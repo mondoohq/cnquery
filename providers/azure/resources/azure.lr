@@ -3046,6 +3046,12 @@ azure.subscription.networkService.loadBalancer @defaults("id name location") {
   sku string
   // Load Balancer SKU tier ("Global" or "Regional")
   skuTier string
+  // Load Balancer operating mode
+  //
+  // "Advanced" for a load balancer running in advanced mode, empty for the
+  // standard behavior. Advanced mode changes how backend pools and rules
+  // are evaluated.
+  mode string
   // List of Load Balancer probes
   probes() []azure.subscription.networkService.probe
   // List of Load Balancer backend address pools
@@ -3147,6 +3153,12 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
   privateIpAddress string
   // Resource ID of the DDoS custom policy bound to this frontend IP configuration (empty when none)
   ddosCustomPolicyId string
+  // Whether connection tracking is enabled on this frontend
+  //
+  // Connection tracking keeps per-flow state so that return traffic is
+  // matched to the flow that opened it. Null when the load balancer does
+  // not report the setting.
+  enableConnectionTracking bool
 }
 
 // Azure Load Balancer rule
@@ -3331,10 +3343,12 @@ private azure.subscription.networkService.interface.effectiveRoute @defaults("na
   addressPrefix []string
   // Where matching traffic is sent
   //
-  // One of VirtualNetworkGateway, VnetLocal, Internet, VirtualAppliance, or
-  // None. A route to None discards the traffic.
+  // One of VirtualNetworkGateway, VnetLocal, Internet, VirtualAppliance,
+  // VirtualApplianceEcmp, or None. A route to None discards the traffic.
+  // VirtualApplianceEcmp carries several next hop addresses that share the
+  // traffic, so a filter looking only for VirtualAppliance misses it.
   nextHopType string
-  // Next hop addresses, set only when nextHopType is VirtualAppliance
+  // Next hop addresses, set only when nextHopType is VirtualAppliance or VirtualApplianceEcmp
   nextHopIpAddress []string
   // Whether BGP route propagation is disabled on the route's table
   disableBgpRoutePropagation bool
@@ -3415,6 +3429,11 @@ private azure.subscription.networkService.ipAddress @defaults("name location ipA
   ipTags []dict
   // NAT gateway using this public IP; null when the address is not used by a NAT gateway
   natGateway() azure.subscription.networkService.natGateway
+  // Whether the address has been migrated to the v2 platform
+  //
+  // Reports the migration off the retiring Basic SKU. Null when Azure does
+  // not report a migration state for the address.
+  upgradedToV2 bool
 }
 
 // Azure Network Bastion host
@@ -3831,6 +3850,12 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Gateway IP configurations that bind the application gateway into a subnet
   gatewayIpConfigs() []azure.subscription.networkService.applicationGateway.gatewayIpConfig
+  // Whether the gateway omits its default Server header from responses
+  //
+  // When false the gateway advertises itself in every response, disclosing
+  // the platform to anyone probing the endpoint. Null when the gateway does
+  // not carry a global configuration block.
+  disableDefaultServerHeaderInResponse bool
 }
 
 // Azure Application Gateway IP configuration
@@ -4211,9 +4236,10 @@ private azure.subscription.networkService.applicationFirewallPolicy.managedRuleS
   state string
   // Action that replaces the rule's own when it matches
   //
-  // One of "Allow", "Block", "Log", "JSChallenge", or empty to keep the
-  // rule set's action. "Log" downgrades a blocking rule to detection
-  // only while the policy as a whole still reports Prevention mode.
+  // One of "Allow", "Block", "Log", "JSChallenge", "CAPTCHA",
+  // "AnomalyScoring", or empty to keep the rule set's action. "Log"
+  // downgrades a blocking rule to detection only while the policy as a
+  // whole still reports Prevention mode.
   action string
   // Override sensitivity applied when the rule matches (anomaly-scoring rule sets)
   sensitivity string
@@ -4238,9 +4264,9 @@ private azure.subscription.networkService.applicationFirewallPolicy.customRule @
   ruleType string
   // Action taken when every match condition holds
   //
-  // One of "Allow", "Block", "Log", or "JSChallenge". An "Allow" rule
-  // short-circuits the managed rule sets for matching requests, and a
-  // "Log" rule records without blocking.
+  // One of "Allow", "Block", "Log", "JSChallenge", or "CAPTCHA". An
+  // "Allow" rule short-circuits the managed rule sets for matching
+  // requests, and a "Log" rule records without blocking.
   action string
   // Whether the rule is evaluated
   //
@@ -4663,6 +4689,10 @@ azure.subscription.networkService.virtualHub @defaults("id name location sku") {
   virtualRouterAsn int
   // VirtualRouter IP addresses
   virtualRouterIps []string
+  // IPv6 address prefix of the hub, empty on an IPv4-only hub
+  addressPrefixV6 string
+  // VirtualRouter IPv6 addresses, empty on an IPv4-only hub
+  virtualRouterIpsV6 []string
   // Provisioning state
   provisioningState string
   // Current routing state ("None", "Provisioning", "Provisioned", "Failed")
@@ -4729,6 +4759,12 @@ private azure.subscription.networkService.virtualHub.vnetConnection @defaults("i
   etag string
   // Whether secured-hub Internet-egress filtering is enabled for the spoke
   enableInternetSecurity bool
+  // Whether the connection peers over IPv6 only
+  //
+  // When true the spoke reaches the hub over IPv6 and no IPv4 peering is
+  // established, which changes what the connection can reach. Null when the
+  // hub does not report the setting.
+  enableOnlyIPv6Peering bool
   // Provisioning state
   provisioningState string
   // Routing configuration (associated route table, propagated route tables/labels, static routes)
@@ -4864,6 +4900,12 @@ azure.subscription.networkService.expressRouteCircuit @defaults("id name locatio
   provisioningState string
   // Outer QinQ tag identifying the circuit's traffic
   stag int
+  // Redundancy the circuit is provisioned with
+  //
+  // One of "Standard", "High", or "Maximum". A Standard circuit has a single
+  // connection path, so it is a single point of failure for the hybrid link
+  // it carries. Empty when the provider does not report a resiliency level.
+  resiliencyLevel string
   // BGP peerings (private, microsoft, Azure private) configured on the circuit
   peerings() []azure.subscription.networkService.expressRouteCircuit.peering
   // Connection authorizations issued for the circuit
@@ -5352,10 +5394,31 @@ azure.subscription.networkService.virtualAppliance @defaults("id name location")
   marketplaceVersion string
   // Address prefix assigned to the appliance
   addressPrefix string
+  // IPv6 address prefix assigned to the appliance, empty on an IPv4-only appliance
+  addressPrefixV6 string
+  // Private IPv6 address of the appliance, empty on an IPv4-only appliance
+  privateIpAddressV6 string
+  // IP versions the appliance is configured for
+  //
+  // Each entry is "IPv4" or "IPv6". An appliance carrying both is
+  // dual-stack, so an audit reading only the IPv4 fields sees half of
+  // its address surface.
+  addressFamily []string
   // Deployment type (for example PartnerManaged for SaaS appliances)
   deploymentType string
   // Public key used for SSH login to the appliance
   sshPublicKey string
+  // Phase of the appliance migration workflow, empty when no migration has run
+  //
+  // For example Prepare, Execute, Commit, or Abort.
+  migrationPhase string
+  // Detailed status of the current migration phase, empty when no migration has run
+  migrationPhaseStatus string
+  // Migration workflow in progress or last performed
+  //
+  // One of "MigrateToNewILBArchitecture" or "MigrateToNewOSVersion". Empty
+  // when no migration has run.
+  migrationType string
   // Virtual hub the appliance is deployed in
   virtualHub() azure.subscription.networkService.virtualHub
 }
@@ -5428,6 +5491,11 @@ azure.subscription.networkService.publicIpPrefix @defaults("id name location") {
   ipTags []dict
   // Custom IP prefix (BYOIP) the range is drawn from
   customIpPrefix() azure.subscription.networkService.customIpPrefix
+  // Whether the prefix has been migrated to the v2 platform
+  //
+  // Reports the migration off the retiring Basic SKU. Null when Azure does
+  // not report a migration state for the prefix.
+  upgradedToV2 bool
 }
 
 // Azure custom IP prefix
@@ -12676,6 +12744,13 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   secureScore string
   // Cost management report granularity ("ProtectedItemLevel", "ProtectedItemWithParentTag", or "VaultLevel"); empty when unset
   costManagementGranularityLevel string
+  // Region of choice status for the vault
+  //
+  // One of "Enabled", "Disabled", or "Invalid"; empty when unset. When
+  // enabled the vault replicates backups to a chosen secondary region
+  // rather than the default paired region, which is what a data residency
+  // audit needs to read.
+  regionOfChoiceStatus string
   // Security settings (soft delete, immutability, enhanced security)
   securitySettings() azure.subscription.recoveryServicesService.vault.securitySettings
   // Encryption settings

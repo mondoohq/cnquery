@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 	trafficmanager "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/trafficmanager/armtrafficmanager"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -557,6 +557,8 @@ func azureVirtualHubToMql(runtime *plugin.Runtime, h *network.VirtualHub) (plugi
 		"provisioningState":          llx.StringDataPtr(nil),
 		"routingState":               llx.StringDataPtr(nil),
 		"securityProviderName":       llx.StringDataPtr(nil),
+		"addressPrefixV6":            llx.StringDataPtr(nil),
+		"virtualRouterIpsV6":         llx.ArrayData([]any{}, types.String),
 	}
 
 	var wanId, fwId *string
@@ -591,6 +593,15 @@ func azureVirtualHubToMql(runtime *plugin.Runtime, h *network.VirtualHub) (plugi
 			}
 		}
 		args["virtualRouterIps"] = llx.ArrayData(ips, types.String)
+
+		args["addressPrefixV6"] = llx.StringDataPtr(props.AddressPrefixV6)
+		ipsV6 := []any{}
+		for _, ip := range props.VirtualRouterIPsV6 {
+			if ip != nil {
+				ipsV6 = append(ipsV6, *ip)
+			}
+		}
+		args["virtualRouterIpsV6"] = llx.ArrayData(ipsV6, types.String)
 
 		if props.VirtualWan != nil {
 			wanId = props.VirtualWan.ID
@@ -744,8 +755,13 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualHub) vnetConnections() ([]any,
 			var routingDict any
 			var provState *string
 			var remoteId *string
+			var enableOnlyIPv6Peering *bool
 			if c.Properties != nil {
 				enableInternetSecurity = c.Properties.EnableInternetSecurity
+				if c.Properties.EnableOnlyIPv6Peering != nil {
+					b := *c.Properties.EnableOnlyIPv6Peering == network.EnableOnlyIPv6PeeringStateEnabled
+					enableOnlyIPv6Peering = &b
+				}
 				if c.Properties.RoutingConfiguration != nil {
 					d, err := convert.JsonToDict(c.Properties.RoutingConfiguration)
 					if err != nil {
@@ -767,6 +783,7 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualHub) vnetConnections() ([]any,
 					"name":                   llx.StringDataPtr(c.Name),
 					"etag":                   llx.StringDataPtr(c.Etag),
 					"enableInternetSecurity": llx.BoolDataPtr(enableInternetSecurity),
+					"enableOnlyIPv6Peering":  llx.BoolDataPtr(enableOnlyIPv6Peering),
 					"provisioningState":      llx.StringDataPtr(provState),
 					"routingConfiguration":   llx.DictData(routingDict),
 				})
@@ -974,6 +991,7 @@ func azureExpressRouteCircuitToMql(runtime *plugin.Runtime, c *network.ExpressRo
 		"authorizationStatus":              llx.StringDataPtr(nil),
 		"provisioningState":                llx.StringDataPtr(nil),
 		"stag":                             llx.IntDataDefault[int32](nil, 0),
+		"resiliencyLevel":                  llx.StringDataPtr(nil),
 	}
 
 	if c.SKU != nil {
@@ -1006,6 +1024,10 @@ func azureExpressRouteCircuitToMql(runtime *plugin.Runtime, c *network.ExpressRo
 		if props.ProvisioningState != nil {
 			s := string(*props.ProvisioningState)
 			args["provisioningState"] = llx.StringData(s)
+		}
+		if props.ResiliencyLevel != nil {
+			s := string(*props.ResiliencyLevel)
+			args["resiliencyLevel"] = llx.StringData(s)
 		}
 		if props.ExpressRoutePort != nil {
 			args["expressRoutePortId"] = llx.StringDataPtr(props.ExpressRoutePort.ID)

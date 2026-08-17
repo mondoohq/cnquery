@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -62,7 +62,9 @@ func azurePublicIpPrefixToMql(runtime *plugin.Runtime, prefix *network.PublicIPP
 	var prefixLength int64
 	ipTags := []any{}
 	var customIpPrefixId *string
+	var upgradedToV2 *bool
 	if p := prefix.Properties; p != nil {
+		upgradedToV2 = p.UpgradedToV2
 		if p.ProvisioningState != nil {
 			provisioningState = string(*p.ProvisioningState)
 		}
@@ -109,6 +111,7 @@ func azurePublicIpPrefixToMql(runtime *plugin.Runtime, prefix *network.PublicIPP
 			"skuTier":           llx.StringData(skuTier),
 			"resourceGuid":      llx.StringData(resourceGuid),
 			"ipTags":            llx.ArrayData(ipTags, types.Dict),
+			"upgradedToV2":      llx.BoolDataPtr(upgradedToV2),
 		})
 	if err != nil {
 		return nil, err

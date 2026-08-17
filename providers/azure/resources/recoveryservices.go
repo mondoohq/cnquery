@@ -341,6 +341,11 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 		costManagementGranularityLevel = string(*props.CostManagementSettings.GranularityLevel)
 	}
 
+	var regionOfChoiceStatus string
+	if props.RegionOfChoiceSettings != nil && props.RegionOfChoiceSettings.Status != nil {
+		regionOfChoiceStatus = string(*props.RegionOfChoiceSettings.Status)
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionRecoveryServicesServiceVault,
 		map[string]*llx.RawData{
 			"id":                                  llx.StringDataPtr(vault.ID),
@@ -357,6 +362,7 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 			"privateEndpointStateForSiteRecovery": llx.StringData(privateEndpointStateForSiteRecovery),
 			"secureScore":                         llx.StringData(secureScore),
 			"costManagementGranularityLevel":      llx.StringData(costManagementGranularityLevel),
+			"regionOfChoiceStatus":                llx.StringData(regionOfChoiceStatus),
 		})
 	if err != nil {
 		return nil, err

@@ -26,7 +26,7 @@ import (
 	"go.mondoo.com/mql/v13/utils/stringx"
 	"golang.org/x/sync/errgroup"
 
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 )
 
 func (a *mqlAzureSubscriptionNetworkService) id() (string, error) {
@@ -659,6 +659,10 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 				lbSkuName = (*string)(lb.SKU.Name)
 				lbSkuTier = (*string)(lb.SKU.Tier)
 			}
+			var lbMode string
+			if lb.Properties != nil && lb.Properties.Mode != nil {
+				lbMode = string(*lb.Properties.Mode)
+			}
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancer",
 				map[string]*llx.RawData{
 					"id":         llx.StringDataPtr(lb.ID),
@@ -667,6 +671,7 @@ func (a *mqlAzureSubscriptionNetworkService) loadBalancers() ([]any, error) {
 					"etag":       llx.StringDataPtr(lb.Etag),
 					"sku":        llx.StringDataPtr(lbSkuName),
 					"skuTier":    llx.StringDataPtr(lbSkuTier),
+					"mode":       llx.StringData(lbMode),
 					"tags":       llx.MapData(convert.PtrMapStrToInterface(lb.Tags), types.String),
 					"type":       llx.StringDataPtr(lb.Type),
 					"properties": llx.DictData(lbProps),
@@ -762,7 +767,9 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 		var privateIpAddress string
 		var ddosCustomPolicyId string
 		var publicIpAddressIDPtr, subnetIDPtr *string
+		var enableConnectionTracking *bool
 		if ipConfig.Properties != nil {
+			enableConnectionTracking = ipConfig.Properties.EnableConnectionTracking
 			if ipConfig.Properties.PublicIPAddress != nil && ipConfig.Properties.PublicIPAddress.ID != nil {
 				isPublic = true
 				publicIpAddressId = *ipConfig.Properties.PublicIPAddress.ID
@@ -791,6 +798,8 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) frontendIpConfigs() ([]
 				"publicIpAddressId":  llx.StringData(publicIpAddressId),
 				"privateIpAddress":   llx.StringData(privateIpAddress),
 				"ddosCustomPolicyId": llx.StringData(ddosCustomPolicyId),
+
+				"enableConnectionTracking": llx.BoolDataPtr(enableConnectionTracking),
 			})
 		if err != nil {
 			return nil, err
@@ -3579,6 +3588,13 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(ag.Identity.UserAssignedIdentities)
 	}
 
+	// The default Server header suppression lives on the gateway's global
+	// configuration block, which is absent on gateways that never set one.
+	var disableDefaultServerHeaderInResponse *bool
+	if ag.Properties != nil && ag.Properties.GlobalConfiguration != nil {
+		disableDefaultServerHeaderInResponse = ag.Properties.GlobalConfiguration.DisableDefaultServerHeaderInResponse
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                        llx.StringDataPtr(ag.ID),
 		"name":                      llx.StringDataPtr(ag.Name),
@@ -3600,6 +3616,8 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		"principalId":               llx.StringDataPtr(principalId),
 		"tenantId":                  llx.StringDataPtr(tenantId),
 		"identityType":              llx.StringDataPtr(identityType),
+
+		"disableDefaultServerHeaderInResponse": llx.BoolDataPtr(disableDefaultServerHeaderInResponse),
 	}
 
 	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
@@ -4454,10 +4472,12 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzureSubscriptionNetworkServiceIpAddress, error) {
 	var ipAllocationMethod, ipVersion, ddosProtectionMode, associatedResourceId string
 	var ipAddr, publicIpPrefixId, natGatewayId *string
+	var upgradedToV2 *bool
 	var idleTimeoutInMinutes int64
 	ipTags := []any{}
 	if ip.Properties != nil {
 		ipAddr = ip.Properties.IPAddress
+		upgradedToV2 = ip.Properties.UpgradedToV2
 		if ip.Properties.PublicIPAllocationMethod != nil {
 			ipAllocationMethod = string(*ip.Properties.PublicIPAllocationMethod)
 		}
@@ -4517,6 +4537,7 @@ func azureIpToMql(runtime *plugin.Runtime, ip network.PublicIPAddress) (*mqlAzur
 			"skuTier":              llx.StringData(skuTier),
 			"idleTimeoutInMinutes": llx.IntData(idleTimeoutInMinutes),
 			"ipTags":               llx.ArrayData(ipTags, types.Dict),
+			"upgradedToV2":         llx.BoolDataPtr(upgradedToV2),
 		})
 	if err != nil {
 		return nil, err
