@@ -66,6 +66,34 @@ make providers/mqlr
 ```
 To quickly install the changed provider plugin run `make providers/build/aws && make providers/install/aws`.
 
+## Run the tests
+
+Some tests use mocks that `mockgen` writes. The generated files are not committed. A fresh clone therefore cannot build
+the tests of `providers` and of `providers/os/connection/device/linux`. `go test ./...` stops with
+`undefined: NewMockProviderPlugin` and `undefined: snapshot.MockVolumeMounter`.
+
+Generate the mocks once after you clone:
+
+```bash
+make test/generate
+```
+
+The target installs `mockgen` and then runs `go generate ./providers/...`. It writes four files:
+
+- `providers/mock_coordinator.go`
+- `providers/mock_plugin_interface.go`
+- `providers/mock_schema.go`
+- `providers/os/connection/snapshot/mock_volumemounter.go`
+
+Run the target again after you change one of the interfaces that these files mock. Every CI test job runs it before the
+tests.
+
+After that step `go test ./...` builds. To run the core suite the way CI does, use:
+
+```bash
+make test/go
+```
+
 ## Debug providers
 
 `mql` uses a plugin mechanism. Each provider has its own go modules. This ensures that dependencies are only used on
