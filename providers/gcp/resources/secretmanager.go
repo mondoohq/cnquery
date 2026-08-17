@@ -197,6 +197,9 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),
 			"customerManagedEncryption": llx.ArrayData(cmeKeys, types.String),
 			"tags":                      llx.MapData(convert.MapToInterfaceMap(s.Tags), types.String),
+			"secretType":                llx.StringData(s.GetSecretType().String()),
+			"policyMemberNamePrincipal": llx.StringData(s.GetPolicyMember().GetIamPolicyNamePrincipal()),
+			"policyMemberUidPrincipal":  llx.StringData(s.GetPolicyMember().GetIamPolicyUidPrincipal()),
 		})
 		if err != nil {
 			return nil, err
@@ -308,6 +311,8 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) versions() ([]any, error) {
 			}
 		}
 
+		replicationStatusDict := replicationStatusToDict(v.GetReplicationStatus())
+
 		mqlVersion, err := CreateResource(g.MqlRuntime, "gcp.project.secretmanagerService.secret.version", map[string]*llx.RawData{
 			"resourcePath":                   llx.StringData(v.Name),
 			"name":                           llx.StringData(parseResourceName(v.Name)),
@@ -318,6 +323,7 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) versions() ([]any, error) {
 			"clientSpecifiedPayloadChecksum": llx.BoolData(v.ClientSpecifiedPayloadChecksum),
 			"scheduledDestroyTime":           llx.TimeDataPtr(timestampAsTimePtr(v.ScheduledDestroyTime)),
 			"customerManagedEncryption":      llx.DictData(cmeStatusDict),
+			"replicationStatus":              llx.DictData(replicationStatusDict),
 		})
 		if err != nil {
 			return nil, err
@@ -499,6 +505,55 @@ type mqlSecretRotation struct {
 
 type mqlCustomerManagedEncryptionStatus struct {
 	KmsKeyVersionName string `json:"kmsKeyVersionName"`
+}
+
+// replicationStatusToDict maps a secret version's replication status onto the
+// discriminated shape the schema documents: an `automatic` key for an
+// automatically replicated secret, a `userManaged` key for a user-managed one.
+//
+// It reports the key version protecting the stored bytes, which can lag the key
+// configured on the secret after a rotation. A nil status, or one whose oneof is
+// unset, returns nil so the field reads null rather than an empty object that
+// would look like a version replicated nowhere.
+func replicationStatusToDict(status *secretmanagerpb.ReplicationStatus) map[string]any {
+	if status == nil {
+		return nil
+	}
+
+	switch s := status.GetReplicationStatus().(type) {
+	case *secretmanagerpb.ReplicationStatus_Automatic:
+		if s.Automatic == nil {
+			return nil
+		}
+		automatic := map[string]any{}
+		if cme := s.Automatic.GetCustomerManagedEncryption(); cme != nil {
+			automatic["customerManagedEncryption"] = map[string]any{
+				"kmsKeyVersionName": cme.GetKmsKeyVersionName(),
+			}
+		}
+		return map[string]any{"automatic": automatic}
+
+	case *secretmanagerpb.ReplicationStatus_UserManaged:
+		if s.UserManaged == nil {
+			return nil
+		}
+		replicas := []any{}
+		for _, r := range s.UserManaged.GetReplicas() {
+			if r == nil {
+				continue
+			}
+			replica := map[string]any{"location": r.GetLocation()}
+			if cme := r.GetCustomerManagedEncryption(); cme != nil {
+				replica["customerManagedEncryption"] = map[string]any{
+					"kmsKeyVersionName": cme.GetKmsKeyVersionName(),
+				}
+			}
+			replicas = append(replicas, replica)
+		}
+		return map[string]any{"userManaged": map[string]any{"replicas": replicas}}
+	}
+
+	return nil
 }
 
 // extractCustomerManagedEncryptionKeys returns all CMEK key names from a secret,

@@ -638,7 +638,54 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				}
 			}
 
+			var mqlPerformanceCaptureConfig map[string]any
+			if s.PerformanceCaptureConfig != nil {
+				mqlPerformanceCaptureConfig, err = convert.JsonToDict(s.PerformanceCaptureConfig)
+				if err != nil {
+					return err
+				}
+			}
+
+			// Each of the three configs below is optional. A nil config leaves
+			// its fields at the zero value rather than reporting a default the
+			// API never returned; the booleans read false, which is the safe
+			// direction for "not enabled".
+			var finalBackupEnabled bool
+			var finalBackupRetentionDays int64
+			if s.FinalBackupConfig != nil {
+				finalBackupEnabled = s.FinalBackupConfig.Enabled
+				finalBackupRetentionDays = s.FinalBackupConfig.RetentionDays
+			}
+
+			var connectionPoolingEnabled bool
+			var connectionPoolerCount int64
+			connectionPoolFlags := map[string]any{}
+			if s.ConnectionPoolConfig != nil {
+				connectionPoolingEnabled = s.ConnectionPoolConfig.ConnectionPoolingEnabled
+				connectionPoolerCount = s.ConnectionPoolConfig.PoolerCount
+				for _, f := range s.ConnectionPoolConfig.Flags {
+					if f == nil {
+						continue
+					}
+					connectionPoolFlags[f.Name] = f.Value
+				}
+			}
+
+			var threadsPerCore int64
+			if s.AdvancedMachineFeatures != nil {
+				threadsPerCore = s.AdvancedMachineFeatures.ThreadsPerCore
+			}
+
 			mqlSettings, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.settings", map[string]*llx.RawData{
+				"retainBackupsOnDelete":       llx.BoolData(s.RetainBackupsOnDelete),
+				"finalBackupEnabled":          llx.BoolData(finalBackupEnabled),
+				"finalBackupRetentionDays":    llx.IntData(finalBackupRetentionDays),
+				"autoUpgradeEnabled":          llx.BoolData(s.AutoUpgradeEnabled),
+				"connectionPoolingEnabled":    llx.BoolData(connectionPoolingEnabled),
+				"connectionPoolerCount":       llx.IntData(connectionPoolerCount),
+				"connectionPoolFlags":         llx.MapData(connectionPoolFlags, types.String),
+				"threadsPerCore":              llx.IntData(threadsPerCore),
+				"performanceCaptureConfig":    llx.DictData(mqlPerformanceCaptureConfig),
 				"activationPolicy":            llx.StringData(s.ActivationPolicy),
 				"activeDirectoryConfig":       llx.DictData(mqlADCfg),
 				"activeDirectory":             llx.ResourceData(mqlActiveDirectory, "gcp.project.sqlService.instance.settings.activeDirectory"),
@@ -770,6 +817,50 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				serverCaCertExpiration = parseTime(instance.ServerCaCert.ExpirationTime)
 			}
 
+			mqlPoolNodes := make([]any, 0, len(instance.Nodes))
+			for _, node := range instance.Nodes {
+				if node == nil {
+					continue
+				}
+				nodeDict, err := convert.JsonToDict(node)
+				if err != nil {
+					return err
+				}
+				mqlPoolNodes = append(mqlPoolNodes, nodeDict)
+			}
+
+			// An instance that is not an external-primary replica reports no
+			// on-premises configuration at all. Leave the field null rather
+			// than creating an empty sub-resource, so a check for an insecure
+			// SSL mode cannot match an instance that has no external link.
+			onPremisesConfigData := llx.NilData
+			if opc := instance.OnPremisesConfiguration; opc != nil {
+				mqlOnPrem, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance.onPremisesConfiguration", map[string]*llx.RawData{
+					"__id":              llx.StringData(fmt.Sprintf("%s/%s/onPremisesConfiguration", projectId, instance.Name)),
+					"hostPort":          llx.StringData(opc.HostPort),
+					"username":          llx.StringData(opc.Username),
+					"caCertificate":     llx.StringData(opc.CaCertificate),
+					"clientCertificate": llx.StringData(opc.ClientCertificate),
+					"sslOption":         llx.StringData(opc.SslOption),
+					"dmsManaged":        llx.BoolData(opc.DmsManaged),
+					"dumpFilePath":      llx.StringData(opc.DumpFilePath),
+				})
+				if err != nil {
+					return err
+				}
+				mqlOnPremRes := mqlOnPrem.(*mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration)
+				mqlOnPremRes.cacheProjectId = projectId
+				if src := opc.SourceInstance; src != nil {
+					mqlOnPremRes.cacheSourceInstanceName = src.Name
+					mqlOnPremRes.cacheSourceInstanceRegion = src.Region
+					// A cross-project source names its own project.
+					if src.Project != "" {
+						mqlOnPremRes.cacheProjectId = src.Project
+					}
+				}
+				onPremisesConfigData = llx.ResourceData(mqlOnPrem, "gcp.project.sqlService.instance.onPremisesConfiguration")
+			}
+
 			mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.sqlService.instance", map[string]*llx.RawData{
 				"availableMaintenanceVersions": llx.ArrayData(convert.SliceAnyToInterface(instance.AvailableMaintenanceVersions), types.String),
 				"backendType":                  llx.StringData(instance.BackendType),
@@ -810,6 +901,10 @@ func (g *mqlGcpProjectSqlService) instances() ([]any, error) {
 				"upgradableDatabaseVersions": llx.ArrayData(mqlUpgradableVersions, types.Dict),
 				"replicationCluster":         llx.DictData(mqlReplicationClusterDict),
 				"serverCaCertExpiration":     llx.TimeDataPtr(serverCaCertExpiration),
+				"ipv6Address":                llx.StringData(instance.Ipv6Address),
+				"nodeCount":                  llx.IntData(instance.NodeCount),
+				"nodes":                      llx.ArrayData(mqlPoolNodes, types.Dict),
+				"onPremisesConfig":           onPremisesConfigData,
 			})
 			if err != nil {
 				return err
@@ -910,6 +1005,32 @@ type mqlGcpProjectSqlServiceInstanceInternal struct {
 	cacheKmsKeyName          string
 	cacheFailoverReplicaName string
 	cacheDrReplicaName       string
+}
+
+type mqlGcpProjectSqlServiceInstanceOnPremisesConfigurationInternal struct {
+	cacheProjectId            string
+	cacheSourceInstanceName   string
+	cacheSourceInstanceRegion string
+}
+
+// sourceInstance resolves the Cloud SQL instance this replica reads from.
+//
+// Most external-primary replicas point at a self-managed server that Cloud SQL
+// does not model, in which case the API returns no sourceInstance and the field
+// is null. It is only populated when the source is itself a Cloud SQL instance.
+func (g *mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration) sourceInstance() (*mqlGcpProjectSqlServiceInstance, error) {
+	if g.cacheSourceInstanceName == "" {
+		g.SourceInstance.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	src, err := getSqlInstanceByName(g.MqlRuntime, g.cacheProjectId, g.cacheSourceInstanceName)
+	if err != nil {
+		return nil, err
+	}
+	if src == nil {
+		g.SourceInstance.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return src, nil
 }
 
 func (g *mqlGcpProjectSqlServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
