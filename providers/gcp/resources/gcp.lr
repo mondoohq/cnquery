@@ -3512,6 +3512,14 @@ private gcp.project.sqlService.instance.onPremisesConfiguration @defaults("hostP
   dmsManaged bool
   // Cloud Storage path of the dump file used to seed the replica
   dumpFilePath string
+  // Cloud Storage bucket holding the source database dump
+  //
+  // Resolves the bucket named in dumpFilePath. A dump of an external database
+  // is a full copy of its contents, so the bucket's IAM policy and
+  // public-access-prevention setting decide who can read that copy. Null when
+  // no dump file is configured, and when the bucket sits in a project this
+  // credential cannot read.
+  dumpFileBucket() gcp.project.storageService.bucket
   // Cloud SQL instance this instance replicates from, when the source is itself a Cloud SQL instance
   sourceInstance() gcp.project.sqlService.instance
 }
@@ -4225,7 +4233,19 @@ private gcp.project.bigqueryService.table @defaults("id") {
 // `tableFormat` fields report the layout of the files behind the table.
 private gcp.project.bigqueryService.table.bigLakeConfig @defaults("storageUri fileFormat") {
   // Cloud Storage URI the table's data files are read from
+  //
+  // In `gs://bucket/prefix/` form. The bucket alone is reachable through
+  // bucket; this field is kept because it also carries the object prefix
+  // inside the bucket, which the reference cannot round-trip.
   storageUri string
+  // Cloud Storage bucket holding the table's data files
+  //
+  // Resolves the bucket named in storageUri, so the table's exposure can be
+  // read from the bucket's own IAM policy and public-access-prevention
+  // setting. A BigLake table is only as private as the bucket behind it.
+  // Null when the URI names no bucket, and when the bucket sits in a project
+  // this credential cannot read.
+  bucket() gcp.project.storageService.bucket
   // Format of the underlying data files (PARQUET)
   fileFormat string
   // Open table format layered over the data files (ICEBERG)

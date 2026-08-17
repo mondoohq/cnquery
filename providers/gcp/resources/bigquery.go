@@ -336,6 +336,13 @@ func (g *mqlGcpProjectBigqueryServiceTableForeignKey) referencedTable() (*mqlGcp
 	return tbl, nil
 }
 
+// bucket resolves the Cloud Storage bucket named in storageUri. A BigLake
+// table is only as private as the bucket behind it, so this is what lets the
+// table's exposure be read from the bucket's own IAM policy.
+func (g *mqlGcpProjectBigqueryServiceTableBigLakeConfig) bucket() (*mqlGcpProjectStorageServiceBucket, error) {
+	return resolveGcsBucketFromURI(g.MqlRuntime, g.StorageUri.Data, &g.Bucket)
+}
+
 // connection resolves the BigLake connection through the project's connection
 // list, which is already fetched and fully populated.
 //
