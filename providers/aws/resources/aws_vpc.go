@@ -1521,6 +1521,14 @@ func initAwsVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[stri
 		return args, nil, nil
 	}
 
+	// Already materialized by an earlier reference or by the list that
+	// built it: NewResource consults the cache only after this init
+	// returns, so without this the same target is fetched once per
+	// referring resource and the result thrown away.
+	if cached := cachedArgByArn(runtime, ResourceAwsVpc, args); cached != nil {
+		return args, cached, nil
+	}
+
 	// Derive region + vpcId for a single targeted DescribeVpcs call instead of
 	// listing every VPC in every region. This also pulls the ARN from the asset
 	// identifier when args are empty.

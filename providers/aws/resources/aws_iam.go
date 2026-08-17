@@ -1750,6 +1750,14 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return args, nil, nil
 	}
 
+	// Already materialized by an earlier reference or by the list that
+	// built it: NewResource consults the cache only after this init
+	// returns, so without this the same target is fetched once per
+	// referring resource and the result thrown away.
+	if cached := cachedArgByArn(runtime, ResourceAwsIamRole, args); cached != nil {
+		return args, cached, nil
+	}
+
 	if args["arn"] == nil && args["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam role")
 	}

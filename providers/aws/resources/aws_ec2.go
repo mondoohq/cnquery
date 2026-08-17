@@ -2174,6 +2174,14 @@ func initAwsEc2Securitygroup(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return args, nil, nil
 	}
 
+	// Already materialized by an earlier reference or by the list that
+	// built it: NewResource consults the cache only after this init
+	// returns, so without this the same target is fetched once per
+	// referring resource and the result thrown away.
+	if cached := cachedArgByArn(runtime, ResourceAwsEc2Securitygroup, args); cached != nil {
+		return args, cached, nil
+	}
+
 	if len(args) == 0 {
 		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
