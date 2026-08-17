@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "mssql",
 	ID:              "go.mondoo.com/mql/v13/providers/mssql",
-	Version:         "13.0.2",
+	Version:         "13.1.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{
