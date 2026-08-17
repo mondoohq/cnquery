@@ -182,8 +182,23 @@ client and fetches inline is invisible to it.** Such an accessor never calls
 in Phase 4 — while an audit that only ran the classifier will read as complete.
 
 Enumerate them properly rather than grepping for client construction in a
-window — that over-counts badly. In azure a real enumeration gives **43** inline
-accessors against 126 that go through `NewResource`.
+window — that over-counts badly. And **do not pin the receiver name**: providers
+use `a`, `g`, `k`, `o`, `r`, `m`, `c`, `p`, `i`. Pinning one silently reports
+zero for every provider that picked another letter.
+
+Real counts, receiver-agnostic:
+
+| provider | INLINE | BOTH | VIA-NEW |
+|---|---|---|---|
+| aws | 41 | 6 | 550 |
+| azure | 38 | 0 | 136 |
+| github | 16 | 1 | 5 |
+| ms365 | 14 | 0 | 11 |
+| gcp | 10 | 0 | 71 |
+| okta | 1 | 0 | 4 |
+| k8s | **0** | 0 | 23 |
+
+k8s at zero is the shape to aim for. Everything else has some.
 
 ```bash
 awk -f .claude/skills/provider-api-call-dedup/classify-accessors.awk \
@@ -198,9 +213,8 @@ accessor falls into one of two kinds:
 | **Owned sub-object** | A config child belonging to exactly one parent — a database's audit policy, a storage account's management policy, a site's auth settings | **No.** One fetch per parent is the floor, and `GetOrCompute` already memoizes it on that parent. Nothing repeats |
 | **Shared resource** | A subnet, a public IP, a firewall policy, a disk — something several resources point at | **Yes.** Fan-in means repeats, and nothing dedupes them |
 
-In azure that split is roughly 30 owned sub-objects (all the SQL policies,
-storage config, web auth settings, Defender plans) against ~12 shared targets.
-So the backlog is small and specific, not half the provider. Measure fan-in per
+In azure that split is roughly 30 owned sub-objects against ~12 shared targets,
+so the backlog is small and specific, not half the provider. Measure fan-in per
 target before proposing anything:
 
 ```bash

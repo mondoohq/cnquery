@@ -12,18 +12,28 @@
 #
 # This one reads the accessors instead: functions shaped
 #
-#   func (a *mqlFoo) bar() (*mqlBaz, error)
+#   func (x *mqlFoo) bar() (*mqlBaz, error)
 #
 # i.e. returning a single resource, which is what a typed reference looks like.
+# The receiver name is deliberately not pinned -- providers use a, g, k, o, r,
+# m, c, p, i and more, and pinning it silently reports zero for every provider
+# that picked a different letter.
 #
 # Output: <bucket>\t<file>:<line>\t<signature>
 #
-#   INLINE   builds a client and fetches; never calls NewResource. Not reachable
-#            from init-level work. Triage by fan-in before doing anything (see
-#            below).
+#   INLINE   reaches the API itself; never calls NewResource. Not reachable
+#            from init-level work. Triage by fan-in before doing anything.
 #   VIA-NEW  calls NewResource, so it routes through the target's init and the
 #            init-level fixes apply.
+#   BOTH     does both -- typically a cache or list check with a fetch as the
+#            fallback, which is usually correct. Read it before touching it;
+#            bucketing these as VIA-NEW would hide a live fetch.
 #   NO-IO    reads what it already has. Fine.
+#
+# A ZERO IS A RESULT TO CHECK, NOT TO TRUST. If a provider reports no INLINE and
+# no VIA-NEW at all, suspect the patterns below before believing it: confirm the
+# provider's accessors actually match the signature shape, and that it obtains
+# clients in one of the ways detected here.
 #
 # TRIAGE THE INLINE ONES BY FAN-IN. They split into two kinds and only one is
 # worth touching:
@@ -45,25 +55,49 @@
 # the real backlog is small and specific. Do not report the raw INLINE count as
 # though all of it were work.
 
-/^func \(a \*mql[A-Za-z0-9]+\) [a-z][A-Za-z0-9]*\(\) \(\*mql[A-Za-z0-9]+, error\) \{/ {
-  inFunc = 1
-  sig = $0
-  start = FNR
-  body = ""
-  next
+BEGIN {
+    # An SDK operation always takes a context; an MQL list getter takes no
+    # arguments. Requiring the context is what keeps svc.GetBackupVaults() on
+    # an MQL resource from reading as an SDK call -- gcp names MQL resources
+    # `svc`, aws names SDK clients `svc`.
+    #
+    # Connection methods that are NOT API calls -- they hand back credentials,
+    # config or identity the connection already holds. Without scrubbing these,
+    # the conn.<Service>( pattern that catches the aws style (conn.Ec2(region))
+    # also matches conn.Token(), conn.Regions(), conn.Asset() and friends, and
+    # every accessor looks like it reaches the API.
+    notAPI = "Asset|Runtime|Context|Token|ClientOptions|Credentials|Config|Conf|" \
+             "SubId|AccountId|OrganizationID|Regions|Region|BasePlatformId|" \
+             "PlatformId|Name|Filters|Options|ID|Id|Provider|Upstream|Hash"
+}
+
+/^func \([a-z][a-zA-Z0-9]* \*mql[A-Za-z0-9]+\) [a-z][A-Za-z0-9]*\(\) \(\*mql[A-Za-z0-9]+, error\) \{/ {
+    inFunc = 1
+    sig = $0
+    start = FNR
+    body = ""
+    next
 }
 
 inFunc && /^}/ {
-  client = (body ~ /New[A-Za-z]*Client\(/)
-  newres = (body ~ /NewResource\(/)
+    scrubbed = body
+    gsub("conn\\.(" notAPI ")\\(", "", scrubbed)
 
-  if (newres)      bucket = "VIA-NEW"
-  else if (client) bucket = "INLINE"
-  else             bucket = "NO-IO"
+    client = (scrubbed ~ /New[A-Za-z]*Client\(/) ||     # azure, gcp, some aws
+             (scrubbed ~ /conn\.Client\(\)/) ||         # github, okta, gcp
+             (scrubbed ~ /conn\.[A-Z][A-Za-z]*\(/) ||   # aws: conn.Ec2(region)
+             (scrubbed ~ /svc\.[A-Z][A-Za-z]*\((ctx|context\.)/) || # aws sdk ops
+             (scrubbed ~ /client\.[A-Z][A-Za-z]*\(ctx/) # gcp sdk operations
+    newres = (scrubbed ~ /NewResource\(/)
 
-  printf "%s\t%s:%d\t%s\n", bucket, FILENAME, start, sig
-  inFunc = 0
-  next
+    if (newres && client) bucket = "BOTH"
+    else if (newres)      bucket = "VIA-NEW"
+    else if (client)      bucket = "INLINE"
+    else                  bucket = "NO-IO"
+
+    printf "%s\t%s:%d\t%s\n", bucket, FILENAME, start, sig
+    inFunc = 0
+    next
 }
 
 inFunc { body = body "\n" $0 }
