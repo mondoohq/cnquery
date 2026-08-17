@@ -99,22 +99,22 @@ Features:
   start: v13.x
   status: new
 - id: ScanContentModeShadow
-  desc: "Server-activated scan-content mode (unchanged-scan short-circuit ADR): compute row/kind checksums while writing the scandb and stamp them into its metadata. Shadow changes nothing else - every scan still uploads in full."
+  desc: "Compute a checksum for every row while writing the scan database, so an unchanged scan is detectable. Nothing else changes - every scan still uploads and is processed in full."
   idx: 18
   start: v13.x
   status: new
 - id: ScanContentModeServerCompare
-  desc: "Server-activated scan-content mode: checksums computed and written; the server short-circuits ingest for unchanged uploads. Client behavior is identical to shadow."
+  desc: "Row checksums as in shadow; the server also skips reprocessing uploads whose rows are identical to the previous scan. Client behavior is identical to shadow."
   idx: 19
   start: v13.x
   status: new
 - id: ScanContentModeClientCompare
-  desc: "Server-activated scan-content mode: checksums computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true."
+  desc: "Row checksums as in shadow; the client may also fetch the previous upload's checksum summary, compare locally, and skip the upload entirely when nothing changed (completing with unchanged=true)."
   idx: 20
   start: v13.x
   status: new
 - id: ScanContentModeNoCompare
-  desc: "The kill switch: do NO scan-content checksum work and upload in full - behaves exactly like the feature being absent today. Exists as an explicit client-facing signal so that once comparison ships enabled-by-default (no enabling flag), the server can still turn it off per scope; it overrides any other ScanContentMode* feature and any client default."
+  desc: "The kill switch: compute no checksums, always upload in full. Overrides every other ScanContentMode* feature and any client default, so the server can disable comparison per scope even after it ships as the default."
   idx: 21
   start: v13.x
   status: new
