@@ -519,12 +519,21 @@ func getAssetIdentifier(runtime *plugin.Runtime, platform string) string {
 // (e.g. IAM GetUser/GetGroup) and whose discovery sets the asset name to the
 // resource's own name; for everything else resolve by ARN via
 // getAssetIdentifier — the asset name is a display name, not a resource key.
-func getAssetName(runtime *plugin.Runtime) string {
+// The platform argument gates the name the same way getAssetIdentifier gates
+// the ARN, and for the same reason: without it a bare aws.iam.user query on an
+// EBS volume asset called GetUser with the volume id as the user name. Of 169
+// distinct names one scan passed to GetUser, 4 were IAM users; the rest were
+// log groups, volume ids and UUIDs belonging to whatever else was scanned.
+func getAssetName(runtime *plugin.Runtime, platform string) string {
 	var a *inventory.Asset
 	if conn, ok := runtime.Connection.(*connection.AwsConnection); ok {
 		a = conn.Asset()
 	}
 	if a == nil {
+		return ""
+	}
+	if a.Platform == nil || a.Platform.Name != platform {
+		// the scanned asset is not this kind of resource, so its name is not ours
 		return ""
 	}
 	return a.Name

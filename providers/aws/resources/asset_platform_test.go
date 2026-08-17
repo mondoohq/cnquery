@@ -113,3 +113,17 @@ func TestDiscoveryPlatformNamesAreRegistered(t *testing.T) {
 			"getPlatformName returns %q, which is not in connection.Platforms", m[1])
 	}
 }
+
+// getAssetName is gated the same way, for the same reason: a bare
+// aws.iam.user query on an EBS volume asset used to call GetUser with the
+// volume id as the user name.
+func TestGetAssetName_ForeignPlatformIsNotAdopted(t *testing.T) {
+	runtime := testAwsIdentifierRuntime(connection.PlatformEbsVolume, "vol-0eacce2fc0d0612e3", nil)
+	assert.Empty(t, getAssetName(runtime, connection.PlatformIamUser),
+		"a volume's name must never be adopted as an IAM user name")
+}
+
+func TestGetAssetName_MatchingPlatform(t *testing.T) {
+	runtime := testAwsIdentifierRuntime(connection.PlatformIamUser, "alice", nil)
+	assert.Equal(t, "alice", getAssetName(runtime, connection.PlatformIamUser))
+}

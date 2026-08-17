@@ -1098,7 +1098,7 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	// The lookup is name-driven (GetUser); discovery sets the asset name to
 	// the IAM user name.
 	if len(args) == 0 {
-		if name := getAssetName(runtime); name != "" {
+		if name := getAssetName(runtime, connection.PlatformIamUser); name != "" {
 			args["name"] = llx.StringData(name)
 		}
 	}
@@ -2056,7 +2056,7 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	// The lookup is name-driven (GetGroup); discovery sets the asset name to
 	// the IAM group name.
 	if len(args) == 0 {
-		if name := getAssetName(runtime); name != "" {
+		if name := getAssetName(runtime, connection.PlatformIamGroup); name != "" {
 			args["name"] = llx.StringData(name)
 		}
 	}
