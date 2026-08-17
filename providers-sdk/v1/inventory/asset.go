@@ -144,8 +144,18 @@ var AssetCategory_schemevalue = map[string]AssetCategory{
 	"cicd":      AssetCategory_CATEGORY_CICD,
 }
 
+// deprecatedAssetCategories maps retired category names to the name that
+// replaced them. Values here still resolve, but warn on use so the next
+// major can drop them from AssetCategory_schemevalue.
+// FIXME: DEPRECATED, remove in v14.0 vv
+var deprecatedAssetCategories = map[string]string{
+	"fleet": "inventory",
+}
+
+// ^^
+
 // UnmarshalJSON parses either an int or a string representation of
-// CredentialType into the struct
+// AssetCategory into the struct
 func (s *AssetCategory) UnmarshalJSON(data []byte) error {
 	// check if we have a number
 	var code int32
@@ -155,12 +165,21 @@ func (s *AssetCategory) UnmarshalJSON(data []byte) error {
 	} else {
 		var name string
 		// we can ignore the error here because we just look it up and otherwise
-		// tell users that we can't find the backend value
+		// tell users that we can't find the category value
 		_ = json.Unmarshal(data, &name)
-		code, ok := AssetCategory_schemevalue[strings.TrimSpace(name)]
+		name = strings.TrimSpace(name)
+		code, ok := AssetCategory_schemevalue[name]
 		if !ok {
-			return errors.New("unknown backend value: " + string(data))
+			return errors.New("unknown asset category value: " + string(data))
 		}
+		// FIXME: DEPRECATED, remove in v14.0 vv
+		if replacement, deprecated := deprecatedAssetCategories[name]; deprecated {
+			log.Warn().
+				Str("category", name).
+				Str("use", replacement).
+				Msg("deprecated asset category in inventory, please switch to the replacement")
+		}
+		// ^^
 		*s = code
 	}
 	return nil
