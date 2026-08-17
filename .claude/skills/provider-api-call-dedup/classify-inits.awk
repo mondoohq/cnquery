@@ -15,9 +15,9 @@
 #
 # BLIND SPOT: this reads init functions only. A typed-reference accessor that
 # builds a client and fetches inline never calls NewResource, never enters an
-# init, and so does not appear here at all -- in azure that is 43 accessors
-# against 126 that go through NewResource. An audit that runs only this script
-# will look complete while missing them. Enumerate them with the companion
+# init, and so does not appear here at all. An audit that runs only this script
+# will look complete while missing them: aws has 41 such accessors, azure 38,
+# github 16, ms365 14, gcp 10, k8s none. Enumerate them with the companion
 # script, classify-accessors.awk, and split the result by fan-in: most are
 # owned sub-objects with exactly one parent and nothing to dedupe.
 #
