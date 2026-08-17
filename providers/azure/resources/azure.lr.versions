@@ -3689,6 +3689,7 @@ azure.subscription.networkService.applicationGateway.backendHttpSettings.trusted
 azure.subscription.networkService.applicationGateway.backendHttpSettings.trustedRootCertificateNames 13.29.1
 azure.subscription.networkService.applicationGateway.backendHttpSettings.validateCertChainAndExpiry 13.29.1
 azure.subscription.networkService.applicationGateway.backendHttpSettings.validateSNI 13.29.1
+azure.subscription.networkService.applicationGateway.disableDefaultServerHeaderInResponse 13.35.1
 azure.subscription.networkService.applicationGateway.etag 9.0.13
 azure.subscription.networkService.applicationGateway.frontendIpConfig 13.18.1
 azure.subscription.networkService.applicationGateway.frontendIpConfig.id 13.18.1
@@ -3906,6 +3907,7 @@ azure.subscription.networkService.expressRouteCircuit.peeringLocation 13.12.2
 azure.subscription.networkService.expressRouteCircuit.peerings 13.12.2
 azure.subscription.networkService.expressRouteCircuit.properties 13.12.2
 azure.subscription.networkService.expressRouteCircuit.provisioningState 13.12.2
+azure.subscription.networkService.expressRouteCircuit.resiliencyLevel 13.35.1
 azure.subscription.networkService.expressRouteCircuit.serviceProviderName 13.12.2
 azure.subscription.networkService.expressRouteCircuit.serviceProviderNotes 13.12.2
 azure.subscription.networkService.expressRouteCircuit.serviceProviderProvisioningState 13.12.2
@@ -4048,6 +4050,7 @@ azure.subscription.networkService.firewallPolicy.type 9.0.8
 azure.subscription.networkService.firewalls 9.0.8
 azure.subscription.networkService.frontendIpConfig 9.0.8
 azure.subscription.networkService.frontendIpConfig.ddosCustomPolicyId 13.25.1
+azure.subscription.networkService.frontendIpConfig.enableConnectionTracking 13.35.1
 azure.subscription.networkService.frontendIpConfig.etag 9.0.8
 azure.subscription.networkService.frontendIpConfig.id 9.0.8
 azure.subscription.networkService.frontendIpConfig.isPublic 9.0.8
@@ -4150,6 +4153,7 @@ azure.subscription.networkService.ipAddress.skuName 13.25.1
 azure.subscription.networkService.ipAddress.skuTier 13.25.1
 azure.subscription.networkService.ipAddress.tags 9.0.1
 azure.subscription.networkService.ipAddress.type 9.0.1
+azure.subscription.networkService.ipAddress.upgradedToV2 13.35.1
 azure.subscription.networkService.ipAddress.zones 13.1.8
 azure.subscription.networkService.ipAllocation 13.25.1
 azure.subscription.networkService.ipAllocation.allocationTags 13.25.1
@@ -4187,6 +4191,7 @@ azure.subscription.networkService.loadBalancer.inboundNatPools 9.0.8
 azure.subscription.networkService.loadBalancer.inboundNatRules 9.0.8
 azure.subscription.networkService.loadBalancer.loadBalancerRules 9.0.8
 azure.subscription.networkService.loadBalancer.location 9.0.8
+azure.subscription.networkService.loadBalancer.mode 13.35.1
 azure.subscription.networkService.loadBalancer.name 9.0.8
 azure.subscription.networkService.loadBalancer.outboundRules 9.0.8
 azure.subscription.networkService.loadBalancer.probes 9.0.8
@@ -4398,6 +4403,7 @@ azure.subscription.networkService.publicIpPrefix.skuName 13.25.1
 azure.subscription.networkService.publicIpPrefix.skuTier 13.25.1
 azure.subscription.networkService.publicIpPrefix.tags 13.25.1
 azure.subscription.networkService.publicIpPrefix.type 13.25.1
+azure.subscription.networkService.publicIpPrefix.upgradedToV2 13.35.1
 azure.subscription.networkService.publicIpPrefix.zones 13.25.1
 azure.subscription.networkService.publicIpPrefixes 13.25.1
 azure.subscription.networkService.route 11.4.28
@@ -4603,7 +4609,9 @@ azure.subscription.networkService.trafficManagerProfile.trafficViewEnrollmentSta
 azure.subscription.networkService.trafficManagerProfile.type 13.12.2
 azure.subscription.networkService.trafficManagerProfiles 13.12.2
 azure.subscription.networkService.virtualAppliance 13.25.1
+azure.subscription.networkService.virtualAppliance.addressFamily 13.35.1
 azure.subscription.networkService.virtualAppliance.addressPrefix 13.25.1
+azure.subscription.networkService.virtualAppliance.addressPrefixV6 13.35.1
 azure.subscription.networkService.virtualAppliance.asn 13.25.1
 azure.subscription.networkService.virtualAppliance.bundledScaleUnit 13.25.1
 azure.subscription.networkService.virtualAppliance.deploymentType 13.25.1
@@ -4611,7 +4619,11 @@ azure.subscription.networkService.virtualAppliance.etag 13.25.1
 azure.subscription.networkService.virtualAppliance.id 13.25.1
 azure.subscription.networkService.virtualAppliance.location 13.25.1
 azure.subscription.networkService.virtualAppliance.marketplaceVersion 13.25.1
+azure.subscription.networkService.virtualAppliance.migrationPhase 13.35.1
+azure.subscription.networkService.virtualAppliance.migrationPhaseStatus 13.35.1
+azure.subscription.networkService.virtualAppliance.migrationType 13.35.1
 azure.subscription.networkService.virtualAppliance.name 13.25.1
+azure.subscription.networkService.virtualAppliance.privateIpAddressV6 13.35.1
 azure.subscription.networkService.virtualAppliance.provisioningState 13.25.1
 azure.subscription.networkService.virtualAppliance.sshPublicKey 13.25.1
 azure.subscription.networkService.virtualAppliance.tags 13.25.1
@@ -4621,6 +4633,7 @@ azure.subscription.networkService.virtualAppliance.virtualHub 13.25.1
 azure.subscription.networkService.virtualAppliances 13.25.1
 azure.subscription.networkService.virtualHub 13.12.2
 azure.subscription.networkService.virtualHub.addressPrefix 13.12.2
+azure.subscription.networkService.virtualHub.addressPrefixV6 13.35.1
 azure.subscription.networkService.virtualHub.allowBranchToBranchTraffic 13.12.2
 azure.subscription.networkService.virtualHub.azureFirewall 13.12.2
 azure.subscription.networkService.virtualHub.etag 13.12.2
@@ -4650,9 +4663,11 @@ azure.subscription.networkService.virtualHub.tags 13.12.2
 azure.subscription.networkService.virtualHub.type 13.12.2
 azure.subscription.networkService.virtualHub.virtualRouterAsn 13.12.2
 azure.subscription.networkService.virtualHub.virtualRouterIps 13.12.2
+azure.subscription.networkService.virtualHub.virtualRouterIpsV6 13.35.1
 azure.subscription.networkService.virtualHub.virtualWan 13.12.2
 azure.subscription.networkService.virtualHub.vnetConnection 13.12.2
 azure.subscription.networkService.virtualHub.vnetConnection.enableInternetSecurity 13.12.2
+azure.subscription.networkService.virtualHub.vnetConnection.enableOnlyIPv6Peering 13.35.1
 azure.subscription.networkService.virtualHub.vnetConnection.etag 13.12.2
 azure.subscription.networkService.virtualHub.vnetConnection.id 13.12.2
 azure.subscription.networkService.virtualHub.vnetConnection.name 13.12.2
@@ -5198,6 +5213,7 @@ azure.subscription.recoveryServicesService.vault.redundancySettings 13.3.3
 azure.subscription.recoveryServicesService.vault.redundancySettings.crossRegionRestore 13.3.3
 azure.subscription.recoveryServicesService.vault.redundancySettings.id 13.3.3
 azure.subscription.recoveryServicesService.vault.redundancySettings.storageRedundancy 13.3.3
+azure.subscription.recoveryServicesService.vault.regionOfChoiceStatus 13.35.1
 azure.subscription.recoveryServicesService.vault.secureScore 13.3.3
 azure.subscription.recoveryServicesService.vault.securitySettings 13.3.3
 azure.subscription.recoveryServicesService.vault.securitySettings.enhancedSecurityState 13.3.3

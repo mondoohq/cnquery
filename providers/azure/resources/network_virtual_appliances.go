@@ -8,7 +8,7 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v10"
+	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -46,11 +46,28 @@ func (a *mqlAzureSubscriptionNetworkService) virtualAppliances() ([]any, error) 
 			}
 			var provisioningState, addressPrefix, deploymentType, sshPublicKey string
 			var vendor, bundledScaleUnit, marketplaceVersion string
+			var addressPrefixV6, privateIpAddressV6 string
+			var migrationPhase, migrationPhaseStatus, migrationType string
+			addressFamily := []any{}
 			var asn int64
 			var virtualHubId *string
 			if p := nva.Properties; p != nil {
 				if p.ProvisioningState != nil {
 					provisioningState = string(*p.ProvisioningState)
+				}
+				addressPrefixV6 = convert.ToValue(p.AddressPrefixV6)
+				privateIpAddressV6 = convert.ToValue(p.PrivateIPAddressV6)
+				for _, af := range p.AddressFamily {
+					if af != nil {
+						addressFamily = append(addressFamily, string(*af))
+					}
+				}
+				if ms := p.MigrationStatus; ms != nil {
+					migrationPhase = convert.ToValue(ms.MigrationPhase)
+					migrationPhaseStatus = convert.ToValue(ms.MigrationPhaseStatus)
+					if ms.MigrationType != nil {
+						migrationType = string(*ms.MigrationType)
+					}
 				}
 				addressPrefix = convert.ToValue(p.AddressPrefix)
 				deploymentType = convert.ToValue(p.DeploymentType)
@@ -83,6 +100,13 @@ func (a *mqlAzureSubscriptionNetworkService) virtualAppliances() ([]any, error) 
 					"addressPrefix":      llx.StringData(addressPrefix),
 					"deploymentType":     llx.StringData(deploymentType),
 					"sshPublicKey":       llx.StringData(sshPublicKey),
+
+					"addressPrefixV6":      llx.StringData(addressPrefixV6),
+					"privateIpAddressV6":   llx.StringData(privateIpAddressV6),
+					"addressFamily":        llx.ArrayData(addressFamily, types.String),
+					"migrationPhase":       llx.StringData(migrationPhase),
+					"migrationPhaseStatus": llx.StringData(migrationPhaseStatus),
+					"migrationType":        llx.StringData(migrationType),
 				})
 			if err != nil {
 				return nil, err
