@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/rs/zerolog/log"
@@ -60,16 +61,47 @@ func newMqlAuth0Organization(runtime *plugin.Runtime, o *management.Organization
 	}
 
 	r, err := CreateResource(runtime, "auth0.organization", map[string]*llx.RawData{
-		"id":              llx.StringDataPtr(o.ID),
-		"name":            llx.StringDataPtr(o.Name),
-		"displayName":     llx.StringDataPtr(o.DisplayName),
-		"brandingLogoUrl": llx.StringDataPtr(logoURL),
-		"metadata":        llx.MapData(metadata, types.String),
+		"id":                     llx.StringDataPtr(o.ID),
+		"name":                   llx.StringDataPtr(o.Name),
+		"displayName":            llx.StringDataPtr(o.DisplayName),
+		"brandingLogoUrl":        llx.StringDataPtr(logoURL),
+		"metadata":               llx.MapData(metadata, types.String),
+		"isAppEntitlementActive": llx.BoolDataPtr(o.IsAppEntitlementActive),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return r, nil
+}
+
+// initAuth0Organization resolves an organization by its ID on demand, for typed
+// references such as auth0.role.owner and for direct lookups.
+func initAuth0Organization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// fast path: the caller already provided a fully populated resource
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	idArg, ok := args["id"]
+	if !ok {
+		return nil, nil, fmt.Errorf("auth0.organization requires an id argument")
+	}
+	id, ok := idArg.Value.(string)
+	if !ok || id == "" {
+		return nil, nil, fmt.Errorf("auth0.organization requires a valid id")
+	}
+
+	conn := runtime.Connection.(*connection.Auth0Connection)
+	o, err := conn.Client().Organization.Read(context.Background(), id)
+	if err != nil {
+		return nil, nil, fmt.Errorf("auth0.organization with id %q not found: %w", id, err)
+	}
+
+	res, err := newMqlAuth0Organization(runtime, o)
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 // connections resolves the identity connections enabled for this organization

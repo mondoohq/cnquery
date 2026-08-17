@@ -8,6 +8,7 @@ require (
 	github.com/auth0/go-auth0 v1.47.0
 	github.com/cockroachdb/errors v1.14.0
 	github.com/rs/zerolog v1.35.1
+	github.com/stretchr/testify v1.12.0
 	go.mondoo.com/mql/v13 v13.33.2
 )
 
@@ -108,6 +109,7 @@ require (
 	google.golang.org/grpc v1.83.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )

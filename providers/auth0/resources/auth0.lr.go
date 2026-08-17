@@ -84,7 +84,7 @@ func init() {
 			Create: createAuth0ClientGrant,
 		},
 		"auth0.organization": {
-			// to override args, implement: initAuth0Organization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAuth0Organization,
 			Create: createAuth0Organization,
 		},
 	}
@@ -401,6 +401,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"auth0.role.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuth0Role).GetDescription()).ToDataRes(types.String)
 	},
+	"auth0.role.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuth0Role).GetType()).ToDataRes(types.String)
+	},
+	"auth0.role.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuth0Role).GetOwner()).ToDataRes(types.Resource("auth0.organization"))
+	},
 	"auth0.role.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuth0Role).GetPermissions()).ToDataRes(types.Array(types.Dict))
 	},
@@ -613,6 +619,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"auth0.organization.metadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuth0Organization).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"auth0.organization.isAppEntitlementActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAuth0Organization).GetIsAppEntitlementActive()).ToDataRes(types.Bool)
 	},
 	"auth0.organization.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAuth0Organization).GetConnections()).ToDataRes(types.Array(types.Resource("auth0.connection")))
@@ -980,6 +989,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAuth0Role).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"auth0.role.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuth0Role).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"auth0.role.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuth0Role).Owner, ok = plugin.RawToTValue[*mqlAuth0Organization](v.Value, v.Error)
+		return
+	},
 	"auth0.role.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuth0Role).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1290,6 +1307,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"auth0.organization.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAuth0Organization).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"auth0.organization.isAppEntitlementActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAuth0Organization).IsAppEntitlementActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"auth0.organization.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2077,10 +2098,12 @@ func (c *mqlAuth0User) GetRoles() *plugin.TValue[[]any] {
 type mqlAuth0Role struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAuth0RoleInternal it will be used here
+	mqlAuth0RoleInternal
 	Id          plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Owner       plugin.TValue[*mqlAuth0Organization]
 	Permissions plugin.TValue[[]any]
 	Users       plugin.TValue[[]any]
 }
@@ -2132,6 +2155,26 @@ func (c *mqlAuth0Role) GetName() *plugin.TValue[string] {
 
 func (c *mqlAuth0Role) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAuth0Role) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAuth0Role) GetOwner() *plugin.TValue[*mqlAuth0Organization] {
+	return plugin.GetOrCompute[*mqlAuth0Organization](&c.Owner, func() (*mqlAuth0Organization, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("auth0.role", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAuth0Organization), nil
+			}
+		}
+
+		return c.owner()
+	})
 }
 
 func (c *mqlAuth0Role) GetPermissions() *plugin.TValue[[]any] {
@@ -2759,13 +2802,14 @@ type mqlAuth0Organization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAuth0OrganizationInternal it will be used here
-	Id              plugin.TValue[string]
-	Name            plugin.TValue[string]
-	DisplayName     plugin.TValue[string]
-	BrandingLogoUrl plugin.TValue[string]
-	Metadata        plugin.TValue[map[string]any]
-	Connections     plugin.TValue[[]any]
-	Members         plugin.TValue[[]any]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	BrandingLogoUrl        plugin.TValue[string]
+	Metadata               plugin.TValue[map[string]any]
+	IsAppEntitlementActive plugin.TValue[bool]
+	Connections            plugin.TValue[[]any]
+	Members                plugin.TValue[[]any]
 }
 
 // createAuth0Organization creates a new instance of this resource
@@ -2823,6 +2867,10 @@ func (c *mqlAuth0Organization) GetBrandingLogoUrl() *plugin.TValue[string] {
 
 func (c *mqlAuth0Organization) GetMetadata() *plugin.TValue[map[string]any] {
 	return &c.Metadata
+}
+
+func (c *mqlAuth0Organization) GetIsAppEntitlementActive() *plugin.TValue[bool] {
+	return &c.IsAppEntitlementActive
 }
 
 func (c *mqlAuth0Organization) GetConnections() *plugin.TValue[[]any] {

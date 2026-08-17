@@ -281,6 +281,9 @@ auth0.user @defaults("email") @maturity("experimental") {
 // role by its `name`. The `permissions` field lists the resource-server
 // scopes the role grants, and `users` lists the accounts currently holding
 // it, letting you audit membership in high-privilege roles directly.
+// `type` separates roles that apply across the whole tenant from those
+// scoped to a single organization, and `owner` resolves the organization
+// an organization-level role belongs to.
 auth0.role @defaults("name") @maturity("experimental") {
   // Role ID
   id string
@@ -288,6 +291,19 @@ auth0.role @defaults("name") @maturity("experimental") {
   name string
   // Role description
   description string
+  // Role scope
+  //
+  // One of tenant for a role that applies across the whole tenant, or
+  // organization for a role created within a single organization. Null when
+  // the Management API reports no scope for the role, which is how it
+  // describes a tenant-level role in a tenant that has never used
+  // organization-level roles.
+  type string
+  // Organization that owns the role
+  //
+  // Set only for organization-level roles. Null for tenant-level roles,
+  // which are not owned by any organization.
+  owner() auth0.organization
   // Permissions granted by the role
   //
   // One entry per permission, each a dict with keys permissionName,
@@ -598,6 +614,8 @@ auth0.organization @defaults("name displayName") @maturity("experimental") {
   brandingLogoUrl string
   // Custom metadata attached to the organization
   metadata map[string]string
+  // Whether members can reach the applications associated with the organization
+  isAppEntitlementActive bool
   // Identity connections enabled for the organization
   connections() []auth0.connection
   // Users who are members of the organization

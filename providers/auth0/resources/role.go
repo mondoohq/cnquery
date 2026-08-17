@@ -44,17 +44,42 @@ func (a *mqlAuth0) roles() ([]any, error) {
 	return all, nil
 }
 
+// mqlAuth0RoleInternal holds the owning organization ID, which the Management
+// API returns alongside the role but which only reaches MQL as a typed
+// auth0.organization reference.
+type mqlAuth0RoleInternal struct {
+	cacheOwnerID *string
+}
+
 // newMqlAuth0Role maps a single SDK role to its MQL resource.
 func newMqlAuth0Role(runtime *plugin.Runtime, role *management.Role) (plugin.Resource, error) {
 	r, err := CreateResource(runtime, "auth0.role", map[string]*llx.RawData{
 		"id":          llx.StringDataPtr(role.ID),
 		"name":        llx.StringDataPtr(role.Name),
 		"description": llx.StringDataPtr(role.Description),
+		"type":        llx.StringDataPtr(role.Type),
 	})
 	if err != nil {
 		return nil, err
 	}
+	r.(*mqlAuth0Role).cacheOwnerID = role.OwnerID
 	return r, nil
+}
+
+// owner resolves the organization an organization-level role belongs to. A
+// tenant-level role is owned by no organization, so the reference stays null.
+func (r *mqlAuth0Role) owner() (*mqlAuth0Organization, error) {
+	if r.cacheOwnerID == nil || *r.cacheOwnerID == "" {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	o, err := NewResource(r.MqlRuntime, "auth0.organization",
+		map[string]*llx.RawData{"id": llx.StringDataPtr(r.cacheOwnerID)})
+	if err != nil {
+		return nil, err
+	}
+	return o.(*mqlAuth0Organization), nil
 }
 
 // permissions lists the resource-server scopes the role grants.

@@ -108,6 +108,7 @@ auth0.organization.brandingLogoUrl 13.0.0
 auth0.organization.connections 13.0.0
 auth0.organization.displayName 13.0.0
 auth0.organization.id 13.0.0
+auth0.organization.isAppEntitlementActive 13.0.1
 auth0.organization.members 13.0.0
 auth0.organization.metadata 13.0.0
 auth0.organization.name 13.0.0
@@ -133,7 +134,9 @@ auth0.role 13.0.0
 auth0.role.description 13.0.0
 auth0.role.id 13.0.0
 auth0.role.name 13.0.0
+auth0.role.owner 13.0.1
 auth0.role.permissions 13.0.0
+auth0.role.type 13.0.1
 auth0.role.users 13.0.0
 auth0.roles 13.0.0
 auth0.tenant 13.0.0
