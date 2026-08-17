@@ -156,188 +156,6 @@ func (AssetCategory) EnumDescriptor() ([]byte, []int) {
 	return file_inventory_proto_rawDescGZIP(), []int{1}
 }
 
-// FIXME: DEPRECATED, remove in v10.0 (or later) vv
-type ProviderType int32
-
-const (
-	// protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_LOCAL_OS ProviderType = 0
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_DOCKER_ENGINE_IMAGE ProviderType = 1
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_DOCKER_ENGINE_CONTAINER ProviderType = 2
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_SSH ProviderType = 3
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_WINRM ProviderType = 4
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_AWS_SSM_RUN_COMMAND ProviderType = 5
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_CONTAINER_REGISTRY ProviderType = 6
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_TAR ProviderType = 7
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_MOCK ProviderType = 8
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_VSPHERE ProviderType = 9
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_ARISTAEOS ProviderType = 10
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_AWS ProviderType = 12
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_GCP ProviderType = 13
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_AZURE ProviderType = 14
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_MS365 ProviderType = 15
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_IPMI ProviderType = 16
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_VSPHERE_VM ProviderType = 17
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_FS ProviderType = 18
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_K8S ProviderType = 19
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_EQUINIX_METAL ProviderType = 20
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_DOCKER ProviderType = 21 // unspecified if this is a container or image
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_GITHUB ProviderType = 22
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_VAGRANT ProviderType = 23
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_AWS_EC2_EBS ProviderType = 24
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_GITLAB ProviderType = 25
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_TERRAFORM ProviderType = 26
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_HOST ProviderType = 27
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_UNKNOWN ProviderType = 28
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_OKTA ProviderType = 29
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_GOOGLE_WORKSPACE ProviderType = 30
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_SLACK ProviderType = 31
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_VCD ProviderType = 32
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_OCI ProviderType = 33
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_OPCUA ProviderType = 34
-	// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-	ProviderType_GCP_COMPUTE_INSTANCE_SNAPSHOT ProviderType = 35
-)
-
-// Enum value maps for ProviderType.
-var (
-	ProviderType_name = map[int32]string{
-		0:  "LOCAL_OS",
-		1:  "DOCKER_ENGINE_IMAGE",
-		2:  "DOCKER_ENGINE_CONTAINER",
-		3:  "SSH",
-		4:  "WINRM",
-		5:  "AWS_SSM_RUN_COMMAND",
-		6:  "CONTAINER_REGISTRY",
-		7:  "TAR",
-		8:  "MOCK",
-		9:  "VSPHERE",
-		10: "ARISTAEOS",
-		12: "AWS",
-		13: "GCP",
-		14: "AZURE",
-		15: "MS365",
-		16: "IPMI",
-		17: "VSPHERE_VM",
-		18: "FS",
-		19: "K8S",
-		20: "EQUINIX_METAL",
-		21: "DOCKER",
-		22: "GITHUB",
-		23: "VAGRANT",
-		24: "AWS_EC2_EBS",
-		25: "GITLAB",
-		26: "TERRAFORM",
-		27: "HOST",
-		28: "UNKNOWN",
-		29: "OKTA",
-		30: "GOOGLE_WORKSPACE",
-		31: "SLACK",
-		32: "VCD",
-		33: "OCI",
-		34: "OPCUA",
-		35: "GCP_COMPUTE_INSTANCE_SNAPSHOT",
-	}
-	ProviderType_value = map[string]int32{
-		"LOCAL_OS":                      0,
-		"DOCKER_ENGINE_IMAGE":           1,
-		"DOCKER_ENGINE_CONTAINER":       2,
-		"SSH":                           3,
-		"WINRM":                         4,
-		"AWS_SSM_RUN_COMMAND":           5,
-		"CONTAINER_REGISTRY":            6,
-		"TAR":                           7,
-		"MOCK":                          8,
-		"VSPHERE":                       9,
-		"ARISTAEOS":                     10,
-		"AWS":                           12,
-		"GCP":                           13,
-		"AZURE":                         14,
-		"MS365":                         15,
-		"IPMI":                          16,
-		"VSPHERE_VM":                    17,
-		"FS":                            18,
-		"K8S":                           19,
-		"EQUINIX_METAL":                 20,
-		"DOCKER":                        21,
-		"GITHUB":                        22,
-		"VAGRANT":                       23,
-		"AWS_EC2_EBS":                   24,
-		"GITLAB":                        25,
-		"TERRAFORM":                     26,
-		"HOST":                          27,
-		"UNKNOWN":                       28,
-		"OKTA":                          29,
-		"GOOGLE_WORKSPACE":              30,
-		"SLACK":                         31,
-		"VCD":                           32,
-		"OCI":                           33,
-		"OPCUA":                         34,
-		"GCP_COMPUTE_INSTANCE_SNAPSHOT": 35,
-	}
-)
-
-func (x ProviderType) Enum() *ProviderType {
-	p := new(ProviderType)
-	*p = x
-	return p
-}
-
-func (x ProviderType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (ProviderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_inventory_proto_enumTypes[2].Descriptor()
-}
-
-func (ProviderType) Type() protoreflect.EnumType {
-	return &file_inventory_proto_enumTypes[2]
-}
-
-func (x ProviderType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use ProviderType.Descriptor instead.
-func (ProviderType) EnumDescriptor() ([]byte, []int) {
-	return file_inventory_proto_rawDescGZIP(), []int{2}
-}
-
 type Asset struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -732,12 +550,7 @@ func (x *AssetUrlBranch) GetParentValue() string {
 
 type Config struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// FIXME: DEPRECATED, remove in v10.0 (or later) vv
-	// This is replaced by type. We use a different number here so it doesn't
-	// conflict with the old "backend" while allowing us to load the field from
-	// yaml.
-	Backend ProviderType `protobuf:"varint,28,opt,name=backend,proto3,enum=cnquery.providers.v1.ProviderType" json:"backend,omitempty"` // ^^
-	Host    string       `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	Host  string                 `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
 	// Ports are not int by default, eg. docker://centos:latest parses a string
 	// as port. Therefore it is up to the provider to convert the port to what
 	// they need
@@ -795,13 +608,6 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
 	return file_inventory_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *Config) GetBackend() ProviderType {
-	if x != nil {
-		return x.Backend
-	}
-	return ProviderType_LOCAL_OS
 }
 
 func (x *Config) GetHost() string {
@@ -1731,9 +1537,8 @@ const file_inventory_proto_rawDesc = "" +
 	"\fparent_value\x18\x16 \x01(\tR\vparentValue\x1a_\n" +
 	"\vValuesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12:\n" +
-	"\x05value\x18\x02 \x01(\v2$.cnquery.providers.v1.AssetUrlBranchR\x05value:\x028\x01\"\xe4\x05\n" +
-	"\x06Config\x12<\n" +
-	"\abackend\x18\x1c \x01(\x0e2\".cnquery.providers.v1.ProviderTypeR\abackend\x12\x12\n" +
+	"\x05value\x18\x02 \x01(\v2$.cnquery.providers.v1.AssetUrlBranchR\x05value:\x028\x01\"\xac\x05\n" +
+	"\x06Config\x12\x12\n" +
 	"\x04host\x18\x02 \x01(\tR\x04host\x12\x12\n" +
 	"\x04port\x18\x03 \x01(\x05R\x04port\x12\x12\n" +
 	"\x04path\x18\x04 \x01(\tR\x04path\x12\x0e\n" +
@@ -1755,7 +1560,7 @@ const file_inventory_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\t\x10\n" +
 	"J\x04\b\n" +
-	"\x10\vJ\x04\b\x14\x10\x15\"h\n" +
+	"\x10\vJ\x04\b\x14\x10\x15J\x04\b\x1c\x10\x1d\"h\n" +
 	"\x04Sudo\x12\x16\n" +
 	"\x06active\x18\x01 \x01(\bR\x06active\x12\x12\n" +
 	"\x04user\x18\x02 \x01(\tR\x04user\x12\x14\n" +
@@ -1845,48 +1650,7 @@ const file_inventory_proto_rawDesc = "" +
 	"\rSTATE_DELETED\x10\v*:\n" +
 	"\rAssetCategory\x12\x16\n" +
 	"\x12CATEGORY_INVENTORY\x10\x00\x12\x11\n" +
-	"\rCATEGORY_CICD\x10\x01*\x85\x04\n" +
-	"\fProviderType\x12\f\n" +
-	"\bLOCAL_OS\x10\x00\x12\x17\n" +
-	"\x13DOCKER_ENGINE_IMAGE\x10\x01\x12\x1b\n" +
-	"\x17DOCKER_ENGINE_CONTAINER\x10\x02\x12\a\n" +
-	"\x03SSH\x10\x03\x12\t\n" +
-	"\x05WINRM\x10\x04\x12\x17\n" +
-	"\x13AWS_SSM_RUN_COMMAND\x10\x05\x12\x16\n" +
-	"\x12CONTAINER_REGISTRY\x10\x06\x12\a\n" +
-	"\x03TAR\x10\a\x12\b\n" +
-	"\x04MOCK\x10\b\x12\v\n" +
-	"\aVSPHERE\x10\t\x12\r\n" +
-	"\tARISTAEOS\x10\n" +
-	"\x12\a\n" +
-	"\x03AWS\x10\f\x12\a\n" +
-	"\x03GCP\x10\r\x12\t\n" +
-	"\x05AZURE\x10\x0e\x12\t\n" +
-	"\x05MS365\x10\x0f\x12\b\n" +
-	"\x04IPMI\x10\x10\x12\x0e\n" +
-	"\n" +
-	"VSPHERE_VM\x10\x11\x12\x06\n" +
-	"\x02FS\x10\x12\x12\a\n" +
-	"\x03K8S\x10\x13\x12\x11\n" +
-	"\rEQUINIX_METAL\x10\x14\x12\n" +
-	"\n" +
-	"\x06DOCKER\x10\x15\x12\n" +
-	"\n" +
-	"\x06GITHUB\x10\x16\x12\v\n" +
-	"\aVAGRANT\x10\x17\x12\x0f\n" +
-	"\vAWS_EC2_EBS\x10\x18\x12\n" +
-	"\n" +
-	"\x06GITLAB\x10\x19\x12\r\n" +
-	"\tTERRAFORM\x10\x1a\x12\b\n" +
-	"\x04HOST\x10\x1b\x12\v\n" +
-	"\aUNKNOWN\x10\x1c\x12\b\n" +
-	"\x04OKTA\x10\x1d\x12\x14\n" +
-	"\x10GOOGLE_WORKSPACE\x10\x1e\x12\t\n" +
-	"\x05SLACK\x10\x1f\x12\a\n" +
-	"\x03VCD\x10 \x12\a\n" +
-	"\x03OCI\x10!\x12\t\n" +
-	"\x05OPCUA\x10\"\x12!\n" +
-	"\x1dGCP_COMPUTE_INSTANCE_SNAPSHOT\x10#\"\x04\b\v\x10\vB.Z,go.mondoo.com/mql/providers-sdk/v1/inventoryb\x06proto3"
+	"\rCATEGORY_CICD\x10\x01B.Z,go.mondoo.com/mql/providers-sdk/v1/inventoryb\x06proto3"
 
 var (
 	file_inventory_proto_rawDescOnce sync.Once
@@ -1900,79 +1664,77 @@ func file_inventory_proto_rawDescGZIP() []byte {
 	return file_inventory_proto_rawDescData
 }
 
-var file_inventory_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_inventory_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_inventory_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_inventory_proto_goTypes = []any{
 	(State)(0),                       // 0: cnquery.providers.v1.State
 	(AssetCategory)(0),               // 1: cnquery.providers.v1.AssetCategory
-	(ProviderType)(0),                // 2: cnquery.providers.v1.ProviderType
-	(*Asset)(nil),                    // 3: cnquery.providers.v1.Asset
-	(*AssetRelationship)(nil),        // 4: cnquery.providers.v1.AssetRelationship
-	(*AssetUrlBranch)(nil),           // 5: cnquery.providers.v1.AssetUrlBranch
-	(*Config)(nil),                   // 6: cnquery.providers.v1.Config
-	(*Sudo)(nil),                     // 7: cnquery.providers.v1.Sudo
-	(*Discovery)(nil),                // 8: cnquery.providers.v1.Discovery
-	(*Platform)(nil),                 // 9: cnquery.providers.v1.Platform
-	(*TypeMeta)(nil),                 // 10: cnquery.providers.v1.TypeMeta
-	(*ObjectMeta)(nil),               // 11: cnquery.providers.v1.ObjectMeta
-	(*Time)(nil),                     // 12: cnquery.providers.v1.Time
-	(*OwnerReference)(nil),           // 13: cnquery.providers.v1.OwnerReference
-	(*Inventory)(nil),                // 14: cnquery.providers.v1.Inventory
-	(*InventorySpec)(nil),            // 15: cnquery.providers.v1.InventorySpec
-	(*InventoryStatus)(nil),          // 16: cnquery.providers.v1.InventoryStatus
-	nil,                              // 17: cnquery.providers.v1.Asset.LabelsEntry
-	nil,                              // 18: cnquery.providers.v1.Asset.AnnotationsEntry
-	nil,                              // 19: cnquery.providers.v1.Asset.OptionsEntry
-	nil,                              // 20: cnquery.providers.v1.AssetUrlBranch.ValuesEntry
-	nil,                              // 21: cnquery.providers.v1.Config.OptionsEntry
-	nil,                              // 22: cnquery.providers.v1.Discovery.FilterEntry
-	nil,                              // 23: cnquery.providers.v1.Platform.LabelsEntry
-	nil,                              // 24: cnquery.providers.v1.Platform.MetadataEntry
-	nil,                              // 25: cnquery.providers.v1.ObjectMeta.LabelsEntry
-	nil,                              // 26: cnquery.providers.v1.ObjectMeta.AnnotationsEntry
-	nil,                              // 27: cnquery.providers.v1.InventorySpec.CredentialsEntry
-	(*vault.Credential)(nil),         // 28: cnquery.providers.v1.Credential
-	(*vault.VaultConfiguration)(nil), // 29: cnquery.providers.v1.VaultConfiguration
-	(*upstream.ServiceAccountCredentials)(nil), // 30: mondoo.mql.upstream.v1.ServiceAccountCredentials
+	(*Asset)(nil),                    // 2: cnquery.providers.v1.Asset
+	(*AssetRelationship)(nil),        // 3: cnquery.providers.v1.AssetRelationship
+	(*AssetUrlBranch)(nil),           // 4: cnquery.providers.v1.AssetUrlBranch
+	(*Config)(nil),                   // 5: cnquery.providers.v1.Config
+	(*Sudo)(nil),                     // 6: cnquery.providers.v1.Sudo
+	(*Discovery)(nil),                // 7: cnquery.providers.v1.Discovery
+	(*Platform)(nil),                 // 8: cnquery.providers.v1.Platform
+	(*TypeMeta)(nil),                 // 9: cnquery.providers.v1.TypeMeta
+	(*ObjectMeta)(nil),               // 10: cnquery.providers.v1.ObjectMeta
+	(*Time)(nil),                     // 11: cnquery.providers.v1.Time
+	(*OwnerReference)(nil),           // 12: cnquery.providers.v1.OwnerReference
+	(*Inventory)(nil),                // 13: cnquery.providers.v1.Inventory
+	(*InventorySpec)(nil),            // 14: cnquery.providers.v1.InventorySpec
+	(*InventoryStatus)(nil),          // 15: cnquery.providers.v1.InventoryStatus
+	nil,                              // 16: cnquery.providers.v1.Asset.LabelsEntry
+	nil,                              // 17: cnquery.providers.v1.Asset.AnnotationsEntry
+	nil,                              // 18: cnquery.providers.v1.Asset.OptionsEntry
+	nil,                              // 19: cnquery.providers.v1.AssetUrlBranch.ValuesEntry
+	nil,                              // 20: cnquery.providers.v1.Config.OptionsEntry
+	nil,                              // 21: cnquery.providers.v1.Discovery.FilterEntry
+	nil,                              // 22: cnquery.providers.v1.Platform.LabelsEntry
+	nil,                              // 23: cnquery.providers.v1.Platform.MetadataEntry
+	nil,                              // 24: cnquery.providers.v1.ObjectMeta.LabelsEntry
+	nil,                              // 25: cnquery.providers.v1.ObjectMeta.AnnotationsEntry
+	nil,                              // 26: cnquery.providers.v1.InventorySpec.CredentialsEntry
+	(*vault.Credential)(nil),         // 27: cnquery.providers.v1.Credential
+	(*vault.VaultConfiguration)(nil), // 28: cnquery.providers.v1.VaultConfiguration
+	(*upstream.ServiceAccountCredentials)(nil), // 29: mondoo.mql.upstream.v1.ServiceAccountCredentials
 }
 var file_inventory_proto_depIdxs = []int32{
 	0,  // 0: cnquery.providers.v1.Asset.state:type_name -> cnquery.providers.v1.State
-	9,  // 1: cnquery.providers.v1.Asset.platform:type_name -> cnquery.providers.v1.Platform
-	6,  // 2: cnquery.providers.v1.Asset.connections:type_name -> cnquery.providers.v1.Config
-	17, // 3: cnquery.providers.v1.Asset.labels:type_name -> cnquery.providers.v1.Asset.LabelsEntry
-	18, // 4: cnquery.providers.v1.Asset.annotations:type_name -> cnquery.providers.v1.Asset.AnnotationsEntry
-	19, // 5: cnquery.providers.v1.Asset.options:type_name -> cnquery.providers.v1.Asset.OptionsEntry
+	8,  // 1: cnquery.providers.v1.Asset.platform:type_name -> cnquery.providers.v1.Platform
+	5,  // 2: cnquery.providers.v1.Asset.connections:type_name -> cnquery.providers.v1.Config
+	16, // 3: cnquery.providers.v1.Asset.labels:type_name -> cnquery.providers.v1.Asset.LabelsEntry
+	17, // 4: cnquery.providers.v1.Asset.annotations:type_name -> cnquery.providers.v1.Asset.AnnotationsEntry
+	18, // 5: cnquery.providers.v1.Asset.options:type_name -> cnquery.providers.v1.Asset.OptionsEntry
 	1,  // 6: cnquery.providers.v1.Asset.category:type_name -> cnquery.providers.v1.AssetCategory
-	3,  // 7: cnquery.providers.v1.Asset.related_assets:type_name -> cnquery.providers.v1.Asset
-	4,  // 8: cnquery.providers.v1.Asset.relationships:type_name -> cnquery.providers.v1.AssetRelationship
-	3,  // 9: cnquery.providers.v1.AssetRelationship.asset:type_name -> cnquery.providers.v1.Asset
-	20, // 10: cnquery.providers.v1.AssetUrlBranch.values:type_name -> cnquery.providers.v1.AssetUrlBranch.ValuesEntry
-	5,  // 11: cnquery.providers.v1.AssetUrlBranch.parent:type_name -> cnquery.providers.v1.AssetUrlBranch
-	2,  // 12: cnquery.providers.v1.Config.backend:type_name -> cnquery.providers.v1.ProviderType
-	28, // 13: cnquery.providers.v1.Config.credentials:type_name -> cnquery.providers.v1.Credential
-	7,  // 14: cnquery.providers.v1.Config.sudo:type_name -> cnquery.providers.v1.Sudo
-	21, // 15: cnquery.providers.v1.Config.options:type_name -> cnquery.providers.v1.Config.OptionsEntry
-	8,  // 16: cnquery.providers.v1.Config.discover:type_name -> cnquery.providers.v1.Discovery
-	22, // 17: cnquery.providers.v1.Discovery.filter:type_name -> cnquery.providers.v1.Discovery.FilterEntry
-	23, // 18: cnquery.providers.v1.Platform.labels:type_name -> cnquery.providers.v1.Platform.LabelsEntry
-	24, // 19: cnquery.providers.v1.Platform.metadata:type_name -> cnquery.providers.v1.Platform.MetadataEntry
-	25, // 20: cnquery.providers.v1.ObjectMeta.labels:type_name -> cnquery.providers.v1.ObjectMeta.LabelsEntry
-	26, // 21: cnquery.providers.v1.ObjectMeta.annotations:type_name -> cnquery.providers.v1.ObjectMeta.AnnotationsEntry
-	13, // 22: cnquery.providers.v1.ObjectMeta.ownerReferences:type_name -> cnquery.providers.v1.OwnerReference
-	11, // 23: cnquery.providers.v1.Inventory.metadata:type_name -> cnquery.providers.v1.ObjectMeta
-	15, // 24: cnquery.providers.v1.Inventory.spec:type_name -> cnquery.providers.v1.InventorySpec
-	16, // 25: cnquery.providers.v1.Inventory.status:type_name -> cnquery.providers.v1.InventoryStatus
-	3,  // 26: cnquery.providers.v1.InventorySpec.assets:type_name -> cnquery.providers.v1.Asset
-	27, // 27: cnquery.providers.v1.InventorySpec.credentials:type_name -> cnquery.providers.v1.InventorySpec.CredentialsEntry
-	29, // 28: cnquery.providers.v1.InventorySpec.vault:type_name -> cnquery.providers.v1.VaultConfiguration
-	30, // 29: cnquery.providers.v1.InventorySpec.upstream_credentials:type_name -> mondoo.mql.upstream.v1.ServiceAccountCredentials
-	5,  // 30: cnquery.providers.v1.AssetUrlBranch.ValuesEntry.value:type_name -> cnquery.providers.v1.AssetUrlBranch
-	28, // 31: cnquery.providers.v1.InventorySpec.CredentialsEntry.value:type_name -> cnquery.providers.v1.Credential
-	32, // [32:32] is the sub-list for method output_type
-	32, // [32:32] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	2,  // 7: cnquery.providers.v1.Asset.related_assets:type_name -> cnquery.providers.v1.Asset
+	3,  // 8: cnquery.providers.v1.Asset.relationships:type_name -> cnquery.providers.v1.AssetRelationship
+	2,  // 9: cnquery.providers.v1.AssetRelationship.asset:type_name -> cnquery.providers.v1.Asset
+	19, // 10: cnquery.providers.v1.AssetUrlBranch.values:type_name -> cnquery.providers.v1.AssetUrlBranch.ValuesEntry
+	4,  // 11: cnquery.providers.v1.AssetUrlBranch.parent:type_name -> cnquery.providers.v1.AssetUrlBranch
+	27, // 12: cnquery.providers.v1.Config.credentials:type_name -> cnquery.providers.v1.Credential
+	6,  // 13: cnquery.providers.v1.Config.sudo:type_name -> cnquery.providers.v1.Sudo
+	20, // 14: cnquery.providers.v1.Config.options:type_name -> cnquery.providers.v1.Config.OptionsEntry
+	7,  // 15: cnquery.providers.v1.Config.discover:type_name -> cnquery.providers.v1.Discovery
+	21, // 16: cnquery.providers.v1.Discovery.filter:type_name -> cnquery.providers.v1.Discovery.FilterEntry
+	22, // 17: cnquery.providers.v1.Platform.labels:type_name -> cnquery.providers.v1.Platform.LabelsEntry
+	23, // 18: cnquery.providers.v1.Platform.metadata:type_name -> cnquery.providers.v1.Platform.MetadataEntry
+	24, // 19: cnquery.providers.v1.ObjectMeta.labels:type_name -> cnquery.providers.v1.ObjectMeta.LabelsEntry
+	25, // 20: cnquery.providers.v1.ObjectMeta.annotations:type_name -> cnquery.providers.v1.ObjectMeta.AnnotationsEntry
+	12, // 21: cnquery.providers.v1.ObjectMeta.ownerReferences:type_name -> cnquery.providers.v1.OwnerReference
+	10, // 22: cnquery.providers.v1.Inventory.metadata:type_name -> cnquery.providers.v1.ObjectMeta
+	14, // 23: cnquery.providers.v1.Inventory.spec:type_name -> cnquery.providers.v1.InventorySpec
+	15, // 24: cnquery.providers.v1.Inventory.status:type_name -> cnquery.providers.v1.InventoryStatus
+	2,  // 25: cnquery.providers.v1.InventorySpec.assets:type_name -> cnquery.providers.v1.Asset
+	26, // 26: cnquery.providers.v1.InventorySpec.credentials:type_name -> cnquery.providers.v1.InventorySpec.CredentialsEntry
+	28, // 27: cnquery.providers.v1.InventorySpec.vault:type_name -> cnquery.providers.v1.VaultConfiguration
+	29, // 28: cnquery.providers.v1.InventorySpec.upstream_credentials:type_name -> mondoo.mql.upstream.v1.ServiceAccountCredentials
+	4,  // 29: cnquery.providers.v1.AssetUrlBranch.ValuesEntry.value:type_name -> cnquery.providers.v1.AssetUrlBranch
+	27, // 30: cnquery.providers.v1.InventorySpec.CredentialsEntry.value:type_name -> cnquery.providers.v1.Credential
+	31, // [31:31] is the sub-list for method output_type
+	31, // [31:31] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_inventory_proto_init() }
@@ -1985,7 +1747,7 @@ func file_inventory_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_inventory_proto_rawDesc), len(file_inventory_proto_rawDesc)),
-			NumEnums:      3,
+			NumEnums:      2,
 			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,

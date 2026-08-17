@@ -138,90 +138,9 @@ message AssetUrlBranch {
   string parent_value = 22;
 }
 
-// FIXME: DEPRECATED, remove in v10.0 (or later) vv
-enum ProviderType {
-  // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  LOCAL_OS = 0;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  DOCKER_ENGINE_IMAGE = 1;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  DOCKER_ENGINE_CONTAINER = 2;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  SSH = 3;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  WINRM = 4;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  AWS_SSM_RUN_COMMAND = 5;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  CONTAINER_REGISTRY = 6;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  TAR = 7;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  MOCK = 8;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  VSPHERE = 9;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  ARISTAEOS = 10;
-  reserved 11;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  AWS = 12;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  GCP = 13;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  AZURE = 14;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  MS365 = 15;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  IPMI = 16;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  VSPHERE_VM = 17;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  FS = 18;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  K8S = 19;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  EQUINIX_METAL = 20;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  DOCKER = 21; // unspecified if this is a container or image
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  GITHUB = 22;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  VAGRANT = 23;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  AWS_EC2_EBS = 24;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  GITLAB = 25;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  TERRAFORM = 26;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  HOST = 27;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  UNKNOWN = 28;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  OKTA = 29;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  GOOGLE_WORKSPACE = 30;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  SLACK = 31;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  VCD = 32;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  OCI = 33;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  OPCUA = 34;
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
-  GCP_COMPUTE_INSTANCE_SNAPSHOT =35;
-}
-
 message Config {
-  reserved 6, 7, 9, 10, 20;
-  // FIXME: DEPRECATED, remove in v10.0 (or later) vv
-  // This is replaced by type. We use a different number here so it doesn't
-  // conflict with the old "backend" while allowing us to load the field from 
-  // yaml.
-  ProviderType backend = 28;
-  // ^^
+  // 28 was the deprecated "backend" field, replaced by "type".
+  reserved 6, 7, 9, 10, 20, 28;
 
   string host = 2;
   // Ports are not int by default, eg. docker://centos:latest parses a string 

@@ -306,8 +306,8 @@ func (r *Runtime) providerForAsset(asset *inventory.Asset) (*Provider, error) {
 	for i := range asset.Connections {
 		conn := asset.Connections[i]
 		if conn.Type == "" {
-			log.Warn().Msg("no connection `type` provided in inventory, falling back to deprecated `backend` field")
-			conn.Type = inventory.ConnBackendToType(conn.Backend)
+			errs.Add(errors.New("no connection `type` provided in inventory"))
+			continue
 		}
 
 		provider, err := EnsureProvider(ProviderLookup{ConnType: conn.Type}, r.AutoUpdate.Enabled, r.coordinator.Providers())

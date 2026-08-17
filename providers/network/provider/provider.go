@@ -170,8 +170,6 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			conn.Conf.Runtime = scheme
 		}
 
-		conf.Backend = inventory.ProviderType_HOST
-
 		var upstream *upstream.UpstreamClient
 		var err error
 		if req.Upstream != nil && !req.Upstream.Incognito {
