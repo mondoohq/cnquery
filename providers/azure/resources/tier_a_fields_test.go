@@ -7,8 +7,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	compute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/utils/syncx"
 )
 
 // TestPolicyAssignmentDecode pins the struct tags on the hand-rolled policy
@@ -181,4 +184,98 @@ func TestJsonToDictSlice(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, empty)
 	assert.Empty(t, empty)
+}
+
+// TestPolicyDefinitionNameFromID covers the three ID shapes a policy assignment
+// can point at. ParseResourceID is deliberately not used for this: it requires
+// a subscription segment and errors without one, which rejects both built-in
+// definitions and management-group-scoped ones. Built-ins back the majority of
+// assignments, so that route would fail the common case -- this test pins the
+// shapes that must keep working.
+func TestPolicyDefinitionNameFromID(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{
+			name: "built-in definition",
+			id:   "/providers/Microsoft.Authorization/policyDefinitions/def-1",
+			want: "def-1",
+		},
+		{
+			name: "subscription-scoped custom definition",
+			id:   "/subscriptions/sub-1/providers/Microsoft.Authorization/policyDefinitions/custom-deny",
+			want: "custom-deny",
+		},
+		{
+			name: "management-group-scoped definition",
+			id:   "/providers/Microsoft.Management/managementGroups/mg-prod/providers/Microsoft.Authorization/policyDefinitions/mg-deny",
+			want: "mg-deny",
+		},
+		{
+			name: "trailing slash",
+			id:   "/providers/Microsoft.Authorization/policyDefinitions/def-1/",
+			want: "def-1",
+		},
+		{
+			name: "bare name",
+			id:   "def-1",
+			want: "def-1",
+		},
+		{
+			name: "no name to take",
+			id:   "/",
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, policyDefinitionNameFromID(tt.id))
+		})
+	}
+}
+
+// TestParseResourceIDRejectsBuiltInPolicyIDs is the evidence behind the comment
+// on policyDefinitionNameFromID. If ParseResourceID ever gains support for
+// subscription-less IDs, this test fails and the hand-rolled helper can be
+// replaced with it.
+func TestParseResourceIDRejectsBuiltInPolicyIDs(t *testing.T) {
+	_, err := ParseResourceID("/providers/Microsoft.Authorization/policyDefinitions/def-1")
+	require.Error(t, err, "ParseResourceID now handles built-in policy definition IDs; policyDefinitionNameFromID can be replaced")
+
+	_, err = ParseResourceID("/providers/Microsoft.Management/managementGroups/mg-prod/providers/Microsoft.Authorization/policyDefinitions/def-1")
+	require.Error(t, err, "ParseResourceID now handles management-group-scoped policy definition IDs")
+}
+
+// TestDiskNilPropertiesReportsNullNotUnset pins the fields added by this change
+// on a disk that arrives without a Properties block. They must be present in
+// the args as explicit nulls: an absent key leaves the field unset, which
+// crosses the plugin boundary with no type information and surfaces as an
+// unattributed null rather than as "not reported".
+func TestDiskNilPropertiesReportsNullNotUnset(t *testing.T) {
+	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+
+	res, err := diskToMql(runtime, compute.Disk{
+		ID:   strp("/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Compute/disks/d1"),
+		Name: strp("d1"),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+
+	for _, tc := range []struct {
+		field string
+		state plugin.State
+	}{
+		{field: "securityType", state: res.SecurityType.State},
+		{field: "confidentialVmVersion", state: res.ConfidentialVmVersion.State},
+		{field: "encryptionSettingsVersion", state: res.EncryptionSettingsVersion.State},
+		{field: "osType", state: res.OsType.State},
+		{field: "diskSizeGB", state: res.DiskSizeGB.State},
+		{field: "optimizedForFrequentAttach", state: res.OptimizedForFrequentAttach.State},
+	} {
+		assert.NotEqualf(t, plugin.State(0), tc.state,
+			"%s is unset on a nil-Properties disk; it must be an explicit null", tc.field)
+	}
 }

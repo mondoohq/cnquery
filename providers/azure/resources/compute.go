@@ -578,6 +578,38 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 	// derived from diskEncryptionSetId.
 	var secureVMDesID *string
 
+	// Read outside the Properties guard below and set unconditionally, so a
+	// disk that arrives without Properties reports these as null rather than
+	// leaving them unset. An unset field crosses the plugin boundary with no
+	// type information and surfaces client-side as an unattributed null; a
+	// deliberate null says "not reported" and is what a security check should
+	// see for securityType on a disk whose shape could not be read.
+	var encryptionSettingsVersion *string
+	var securityType *compute.DiskSecurityTypes
+	var confidentialVMVersion *compute.ConfidentialVMVersion
+	var osType *compute.OperatingSystemTypes
+	var diskSizeGB *int32
+	var optimizedForFrequentAttach *bool
+	if p := disk.Properties; p != nil {
+		if esc := p.EncryptionSettingsCollection; esc != nil {
+			encryptionSettingsVersion = esc.EncryptionSettingsVersion
+		}
+		if sp := p.SecurityProfile; sp != nil {
+			securityType = sp.SecurityType
+			confidentialVMVersion = sp.ConfidentialVMVersion
+			secureVMDesID = sp.SecureVMDiskEncryptionSetID
+		}
+		osType = p.OSType
+		diskSizeGB = p.DiskSizeGB
+		optimizedForFrequentAttach = p.OptimizedForFrequentAttach
+	}
+	args["encryptionSettingsVersion"] = llx.StringDataPtr(encryptionSettingsVersion)
+	args["securityType"] = llx.StringDataPtr(stringEnumPtr(securityType))
+	args["confidentialVmVersion"] = llx.StringDataPtr(stringEnumPtr(confidentialVMVersion))
+	args["osType"] = llx.StringDataPtr(stringEnumPtr(osType))
+	args["diskSizeGB"] = llx.IntDataPtr(diskSizeGB)
+	args["optimizedForFrequentAttach"] = llx.BoolDataPtr(optimizedForFrequentAttach)
+
 	if disk.Properties != nil {
 		args["networkAccessPolicy"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.NetworkAccessPolicy))
 		args["publicNetworkAccess"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.PublicNetworkAccess))
@@ -594,23 +626,6 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 			encryptionSettingsEnabled = esc.Enabled
 		}
 		args["encryptionSettingsEnabled"] = llx.BoolDataPtr(encryptionSettingsEnabled)
-		var encryptionSettingsVersion *string
-		if esc := disk.Properties.EncryptionSettingsCollection; esc != nil {
-			encryptionSettingsVersion = esc.EncryptionSettingsVersion
-		}
-		args["encryptionSettingsVersion"] = llx.StringDataPtr(encryptionSettingsVersion)
-		var securityType *compute.DiskSecurityTypes
-		var confidentialVMVersion *compute.ConfidentialVMVersion
-		if sp := disk.Properties.SecurityProfile; sp != nil {
-			securityType = sp.SecurityType
-			confidentialVMVersion = sp.ConfidentialVMVersion
-			secureVMDesID = sp.SecureVMDiskEncryptionSetID
-		}
-		args["securityType"] = llx.StringDataPtr(stringEnumPtr(securityType))
-		args["confidentialVmVersion"] = llx.StringDataPtr(stringEnumPtr(confidentialVMVersion))
-		args["osType"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.OSType))
-		args["diskSizeGB"] = llx.IntDataPtr(disk.Properties.DiskSizeGB)
-		args["optimizedForFrequentAttach"] = llx.BoolDataPtr(disk.Properties.OptimizedForFrequentAttach)
 		args["dataAccessAuthMode"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DataAccessAuthMode))
 		args["diskState"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DiskState))
 		args["provisioningState"] = llx.StringDataPtr(disk.Properties.ProvisioningState)

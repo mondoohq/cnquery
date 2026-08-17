@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -260,7 +259,10 @@ func initAzureSubscriptionPolicyDefinition(runtime *plugin.Runtime, args map[str
 		return nil, nil, err
 	}
 
-	name := path.Base(id)
+	name := policyDefinitionNameFromID(id)
+	if name == "" {
+		return nil, nil, fmt.Errorf("policy definition id %q names no definition", id)
+	}
 	client := clientFactory.NewDefinitionsClient()
 
 	var def *armpolicy.Definition
@@ -293,6 +295,23 @@ func initAzureSubscriptionPolicyDefinition(runtime *plugin.Runtime, args map[str
 		return nil, nil, err
 	}
 	return args, res, nil
+}
+
+// policyDefinitionNameFromID returns the last segment of a policy definition
+// resource ID, which is the name the definitions client takes.
+//
+// ParseResourceID is deliberately not used here. It requires a subscription in
+// the ID and errors without one, which rejects both of the shapes that matter
+// most: a built-in definition (/providers/Microsoft.Authorization/policyDefinitions/{name})
+// and a management-group-scoped one. Built-ins back the majority of
+// assignments, so routing through ParseResourceID would fail the common case.
+func policyDefinitionNameFromID(id string) string {
+	id = strings.TrimSuffix(id, "/")
+	i := strings.LastIndex(id, "/")
+	if i < 0 {
+		return id
+	}
+	return id[i+1:]
 }
 
 // managementGroupFromScope pulls the management group name out of a definition

@@ -5357,7 +5357,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) privateLinkService() (*mql
 		a.PrivateLinkService.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateLinkService",
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServicePrivateLinkService,
 		map[string]*llx.RawData{"id": llx.StringData(a.cachePrivateLinkServiceID)})
 	if err != nil {
 		return nil, err
