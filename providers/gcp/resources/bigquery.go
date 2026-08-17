@@ -428,15 +428,23 @@ func (g *mqlGcpProjectBigqueryServiceTable) resolveBaseTable(ref *bigquery.Table
 	table := client.DatasetInProject(ref.ProjectID, ref.DatasetID).Table(ref.TableID)
 	metadata, err := table.Metadata(ctx)
 	if err != nil {
-		// A snapshot outlives the table it was taken from, so a missing or
-		// unreadable base table is an ordinary state rather than a failure.
-		// Report it as null instead of failing the whole table listing.
-		log.Debug().Err(err).
-			Str("project", ref.ProjectID).
-			Str("dataset", ref.DatasetID).
-			Str("table", ref.TableID).
-			Msg("could not read base table metadata")
-		return nil, nil
+		// A snapshot outlives the table it was taken from, so a base table that
+		// is gone or that this caller cannot read is an ordinary state rather
+		// than a failure. Report it as null.
+		//
+		// Anything else (a timeout, a 500, a quota rejection) is a real failure
+		// and has to surface: degrading it to null would report "no base table"
+		// for a table that exists, and a check asserting the base table is
+		// absent would pass on a network blip.
+		if isSkippable(err) {
+			log.Debug().Err(err).
+				Str("project", ref.ProjectID).
+				Str("dataset", ref.DatasetID).
+				Str("table", ref.TableID).
+				Msg("could not read base table metadata")
+			return nil, nil
+		}
+		return nil, err
 	}
 
 	res, err := newMqlBigqueryTable(g.MqlRuntime, table, metadata)
@@ -741,162 +749,160 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 // populated table built anywhere else would take that key and stand in for the
 // real one for the rest of the scan.
 func newMqlBigqueryTable(runtime *plugin.Runtime, table *bigquery.Table, metadata *bigquery.TableMetadata) (plugin.Resource, error) {
-	{
-		var kmsName string
-		if metadata.EncryptionConfig != nil {
-			kmsName = metadata.EncryptionConfig.KMSKeyName
-		}
+	var kmsName string
+	if metadata.EncryptionConfig != nil {
+		kmsName = metadata.EncryptionConfig.KMSKeyName
+	}
 
-		var clusteringFields []any
-		if metadata.Clustering != nil {
-			clusteringFields = convert.SliceAnyToInterface(metadata.Clustering.Fields)
-		}
+	var clusteringFields []any
+	if metadata.Clustering != nil {
+		clusteringFields = convert.SliceAnyToInterface(metadata.Clustering.Fields)
+	}
 
-		externalDataConfig, err := convert.JsonToDict(metadata.ExternalDataConfig)
-		if err != nil {
-			return nil, err
-		}
+	externalDataConfig, err := convert.JsonToDict(metadata.ExternalDataConfig)
+	if err != nil {
+		return nil, err
+	}
 
-		materializedView, err := convert.JsonToDict(metadata.MaterializedView)
-		if err != nil {
-			return nil, err
-		}
+	materializedView, err := convert.JsonToDict(metadata.MaterializedView)
+	if err != nil {
+		return nil, err
+	}
 
-		rangePartitioning, err := convert.JsonToDict(metadata.RangePartitioning)
-		if err != nil {
-			return nil, err
-		}
+	rangePartitioning, err := convert.JsonToDict(metadata.RangePartitioning)
+	if err != nil {
+		return nil, err
+	}
 
-		schema, err := convert.JsonToDictSlice(metadata.Schema)
-		if err != nil {
-			return nil, err
-		}
+	schema, err := convert.JsonToDictSlice(metadata.Schema)
+	if err != nil {
+		return nil, err
+	}
 
-		timePartitioning, err := convert.JsonToDict(metadata.TimePartitioning)
-		if err != nil {
-			return nil, err
-		}
+	timePartitioning, err := convert.JsonToDict(metadata.TimePartitioning)
+	if err != nil {
+		return nil, err
+	}
 
-		var snapshotTime *time.Time
-		if metadata.SnapshotDefinition != nil {
-			snapshotTime = &metadata.SnapshotDefinition.SnapshotTime
-		}
+	var snapshotTime *time.Time
+	if metadata.SnapshotDefinition != nil {
+		snapshotTime = &metadata.SnapshotDefinition.SnapshotTime
+	}
 
-		var cloneTime *time.Time
-		if metadata.CloneDefinition != nil {
-			cloneTime = &metadata.CloneDefinition.CloneTime
-		}
+	var cloneTime *time.Time
+	if metadata.CloneDefinition != nil {
+		cloneTime = &metadata.CloneDefinition.CloneTime
+	}
 
-		// Most tables declare no staleness bound. Keep the field null in that
-		// case rather than reporting "", which would read as a real interval of
-		// zero (always fresh) instead of "not configured".
-		var maxStaleness *string
-		if metadata.MaxStaleness != nil {
-			s := metadata.MaxStaleness.String()
-			maxStaleness = &s
-		}
+	// Most tables declare no staleness bound. Keep the field null in that
+	// case rather than reporting "", which would read as a real interval of
+	// zero (always fresh) instead of "not configured".
+	var maxStaleness *string
+	if metadata.MaxStaleness != nil {
+		s := metadata.MaxStaleness.String()
+		maxStaleness = &s
+	}
 
-		// A table with nothing buffered reports no streaming buffer. Leave the
-		// timestamp null rather than letting it default to the zero time, which
-		// would read as 1 January year 1 on every table that is not streaming.
-		var streamingBufferBytes, streamingBufferRows int64
-		var streamingBufferOldest *time.Time
-		if sb := metadata.StreamingBuffer; sb != nil {
-			streamingBufferBytes = int64(sb.EstimatedBytes)
-			streamingBufferRows = int64(sb.EstimatedRows)
-			if !sb.OldestEntryTime.IsZero() {
-				streamingBufferOldest = &sb.OldestEntryTime
+	// A table with nothing buffered reports no streaming buffer. Leave the
+	// timestamp null rather than letting it default to the zero time, which
+	// would read as 1 January year 1 on every table that is not streaming.
+	var streamingBufferBytes, streamingBufferRows int64
+	var streamingBufferOldest *time.Time
+	if sb := metadata.StreamingBuffer; sb != nil {
+		streamingBufferBytes = int64(sb.EstimatedBytes)
+		streamingBufferRows = int64(sb.EstimatedRows)
+		if !sb.OldestEntryTime.IsZero() {
+			streamingBufferOldest = &sb.OldestEntryTime
+		}
+	}
+
+	primaryKeyColumns := []any{}
+	foreignKeys := []any{}
+	if tc := metadata.TableConstraints; tc != nil {
+		if tc.PrimaryKey != nil {
+			for _, col := range tc.PrimaryKey.Columns {
+				primaryKeyColumns = append(primaryKeyColumns, col)
 			}
 		}
-
-		primaryKeyColumns := []any{}
-		foreignKeys := []any{}
-		if tc := metadata.TableConstraints; tc != nil {
-			if tc.PrimaryKey != nil {
-				for _, col := range tc.PrimaryKey.Columns {
-					primaryKeyColumns = append(primaryKeyColumns, col)
-				}
+		for _, fk := range tc.ForeignKeys {
+			if fk == nil {
+				continue
 			}
-			for _, fk := range tc.ForeignKeys {
-				if fk == nil {
-					continue
-				}
-				mqlFk, err := newMqlBigqueryForeignKey(runtime, table, fk)
-				if err != nil {
-					return nil, err
-				}
-				foreignKeys = append(foreignKeys, mqlFk)
-			}
-		}
-
-		// Only a BigLake managed table carries this. Leaving it null keeps a
-		// check for an unencrypted storage URI from matching an ordinary
-		// managed-storage table that has no external files at all.
-		bigLakeData := llx.NilData
-		if blc := metadata.BigLakeConfiguration; blc != nil {
-			mqlBigLake, err := CreateResource(runtime, "gcp.project.bigqueryService.table.bigLakeConfig", map[string]*llx.RawData{
-				"__id":        llx.StringData(fmt.Sprintf("%s/%s/%s/bigLakeConfig", table.ProjectID, table.DatasetID, table.TableID)),
-				"storageUri":  llx.StringData(blc.StorageURI),
-				"fileFormat":  llx.StringData(string(blc.FileFormat)),
-				"tableFormat": llx.StringData(string(blc.TableFormat)),
-			})
+			mqlFk, err := newMqlBigqueryForeignKey(runtime, table, fk)
 			if err != nil {
 				return nil, err
 			}
-			mqlBigLakeRes := mqlBigLake.(*mqlGcpProjectBigqueryServiceTableBigLakeConfig)
-			mqlBigLakeRes.cacheProjectId = table.ProjectID
-			mqlBigLakeRes.cacheConnectionId = blc.ConnectionID
-			bigLakeData = llx.ResourceData(mqlBigLake, "gcp.project.bigqueryService.table.bigLakeConfig")
+			foreignKeys = append(foreignKeys, mqlFk)
 		}
+	}
 
-		mqlInstance, err := CreateResource(runtime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
-			"id":                             llx.StringData(table.TableID),
-			"projectId":                      llx.StringData(table.ProjectID),
-			"datasetId":                      llx.StringData(table.DatasetID),
-			"name":                           llx.StringData(metadata.Name),
-			"location":                       llx.StringData(metadata.Location),
-			"description":                    llx.StringData(metadata.Description),
-			"labels":                         llx.MapData(convert.MapToInterfaceMap(metadata.Labels), types.String),
-			"useLegacySQL":                   llx.BoolData(metadata.UseLegacySQL),
-			"requirePartitionFilter":         llx.BoolData(metadata.RequirePartitionFilter),
-			"created":                        llx.TimeData(metadata.CreationTime),
-			"modified":                       llx.TimeData(metadata.LastModifiedTime),
-			"numBytes":                       llx.IntData(metadata.NumBytes),
-			"numLongTermBytes":               llx.IntData(metadata.NumLongTermBytes),
-			"numRows":                        llx.IntData(int64(metadata.NumRows)),
-			"type":                           llx.StringData(string(metadata.Type)),
-			"expirationTime":                 llx.TimeData(metadata.ExpirationTime),
-			"kmsName":                        llx.StringData(kmsName),
-			"snapshotTime":                   llx.TimeDataPtr(snapshotTime),
-			"cloneTime":                      llx.TimeDataPtr(cloneTime),
-			"viewQuery":                      llx.StringData(metadata.ViewQuery),
-			"clusteringFields":               llx.DictData(clusteringFields),
-			"externalDataConfig":             llx.DictData(externalDataConfig),
-			"materializedView":               llx.DictData(materializedView),
-			"rangePartitioning":              llx.DictData(rangePartitioning),
-			"timePartitioning":               llx.DictData(timePartitioning),
-			"schema":                         llx.ArrayData(schema, types.Dict),
-			"maxStaleness":                   llx.StringDataPtr(maxStaleness),
-			"streamingBufferEstimatedBytes":  llx.IntData(streamingBufferBytes),
-			"streamingBufferEstimatedRows":   llx.IntData(streamingBufferRows),
-			"streamingBufferOldestEntryTime": llx.TimeDataPtr(streamingBufferOldest),
-			"primaryKeyColumns":              llx.ArrayData(primaryKeyColumns, types.String),
-			"foreignKeys":                    llx.ArrayData(foreignKeys, types.Resource("gcp.project.bigqueryService.table.foreignKey")),
-			"bigLakeConfiguration":           bigLakeData,
+	// Only a BigLake managed table carries this. Leaving it null keeps a
+	// check for an unencrypted storage URI from matching an ordinary
+	// managed-storage table that has no external files at all.
+	bigLakeData := llx.NilData
+	if blc := metadata.BigLakeConfiguration; blc != nil {
+		mqlBigLake, err := CreateResource(runtime, "gcp.project.bigqueryService.table.bigLakeConfig", map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("%s/%s/%s/bigLakeConfig", table.ProjectID, table.DatasetID, table.TableID)),
+			"storageUri":  llx.StringData(blc.StorageURI),
+			"fileFormat":  llx.StringData(string(blc.FileFormat)),
+			"tableFormat": llx.StringData(string(blc.TableFormat)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		mqlTable := mqlInstance.(*mqlGcpProjectBigqueryServiceTable)
-		mqlTable.cacheKmsKeyName = kmsName
-		if metadata.SnapshotDefinition != nil {
-			mqlTable.cacheSnapshotBaseTable = metadata.SnapshotDefinition.BaseTableReference
-		}
-		if metadata.CloneDefinition != nil {
-			mqlTable.cacheCloneBaseTable = metadata.CloneDefinition.BaseTableReference
-		}
-		return mqlInstance, nil
+		mqlBigLakeRes := mqlBigLake.(*mqlGcpProjectBigqueryServiceTableBigLakeConfig)
+		mqlBigLakeRes.cacheProjectId = table.ProjectID
+		mqlBigLakeRes.cacheConnectionId = blc.ConnectionID
+		bigLakeData = llx.ResourceData(mqlBigLake, "gcp.project.bigqueryService.table.bigLakeConfig")
 	}
+
+	mqlInstance, err := CreateResource(runtime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
+		"id":                             llx.StringData(table.TableID),
+		"projectId":                      llx.StringData(table.ProjectID),
+		"datasetId":                      llx.StringData(table.DatasetID),
+		"name":                           llx.StringData(metadata.Name),
+		"location":                       llx.StringData(metadata.Location),
+		"description":                    llx.StringData(metadata.Description),
+		"labels":                         llx.MapData(convert.MapToInterfaceMap(metadata.Labels), types.String),
+		"useLegacySQL":                   llx.BoolData(metadata.UseLegacySQL),
+		"requirePartitionFilter":         llx.BoolData(metadata.RequirePartitionFilter),
+		"created":                        llx.TimeData(metadata.CreationTime),
+		"modified":                       llx.TimeData(metadata.LastModifiedTime),
+		"numBytes":                       llx.IntData(metadata.NumBytes),
+		"numLongTermBytes":               llx.IntData(metadata.NumLongTermBytes),
+		"numRows":                        llx.IntData(int64(metadata.NumRows)),
+		"type":                           llx.StringData(string(metadata.Type)),
+		"expirationTime":                 llx.TimeData(metadata.ExpirationTime),
+		"kmsName":                        llx.StringData(kmsName),
+		"snapshotTime":                   llx.TimeDataPtr(snapshotTime),
+		"cloneTime":                      llx.TimeDataPtr(cloneTime),
+		"viewQuery":                      llx.StringData(metadata.ViewQuery),
+		"clusteringFields":               llx.DictData(clusteringFields),
+		"externalDataConfig":             llx.DictData(externalDataConfig),
+		"materializedView":               llx.DictData(materializedView),
+		"rangePartitioning":              llx.DictData(rangePartitioning),
+		"timePartitioning":               llx.DictData(timePartitioning),
+		"schema":                         llx.ArrayData(schema, types.Dict),
+		"maxStaleness":                   llx.StringDataPtr(maxStaleness),
+		"streamingBufferEstimatedBytes":  llx.IntData(streamingBufferBytes),
+		"streamingBufferEstimatedRows":   llx.IntData(streamingBufferRows),
+		"streamingBufferOldestEntryTime": llx.TimeDataPtr(streamingBufferOldest),
+		"primaryKeyColumns":              llx.ArrayData(primaryKeyColumns, types.String),
+		"foreignKeys":                    llx.ArrayData(foreignKeys, types.Resource("gcp.project.bigqueryService.table.foreignKey")),
+		"bigLakeConfiguration":           bigLakeData,
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlTable := mqlInstance.(*mqlGcpProjectBigqueryServiceTable)
+	mqlTable.cacheKmsKeyName = kmsName
+	if metadata.SnapshotDefinition != nil {
+		mqlTable.cacheSnapshotBaseTable = metadata.SnapshotDefinition.BaseTableReference
+	}
+	if metadata.CloneDefinition != nil {
+		mqlTable.cacheCloneBaseTable = metadata.CloneDefinition.BaseTableReference
+	}
+	return mqlInstance, nil
 }
 
 func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {

@@ -147,6 +147,48 @@ func TestBaseTableResolutionToleratesAMissingBaseTable(t *testing.T) {
 	assert.Nil(t, resolved, "a deleted base table resolves to null")
 }
 
+// TestBaseTableResolutionToleratesAForbiddenBaseTable covers the other half of
+// "nothing to read here": a base table in a project this caller cannot see.
+// Like a deleted table, it resolves to null rather than failing the listing.
+func TestBaseTableResolutionToleratesAForbiddenBaseTable(t *testing.T) {
+	env := setupTestEnv(t, []string{bigqueryScope})
+	env.Mux.HandleFunc("/bigquery/v2/projects/other-project/datasets/prod/tables/orders",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprint(w, `{"error":{"code":403,"message":"Access Denied: Table orders"}}`)
+		})
+
+	snapshot := listedTable(t, env.Runtime, "test-project", "snaps", "orders_snapshot", 0)
+	resolved, err := snapshot.resolveBaseTable(&bigquery.Table{
+		ProjectID: "other-project", DatasetID: "prod", TableID: "orders",
+	})
+
+	require.NoError(t, err, "an unreadable base table must not fail the query")
+	assert.Nil(t, resolved, "an unreadable base table resolves to null")
+}
+
+// TestBaseTableResolutionSurfacesRealFailures is the counterweight to the two
+// tolerate tests. Only "gone" and "cannot see it" mean null; anything else is a
+// failure to read a table that exists, and folding it into null would report an
+// absent base table as fact. A check asserting a snapshot has no base table
+// would then pass on a failed request rather than on a real answer.
+func TestBaseTableResolutionSurfacesRealFailures(t *testing.T) {
+	env := setupTestEnv(t, []string{bigqueryScope})
+	env.Mux.HandleFunc("/bigquery/v2/projects/test-project/datasets/prod/tables/orders",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, `{"error":{"code":400,"message":"Invalid request"}}`)
+		})
+
+	snapshot := listedTable(t, env.Runtime, "test-project", "snaps", "orders_snapshot", 0)
+	resolved, err := snapshot.resolveBaseTable(&bigquery.Table{
+		ProjectID: "test-project", DatasetID: "prod", TableID: "orders",
+	})
+
+	require.Error(t, err, "a failure that is not a missing or unreadable table must surface")
+	assert.Nil(t, resolved)
+}
+
 // TestResolveBaseTableHandlesAbsentReference keeps the null path intact for a
 // table that is neither a snapshot nor a clone.
 func TestResolveBaseTableHandlesAbsentReference(t *testing.T) {
