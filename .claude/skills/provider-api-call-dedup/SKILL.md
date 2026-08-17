@@ -35,6 +35,14 @@ It has to be this way in general: the cache key is the resolved resource's
 knowable beforehand. The opening exists only for callers that already supply
 the id — see *cache-first* in Phase 4.
 
+**A third class, and usually the biggest: calls that can never succeed.** Not
+duplicates of a useful call but lookups made with an identifier belonging to
+some other resource, because an init adopted the scanned asset's identity
+without checking what the asset was. It is not a caching problem and none of
+the phases below address it. It is also cheaper to find and worth more —
+26.7% of one provider's traffic against the 5% the caching work recovered — so
+check it first. See *Check this first* below.
+
 ## The parent-child cache model
 
 Worth understanding on its own, not just for init migration: it governs every
@@ -104,6 +112,138 @@ than being asked for a field on a known id.
 **Not for:** a provider that is genuinely slow because the API is slow, or one
 that fetches too much per call. Measure first — this skill only removes
 *repeats*.
+
+## Check this first: calls that can never succeed
+
+Before any caching work, check for a different and usually larger class of
+waste: calls made with an identifier that does not belong to the resource being
+asked for. These are not duplicates of a useful call, they are calls that
+**cannot** return the requested thing. In the provider this skill came from they
+were 26.7% of all API traffic, five times what the caching work recovered.
+
+**The mechanism.** An init called with no args falls back to the scanned
+asset's own identity:
+
+```go
+if len(args) == 0 {
+    if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+        args["arn"] = llx.StringData(assetArn)   // whatever the asset happens to be
+    }
+}
+```
+
+That is correct when the asset *is* the resource, which is what it was written
+for. It is wrong on every other asset, and every other asset is where it mostly
+runs — because **cnspec evaluates every policy's filter against every asset** to
+decide which policies apply, and filters routinely probe a bare resource instead
+of checking the platform:
+
+```
+//policy.api.mondoo.app/filter/AdVyvxA8WWw=
+  aws.secretsmanager.secret.lastChangedDate != null
+```
+
+So while an EC2 instance is scanned, that filter reaches the Secrets Manager
+init, which adopts the *instance's* ARN and calls `DescribeSecret` with it.
+
+**Why it stays invisible.** The call fails, failures are not cached, so it is
+retried once per referrer — a single doomed lookup became 42 calls. A failed
+init is not surfaced as a scan error, so nothing in the output says this is
+happening. It is visible only in a request trace, and only if you compare the
+*identifier* against the *API being called*.
+
+**Why only some inits are expensive.** How much of the identifier the init
+validates decides whether it pays. One that checks the resource type rejects a
+foreign id for free:
+
+```go
+if parsed, err := arn.Parse(arnVal); err == nil && strings.HasPrefix(parsed.Resource, "snapshot/") {
+```
+
+One that only needs the region or subscription succeeds at parsing *any* id and
+proceeds straight to the API. Those are the ones that bleed.
+
+**Detect it.** Two signals, in order of preference:
+
+*1. Response status, if the trace logs it.* A doomed lookup answers 404 or 400,
+so non-2xx responses locate the bug directly and the method is
+provider-agnostic. Azure's `apiTracePolicy` already logs `status`:
+
+```bash
+grep "azure api call" scan.log | grep -oE 'status=[0-9]+' | sort | uniq -c | sort -rn
+# then read the URLs behind the failures
+grep "azure api call" scan.log | grep -vE 'status=(2[0-9][0-9]|0)' |
+  sed -E 's#.*url=([^ ]*).*#\1#' | sed -E 's#/subscriptions/[^/]+#/SUB#' | sort | uniq -c | sort -rn
+```
+
+Prefer this where available. Note a 404 is not proof on its own — some are
+legitimate "this optional sub-resource does not exist" probes — so confirm by
+checking whether the identifier in the URL names a *different* kind of resource
+than the endpoint expects.
+
+*2. Identifier-vs-endpoint comparison*, when status is not traced. Compare the
+service named in the identifier with the service being called. Do it over
+request bodies *and* URLs — REST-style services carry the id in the path,
+query-protocol ones in the body, and checking only one hides half the problem
+(in the source provider, one service was found only via bodies and another only
+via URLs):
+
+```bash
+grep "api call" scan.log | sed -E 's/.*host=([^ ]*).*params=(.*)/\1\t\2/' |
+awk -F'\t' '{ svc=$1; sub(/\..*/,"",svc)
+  if (match($2, /arn:aws:[a-z0-9-]+/)) { split(substr($2,RSTART,RLENGTH),p,":")
+    if (p[3] != svc) bad[svc" <- "p[3]]++ } }
+END { for (k in bad) print bad[k], k }' | sort -rn
+```
+
+That snippet is ARN-shaped; the general form is "pull the resource-type token
+out of the identifier and compare it to the endpoint's". For ARM ids the token
+is the `Microsoft.X/type` segment of the path.
+
+A uniform count across unrelated services is the giveaway either way — six
+services each sitting at exactly 436 calls in a 169-asset scan is one doomed
+call per asset, not real work.
+
+**Fix by gating on the asset's platform, not by parsing the id.** The platform
+is the exact discriminator: the provider's platform registry holds one entry per
+discoverable object type, so it is a string equality test rather than a prefix
+heuristic. Parsing the id invites two specific bugs — separators are not uniform
+(`secret:name` but `key/id`), and providers mint synthetic ids whose service
+field does not exist upstream (`arn:aws:vpc:` where AWS itself uses
+`arn:aws:ec2:...:vpc/...`), so a guard written from the cloud's own docs breaks
+those resources.
+
+```go
+func getAssetIdentifier(runtime *plugin.Runtime, platform string) string {
+	...
+	if a.Platform == nil || a.Platform.Name != platform {
+		// the scanned asset is not this kind of resource, so its id is not ours
+		return ""
+	}
+```
+
+**Make the parameter required.** That is the whole point: the compiler then
+forces every call site to declare a platform, so inits that are merely *latent*
+get fixed too. In the source provider only 3 of 61 sites were actively bleeding;
+the other 47 were one policy filter away from joining them. Do the same for any
+sibling helper that hands back asset identity by name rather than id — that one
+was calling `GetUser` with volume ids and log-group paths.
+
+Two follow-ups worth doing at the same time:
+
+- Inits whose resource is **never a standalone asset** can only ever adopt a
+  foreign id. Delete the fallback rather than inventing a platform for it, and
+  let the existing "id required" error fire.
+- Export the platform names as constants and reference them. A mistyped platform
+  matches no asset and **fails closed**, silently disabling asset-scoped
+  resolution for that one resource with no error to notice. Lock it with a test
+  asserting every platform passed is present in the registry.
+
+**Verify with scores, not just call counts.** A guard that is too tight removes
+calls *and* answers. Diff the per-check scores between runs and require zero
+differences; in the source provider all 14,557 score tuples were byte-identical
+while calls fell 80.8%, and the only change was 34 *fewer* "provider returned no
+data and no error" warnings — the wreckage of resources the bug had fabricated.
 
 ## Phase 1 — Measure before touching anything
 
