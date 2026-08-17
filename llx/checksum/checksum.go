@@ -38,7 +38,6 @@ import (
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/types"
-	"google.golang.org/protobuf/proto"
 )
 
 // AlgoVersion identifies the canonicalization algorithm. It is a fold input:
@@ -234,7 +233,7 @@ func canonPrimitive(h *Hasher, p *llx.Primitive, depth int) error {
 	case types.Dict:
 		if len(p.Value) > 0 {
 			inner := &llx.Primitive{}
-			if err := proto.Unmarshal(p.Value, inner); err != nil {
+			if err := inner.UnmarshalVT(p.Value); err != nil {
 				return fmt.Errorf("canon: failed to decode dict payload: %w", err)
 			}
 			h.Str("dict")
@@ -247,7 +246,7 @@ func canonPrimitive(h *Hasher, p *llx.Primitive, depth int) error {
 	case types.Asset:
 		if len(p.Value) > 0 {
 			av := &llx.AssetValue{}
-			if err := proto.Unmarshal(p.Value, av); err != nil {
+			if err := av.UnmarshalVT(p.Value); err != nil {
 				return fmt.Errorf("canon: failed to decode asset payload: %w", err)
 			}
 			h.Str("asset")
