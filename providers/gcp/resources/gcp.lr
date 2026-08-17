@@ -3426,12 +3426,56 @@ private gcp.project.sqlService.instance @defaults("name") {
   drReplica() gcp.project.sqlService.instance
   // Expiration time of the instance's server CA certificate used for TLS
   serverCaCertExpiration time
+  // IPv6 address assigned to the instance
+  ipv6Address string
+  // Number of nodes in the instance's read pool
+  nodeCount int
+  // Nodes that make up the instance's read pool
+  //
+  // One entry per node. Keys: `name`, `gceZone`, `state`, `dnsName`,
+  // `dnsNames`, `ipAddresses`, `pscServiceAttachmentLink`, and
+  // `pscAutoConnections`.
+  nodes []dict
+  // External server this instance replicates from, when it is an external-primary replica
+  onPremisesConfig gcp.project.sqlService.instance.onPremisesConfiguration
   // Infrastructure-management system that provisioned the resource
   //
   // Value derived from the provenance labels and annotations Google and IaC
   // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
   // when the resource carries no management signal.
   managedBy() string
+}
+
+// External primary server a Cloud SQL instance replicates from
+//
+// Connection settings for the external MySQL or PostgreSQL server that a Cloud
+// SQL replica reads from. Carries the host and port, the replication username,
+// the CA and client certificates that secure the link, and the SSL mode in
+// force, so an audit can find replicas pulling from an external primary over an
+// unverified or unencrypted connection. The replication password and client
+// private key are not exposed. When the source is itself a Cloud SQL instance
+// rather than a self-managed server, `sourceInstance` names it.
+private gcp.project.sqlService.instance.onPremisesConfiguration @defaults("hostPort sslOption") {
+  // Host and port of the external server, as host:port
+  hostPort string
+  // Replication username on the external server
+  username string
+  // PEM-encoded CA certificate used to verify the external server
+  caCertificate string
+  // PEM-encoded client certificate presented to the external server
+  clientCertificate string
+  // SSL mode in force on the replication link
+  //
+  // One of DISABLE, REQUIRE, or VERIFY_CA. DISABLE carries replication
+  // traffic in the clear, and REQUIRE encrypts without verifying the
+  // server's identity.
+  sslOption string
+  // Whether Database Migration Service manages this configuration
+  dmsManaged bool
+  // Cloud Storage path of the dump file used to seed the replica
+  dumpFilePath string
+  // Cloud SQL instance this instance replicates from, when the source is itself a Cloud SQL instance
+  sourceInstance() gcp.project.sqlService.instance
 }
 
 // Google Cloud (GCP) SQL instance database
@@ -3688,6 +3732,40 @@ private gcp.project.sqlService.instance.settings {
   enableGoogleMlIntegration bool
   // Whether Dataplex schema extraction is enabled
   enableDataplexIntegration bool
+  // Whether automated backups survive deletion of the instance
+  //
+  // When false, deleting the instance destroys its automated backups with it,
+  // leaving no restore path.
+  retainBackupsOnDelete bool
+  // Whether a final backup is taken when the instance is deleted
+  finalBackupEnabled bool
+  // Days a final backup is retained after the instance is deleted
+  finalBackupRetentionDays int
+  // Whether the instance is upgraded to a new minor version automatically
+  autoUpgradeEnabled bool
+  // Whether managed connection pooling is enabled
+  connectionPoolingEnabled bool
+  // Number of connection poolers provisioned for the instance
+  connectionPoolerCount int
+  // Connection pool flags, keyed by flag name
+  connectionPoolFlags map[string]string
+  // Threads per physical CPU core
+  //
+  // A value of 1 disables simultaneous multithreading, which some workloads
+  // require for licensing or side-channel isolation.
+  threadsPerCore int
+  // Performance capture configuration
+  //
+  // Thresholds that trigger performance probes, and the rules that kill
+  // long-running or lock-waiting transactions. Keys: `enabled`,
+  // `probeThreshold`, `probingIntervalSeconds`,
+  // `cpuUtilizationThresholdPercent`, `memoryUsageThresholdPercent`,
+  // `runningThreadsThreshold`, `historyListLengthThresholdCount`,
+  // `semaphoreWaitThresholdCount`, `transactionDurationThreshold`,
+  // `transactionLockWaitThresholdCount`, `secondsBehindSourceThreshold`,
+  // `transactionKillType`, `transactionKillThresholdSeconds`, and
+  // `transactionKillExcludedUserHosts`.
+  performanceCaptureConfig dict
 }
 
 // Google Cloud (GCP) SQL instance Entra ID / Active Directory configuration
@@ -4079,6 +4157,61 @@ private gcp.project.bigqueryService.table @defaults("id") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the table's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Maximum staleness tolerated when reading the table
+  //
+  // An interval such as `4:0:0` (four hours). Reads may return data this far
+  // out of date rather than waiting for the underlying source to be
+  // re-scanned, which matters when the table backs an access decision.
+  maxStaleness string
+  // Estimated bytes sitting in the streaming buffer, not yet written to managed storage
+  streamingBufferEstimatedBytes int
+  // Estimated rows sitting in the streaming buffer, not yet written to managed storage
+  streamingBufferEstimatedRows int
+  // Time of the oldest entry in the streaming buffer
+  streamingBufferOldestEntryTime time
+  // Columns that make up the table's primary key
+  primaryKeyColumns []string
+  // Foreign key constraints declared on the table
+  foreignKeys []gcp.project.bigqueryService.table.foreignKey
+  // Storage and connection settings for a BigLake managed table
+  bigLakeConfiguration gcp.project.bigqueryService.table.bigLakeConfig
+}
+
+// BigLake configuration of a BigQuery table
+//
+// Settings that let a BigQuery table read data files held in Cloud Storage
+// rather than in BigQuery managed storage. The `storageUri` field gives the
+// Cloud Storage location of the files and `connection` names the credential
+// BigQuery presents to reach that bucket, which is the identity an audit has to
+// follow to see who can actually read the data. The `fileFormat` and
+// `tableFormat` fields report the layout of the files behind the table.
+private gcp.project.bigqueryService.table.bigLakeConfig @defaults("storageUri fileFormat") {
+  // Cloud Storage URI the table's data files are read from
+  storageUri string
+  // Format of the underlying data files (PARQUET)
+  fileFormat string
+  // Open table format layered over the data files (ICEBERG)
+  tableFormat string
+  // Connection whose credentials BigQuery uses to reach the storage bucket
+  connection() gcp.project.bigqueryService.connection
+}
+
+// Foreign key constraint on a BigQuery table
+//
+// Declared relationship between columns on this table and columns on another
+// table. The `referencedTable` field resolves to the table on the other side of
+// the constraint, so a query can follow a declared join across datasets, and
+// `columnReferences` lists the column pairs the constraint is built from.
+private gcp.project.bigqueryService.table.foreignKey @defaults("name") {
+  // Name of the foreign key constraint
+  name string
+  // Column pairs that make up the constraint
+  //
+  // Each entry has `referencingColumn` (the column on this table) and
+  // `referencedColumn` (the column on the referenced table).
+  columnReferences []dict
+  // Table this constraint references
+  referencedTable() gcp.project.bigqueryService.table
 }
 
 // Google BigQuery ML model
@@ -8728,6 +8861,23 @@ private gcp.project.secretmanagerService.secret @defaults("name createTime") {
   iamPolicy() []gcp.resourcemanager.binding
   // Whether the secret's IAM policy grants any role to allUsers or allAuthenticatedUsers
   public() bool
+  // Kind of material the secret holds
+  //
+  // One of CLOUD_SQL_DB_CREDENTIALS, ACCESS_KEY, CERTIFICATE,
+  // OTHER_DB_CREDENTIALS, or OTHER. SECRET_TYPE_UNSPECIFIED when the type was
+  // never declared, which is the common case for secrets created before the
+  // field existed.
+  secretType string
+  // IAM principal identifier for the secret, addressed by resource name
+  //
+  // The principal string that names this secret in an IAM policy binding, for
+  // conditional grants that let a workload read one specific secret.
+  policyMemberNamePrincipal string
+  // IAM principal identifier for the secret, addressed by resource UID
+  //
+  // Equivalent to policyMemberNamePrincipal but keyed on the secret's
+  // immutable UID, so it keeps resolving to the same secret after a rename.
+  policyMemberUidPrincipal string
   // Infrastructure-management system that provisioned the resource
   //
   // Value derived from the provenance labels and annotations Google and IaC
@@ -8766,6 +8916,15 @@ private gcp.project.secretmanagerService.secret.version @defaults("name state") 
   // version used to encrypt this secret version. Empty when the version is
   // Google-managed.
   customerManagedEncryption dict
+  // Where this version is replicated, and the key version protecting each copy
+  //
+  // For an automatically replicated secret, `automatic` holds
+  // `customerManagedEncryption` with the `kmsKeyVersionName` in force. For a
+  // user-managed secret, `userManaged` holds `replicas`, each with its
+  // `location` and its own `customerManagedEncryption`. This reports the key
+  // version actually protecting the stored bytes, which can lag the key
+  // configured on the secret after a rotation.
+  replicationStatus dict
 }
 
 // Google Cloud (GCP) Firestore
