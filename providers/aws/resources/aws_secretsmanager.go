@@ -56,7 +56,7 @@ func initAwsSecretsmanagerSecret(runtime *plugin.Runtime, args map[string]*llx.R
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformSecretsmanagerSecret); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

@@ -485,7 +485,7 @@ func initAwsEcrImage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformEcrImage); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
@@ -952,7 +952,7 @@ func initAwsEcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformEcrRepository); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

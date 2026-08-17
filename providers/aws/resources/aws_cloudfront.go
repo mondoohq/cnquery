@@ -581,7 +581,7 @@ func initAwsCloudfrontDistribution(runtime *plugin.Runtime, args map[string]*llx
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformCloudfrontDistribution); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

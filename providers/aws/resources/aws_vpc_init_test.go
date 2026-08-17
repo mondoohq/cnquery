@@ -24,6 +24,9 @@ func testAwsRuntime(assetName string, platformIds []string, vpcs []*mqlAwsVpc) *
 		Name:        assetName,
 		PlatformIds: platformIds,
 		Connections: []*inventory.Config{{}},
+		// the asset under test is a VPC; getAssetIdentifier only adopts an
+		// asset's ARN when its platform matches the resource asking
+		Platform: &inventory.Platform{Name: connection.PlatformVpc},
 	}
 
 	conn := &connection.AwsConnection{

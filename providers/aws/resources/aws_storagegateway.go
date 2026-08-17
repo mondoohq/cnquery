@@ -125,12 +125,6 @@ func initAwsStoragegatewayGateway(runtime *plugin.Runtime, args map[string]*llx.
 		return args, nil, nil
 	}
 
-	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
-			args["arn"] = llx.StringData(assetArn)
-		}
-	}
-
 	if args["arn"] == nil {
 		return nil, nil, errors.New("arn required to fetch storage gateway")
 	}

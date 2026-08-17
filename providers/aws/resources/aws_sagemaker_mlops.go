@@ -71,7 +71,7 @@ func initAwsSagemakerModel(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformSagemakerModel); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

@@ -113,7 +113,7 @@ func initAwsCodebuildProject(runtime *plugin.Runtime, args map[string]*llx.RawDa
 	// During a discovered-asset scan the resource is queried with no args; recover
 	// the project's region and name from the ARN carried on the asset.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformCodebuildProject); assetArn != "" {
 			parsed, err := arn.Parse(assetArn)
 			if err != nil {
 				return nil, nil, err

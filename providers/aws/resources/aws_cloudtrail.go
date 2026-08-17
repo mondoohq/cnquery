@@ -51,7 +51,7 @@ func initAwsCloudtrailTrail(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return args, nil, nil
 	}
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformCloudtrailTrail); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

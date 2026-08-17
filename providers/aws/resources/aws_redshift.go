@@ -378,7 +378,7 @@ func initAwsRedshiftCluster(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	}
 
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformRedshiftCluster); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}

@@ -209,7 +209,7 @@ func initAwsAppstreamFleet(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 	// Resolve a discovered asset (aws-appstream-fleet platform) by its ARN.
 	if len(args) == 0 {
-		if assetArn := getAssetIdentifier(runtime); assetArn != "" {
+		if assetArn := getAssetIdentifier(runtime, connection.PlatformAppstreamFleet); assetArn != "" {
 			args["arn"] = llx.StringData(assetArn)
 		}
 	}
