@@ -1972,7 +1972,7 @@ oci.loadBalancer.backendSet 13.0.6
 oci.loadBalancer.backendSet.backendCount 13.0.6
 oci.loadBalancer.backendSet.backendMaxConnections 13.20.1
 oci.loadBalancer.backendSet.backends 13.20.1
-oci.loadBalancer.backendSet.certificateName 13.20.1
+oci.loadBalancer.backendSet.certificateBundle 13.20.1
 oci.loadBalancer.backendSet.certificates 13.20.1
 oci.loadBalancer.backendSet.healthChecker 13.0.6
 oci.loadBalancer.backendSet.lbCookieDisableFallback 13.20.1
@@ -1986,7 +1986,7 @@ oci.loadBalancer.backendSet.name 13.0.6
 oci.loadBalancer.backendSet.policy 13.0.6
 oci.loadBalancer.backendSet.sessionPersistenceCookieName 13.20.1
 oci.loadBalancer.backendSet.sessionPersistenceDisableFallback 13.20.1
-oci.loadBalancer.backendSet.sslCipherSuiteName 13.20.1
+oci.loadBalancer.backendSet.sslCipherSuite 13.20.1
 oci.loadBalancer.backendSet.sslProtocols 13.20.1
 oci.loadBalancer.backendSet.sslVerifyDepth 13.20.1
 oci.loadBalancer.backendSet.sslVerifyPeerCertificate 13.20.1
@@ -1999,6 +1999,7 @@ oci.loadBalancer.certificateBundle.name 13.20.1
 oci.loadBalancer.certificateBundle.publicCertificate 13.20.1
 oci.loadBalancer.listener 13.0.6
 oci.loadBalancer.listener.backendTcpProxyProtocolVersion 13.20.1
+oci.loadBalancer.listener.certificateBundle 13.20.1
 oci.loadBalancer.listener.certificateName 13.10.1
 oci.loadBalancer.listener.certificates 13.10.1
 oci.loadBalancer.listener.defaultBackendSetName 13.0.6
@@ -2010,7 +2011,8 @@ oci.loadBalancer.listener.pathRouteSetName 13.20.1
 oci.loadBalancer.listener.port 13.0.6
 oci.loadBalancer.listener.protocol 13.0.6
 oci.loadBalancer.listener.routingPolicyName 13.20.1
-oci.loadBalancer.listener.ruleSetNames 13.20.1
+oci.loadBalancer.listener.ruleSets 13.20.1
+oci.loadBalancer.listener.sslCipherSuite 13.20.1
 oci.loadBalancer.listener.sslCipherSuiteName 13.0.6
 oci.loadBalancer.listener.sslProtocols 13.0.6
 oci.loadBalancer.listener.sslServerOrderPreference 13.20.1

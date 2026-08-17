@@ -4490,7 +4490,20 @@ private oci.loadBalancer.listener @defaults("name") {
   // SSL/TLS protocols enabled (e.g., TLSv1.2, TLSv1.3)
   sslProtocols []string
   // SSL cipher suite name
-  sslCipherSuiteName string
+  //
+  // Deprecated in favor of sslCipherSuite, which resolves the same name to
+  // the suite itself. Kept because it also carries the OCI-predefined suite
+  // names, which are not part of the load balancer's own collection and so
+  // do not resolve.
+  sslCipherSuiteName @maturity("deprecated") string
+  // Cipher suite the listener negotiates with
+  //
+  // Resolves the load balancer's named cipher suite, whose ciphers list is
+  // what a weak-algorithm audit reads. Null when the listener terminates no
+  // TLS, and when it names an OCI-predefined suite rather than a custom one
+  // defined on this load balancer; sslCipherSuiteName carries the name in
+  // that case.
+  sslCipherSuite() oci.loadBalancer.sslCipherSuite
   // Whether peer certificate verification is enabled
   sslVerifyPeerCertificate bool
   // Maximum depth for peer certificate chain verification
@@ -4511,10 +4524,16 @@ private oci.loadBalancer.listener @defaults("name") {
   hasSessionResumption bool
   // Name of the inline certificate bundle configured on the listener
   //
-  // Set when the listener serves a certificate bundle managed directly on the
-  // load balancer; empty when the listener uses OCI Certificates service
-  // certificates exposed through certificates instead.
-  certificateName string
+  // Deprecated in favor of certificateBundle, which resolves the same name to
+  // the bundle itself.
+  certificateName @maturity("deprecated") string
+  // Inline certificate bundle the listener serves
+  //
+  // Resolves the bundle managed directly on the load balancer, carrying the
+  // leaf certificate and its CA chain. Null when the listener uses OCI
+  // Certificates service certificates, exposed through certificates,
+  // instead.
+  certificateBundle() oci.loadBalancer.certificateBundle
   // Certificates served by the listener from the OCI Certificates service
   //
   // The managed certificates exposing the validity window, key algorithm, and
@@ -4554,12 +4573,12 @@ private oci.loadBalancer.listener @defaults("name") {
   //
   // Empty when the listener applies no routing policy.
   routingPolicyName string
-  // Names of the rule sets attached to the listener
+  // Rule sets attached to the listener
   //
-  // Each entry selects an entry of the load balancer's ruleSets, which carry
-  // the header manipulation, HTTP method restriction, and source IP rules
-  // applied to traffic through this listener.
-  ruleSetNames []string
+  // Resolves the load balancer's rule sets, which carry the header
+  // manipulation, HTTP method restriction, and source IP rules applied to
+  // traffic through this listener. Empty when no rule set is attached.
+  ruleSets() []oci.loadBalancer.ruleSet
 }
 
 // Custom SSL cipher suite on an Oracle Cloud Infrastructure (OCI) load balancer
@@ -4648,8 +4667,10 @@ private oci.loadBalancer.backendSet @defaults("name") {
   sslProtocols []string
   // Cipher suite used on connections to the backends
   //
-  // Empty when the backend set carries no SSL configuration.
-  sslCipherSuiteName string
+  // Resolves the load balancer's named cipher suite. Null when the backend
+  // set carries no SSL configuration, and when it uses an OCI-predefined
+  // suite rather than a custom one defined on this load balancer.
+  sslCipherSuite() oci.loadBalancer.sslCipherSuite
   // Whether the load balancer verifies the backend server certificates
   //
   // False when the backend set carries no SSL configuration, and also when
@@ -4659,12 +4680,12 @@ private oci.loadBalancer.backendSet @defaults("name") {
   //
   // Only meaningful when sslVerifyPeerCertificate is enabled.
   sslVerifyDepth int
-  // Name of the inline certificate bundle presented to the backends
+  // Inline certificate bundle presented to the backends
   //
-  // Selects an entry of the load balancer's certificateBundles. Empty when
-  // the backend set uses OCI Certificates service certificates, exposed
-  // through certificates, or carries no SSL configuration at all.
-  certificateName string
+  // Resolves the bundle managed directly on the load balancer. Null when the
+  // backend set uses OCI Certificates service certificates, exposed through
+  // certificates, or carries no SSL configuration at all.
+  certificateBundle() oci.loadBalancer.certificateBundle
   // Certificates presented to the backends from the OCI Certificates service
   certificates() []oci.certificates.certificate
   // Certificate authorities trusted to verify the backend certificates
