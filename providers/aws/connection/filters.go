@@ -60,7 +60,7 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 		AccountTags:          parseMapOpt(opts, "account-tag:"),
 	}
 
-	// FIXME: DEPRECATED, remove in v14.0 vv
+	// FIXME: DEPRECATED, remove in v15.0 vv
 	// `ec2:tag:` and `ec2:exclude:tag:` were folded into the general `tag:` and
 	// `exclude:tag:` filters. They still apply, but warn, so the removal lands
 	// on users who have already been told rather than silently dropping a
@@ -75,7 +75,7 @@ func DiscoveryFiltersFromOpts(opts map[string]string) DiscoveryFilters {
 // general replacement, warning that the option is deprecated. The replacement
 // wins on conflict, so a key carrying a different value under each option gets
 // a second warning naming the value being dropped.
-// FIXME: DEPRECATED, remove in v14.0 vv
+// FIXME: DEPRECATED, remove in v15.0 vv
 func mergeDeprecatedTagOpt(deprecated, replacement string, from, into map[string]string) {
 	if len(from) == 0 {
 		return
