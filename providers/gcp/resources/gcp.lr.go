@@ -5863,6 +5863,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.sqlService.instance.onPremisesConfiguration.dumpFilePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration).GetDumpFilePath()).ToDataRes(types.String)
 	},
+	"gcp.project.sqlService.instance.onPremisesConfiguration.dumpFileBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration).GetDumpFileBucket()).ToDataRes(types.Resource("gcp.project.storageService.bucket"))
+	},
 	"gcp.project.sqlService.instance.onPremisesConfiguration.sourceInstance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration).GetSourceInstance()).ToDataRes(types.Resource("gcp.project.sqlService.instance"))
 	},
@@ -6510,6 +6513,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.bigqueryService.table.bigLakeConfig.storageUri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceTableBigLakeConfig).GetStorageUri()).ToDataRes(types.String)
+	},
+	"gcp.project.bigqueryService.table.bigLakeConfig.bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectBigqueryServiceTableBigLakeConfig).GetBucket()).ToDataRes(types.Resource("gcp.project.storageService.bucket"))
 	},
 	"gcp.project.bigqueryService.table.bigLakeConfig.fileFormat": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectBigqueryServiceTableBigLakeConfig).GetFileFormat()).ToDataRes(types.String)
@@ -23796,6 +23802,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration).DumpFilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.sqlService.instance.onPremisesConfiguration.dumpFileBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration).DumpFileBucket, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucket](v.Value, v.Error)
+		return
+	},
 	"gcp.project.sqlService.instance.onPremisesConfiguration.sourceInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration).SourceInstance, ok = plugin.RawToTValue[*mqlGcpProjectSqlServiceInstance](v.Value, v.Error)
 		return
@@ -24730,6 +24740,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.bigqueryService.table.bigLakeConfig.storageUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectBigqueryServiceTableBigLakeConfig).StorageUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.bigqueryService.table.bigLakeConfig.bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectBigqueryServiceTableBigLakeConfig).Bucket, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucket](v.Value, v.Error)
 		return
 	},
 	"gcp.project.bigqueryService.table.bigLakeConfig.fileFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54686,6 +54700,7 @@ type mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration struct {
 	SslOption         plugin.TValue[string]
 	DmsManaged        plugin.TValue[bool]
 	DumpFilePath      plugin.TValue[string]
+	DumpFileBucket    plugin.TValue[*mqlGcpProjectStorageServiceBucket]
 	SourceInstance    plugin.TValue[*mqlGcpProjectSqlServiceInstance]
 }
 
@@ -54747,6 +54762,22 @@ func (c *mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration) GetDmsManaged()
 
 func (c *mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration) GetDumpFilePath() *plugin.TValue[string] {
 	return &c.DumpFilePath
+}
+
+func (c *mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration) GetDumpFileBucket() *plugin.TValue[*mqlGcpProjectStorageServiceBucket] {
+	return plugin.GetOrCompute[*mqlGcpProjectStorageServiceBucket](&c.DumpFileBucket, func() (*mqlGcpProjectStorageServiceBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.sqlService.instance.onPremisesConfiguration", c.__id, "dumpFileBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectStorageServiceBucket), nil
+			}
+		}
+
+		return c.dumpFileBucket()
+	})
 }
 
 func (c *mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration) GetSourceInstance() *plugin.TValue[*mqlGcpProjectSqlServiceInstance] {
@@ -56748,6 +56779,7 @@ type mqlGcpProjectBigqueryServiceTableBigLakeConfig struct {
 	__id       string
 	mqlGcpProjectBigqueryServiceTableBigLakeConfigInternal
 	StorageUri  plugin.TValue[string]
+	Bucket      plugin.TValue[*mqlGcpProjectStorageServiceBucket]
 	FileFormat  plugin.TValue[string]
 	TableFormat plugin.TValue[string]
 	Connection  plugin.TValue[*mqlGcpProjectBigqueryServiceConnection]
@@ -56787,6 +56819,22 @@ func (c *mqlGcpProjectBigqueryServiceTableBigLakeConfig) MqlID() string {
 
 func (c *mqlGcpProjectBigqueryServiceTableBigLakeConfig) GetStorageUri() *plugin.TValue[string] {
 	return &c.StorageUri
+}
+
+func (c *mqlGcpProjectBigqueryServiceTableBigLakeConfig) GetBucket() *plugin.TValue[*mqlGcpProjectStorageServiceBucket] {
+	return plugin.GetOrCompute[*mqlGcpProjectStorageServiceBucket](&c.Bucket, func() (*mqlGcpProjectStorageServiceBucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.bigqueryService.table.bigLakeConfig", c.__id, "bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectStorageServiceBucket), nil
+			}
+		}
+
+		return c.bucket()
+	})
 }
 
 func (c *mqlGcpProjectBigqueryServiceTableBigLakeConfig) GetFileFormat() *plugin.TValue[string] {

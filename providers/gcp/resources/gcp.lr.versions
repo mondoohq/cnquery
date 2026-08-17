@@ -819,6 +819,7 @@ gcp.project.bigqueryService.routine.projectId 9.0.0
 gcp.project.bigqueryService.routine.type 9.0.0
 gcp.project.bigqueryService.table 9.0.0
 gcp.project.bigqueryService.table.bigLakeConfig 13.36.1
+gcp.project.bigqueryService.table.bigLakeConfig.bucket 13.36.1
 gcp.project.bigqueryService.table.bigLakeConfig.connection 13.36.1
 gcp.project.bigqueryService.table.bigLakeConfig.fileFormat 13.36.1
 gcp.project.bigqueryService.table.bigLakeConfig.storageUri 13.36.1
@@ -5068,6 +5069,7 @@ gcp.project.sqlService.instance.onPremisesConfiguration 13.36.1
 gcp.project.sqlService.instance.onPremisesConfiguration.caCertificate 13.36.1
 gcp.project.sqlService.instance.onPremisesConfiguration.clientCertificate 13.36.1
 gcp.project.sqlService.instance.onPremisesConfiguration.dmsManaged 13.36.1
+gcp.project.sqlService.instance.onPremisesConfiguration.dumpFileBucket 13.36.1
 gcp.project.sqlService.instance.onPremisesConfiguration.dumpFilePath 13.36.1
 gcp.project.sqlService.instance.onPremisesConfiguration.hostPort 13.36.1
 gcp.project.sqlService.instance.onPremisesConfiguration.sourceInstance 13.36.1

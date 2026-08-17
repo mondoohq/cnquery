@@ -1074,6 +1074,13 @@ func (g *mqlGcpProjectSqlServiceInstanceSettingsIpConfiguration) network() (*mql
 	return n, nil
 }
 
+// dumpFileBucket resolves the Cloud Storage bucket holding the source database
+// dump. A dump is a full copy of the external database's contents, so the
+// bucket's own IAM policy decides who can read that copy.
+func (g *mqlGcpProjectSqlServiceInstanceOnPremisesConfiguration) dumpFileBucket() (*mqlGcpProjectStorageServiceBucket, error) {
+	return resolveGcsBucketFromURI(g.MqlRuntime, g.DumpFilePath.Data, &g.DumpFileBucket)
+}
+
 func (g *mqlGcpProjectSqlServiceInstance) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
