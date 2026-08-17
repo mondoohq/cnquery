@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -83,12 +84,32 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					ipAddresses = append(ipAddresses, entry)
 				}
 
+				// ShapeDetails is populated only on a flexible shape. Leaving the
+				// bandwidth fields null on a fixed shape keeps "no configured
+				// bandwidth" distinct from a configured 0 Mbps.
+				var minBandwidth, maxBandwidth *int
+				if lb.ShapeDetails != nil {
+					minBandwidth = lb.ShapeDetails.MinimumBandwidthInMbps
+					maxBandwidth = lb.ShapeDetails.MaximumBandwidthInMbps
+				}
+
+				hostnames := make(map[string]any, len(lb.Hostnames))
+				for name, h := range lb.Hostnames {
+					hostnames[name] = stringValue(h.Hostname)
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.loadBalancer", map[string]*llx.RawData{
 					"id":                        llx.StringDataPtr(lb.Id),
 					"name":                      llx.StringDataPtr(lb.DisplayName),
 					"compartmentID":             llx.StringDataPtr(lb.CompartmentId),
 					"shape":                     llx.StringDataPtr(lb.ShapeName),
+					"minimumBandwidthInMbps":    llx.IntDataPtr(minBandwidth),
+					"maximumBandwidthInMbps":    llx.IntDataPtr(maxBandwidth),
 					"isPrivate":                 llx.BoolDataPtr(lb.IsPrivate),
+					"ipMode":                    llx.StringData(string(lb.IpMode)),
+					"isRequestIdEnabled":        llx.BoolDataPtr(lb.IsRequestIdEnabled),
+					"requestIdHeader":           llx.StringDataPtr(lb.RequestIdHeader),
+					"hostnames":                 llx.MapData(hostnames, types.String),
 					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
 					"nsgIds":                    llx.ArrayData(convert.SliceAnyToInterface(lb.NetworkSecurityGroupIds), types.String),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
@@ -107,6 +128,9 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 				mqlLb.cacheBackendSets = lb.BackendSets
 				mqlLb.cacheRegion = region
 				mqlLb.cacheSubnetIDs = lb.SubnetIds
+				mqlLb.cacheCipherSuites = lb.SslCipherSuites
+				mqlLb.cacheCertificates = lb.Certificates
+				mqlLb.cacheRuleSets = lb.RuleSets
 				res = append(res, mqlLb)
 			}
 
@@ -115,10 +139,13 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 }
 
 type mqlOciLoadBalancerLoadBalancerInternal struct {
-	cacheListeners   map[string]loadbalancer.Listener
-	cacheBackendSets map[string]loadbalancer.BackendSet
-	cacheRegion      string
-	cacheSubnetIDs   []string
+	cacheListeners    map[string]loadbalancer.Listener
+	cacheBackendSets  map[string]loadbalancer.BackendSet
+	cacheRegion       string
+	cacheSubnetIDs    []string
+	cacheCipherSuites map[string]loadbalancer.SslCipherSuite
+	cacheCertificates map[string]loadbalancer.Certificate
+	cacheRuleSets     map[string]loadbalancer.RuleSet
 }
 
 func initOciLoadBalancerLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -164,47 +191,118 @@ func (o *mqlOciLoadBalancerLoadBalancer) id() (string, error) {
 	return "oci.loadBalancer.loadBalancer/" + o.Id.Data, nil
 }
 
+// lbSslFields is the flattened form of a loadbalancer.SslConfiguration, shared
+// by listeners and backend sets because OCI models both with the same struct.
+type lbSslFields struct {
+	protocols             []any
+	cipherSuiteName       string
+	verifyPeerCertificate bool
+	hasSessionResumption  bool
+	verifyDepth           *int
+	serverOrderPreference string
+	certificateName       string
+	certificateIDs        []any
+	trustedCaIDs          []any
+}
+
+// lbSslFieldsFrom flattens an SSL configuration. A nil configuration means the
+// listener or backend set terminates no TLS at all, which is reported as empty
+// strings and false rather than as null: a null would satisfy an assertion that
+// peer verification is enabled, and "not configured" must fail that assertion,
+// not pass it.
+func lbSslFieldsFrom(ssl *loadbalancer.SslConfiguration) lbSslFields {
+	out := lbSslFields{}
+	if ssl == nil {
+		return out
+	}
+	for _, p := range ssl.Protocols {
+		out.protocols = append(out.protocols, p)
+	}
+	out.cipherSuiteName = stringValue(ssl.CipherSuiteName)
+	out.verifyPeerCertificate = boolValue(ssl.VerifyPeerCertificate)
+	out.hasSessionResumption = boolValue(ssl.HasSessionResumption)
+	out.verifyDepth = ssl.VerifyDepth
+	out.serverOrderPreference = string(ssl.ServerOrderPreference)
+	out.certificateName = stringValue(ssl.CertificateName)
+	out.certificateIDs = convert.SliceAnyToInterface(ssl.CertificateIds)
+	out.trustedCaIDs = convert.SliceAnyToInterface(ssl.TrustedCertificateAuthorityIds)
+	return out
+}
+
+// lbCookieFields is the flattened form of the load balancer's own session
+// cookie configuration.
+type lbCookieFields struct {
+	name            string
+	disableFallback bool
+	domain          string
+	path            string
+	maxAgeInSeconds *int
+	isSecure        bool
+	isHttpOnly      bool
+}
+
+// lbCookieFieldsFrom flattens the load balancer cookie configuration. A nil
+// configuration means this form of session persistence is off, so isSecure and
+// isHttpOnly report false: there is no cookie, and a null would let a check
+// requiring the Secure attribute pass.
+func lbCookieFieldsFrom(c *loadbalancer.LbCookieSessionPersistenceConfigurationDetails) lbCookieFields {
+	out := lbCookieFields{}
+	if c == nil {
+		return out
+	}
+	out.name = stringValue(c.CookieName)
+	out.disableFallback = boolValue(c.DisableFallback)
+	out.domain = stringValue(c.Domain)
+	out.path = stringValue(c.Path)
+	out.maxAgeInSeconds = c.MaxAgeInSeconds
+	out.isSecure = boolValue(c.IsSecure)
+	out.isHttpOnly = boolValue(c.IsHttpOnly)
+	return out
+}
+
 func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 	res := []any{}
 	for name, listener := range o.cacheListeners {
-		var sslProtocols []any
-		var sslCipherSuiteName string
-		var sslVerifyPeerCert, hasSessionResumption bool
-		var certificateName string
-		var certificateIds, trustedCaIds []any
-		if listener.SslConfiguration != nil {
-			ssl := listener.SslConfiguration
-			for _, p := range ssl.Protocols {
-				sslProtocols = append(sslProtocols, p)
-			}
-			sslCipherSuiteName = stringValue(ssl.CipherSuiteName)
-			sslVerifyPeerCert = boolValue(ssl.VerifyPeerCertificate)
-			hasSessionResumption = boolValue(ssl.HasSessionResumption)
-			certificateName = stringValue(ssl.CertificateName)
-			certificateIds = convert.SliceAnyToInterface(ssl.CertificateIds)
-			trustedCaIds = convert.SliceAnyToInterface(ssl.TrustedCertificateAuthorityIds)
+		ssl := lbSslFieldsFrom(listener.SslConfiguration)
+
+		// A listener that leaves the connection defaults alone carries no
+		// ConnectionConfiguration at all, so both fields stay null rather than
+		// reporting a zero timeout the load balancer does not enforce.
+		var idleTimeout *int64
+		var proxyProtocolVersion *int
+		if listener.ConnectionConfiguration != nil {
+			idleTimeout = listener.ConnectionConfiguration.IdleTimeout
+			proxyProtocolVersion = listener.ConnectionConfiguration.BackendTcpProxyProtocolVersion
 		}
 
 		lbId := o.Id.Data
 		listenerId := lbId + "/listener/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.listener", map[string]*llx.RawData{
-			"__id":                     llx.StringData(listenerId),
-			"name":                     llx.StringData(name),
-			"port":                     llx.IntDataPtr(listener.Port),
-			"protocol":                 llx.StringDataPtr(listener.Protocol),
-			"defaultBackendSetName":    llx.StringDataPtr(listener.DefaultBackendSetName),
-			"sslProtocols":             llx.ArrayData(sslProtocols, types.String),
-			"sslCipherSuiteName":       llx.StringData(sslCipherSuiteName),
-			"sslVerifyPeerCertificate": llx.BoolData(sslVerifyPeerCert),
-			"hasSessionResumption":     llx.BoolData(hasSessionResumption),
-			"certificateName":          llx.StringData(certificateName),
+			"__id":                           llx.StringData(listenerId),
+			"name":                           llx.StringData(name),
+			"port":                           llx.IntDataPtr(listener.Port),
+			"protocol":                       llx.StringDataPtr(listener.Protocol),
+			"defaultBackendSetName":          llx.StringDataPtr(listener.DefaultBackendSetName),
+			"sslProtocols":                   llx.ArrayData(ssl.protocols, types.String),
+			"sslCipherSuiteName":             llx.StringData(ssl.cipherSuiteName),
+			"sslVerifyPeerCertificate":       llx.BoolData(ssl.verifyPeerCertificate),
+			"sslVerifyDepth":                 llx.IntDataPtr(ssl.verifyDepth),
+			"sslServerOrderPreference":       llx.StringData(ssl.serverOrderPreference),
+			"hasSessionResumption":           llx.BoolData(ssl.hasSessionResumption),
+			"certificateName":                llx.StringData(ssl.certificateName),
+			"idleTimeoutInSeconds":           llx.IntDataPtr(idleTimeout),
+			"backendTcpProxyProtocolVersion": llx.IntDataPtr(proxyProtocolVersion),
+			"hostnameNames":                  llx.ArrayData(convert.SliceAnyToInterface(listener.HostnameNames), types.String),
+			"pathRouteSetName":               llx.StringDataPtr(listener.PathRouteSetName),
+			"routingPolicyName":              llx.StringDataPtr(listener.RoutingPolicyName),
+			"ruleSetNames":                   llx.ArrayData(convert.SliceAnyToInterface(listener.RuleSetNames), types.String),
 		})
 		if err != nil {
 			return nil, err
 		}
 		mqlListener := mqlInstance.(*mqlOciLoadBalancerListener)
-		mqlListener.cacheCertificateIDs = certificateIds
-		mqlListener.cacheTrustedCaIDs = trustedCaIds
+		mqlListener.cacheCertificateIDs = ssl.certificateIDs
+		mqlListener.cacheTrustedCaIDs = ssl.trustedCaIDs
 		res = append(res, mqlInstance)
 	}
 	return res, nil
@@ -235,14 +333,81 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 			return nil, err
 		}
 
+		// A backend set with no SslConfiguration talks to its backends in the
+		// clear. The booleans stay false rather than null so that an assertion
+		// requiring verification fails on such a set instead of passing on a
+		// null, which MQL reads as satisfied.
+		ssl := lbSslFieldsFrom(bs.SslConfiguration)
+
+		var sessionCookieName string
+		var sessionDisableFallback bool
+		if bs.SessionPersistenceConfiguration != nil {
+			sessionCookieName = stringValue(bs.SessionPersistenceConfiguration.CookieName)
+			sessionDisableFallback = boolValue(bs.SessionPersistenceConfiguration.DisableFallback)
+		}
+
+		cookie := lbCookieFieldsFrom(bs.LbCookieSessionPersistenceConfiguration)
+
 		lbId := o.Id.Data
 		bsId := lbId + "/backendSet/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.backendSet", map[string]*llx.RawData{
-			"__id":          llx.StringData(bsId),
-			"name":          llx.StringData(name),
-			"policy":        llx.StringDataPtr(bs.Policy),
-			"healthChecker": llx.DictData(healthChecker),
-			"backendCount":  llx.IntData(int64(len(bs.Backends))),
+			"__id":                              llx.StringData(bsId),
+			"name":                              llx.StringData(name),
+			"policy":                            llx.StringDataPtr(bs.Policy),
+			"healthChecker":                     llx.DictData(healthChecker),
+			"backendCount":                      llx.IntData(int64(len(bs.Backends))),
+			"backendMaxConnections":             llx.IntDataPtr(bs.BackendMaxConnections),
+			"sslProtocols":                      llx.ArrayData(ssl.protocols, types.String),
+			"sslCipherSuiteName":                llx.StringData(ssl.cipherSuiteName),
+			"sslVerifyPeerCertificate":          llx.BoolData(ssl.verifyPeerCertificate),
+			"sslVerifyDepth":                    llx.IntDataPtr(ssl.verifyDepth),
+			"certificateName":                   llx.StringData(ssl.certificateName),
+			"sessionPersistenceCookieName":      llx.StringData(sessionCookieName),
+			"sessionPersistenceDisableFallback": llx.BoolData(sessionDisableFallback),
+			"lbCookieName":                      llx.StringData(cookie.name),
+			"lbCookieDisableFallback":           llx.BoolData(cookie.disableFallback),
+			"lbCookieDomain":                    llx.StringData(cookie.domain),
+			"lbCookiePath":                      llx.StringData(cookie.path),
+			"lbCookieMaxAgeInSeconds":           llx.IntDataPtr(cookie.maxAgeInSeconds),
+			"lbCookieIsSecure":                  llx.BoolData(cookie.isSecure),
+			"lbCookieIsHttpOnly":                llx.BoolData(cookie.isHttpOnly),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlBs := mqlInstance.(*mqlOciLoadBalancerBackendSet)
+		mqlBs.cacheBackends = bs.Backends
+		mqlBs.cacheCertificateIDs = ssl.certificateIDs
+		mqlBs.cacheTrustedCaIDs = ssl.trustedCaIDs
+		res = append(res, mqlBs)
+	}
+	return res, nil
+}
+
+type mqlOciLoadBalancerBackendSetInternal struct {
+	cacheBackends       []loadbalancer.Backend
+	cacheCertificateIDs []any
+	cacheTrustedCaIDs   []any
+}
+
+func (o *mqlOciLoadBalancerBackendSet) backends() ([]any, error) {
+	res := make([]any, 0, len(o.cacheBackends))
+	for i := range o.cacheBackends {
+		b := o.cacheBackends[i]
+
+		// The backend name is the address and port, which is what makes it
+		// unique inside the set. Qualifying it with the backend set id keeps
+		// two sets that front the same server from colliding in the cache.
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.backend", map[string]*llx.RawData{
+			"__id":           llx.StringData(o.__id + "/backend/" + stringValue(b.Name)),
+			"name":           llx.StringDataPtr(b.Name),
+			"ipAddress":      llx.StringDataPtr(b.IpAddress),
+			"port":           llx.IntDataPtr(b.Port),
+			"weight":         llx.IntDataPtr(b.Weight),
+			"drain":          llx.BoolDataPtr(b.Drain),
+			"backup":         llx.BoolDataPtr(b.Backup),
+			"offline":        llx.BoolDataPtr(b.Offline),
+			"maxConnections": llx.IntDataPtr(b.MaxConnections),
 		})
 		if err != nil {
 			return nil, err
@@ -250,6 +415,115 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		res = append(res, mqlInstance)
 	}
 	return res, nil
+}
+
+func (o *mqlOciLoadBalancerBackend) id() (string, error) {
+	return o.__id, nil
+}
+
+func (o *mqlOciLoadBalancerBackendSet) certificates() ([]any, error) {
+	return resolveOciCertificates(o.MqlRuntime, o.cacheCertificateIDs)
+}
+
+func (o *mqlOciLoadBalancerBackendSet) trustedCertificateAuthorities() ([]any, error) {
+	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIDs, "certificateauthority", "oci.certificates.certificateAuthority")
+}
+
+func (o *mqlOciLoadBalancerBackendSet) trustedCaBundles() ([]any, error) {
+	return resolveOciCertRefsByType(o.MqlRuntime, o.cacheTrustedCaIDs, "cabundle", "oci.certificates.caBundle")
+}
+
+func (o *mqlOciLoadBalancerLoadBalancer) sslCipherSuites() ([]any, error) {
+	res := make([]any, 0, len(o.cacheCipherSuites))
+	for name, suite := range o.cacheCipherSuites {
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.sslCipherSuite", map[string]*llx.RawData{
+			"__id":    llx.StringData(o.Id.Data + "/sslCipherSuite/" + name),
+			"name":    llx.StringData(name),
+			"ciphers": llx.ArrayData(convert.SliceAnyToInterface(suite.Ciphers), types.String),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+	return res, nil
+}
+
+func (o *mqlOciLoadBalancerSslCipherSuite) id() (string, error) {
+	return o.__id, nil
+}
+
+func (o *mqlOciLoadBalancerLoadBalancer) certificateBundles() ([]any, error) {
+	res := make([]any, 0, len(o.cacheCertificates))
+	for name, cert := range o.cacheCertificates {
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.certificateBundle", map[string]*llx.RawData{
+			"__id":              llx.StringData(o.Id.Data + "/certificateBundle/" + name),
+			"name":              llx.StringData(name),
+			"publicCertificate": llx.StringDataPtr(cert.PublicCertificate),
+			"caCertificate":     llx.StringDataPtr(cert.CaCertificate),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+	return res, nil
+}
+
+func (o *mqlOciLoadBalancerCertificateBundle) id() (string, error) {
+	return o.__id, nil
+}
+
+// certificates parses the bundle's PEM into network.certificate resources. The
+// leaf and the chain are parsed as one bundle so the chain is queryable
+// alongside the certificate it issued.
+func (o *mqlOciLoadBalancerCertificateBundle) certificates() ([]any, error) {
+	pem := o.PublicCertificate.Data + "\n" + o.CaCertificate.Data
+	if strings.TrimSpace(pem) == "" {
+		return []any{}, nil
+	}
+
+	certs, err := o.MqlRuntime.CreateSharedResource("certificates", map[string]*llx.RawData{
+		"pem": llx.StringData(pem),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := o.MqlRuntime.GetSharedData("certificates", certs.MqlID(), "list")
+	if err != nil {
+		return nil, err
+	}
+	items, ok := list.Value.([]any)
+	if !ok {
+		return []any{}, nil
+	}
+	return items, nil
+}
+
+func (o *mqlOciLoadBalancerLoadBalancer) ruleSets() ([]any, error) {
+	res := make([]any, 0, len(o.cacheRuleSets))
+	for name, rs := range o.cacheRuleSets {
+		rules, err := convert.JsonToDictSlice(rs.Items)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.ruleSet", map[string]*llx.RawData{
+			"__id":  llx.StringData(o.Id.Data + "/ruleSet/" + name),
+			"name":  llx.StringData(name),
+			"rules": llx.ArrayData(rules, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+	return res, nil
+}
+
+func (o *mqlOciLoadBalancerRuleSet) id() (string, error) {
+	return o.__id, nil
 }
 
 func (o *mqlOciLoadBalancerListener) id() (string, error) {

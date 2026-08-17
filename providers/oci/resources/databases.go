@@ -13,6 +13,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/nosql"
 	"github.com/oracle/oci-go-sdk/v65/opensearch"
 	"github.com/oracle/oci-go-sdk/v65/psql"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -714,6 +715,202 @@ func (o *mqlOciOpensearchCluster) opendashboardPrivateIp() (string, error) {
 		return "", err
 	}
 	return stringValue(detail.OpendashboardPrivateIp), nil
+}
+
+// A cluster with no SAML configuration carries no SecuritySamlConfig at all.
+// Reporting false there is correct: no federated sign-on is configured.
+func (o *mqlOciOpensearchCluster) isSamlEnabled() (bool, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return false, err
+	}
+	if detail.SecuritySamlConfig == nil {
+		return false, nil
+	}
+	return boolValue(detail.SecuritySamlConfig.IsEnabled), nil
+}
+
+func (o *mqlOciOpensearchCluster) samlIdpEntityId() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.SecuritySamlConfig == nil {
+		return "", nil
+	}
+	return stringValue(detail.SecuritySamlConfig.IdpEntityId), nil
+}
+
+func (o *mqlOciOpensearchCluster) samlAdminBackendRole() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.SecuritySamlConfig == nil {
+		return "", nil
+	}
+	return stringValue(detail.SecuritySamlConfig.AdminBackendRole), nil
+}
+
+func (o *mqlOciOpensearchCluster) samlSubjectKey() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.SecuritySamlConfig == nil {
+		return "", nil
+	}
+	return stringValue(detail.SecuritySamlConfig.SubjectKey), nil
+}
+
+func (o *mqlOciOpensearchCluster) samlRolesKey() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.SecuritySamlConfig == nil {
+		return "", nil
+	}
+	return stringValue(detail.SecuritySamlConfig.RolesKey), nil
+}
+
+func (o *mqlOciOpensearchCluster) samlOpendashboardUrl() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.SecuritySamlConfig == nil {
+		return "", nil
+	}
+	return stringValue(detail.SecuritySamlConfig.OpendashboardUrl), nil
+}
+
+func (o *mqlOciOpensearchCluster) clusterCertificateMode() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.CertificateConfig == nil {
+		return "", nil
+	}
+	return string(detail.CertificateConfig.ClusterCertificateMode), nil
+}
+
+func (o *mqlOciOpensearchCluster) dashboardCertificateMode() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.CertificateConfig == nil {
+		return "", nil
+	}
+	return string(detail.CertificateConfig.DashboardCertificateMode), nil
+}
+
+func (o *mqlOciOpensearchCluster) apiCertificate() (*mqlOciCertificatesCertificate, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	var id string
+	if detail.CertificateConfig != nil {
+		id = stringValue(detail.CertificateConfig.OpenSearchApiCertificateId)
+	}
+	return resolveOciOpensearchCertificate(o.MqlRuntime, id, &o.ApiCertificate)
+}
+
+func (o *mqlOciOpensearchCluster) dashboardCertificate() (*mqlOciCertificatesCertificate, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	var id string
+	if detail.CertificateConfig != nil {
+		id = stringValue(detail.CertificateConfig.OpenSearchDashboardCertificateId)
+	}
+	return resolveOciOpensearchCertificate(o.MqlRuntime, id, &o.DashboardCertificate)
+}
+
+// resolveOciOpensearchCertificate resolves a certificate reference, reporting
+// null for the Oracle-managed case where the cluster names no certificate of
+// its own.
+func resolveOciOpensearchCertificate(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciCertificatesCertificate]) (*mqlOciCertificatesCertificate, error) {
+	if id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "oci.certificates.certificate", map[string]*llx.RawData{
+		"id": llx.StringData(id),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciCertificatesCertificate), nil
+}
+
+func (o *mqlOciOpensearchCluster) securityGroups() ([]any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	// The SDK models a single group rather than a list, but every sibling
+	// resource exposes securityGroups as a list, so keep the shape uniform.
+	nsgID := stringValue(detail.NsgId)
+	if nsgID == "" {
+		return []any{}, nil
+	}
+	return resolveOciSecurityGroups(o.MqlRuntime, []any{nsgID})
+}
+
+func (o *mqlOciOpensearchCluster) fqdn() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	return stringValue(detail.Fqdn), nil
+}
+
+func (o *mqlOciOpensearchCluster) loadBalancerServiceType() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.LoadBalancerConfig == nil {
+		return "", nil
+	}
+	return string(detail.LoadBalancerConfig.LoadBalancerServiceType), nil
+}
+
+func (o *mqlOciOpensearchCluster) reverseConnectionEndpoints() ([]any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	return convert.JsonToDictSlice(detail.ReverseConnectionEndpoints)
+}
+
+func (o *mqlOciOpensearchCluster) inboundClusters() ([]any, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(detail.InboundClusterIds))
+	for _, id := range detail.InboundClusterIds {
+		if id == "" {
+			continue
+		}
+		mqlCluster, err := NewResource(o.MqlRuntime, "oci.opensearch.cluster", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			// A cluster in a compartment we cannot read must not take the rest
+			// of the list with it.
+			log.Debug().Err(err).Str("cluster", id).Msg("skipping unresolvable oci opensearch cluster")
+			continue
+		}
+		res = append(res, mqlCluster)
+	}
+	return res, nil
 }
 
 // ----- GoldenGate -----

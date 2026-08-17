@@ -62,6 +62,10 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 					"compartmentID":         llx.StringDataPtr(vcn.CompartmentId),
 					"cidrBlock":             llx.StringDataPtr(vcn.CidrBlock),
 					"cidrBlocks":            llx.ArrayData(convert.SliceAnyToInterface(vcn.CidrBlocks), types.String),
+					"ipv6CidrBlocks":        llx.ArrayData(convert.SliceAnyToInterface(vcn.Ipv6CidrBlocks), types.String),
+					"byoipv6CidrBlocks":     llx.ArrayData(convert.SliceAnyToInterface(vcn.Byoipv6CidrBlocks), types.String),
+					"ipv6PrivateCidrBlocks": llx.ArrayData(convert.SliceAnyToInterface(vcn.Ipv6PrivateCidrBlocks), types.String),
+					"isZprOnly":             llx.BoolDataPtr(vcn.IsZprOnly),
 					"vcnDomainName":         llx.StringDataPtr(vcn.VcnDomainName),
 					"securityAttributes":    llx.MapData(definedTagsToAny(vcn.SecurityAttributes), types.Dict),
 					"defaultDhcpOptionsId":  llx.StringDataPtr(vcn.DefaultDhcpOptionsId),
@@ -70,6 +74,7 @@ func (o *mqlOciNetwork) vcns() ([]any, error) {
 					"dnsLabel":              llx.StringDataPtr(vcn.DnsLabel),
 					"freeformTags":          llx.MapData(strMapToAny(vcn.FreeformTags), types.String),
 					"definedTags":           llx.MapData(definedTagsToAny(vcn.DefinedTags), types.Any),
+					"systemTags":            llx.MapData(definedTagsToAny(vcn.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -457,6 +462,12 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 					"compartmentID":           llx.StringDataPtr(subnet.CompartmentId),
 					"availabilityDomain":      llx.StringDataPtr(subnet.AvailabilityDomain),
 					"cidrBlock":               llx.StringDataPtr(subnet.CidrBlock),
+					"ipv4CidrBlocks":          llx.ArrayData(convert.SliceAnyToInterface(subnet.Ipv4CidrBlocks), types.String),
+					"ipv6CidrBlock":           llx.StringDataPtr(subnet.Ipv6CidrBlock),
+					"ipv6CidrBlocks":          llx.ArrayData(convert.SliceAnyToInterface(subnet.Ipv6CidrBlocks), types.String),
+					"ipv6VirtualRouterIp":     llx.StringDataPtr(subnet.Ipv6VirtualRouterIp),
+					"virtualRouterIp":         llx.StringDataPtr(subnet.VirtualRouterIp),
+					"virtualRouterMac":        llx.StringDataPtr(subnet.VirtualRouterMac),
 					"state":                   llx.StringData(string(subnet.LifecycleState)),
 					"dnsLabel":                llx.StringDataPtr(subnet.DnsLabel),
 					"subnetDomainName":        llx.StringDataPtr(subnet.SubnetDomainName),
@@ -465,6 +476,7 @@ func (o *mqlOciNetwork) subnets() ([]any, error) {
 					"created":                 llx.TimeDataPtr(created),
 					"freeformTags":            llx.MapData(strMapToAny(subnet.FreeformTags), types.String),
 					"definedTags":             llx.MapData(definedTagsToAny(subnet.DefinedTags), types.Any),
+					"systemTags":              llx.MapData(definedTagsToAny(subnet.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

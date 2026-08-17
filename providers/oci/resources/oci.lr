@@ -1,6 +1,8 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
+import "../../network/resources/network.lr"
+
 option provider = "go.mondoo.com/cnquery/v9/providers/oci"
 option go_package = "go.mondoo.com/mql/v13/providers/oci/resources"
 
@@ -377,6 +379,58 @@ private oci.identity.domain.passwordPolicy @defaults("name minLength passwordExp
   startsWithAlphabet bool
   // Substrings the password may not contain
   disallowedSubstrings []string
+  // Overall strength preset the policy was built from
+  //
+  // One of Simple, Standard, or Custom. Simple and Standard are Oracle's
+  // presets; Custom means the individual rules on this policy are what
+  // actually applies.
+  passwordStrength string
+  // Character classes a password must draw from
+  //
+  // A string listing the required characters, so a policy requiring a digit
+  // and a symbol reads as those characters rather than as counts. Empty when
+  // the policy constrains composition only through the min and max counts.
+  requiredChars string
+  // Characters a password may contain
+  //
+  // Empty when every character is permitted.
+  allowedChars string
+  // Characters a password may not contain
+  //
+  // Empty when no character is excluded.
+  disallowedChars string
+  // Minimum distinct characters a new password must have from the previous one
+  //
+  // Zero means a user may change a password by altering a single character.
+  // Null when the policy states no requirement, which the domain treats the
+  // same way.
+  distinctCharacters int
+  // Whether every user governed by the policy must reset their password at next sign-in
+  forcePasswordReset bool
+  // User attributes whose values a password may not contain
+  //
+  // Each entry names a profile attribute, so a policy listing `emails`
+  // rejects a password built from the user's own mail address. Empty when
+  // the policy checks no attribute beyond the dedicated userName, firstName,
+  // and lastName rules.
+  disallowedUserAttributeValues []string
+  // Location of the dictionary of disallowed words
+  //
+  // Only meaningful when dictionaryWordDisallowed is set. Empty when the
+  // domain uses the built-in dictionary.
+  dictionaryLocation string
+  // Evaluation order when several policies could govern the same user
+  //
+  // The lowest priority wins, so a weak policy at priority 1 overrides a
+  // strict one at priority 2 for any user in both policies' groups. Null on a
+  // policy the domain returns no priority for, which is the case for the
+  // built-in policies.
+  priority int
+  // Groups the policy governs
+  //
+  // Empty when the policy applies to the whole domain rather than to
+  // selected groups.
+  groups() []oci.identity.domain.group
 }
 
 // Oracle Cloud Infrastructure (OCI) identity domain multi-factor settings
@@ -1563,6 +1617,28 @@ private oci.network.vcn @defaults("name") {
   cidrBlock @maturity("deprecated") string
   // IPv4 CIDR blocks for the VCN address space
   cidrBlocks []string
+  // Oracle-allocated IPv6 CIDR blocks for the VCN address space
+  //
+  // Empty on an IPv4-only VCN. A VCN with an IPv6 range carries a second
+  // address family whose reachability is governed by its own route rules and
+  // security rules, so an audit written only against cidrBlocks does not
+  // describe it.
+  ipv6CidrBlocks []string
+  // Customer-owned IPv6 CIDR blocks imported into the VCN (BYOIPv6)
+  //
+  // Empty when the VCN uses no imported address space.
+  byoipv6CidrBlocks []string
+  // ULA and private IPv6 CIDR blocks for the VCN address space
+  //
+  // Not routable to the internet. Empty when the VCN defines no private IPv6
+  // range.
+  ipv6PrivateCidrBlocks []string
+  // Whether the VCN admits traffic only where a Zero Trust Packet Routing policy allows it
+  //
+  // When set, security lists and network security groups no longer decide on
+  // their own what may reach resources in the VCN; a ZPR policy has to permit
+  // the flow as well.
+  isZprOnly bool
   // VCN domain name for DNS resolution
   vcnDomainName string
   // Security attributes applied to the VCN, keyed by namespace
@@ -1597,6 +1673,12 @@ private oci.network.vcn @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
   // Subnets carved out of the VCN address space
   subnets() []oci.network.subnet
   // Route tables defined in the VCN
@@ -1644,6 +1726,32 @@ private oci.network.subnet @defaults("name") {
   availabilityDomain string
   // IPv4 CIDR block for the subnet
   cidrBlock string
+  // IPv4 CIDR blocks for the subnet
+  //
+  // The full list, for a subnet carrying more than the single range in
+  // cidrBlock.
+  ipv4CidrBlocks []string
+  // Primary IPv6 CIDR block for the subnet
+  //
+  // Empty on an IPv4-only subnet.
+  ipv6CidrBlock string
+  // IPv6 CIDR blocks for the subnet
+  //
+  // Empty on an IPv4-only subnet. A dual-stack subnet reaches the internet
+  // over a path that `prohibitPublicIpOnVnic` does not constrain, since that
+  // flag governs IPv4 public addressing only.
+  ipv6CidrBlocks []string
+  // IPv6 address of the subnet's virtual router
+  //
+  // The default gateway VNICs on the subnet use for IPv6. Empty on an
+  // IPv4-only subnet.
+  ipv6VirtualRouterIp string
+  // IPv4 address of the subnet's virtual router
+  //
+  // The default gateway VNICs on the subnet use for IPv4.
+  virtualRouterIp string
+  // MAC address of the subnet's virtual router
+  virtualRouterMac string
   // Subnet lifecycle state (e.g., PROVISIONING, AVAILABLE, TERMINATING, TERMINATED, UPDATING)
   state string
   // DNS label for the subnet
@@ -1664,6 +1772,12 @@ private oci.network.subnet @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
   // Subnet flow logs (OCI logs with service=flowlogs whose resource is this subnet)
   flowLogs() []oci.logging.log
 }
@@ -2733,6 +2847,22 @@ private oci.objectStorage.bucket {
   etag() string
   // KMS key OCID for encryption
   kmsKeyId() string
+  // Whether the bucket derives a per-bucket data key from its KMS key
+  //
+  // A bucket key lets Object Storage encrypt objects under a key derived once
+  // for the bucket rather than calling the vault per object. Without it every
+  // object is wrapped directly by the KMS key.
+  isBucketKeyEnabled() bool
+  // Whether the bucket name is unique within its namespace or only within its compartment
+  //
+  // One of GLOBAL or COMPARTMENT. A compartment-scoped bucket name can be
+  // reused in another compartment of the same namespace.
+  bucketScope() string
+  // User-defined metadata stored on the bucket
+  //
+  // Free-form keys set at creation. Object Storage returns them unchanged and
+  // attaches no meaning to them.
+  metadata() map[string]string
   // Approximate number of objects in the bucket
   approximateCount() int
   // Approximate total size of objects in bytes
@@ -4249,8 +4379,35 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   compartment() oci.compartment
   // Shape name (e.g., flexible, 100Mbps, 400Mbps)
   shape string
+  // Guaranteed pre-provisioned bandwidth in Mbps
+  //
+  // Ingress plus egress. Set only on a flexible shape; null on a fixed
+  // shape, where the shape name itself carries the bandwidth.
+  minimumBandwidthInMbps int
+  // Maximum burst bandwidth in Mbps
+  //
+  // Ingress plus egress, not guaranteed. Set only on a flexible shape;
+  // null on a fixed shape.
+  maximumBandwidthInMbps int
   // Whether the load balancer is private (no public IP)
   isPrivate bool
+  // IP address family the load balancer serves
+  //
+  // One of IPV4 or IPV6. An IPV6 load balancer reaches the internet over a
+  // path that IPv4-only egress rules do not describe.
+  ipMode string
+  // Whether the load balancer stamps a request identifier on forwarded requests
+  isRequestIdEnabled bool
+  // HTTP header carrying the generated request identifier
+  //
+  // Defaults to X-Request-Id when isRequestIdEnabled is set and no header
+  // name was chosen. Empty when request identifiers are disabled.
+  requestIdHeader string
+  // Virtual hostnames defined on the load balancer, keyed by hostname resource name
+  //
+  // Listeners reference these by name to route by Host header. Each value is
+  // the hostname served, for example `app.example.com`.
+  hostnames map[string]string
   // Assigned IP addresses
   //
   // Each entry is a dict with an `ipAddress`, an `isPublic` flag indicating
@@ -4287,6 +4444,25 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   exposure() oci.network.exposure
   // Backend sets
   backendSets() []oci.loadBalancer.backendSet
+  // Custom SSL cipher suites defined on the load balancer
+  //
+  // Only user-defined suites appear here. A listener or backend set that
+  // names one of Oracle's predefined suites reports that name in
+  // sslCipherSuiteName without a matching entry in this list.
+  sslCipherSuites() []oci.loadBalancer.sslCipherSuite
+  // Certificate bundles uploaded directly to the load balancer
+  //
+  // The inline alternative to the OCI Certificates service. A listener or
+  // backend set selects one by name through certificateName, and the
+  // bundle's parsed certificates carry the validity window an expiry audit
+  // needs.
+  certificateBundles() []oci.loadBalancer.certificateBundle
+  // Rule sets defined on the load balancer
+  //
+  // Named collections of request and response rules that listeners attach
+  // by name, covering header manipulation, HTTP method allow lists,
+  // redirects, and source IP restrictions.
+  ruleSets() []oci.loadBalancer.ruleSet
   // Creation time
   created time
   // Free-form tags for resource management
@@ -4317,6 +4493,16 @@ private oci.loadBalancer.listener @defaults("name") {
   sslCipherSuiteName string
   // Whether peer certificate verification is enabled
   sslVerifyPeerCertificate bool
+  // Maximum depth for peer certificate chain verification
+  //
+  // Only meaningful when sslVerifyPeerCertificate is enabled.
+  sslVerifyDepth int
+  // Whether the listener prefers its own cipher order over the client's
+  //
+  // One of ENABLED or DISABLED. Server order preference stops a client from
+  // steering the negotiation toward the weakest mutually supported cipher.
+  // Empty when the listener terminates no TLS.
+  sslServerOrderPreference string
   // Whether TLS session resumption is enabled
   //
   // Session resumption reuses the cryptographic parameters of a previous TLS
@@ -4345,6 +4531,92 @@ private oci.loadBalancer.listener @defaults("name") {
   // The OCI Certificates service CA bundles trusted when
   // sslVerifyPeerCertificate is enabled.
   trustedCaBundles() []oci.certificates.caBundle
+  // Idle timeout in seconds between successive client and backend operations
+  //
+  // A send does not reset the receive timer and a receive does not reset the
+  // send timer. Null when the listener leaves the service default in place.
+  idleTimeoutInSeconds int
+  // Backend TCP Proxy Protocol version negotiated toward the backends
+  //
+  // Null when the listener does not use the proxy protocol, in which case
+  // backends see the load balancer address rather than the client address.
+  backendTcpProxyProtocolVersion int
+  // Names of the virtual hostnames the listener answers for
+  //
+  // Each entry selects an entry of the load balancer's hostnames map. Empty
+  // when the listener answers for every hostname.
+  hostnameNames []string
+  // Name of the path route set that maps request paths to backend sets
+  //
+  // Empty when every request goes to defaultBackendSetName.
+  pathRouteSetName string
+  // Name of the routing policy applied to the listener
+  //
+  // Empty when the listener applies no routing policy.
+  routingPolicyName string
+  // Names of the rule sets attached to the listener
+  //
+  // Each entry selects an entry of the load balancer's ruleSets, which carry
+  // the header manipulation, HTTP method restriction, and source IP rules
+  // applied to traffic through this listener.
+  ruleSetNames []string
+}
+
+// Custom SSL cipher suite on an Oracle Cloud Infrastructure (OCI) load balancer
+//
+// A user-defined named set of ciphers that listeners and backend sets select
+// through sslCipherSuiteName. The ciphers list is what a weak-algorithm audit
+// reads, since a suite naming CBC, RC4, 3DES, or MD5 ciphers weakens every
+// listener that references it.
+private oci.loadBalancer.sslCipherSuite @defaults("name") {
+  // Cipher suite name
+  name string
+  // Ciphers the suite offers, in the order the load balancer presents them
+  ciphers []string
+}
+
+// Certificate bundle on an Oracle Cloud Infrastructure (OCI) load balancer
+//
+// A certificate uploaded directly to the load balancer rather than managed by
+// the OCI Certificates service. Listeners and backend sets select one by name
+// through certificateName. The bundle carries the leaf certificate and the
+// issuing chain in PEM form, and certificates parses them into the validity
+// window, key algorithm, and signature algorithm an expiry or weak-algorithm
+// audit needs. The private key is never returned by the API.
+private oci.loadBalancer.certificateBundle @defaults("name") {
+  // Certificate bundle name
+  name string
+  // Leaf certificate in PEM format
+  publicCertificate string
+  // Issuing certificate authority chain in PEM format
+  //
+  // Empty when the bundle was uploaded without its chain.
+  caCertificate string
+  // Certificates in the bundle, parsed
+  //
+  // The leaf followed by the chain, exposing subject, issuer, validity
+  // window, and signature algorithm. A certificate that fails to parse is
+  // skipped rather than blinding the whole bundle.
+  certificates() []network.certificate
+}
+
+// Rule set on an Oracle Cloud Infrastructure (OCI) load balancer
+//
+// A named collection of rules that listeners attach through ruleSetNames.
+// Rules act on requests and responses as they pass through the load balancer.
+private oci.loadBalancer.ruleSet @defaults("name") {
+  // Rule set name
+  name string
+  // Rules composing the set
+  //
+  // Each entry carries an `action` naming the rule kind, for example
+  // ADD_HTTP_REQUEST_HEADER, REMOVE_HTTP_RESPONSE_HEADER,
+  // CONTROL_ACCESS_USING_HTTP_METHODS, REDIRECT, ALLOW, or
+  // HTTP_HEADER. The remaining keys vary by action: header rules carry
+  // `header` and `value`, method control carries `allowedMethods` and
+  // `statusCode`, redirects carry `conditions` and `redirectUri`, and ALLOW
+  // rules carry `conditions` describing the permitted sources.
+  rules []dict
 }
 
 // Oracle Cloud Infrastructure (OCI) load balancer backend set
@@ -4362,6 +4634,109 @@ private oci.loadBalancer.backendSet @defaults("name") {
   healthChecker dict
   // Number of backends
   backendCount int
+  // Backend servers in the set
+  backends() []oci.loadBalancer.backend
+  // Maximum simultaneous connections the load balancer opens to each backend
+  //
+  // Null when the backend set sets no limit, in which case the number of
+  // simultaneous connections is unbounded.
+  backendMaxConnections int
+  // TLS protocols offered on connections to the backends
+  //
+  // Empty when the backend set carries no SSL configuration, which means
+  // traffic between the load balancer and its backends is not encrypted.
+  sslProtocols []string
+  // Cipher suite used on connections to the backends
+  //
+  // Empty when the backend set carries no SSL configuration.
+  sslCipherSuiteName string
+  // Whether the load balancer verifies the backend server certificates
+  //
+  // False when the backend set carries no SSL configuration, and also when
+  // it terminates TLS without checking who is on the other end.
+  sslVerifyPeerCertificate bool
+  // Maximum depth for backend certificate chain verification
+  //
+  // Only meaningful when sslVerifyPeerCertificate is enabled.
+  sslVerifyDepth int
+  // Name of the inline certificate bundle presented to the backends
+  //
+  // Selects an entry of the load balancer's certificateBundles. Empty when
+  // the backend set uses OCI Certificates service certificates, exposed
+  // through certificates, or carries no SSL configuration at all.
+  certificateName string
+  // Certificates presented to the backends from the OCI Certificates service
+  certificates() []oci.certificates.certificate
+  // Certificate authorities trusted to verify the backend certificates
+  trustedCertificateAuthorities() []oci.certificates.certificateAuthority
+  // CA bundles trusted to verify the backend certificates
+  trustedCaBundles() []oci.certificates.caBundle
+  // Name of the application cookie the backends set to pin a session
+  //
+  // Application cookie stickiness, where the load balancer keys persistence
+  // off a cookie the backend already sets. A value of `*` pins on any
+  // backend cookie. Empty when this form of persistence is off.
+  sessionPersistenceCookieName string
+  // Whether application cookie stickiness refuses to fall back to another backend
+  //
+  // When set, a client pinned to a backend that has failed its health check
+  // is not redirected to a healthy one.
+  sessionPersistenceDisableFallback bool
+  // Name of the cookie the load balancer itself inserts to pin a session
+  //
+  // Load balancer cookie stickiness. Empty when this form of persistence is
+  // off; defaults to X-Oracle-BMC-LBS-Route when enabled without a chosen
+  // name.
+  lbCookieName string
+  // Whether load balancer cookie stickiness refuses to fall back to another backend
+  lbCookieDisableFallback bool
+  // Domain attribute set on the load balancer session cookie
+  //
+  // Empty when the load balancer omits the attribute, in which case the
+  // client returns the cookie only to the host that issued it.
+  lbCookieDomain string
+  // Path attribute set on the load balancer session cookie
+  //
+  // Defaults to `/`.
+  lbCookiePath string
+  // Lifetime in seconds of the load balancer session cookie
+  //
+  // Null when the load balancer omits the Max-Age attribute, in which case
+  // the cookie lasts as long as the client session.
+  lbCookieMaxAgeInSeconds int
+  // Whether the load balancer session cookie carries the Secure attribute
+  //
+  // Without it the cookie that pins a session can travel over plain HTTP.
+  lbCookieIsSecure bool
+  // Whether the load balancer session cookie carries the HttpOnly attribute
+  //
+  // Without it the cookie that pins a session is readable from JavaScript.
+  lbCookieIsHttpOnly bool
+}
+
+// Backend server in an Oracle Cloud Infrastructure (OCI) load balancer backend set
+//
+// One server the load balancer forwards to, with the weighting and drain,
+// backup, and offline flags that decide whether it currently receives traffic.
+private oci.loadBalancer.backend @defaults("name") {
+  // Backend name, the address and port that identify it in the set (e.g., 10.0.0.3:8080)
+  name string
+  // Backend server IP address
+  ipAddress string
+  // Backend server port
+  port int
+  // Load balancing weight relative to the other backends in the set
+  weight int
+  // Whether the backend is draining and receives no new connections
+  drain bool
+  // Whether the backend only receives traffic once every non-backup backend fails its health check
+  backup bool
+  // Whether the backend is marked offline and receives no traffic
+  offline bool
+  // Maximum simultaneous connections the load balancer opens to this backend
+  //
+  // Null or zero means unlimited.
+  maxConnections int
 }
 
 // Oracle Cloud Infrastructure (OCI) Network Load Balancer
@@ -5174,10 +5549,71 @@ private oci.opensearch.cluster @defaults("name softwareVersion securityMode stat
   securityMode string
   // Built-in administrator user name, when security is enabled
   securityMasterUserName() string
+  // Whether SAML single sign-on is configured on the cluster
+  //
+  // When enabled, an external identity provider issues the assertions the
+  // cluster accepts, so access is no longer bounded by the built-in master
+  // user and internal roles alone.
+  isSamlEnabled() bool
+  // Entity identifier of the SAML identity provider
+  //
+  // Empty when SAML is not configured.
+  samlIdpEntityId() string
+  // Backend role mapped to cluster administrator for SAML users
+  //
+  // Every federated user carrying this role becomes a cluster administrator.
+  // Empty when SAML is not configured.
+  samlAdminBackendRole() string
+  // Assertion attribute the cluster reads the user name from
+  samlSubjectKey() string
+  // Assertion attribute the cluster reads role membership from
+  //
+  // Role membership drives authorization, so the attribute named here decides
+  // which cluster roles a federated user receives.
+  samlRolesKey() string
+  // OpenSearch Dashboards URL registered with the identity provider
+  samlOpendashboardUrl() string
+  // How the OpenSearch API endpoint certificate is managed (OCI_MANAGED, BYOC)
+  //
+  // BYOC means the certificate comes from the tenancy's own OCI Certificates
+  // service, exposed through apiCertificate.
+  clusterCertificateMode() string
+  // How the OpenSearch Dashboards endpoint certificate is managed (OCI_MANAGED, BYOC)
+  dashboardCertificateMode() string
+  // Certificate served on the OpenSearch API endpoint
+  //
+  // Null when the endpoint uses an Oracle-managed certificate.
+  apiCertificate() oci.certificates.certificate
+  // Certificate served on the OpenSearch Dashboards endpoint
+  //
+  // Null when the endpoint uses an Oracle-managed certificate.
+  dashboardCertificate() oci.certificates.certificate
   // VCN the cluster is deployed into
   vcn() oci.network.vcn
   // Subnet the cluster is deployed into
   subnet() oci.network.subnet
+  // Network security groups attached to the cluster
+  //
+  // Empty when the cluster is governed only by its subnet's security lists.
+  securityGroups() []oci.network.networkSecurityGroup
+  // Fully-qualified domain name of the cluster
+  fqdn() string
+  // Load balancer service fronting the cluster (OCI_LOAD_BALANCER, OCI_NETWORK_LOAD_BALANCER)
+  //
+  // Empty when the cluster is reached directly rather than through a load
+  // balancer.
+  loadBalancerServiceType() string
+  // Reverse connection endpoints the cluster reaches customer networks through
+  //
+  // Each entry has a `customerIp`, the address in the customer VCN, and a
+  // `natIp`, the address the cluster presents. These are the paths by which
+  // the managed cluster reaches back into tenant networks.
+  reverseConnectionEndpoints() []dict
+  // Clusters permitted to run cross-cluster searches against this one
+  //
+  // The inbound half of cross-cluster search, where outboundClusterConfig is
+  // the outbound half. Empty when no other cluster may search this one.
+  inboundClusters() []oci.opensearch.cluster
   // Fully-qualified domain name of the OpenSearch API endpoint
   opensearchFqdn() string
   // Private IP address of the OpenSearch API endpoint
@@ -5982,12 +6418,93 @@ private oci.oke.cluster @defaults("name") {
   privateEndpoint string
   // Whether image signature verification policy is enabled
   isImagePolicyEnabled bool
+  // Keys whose signatures the image policy accepts
+  //
+  // Empty when isImagePolicyEnabled is false, and also when the policy is on
+  // but names no key, which admits every image.
+  imagePolicyKmsKeys() []oci.kms.key
   // Available Kubernetes version upgrades
   availableKubernetesUpgrades []string
   // Whether Pod Security Policy admission controller is enabled
   isPodSecurityPolicyEnabled bool
+  // Whether the Kubernetes Dashboard add-on is deployed
+  //
+  // The dashboard is a cluster-wide administrative console; where it is
+  // reachable it becomes a route to the cluster that does not pass through
+  // kubectl authentication.
+  isKubernetesDashboardEnabled bool
+  // Whether the Tiller add-on is deployed
+  //
+  // Tiller is the Helm 2 in-cluster component. It runs with broad cluster
+  // permissions and is unsupported upstream.
+  isTillerEnabled bool
+  // CIDR block pods are addressed from
+  //
+  // Empty on a cluster using native VCN pod networking, where pods take
+  // addresses from the subnets rather than from an overlay range.
+  podsCidr string
+  // CIDR block Kubernetes services are addressed from
+  servicesCidr string
+  // IP address families the cluster serves (IPv4, IPv6)
+  ipFamilies []string
+  // Pod networking types available on the cluster
+  //
+  // Each entry is OCI_VCN_IP_NATIVE, where pods take VCN addresses and are
+  // governed by network security groups directly, or FLANNEL_OVERLAY, where
+  // pod traffic is tunnelled and invisible to VCN rules.
+  podNetworkTypes []string
+  // Subnets the cluster provisions service load balancers into
+  serviceLbSubnets() []oci.network.subnet
+  // Subnet hosting the Kubernetes API endpoint
+  //
+  // Null on a cluster that predates native VCN endpoint configuration.
+  endpointSubnet() oci.network.subnet
+  // Network security groups applied to the Kubernetes API endpoint
+  //
+  // Empty when no group is attached, in which case the endpoint is governed
+  // only by its subnet's security lists.
+  endpointSecurityGroups() []oci.network.networkSecurityGroup
+  // Whether the API server accepts OpenID Connect tokens
+  //
+  // When enabled, an external identity provider can mint tokens the cluster
+  // accepts, so cluster access is no longer bounded by OCI IAM alone.
+  isOpenIdConnectAuthEnabled bool
+  // Issuer URL the API server accepts OpenID Connect tokens from
+  openIdConnectIssuerUrl string
+  // Client identifier the API server requires in OpenID Connect tokens
+  openIdConnectClientId string
+  // Token claim the API server reads the username from
+  openIdConnectUsernameClaim string
+  // Token claim the API server reads group membership from
+  //
+  // Group membership drives role binding, so the claim named here decides
+  // which cluster roles a federated user receives.
+  openIdConnectGroupsClaim string
+  // Signing algorithms the API server accepts on OpenID Connect tokens
+  openIdConnectSigningAlgorithms []string
+  // Discovery endpoint serving the cluster's own OpenID Connect metadata
+  //
+  // Used by workloads federating to OCI with a service account token. Empty
+  // when the cluster publishes no discovery document.
+  openIdConnectDiscoveryEndpoint() string
   // Lifecycle state (e.g., CREATING, ACTIVE, FAILED, DELETING, DELETED, UPDATING)
   state string
+  // Detail behind the lifecycle state
+  //
+  // Empty on a healthy cluster.
+  lifecycleDetails string
+  // User that created the cluster
+  //
+  // Null when the cluster was created by a principal that is not an IAM user,
+  // for example an instance principal or a federated identity.
+  createdByUser() oci.identity.user
+  // Last time the cluster was updated
+  timeUpdated time
+  // Expiry of the cluster's own credentials
+  //
+  // The point at which the control plane certificates the cluster issued to
+  // itself stop being valid. Null when the cluster reports no expiry.
+  timeCredentialExpiration time
   // Node pools in the cluster
   nodePools() []oci.oke.nodePool
   // Creation time
@@ -6063,8 +6580,50 @@ private oci.oke.nodePool @defaults("name") {
   subnets() []oci.network.subnet
   // Network Security Groups attached to the node VNICs (empty when nodes are governed only by subnet security lists)
   networkSecurityGroups() []oci.network.networkSecurityGroup
+  // Number of nodes the pool maintains
+  size int
+  // Whether traffic between the nodes and their block volumes is encrypted
+  //
+  // Without it, volume traffic crosses the network in the clear even though
+  // the volume itself is encrypted at rest.
+  isPvEncryptionInTransitEnabled bool
+  // Key encrypting the node boot and block volumes
+  //
+  // Null when the nodes use Oracle-managed encryption rather than a key from
+  // the tenancy's vault.
+  nodeKmsKey() oci.kms.key
+  // Labels applied to every node as it joins the cluster
+  //
+  // Workloads select nodes by these, so a label here is what places a pod on
+  // this pool.
+  initialNodeLabels map[string]string
+  // Grace period before a node being removed is force-drained
+  //
+  // An ISO 8601 duration, for example PT60M. Empty when the pool leaves the
+  // service default in place.
+  evictionGraceDuration string
+  // Whether a node is deleted once its grace period expires even if pods remain
+  isForceDeleteAfterGraceDuration bool
+  // Whether the pool replaces its nodes in place when its configuration changes
+  //
+  // Node cycling is how a pool picks up a new Kubernetes version or a patched
+  // image without being recreated. Where it is off, nodes keep running the
+  // image they launched with.
+  isNodeCyclingEnabled bool
+  // Nodes the pool may take out of service at once while cycling
+  //
+  // A count or a percentage, for example `1` or `25%`.
+  cyclingMaximumUnavailable string
+  // Extra nodes the pool may add above its size while cycling
+  //
+  // A count or a percentage, for example `1` or `25%`.
+  cyclingMaximumSurge string
   // Lifecycle state (e.g., CREATING, ACTIVE, UPDATING, DELETING, DELETED, FAILED, NEEDS_ATTENTION)
   state string
+  // Detail behind the lifecycle state
+  //
+  // Empty on a healthy node pool.
+  lifecycleDetails string
   // Free-form tags for resource management
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
@@ -6598,10 +7157,66 @@ private oci.database.dbSystem @defaults("name") {
   backupNetworkNsgIds @maturity("deprecated") []string
   // Network Security Groups attached to the backup network
   backupSecurityGroups() []oci.network.networkSecurityGroup
+  // Subnet carrying the DB system's backup traffic
+  //
+  // Null when the DB system runs a single network rather than separating
+  // backup traffic onto its own subnet.
+  backupSubnet() oci.network.subnet
+  // Public keys authorized to sign in to the DB system hosts over SSH
+  //
+  // Every key here reaches the database hosts directly, outside the database
+  // authentication that governs the data. Empty when no key was supplied at
+  // launch.
+  sshPublicKeys []string
+  // Fault domains the DB system nodes are placed across
+  faultDomains []string
+  // Operating system version on the DB system hosts
+  osVersion string
+  // Time zone configured on the DB system
+  timeZone string
+  // Cluster name for an Exadata or RAC DB system
+  //
+  // Empty on a single-node DB system.
+  clusterName string
+  // How storage is managed (ASM, LVM)
+  //
+  // Empty when the DB system reports no storage management option.
+  storageManagement string
+  // Whether Oracle collects diagnostic events from the DB system
+  isDiagnosticsEventsEnabled bool
+  // Whether Oracle collects health metrics from the DB system
+  isHealthMonitoringEnabled bool
+  // Whether Oracle collects incident logs and trace files from the DB system
+  //
+  // Incident logs can carry query text and payload fragments, so enabling
+  // collection sends database content to Oracle support tooling.
+  isIncidentLogsEnabled bool
+  // Zero Trust Packet Routing security attributes applied to the DB system
+  //
+  // Each key is a security attribute namespace and each value maps that
+  // namespace's attribute names to this DB system's values.
+  securityAttributes map[string]dict
+  // Security attributes applied to this resource, resolved
+  //
+  // Each labelling as a row carrying its namespace, its definition and whether
+  // that namespace enforces or only audits.
+  appliedSecurityAttributes() []oci.securityAttributes.applied
+  // Patching and maintenance schedule
+  //
+  // Keyed by `preference` (NO_PREFERENCE or CUSTOM_PREFERENCE),
+  // `patchingMode` (ROLLING or NONROLLING), `isMonthlyPatchingEnabled`,
+  // `isCustomActionTimeoutEnabled` with its `customActionTimeoutInMins`,
+  // and the `months`, `weeksOfMonth`, `daysOfWeek`, and `hoursOfDay` that
+  // schedule the window.
+  maintenanceWindow dict
   // Lifecycle state
   //
   // For example: PROVISIONING, AVAILABLE, UPDATING, TERMINATING, TERMINATED, FAILED, MIGRATED, MAINTENANCE_IN_PROGRESS, NEEDS_ATTENTION, UPGRADING.
   state string
+  // Detail behind the lifecycle state
+  //
+  // Empty on a healthy DB system.
+  lifecycleDetails string
   // Creation time
   created time
   // Free-form tags for resource management

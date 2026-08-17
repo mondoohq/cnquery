@@ -14,6 +14,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/oracle/oci-go-sdk/v65/identitydomains"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -451,13 +452,76 @@ func (o *mqlOciIdentityDomain) passwordPolicies() ([]any, error) {
 			"lastNameDisallowed":       llx.BoolData(boolValue(p.LastNameDisallowed)),
 			"startsWithAlphabet":       llx.BoolData(boolValue(p.StartsWithAlphabet)),
 			"disallowedSubstrings":     llx.ArrayData(stringsToAny(p.DisallowedSubstrings), types.String),
+
+			"passwordStrength":              llx.StringData(string(p.PasswordStrength)),
+			"requiredChars":                 llx.StringDataPtr(p.RequiredChars),
+			"allowedChars":                  llx.StringDataPtr(p.AllowedChars),
+			"disallowedChars":               llx.StringDataPtr(p.DisallowedChars),
+			// distinctCharacters and priority stay null when IDCS does not
+			// return them. Defaulting to 0 the way the older fields above do
+			// would assert two things that are not known to be true: that a
+			// single-character edit is an acceptable password change, and that
+			// this policy outranks every other one.
+			"distinctCharacters":            llx.IntDataPtr(p.DistinctCharacters),
+			"forcePasswordReset":            llx.BoolData(boolValue(p.ForcePasswordReset)),
+			"disallowedUserAttributeValues": llx.ArrayData(stringsToAny(p.DisallowedUserAttributeValues), types.String),
+			"dictionaryLocation":            llx.StringDataPtr(p.DictionaryLocation),
+			"priority":                      llx.IntDataPtr(p.Priority),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlPolicy)
+		mqlPolicyRes := mqlPolicy.(*mqlOciIdentityDomainPasswordPolicy)
+		mqlPolicyRes.cacheDomain = o
+		for _, g := range p.Groups {
+			if g.Value != nil {
+				mqlPolicyRes.cacheGroupIDs = append(mqlPolicyRes.cacheGroupIDs, *g.Value)
+			}
+		}
+		res = append(res, mqlPolicyRes)
 	}
 
+	return res, nil
+}
+
+type mqlOciIdentityDomainPasswordPolicyInternal struct {
+	cacheDomain   *mqlOciIdentityDomain
+	cacheGroupIDs []string
+}
+
+// groups resolves the policy's group references against the domain's already
+// fetched group list. Resolving each one through NewResource would re-run the
+// group init per reference, since init runs before the runtime cache is
+// consulted.
+func (o *mqlOciIdentityDomainPasswordPolicy) groups() ([]any, error) {
+	if len(o.cacheGroupIDs) == 0 || o.cacheDomain == nil {
+		return []any{}, nil
+	}
+
+	groups := o.cacheDomain.GetGroups()
+	if groups.Error != nil {
+		return nil, groups.Error
+	}
+
+	byID := make(map[string]any, len(groups.Data))
+	for _, raw := range groups.Data {
+		g, ok := raw.(*mqlOciIdentityDomainGroup)
+		if !ok {
+			continue
+		}
+		byID[g.Id.Data] = g
+	}
+
+	res := make([]any, 0, len(o.cacheGroupIDs))
+	for _, id := range o.cacheGroupIDs {
+		if g, ok := byID[id]; ok {
+			res = append(res, g)
+			continue
+		}
+		// A group the caller cannot read is skipped rather than failing the
+		// whole list, which would hide the groups that did resolve.
+		log.Debug().Str("group", id).Msg("skipping unresolvable oci password policy group")
+	}
 	return res, nil
 }
 

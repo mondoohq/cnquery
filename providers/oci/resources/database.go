@@ -58,6 +58,26 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					created = &s.TimeCreated.Time
 				}
 
+				var storageManagement string
+				if s.DbSystemOptions != nil {
+					storageManagement = string(s.DbSystemOptions.StorageManagement)
+				}
+
+				// A DB system that has never had data collection configured
+				// carries no DataCollectionOptions at all. Reporting false in
+				// that case is correct: nothing is being collected.
+				var isDiagnosticsEventsEnabled, isHealthMonitoringEnabled, isIncidentLogsEnabled bool
+				if d := s.DataCollectionOptions; d != nil {
+					isDiagnosticsEventsEnabled = boolValue(d.IsDiagnosticsEventsEnabled)
+					isHealthMonitoringEnabled = boolValue(d.IsHealthMonitoringEnabled)
+					isIncidentLogsEnabled = boolValue(d.IsIncidentLogsEnabled)
+				}
+
+				maintenanceWindow, err := convert.JsonToDict(s.MaintenanceWindow)
+				if err != nil {
+					return nil, err
+				}
+
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.database.dbSystem", map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(s.Id),
 					"name":                 llx.StringDataPtr(s.DisplayName),
@@ -82,6 +102,19 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					"freeformTags":         llx.MapData(strMapToAny(s.FreeformTags), types.String),
 					"definedTags":          llx.MapData(definedTagsToAny(s.DefinedTags), types.Any),
 					"systemTags":           llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
+
+					"sshPublicKeys":              llx.ArrayData(convert.SliceAnyToInterface(s.SshPublicKeys), types.String),
+					"faultDomains":               llx.ArrayData(convert.SliceAnyToInterface(s.FaultDomains), types.String),
+					"osVersion":                  llx.StringDataPtr(s.OsVersion),
+					"timeZone":                   llx.StringDataPtr(s.TimeZone),
+					"clusterName":                llx.StringDataPtr(s.ClusterName),
+					"storageManagement":          llx.StringData(storageManagement),
+					"isDiagnosticsEventsEnabled": llx.BoolData(isDiagnosticsEventsEnabled),
+					"isHealthMonitoringEnabled":  llx.BoolData(isHealthMonitoringEnabled),
+					"isIncidentLogsEnabled":      llx.BoolData(isIncidentLogsEnabled),
+					"securityAttributes":         llx.MapData(definedTagsToAny(s.SecurityAttributes), types.Dict),
+					"maintenanceWindow":          llx.DictData(maintenanceWindow),
+					"lifecycleDetails":           llx.StringDataPtr(s.LifecycleDetails),
 				})
 				if err != nil {
 					return nil, err
@@ -90,6 +123,7 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 				mqlDb.cacheKmsKeyID = stringValue(s.KmsKeyId)
 				mqlDb.cacheSubnetID = stringValue(s.SubnetId)
 				mqlDb.cacheSourceDbSystemID = stringValue(s.SourceDbSystemId)
+				mqlDb.cacheBackupSubnetID = stringValue(s.BackupSubnetId)
 				res = append(res, mqlDb)
 			}
 
@@ -101,6 +135,11 @@ type mqlOciDatabaseDbSystemInternal struct {
 	cacheKmsKeyID         string
 	cacheSubnetID         string
 	cacheSourceDbSystemID string
+	cacheBackupSubnetID   string
+}
+
+func (o *mqlOciDatabaseDbSystem) backupSubnet() (*mqlOciNetworkSubnet, error) {
+	return resolveOciSubnet(o.MqlRuntime, o.cacheBackupSubnetID, &o.BackupSubnet)
 }
 
 func (o *mqlOciDatabaseDbSystem) id() (string, error) {
