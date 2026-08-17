@@ -372,25 +372,74 @@ func (g *mqlGcpProjectBigqueryServiceTableBigLakeConfig) connection() (*mqlGcpPr
 	return notFound()
 }
 
-// resolveBaseTable builds the typed table that a snapshot or clone derives from.
-// The BigQuery base-table reference carries only project/dataset/table IDs, so
-// the table's location is inherited from the owning table (a base table lives in
-// the same location as its snapshots and clones).
+// bigqueryTableId is the resource identity of a table. The runtime stores the
+// resource under this value, so it is also what a cache lookup has to rebuild.
+func bigqueryTableId(projectId, datasetId, tableId string) string {
+	return fmt.Sprintf("gcp.project.bigqueryService.table/%s/%s/%s", projectId, datasetId, tableId)
+}
+
+// bigqueryTableCacheKey is the runtime cache key for a table resource, in the
+// runtime's "<resource name>\x00<id>" form.
+func bigqueryTableCacheKey(projectId, datasetId, tableId string) string {
+	return "gcp.project.bigqueryService.table\x00" + bigqueryTableId(projectId, datasetId, tableId)
+}
+
+// resolveBaseTable returns the table that a snapshot or clone derives from.
+//
+// The BigQuery reference carries only project/dataset/table IDs. Building a
+// resource out of those alone is not safe: the table has no init, so the
+// resource would be created from exactly those args and every other field would
+// read null. Worse, the runtime cache is first-writer-wins on the table's id, so
+// that stand-in would take the key and be handed back to the later full listing
+// of the same table, discarding the metadata that listing had just fetched.
+//
+// So the reference is resolved instead. A table already listed in this scan is
+// returned straight from the cache at no cost; otherwise exactly that one
+// table's metadata is fetched. Listing the whole referenced dataset would cost
+// one API call per table in it to answer a single reference.
+//
+// A base table that has been deleted, or that lives in a project the caller
+// cannot read, resolves to null rather than to a stand-in.
 func (g *mqlGcpProjectBigqueryServiceTable) resolveBaseTable(ref *bigquery.Table) (*mqlGcpProjectBigqueryServiceTable, error) {
 	if ref == nil {
 		return nil, nil
 	}
-	location := ""
-	if g.Location.Error == nil {
-		location = g.Location.Data
+
+	key := bigqueryTableCacheKey(ref.ProjectID, ref.DatasetID, ref.TableID)
+	if cached, ok := g.MqlRuntime.Resources.Get(key); ok {
+		return cached.(*mqlGcpProjectBigqueryServiceTable), nil
 	}
-	res, err := NewResource(g.MqlRuntime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
-		"id":        llx.StringData(ref.TableID),
-		"projectId": llx.StringData(ref.ProjectID),
-		"datasetId": llx.StringData(ref.DatasetID),
-		"name":      llx.StringData(ref.TableID),
-		"location":  llx.StringData(location),
-	})
+
+	conn, ok := g.MqlRuntime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, errors.New("resolving a base table requires a GCP connection")
+	}
+	httpClient, err := conn.Client("https://www.googleapis.com/auth/bigquery")
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	client, err := bigquery.NewClient(ctx, ref.ProjectID, option.WithHTTPClient(httpClient))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	table := client.DatasetInProject(ref.ProjectID, ref.DatasetID).Table(ref.TableID)
+	metadata, err := table.Metadata(ctx)
+	if err != nil {
+		// A snapshot outlives the table it was taken from, so a missing or
+		// unreadable base table is an ordinary state rather than a failure.
+		// Report it as null instead of failing the whole table listing.
+		log.Debug().Err(err).
+			Str("project", ref.ProjectID).
+			Str("dataset", ref.DatasetID).
+			Str("table", ref.TableID).
+			Msg("could not read base table metadata")
+		return nil, nil
+	}
+
+	res, err := newMqlBigqueryTable(g.MqlRuntime, table, metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -673,6 +722,26 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 			return nil, err
 		}
 
+		mqlInstance, err := newMqlBigqueryTable(g.MqlRuntime, table, metadata)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlInstance)
+	}
+
+	return res, nil
+}
+
+// newMqlBigqueryTable maps a BigQuery table and its metadata onto the mql
+// resource.
+//
+// Every path that produces a gcp.project.bigqueryService.table goes through
+// here. The resource cache is first-writer-wins on
+// "gcp.project.bigqueryService.table/<project>/<dataset>/<table>", so a partially
+// populated table built anywhere else would take that key and stand in for the
+// real one for the rest of the scan.
+func newMqlBigqueryTable(runtime *plugin.Runtime, table *bigquery.Table, metadata *bigquery.TableMetadata) (plugin.Resource, error) {
+	{
 		var kmsName string
 		if metadata.EncryptionConfig != nil {
 			kmsName = metadata.EncryptionConfig.KMSKeyName
@@ -752,7 +821,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 				if fk == nil {
 					continue
 				}
-				mqlFk, err := newMqlBigqueryForeignKey(g.MqlRuntime, table, fk)
+				mqlFk, err := newMqlBigqueryForeignKey(runtime, table, fk)
 				if err != nil {
 					return nil, err
 				}
@@ -765,7 +834,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 		// managed-storage table that has no external files at all.
 		bigLakeData := llx.NilData
 		if blc := metadata.BigLakeConfiguration; blc != nil {
-			mqlBigLake, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.table.bigLakeConfig", map[string]*llx.RawData{
+			mqlBigLake, err := CreateResource(runtime, "gcp.project.bigqueryService.table.bigLakeConfig", map[string]*llx.RawData{
 				"__id":        llx.StringData(fmt.Sprintf("%s/%s/%s/bigLakeConfig", table.ProjectID, table.DatasetID, table.TableID)),
 				"storageUri":  llx.StringData(blc.StorageURI),
 				"fileFormat":  llx.StringData(string(blc.FileFormat)),
@@ -780,7 +849,7 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 			bigLakeData = llx.ResourceData(mqlBigLake, "gcp.project.bigqueryService.table.bigLakeConfig")
 		}
 
-		mqlInstance, err := CreateResource(g.MqlRuntime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
+		mqlInstance, err := CreateResource(runtime, "gcp.project.bigqueryService.table", map[string]*llx.RawData{
 			"id":                             llx.StringData(table.TableID),
 			"projectId":                      llx.StringData(table.ProjectID),
 			"datasetId":                      llx.StringData(table.DatasetID),
@@ -826,10 +895,8 @@ func (g *mqlGcpProjectBigqueryServiceDataset) tables() ([]any, error) {
 		if metadata.CloneDefinition != nil {
 			mqlTable.cacheCloneBaseTable = metadata.CloneDefinition.BaseTableReference
 		}
-		res = append(res, mqlInstance)
-
+		return mqlInstance, nil
 	}
-	return res, nil
 }
 
 func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
@@ -847,7 +914,7 @@ func (g *mqlGcpProjectBigqueryServiceTable) id() (string, error) {
 		return "", g.Id.Error
 	}
 	id := g.Id.Data
-	return fmt.Sprintf("gcp.project.bigqueryService.table/%s/%s/%s", projectId, datasetId, id), nil
+	return bigqueryTableId(projectId, datasetId, id), nil
 }
 
 func (g *mqlGcpProjectBigqueryServiceDataset) models() ([]any, error) {
