@@ -2264,6 +2264,19 @@ private gcp.project.computeService.disk @defaults("name") {
   sourceSnapshot() gcp.project.computeService.snapshot
   // Provisioned throughput of the disk in MB/s
   provisionedThroughput int
+  // Cloud Storage object the disk image was imported from
+  //
+  // Set when the disk was created from a RAW image in a bucket rather than
+  // from a Compute Engine image or snapshot, which puts the disk's provenance
+  // outside the image and snapshot controls.
+  sourceStorageObject string
+  // Instant snapshot the disk was created from
+  sourceInstantSnapshot string
+  // Numeric license codes attached to the disk
+  //
+  // Identifies the paid or restricted operating-system licenses the disk
+  // carries, which the licenses field gives as URLs.
+  licenseCodes []int
   // Storage pool where the disk resides
   storagePool() gcp.project.computeService.storagePool
   // Region of the disk (for regional persistent disks)
@@ -2381,19 +2394,6 @@ private gcp.project.computeService.snapshot @defaults("name") {
   satisfiesPzs bool
   // URL of the source disk used to create this snapshot
   sourceDisk string
-  // Cloud Storage object the disk image was imported from
-  //
-  // Set when the disk was created from a RAW image in a bucket rather than
-  // from a Compute Engine image or snapshot, which puts the disk's provenance
-  // outside the image and snapshot controls.
-  sourceStorageObject string
-  // Instant snapshot the disk was created from
-  sourceInstantSnapshot string
-  // Numeric license codes attached to the disk
-  //
-  // Identifies the paid or restricted operating-system licenses the disk
-  // carries, which the licenses field gives as URLs.
-  licenseCodes []int
   // Source disk used to create this snapshot
   sourceDiskRef() gcp.project.computeService.disk
   // URL of the snapshot schedule policy that created this snapshot

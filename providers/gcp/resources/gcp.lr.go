@@ -4642,6 +4642,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.computeService.disk.provisionedThroughput": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceDisk).GetProvisionedThroughput()).ToDataRes(types.Int)
 	},
+	"gcp.project.computeService.disk.sourceStorageObject": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceStorageObject()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.sourceInstantSnapshot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetSourceInstantSnapshot()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.disk.licenseCodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceDisk).GetLicenseCodes()).ToDataRes(types.Array(types.Int))
+	},
 	"gcp.project.computeService.disk.storagePool": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceDisk).GetStoragePool()).ToDataRes(types.Resource("gcp.project.computeService.storagePool"))
 	},
@@ -4779,15 +4788,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.snapshot.sourceDisk": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSourceDisk()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.snapshot.sourceStorageObject": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSourceStorageObject()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.snapshot.sourceInstantSnapshot": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSourceInstantSnapshot()).ToDataRes(types.String)
-	},
-	"gcp.project.computeService.snapshot.licenseCodes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetLicenseCodes()).ToDataRes(types.Array(types.Int))
 	},
 	"gcp.project.computeService.snapshot.sourceDiskRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSnapshot).GetSourceDiskRef()).ToDataRes(types.Resource("gcp.project.computeService.disk"))
@@ -22088,6 +22088,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectComputeServiceDisk).ProvisionedThroughput, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"gcp.project.computeService.disk.sourceStorageObject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).SourceStorageObject, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.sourceInstantSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).SourceInstantSnapshot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.disk.licenseCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceDisk).LicenseCodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.computeService.disk.storagePool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceDisk).StoragePool, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceStoragePool](v.Value, v.Error)
 		return
@@ -22278,18 +22290,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.snapshot.sourceDisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeServiceSnapshot).SourceDisk, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.snapshot.sourceStorageObject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSnapshot).SourceStorageObject, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.snapshot.sourceInstantSnapshot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSnapshot).SourceInstantSnapshot, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gcp.project.computeService.snapshot.licenseCodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectComputeServiceSnapshot).LicenseCodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.snapshot.sourceDiskRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51018,6 +51018,9 @@ type mqlGcpProjectComputeServiceDisk struct {
 	SourceImage                 plugin.TValue[*mqlGcpProjectComputeServiceImage]
 	SourceSnapshot              plugin.TValue[*mqlGcpProjectComputeServiceSnapshot]
 	ProvisionedThroughput       plugin.TValue[int64]
+	SourceStorageObject         plugin.TValue[string]
+	SourceInstantSnapshot       plugin.TValue[string]
+	LicenseCodes                plugin.TValue[[]any]
 	StoragePool                 plugin.TValue[*mqlGcpProjectComputeServiceStoragePool]
 	Region                      plugin.TValue[string]
 	ReplicaZones                plugin.TValue[[]any]
@@ -51215,6 +51218,18 @@ func (c *mqlGcpProjectComputeServiceDisk) GetSourceSnapshot() *plugin.TValue[*mq
 
 func (c *mqlGcpProjectComputeServiceDisk) GetProvisionedThroughput() *plugin.TValue[int64] {
 	return &c.ProvisionedThroughput
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetSourceStorageObject() *plugin.TValue[string] {
+	return &c.SourceStorageObject
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetSourceInstantSnapshot() *plugin.TValue[string] {
+	return &c.SourceInstantSnapshot
+}
+
+func (c *mqlGcpProjectComputeServiceDisk) GetLicenseCodes() *plugin.TValue[[]any] {
+	return &c.LicenseCodes
 }
 
 func (c *mqlGcpProjectComputeServiceDisk) GetStoragePool() *plugin.TValue[*mqlGcpProjectComputeServiceStoragePool] {
@@ -51438,9 +51453,6 @@ type mqlGcpProjectComputeServiceSnapshot struct {
 	SatisfiesPzi                   plugin.TValue[bool]
 	SatisfiesPzs                   plugin.TValue[bool]
 	SourceDisk                     plugin.TValue[string]
-	SourceStorageObject            plugin.TValue[string]
-	SourceInstantSnapshot          plugin.TValue[string]
-	LicenseCodes                   plugin.TValue[[]any]
 	SourceDiskRef                  plugin.TValue[*mqlGcpProjectComputeServiceDisk]
 	SourceSnapshotSchedulePolicy   plugin.TValue[string]
 	SourceSnapshotSchedulePolicyId plugin.TValue[string]
@@ -51574,18 +51586,6 @@ func (c *mqlGcpProjectComputeServiceSnapshot) GetSatisfiesPzs() *plugin.TValue[b
 
 func (c *mqlGcpProjectComputeServiceSnapshot) GetSourceDisk() *plugin.TValue[string] {
 	return &c.SourceDisk
-}
-
-func (c *mqlGcpProjectComputeServiceSnapshot) GetSourceStorageObject() *plugin.TValue[string] {
-	return &c.SourceStorageObject
-}
-
-func (c *mqlGcpProjectComputeServiceSnapshot) GetSourceInstantSnapshot() *plugin.TValue[string] {
-	return &c.SourceInstantSnapshot
-}
-
-func (c *mqlGcpProjectComputeServiceSnapshot) GetLicenseCodes() *plugin.TValue[[]any] {
-	return &c.LicenseCodes
 }
 
 func (c *mqlGcpProjectComputeServiceSnapshot) GetSourceDiskRef() *plugin.TValue[*mqlGcpProjectComputeServiceDisk] {

@@ -1777,6 +1777,7 @@ gcp.project.computeService.disk.kmsKey 13.12.2
 gcp.project.computeService.disk.labels 9.0.0
 gcp.project.computeService.disk.lastAttachTimestamp 9.0.0
 gcp.project.computeService.disk.lastDetachTimestamp 9.0.0
+gcp.project.computeService.disk.licenseCodes 13.36.1
 gcp.project.computeService.disk.licenses 9.0.0
 gcp.project.computeService.disk.locationHint 9.0.0
 gcp.project.computeService.disk.managedBy 13.27.2
@@ -1793,8 +1794,10 @@ gcp.project.computeService.disk.sizeGb 9.0.0
 gcp.project.computeService.disk.sourceDisk 13.1.2
 gcp.project.computeService.disk.sourceImage 11.6.6
 gcp.project.computeService.disk.sourceImageEncryptionKey 13.16.3
+gcp.project.computeService.disk.sourceInstantSnapshot 13.36.1
 gcp.project.computeService.disk.sourceSnapshot 11.6.6
 gcp.project.computeService.disk.sourceSnapshotEncryptionKey 13.16.3
+gcp.project.computeService.disk.sourceStorageObject 13.36.1
 gcp.project.computeService.disk.status 9.0.0
 gcp.project.computeService.disk.storagePool 11.6.6
 gcp.project.computeService.disk.type 11.6.6
@@ -2452,7 +2455,6 @@ gcp.project.computeService.snapshot.iamPolicy 13.10.1
 gcp.project.computeService.snapshot.id 9.0.0
 gcp.project.computeService.snapshot.kmsKey 13.12.2
 gcp.project.computeService.snapshot.labels 9.0.0
-gcp.project.computeService.snapshot.licenseCodes 13.36.1
 gcp.project.computeService.snapshot.licenses 9.0.0
 gcp.project.computeService.snapshot.managedBy 13.27.2
 gcp.project.computeService.snapshot.name 9.0.0
@@ -2464,10 +2466,8 @@ gcp.project.computeService.snapshot.snapshotEncryptionKey 13.19.2
 gcp.project.computeService.snapshot.snapshotType 9.0.0
 gcp.project.computeService.snapshot.sourceDisk 11.6.6
 gcp.project.computeService.snapshot.sourceDiskRef 13.25.2
-gcp.project.computeService.snapshot.sourceInstantSnapshot 13.36.1
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicy 13.1.2
 gcp.project.computeService.snapshot.sourceSnapshotSchedulePolicyId 13.1.2
-gcp.project.computeService.snapshot.sourceStorageObject 13.36.1
 gcp.project.computeService.snapshot.status 9.0.0
 gcp.project.computeService.snapshot.storageBytes 9.0.0
 gcp.project.computeService.snapshot.storageBytesStatus 9.0.0
