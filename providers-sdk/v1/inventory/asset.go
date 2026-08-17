@@ -137,7 +137,7 @@ func NewState(state string) State {
 }
 
 var AssetCategory_schemevalue = map[string]AssetCategory{
-	// FIXME: DEPRECATED, remove in v11.0 vv
+	// FIXME: DEPRECATED, remove in v15.0 vv
 	"fleet": AssetCategory_CATEGORY_INVENTORY,
 	// ^^
 	"inventory": AssetCategory_CATEGORY_INVENTORY,
@@ -145,9 +145,9 @@ var AssetCategory_schemevalue = map[string]AssetCategory{
 }
 
 // deprecatedAssetCategories maps retired category names to the name that
-// replaced them. Values here still resolve, but warn on use so the next
-// major can drop them from AssetCategory_schemevalue.
-// FIXME: DEPRECATED, remove in v14.0 vv
+// replaced them. Values here still resolve, but warn on use so v15 can drop
+// them from AssetCategory_schemevalue.
+// FIXME: DEPRECATED, remove in v15.0 vv
 var deprecatedAssetCategories = map[string]string{
 	"fleet": "inventory",
 }
@@ -172,7 +172,7 @@ func (s *AssetCategory) UnmarshalJSON(data []byte) error {
 		if !ok {
 			return errors.New("unknown asset category value: " + string(data))
 		}
-		// FIXME: DEPRECATED, remove in v14.0 vv
+		// FIXME: DEPRECATED, remove in v15.0 vv
 		if replacement, deprecated := deprecatedAssetCategories[name]; deprecated {
 			log.Warn().
 				Str("category", name).
