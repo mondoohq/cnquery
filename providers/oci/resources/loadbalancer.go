@@ -278,24 +278,25 @@ func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 		lbId := o.Id.Data
 		listenerId := lbId + "/listener/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.listener", map[string]*llx.RawData{
-			"__id":                           llx.StringData(listenerId),
-			"name":                           llx.StringData(name),
-			"port":                           llx.IntDataPtr(listener.Port),
-			"protocol":                       llx.StringDataPtr(listener.Protocol),
-			"defaultBackendSetName":          llx.StringDataPtr(listener.DefaultBackendSetName),
-			"sslProtocols":                   llx.ArrayData(ssl.protocols, types.String),
-			"sslCipherSuiteName":             llx.StringData(ssl.cipherSuiteName),
-			"sslVerifyPeerCertificate":       llx.BoolData(ssl.verifyPeerCertificate),
-			"sslVerifyDepth":                 llx.IntDataPtr(ssl.verifyDepth),
-			"sslServerOrderPreference":       llx.StringData(ssl.serverOrderPreference),
-			"hasSessionResumption":           llx.BoolData(ssl.hasSessionResumption),
-			"certificateName":                llx.StringData(ssl.certificateName),
+			"__id":                  llx.StringData(listenerId),
+			"name":                  llx.StringData(name),
+			"port":                  llx.IntDataPtr(listener.Port),
+			"protocol":              llx.StringDataPtr(listener.Protocol),
+			"defaultBackendSetName": llx.StringDataPtr(listener.DefaultBackendSetName),
+			"sslCipherSuiteName":    llx.StringData(ssl.cipherSuiteName),
+			"certificateName":       llx.StringData(ssl.certificateName),
+			"sslProtocols":          llx.ArrayData(ssl.protocols, types.String),
+
+			"sslVerifyPeerCertificate": llx.BoolData(ssl.verifyPeerCertificate),
+			"sslVerifyDepth":           llx.IntDataPtr(ssl.verifyDepth),
+			"sslServerOrderPreference": llx.StringData(ssl.serverOrderPreference),
+			"hasSessionResumption":     llx.BoolData(ssl.hasSessionResumption),
+
 			"idleTimeoutInSeconds":           llx.IntDataPtr(idleTimeout),
 			"backendTcpProxyProtocolVersion": llx.IntDataPtr(proxyProtocolVersion),
 			"hostnameNames":                  llx.ArrayData(convert.SliceAnyToInterface(listener.HostnameNames), types.String),
 			"pathRouteSetName":               llx.StringDataPtr(listener.PathRouteSetName),
 			"routingPolicyName":              llx.StringDataPtr(listener.RoutingPolicyName),
-			"ruleSetNames":                   llx.ArrayData(convert.SliceAnyToInterface(listener.RuleSetNames), types.String),
 		})
 		if err != nil {
 			return nil, err
@@ -303,6 +304,15 @@ func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 		mqlListener := mqlInstance.(*mqlOciLoadBalancerListener)
 		mqlListener.cacheCertificateIDs = ssl.certificateIDs
 		mqlListener.cacheTrustedCaIDs = ssl.trustedCaIDs
+		// The named sibling collections are already in hand on the parent, so
+		// the typed references below are in-memory lookups rather than calls.
+		mqlListener.cacheLbId = lbId
+		mqlListener.cacheCipherSuiteName = ssl.cipherSuiteName
+		mqlListener.cacheCertBundleName = ssl.certificateName
+		mqlListener.cacheRuleSetNames = listener.RuleSetNames
+		mqlListener.cacheLbCipherSuites = o.cacheCipherSuites
+		mqlListener.cacheLbCertificates = o.cacheCertificates
+		mqlListener.cacheLbRuleSets = o.cacheRuleSets
 		res = append(res, mqlInstance)
 	}
 	return res, nil
@@ -311,6 +321,47 @@ func (o *mqlOciLoadBalancerLoadBalancer) listeners() ([]any, error) {
 type mqlOciLoadBalancerListenerInternal struct {
 	cacheCertificateIDs []any
 	cacheTrustedCaIDs   []any
+
+	cacheLbId            string
+	cacheCipherSuiteName string
+	cacheCertBundleName  string
+	cacheRuleSetNames    []string
+	cacheLbCipherSuites  map[string]loadbalancer.SslCipherSuite
+	cacheLbCertificates  map[string]loadbalancer.Certificate
+	cacheLbRuleSets      map[string]loadbalancer.RuleSet
+}
+
+// sslCipherSuite resolves the named cipher suite against the ones defined on
+// the parent load balancer. Null when the listener terminates no TLS, and when
+// it names an OCI-predefined suite, which is not part of the load balancer's
+// own collection.
+func (o *mqlOciLoadBalancerListener) sslCipherSuite() (*mqlOciLoadBalancerSslCipherSuite, error) {
+	return resolveLbCipherSuite(o.MqlRuntime, o.cacheLbId, o.cacheCipherSuiteName, o.cacheLbCipherSuites, &o.SslCipherSuite)
+}
+
+// certificateBundle resolves the inline bundle the listener serves. Null when
+// it uses OCI Certificates service certificates instead.
+func (o *mqlOciLoadBalancerListener) certificateBundle() (*mqlOciLoadBalancerCertificateBundle, error) {
+	return resolveLbCertificateBundle(o.MqlRuntime, o.cacheLbId, o.cacheCertBundleName, o.cacheLbCertificates, &o.CertificateBundle)
+}
+
+// ruleSets resolves the rule sets attached to the listener by name.
+func (o *mqlOciLoadBalancerListener) ruleSets() ([]any, error) {
+	res := []any{}
+	for _, name := range o.cacheRuleSetNames {
+		rs, ok := o.cacheLbRuleSets[name]
+		if !ok {
+			// A listener naming a rule set the load balancer does not define
+			// is a configuration the API allows; skip rather than fail.
+			continue
+		}
+		mqlRs, err := newMqlLbRuleSet(o.MqlRuntime, o.cacheLbId, name, rs)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlRs)
+	}
+	return res, nil
 }
 
 func (o *mqlOciLoadBalancerListener) certificates() ([]any, error) {
@@ -351,17 +402,17 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		lbId := o.Id.Data
 		bsId := lbId + "/backendSet/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.backendSet", map[string]*llx.RawData{
-			"__id":                              llx.StringData(bsId),
-			"name":                              llx.StringData(name),
-			"policy":                            llx.StringDataPtr(bs.Policy),
-			"healthChecker":                     llx.DictData(healthChecker),
-			"backendCount":                      llx.IntData(int64(len(bs.Backends))),
-			"backendMaxConnections":             llx.IntDataPtr(bs.BackendMaxConnections),
-			"sslProtocols":                      llx.ArrayData(ssl.protocols, types.String),
-			"sslCipherSuiteName":                llx.StringData(ssl.cipherSuiteName),
-			"sslVerifyPeerCertificate":          llx.BoolData(ssl.verifyPeerCertificate),
-			"sslVerifyDepth":                    llx.IntDataPtr(ssl.verifyDepth),
-			"certificateName":                   llx.StringData(ssl.certificateName),
+			"__id":                  llx.StringData(bsId),
+			"name":                  llx.StringData(name),
+			"policy":                llx.StringDataPtr(bs.Policy),
+			"healthChecker":         llx.DictData(healthChecker),
+			"backendCount":          llx.IntData(int64(len(bs.Backends))),
+			"backendMaxConnections": llx.IntDataPtr(bs.BackendMaxConnections),
+			"sslProtocols":          llx.ArrayData(ssl.protocols, types.String),
+
+			"sslVerifyPeerCertificate": llx.BoolData(ssl.verifyPeerCertificate),
+			"sslVerifyDepth":           llx.IntDataPtr(ssl.verifyDepth),
+
 			"sessionPersistenceCookieName":      llx.StringData(sessionCookieName),
 			"sessionPersistenceDisableFallback": llx.BoolData(sessionDisableFallback),
 			"lbCookieName":                      llx.StringData(cookie.name),
@@ -379,6 +430,11 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		mqlBs.cacheBackends = bs.Backends
 		mqlBs.cacheCertificateIDs = ssl.certificateIDs
 		mqlBs.cacheTrustedCaIDs = ssl.trustedCaIDs
+		mqlBs.cacheLbId = o.Id.Data
+		mqlBs.cacheCipherSuiteName = ssl.cipherSuiteName
+		mqlBs.cacheCertBundleName = ssl.certificateName
+		mqlBs.cacheLbCipherSuites = o.cacheCipherSuites
+		mqlBs.cacheLbCertificates = o.cacheCertificates
 		res = append(res, mqlBs)
 	}
 	return res, nil
@@ -388,6 +444,23 @@ type mqlOciLoadBalancerBackendSetInternal struct {
 	cacheBackends       []loadbalancer.Backend
 	cacheCertificateIDs []any
 	cacheTrustedCaIDs   []any
+
+	cacheLbId            string
+	cacheCipherSuiteName string
+	cacheCertBundleName  string
+	cacheLbCipherSuites  map[string]loadbalancer.SslCipherSuite
+	cacheLbCertificates  map[string]loadbalancer.Certificate
+}
+
+// sslCipherSuite resolves the cipher suite used toward the backends. Null when
+// the backend set carries no SSL configuration.
+func (o *mqlOciLoadBalancerBackendSet) sslCipherSuite() (*mqlOciLoadBalancerSslCipherSuite, error) {
+	return resolveLbCipherSuite(o.MqlRuntime, o.cacheLbId, o.cacheCipherSuiteName, o.cacheLbCipherSuites, &o.SslCipherSuite)
+}
+
+// certificateBundle resolves the inline bundle presented to the backends.
+func (o *mqlOciLoadBalancerBackendSet) certificateBundle() (*mqlOciLoadBalancerCertificateBundle, error) {
+	return resolveLbCertificateBundle(o.MqlRuntime, o.cacheLbId, o.cacheCertBundleName, o.cacheLbCertificates, &o.CertificateBundle)
 }
 
 func (o *mqlOciLoadBalancerBackendSet) backends() ([]any, error) {
@@ -436,11 +509,7 @@ func (o *mqlOciLoadBalancerBackendSet) trustedCaBundles() ([]any, error) {
 func (o *mqlOciLoadBalancerLoadBalancer) sslCipherSuites() ([]any, error) {
 	res := make([]any, 0, len(o.cacheCipherSuites))
 	for name, suite := range o.cacheCipherSuites {
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.sslCipherSuite", map[string]*llx.RawData{
-			"__id":    llx.StringData(o.Id.Data + "/sslCipherSuite/" + name),
-			"name":    llx.StringData(name),
-			"ciphers": llx.ArrayData(convert.SliceAnyToInterface(suite.Ciphers), types.String),
-		})
+		mqlInstance, err := newMqlLbCipherSuite(o.MqlRuntime, o.Id.Data, name, suite)
 		if err != nil {
 			return nil, err
 		}
@@ -456,12 +525,7 @@ func (o *mqlOciLoadBalancerSslCipherSuite) id() (string, error) {
 func (o *mqlOciLoadBalancerLoadBalancer) certificateBundles() ([]any, error) {
 	res := make([]any, 0, len(o.cacheCertificates))
 	for name, cert := range o.cacheCertificates {
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.certificateBundle", map[string]*llx.RawData{
-			"__id":              llx.StringData(o.Id.Data + "/certificateBundle/" + name),
-			"name":              llx.StringData(name),
-			"publicCertificate": llx.StringDataPtr(cert.PublicCertificate),
-			"caCertificate":     llx.StringDataPtr(cert.CaCertificate),
-		})
+		mqlInstance, err := newMqlLbCertificateBundle(o.MqlRuntime, o.Id.Data, name, cert)
 		if err != nil {
 			return nil, err
 		}
@@ -504,22 +568,87 @@ func (o *mqlOciLoadBalancerCertificateBundle) certificates() ([]any, error) {
 func (o *mqlOciLoadBalancerLoadBalancer) ruleSets() ([]any, error) {
 	res := make([]any, 0, len(o.cacheRuleSets))
 	for name, rs := range o.cacheRuleSets {
-		rules, err := convert.JsonToDictSlice(rs.Items)
-		if err != nil {
-			return nil, err
-		}
-
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.ruleSet", map[string]*llx.RawData{
-			"__id":  llx.StringData(o.Id.Data + "/ruleSet/" + name),
-			"name":  llx.StringData(name),
-			"rules": llx.ArrayData(rules, types.Dict),
-		})
+		mqlInstance, err := newMqlLbRuleSet(o.MqlRuntime, o.Id.Data, name, rs)
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, mqlInstance)
 	}
 	return res, nil
+}
+
+// newMqlLbRuleSet is shared by the load balancer's own listing and the typed
+// reference from a listener. Both build the same __id, so a rule set reached
+// either way is one cached instance rather than two.
+func newMqlLbRuleSet(runtime *plugin.Runtime, lbId, name string, rs loadbalancer.RuleSet) (plugin.Resource, error) {
+	rules, err := convert.JsonToDictSlice(rs.Items)
+	if err != nil {
+		return nil, err
+	}
+	return CreateResource(runtime, "oci.loadBalancer.ruleSet", map[string]*llx.RawData{
+		"__id":  llx.StringData(lbId + "/ruleSet/" + name),
+		"name":  llx.StringData(name),
+		"rules": llx.ArrayData(rules, types.Dict),
+	})
+}
+
+// newMqlLbCipherSuite is shared by the load balancer's own listing and the
+// typed references from listeners and backend sets.
+func newMqlLbCipherSuite(runtime *plugin.Runtime, lbId, name string, suite loadbalancer.SslCipherSuite) (plugin.Resource, error) {
+	return CreateResource(runtime, "oci.loadBalancer.sslCipherSuite", map[string]*llx.RawData{
+		"__id":    llx.StringData(lbId + "/sslCipherSuite/" + name),
+		"name":    llx.StringData(name),
+		"ciphers": llx.ArrayData(convert.SliceAnyToInterface(suite.Ciphers), types.String),
+	})
+}
+
+// newMqlLbCertificateBundle is shared by the load balancer's own listing and
+// the typed references from listeners and backend sets.
+func newMqlLbCertificateBundle(runtime *plugin.Runtime, lbId, name string, cert loadbalancer.Certificate) (plugin.Resource, error) {
+	return CreateResource(runtime, "oci.loadBalancer.certificateBundle", map[string]*llx.RawData{
+		"__id":              llx.StringData(lbId + "/certificateBundle/" + name),
+		"name":              llx.StringData(name),
+		"publicCertificate": llx.StringDataPtr(cert.PublicCertificate),
+		"caCertificate":     llx.StringDataPtr(cert.CaCertificate),
+	})
+}
+
+// resolveLbCipherSuite looks a named cipher suite up in the parent load
+// balancer's own collection. A listener may instead name an OCI-predefined
+// suite (oci-default-ssl-cipher-suite-v1 and friends), which the load balancer
+// does not enumerate; that reads as null rather than as an error.
+func resolveLbCipherSuite(runtime *plugin.Runtime, lbId, name string,
+	suites map[string]loadbalancer.SslCipherSuite,
+	field *plugin.TValue[*mqlOciLoadBalancerSslCipherSuite],
+) (*mqlOciLoadBalancerSslCipherSuite, error) {
+	suite, ok := suites[name]
+	if name == "" || !ok {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := newMqlLbCipherSuite(runtime, lbId, name, suite)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciLoadBalancerSslCipherSuite), nil
+}
+
+// resolveLbCertificateBundle looks a named inline bundle up in the parent load
+// balancer's own collection.
+func resolveLbCertificateBundle(runtime *plugin.Runtime, lbId, name string,
+	certs map[string]loadbalancer.Certificate,
+	field *plugin.TValue[*mqlOciLoadBalancerCertificateBundle],
+) (*mqlOciLoadBalancerCertificateBundle, error) {
+	cert, ok := certs[name]
+	if name == "" || !ok {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := newMqlLbCertificateBundle(runtime, lbId, name, cert)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciLoadBalancerCertificateBundle), nil
 }
 
 func (o *mqlOciLoadBalancerRuleSet) id() (string, error) {

@@ -453,10 +453,10 @@ func (o *mqlOciIdentityDomain) passwordPolicies() ([]any, error) {
 			"startsWithAlphabet":       llx.BoolData(boolValue(p.StartsWithAlphabet)),
 			"disallowedSubstrings":     llx.ArrayData(stringsToAny(p.DisallowedSubstrings), types.String),
 
-			"passwordStrength":              llx.StringData(string(p.PasswordStrength)),
-			"requiredChars":                 llx.StringDataPtr(p.RequiredChars),
-			"allowedChars":                  llx.StringDataPtr(p.AllowedChars),
-			"disallowedChars":               llx.StringDataPtr(p.DisallowedChars),
+			"passwordStrength": llx.StringData(string(p.PasswordStrength)),
+			"requiredChars":    llx.StringDataPtr(p.RequiredChars),
+			"allowedChars":     llx.StringDataPtr(p.AllowedChars),
+			"disallowedChars":  llx.StringDataPtr(p.DisallowedChars),
 			// distinctCharacters and priority stay null when IDCS does not
 			// return them. Defaulting to 0 the way the older fields above do
 			// would assert two things that are not known to be true: that a

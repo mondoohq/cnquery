@@ -5435,6 +5435,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.listener.sslCipherSuiteName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetSslCipherSuiteName()).ToDataRes(types.String)
 	},
+	"oci.loadBalancer.listener.sslCipherSuite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetSslCipherSuite()).ToDataRes(types.Resource("oci.loadBalancer.sslCipherSuite"))
+	},
 	"oci.loadBalancer.listener.sslVerifyPeerCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetSslVerifyPeerCertificate()).ToDataRes(types.Bool)
 	},
@@ -5449,6 +5452,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.loadBalancer.listener.certificateName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetCertificateName()).ToDataRes(types.String)
+	},
+	"oci.loadBalancer.listener.certificateBundle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetCertificateBundle()).ToDataRes(types.Resource("oci.loadBalancer.certificateBundle"))
 	},
 	"oci.loadBalancer.listener.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetCertificates()).ToDataRes(types.Array(types.Resource("oci.certificates.certificate")))
@@ -5474,8 +5480,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.listener.routingPolicyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerListener).GetRoutingPolicyName()).ToDataRes(types.String)
 	},
-	"oci.loadBalancer.listener.ruleSetNames": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerListener).GetRuleSetNames()).ToDataRes(types.Array(types.String))
+	"oci.loadBalancer.listener.ruleSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerListener).GetRuleSets()).ToDataRes(types.Array(types.Resource("oci.loadBalancer.ruleSet")))
 	},
 	"oci.loadBalancer.sslCipherSuite.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerSslCipherSuite).GetName()).ToDataRes(types.String)
@@ -5522,8 +5528,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.backendSet.sslProtocols": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetSslProtocols()).ToDataRes(types.Array(types.String))
 	},
-	"oci.loadBalancer.backendSet.sslCipherSuiteName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetSslCipherSuiteName()).ToDataRes(types.String)
+	"oci.loadBalancer.backendSet.sslCipherSuite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerBackendSet).GetSslCipherSuite()).ToDataRes(types.Resource("oci.loadBalancer.sslCipherSuite"))
 	},
 	"oci.loadBalancer.backendSet.sslVerifyPeerCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetSslVerifyPeerCertificate()).ToDataRes(types.Bool)
@@ -5531,8 +5537,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.backendSet.sslVerifyDepth": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetSslVerifyDepth()).ToDataRes(types.Int)
 	},
-	"oci.loadBalancer.backendSet.certificateName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetCertificateName()).ToDataRes(types.String)
+	"oci.loadBalancer.backendSet.certificateBundle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerBackendSet).GetCertificateBundle()).ToDataRes(types.Resource("oci.loadBalancer.certificateBundle"))
 	},
 	"oci.loadBalancer.backendSet.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetCertificates()).ToDataRes(types.Array(types.Resource("oci.certificates.certificate")))
@@ -16862,6 +16868,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerListener).SslCipherSuiteName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"oci.loadBalancer.listener.sslCipherSuite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).SslCipherSuite, ok = plugin.RawToTValue[*mqlOciLoadBalancerSslCipherSuite](v.Value, v.Error)
+		return
+	},
 	"oci.loadBalancer.listener.sslVerifyPeerCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerListener).SslVerifyPeerCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -16880,6 +16890,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.listener.certificateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerListener).CertificateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.listener.certificateBundle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).CertificateBundle, ok = plugin.RawToTValue[*mqlOciLoadBalancerCertificateBundle](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.listener.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16914,8 +16928,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerListener).RoutingPolicyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"oci.loadBalancer.listener.ruleSetNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerListener).RuleSetNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"oci.loadBalancer.listener.ruleSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerListener).RuleSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.sslCipherSuite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16994,8 +17008,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerBackendSet).SslProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"oci.loadBalancer.backendSet.sslCipherSuiteName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).SslCipherSuiteName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.loadBalancer.backendSet.sslCipherSuite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerBackendSet).SslCipherSuite, ok = plugin.RawToTValue[*mqlOciLoadBalancerSslCipherSuite](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.backendSet.sslVerifyPeerCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17006,8 +17020,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerBackendSet).SslVerifyDepth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"oci.loadBalancer.backendSet.certificateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).CertificateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"oci.loadBalancer.backendSet.certificateBundle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerBackendSet).CertificateBundle, ok = plugin.RawToTValue[*mqlOciLoadBalancerCertificateBundle](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.backendSet.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -39607,11 +39621,13 @@ type mqlOciLoadBalancerListener struct {
 	DefaultBackendSetName          plugin.TValue[string]
 	SslProtocols                   plugin.TValue[[]any]
 	SslCipherSuiteName             plugin.TValue[string]
+	SslCipherSuite                 plugin.TValue[*mqlOciLoadBalancerSslCipherSuite]
 	SslVerifyPeerCertificate       plugin.TValue[bool]
 	SslVerifyDepth                 plugin.TValue[int64]
 	SslServerOrderPreference       plugin.TValue[string]
 	HasSessionResumption           plugin.TValue[bool]
 	CertificateName                plugin.TValue[string]
+	CertificateBundle              plugin.TValue[*mqlOciLoadBalancerCertificateBundle]
 	Certificates                   plugin.TValue[[]any]
 	TrustedCertificateAuthorities  plugin.TValue[[]any]
 	TrustedCaBundles               plugin.TValue[[]any]
@@ -39620,7 +39636,7 @@ type mqlOciLoadBalancerListener struct {
 	HostnameNames                  plugin.TValue[[]any]
 	PathRouteSetName               plugin.TValue[string]
 	RoutingPolicyName              plugin.TValue[string]
-	RuleSetNames                   plugin.TValue[[]any]
+	RuleSets                       plugin.TValue[[]any]
 }
 
 // createOciLoadBalancerListener creates a new instance of this resource
@@ -39684,6 +39700,22 @@ func (c *mqlOciLoadBalancerListener) GetSslCipherSuiteName() *plugin.TValue[stri
 	return &c.SslCipherSuiteName
 }
 
+func (c *mqlOciLoadBalancerListener) GetSslCipherSuite() *plugin.TValue[*mqlOciLoadBalancerSslCipherSuite] {
+	return plugin.GetOrCompute[*mqlOciLoadBalancerSslCipherSuite](&c.SslCipherSuite, func() (*mqlOciLoadBalancerSslCipherSuite, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.listener", c.__id, "sslCipherSuite")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLoadBalancerSslCipherSuite), nil
+			}
+		}
+
+		return c.sslCipherSuite()
+	})
+}
+
 func (c *mqlOciLoadBalancerListener) GetSslVerifyPeerCertificate() *plugin.TValue[bool] {
 	return &c.SslVerifyPeerCertificate
 }
@@ -39702,6 +39734,22 @@ func (c *mqlOciLoadBalancerListener) GetHasSessionResumption() *plugin.TValue[bo
 
 func (c *mqlOciLoadBalancerListener) GetCertificateName() *plugin.TValue[string] {
 	return &c.CertificateName
+}
+
+func (c *mqlOciLoadBalancerListener) GetCertificateBundle() *plugin.TValue[*mqlOciLoadBalancerCertificateBundle] {
+	return plugin.GetOrCompute[*mqlOciLoadBalancerCertificateBundle](&c.CertificateBundle, func() (*mqlOciLoadBalancerCertificateBundle, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.listener", c.__id, "certificateBundle")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLoadBalancerCertificateBundle), nil
+			}
+		}
+
+		return c.certificateBundle()
+	})
 }
 
 func (c *mqlOciLoadBalancerListener) GetCertificates() *plugin.TValue[[]any] {
@@ -39772,8 +39820,20 @@ func (c *mqlOciLoadBalancerListener) GetRoutingPolicyName() *plugin.TValue[strin
 	return &c.RoutingPolicyName
 }
 
-func (c *mqlOciLoadBalancerListener) GetRuleSetNames() *plugin.TValue[[]any] {
-	return &c.RuleSetNames
+func (c *mqlOciLoadBalancerListener) GetRuleSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RuleSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.listener", c.__id, "ruleSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ruleSets()
+	})
 }
 
 // mqlOciLoadBalancerSslCipherSuite for the oci.loadBalancer.sslCipherSuite resource
@@ -39972,10 +40032,10 @@ type mqlOciLoadBalancerBackendSet struct {
 	Backends                          plugin.TValue[[]any]
 	BackendMaxConnections             plugin.TValue[int64]
 	SslProtocols                      plugin.TValue[[]any]
-	SslCipherSuiteName                plugin.TValue[string]
+	SslCipherSuite                    plugin.TValue[*mqlOciLoadBalancerSslCipherSuite]
 	SslVerifyPeerCertificate          plugin.TValue[bool]
 	SslVerifyDepth                    plugin.TValue[int64]
-	CertificateName                   plugin.TValue[string]
+	CertificateBundle                 plugin.TValue[*mqlOciLoadBalancerCertificateBundle]
 	Certificates                      plugin.TValue[[]any]
 	TrustedCertificateAuthorities     plugin.TValue[[]any]
 	TrustedCaBundles                  plugin.TValue[[]any]
@@ -40067,8 +40127,20 @@ func (c *mqlOciLoadBalancerBackendSet) GetSslProtocols() *plugin.TValue[[]any] {
 	return &c.SslProtocols
 }
 
-func (c *mqlOciLoadBalancerBackendSet) GetSslCipherSuiteName() *plugin.TValue[string] {
-	return &c.SslCipherSuiteName
+func (c *mqlOciLoadBalancerBackendSet) GetSslCipherSuite() *plugin.TValue[*mqlOciLoadBalancerSslCipherSuite] {
+	return plugin.GetOrCompute[*mqlOciLoadBalancerSslCipherSuite](&c.SslCipherSuite, func() (*mqlOciLoadBalancerSslCipherSuite, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.backendSet", c.__id, "sslCipherSuite")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLoadBalancerSslCipherSuite), nil
+			}
+		}
+
+		return c.sslCipherSuite()
+	})
 }
 
 func (c *mqlOciLoadBalancerBackendSet) GetSslVerifyPeerCertificate() *plugin.TValue[bool] {
@@ -40079,8 +40151,20 @@ func (c *mqlOciLoadBalancerBackendSet) GetSslVerifyDepth() *plugin.TValue[int64]
 	return &c.SslVerifyDepth
 }
 
-func (c *mqlOciLoadBalancerBackendSet) GetCertificateName() *plugin.TValue[string] {
-	return &c.CertificateName
+func (c *mqlOciLoadBalancerBackendSet) GetCertificateBundle() *plugin.TValue[*mqlOciLoadBalancerCertificateBundle] {
+	return plugin.GetOrCompute[*mqlOciLoadBalancerCertificateBundle](&c.CertificateBundle, func() (*mqlOciLoadBalancerCertificateBundle, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.backendSet", c.__id, "certificateBundle")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLoadBalancerCertificateBundle), nil
+			}
+		}
+
+		return c.certificateBundle()
+	})
 }
 
 func (c *mqlOciLoadBalancerBackendSet) GetCertificates() *plugin.TValue[[]any] {
