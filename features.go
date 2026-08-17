@@ -97,29 +97,53 @@ const (
 	// status: new
 	TerraformResolveVars Feature = 17
 
+	// Compute a checksum for every row while writing the scan database, so an unchanged scan is detectable. Nothing else changes - every scan still uploads and is processed in full.
+	// start:  v13.x
+	// status: new
+	ScanContentModeShadow Feature = 18
+
+	// Row checksums as in shadow; the server also skips reprocessing uploads whose rows are identical to the previous scan. Client behavior is identical to shadow.
+	// start:  v13.x
+	// status: new
+	ScanContentModeServerCompare Feature = 19
+
+	// Row checksums as in shadow; the client may also fetch the previous upload's checksum summary, compare locally, and skip the upload entirely when nothing changed (completing with unchanged=true).
+	// start:  v13.x
+	// status: new
+	ScanContentModeClientCompare Feature = 20
+
+	// The kill switch: compute no checksums, always upload in full. Overrides every other ScanContentMode* feature and any client default, so the server can disable comparison per scope even after it ships as the default.
+	// start:  v13.x
+	// status: new
+	ScanContentModeNoCompare Feature = 21
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 18
+	MAX_FEATURES byte = 22
 )
 
 var FeaturesValue = map[string]Feature{
-	"MassQueries":           MassQueries,
-	"PiperCode":             PiperCode,
-	"BoolAssertions":        BoolAssertions,
-	"K8sNodeDiscovery":      K8sNodeDiscovery,
-	"MQLAssetContext":       MQLAssetContext,
-	"ErrorsAsFailures":      ErrorsAsFailures,
-	"StoreResourcesData":    StoreResourcesData,
-	"FineGrainedAssets":     FineGrainedAssets,
-	"SerialNumberAsID":      SerialNumberAsID,
-	"ForceShellCompletion":  ForceShellCompletion,
-	"ResourceContext":       ResourceContext,
-	"FailIfNoEntryPoints":   FailIfNoEntryPoints,
-	"UploadResultsV2":       UploadResultsV2,
-	"AutoUpdateEngine":      AutoUpdateEngine,
-	"BiosUUIDAsID":          BiosUUIDAsID,
-	"ExchangeTokenForToken": ExchangeTokenForToken,
-	"TerraformResolveVars":  TerraformResolveVars,
+	"MassQueries":                  MassQueries,
+	"PiperCode":                    PiperCode,
+	"BoolAssertions":               BoolAssertions,
+	"K8sNodeDiscovery":             K8sNodeDiscovery,
+	"MQLAssetContext":              MQLAssetContext,
+	"ErrorsAsFailures":             ErrorsAsFailures,
+	"StoreResourcesData":           StoreResourcesData,
+	"FineGrainedAssets":            FineGrainedAssets,
+	"SerialNumberAsID":             SerialNumberAsID,
+	"ForceShellCompletion":         ForceShellCompletion,
+	"ResourceContext":              ResourceContext,
+	"FailIfNoEntryPoints":          FailIfNoEntryPoints,
+	"UploadResultsV2":              UploadResultsV2,
+	"AutoUpdateEngine":             AutoUpdateEngine,
+	"BiosUUIDAsID":                 BiosUUIDAsID,
+	"ExchangeTokenForToken":        ExchangeTokenForToken,
+	"TerraformResolveVars":         TerraformResolveVars,
+	"ScanContentModeShadow":        ScanContentModeShadow,
+	"ScanContentModeServerCompare": ScanContentModeServerCompare,
+	"ScanContentModeClientCompare": ScanContentModeClientCompare,
+	"ScanContentModeNoCompare":     ScanContentModeNoCompare,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -138,4 +162,8 @@ var AvailableFeatures = Features{
 	byte(BiosUUIDAsID),
 	byte(ExchangeTokenForToken),
 	byte(TerraformResolveVars),
+	byte(ScanContentModeShadow),
+	byte(ScanContentModeServerCompare),
+	byte(ScanContentModeClientCompare),
+	byte(ScanContentModeNoCompare),
 }

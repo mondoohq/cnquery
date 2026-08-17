@@ -98,3 +98,23 @@ Features:
   idx: 17
   start: v13.x
   status: new
+- id: ScanContentModeShadow
+  desc: "Compute a checksum for every row while writing the scan database, so an unchanged scan is detectable. Nothing else changes - every scan still uploads and is processed in full."
+  idx: 18
+  start: v13.x
+  status: new
+- id: ScanContentModeServerCompare
+  desc: "Row checksums as in shadow; the server also skips reprocessing uploads whose rows are identical to the previous scan. Client behavior is identical to shadow."
+  idx: 19
+  start: v13.x
+  status: new
+- id: ScanContentModeClientCompare
+  desc: "Row checksums as in shadow; the client may also fetch the previous upload's checksum summary, compare locally, and skip the upload entirely when nothing changed (completing with unchanged=true)."
+  idx: 20
+  start: v13.x
+  status: new
+- id: ScanContentModeNoCompare
+  desc: "The kill switch: compute no checksums, always upload in full. Overrides every other ScanContentMode* feature and any client default, so the server can disable comparison per scope even after it ships as the default."
+  idx: 21
+  start: v13.x
+  status: new
