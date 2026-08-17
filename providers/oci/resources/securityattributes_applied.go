@@ -211,3 +211,7 @@ func (o *mqlOciOkeCluster) appliedSecurityAttributes() ([]any, error) {
 func (o *mqlOciNetworkFirewallFirewall) appliedSecurityAttributes() ([]any, error) {
 	return ociAppliedSecurityAttributes(o.MqlRuntime, o.Id.Data, o.SecurityAttributes.Data)
 }
+
+func (o *mqlOciDatabaseDbSystem) appliedSecurityAttributes() ([]any, error) {
+	return ociAppliedSecurityAttributes(o.MqlRuntime, o.Id.Data, o.SecurityAttributes.Data)
+}

@@ -385,6 +385,30 @@ func (o *mqlOciObjectStorageBucket) kmsKeyId() (string, error) {
 	return *bucketInfo.KmsKeyId, nil
 }
 
+func (o *mqlOciObjectStorageBucket) isBucketKeyEnabled() (bool, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return false, err
+	}
+	return boolValue(bucketInfo.IsBucketKeyEnabled), nil
+}
+
+func (o *mqlOciObjectStorageBucket) bucketScope() (string, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return "", err
+	}
+	return string(bucketInfo.BucketScope), nil
+}
+
+func (o *mqlOciObjectStorageBucket) metadata() (map[string]any, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return nil, err
+	}
+	return strMapToAny(bucketInfo.Metadata), nil
+}
+
 func (o *mqlOciObjectStorageBucket) approximateCount() (int64, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {

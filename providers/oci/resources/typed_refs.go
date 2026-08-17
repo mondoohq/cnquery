@@ -246,6 +246,52 @@ func resolveOciSecurityGroups(runtime *plugin.Runtime, ids []any) ([]any, error)
 	return out, nil
 }
 
+// resolveOciSubnets resolves a list of typed subnet resources from a list of
+// subnet OCIDs. Empty list returns ([], nil).
+func resolveOciSubnets(runtime *plugin.Runtime, ids []any) ([]any, error) {
+	out := make([]any, 0, len(ids))
+	for _, raw := range ids {
+		id, ok := raw.(string)
+		if !ok || id == "" {
+			continue
+		}
+		res, err := NewResource(runtime, "oci.network.subnet", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			// A subnet that cannot be resolved must not take the rest of the
+			// list with it.
+			log.Debug().Err(err).Str("subnet", id).Msg("skipping unresolvable oci subnet")
+			continue
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// resolveOciKmsKeys resolves a list of typed KMS key resources from a list of
+// key OCIDs. Empty list returns ([], nil).
+func resolveOciKmsKeys(runtime *plugin.Runtime, ids []any) ([]any, error) {
+	out := make([]any, 0, len(ids))
+	for _, raw := range ids {
+		id, ok := raw.(string)
+		if !ok || id == "" {
+			continue
+		}
+		res, err := NewResource(runtime, "oci.kms.key", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			// A key that cannot be resolved must not take the rest of the list
+			// with it.
+			log.Debug().Err(err).Str("key", id).Msg("skipping unresolvable oci kms key")
+			continue
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
 // resolveOciCertificates resolves a list of typed OCI Certificates service
 // certificate resources from a list of certificate OCIDs. Empty entries are
 // skipped. Empty list returns ([], nil).
