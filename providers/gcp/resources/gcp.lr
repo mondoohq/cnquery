@@ -1946,6 +1946,13 @@ gcp.project.computeService.instance @defaults("name id") {
   // letting audits traverse the role bindings and keys of each identity the VM
   // authenticates with.
   serviceAccountRefs() []gcp.project.iamService.serviceAccount
+  // How the instance's local SSDs are encrypted
+  //
+  // One of LOCAL_SSD_ENCRYPTION_MODE_UNSPECIFIED, STANDARD_ENCRYPTION, or
+  // EPHEMERAL_KEY_ENCRYPTION. Under EPHEMERAL_KEY_ENCRYPTION the key is
+  // discarded when the instance stops, so the local SSD contents cannot be
+  // recovered afterwards.
+  localSsdEncryptionMode string
 }
 
 // Compute instance internet-exposure breakdown
@@ -2257,6 +2264,19 @@ private gcp.project.computeService.disk @defaults("name") {
   sourceSnapshot() gcp.project.computeService.snapshot
   // Provisioned throughput of the disk in MB/s
   provisionedThroughput int
+  // Cloud Storage object the disk image was imported from
+  //
+  // Set when the disk was created from a RAW image in a bucket rather than
+  // from a Compute Engine image or snapshot, which puts the disk's provenance
+  // outside the image and snapshot controls.
+  sourceStorageObject string
+  // Instant snapshot the disk was created from
+  sourceInstantSnapshot string
+  // Numeric license codes attached to the disk
+  //
+  // Identifies the paid or restricted operating-system licenses the disk
+  // carries, which the licenses field gives as URLs.
+  licenseCodes []int
   // Storage pool where the disk resides
   storagePool() gcp.project.computeService.storagePool
   // Region of the disk (for regional persistent disks)
@@ -2708,6 +2728,24 @@ gcp.project.computeService.subnetwork @defaults("name") {
   // for Pods and Services and by other workloads that need additional
   // alias IP allocations beyond the primary `ipCidrRange`.
   secondaryIpRanges []dict
+  // Address pool the subnetwork draws its range from
+  //
+  // Full URL of the public delegated prefix or internal range the subnetwork
+  // is carved out of. Empty when the range was assigned directly.
+  ipCollection string
+  // Whether the subnet mask is resolved on read
+  //
+  // One of RESOLVE_SUBNET_MASK_UNSPECIFIED, ARBITRARY, or STRICT.
+  resolveSubnetMask string
+  // Internal IPv6 ranges Google reserves within this subnetwork
+  systemReservedInternalIpv6Ranges []string
+  // External IPv6 ranges Google reserves within this subnetwork
+  systemReservedExternalIpv6Ranges []string
+  // Address utilization of the subnetwork
+  //
+  // Keys: `internalIpv6Utilization` and `externalIpv6Utilization`, each with
+  // the assigned and free address counts for that family.
+  utilizationDetails dict
 }
 
 // Google Cloud (GCP) Compute VPC network partitioning log configuration
@@ -4526,6 +4564,14 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   peeringNetwork @maturity("deprecated") string
   // VPC network this private zone peers with for DNS resolution (resolved from peeringNetwork)
   peeringNetworkRef() gcp.project.computeService.network
+  // Service Directory namespace this zone resolves names from
+  //
+  // Full URL of the namespace backing the zone. When set, records are served
+  // from Service Directory rather than from the zone's own record sets, so the
+  // recordSets list is not the whole answer for this zone.
+  serviceDirectoryNamespaceUrl string
+  // Whether the zone performs reverse lookups
+  reverseLookupEnabled bool
   // Cloud DNS record set in the zone
   recordSets() []gcp.project.dnsService.recordset
   // IAM policy bindings for this managed zone
@@ -4980,6 +5026,98 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   tpuIpv4CidrBlock string
   // Enabled Kubernetes beta APIs
   enabledK8sBetaApis []string
+  // Support tier the cluster runs under
+  //
+  // One of STANDARD or ENTERPRISE. GKE Enterprise gates several of the
+  // security posture features, so a control that assumes they are active only
+  // holds on an ENTERPRISE cluster.
+  enterpriseClusterTier string
+  // Support tier the cluster is being moved to, while a tier change is in flight
+  enterpriseDesiredTier string
+  // How the cluster takes new patch versions
+  //
+  // One of PATCH_MODE_UNSPECIFIED or ACCELERATED. ACCELERATED opts the cluster
+  // into patch releases sooner than its release channel would otherwise apply
+  // them.
+  autoUpgradePatchMode string
+  // Whether the cluster synchronizes secrets from Secret Manager
+  secretSyncEnabled bool
+  // Whether synchronized secrets are re-read on a schedule
+  secretSyncRotationEnabled bool
+  // Seconds between re-reads of synchronized secrets
+  //
+  // A long interval leaves a rotated or revoked secret live in the cluster
+  // until the next sync.
+  secretSyncRotationIntervalSeconds int
+  // Horizontal Pod Autoscaler profile in force
+  //
+  // One of HPA_PROFILE_UNSPECIFIED, NONE, or PERFORMANCE.
+  podAutoscalingHpaProfile string
+  // Kubernetes version running on the cluster's nodes
+  //
+  // Reports the nodes rather than the control plane, which currentMasterVersion
+  // covers. The two drift apart between a control-plane upgrade and the node
+  // upgrade that follows it.
+  currentNodeVersion string
+  // Human-readable detail for the cluster's current status
+  statusMessage string
+  // Settings applied to node pools GKE creates automatically
+  //
+  // Keys: `networkTags`, `resourceManagerTags`, `nodeKubeletConfig`, and
+  // `linuxNodeConfig`.
+  nodePoolAutoConfig dict
+  // Node auto-provisioning settings, and the defaults applied to the nodes it creates
+  nodeAutoprovisioning gcp.project.gkeService.cluster.nodeAutoprovisioningConfig
+}
+
+// Node auto-provisioning settings of a GKE cluster
+//
+// Controls whether GKE may create node pools on its own to fit pending
+// workloads, and the settings those nodes get. Nodes created this way are the
+// ones no one chose the configuration for, so the defaults here decide whether
+// they run Shielded VM, which key encrypts their boot disks, and which identity
+// and OAuth scopes they carry. The `serviceAccount` field resolves that
+// identity, and `enabled` reports whether auto-provisioning is switched on at
+// all, since the remaining settings only take effect when it is.
+private gcp.project.gkeService.cluster.nodeAutoprovisioningConfig @defaults("enabled autoscalingProfile") {
+  // Whether GKE may create node pools automatically
+  enabled bool
+  // Balance the autoscaler strikes between utilization and availability
+  //
+  // One of PROFILE_UNSPECIFIED, OPTIMIZE_UTILIZATION, or BALANCED.
+  autoscalingProfile string
+  // Locations auto-provisioned node pools may be created in
+  autoprovisioningLocations []string
+  // Per-resource ceilings on what auto-provisioning may create
+  //
+  // Each entry has `resourceType` (for example `cpu`, `memory`, or a GPU
+  // type), `minimum`, and `maximum`.
+  resourceLimits []dict
+  // OAuth scopes granted to auto-provisioned nodes
+  //
+  // A scope of `https://www.googleapis.com/auth/cloud-platform` gives those
+  // nodes the full reach of their service account.
+  oauthScopes []string
+  // Whether auto-provisioned nodes run with Secure Boot
+  shieldedSecureBootEnabled bool
+  // Whether auto-provisioned nodes run with an integrity-monitored vTPM
+  shieldedIntegrityMonitoringEnabled bool
+  // Cloud KMS key encrypting the boot disks of auto-provisioned nodes
+  //
+  // Empty when those boot disks fall back to Google-managed encryption.
+  bootDiskKmsKey string
+  // Boot disk type given to auto-provisioned nodes
+  diskType string
+  // Boot disk size in GB given to auto-provisioned nodes
+  diskSizeGb int
+  // Node image used for auto-provisioned nodes
+  imageType string
+  // Minimum CPU platform required of auto-provisioned nodes
+  minCpuPlatform string
+  // Whether the unauthenticated kubelet read-only port is open on auto-provisioned nodes
+  insecureKubeletReadonlyPortEnabled bool
+  // Service account auto-provisioned nodes run as
+  serviceAccount() gcp.project.iamService.serviceAccount
 }
 
 // Google Cloud (GCP) GKE cluster notification configuration
@@ -8070,6 +8208,58 @@ private gcp.project.cloudRunService.service @defaults("name") {
   // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
   // when the resource carries no management signal.
   managedBy() string
+  // How Cloud Run decides the instance count for the service
+  //
+  // One of SCALING_MODE_UNSPECIFIED, AUTOMATIC, or MANUAL. MANUAL holds the
+  // count fixed at manualInstanceCount and stops the service absorbing load.
+  scalingMode string
+  // Minimum instances kept running for the service
+  minInstanceCount int
+  // Maximum instances the service may scale out to
+  maxInstanceCount int
+  // Instance count held when scalingMode is MANUAL
+  manualInstanceCount int
+  // Every URL the service answers on
+  //
+  // Includes the default run.app URL and any custom-audience or regional URLs.
+  // A service with defaultUriDisabled set still lists the URLs that remain
+  // reachable.
+  urls []string
+  // Source build the service was deployed from, when Cloud Run built the image itself
+  buildConfig gcp.project.cloudRunService.service.buildSettings
+}
+
+// Source build behind a Cloud Run service
+//
+// Settings Cloud Run used to build the container image from source, present
+// only on services deployed from source rather than from a prebuilt image.
+// Records where the source came from (`sourceLocation`), the image that came
+// out (`imageUri`), the base image it was built on, and whether that base is
+// refreshed automatically. The `serviceAccount` field resolves the identity the
+// build ran as, which is the identity an audit follows to see what the build
+// could reach.
+private gcp.project.cloudRunService.service.buildSettings @defaults("imageUri sourceLocation") {
+  // Name of the build
+  name string
+  // Cloud Storage location of the source archive the image was built from
+  sourceLocation string
+  // Entry point built for a function-style deployment
+  functionTarget string
+  // Image the build produced
+  imageUri string
+  // Base image the build layered on
+  baseImage string
+  // Whether the base image is refreshed automatically as new versions ship
+  //
+  // When false, the service keeps running on the base image it was built
+  // against, including any vulnerabilities later fixed upstream.
+  enableAutomaticUpdates bool
+  // Worker pool the build ran in
+  workerPool string
+  // Environment variables supplied to the build
+  environmentVariables map[string]string
+  // Service account the build ran as
+  serviceAccount() gcp.project.iamService.serviceAccount
 }
 
 // Google Cloud (GCP) Run service revision template
@@ -8113,6 +8303,30 @@ private gcp.project.cloudRunService.service.revisionTemplate @defaults("name") {
   encryptionKey string
   // Maximum number of requests that each serving instance can receive
   maxInstanceRequestConcurrency int
+  // What Cloud Run does when the revision's encryption key is revoked
+  //
+  // One of PREVENT_NEW or SHUTDOWN. PREVENT_NEW leaves instances that are
+  // already running in place after the key is gone, so revoking the key does
+  // not by itself stop the workload.
+  encryptionKeyRevocationAction string
+  // Seconds a revision keeps running after its encryption key is revoked, when the action is SHUTDOWN
+  encryptionKeyShutdownDurationSeconds int
+  // Service mesh the revision joins
+  //
+  // Full resource name of the Cloud Service Mesh the revision's traffic is
+  // routed through. Empty when the revision is not attached to a mesh.
+  serviceMesh string
+  // Whether requests from one client are pinned to the same instance
+  sessionAffinity bool
+  // Whether Cloud Run's default health checking is turned off for the revision
+  //
+  // When true, Cloud Run does not probe the container, so an instance that has
+  // stopped serving correctly stays in rotation.
+  healthCheckDisabled bool
+  // Accelerator required of the nodes the revision runs on
+  nodeSelectorAccelerator string
+  // Whether zonal redundancy is switched off for the revision's GPUs
+  gpuZonalRedundancyDisabled bool
 }
 
 // Google Cloud (GCP) Run service revision template container
@@ -8164,6 +8378,16 @@ private gcp.project.cloudRunService.container @defaults("name image") {
   livenessProbe gcp.project.cloudRunService.container.probe
   // Startup probe of application within the container
   startupProbe gcp.project.cloudRunService.container.probe
+  // Probe deciding when the container is ready to take traffic
+  readinessProbe gcp.project.cloudRunService.container.probe
+  // Containers in the same revision that must start before this one
+  dependsOn []string
+  // Base image this container was built on
+  baseImageUri string
+  // Entry point built for a function-style deployment
+  buildFunctionTarget string
+  // Cloud Storage location of the source the container image was built from
+  buildSourceLocation string
 }
 
 // Google Cloud (GCP) Run service revision template container probe

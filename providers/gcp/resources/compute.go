@@ -955,6 +955,7 @@ func newMqlComputeServiceInstance(projectId string, zone *mqlGcpProjectComputeSe
 		"nics":                            llx.ArrayData(mqlNics, types.Resource("gcp.project.computeService.instance.networkInterface")),
 		"networkStackTypes":               llx.ArrayData(networkStackTypes, types.String),
 		"privateIpv6GoogleAccess":         llx.StringData(instance.PrivateIpv6GoogleAccess),
+		"localSsdEncryptionMode":          llx.StringData(instance.LocalSsdEncryptionMode),
 		"reservationAffinity":             llx.DictData(reservationAffinity),
 		"resourcePolicies":                llx.ArrayData(convert.SliceAnyToInterface(instance.ResourcePolicies), types.String),
 		"physicalHostResourceStatus":      llx.StringData(physicalHost),
@@ -1411,6 +1412,9 @@ func (g *mqlGcpProjectComputeService) disks() ([]any, error) {
 					"type":                        llx.StringData(disk.Type),
 					"users":                       llx.ArrayData(convert.SliceAnyToInterface(disk.Users), types.String),
 					"accessMode":                  llx.StringData(disk.AccessMode),
+					"sourceStorageObject":         llx.StringData(disk.SourceStorageObject),
+					"sourceInstantSnapshot":       llx.StringData(disk.SourceInstantSnapshot),
+					"licenseCodes":                llx.ArrayData(convert.SliceAnyToInterface([]int64(disk.LicenseCodes)), types.Int),
 					"provisionedThroughput":       llx.IntData(disk.ProvisionedThroughput),
 				})
 				if err != nil {
@@ -2557,32 +2561,42 @@ func newMqlSubnetwork(projectId string, runtime *plugin.Runtime, subnetwork *com
 		})
 	}
 
+	utilizationDetails, err := protoToDict(subnetwork.GetUtilizationDetails())
+	if err != nil {
+		return nil, err
+	}
+
 	args := map[string]*llx.RawData{
-		"id":                           llx.StringData(subnetId),
-		"projectId":                    llx.StringData(projectId),
-		"name":                         llx.StringData(subnetwork.GetName()),
-		"description":                  llx.StringData(subnetwork.GetDescription()),
-		"enableFlowLogs":               llx.BoolData(subnetwork.GetEnableFlowLogs()),
-		"externalIpv6Prefix":           llx.StringData(subnetwork.GetExternalIpv6Prefix()),
-		"fingerprint":                  llx.StringData(subnetwork.GetFingerprint()),
-		"gatewayAddress":               llx.StringData(subnetwork.GetGatewayAddress()),
-		"internalIpv6Prefix":           llx.StringData(subnetwork.GetInternalIpv6Prefix()),
-		"ipCidrRange":                  llx.StringData(subnetwork.GetIpCidrRange()),
-		"ipv6AccessType":               llx.StringData(subnetwork.GetIpv6AccessType()),
-		"ipv6CidrRange":                llx.StringData(subnetwork.GetIpv6CidrRange()),
-		"logConfig":                    llx.ResourceData(mqlLogConfig, "gcp.project.computeService.subnetwork.logConfig"),
-		"privateIpGoogleAccess":        llx.BoolData(subnetwork.GetPrivateIpGoogleAccess()),
-		"privateIpv6GoogleAccess":      llx.StringData(subnetwork.GetPrivateIpv6GoogleAccess()),
-		"purpose":                      llx.StringData(subnetwork.GetPurpose()),
-		"regionUrl":                    llx.StringData(subnetwork.GetRegion()),
-		"role":                         llx.StringData(subnetwork.GetRole()),
-		"stackType":                    llx.StringData(subnetwork.GetStackType()),
-		"state":                        llx.StringData(subnetwork.GetState()),
-		"created":                      llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
-		"reservedInternalRange":        llx.StringData(subnetwork.GetReservedInternalRange()),
-		"networkUrl":                   llx.StringData(subnetwork.GetNetwork()),
-		"allowSubnetCidrRoutesOverlap": llx.BoolData(subnetwork.GetAllowSubnetCidrRoutesOverlap()),
-		"secondaryIpRanges":            llx.ArrayData(secondaryIpRanges, types.Dict),
+		"id":                               llx.StringData(subnetId),
+		"projectId":                        llx.StringData(projectId),
+		"name":                             llx.StringData(subnetwork.GetName()),
+		"description":                      llx.StringData(subnetwork.GetDescription()),
+		"enableFlowLogs":                   llx.BoolData(subnetwork.GetEnableFlowLogs()),
+		"externalIpv6Prefix":               llx.StringData(subnetwork.GetExternalIpv6Prefix()),
+		"fingerprint":                      llx.StringData(subnetwork.GetFingerprint()),
+		"gatewayAddress":                   llx.StringData(subnetwork.GetGatewayAddress()),
+		"internalIpv6Prefix":               llx.StringData(subnetwork.GetInternalIpv6Prefix()),
+		"ipCidrRange":                      llx.StringData(subnetwork.GetIpCidrRange()),
+		"ipv6AccessType":                   llx.StringData(subnetwork.GetIpv6AccessType()),
+		"ipv6CidrRange":                    llx.StringData(subnetwork.GetIpv6CidrRange()),
+		"logConfig":                        llx.ResourceData(mqlLogConfig, "gcp.project.computeService.subnetwork.logConfig"),
+		"privateIpGoogleAccess":            llx.BoolData(subnetwork.GetPrivateIpGoogleAccess()),
+		"privateIpv6GoogleAccess":          llx.StringData(subnetwork.GetPrivateIpv6GoogleAccess()),
+		"purpose":                          llx.StringData(subnetwork.GetPurpose()),
+		"regionUrl":                        llx.StringData(subnetwork.GetRegion()),
+		"role":                             llx.StringData(subnetwork.GetRole()),
+		"stackType":                        llx.StringData(subnetwork.GetStackType()),
+		"state":                            llx.StringData(subnetwork.GetState()),
+		"created":                          llx.TimeDataPtr(parseTime(subnetwork.GetCreationTimestamp())),
+		"reservedInternalRange":            llx.StringData(subnetwork.GetReservedInternalRange()),
+		"networkUrl":                       llx.StringData(subnetwork.GetNetwork()),
+		"allowSubnetCidrRoutesOverlap":     llx.BoolData(subnetwork.GetAllowSubnetCidrRoutesOverlap()),
+		"secondaryIpRanges":                llx.ArrayData(secondaryIpRanges, types.Dict),
+		"ipCollection":                     llx.StringData(subnetwork.GetIpCollection()),
+		"resolveSubnetMask":                llx.StringData(subnetwork.GetResolveSubnetMask()),
+		"systemReservedInternalIpv6Ranges": llx.ArrayData(convert.SliceAnyToInterface(subnetwork.GetSystemReservedInternalIpv6Ranges()), types.String),
+		"systemReservedExternalIpv6Ranges": llx.ArrayData(convert.SliceAnyToInterface(subnetwork.GetSystemReservedExternalIpv6Ranges()), types.String),
+		"utilizationDetails":               llx.DictData(utilizationDetails),
 	}
 	if region != nil {
 		args["region"] = llx.ResourceData(region, "gcp.project.computeService.region")
