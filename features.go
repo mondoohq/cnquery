@@ -97,22 +97,22 @@ const (
 	// status: new
 	TerraformResolveVars Feature = 17
 
-	// Server-activated scan-content mode. Most scans of an unchanged machine produce exactly the same results as the previous scan; these modes let both sides detect that and skip redundant transfer and processing. In shadow, the client computes a checksum for every row while writing the scan database and records the checksum algorithm version in its metadata - nothing else changes, every scan still uploads and is processed in full. The server uses the checksums to measure, per upload, whether content actually changed.
+	// Compute a checksum for every row while writing the scan database, so an unchanged scan is detectable. Nothing else changes - every scan still uploads and is processed in full.
 	// start:  v13.x
 	// status: new
 	ScanContentModeShadow Feature = 18
 
-	// Server-activated scan-content mode: row checksums are computed and written as in shadow, and the server additionally skips reprocessing an upload whose rows are identical to the previous scan's. Client behavior is identical to shadow.
+	// Row checksums as in shadow; the server also skips reprocessing uploads whose rows are identical to the previous scan. Client behavior is identical to shadow.
 	// start:  v13.x
 	// status: new
 	ScanContentModeServerCompare Feature = 19
 
-	// Server-activated scan-content mode: row checksums as in shadow, and the client may additionally download a small per-row checksum summary (the manifest) of its previous upload, compare locally, and skip the upload entirely when every row is identical - completing the scan with unchanged=true instead of a PUT.
+	// Row checksums as in shadow; the client may also fetch the previous upload's checksum summary, compare locally, and skip the upload entirely when nothing changed (completing with unchanged=true).
 	// start:  v13.x
 	// status: new
 	ScanContentModeClientCompare Feature = 20
 
-	// The kill switch: do NO scan-content checksum work and upload in full - behaves exactly like the feature being absent today. Exists as an explicit client-facing signal so that once comparison ships enabled-by-default (no enabling flag), the server can still turn it off per scope; it overrides any other ScanContentMode* feature and any client default.
+	// The kill switch: compute no checksums, always upload in full. Overrides every other ScanContentMode* feature and any client default, so the server can disable comparison per scope even after it ships as the default.
 	// start:  v13.x
 	// status: new
 	ScanContentModeNoCompare Feature = 21
