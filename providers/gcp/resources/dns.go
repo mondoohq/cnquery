@@ -97,6 +97,29 @@ func managedZoneDnssecNonExistence(cfg *dns.ManagedZoneDnsSecConfig) string {
 	return cfg.NonExistence
 }
 
+// managedZoneServiceDirectoryNamespaceUrl returns the Service Directory
+// namespace a zone resolves names from, or "" when the zone serves its own
+// record sets.
+//
+// The config and its namespace are independently optional, so both are guarded:
+// a config present with no namespace still means "no Service Directory backing".
+func managedZoneServiceDirectoryNamespaceUrl(cfg *dns.ManagedZoneServiceDirectoryConfig) string {
+	if cfg == nil || cfg.Namespace == nil {
+		return ""
+	}
+	return cfg.Namespace.NamespaceUrl
+}
+
+// managedZoneReverseLookupEnabled reports whether a zone performs reverse
+// lookups.
+//
+// The API signals this by the presence of the config block rather than by a
+// flag inside it, so there is no field to read: an empty, non-nil block means
+// enabled.
+func managedZoneReverseLookupEnabled(cfg *dns.ManagedZoneReverseLookupConfig) bool {
+	return cfg != nil
+}
+
 // dnssecStateEnabled reports whether DNSSEC is enabled for a managed zone.
 //
 // The API documents three states: "off" (not signed), "on" (signed and fully
@@ -311,19 +334,25 @@ func (g *mqlGcpProjectDnsService) managedZones() ([]any, error) {
 				peeringNetwork = managedZone.PeeringConfig.TargetNetwork.NetworkUrl
 			}
 
+			serviceDirectoryNamespaceUrl := managedZoneServiceDirectoryNamespaceUrl(managedZone.ServiceDirectoryConfig)
+
 			mqlManagedZone, err := CreateResource(g.MqlRuntime, "gcp.project.dnsService.managedzone", map[string]*llx.RawData{
-				"id":                         llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
-				"projectId":                  llx.StringData(projectId),
-				"name":                       llx.StringData(managedZone.Name),
-				"description":                llx.StringData(managedZone.Description),
-				"dnssecConfig":               llx.DictData(mqlDnssecCfg),
-				"dnsName":                    llx.StringData(managedZone.DnsName),
-				"nameServerSet":              llx.StringData(managedZone.NameServerSet),
-				"nameServers":                llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
-				"visibility":                 llx.StringData(managedZone.Visibility),
-				"created":                    llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
-				"labels":                     llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
-				"cloudLoggingEnabled":        llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
+				"id":                           llx.StringData(strconv.FormatInt(int64(managedZone.Id), 10)),
+				"projectId":                    llx.StringData(projectId),
+				"name":                         llx.StringData(managedZone.Name),
+				"description":                  llx.StringData(managedZone.Description),
+				"dnssecConfig":                 llx.DictData(mqlDnssecCfg),
+				"dnsName":                      llx.StringData(managedZone.DnsName),
+				"nameServerSet":                llx.StringData(managedZone.NameServerSet),
+				"nameServers":                  llx.ArrayData(convert.SliceAnyToInterface(managedZone.NameServers), types.String),
+				"visibility":                   llx.StringData(managedZone.Visibility),
+				"created":                      llx.TimeDataPtr(parseTime(managedZone.CreationTime)),
+				"labels":                       llx.MapData(convert.MapToInterfaceMap(managedZone.Labels), types.String),
+				"cloudLoggingEnabled":          llx.BoolData(managedZone.CloudLoggingConfig != nil && managedZone.CloudLoggingConfig.EnableLogging),
+				"serviceDirectoryNamespaceUrl": llx.StringData(serviceDirectoryNamespaceUrl),
+				// The API signals reverse lookup by the presence of the config
+				// block rather than by a flag inside it.
+				"reverseLookupEnabled":       llx.BoolData(managedZoneReverseLookupEnabled(managedZone.ReverseLookupConfig)),
 				"dnssecEnabled":              llx.BoolData(dnssecStateEnabled(managedZone.DnssecConfig)),
 				"dnssecNonExistence":         llx.StringData(dnssecNonExistence),
 				"dnssecDefaultKeyAlgorithms": llx.ArrayData(dnssecAlgorithms, types.String),

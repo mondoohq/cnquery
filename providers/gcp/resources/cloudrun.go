@@ -494,21 +494,28 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					}
 
 					mqlTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service.revisionTemplate", map[string]*llx.RawData{
-						"id":                            llx.StringData(templateId),
-						"projectId":                     llx.StringData(projectId),
-						"name":                          llx.StringData(s.Template.Revision),
-						"labels":                        llx.MapData(convert.MapToInterfaceMap(s.Template.Labels), types.String),
-						"annotations":                   llx.MapData(convert.MapToInterfaceMap(s.Template.Annotations), types.String),
-						"scaling":                       llx.DictData(scalingCfg),
-						"vpcAccess":                     llx.DictData(vpcCfg),
-						"vpcAccessConfig":               llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
-						"timeout":                       llx.TimeData(llx.DurationToTime(s.Template.GetTimeout().GetSeconds())),
-						"serviceAccountEmail":           llx.StringData(s.Template.ServiceAccount),
-						"containers":                    llx.ArrayData(mqlContainers, "gcp.project.cloudRunService.container"),
-						"volumes":                       llx.ArrayData(mqlVolumes(s.Template.Volumes), types.Dict),
-						"executionEnvironment":          llx.StringData(s.Template.ExecutionEnvironment.String()),
-						"encryptionKey":                 llx.StringData(s.Template.EncryptionKey),
-						"maxInstanceRequestConcurrency": llx.IntData(int64(s.Template.MaxInstanceRequestConcurrency)),
+						"id":                                   llx.StringData(templateId),
+						"projectId":                            llx.StringData(projectId),
+						"name":                                 llx.StringData(s.Template.Revision),
+						"labels":                               llx.MapData(convert.MapToInterfaceMap(s.Template.Labels), types.String),
+						"annotations":                          llx.MapData(convert.MapToInterfaceMap(s.Template.Annotations), types.String),
+						"scaling":                              llx.DictData(scalingCfg),
+						"vpcAccess":                            llx.DictData(vpcCfg),
+						"vpcAccessConfig":                      llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
+						"timeout":                              llx.TimeData(llx.DurationToTime(s.Template.GetTimeout().GetSeconds())),
+						"serviceAccountEmail":                  llx.StringData(s.Template.ServiceAccount),
+						"containers":                           llx.ArrayData(mqlContainers, "gcp.project.cloudRunService.container"),
+						"volumes":                              llx.ArrayData(mqlVolumes(s.Template.Volumes), types.Dict),
+						"executionEnvironment":                 llx.StringData(s.Template.ExecutionEnvironment.String()),
+						"encryptionKey":                        llx.StringData(s.Template.EncryptionKey),
+						"maxInstanceRequestConcurrency":        llx.IntData(int64(s.Template.MaxInstanceRequestConcurrency)),
+						"encryptionKeyRevocationAction":        llx.StringData(s.Template.GetEncryptionKeyRevocationAction().String()),
+						"encryptionKeyShutdownDurationSeconds": llx.IntData(s.Template.GetEncryptionKeyShutdownDuration().GetSeconds()),
+						"serviceMesh":                          llx.StringData(s.Template.GetServiceMesh().GetMesh()),
+						"sessionAffinity":                      llx.BoolData(s.Template.GetSessionAffinity()),
+						"healthCheckDisabled":                  llx.BoolData(s.Template.GetHealthCheckDisabled()),
+						"nodeSelectorAccelerator":              llx.StringData(s.Template.GetNodeSelector().GetAccelerator()),
+						"gpuZonalRedundancyDisabled":           llx.BoolData(s.Template.GetGpuZonalRedundancyDisabled()),
 					})
 					if err != nil {
 						log.Error().Err(err).Send()
@@ -560,6 +567,34 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					baUseDefault = s.BinaryAuthorization.GetUseDefault()
 					baBreakglass = s.BinaryAuthorization.GetBreakglassJustification()
 				}
+				// Only a service Cloud Run built from source carries a build
+				// config. Leaving it null on image-deployed services keeps a
+				// check on the base image or build identity from matching a
+				// service that was never built here.
+				buildConfigData := llx.NilData
+				if bc := s.GetBuildConfig(); bc != nil {
+					mqlBuild, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service.buildSettings", map[string]*llx.RawData{
+						"__id":                   llx.StringData(fmt.Sprintf("%s/buildConfig", s.Name)),
+						"name":                   llx.StringData(bc.GetName()),
+						"sourceLocation":         llx.StringData(bc.GetSourceLocation()),
+						"functionTarget":         llx.StringData(bc.GetFunctionTarget()),
+						"imageUri":               llx.StringData(bc.GetImageUri()),
+						"baseImage":              llx.StringData(bc.GetBaseImage()),
+						"enableAutomaticUpdates": llx.BoolData(bc.GetEnableAutomaticUpdates()),
+						"workerPool":             llx.StringData(bc.GetWorkerPool()),
+						"environmentVariables":   llx.MapData(convert.MapToInterfaceMap(bc.GetEnvironmentVariables()), types.String),
+					})
+					if err != nil {
+						// Match the surrounding loop: one malformed build config
+						// must not drop the whole service list. The field stays
+						// null rather than reporting a build that was not read.
+						log.Error().Err(err).Str("service", s.Name).Msg("failed to create cloud run build config")
+					} else {
+						mqlBuild.(*mqlGcpProjectCloudRunServiceServiceBuildSettings).cacheServiceAccount = bc.GetServiceAccount()
+						buildConfigData = llx.ResourceData(mqlBuild, "gcp.project.cloudRunService.service.buildSettings")
+					}
+				}
+
 				mqlS, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
 					"id":                            llx.StringData(s.Name),
 					"projectId":                     llx.StringData(projectId),
@@ -593,6 +628,12 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					"customAudiences":               llx.ArrayData(convert.SliceAnyToInterface(s.CustomAudiences), types.String),
 					"defaultUriDisabled":            llx.BoolData(s.DefaultUriDisabled),
 					"satisfiesPzs":                  llx.BoolData(s.SatisfiesPzs),
+					"scalingMode":                   llx.StringData(s.GetScaling().GetScalingMode().String()),
+					"minInstanceCount":              llx.IntData(int64(s.GetScaling().GetMinInstanceCount())),
+					"maxInstanceCount":              llx.IntData(int64(s.GetScaling().GetMaxInstanceCount())),
+					"manualInstanceCount":           llx.IntData(int64(s.GetScaling().GetManualInstanceCount())),
+					"urls":                          llx.ArrayData(convert.SliceAnyToInterface(s.GetUrls()), types.String),
+					"buildConfig":                   buildConfigData,
 					"uid":                           llx.StringData(s.Uid),
 					"etag":                          llx.StringData(s.Etag),
 					"client":                        llx.StringData(s.Client),
@@ -1094,24 +1135,34 @@ func mqlContainers(runtime *plugin.Runtime, containers []*runpb.Container, templ
 			return nil, err
 		}
 
+		mqlReadinessProbe, err := mqlContainerProbe(runtime, c.ReadinessProbe, containerId, "readinessProbe")
+		if err != nil {
+			return nil, err
+		}
+
 		mqlStartupProbe, err := mqlContainerProbe(runtime, c.StartupProbe, containerId, "startupProbe")
 		if err != nil {
 			return nil, err
 		}
 
 		mqlContainer, err := CreateResource(runtime, "gcp.project.cloudRunService.container", map[string]*llx.RawData{
-			"id":            llx.StringData(containerId),
-			"name":          llx.StringData(c.Name),
-			"image":         llx.StringData(c.Image),
-			"command":       llx.ArrayData(convert.SliceAnyToInterface(c.Command), types.String),
-			"args":          llx.ArrayData(convert.SliceAnyToInterface(c.Args), types.String),
-			"env":           llx.ArrayData(mqlEnvs, types.Dict),
-			"resources":     llx.DictData(mqlResources),
-			"ports":         llx.ArrayData(mqlPorts, types.Dict),
-			"volumeMounts":  llx.ArrayData(mqlVolumeMounts, types.Dict),
-			"workingDir":    llx.StringData(c.WorkingDir),
-			"livenessProbe": llx.ResourceData(mqlLivenessProbe, "gcp.project.cloudRunService.container.probe"),
-			"startupProbe":  llx.ResourceData(mqlStartupProbe, "gcp.project.cloudRunService.container.probe"),
+			"id":                  llx.StringData(containerId),
+			"name":                llx.StringData(c.Name),
+			"image":               llx.StringData(c.Image),
+			"command":             llx.ArrayData(convert.SliceAnyToInterface(c.Command), types.String),
+			"args":                llx.ArrayData(convert.SliceAnyToInterface(c.Args), types.String),
+			"env":                 llx.ArrayData(mqlEnvs, types.Dict),
+			"resources":           llx.DictData(mqlResources),
+			"ports":               llx.ArrayData(mqlPorts, types.Dict),
+			"volumeMounts":        llx.ArrayData(mqlVolumeMounts, types.Dict),
+			"workingDir":          llx.StringData(c.WorkingDir),
+			"livenessProbe":       llx.ResourceData(mqlLivenessProbe, "gcp.project.cloudRunService.container.probe"),
+			"startupProbe":        llx.ResourceData(mqlStartupProbe, "gcp.project.cloudRunService.container.probe"),
+			"readinessProbe":      llx.ResourceData(mqlReadinessProbe, "gcp.project.cloudRunService.container.probe"),
+			"dependsOn":           llx.ArrayData(convert.SliceAnyToInterface(c.DependsOn), types.String),
+			"baseImageUri":        llx.StringData(c.BaseImageUri),
+			"buildFunctionTarget": llx.StringData(c.GetBuildInfo().GetFunctionTarget()),
+			"buildSourceLocation": llx.StringData(c.GetBuildInfo().GetSourceLocation()),
 		})
 		if err != nil {
 			return nil, err
@@ -1148,4 +1199,21 @@ func mqlVolumes(volumes []*runpb.Volume) []any {
 // isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectCloudRunService) isEnabled() (bool, error) {
 	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_cloudrun)
+}
+
+type mqlGcpProjectCloudRunServiceServiceBuildSettingsInternal struct {
+	cacheServiceAccount string
+}
+
+func (g *mqlGcpProjectCloudRunServiceServiceBuildSettings) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	// Cloud Run reports a full "projects/{p}/serviceAccounts/{email}" path here,
+	// so resolveServiceAccountRef derives the project and needs no fallback.
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheServiceAccount, "")
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
 }

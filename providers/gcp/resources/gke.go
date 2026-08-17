@@ -898,6 +898,24 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			}
 		}
 
+		nodePoolAutoConfig, err := protoToDict(c.GetNodePoolAutoConfig())
+		if err != nil {
+			return nil, err
+		}
+
+		// Only a cluster with a ClusterAutoscaling block has ever been
+		// configured for node auto-provisioning. Leave the field null on the
+		// rest, so a check on the auto-provisioned node defaults cannot match a
+		// cluster that never creates such nodes.
+		nodeAutoprovisioningData := llx.NilData
+		if ca := c.GetAutoscaling(); ca != nil {
+			mqlNap, err := newMqlNodeAutoprovisioning(g.MqlRuntime, projectId, c.Id, ca)
+			if err != nil {
+				return nil, err
+			}
+			nodeAutoprovisioningData = llx.ResourceData(mqlNap, "gcp.project.gkeService.cluster.nodeAutoprovisioningConfig")
+		}
+
 		clusterArgs := map[string]*llx.RawData{
 			"projectId":                                llx.StringData(projectId),
 			"id":                                       llx.StringData(c.Id),
@@ -968,6 +986,17 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"nodeIpv4CidrSize":                         llx.IntData(int64(c.NodeIpv4CidrSize)),
 			"tpuIpv4CidrBlock":                         llx.StringData(c.TpuIpv4CidrBlock),
 			"enabledK8sBetaApis":                       llx.ArrayData(enabledK8sBetaApis, types.String),
+			"enterpriseClusterTier":                    llx.StringData(c.GetEnterpriseConfig().GetClusterTier().String()),
+			"enterpriseDesiredTier":                    llx.StringData(c.GetEnterpriseConfig().GetDesiredTier().String()),
+			"autoUpgradePatchMode":                     llx.StringData(c.GetGkeAutoUpgradeConfig().GetPatchMode().String()),
+			"secretSyncEnabled":                        llx.BoolData(c.GetSecretSyncConfig().GetEnabled()),
+			"secretSyncRotationEnabled":                llx.BoolData(c.GetSecretSyncConfig().GetRotationConfig().GetEnabled()),
+			"secretSyncRotationIntervalSeconds":        llx.IntData(c.GetSecretSyncConfig().GetRotationConfig().GetRotationInterval().GetSeconds()),
+			"podAutoscalingHpaProfile":                 llx.StringData(c.GetPodAutoscaling().GetHpaProfile().String()),
+			"currentNodeVersion":                       llx.StringData(c.GetCurrentNodeVersion()),
+			"statusMessage":                            llx.StringData(c.GetStatusMessage()),
+			"nodePoolAutoConfig":                       llx.DictData(nodePoolAutoConfig),
+			"nodeAutoprovisioning":                     nodeAutoprovisioningData,
 			"meshCertificates":                         llx.DictData(meshCertificates),
 			"controlPlaneEndpointsConfig":              llx.DictData(controlPlaneEndpointsConfig),
 			"controlPlanePublicEndpointEnabled":        llx.BoolData(controlPlanePublicEndpointEnabled),
@@ -1574,4 +1603,69 @@ func gkeRbacInsecureBindings(cfg *containerpb.RBACBindingConfig) (systemUnauthen
 // isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectGkeService) isEnabled() (bool, error) {
 	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_gke)
+}
+
+type mqlGcpProjectGkeServiceClusterNodeAutoprovisioningConfigInternal struct {
+	cacheServiceAccount string
+	cacheProjectId      string
+}
+
+// newMqlNodeAutoprovisioning maps a cluster's node auto-provisioning settings
+// and the defaults applied to the nodes it creates.
+//
+// The defaults block is optional even when auto-provisioning is configured. A
+// missing block leaves the shielded and kubelet booleans false, which is the
+// safe reading: it must not report protections the API never claimed.
+func newMqlNodeAutoprovisioning(runtime *plugin.Runtime, projectId, clusterId string, ca *containerpb.ClusterAutoscaling) (plugin.Resource, error) {
+	resourceLimits := make([]any, 0, len(ca.GetResourceLimits()))
+	for _, rl := range ca.GetResourceLimits() {
+		if rl == nil {
+			continue
+		}
+		resourceLimits = append(resourceLimits, map[string]any{
+			"resourceType": rl.GetResourceType(),
+			"minimum":      rl.GetMinimum(),
+			"maximum":      rl.GetMaximum(),
+		})
+	}
+
+	defaults := ca.GetAutoprovisioningNodePoolDefaults()
+	args := map[string]*llx.RawData{
+		"__id":                               llx.StringData(fmt.Sprintf("%s/%s/nodeAutoprovisioning", projectId, clusterId)),
+		"enabled":                            llx.BoolData(ca.GetEnableNodeAutoprovisioning()),
+		"autoscalingProfile":                 llx.StringData(ca.GetAutoscalingProfile().String()),
+		"autoprovisioningLocations":          llx.ArrayData(convert.SliceAnyToInterface(ca.GetAutoprovisioningLocations()), types.String),
+		"resourceLimits":                     llx.ArrayData(resourceLimits, types.Dict),
+		"oauthScopes":                        llx.ArrayData(convert.SliceAnyToInterface(defaults.GetOauthScopes()), types.String),
+		"shieldedSecureBootEnabled":          llx.BoolData(defaults.GetShieldedInstanceConfig().GetEnableSecureBoot()),
+		"shieldedIntegrityMonitoringEnabled": llx.BoolData(defaults.GetShieldedInstanceConfig().GetEnableIntegrityMonitoring()),
+		"bootDiskKmsKey":                     llx.StringData(defaults.GetBootDiskKmsKey()),
+		"diskType":                           llx.StringData(defaults.GetDiskType()),
+		"diskSizeGb":                         llx.IntData(int64(defaults.GetDiskSizeGb())),
+		"imageType":                          llx.StringData(defaults.GetImageType()),
+		"minCpuPlatform":                     llx.StringData(defaults.GetMinCpuPlatform()),
+		"insecureKubeletReadonlyPortEnabled": llx.BoolData(defaults.GetInsecureKubeletReadonlyPortEnabled()),
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.gkeService.cluster.nodeAutoprovisioningConfig", args)
+	if err != nil {
+		return nil, err
+	}
+	nap := res.(*mqlGcpProjectGkeServiceClusterNodeAutoprovisioningConfig)
+	nap.cacheServiceAccount = defaults.GetServiceAccount()
+	nap.cacheProjectId = projectId
+	return res, nil
+}
+
+func (g *mqlGcpProjectGkeServiceClusterNodeAutoprovisioningConfig) serviceAccount() (*mqlGcpProjectIamServiceServiceAccount, error) {
+	// GKE reports a bare email here rather than a full resource path, so the
+	// cluster's project is supplied as the fallback.
+	sa, err := resolveServiceAccountRef(g.MqlRuntime, g.cacheServiceAccount, g.cacheProjectId)
+	if err != nil {
+		return nil, err
+	}
+	if sa == nil {
+		g.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return sa, nil
 }
