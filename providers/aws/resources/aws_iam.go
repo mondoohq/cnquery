@@ -740,7 +740,7 @@ func (a *mqlAwsIam) roles() ([]any, error) {
 					"maxSessionDuration":       llx.IntDataDefault(role.MaxSessionDuration, 3600),
 					"permissionsBoundaryArn":   llx.StringData(permBoundaryArn),
 					"path":                     llx.StringDataPtr(role.Path),
-					"isServiceLinked":          llx.BoolData(strings.HasPrefix(convert.ToValue(role.Path), "/aws-service-role/")),
+					"isServiceLinked":          llx.BoolData(isServiceLinkedRolePath(convert.ToValue(role.Path))),
 				})
 			if err != nil {
 				return nil, err
@@ -1753,6 +1753,14 @@ func (a *mqlAwsIamPolicyversion) document() (any, error) {
 	return dict, nil
 }
 
+// isServiceLinkedRolePath reports whether an IAM role path marks the role as
+// service-linked. IAM does not return a flag for this; the path prefix is the
+// documented signal. Shared by roles() and initAwsIamRole so the two cannot
+// disagree about the same role.
+func isServiceLinkedRolePath(path string) bool {
+	return strings.HasPrefix(path, "/aws-service-role/")
+}
+
 func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 2 {
 		return args, nil, nil
@@ -1823,6 +1831,11 @@ func initAwsIamRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		args["maxSessionDuration"] = llx.IntDataDefault(role.MaxSessionDuration, 3600)
 		args["permissionsBoundaryArn"] = llx.StringData(permBoundaryArn)
 		args["path"] = llx.StringDataPtr(role.Path)
+		// Leaving this unset reported null for every role reached through the
+		// init, and because the resource the init builds is cached under the
+		// role ARN, a query that touched aws.iam.role(...) also degraded
+		// isServiceLinked to null for aws.iam.roles in the same scan.
+		args["isServiceLinked"] = llx.BoolData(isServiceLinkedRolePath(convert.ToValue(role.Path)))
 		return args, nil, nil
 	}
 
