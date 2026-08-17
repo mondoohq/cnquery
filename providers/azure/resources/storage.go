@@ -263,6 +263,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 			var defaultEncryptionScope string
 			var denyEncryptionScopeOverride bool
 			var leaseState, leaseStatus string
+			var leaseDuration *string
 			var deleted *bool
 			var deletedTime, lastModifiedTime *time.Time
 			var remainingRetentionDays *int32
@@ -294,6 +295,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 				if containerProps.LeaseStatus != nil {
 					leaseStatus = string(*containerProps.LeaseStatus)
 				}
+				leaseDuration = stringEnumPtr(containerProps.LeaseDuration)
 				deleted = containerProps.Deleted
 				deletedTime = containerProps.DeletedTime
 				lastModifiedTime = containerProps.LastModifiedTime
@@ -368,6 +370,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) containers() ([]any, error) 
 					"lastModifiedTime":                                llx.TimeDataPtr(lastModifiedTime),
 					"leaseState":                                      llx.StringData(leaseState),
 					"leaseStatus":                                     llx.StringData(leaseStatus),
+					"leaseDuration":                                   llx.StringDataPtr(leaseDuration),
 					"deleted":                                         llx.BoolDataPtr(deleted),
 					"deletedTime":                                     llx.TimeDataPtr(deletedTime),
 					"remainingRetentionDays":                          llx.IntDataPtr(remainingRetentionDays),
@@ -974,6 +977,59 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		}
 	}
 
+	// Azure Files identity-based authentication. Absent on an account that has
+	// never configured it, in which case SMB shares authenticate with the
+	// account key alone.
+	var filesDirectoryServiceOptions, filesDefaultSharePermission *string
+	var filesADDomainName, filesADForestName, filesADAccountType *string
+	if account.Properties != nil && account.Properties.AzureFilesIdentityBasedAuthentication != nil {
+		fa := account.Properties.AzureFilesIdentityBasedAuthentication
+		filesDirectoryServiceOptions = stringEnumPtr(fa.DirectoryServiceOptions)
+		filesDefaultSharePermission = stringEnumPtr(fa.DefaultSharePermission)
+		if ad := fa.ActiveDirectoryProperties; ad != nil {
+			filesADDomainName = ad.DomainName
+			filesADForestName = ad.ForestName
+			filesADAccountType = stringEnumPtr(ad.AccountType)
+		}
+	}
+
+	// Per-service shared-key overrides narrow the account-wide setting. A
+	// service missing from the response falls back to allowSharedKeyAccess, so
+	// only services Azure actually reported are published here.
+	sharedKeyAccessByService := map[string]any{}
+	if account.Properties != nil && account.Properties.AllowSharedKeyAccessForServices != nil {
+		svc := account.Properties.AllowSharedKeyAccessForServices
+		for name, prop := range map[string]*storage.ServiceSharedKeyAccessProperties{
+			"blob":  svc.Blob,
+			"file":  svc.File,
+			"queue": svc.Queue,
+			"table": svc.Table,
+		} {
+			if prop != nil && prop.Enabled != nil {
+				if *prop.Enabled {
+					sharedKeyAccessByService[name] = "Enabled"
+				} else {
+					sharedKeyAccessByService[name] = "Disabled"
+				}
+			}
+		}
+	}
+
+	// Null when the key has never been rotated since the account was created,
+	// which is itself the answer a rotation check is looking for.
+	var key1CreationTime, key2CreationTime *time.Time
+	if account.Properties != nil && account.Properties.KeyCreationTime != nil {
+		key1CreationTime = account.Properties.KeyCreationTime.Key1
+		key2CreationTime = account.Properties.KeyCreationTime.Key2
+	}
+
+	var dnsEndpointType *string
+	var enableExtendedGroups *bool
+	if account.Properties != nil {
+		dnsEndpointType = stringEnumPtr(account.Properties.DNSEndpointType)
+		enableExtendedGroups = account.Properties.EnableExtendedGroups
+	}
+
 	identity, err := convert.JsonToDict(account.Identity)
 	if err != nil {
 		return nil, err
@@ -1038,6 +1094,16 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 			"sasExpirationPeriod":                llx.StringData(sasExpirationPeriod),
 			"sasExpirationAction":                llx.StringData(sasExpirationAction),
 			"keyExpirationPeriodInDays":          llx.IntData(keyExpirationPeriodInDays),
+			"sharedKeyAccessByService":           llx.MapData(sharedKeyAccessByService, types.String),
+			"key1CreationTime":                   llx.TimeDataPtr(key1CreationTime),
+			"key2CreationTime":                   llx.TimeDataPtr(key2CreationTime),
+			"filesDirectoryServiceOptions":       llx.StringDataPtr(filesDirectoryServiceOptions),
+			"filesDefaultSharePermission":        llx.StringDataPtr(filesDefaultSharePermission),
+			"filesActiveDirectoryDomainName":     llx.StringDataPtr(filesADDomainName),
+			"filesActiveDirectoryForestName":     llx.StringDataPtr(filesADForestName),
+			"filesActiveDirectoryAccountType":    llx.StringDataPtr(filesADAccountType),
+			"enableExtendedGroups":               llx.BoolDataPtr(enableExtendedGroups),
+			"dnsEndpointType":                    llx.StringDataPtr(dnsEndpointType),
 			"immutableStorageEnabled":            llx.BoolData(immutableEnabled),
 			"immutableStoragePolicyPeriodDays":   llx.IntData(immutablePeriodDays),
 			"immutableStoragePolicyAllowProtectedAppendWrites": llx.BoolData(immutableAllowAppend),

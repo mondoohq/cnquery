@@ -498,6 +498,32 @@ private azure.subscription.deployment @defaults("name provisioningState timestam
   mode string
   // Hash produced for the deployed template
   templateHash string
+  // What the deployment recorded in its debug log
+  //
+  // One of requestContent, responseContent, or both joined by a comma.
+  // Empty when debug logging is off, which is the safe setting: the
+  // debug log is retained with the deployment and readable by anyone
+  // who can read the deployment history, so a deployment that logged
+  // request content has persisted whatever secrets its parameters
+  // carried.
+  debugDetailLevel string
+  // Deployment run if this one fails
+  //
+  // One of LastSuccessful or SpecificDeployment, naming what Azure
+  // redeploys on failure. Empty when no rollback deployment is
+  // configured.
+  onErrorDeploymentType string
+  // Name of the deployment redeployed on failure
+  //
+  // Set when onErrorDeploymentType is SpecificDeployment.
+  onErrorDeploymentName string
+  // How thoroughly the template was validated before deploying
+  //
+  // One of Template, Provider, or ProviderNoRbac. ProviderNoRbac skips
+  // the permission checks the other levels run, so a deployment
+  // validated at that level was not tested against the identity's
+  // actual access.
+  validationLevel string
   // URI of the linked template, when the deployment used one
   templateLink string
   // URI of the linked parameters file, when the deployment used one
@@ -936,6 +962,47 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   // `encryptionType`, which describes server-side encryption at rest with a
   // platform or customer-managed key.
   encryptionSettingsEnabled bool
+  // Version of the guest encryption settings schema
+  //
+  // Either 1.0 or 1.1, recording which Azure Disk Encryption generation
+  // configured the disk. Empty when encryptionSettingsEnabled is false.
+  encryptionSettingsVersion string
+  // Confidential or trusted-launch protection applied to the disk
+  //
+  // One of TrustedLaunch, ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey,
+  // ConfidentialVM_DiskEncryptedWithPlatformKey,
+  // ConfidentialVM_DiskEncryptedWithCustomerKey, or
+  // ConfidentialVM_NonPersistedTPM. Empty on an ordinary disk. This is
+  // what separates a Confidential VM's disk, whose contents are opaque
+  // to the host, from a normal one that only has encryption at rest.
+  securityType string
+  // Confidential VM guest state version
+  //
+  // Either V1 or V2. Empty unless securityType names a Confidential VM
+  // protection level.
+  confidentialVmVersion string
+  // Disk encryption set protecting the confidential VM guest state
+  //
+  // Set only when securityType is
+  // ConfidentialVM_DiskEncryptedWithCustomerKey, where the guest state
+  // blob is encrypted with a customer-managed key rather than a
+  // platform one. Null on every other disk.
+  secureVmDiskEncryptionSet() azure.subscription.computeService.diskEncryptionSet
+  // Operating system the disk holds (Windows, Linux)
+  //
+  // Empty for a data disk, which carries no operating system.
+  osType string
+  // Provisioned size of the disk in GiB
+  //
+  // The size requested when the disk was created. diskSizeBytes reports
+  // the exact allocated size, which can differ.
+  diskSizeGB int
+  // Whether the disk is tuned for frequent attach and detach
+  //
+  // True for data disks that are repeatedly moved between virtual
+  // machines, which improves reliability at the cost of a longer
+  // initial detach.
+  optimizedForFrequentAttach bool
   // Data access authentication mode (AzureActiveDirectory, None)
   dataAccessAuthMode string
   // Current state of the disk (Unattached, Attached, Reserved, ActiveSAS, ReadyToUpload, ActiveUpload, ActiveSASFrozen)
@@ -1103,6 +1170,41 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   publicNetworkAccess string
   // Snapshot encryption type (EncryptionAtRestWithPlatformKey, EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys)
   encryptionType string
+  // Whether Azure Disk Encryption settings carried over from the source disk
+  //
+  // True when the snapshot holds guest-based encryption settings
+  // (BitLocker / dm-crypt, keyed through Key Vault). A snapshot of an
+  // ADE-encrypted disk is only usable with the same Key Vault key, so
+  // this records whether the key material still has to be available.
+  encryptionSettingsEnabled bool
+  // Version of the guest encryption settings schema
+  //
+  // Either 1.0 or 1.1. Empty when encryptionSettingsEnabled is false.
+  encryptionSettingsVersion string
+  // Confidential or trusted-launch protection carried by the snapshot
+  //
+  // One of TrustedLaunch, ConfidentialVM_VMGuestStateOnlyEncryptedWithPlatformKey,
+  // ConfidentialVM_DiskEncryptedWithPlatformKey,
+  // ConfidentialVM_DiskEncryptedWithCustomerKey, or
+  // ConfidentialVM_NonPersistedTPM. Empty on an ordinary snapshot.
+  securityType string
+  // Confidential VM guest state version
+  //
+  // Either V1 or V2. Empty unless securityType names a Confidential VM
+  // protection level.
+  confidentialVmVersion string
+  // Disk encryption set protecting the confidential VM guest state
+  //
+  // Set only when securityType is
+  // ConfidentialVM_DiskEncryptedWithCustomerKey. Null otherwise.
+  secureVmDiskEncryptionSet() azure.subscription.computeService.diskEncryptionSet
+  // Provisioned size of the snapshot in GiB
+  diskSizeGB int
+  // Percentage of a background copy that has completed
+  //
+  // Reported while a snapshot created with CopyStart is still filling.
+  // A snapshot below 100 is not yet usable as a restore source.
+  completionPercent float
   // Data access authentication mode (AzureActiveDirectory, None)
   dataAccessAuthMode string
   // ARM ID of the DiskAccess resource for private endpoint access
@@ -1795,6 +1897,39 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   enhancedSecurityMonitoring string
   // Automatic cluster update status ("Enabled" or "Disabled")
   automaticClusterUpdate string
+  // Whether Unity Catalog is enabled on the workspace
+  //
+  // Unity Catalog moves data governance from per-workspace table ACLs
+  // to an account-level metastore, so grants are managed centrally
+  // rather than inside each workspace.
+  isUnityCatalogEnabled bool
+  // Compute mode of the workspace ("Serverless" or "Hybrid")
+  computeMode string
+  // URL clients use to reach the workspace
+  //
+  // In the form adb-{workspaceId}.{n}.azuredatabricks.net.
+  workspaceUrl string
+  // Resource ID of the access connector attached to the workspace
+  //
+  // The managed identity Unity Catalog uses to reach external storage.
+  // Empty when no access connector is attached.
+  accessConnectorId string
+  // Catalog type created with the workspace ("UnityCatalog" or "HiveMetastore")
+  //
+  // Empty when no default catalog was configured at creation.
+  defaultCatalogInitialType string
+  // Name of the catalog created with the workspace
+  defaultCatalogInitialName string
+  // Identity that created the workspace
+  //
+  // Keyed by `oid` (the Entra object ID), `puid`, and
+  // `applicationId`. Null when Azure did not record a creator.
+  createdBy dict
+  // Identity that last updated the workspace
+  //
+  // Same shape as createdBy. Null when the workspace has not been
+  // updated since creation.
+  updatedBy dict
   // ARM resource ID of the managed disk encryption set used for managed disks
   diskEncryptionSetId string
   // Managed resource group ARM resource ID
@@ -2424,6 +2559,79 @@ azure.subscription.networkService.firewallPolicy @defaults("id name location") {
   properties dict
   // Firewall policy provisioning state
   provisioningState string
+  // Threat intelligence filtering mode
+  //
+  // One of Off, Alert, or Deny. Alert logs traffic to and from domains
+  // and addresses Microsoft's feed flags as malicious but still lets it
+  // through; only Deny blocks it. Off disables the feed entirely, which
+  // is the setting a policy audit is looking for.
+  threatIntelMode string
+  // Domains exempted from threat intelligence filtering
+  //
+  // Traffic to these fully qualified domain names bypasses the threat
+  // intelligence feed regardless of threatIntelMode, so an entry here
+  // is a hole punched through the feed.
+  threatIntelAllowedFqdns []string
+  // Addresses exempted from threat intelligence filtering
+  threatIntelAllowedIpAddresses []string
+  // Name of the CA certificate used for TLS inspection
+  //
+  // Empty when TLS inspection is not configured, in which case the
+  // firewall cannot see inside HTTPS traffic and application rules
+  // match on SNI alone.
+  transportSecurityCertificateName string
+  // Key Vault secret ID holding the TLS inspection CA certificate
+  //
+  // The intermediate CA the firewall signs interception certificates
+  // with. Whoever can read this secret can mint certificates every
+  // client behind the firewall trusts.
+  transportSecurityKeyVaultSecretId string
+  // Whether the firewall acts as a DNS proxy
+  //
+  // When enabled the firewall resolves DNS on behalf of the virtual
+  // network, which is what makes FQDN-based network rules resolve
+  // consistently. FQDN rules are unreliable without it.
+  dnsProxyEnabled bool
+  // Whether network rules require the DNS proxy
+  dnsRequireProxyForNetworkRules bool
+  // Custom DNS servers the policy resolves through
+  //
+  // Empty when the firewall uses Azure-provided DNS. A custom resolver
+  // decides what every FQDN rule evaluates against.
+  dnsServers []string
+  // Whether explicit proxy mode is enabled
+  //
+  // When enabled, clients send traffic to the firewall as an HTTP proxy
+  // rather than routing through it, which changes which client
+  // addresses appear in rule matches.
+  explicitProxyEnabled bool
+  // Port the explicit proxy listens on for HTTP
+  explicitProxyHttpPort int
+  // Port the explicit proxy listens on for HTTPS
+  explicitProxyHttpsPort int
+  // Whether a proxy auto-configuration file is served
+  explicitProxyPacFileEnabled bool
+  // Location of the proxy auto-configuration file
+  //
+  // SAS URL of the PAC file clients fetch their proxy configuration
+  // from. Empty when no PAC file is configured.
+  explicitProxyPacFile string
+  // Port the proxy auto-configuration file is served on
+  explicitProxyPacFilePort int
+  // Whether policy analytics logging is enabled
+  //
+  // Policy analytics records which rules traffic actually hits, which
+  // is what identifies rules that never match and can be removed.
+  insightsEnabled bool
+  // Days of policy analytics data retained
+  insightsRetentionDays int
+  // Address ranges excluded from source NAT
+  //
+  // Traffic to these ranges keeps its original source address instead
+  // of being translated to the firewall's. Ranges listed here reach
+  // their destination with the client address intact, which is what
+  // downstream address-based rules see.
+  snatPrivateRanges []string
   // The parent firewall policy from which rules are inherited
   basePolicy() azure.subscription.networkService.firewallPolicy
   // List of child policies this policy is associated with
@@ -2859,6 +3067,13 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   privateLinkServiceNetworkPolicies string
   // Whether default outbound access is enabled for VMs in the subnet
   defaultOutboundAccess bool
+  // Scope the subnet may be shared across
+  //
+  // Either Tenant or DelegatedServices. Tenant lets other
+  // subscriptions in the same Microsoft Entra tenant place resources in
+  // this subnet, so its network security group governs workloads
+  // outside this subscription. Empty when the subnet is not shared.
+  sharingScope string
   // Virtual network the subnet belongs to; null when the subnet ID has no parent virtual network
   //
   // Resolves the parent virtual network so its peerings and address space can
@@ -2949,6 +3164,34 @@ azure.subscription.networkService.virtualNetwork @defaults("id name location") {
   dhcpOptions azure.subscription.networkService.virtualNetwork.dhcpOptions
   // Whether DDoS protection is enabled for all the protected resources in the virtual network
   enableDdosProtection bool
+  // DDoS protection plan protecting the virtual network
+  //
+  // Null when the virtual network relies on the platform's basic
+  // protection, and when the attached plan sits in a subscription the
+  // credential cannot read. enableDdosProtection can be true only when
+  // a plan is attached, so a true flag alongside a null plan here means
+  // the plan is out of this scan's reach rather than absent.
+  ddosProtectionPlan() azure.subscription.networkService.ddosProtectionPlan
+  // How private endpoint network policies are applied
+  //
+  // Either Basic or Disabled. Disabled means network security groups
+  // and user-defined routes are not enforced on private endpoint
+  // traffic in this virtual network, so a subnet NSG that appears to
+  // restrict a private endpoint does not actually apply to it.
+  privateEndpointVNetPolicies string
+  // BGP community advertised for the virtual network
+  //
+  // Keyed by `virtualNetworkCommunity` (the community the operator set)
+  // and the read-only `regionalCommunity`. Advertised over ExpressRoute
+  // with every prefix in this network.
+  bgpCommunities dict
+  // Summarized gateway prefixes advertised for the virtual network
+  //
+  // Empty when the gateway advertises the network's own prefixes rather
+  // than a summarized set.
+  summarizedGatewayPrefixes []string
+  // Immutable GUID Azure assigns to the virtual network
+  resourceGuid string
   // Whether VM protection is enabled for all the subnets in the virtual network
   enableVmProtection bool
   // Address space CIDR prefixes for the virtual network
@@ -3219,6 +3462,50 @@ azure.subscription.networkService.interface @defaults("name location properties.
   enableAcceleratedNetworking bool
   // Whether this is a primary network interface on a VM
   primary bool
+  // Role the network interface plays
+  //
+  // One of Standard or Elastic. An Elastic NIC is attached to a
+  // container or a network virtual appliance data path rather than to a
+  // virtual machine directly.
+  nicType string
+  // Whether TCP state tracking is turned off
+  //
+  // True on a NIC carrying network virtual appliance traffic, where the
+  // firewall behind it does the tracking. With state tracking off, the
+  // NIC's network security group evaluates each packet without
+  // connection context, so return traffic needs its own explicit rule.
+  disableTcpStateTracking bool
+  // Private endpoint the network interface belongs to
+  //
+  // Null on a NIC attached to a virtual machine, which is the common
+  // case. A non-null value means the NIC is the network presence of a
+  // private endpoint rather than of a workload.
+  privateEndpoint() azure.subscription.networkService.privateEndpoint
+  // Private link service the network interface is part of the frontend for
+  //
+  // Null on a NIC that is not part of a private link service.
+  privateLinkService() azure.subscription.networkService.privateLinkService
+  // Workloads hosted on the network interface
+  //
+  // Resource IDs of the services occupying the NIC. A non-empty list
+  // means the NIC is shared with something other than the virtual
+  // machine it appears attached to.
+  hostedWorkloads []string
+  // Auxiliary mode of the network interface
+  //
+  // One of None, AcceleratedConnections, Floating, or MaxConnections.
+  // Empty when the NIC has no auxiliary configuration.
+  auxiliaryMode string
+  // Auxiliary SKU of the network interface ("None", "A1", "A2", "A4", or "A8")
+  auxiliarySku string
+  // Migration phase of the network interface
+  //
+  // One of None, Prepare, Commit, Abort, or Committed, tracking a
+  // classic-to-Resource-Manager migration. Empty on a NIC that was
+  // never migrated.
+  migrationPhase string
+  // Immutable GUID Azure assigns to the network interface
+  resourceGuid string
   // Raw network security group resource ID
   //
   // Deprecated in favor of `networkSecurityGroup()`.
@@ -3820,6 +4107,33 @@ azure.subscription.networkService.applicationGateway @defaults("id name location
   policy() azure.subscription.networkService.applicationFirewallPolicy
   // WAF configurations
   wafConfiguration() []azure.subscription.networkService.wafConfig
+  // Whether the firewall policy is applied regardless of the WAF configuration
+  //
+  // When false and both a firewall policy and a legacy WAF
+  // configuration are present, the legacy configuration wins and the
+  // policy this gateway appears to reference is not the one enforced.
+  forceFirewallPolicyAssociation bool
+  // Whether HTTP/2 is enabled on the gateway
+  enableHttp2 bool
+  // Whether FIPS-validated cryptography is enabled on the gateway
+  enableFips bool
+  // Predefined SSL policy applied when no explicit policy is set
+  //
+  // Reports which predefined policy the gateway falls back to, so a
+  // gateway with sslPolicyType empty still has a knowable minimum
+  // protocol version rather than an unspecified one.
+  defaultPredefinedSslPolicy string
+  // Operational state of the gateway ("Stopped", "Starting", "Running", "Stopping")
+  operationalState string
+  // Minimum instance count when autoscaling is configured
+  //
+  // Null when the gateway runs a fixed instance count instead of
+  // autoscaling.
+  autoscaleMinCapacity int
+  // Maximum instance count when autoscaling is configured
+  autoscaleMaxCapacity int
+  // Immutable GUID Azure assigns to the gateway
+  resourceGuid string
   // SSL policy type ("Predefined", "Custom", "CustomV2")
   sslPolicyType string
   // Minimum SSL/TLS protocol version ("TLSv1_0", "TLSv1_1", "TLSv1_2", "TLSv1_3")
@@ -5666,6 +5980,23 @@ private azure.subscription.storageService.account @defaults("id name location") 
   publicNetworkAccess string
   // Whether shared key access is allowed for the storage account
   allowSharedKeyAccess bool
+  // Per-service shared-key overrides
+  //
+  // Keyed by service name ("blob", "file", "queue", "table"), each
+  // value "Enabled" or "Disabled". These narrow the account-wide
+  // allowSharedKeyAccess: an account that permits shared key overall
+  // can still refuse it for individual services, and a service missing
+  // from this map falls back to the account setting.
+  sharedKeyAccessByService map[string]string
+  // Creation time of the account's first access key
+  //
+  // Null when the key has never been rotated since the account was
+  // created. Read together with keyExpirationPeriodInDays to tell
+  // whether a rotation policy is actually being met rather than only
+  // declared.
+  key1CreationTime time
+  // Creation time of the account's second access key
+  key2CreationTime time
   // Whether cross-tenant replication is allowed
   allowCrossTenantReplication bool
   // Whether local user accounts are enabled for SFTP/SSH
@@ -5700,6 +6031,45 @@ private azure.subscription.storageService.account @defaults("id name location") 
   defaultToOAuthAuthentication bool
   // Whether NFS v3 protocol is enabled
   enableNfsV3 bool
+  // Directory service backing Azure Files identity authentication
+  //
+  // One of AD (on-premises Active Directory Domain Services), AADDS
+  // (Microsoft Entra Domain Services), AADKERB (Microsoft Entra
+  // Kerberos), or None. None means SMB shares authenticate with the
+  // storage account key alone, so every caller shares one credential
+  // and no per-user NTFS permission is enforced.
+  filesDirectoryServiceOptions string
+  // Share-level permission granted to all authenticated identities
+  //
+  // One of StorageFileDataSmbShareReader, StorageFileDataSmbShareContributor,
+  // StorageFileDataSmbShareElevatedContributor, or
+  // StorageFileDataSmbShareOwner. Empty when no default is set and
+  // share access has to be granted explicitly per identity, which is
+  // the more restrictive configuration.
+  filesDefaultSharePermission string
+  // Active Directory domain Azure Files authenticates against
+  //
+  // Empty unless filesDirectoryServiceOptions is AD.
+  filesActiveDirectoryDomainName string
+  // Active Directory forest Azure Files authenticates against
+  filesActiveDirectoryForestName string
+  // Active Directory account type used for the storage account
+  //
+  // Either User or Computer. Empty unless filesDirectoryServiceOptions
+  // is AD.
+  filesActiveDirectoryAccountType string
+  // Whether extended groups are supported for local users
+  //
+  // True when the account resolves supplemental group IDs for local
+  // users, which widens what an SFTP or NFS local user can reach
+  // beyond its primary group.
+  enableExtendedGroups bool
+  // Endpoint naming scheme used by the account
+  //
+  // Either Standard or AzureDnsZone. AzureDnsZone places the account
+  // under a shared per-zone DNS suffix, which changes the hostnames a
+  // firewall or private DNS rule has to match.
+  dnsEndpointType string
   // Whether large file shares are enabled (Enabled, Disabled)
   largeFileSharesState string
   // When the last geo-failover occurred
@@ -6105,6 +6475,12 @@ private azure.subscription.storageService.account.container @defaults("id name")
   leaseState string
   // Lease status of the container (Locked, Unlocked)
   leaseStatus string
+  // Whether the container's lease is infinite or fixed (Infinite, Fixed)
+  //
+  // Empty when the container is not leased. An infinite lease holds the
+  // container indefinitely, so a delete or immutability change cannot
+  // proceed until it is broken.
+  leaseDuration string
   // Whether the container has been soft-deleted
   deleted bool
   // When the container was deleted
@@ -7153,6 +7529,55 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   sampleName string
   // Whether the database is zone redundant
   zoneRedundant bool
+  // Whether the database is a ledger database
+  //
+  // A ledger database makes every table append-only and cryptographically
+  // verifiable, so historical rows cannot be altered without detection.
+  // This is fixed at creation and cannot be turned on later.
+  isLedgerOn bool
+  // Whether infrastructure (double) encryption is enabled
+  //
+  // Adds a second encryption layer underneath transparent data
+  // encryption, so a single compromised key does not expose the data at
+  // rest.
+  isInfraEncryptionEnabled bool
+  // Storage redundancy currently used for backups
+  //
+  // One of Geo, Local, Zone, or GeoZone. Local keeps backups in a
+  // single datacenter, so a regional outage takes the restore path with
+  // it. This is what Azure applies now, which can differ from
+  // requestedBackupStorageRedundancy while a change is in progress.
+  currentBackupStorageRedundancy string
+  // Storage redundancy requested for backups
+  requestedBackupStorageRedundancy string
+  // License model applied to the database ("LicenseIncluded" or "BasePrice")
+  licenseType string
+  // Application client ID used for cross-tenant customer-managed keys
+  //
+  // Set when the database's transparent data encryption protector lives
+  // in a Key Vault in a different tenant, which puts the key outside
+  // this tenant's control. Empty in the ordinary same-tenant case.
+  federatedClientId string
+  // Secondary type of the database ("Geo" or "Named")
+  //
+  // Empty when the database is not a secondary.
+  secondaryType string
+  // Number of high availability replicas backing the database
+  highAvailabilityReplicaCount int
+  // Maintenance configuration the database is assigned to
+  //
+  // Resource ID of the window Azure applies planned maintenance in.
+  // Empty when the database takes the default window.
+  maintenanceConfigurationId string
+  // Minutes of inactivity before a serverless database is paused
+  //
+  // A value of -1 means auto-pause is disabled. Null on a provisioned
+  // (non-serverless) database.
+  autoPauseDelay int
+  // Minimum capacity a serverless database keeps allocated
+  //
+  // Null on a provisioned (non-serverless) database.
+  minCapacity float
   // Raw transparent data encryption configuration
   //
   // Deprecated in favor of `transparentDataEncryptionEnabled`.
@@ -7657,6 +8082,88 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   properties dict
   // PostgreSQL flexible server engine version
   version string
+  // Full engine version including the minor release
+  //
+  // Empty when Azure reports only a major version.
+  fullVersion string
+  // Administrator login name
+  //
+  // The password-based administrator created with the server. Present
+  // even when passwordAuth is Disabled, in which case the account
+  // exists but cannot be used to sign in.
+  administratorLogin string
+  // Current state of the server
+  //
+  // One of Ready, Dropping, Disabled, Starting, Stopping, Stopped, or
+  // Updating. A Stopped or Disabled server accepts no connections, so
+  // a check reading only its configuration would report a posture that
+  // nothing is currently exposed to.
+  state string
+  // Availability zone the server runs in
+  //
+  // Empty when Azure chose the zone rather than the operator pinning
+  // one.
+  availabilityZone string
+  // High availability mode ("Disabled", "ZoneRedundant", or "SameZone")
+  //
+  // Disabled means a single instance with no standby, so a zone or node
+  // failure takes the server offline until Azure rebuilds it.
+  highAvailabilityMode string
+  // State of the high availability standby
+  //
+  // One of NotEnabled, CreatingStandby, ReplicatingData, FailingOver,
+  // Healthy, or RemovingStandby. A mode of ZoneRedundant with a state
+  // other than Healthy is configured but not currently protecting the
+  // server.
+  highAvailabilityState string
+  // Availability zone holding the high availability standby
+  standbyAvailabilityZone string
+  // Provisioned storage size in GiB
+  storageSizeGB int
+  // Whether storage grows automatically as it fills ("Enabled" or "Disabled")
+  //
+  // Disabled means the server stops accepting writes when storage runs
+  // out rather than expanding.
+  storageAutoGrow string
+  // Performance tier of the managed disk backing the server
+  //
+  // A value such as P4 through P80, or empty when the storage type has
+  // no selectable tier.
+  storageTier string
+  // Storage type backing the server ("Premium_LRS" or "PremiumV2_LRS")
+  storageType string
+  // Role of the server in a replication set
+  //
+  // One of Primary, AsyncReplica, GeoAsyncReplica, or None. A replica
+  // carries a copy of the primary's data, so its own network and
+  // encryption settings decide whether that copy is equally protected.
+  replicationRole string
+  // Server this one was created from
+  //
+  // Set for a replica or a restored server, null for one created
+  // directly. Resolving it lets a replica's own encryption and network
+  // settings be compared against the primary whose data it holds.
+  sourceServer() azure.subscription.postgreSqlService.flexibleServer
+  // Tenant the server accepts Microsoft Entra principals from
+  //
+  // Empty when Entra authentication is not configured.
+  entraTenantId string
+  // Subnet the server is injected into
+  //
+  // Set only for a server deployed with private access (virtual network
+  // integration), where it has no public endpoint at all. Null for a
+  // server using public access with firewall rules.
+  delegatedSubnet() azure.subscription.networkService.subnet
+  // Private DNS zone the server registers in
+  //
+  // Null unless the server is deployed with private access.
+  privateDnsZone() azure.subscription.dnsService.privateZone
+  // Weekly maintenance window
+  //
+  // Keyed by `customWindow` ("Enabled" or "Disabled"), `dayOfWeek`,
+  // `startHour`, and `startMinute`. A custom window pins patching to a
+  // chosen time instead of letting Azure select one.
+  maintenanceWindow dict
   // PostgreSQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // PostgreSQL server databases
@@ -8046,6 +8553,49 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   highAvailabilityMode string
   // High availability state ("NotEnabled", "CreatingStandby", "ReplicatingData", "FailingOver", "Healthy", or "RemovingStandby")
   highAvailabilityState string
+  // Availability zone holding the high availability standby
+  standbyAvailabilityZone string
+  // Administrator login name
+  //
+  // The password-based administrator created with the server.
+  administratorLogin string
+  // Current state of the server
+  //
+  // One of Ready, Dropping, Disabled, Starting, Stopping, Stopped, or
+  // Updating. A Stopped or Disabled server accepts no connections, so
+  // a check reading only its configuration would report a posture that
+  // nothing is currently exposed to.
+  state string
+  // Availability zone the server runs in
+  availabilityZone string
+  // Role of the server in a replication set
+  //
+  // One of None, Replica, or Source. A replica carries a copy of the
+  // source's data, so its own network and encryption settings decide
+  // whether that copy is equally protected.
+  replicationRole string
+  // Server this one replicates from
+  //
+  // Null on a server that is not a replica. Resolving it lets a
+  // replica's own encryption and network settings be compared against
+  // the source whose data it holds.
+  sourceServer() azure.subscription.mySqlService.flexibleServer
+  // Subnet the server is injected into
+  //
+  // Set only for a server deployed with private access (virtual network
+  // integration), where it has no public endpoint at all. Null for a
+  // server using public access with firewall rules.
+  delegatedSubnet() azure.subscription.networkService.subnet
+  // Private DNS zone the server registers in
+  //
+  // Null unless the server is deployed with private access.
+  privateDnsZone() azure.subscription.dnsService.privateZone
+  // Weekly maintenance window
+  //
+  // Keyed by `customWindow` ("Enabled" or "Disabled"), `dayOfWeek`,
+  // `startHour`, and `startMinute`. A custom window pins patching to a
+  // chosen time instead of letting Azure select one.
+  maintenanceWindow dict
   // Whether the MySQL flexible server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
@@ -8180,6 +8730,55 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   encryptionKey() azure.subscription.keyVaultService.key
   // Default identity used for accessing customer-managed encryption key
   defaultIdentity string
+  // Health of the customer-managed key configuration
+  //
+  // Empty when the key is working. A non-empty value carries the error
+  // Cosmos DB hit reaching the key, which means the account is running
+  // on a customer-managed key it can no longer resolve, and reading
+  // encryptionKey alone would report the configuration as intact.
+  customerManagedKeyStatus string
+  // Version of the customer-managed key currently in use
+  //
+  // Empty when the account tracks the key's latest version rather than
+  // pinning one.
+  encryptionKeyVersion string
+  // Generation timestamps for the account's data-plane keys
+  //
+  // Keyed by `primaryMasterKey`, `secondaryMasterKey`,
+  // `primaryReadonlyMasterKey`, and `secondaryReadonlyMasterKey`, each
+  // holding a `generationTime`. These are the only record of how old
+  // an account key is, which is what a rotation policy is measured
+  // against.
+  keysMetadata dict
+  // Optional capabilities turned on for the account
+  //
+  // Capability names such as EnableServerless,
+  // EnableMongoRoleBasedAccessControl, EnableNoSQLVectorSearch, or
+  // DisableRateLimitingResponses. EnableMongoRoleBasedAccessControl is
+  // what makes native Mongo user accounts available alongside Entra ID.
+  capabilities []string
+  // Whether analytical storage is enabled
+  //
+  // Analytical storage keeps a column-oriented copy of the container's
+  // data for Synapse Link, which places the same records in a second
+  // store with its own access path.
+  enableAnalyticalStorage bool
+  // Schema representation used by analytical storage ("WellDefined" or "FullFidelity")
+  analyticalStorageSchemaType string
+  // Whether the account uses the free tier
+  enableFreeTier bool
+  // Whether burst capacity is enabled
+  enableBurstCapacity bool
+  // Whether partition merge is enabled
+  enablePartitionMerge bool
+  // Resources allowed to bypass the network ACL
+  //
+  // Resource IDs exempted from the account's network rules when
+  // networkAclBypass is AzureServices. Each entry reaches the account
+  // regardless of the firewall and virtual network rules.
+  networkAclBypassResourceIds []string
+  // Data-plane endpoint for the account
+  documentEndpoint string
   // Backup policy type ("Periodic" or "Continuous")
   backupType string
   // Backup interval in minutes (for Periodic backup policy)
@@ -11246,24 +11845,113 @@ private azure.subscription.policy.state @defaults("complianceState resourceType 
 // DoNotEnforce), and scope records whether the assignment is inherited
 // from a containing management group or applied directly to the
 // subscription.
-private azure.subscription.policy.assignment @defaults("name enforcementMode") {
-  // Policy definition ID
-  id string
+private azure.subscription.policy.assignment @defaults("displayName enforcementMode") {
+  // Assigned policy definition ID
+  //
+  // Deprecated in favor of policyDefinition, which resolves the same
+  // value to the definition itself. Despite the name, this field holds
+  // the assigned definition's resource ID rather than the assignment's
+  // own ID, which is assignmentId.
+  id @maturity("deprecated") string
   // Policy assignment resource ID
   assignmentId string
-  // Policy name
-  name string
+  // Display name of the assignment
+  //
+  // Deprecated in favor of displayName, which carries the same value
+  // under a name that matches the Azure property. This field holds the
+  // assignment's display name, not its resource name.
+  name @maturity("deprecated") string
+  // Display name given to the assignment
+  displayName string
   // Policy scope
   scope string
+  // Scopes excluded from the assignment
+  //
+  // Resource IDs carved out of the assignment's scope. A subscription
+  // that appears here is not evaluated by the assigned policy even
+  // though the assignment covers its parent, so an exclusion list is
+  // where an otherwise tenant-wide control stops applying.
+  notScopes []string
   // Policy description
   description string
   // Policy enforcement Mode
   enforcementMode string
+  // Origin of the assignment
+  //
+  // One of NotSpecified, System, SystemHidden, or Custom. System and
+  // SystemHidden assignments are created by Azure itself (for example
+  // by Defender for Cloud), so filtering them out isolates the
+  // assignments an operator actually made.
+  assignmentType string
+  // Definition version the assignment pins
+  //
+  // Set when the assignment requests a specific version of the policy
+  // definition, in #.#.# form and optionally with a wildcard such as
+  // "1.*". Null when the assignment tracks whatever version the
+  // definition currently ships.
+  definitionVersion string
+  // Definition version actually in use
+  //
+  // The version Azure resolved the assignment to at evaluation time.
+  // Compare against latestDefinitionVersion to find assignments running
+  // an older rule than the definition now offers.
+  effectiveDefinitionVersion string
+  // Newest definition version available
+  latestDefinitionVersion string
   // Parameter values supplied to the assigned policy
   //
   // Keyed by parameter name, with each value an object holding a
   // `value` field that carries the argument passed to the definition.
   parameters dict
+  // Open-ended assignment metadata
+  //
+  // Free-form object Azure and tooling use to record provenance,
+  // typically carrying keys such as `assignedBy`, `createdBy`, and
+  // `category`.
+  metadata dict
+  // Messages shown when a resource fails the policy
+  //
+  // Each entry carries a `message` and optionally a
+  // `policyDefinitionReferenceId` naming which definition in an
+  // initiative the message belongs to.
+  nonComplianceMessages []dict
+  // Per-definition effect overrides applied by the assignment
+  //
+  // Each entry carries a `kind` (currently `policyEffect`), a `value`
+  // holding the replacement effect, and a `selectors` list naming the
+  // definitions within an initiative it applies to. An override can
+  // downgrade a deny to an audit for part of an initiative without
+  // changing the initiative itself.
+  overrides []dict
+  // Resource selectors narrowing where the assignment applies
+  //
+  // Each entry carries a `name` and a `selectors` list of `kind`,
+  // `in`, and `notIn` values that filter by resource location, resource
+  // type, or provider namespace. A selector restricts an assignment to
+  // part of its scope without excluding whole resource IDs.
+  resourceSelectors []dict
+  // Region the assignment resource is stored in
+  //
+  // Set when the assignment carries a managed identity, which is
+  // required for deployIfNotExists and modify effects. Null otherwise.
+  location string
+  // Managed identity type attached to the assignment
+  //
+  // One of SystemAssigned, UserAssigned, or None. deployIfNotExists and
+  // modify effects act through this identity, so its role assignments
+  // are what the policy can actually do when it remediates.
+  identityType string
+  // Object ID of the assignment's system-assigned identity
+  principalId string
+  // Tenant of the assignment's system-assigned identity
+  tenantId string
+  // Policy definition the assignment applies
+  //
+  // Resolves the assigned definition so the rule, its effect, and its
+  // parameters can be read from the assignment. Null when the
+  // definition cannot be read, which happens for an initiative or a
+  // definition held at a management group the credential cannot see.
+  policyDefinition() azure.subscription.policy.definition
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -11532,6 +12220,36 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   replicasPerPrimary int
   // Minimum TLS version required by the Redis cache
   minimumTlsVersion string
+  // Whether access-key authentication is turned off
+  //
+  // True when the cache accepts only Microsoft Entra ID authentication
+  // and its two access keys stop working. False, the default, leaves
+  // the shared access keys valid, so anyone holding a key reaches the
+  // cache with no identity attached and no way to revoke one caller
+  // without rotating for all of them.
+  disableAccessKeyAuthentication bool
+  // Update channel the cache receives Redis updates on
+  //
+  // Either Stable or Preview. A Preview cache takes monthly updates
+  // ahead of the Stable channel, which is a deliberate choice for a
+  // test cache and usually a mistake for a production one.
+  updateChannel string
+  // How availability zones are assigned to the cache
+  //
+  // Either Automatic or NoZones. NoZones leaves the cache in a single
+  // zone, so a zone outage takes it offline.
+  zonalAllocationPolicy string
+  // Tenant settings applied to the cache
+  //
+  // Free-form key/value settings passed through to the cache instance.
+  tenantSettings map[string]string
+  // Caches linked to this one for geo-replication
+  //
+  // A linked cache replicates data across regions, which puts the same
+  // keys in another region's failure and compliance domain. Resolving
+  // them lets the replica's own TLS and network settings be checked
+  // rather than assumed to match this cache's.
+  linkedServers() []azure.subscription.cacheService.redisInstance
   // Cache SKU
   //
   // Pricing tier and size, keyed by `name` (Basic, Standard, or
@@ -11928,6 +12646,41 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   trustedServiceBypassEnabled bool
   // Whether Azure AD-only authentication is enabled
   azureADOnlyAuthentication bool
+  // Whether data exfiltration protection is enabled
+  //
+  // When enabled, the workspace can only reach the Microsoft Entra
+  // tenants listed in allowedAadTenantIdsForLinking, which stops a
+  // notebook or pipeline writing workspace data to storage in an
+  // unrelated tenant. Null on a workspace without a managed virtual
+  // network, where the protection does not apply.
+  preventDataExfiltration bool
+  // Tenants the workspace may link outbound to
+  //
+  // Empty with preventDataExfiltration enabled means the workspace can
+  // reach no tenant other than its own. Meaningless when
+  // preventDataExfiltration is false, where outbound access is
+  // unrestricted.
+  allowedAadTenantIdsForLinking []string
+  // Subnet Spark compute is created in
+  //
+  // Null when the workspace uses the Microsoft-managed network rather
+  // than a customer subnet.
+  computeSubnet() azure.subscription.networkService.subnet
+  // Source control provider backing the workspace ("WorkspaceVSTSConfiguration" or "WorkspaceGitHubConfiguration")
+  //
+  // Empty when the workspace saves artifacts to its live service
+  // instead of a Git repository.
+  gitRepositoryType string
+  // Account or organization hosting the workspace's Git repository
+  gitAccountName string
+  // Name of the workspace's Git repository
+  gitRepositoryName string
+  // Branch the workspace collaborates on
+  gitCollaborationBranch string
+  // Resource ID of the Microsoft Purview account the workspace reports to
+  //
+  // Empty when the workspace is not connected to Purview.
+  purviewResourceId string
   // Name of the filesystem in the default Data Lake Storage account
   defaultStorageFilesystem string
   // Default Data Lake Storage account for the workspace (null when none is configured)
@@ -13144,8 +13897,18 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   authorizationRules() []azure.subscription.serviceBusService.authorizationRule
   // Private endpoint connections to the namespace
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Alias name used when a namespace participates in geo-disaster recovery
+  //
+  // Empty on a namespace with no pairing. When set, clients connect
+  // through the alias rather than the namespace name, so the alias is
+  // what an endpoint allowlist has to cover.
+  alternateName string
+  // Identifier used for the namespace's Azure Monitor metrics
+  metricId string
   // When the namespace was created
   creationTime time
+  // When the namespace was last modified
+  updatedAt time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -13385,8 +14148,24 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   authorizationRules() []azure.subscription.eventHubService.authorizationRule
   // Private endpoint connections to the namespace
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Alias name used when a namespace participates in geo-disaster recovery
+  //
+  // Empty on a namespace with no pairing. When set, clients connect
+  // through the alias rather than the namespace name, so the alias is
+  // what an endpoint allowlist has to cover.
+  alternateName string
+  // Identifier used for the namespace's Azure Monitor metrics
+  metricId string
+  // Resource ID of the dedicated Event Hubs cluster hosting the namespace
+  //
+  // Empty on a namespace running on shared capacity.
+  clusterArmId string
+  // Endpoint clients use to perform Service Bus operations
+  serviceBusEndpoint string
   // When the namespace was created
   creationTime time
+  // When the namespace was last modified
+  updatedAt time
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -14787,6 +15566,12 @@ azure.subscription.containerAppService.job @defaults("name location triggerType 
   registryAuthUsesIdentity bool
   // Names of declared secrets (values are not returned by ARM on read)
   secretNames []string
+  // Source addresses the job's outbound traffic leaves from
+  //
+  // The addresses a destination firewall or allowlist sees when this
+  // job reaches out. Empty on an environment that does not report
+  // them.
+  outboundIpAddresses []string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -15482,6 +16267,39 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   publicNetworkAccess string
   // Whether API-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
   disableLocalAuth bool
+  // How the data plane authenticates requests
+  //
+  // Either apiKeyOnly or aadOrApiKey. apiKeyOnly means every caller
+  // presents a shared admin or query key with no identity attached;
+  // aadOrApiKey additionally accepts Microsoft Entra tokens, so role
+  // assignments become meaningful. Empty when disableLocalAuth is true
+  // and Entra ID is the only option.
+  authMode string
+  // What the service returns when an Entra token is rejected
+  //
+  // Either http401WithBearerChallenge or http403. Empty unless authMode
+  // is aadOrApiKey.
+  aadAuthFailureMode string
+  // Data exfiltration scenarios explicitly blocked
+  //
+  // Currently only "All", which disables the outbound connections an
+  // indexer or skillset could otherwise use to push index content to an
+  // arbitrary destination. Empty when no scenario is blocked.
+  dataExfiltrationProtections []string
+  // Compute platform backing the service
+  //
+  // Either "default" or "confidential". A confidential service runs on
+  // hardware that keeps index data encrypted in memory. Empty when the
+  // service predates the setting.
+  computeType string
+  // Availability of semantic search ("disabled", "free", or "standard")
+  semanticSearch string
+  // Whether a service upgrade is available ("available" or "notAvailable")
+  upgradeAvailable string
+  // When the service was last upgraded
+  //
+  // Null until the service has been upgraded at least once.
+  serviceUpgradedAt time
   // Customer-managed-key encryption enforcement policy ("Enabled", "Disabled", or "Unspecified")
   cmkEnforcement string
   // Compliance status for customer-managed-key encryption of indexes ("Compliant" or "NonCompliant")
@@ -15687,6 +16505,46 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   allowPublicAccessWhenBehindVnet bool
   // Whether the legacy v1 API surface (v1LegacyMode) is enabled
   v1LegacyMode bool
+  // Whether data isolation between the workspace and its hub is enforced
+  //
+  // True keeps the workspace's data inside its own boundary rather than
+  // sharing the hub's storage and connections with sibling workspaces.
+  enableDataIsolation bool
+  // Whether serverless compute runs without a public IP
+  //
+  // Null when the workspace has no serverless compute configuration.
+  // False leaves serverless jobs with a public address, so their
+  // outbound traffic is not confined to the workspace's virtual
+  // network.
+  serverlessComputeNoPublicIp bool
+  // Subnet serverless compute is created in
+  //
+  // Null when serverless compute uses the Microsoft-managed network
+  // rather than a customer subnet.
+  serverlessComputeSubnet() azure.subscription.networkService.subnet
+  // Identity the workspace acts through for managed resources
+  //
+  // Null when the workspace acts through its system-assigned identity.
+  primaryUserAssignedIdentity() azure.subscription.managedIdentity
+  // Resource ID of the hub the workspace belongs to
+  //
+  // Empty on a standalone workspace. A hub-attached workspace inherits
+  // the hub's connections and storage.
+  hubResourceId string
+  // Workspaces associated with this one
+  //
+  // Resource IDs of the workspaces sharing this workspace's hub
+  // resources.
+  associatedWorkspaces []string
+  // Number of private link connections into the workspace
+  privateLinkCount int
+  // Whether the workspace's storage account has a hierarchical namespace
+  //
+  // True means the backing storage uses Data Lake Storage semantics,
+  // where POSIX ACLs govern access alongside role assignments.
+  storageHnsEnabled bool
+  // Tenant that owns the workspace
+  workspaceTenantId string
   // URL of the discovery service that clients use to resolve workspace-scoped endpoints
   discoveryUrl string
   // MLflow tracking URI for the workspace
@@ -16239,6 +17097,19 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   softDeleteRetentionInDays int
   // Whether purge protection is enabled, preventing permanent deletion during the soft-delete retention period
   enablePurgeProtection bool
+  // How the Resource Manager data-plane proxy authenticates
+  //
+  // Either Local or Pass-through. Pass-through forwards the caller's
+  // own Microsoft Entra identity to the store, so data-plane role
+  // assignments apply. Local authenticates as the Resource Manager
+  // proxy instead, which lets a caller holding only control-plane
+  // permissions read configuration values through it.
+  dataPlaneProxyAuthenticationMode string
+  // Whether the data-plane proxy is reachable over the store's private link
+  //
+  // Either Enabled or Disabled. Enabled lets the proxy bypass the
+  // store's public network restriction.
+  dataPlaneProxyPrivateLinkDelegation string
   // The data-plane endpoint where the configuration store API is reachable
   endpoint string
   // Provisioning state of the store
@@ -16326,6 +17197,18 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   provisioningState string
   // Whether stored completions (request/response logging used for fine-tuning and evaluation) are disabled
   storedCompletionsDisabled bool
+  // Whether the account can hold AI Foundry projects
+  //
+  // A project is a child container with its own access management and
+  // data isolation. True means the account acts as a container others
+  // create projects under, which widens who can hold resources beneath
+  // it.
+  allowProjectManagement bool
+  // Projects associated with the account
+  //
+  // Project names attached to this resource. Empty when the account
+  // holds no projects.
+  associatedProjects []string
   // When the account was created
   creationTime time
   // Fully qualified domain names the account may reach when outbound access is restricted
@@ -17807,6 +18690,42 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   publicNetworkAccess string
   // How the single-sign-on secret is stored ("SharedKey", "Certificate", "SharedKeyInKeyVault", or "CertificateInKeyVault")
   ssoSecretType string
+  // Whether a session-host registration token is currently outstanding
+  //
+  // A registration token lets any machine holding it join the host pool
+  // as a session host. True means one exists and has not expired, so
+  // the pool can still be joined by whoever holds the token. The token
+  // value itself is deliberately not reported.
+  registrationTokenActive bool
+  // When the outstanding registration token expires
+  //
+  // Null when no token has been issued. A time in the past means the
+  // token can no longer be used; Azure keeps the record until the token
+  // is removed.
+  registrationTokenExpirationTime time
+  // Most recent registration token operation ("Delete", "None", or "Update")
+  registrationTokenOperation string
+  // How session host components are updated ("Default" or "Scheduled")
+  //
+  // Default lets Azure choose when to update the agent, side-by-side
+  // stack, and monitoring agent. Scheduled pins updates to the windows
+  // in agentUpdateMaintenanceWindows.
+  agentUpdateType string
+  // Whether agent update windows use each session host's local time
+  agentUpdateUseSessionHostLocalTime bool
+  // Time zone the agent update windows are expressed in
+  agentUpdateMaintenanceWindowTimeZone string
+  // Scheduled agent update windows
+  //
+  // Each entry carries a `dayOfWeek` and an `hour`. Empty when
+  // agentUpdateType is Default.
+  agentUpdateMaintenanceWindows []dict
+  // Host pool description
+  description string
+  // Host pool friendly name
+  friendlyName string
+  // Resource ID of the template session-host VMs are built from
+  vmTemplate string
   // Number of approved private endpoint connections to the host pool
   privateEndpointConnectionCount int
   // Creation and last-modification provenance recorded by Azure Resource Manager

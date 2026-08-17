@@ -25,9 +25,33 @@ import (
 )
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceInternal struct {
-	cacheEncryptionKeyUri string
-	cacheSystemData       any
-	cacheOutboundRules    map[string]ml.OutboundRuleClassification
+	cacheEncryptionKeyUri              string
+	cacheSystemData                    any
+	cacheOutboundRules                 map[string]ml.OutboundRuleClassification
+	cacheServerlessComputeSubnetId     *string
+	cachePrimaryUserAssignedIdentityId *string
+}
+
+// serverlessComputeSubnet resolves the subnet serverless jobs attach to. Null
+// when serverless compute uses the Microsoft-managed network.
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessComputeSubnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	return resolveDelegatedSubnet(a.MqlRuntime, a.cacheServerlessComputeSubnetId, &a.ServerlessComputeSubnet)
+}
+
+// primaryUserAssignedIdentity resolves the identity the workspace acts through
+// for managed resources. Null when it acts through its system-assigned
+// identity.
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) primaryUserAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
+	if a.cachePrimaryUserAssignedIdentityId == nil || *a.cachePrimaryUserAssignedIdentityId == "" {
+		a.PrimaryUserAssignedIdentity.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.managedIdentity",
+		map[string]*llx.RawData{"id": llx.StringDataPtr(a.cachePrimaryUserAssignedIdentityId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionManagedIdentity), nil
 }
 
 func initAzureSubscriptionMachineLearningService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -204,6 +228,16 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 		return nil, err
 	}
 
+	// Serverless compute settings are absent on a workspace that has none, in
+	// which case both values stay null rather than reading as "no public IP
+	// restriction configured".
+	var serverlessComputeNoPublicIp *bool
+	var serverlessComputeSubnetId *string
+	if scs := props.ServerlessComputeSettings; scs != nil {
+		serverlessComputeNoPublicIp = scs.ServerlessComputeNoPublicIP
+		serverlessComputeSubnetId = scs.ServerlessComputeCustomSubnet
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMachineLearningServiceWorkspace,
 		map[string]*llx.RawData{
 			"id":                              llx.StringDataPtr(ws.ID),
@@ -231,6 +265,15 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 			"storageAccountId":                llx.StringDataPtr(props.StorageAccount),
 			"applicationInsightsId":           llx.StringDataPtr(props.ApplicationInsights),
 			"containerRegistryId":             llx.StringDataPtr(props.ContainerRegistry),
+
+			"enableDataIsolation": llx.BoolDataPtr(props.EnableDataIsolation),
+			"hubResourceId":       llx.StringDataPtr(props.HubResourceID),
+			"associatedWorkspaces": llx.ArrayData(
+				strPtrsToAny(props.AssociatedWorkspaces), types.String),
+			"privateLinkCount":            llx.IntDataPtr(props.PrivateLinkCount),
+			"storageHnsEnabled":           llx.BoolDataPtr(props.StorageHnsEnabled),
+			"workspaceTenantId":           llx.StringDataPtr(props.TenantID),
+			"serverlessComputeNoPublicIp": llx.BoolDataPtr(serverlessComputeNoPublicIp),
 		})
 	if err != nil {
 		return nil, err
@@ -239,6 +282,8 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 	mqlWs := resource.(*mqlAzureSubscriptionMachineLearningServiceWorkspace)
 	mqlWs.cacheEncryptionKeyUri = encryptionKeyUri
 	mqlWs.cacheOutboundRules = outboundRules
+	mqlWs.cacheServerlessComputeSubnetId = serverlessComputeSubnetId
+	mqlWs.cachePrimaryUserAssignedIdentityId = props.PrimaryUserAssignedIdentity
 	sysData, err := convert.JsonToDict(ws.SystemData)
 	if err != nil {
 		return nil, err

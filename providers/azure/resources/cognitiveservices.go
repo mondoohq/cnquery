@@ -120,6 +120,8 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 	var abusePenaltyRateLimit float64
 	allowedFqdnList := []any{}
 	ipRules := []any{}
+	associatedProjects := []any{}
+	var allowProjectManagement *bool
 	vnetRules := []any{}
 	userOwnedStorage := []any{}
 	networkInjections := []any{}
@@ -209,6 +211,8 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		if p.StoredCompletionsDisabled != nil {
 			storedCompletionsDisabled = *p.StoredCompletionsDisabled
 		}
+		allowProjectManagement = p.AllowProjectManagement
+		associatedProjects = strPtrsToAny(p.AssociatedProjects)
 		for _, fqdn := range p.AllowedFqdnList {
 			if fqdn != nil {
 				allowedFqdnList = append(allowedFqdnList, *fqdn)
@@ -323,6 +327,8 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		"endpoint":                        llx.StringData(endpoint),
 		"provisioningState":               llx.StringData(provisioningState),
 		"storedCompletionsDisabled":       llx.BoolData(storedCompletionsDisabled),
+		"allowProjectManagement":          llx.BoolDataPtr(allowProjectManagement),
+		"associatedProjects":              llx.ArrayData(associatedProjects, types.String),
 		"creationTime":                    llx.TimeDataPtr(creationTime),
 		"allowedFqdnList":                 llx.ArrayData(allowedFqdnList, types.String),
 		"ipRules":                         llx.ArrayData(ipRules, types.String),

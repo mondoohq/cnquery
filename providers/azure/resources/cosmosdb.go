@@ -173,6 +173,35 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 
 	defaultConsistencyLevel, networkAclBypass, corsAllowedOrigins, locations := cosmosNetworkConsistency(account.Properties)
 
+	var customerManagedKeyStatus, encryptionKeyVersion, documentEndpoint *string
+	var analyticalStorageSchemaType *string
+	var enableAnalyticalStorage, enableFreeTier, enableBurstCapacity, enablePartitionMerge *bool
+	capabilities := []any{}
+	networkAclBypassResourceIds := []any{}
+	var keysMetadata any
+	if p := account.Properties; p != nil {
+		customerManagedKeyStatus = p.CustomerManagedKeyStatus
+		encryptionKeyVersion = p.KeyVaultKeyURIVersion
+		documentEndpoint = p.DocumentEndpoint
+		enableAnalyticalStorage = p.EnableAnalyticalStorage
+		enableFreeTier = p.EnableFreeTier
+		enableBurstCapacity = p.EnableBurstCapacity
+		enablePartitionMerge = p.EnablePartitionMerge
+		if asc := p.AnalyticalStorageConfiguration; asc != nil {
+			analyticalStorageSchemaType = stringEnumPtr(asc.SchemaType)
+		}
+		for _, c := range p.Capabilities {
+			if c != nil && c.Name != nil {
+				capabilities = append(capabilities, *c.Name)
+			}
+		}
+		networkAclBypassResourceIds = strPtrsToAny(p.NetworkACLBypassResourceIDs)
+		keysMetadata, err = convert.JsonToDict(p.KeysMetadata)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	virtualNetworkRules := []any{}
 	if account.Properties != nil && account.Properties.VirtualNetworkRules != nil {
 		for _, rule := range account.Properties.VirtualNetworkRules {
@@ -230,6 +259,17 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 			"backupStorageRedundancy":            llx.StringData(backupRedundancy),
 			"defaultConsistencyLevel":            llx.StringDataPtr(defaultConsistencyLevel),
 			"networkAclBypass":                   llx.StringDataPtr(networkAclBypass),
+			"customerManagedKeyStatus":           llx.StringDataPtr(customerManagedKeyStatus),
+			"encryptionKeyVersion":               llx.StringDataPtr(encryptionKeyVersion),
+			"keysMetadata":                       llx.DictData(keysMetadata),
+			"capabilities":                       llx.ArrayData(capabilities, types.String),
+			"enableAnalyticalStorage":            llx.BoolDataPtr(enableAnalyticalStorage),
+			"analyticalStorageSchemaType":        llx.StringDataPtr(analyticalStorageSchemaType),
+			"enableFreeTier":                     llx.BoolDataPtr(enableFreeTier),
+			"enableBurstCapacity":                llx.BoolDataPtr(enableBurstCapacity),
+			"enablePartitionMerge":               llx.BoolDataPtr(enablePartitionMerge),
+			"networkAclBypassResourceIds":        llx.ArrayData(networkAclBypassResourceIds, types.String),
+			"documentEndpoint":                   llx.StringDataPtr(documentEndpoint),
 			"corsAllowedOrigins":                 llx.ArrayData(corsAllowedOrigins, types.String),
 			"locations":                          llx.ArrayData(locations, types.String),
 			"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),

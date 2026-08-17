@@ -329,9 +329,22 @@ func (a *mqlAzureSubscriptionSqlServiceServer) databases() ([]any, error) {
 				"readScale":                     llx.StringDataPtr((*string)(entry.Properties.ReadScale)),
 				"sampleName":                    llx.StringDataPtr((*string)(entry.Properties.SampleName)),
 				"zoneRedundant":                 llx.BoolDataPtr(entry.Properties.ZoneRedundant),
-				"earliestRestoreDate":           llx.TimeDataPtr(entry.Properties.EarliestRestoreDate),
-				"sourceDatabaseDeletionDate":    llx.TimeDataPtr(entry.Properties.SourceDatabaseDeletionDate),
-				"restorePointInTime":            llx.TimeDataPtr(entry.Properties.RestorePointInTime),
+				"isLedgerOn":                    llx.BoolDataPtr(entry.Properties.IsLedgerOn),
+				"isInfraEncryptionEnabled":      llx.BoolDataPtr(entry.Properties.IsInfraEncryptionEnabled),
+				"currentBackupStorageRedundancy": llx.StringDataPtr(
+					stringEnumPtr(entry.Properties.CurrentBackupStorageRedundancy)),
+				"requestedBackupStorageRedundancy": llx.StringDataPtr(
+					stringEnumPtr(entry.Properties.RequestedBackupStorageRedundancy)),
+				"licenseType":                  llx.StringDataPtr(stringEnumPtr(entry.Properties.LicenseType)),
+				"federatedClientId":            llx.StringDataPtr(entry.Properties.FederatedClientID),
+				"secondaryType":                llx.StringDataPtr(stringEnumPtr(entry.Properties.SecondaryType)),
+				"highAvailabilityReplicaCount": llx.IntDataPtr(entry.Properties.HighAvailabilityReplicaCount),
+				"maintenanceConfigurationId":   llx.StringDataPtr(entry.Properties.MaintenanceConfigurationID),
+				"autoPauseDelay":               llx.IntDataPtr(entry.Properties.AutoPauseDelay),
+				"minCapacity":                  llx.FloatDataPtr(entry.Properties.MinCapacity),
+				"earliestRestoreDate":          llx.TimeDataPtr(entry.Properties.EarliestRestoreDate),
+				"sourceDatabaseDeletionDate":   llx.TimeDataPtr(entry.Properties.SourceDatabaseDeletionDate),
+				"restorePointInTime":           llx.TimeDataPtr(entry.Properties.RestorePointInTime),
 			}
 
 			mqlAzureDatabase, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.database", args)

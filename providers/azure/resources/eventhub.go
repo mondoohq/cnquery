@@ -211,9 +211,15 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 			var maximumThroughputUnits int64
 			var minimumTlsVersion, publicNetworkAccess string
 			var cmkKeys []any
-			var creationTime *time.Time
+			var creationTime, updatedAt *time.Time
+			var alternateName, metricId, clusterArmId, serviceBusEndpoint *string
 			if ns.Properties != nil {
 				creationTime = ns.Properties.CreatedAt
+				updatedAt = ns.Properties.UpdatedAt
+				alternateName = ns.Properties.AlternateName
+				metricId = ns.Properties.MetricID
+				clusterArmId = ns.Properties.ClusterArmID
+				serviceBusEndpoint = ns.Properties.ServiceBusEndpoint
 				if ns.Properties.Status != nil {
 					status = *ns.Properties.Status
 				}
@@ -272,6 +278,11 @@ func (a *mqlAzureSubscriptionEventHubService) namespaces() ([]any, error) {
 				"requireInfrastructureEncryption": llx.BoolDataPtr(requireInfraEnc),
 				"cmkKeys":                         llx.ArrayData(cmkKeys, types.Dict),
 				"creationTime":                    llx.TimeDataPtr(creationTime),
+				"alternateName":                   llx.StringDataPtr(alternateName),
+				"metricId":                        llx.StringDataPtr(metricId),
+				"clusterArmId":                    llx.StringDataPtr(clusterArmId),
+				"serviceBusEndpoint":              llx.StringDataPtr(serviceBusEndpoint),
+				"updatedAt":                       llx.TimeDataPtr(updatedAt),
 			})
 			if err != nil {
 				return nil, err

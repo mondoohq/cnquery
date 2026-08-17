@@ -1297,10 +1297,12 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 			registries := []any{}
 			registryUsesIdentity := false
 			secretNames := []any{}
+			outboundIpAddresses := []any{}
 			identity := map[string]any{}
 
 			if entry.Properties != nil {
 				p := entry.Properties
+				outboundIpAddresses = strPtrsToAny(p.OutboundIPAddresses)
 				if p.EnvironmentID != nil {
 					managedEnvId = *p.EnvironmentID
 				}
@@ -1384,6 +1386,7 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 					"registries":               llx.ArrayData(registries, types.Dict),
 					"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
 					"secretNames":              llx.ArrayData(secretNames, types.String),
+					"outboundIpAddresses":      llx.ArrayData(outboundIpAddresses, types.String),
 				})
 			if err != nil {
 				return nil, err

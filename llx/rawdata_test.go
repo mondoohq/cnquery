@@ -20,6 +20,8 @@ func TestRawData_String(t *testing.T) {
 	strVal := "yo"
 	intVal := int64(1)
 	boolVal := true
+	floatVal := 1.5
+	float32Val := float32(2.5)
 	tests := []struct {
 		data *RawData
 		res  string
@@ -33,6 +35,9 @@ func TestRawData_String(t *testing.T) {
 		{IntDataPtr(&intVal), "1"},
 		{IntDataPtr[int](nil), "<null>"},
 		{FloatData(123), "123"},
+		{FloatDataPtr(&floatVal), "1.5"},
+		{FloatDataPtr[float64](nil), "<null>"},
+		{FloatDataPtr(&float32Val), "2.5"},
 		{StringData("yo"), "\"yo\""},
 		{StringDataPtr(nil), "<null>"},
 		{StringDataPtr(&strVal), "\"yo\""},

@@ -108,6 +108,11 @@ func newMqlAzureDeployment(runtime *plugin.Runtime, deployment *armdeployments.D
 		parameters        any
 		outputs           any
 		deploymentErr     any
+
+		debugDetailLevel      *string
+		onErrorDeploymentType *string
+		onErrorDeploymentName *string
+		validationLevel       *string
 	)
 	providers := []any{}
 	outputResources := []any{}
@@ -129,6 +134,17 @@ func newMqlAzureDeployment(runtime *plugin.Runtime, deployment *armdeployments.D
 		if props.ParametersLink != nil {
 			parametersLink = props.ParametersLink.URI
 		}
+		// Empty when debug logging is off, which is the safe setting: the debug
+		// log persists with the deployment and is readable by anyone who can
+		// read the deployment history.
+		if ds := props.DebugSetting; ds != nil {
+			debugDetailLevel = ds.DetailLevel
+		}
+		if oed := props.OnErrorDeployment; oed != nil {
+			onErrorDeploymentType = stringEnumPtr(oed.Type)
+			onErrorDeploymentName = oed.DeploymentName
+		}
+		validationLevel = stringEnumPtr(props.ValidationLevel)
 
 		var err error
 		if parameters, err = convert.JsonToDict(props.Parameters); err != nil {
@@ -164,13 +180,19 @@ func newMqlAzureDeployment(runtime *plugin.Runtime, deployment *armdeployments.D
 		"correlationId":     llx.StringDataPtr(correlationID),
 		"mode":              llx.StringData(mode),
 		"templateHash":      llx.StringDataPtr(templateHash),
-		"templateLink":      llx.StringDataPtr(templateLink),
-		"parametersLink":    llx.StringDataPtr(parametersLink),
-		"parameters":        llx.DictData(parameters),
-		"outputs":           llx.DictData(outputs),
-		"providers":         llx.ArrayData(providers, types.Dict),
-		"outputResources":   llx.ArrayData(outputResources, types.String),
-		"error":             llx.DictData(deploymentErr),
+
+		"debugDetailLevel":      llx.StringDataPtr(debugDetailLevel),
+		"onErrorDeploymentType": llx.StringDataPtr(onErrorDeploymentType),
+		"onErrorDeploymentName": llx.StringDataPtr(onErrorDeploymentName),
+		"validationLevel":       llx.StringDataPtr(validationLevel),
+
+		"templateLink":    llx.StringDataPtr(templateLink),
+		"parametersLink":  llx.StringDataPtr(parametersLink),
+		"parameters":      llx.DictData(parameters),
+		"outputs":         llx.DictData(outputs),
+		"providers":       llx.ArrayData(providers, types.Dict),
+		"outputResources": llx.ArrayData(outputResources, types.String),
+		"error":           llx.DictData(deploymentErr),
 	})
 	if err != nil {
 		return nil, err

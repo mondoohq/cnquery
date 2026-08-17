@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -98,6 +99,10 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 	var hostingMode, endpoint, provisioningState, status string
 	var disableLocalAuth bool
 	var replicaCount, partitionCount int64
+	var authMode string
+	var aadAuthFailureMode, computeType, semanticSearch, upgradeAvailable *string
+	var serviceUpgradedAt *time.Time
+	dataExfiltrationProtections := []any{}
 	networkRuleSet := llx.NilData
 
 	if p := svc.Properties; p != nil {
@@ -133,6 +138,25 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		if p.Status != nil {
 			status = string(*p.Status)
 		}
+		// AuthOptions is absent when disableLocalAuth is true, where Entra ID
+		// is the only option and there is no mode to report.
+		if ao := p.AuthOptions; ao != nil {
+			if ao.AADOrAPIKey != nil {
+				authMode = "aadOrApiKey"
+				aadAuthFailureMode = stringEnumPtr(ao.AADOrAPIKey.AADAuthFailureMode)
+			} else if ao.APIKeyOnly != nil {
+				authMode = "apiKeyOnly"
+			}
+		}
+		for _, dep := range p.DataExfiltrationProtections {
+			if dep != nil {
+				dataExfiltrationProtections = append(dataExfiltrationProtections, string(*dep))
+			}
+		}
+		computeType = stringEnumPtr(p.ComputeType)
+		semanticSearch = stringEnumPtr(p.SemanticSearch)
+		upgradeAvailable = stringEnumPtr(p.UpgradeAvailable)
+		serviceUpgradedAt = p.ServiceUpgradedAt
 		if p.NetworkRuleSet != nil {
 			d, err := convert.JsonToDict(p.NetworkRuleSet)
 			if err != nil {
@@ -160,6 +184,14 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		"provisioningState":             llx.StringData(provisioningState),
 		"status":                        llx.StringData(status),
 		"networkRuleSet":                networkRuleSet,
+
+		"authMode":                    llx.StringData(authMode),
+		"aadAuthFailureMode":          llx.StringDataPtr(aadAuthFailureMode),
+		"dataExfiltrationProtections": llx.ArrayData(dataExfiltrationProtections, types.String),
+		"computeType":                 llx.StringDataPtr(computeType),
+		"semanticSearch":              llx.StringDataPtr(semanticSearch),
+		"upgradeAvailable":            llx.StringDataPtr(upgradeAvailable),
+		"serviceUpgradedAt":           llx.TimeDataPtr(serviceUpgradedAt),
 	})
 	if err != nil {
 		return nil, err

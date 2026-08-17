@@ -554,6 +554,15 @@ func FloatData(v float64) *RawData {
 	}
 }
 
+// FloatDataPtr creates a rawdata struct from a go float pointer, preserving the
+// distinction between an absent value (null) and a reported zero.
+func FloatDataPtr[T float64 | float32](v *T) *RawData {
+	if v == nil {
+		return NilData
+	}
+	return FloatData(float64(*v))
+}
+
 // StringData creates a rawdata struct from a go string
 func StringData(s string) *RawData {
 	return &RawData{

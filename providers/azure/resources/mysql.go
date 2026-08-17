@@ -237,6 +237,29 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				}
 			}
 
+			var administratorLogin, state, availabilityZone, standbyAvailabilityZone *string
+			var replicationRole *string
+			var delegatedSubnetId, privateDnsZoneId, sourceServerId *string
+			var maintenanceWindow any
+			if p := dbServer.Properties; p != nil {
+				administratorLogin = p.AdministratorLogin
+				state = stringEnumPtr(p.State)
+				availabilityZone = p.AvailabilityZone
+				replicationRole = stringEnumPtr(p.ReplicationRole)
+				sourceServerId = p.SourceServerResourceID
+				if ha := p.HighAvailability; ha != nil {
+					standbyAvailabilityZone = ha.StandbyAvailabilityZone
+				}
+				if n := p.Network; n != nil {
+					delegatedSubnetId = n.DelegatedSubnetResourceID
+					privateDnsZoneId = n.PrivateDNSZoneResourceID
+				}
+				maintenanceWindow, err = convert.JsonToDict(p.MaintenanceWindow)
+				if err != nil {
+					return nil, err
+				}
+			}
+
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
 				map[string]*llx.RawData{
 					"id":                       llx.StringDataPtr(dbServer.ID),
@@ -262,11 +285,21 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					"storageRedundancy":        llx.StringDataPtr(storageRedundancy),
 					"backupIntervalHours":      llx.IntDataPtr(backupIntervalHours),
 					"maintenancePatchStrategy": llx.StringDataPtr(maintenancePatchStrategy),
+
+					"administratorLogin":      llx.StringDataPtr(administratorLogin),
+					"state":                   llx.StringDataPtr(state),
+					"availabilityZone":        llx.StringDataPtr(availabilityZone),
+					"standbyAvailabilityZone": llx.StringDataPtr(standbyAvailabilityZone),
+					"replicationRole":         llx.StringDataPtr(replicationRole),
+					"maintenanceWindow":       llx.DictData(maintenanceWindow),
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlServer := mqlAzureDbServer.(*mqlAzureSubscriptionMySqlServiceFlexibleServer)
+			mqlServer.cacheDelegatedSubnetId = delegatedSubnetId
+			mqlServer.cachePrivateDnsZoneId = privateDnsZoneId
+			mqlServer.cacheSourceServerId = sourceServerId
 			mqlServer.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil {
 				if dbServer.Properties.DataEncryption.PrimaryKeyURI != nil {
@@ -641,6 +674,36 @@ type mqlAzureSubscriptionMySqlServiceFlexibleServerInternal struct {
 	cacheGeoBackupKeyURI         string
 	cacheSystemData              any
 	cacheUserAssignedIdentityIds []string
+	cacheDelegatedSubnetId       *string
+	cachePrivateDnsZoneId        *string
+	cacheSourceServerId          *string
+}
+
+// delegatedSubnet resolves the subnet a privately-accessible server is injected
+// into. Null on a server using public access with firewall rules.
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) delegatedSubnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	return resolveDelegatedSubnet(a.MqlRuntime, a.cacheDelegatedSubnetId, &a.DelegatedSubnet)
+}
+
+// privateDnsZone resolves the private DNS zone the server registers in. Null
+// unless the server is deployed with private access.
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) privateDnsZone() (*mqlAzureSubscriptionDnsServicePrivateZone, error) {
+	return resolveServerPrivateDnsZone(a.MqlRuntime, a.cachePrivateDnsZoneId, &a.PrivateDnsZone)
+}
+
+// sourceServer resolves the server this one replicates from. Null on a server
+// that is not a replica.
+func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) sourceServer() (*mqlAzureSubscriptionMySqlServiceFlexibleServer, error) {
+	if a.cacheSourceServerId == nil || *a.cacheSourceServerId == "" {
+		a.SourceServer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
+		map[string]*llx.RawData{"id": llx.StringDataPtr(a.cacheSourceServerId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionMySqlServiceFlexibleServer), nil
 }
 
 func (a *mqlAzureSubscriptionMySqlServiceFlexibleServer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/redis/armredis/v4"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -25,6 +26,7 @@ func (a *mqlAzureSubscriptionCacheService) id() (string, error) {
 type mqlAzureSubscriptionCacheServiceRedisInstanceInternal struct {
 	cachePrivateEndpointConnections []*armredis.PrivateEndpointConnection
 	cacheUserAssignedIdentityIds    []string
+	cacheLinkedServerIds            []string
 	cacheSystemData                 any
 }
 
@@ -114,6 +116,13 @@ func (a *mqlAzureSubscriptionCacheService) redis() ([]any, error) {
 			mqlRedis := cacheData.(*mqlAzureSubscriptionCacheServiceRedisInstance)
 			if cache.Properties != nil {
 				mqlRedis.cachePrivateEndpointConnections = cache.Properties.PrivateEndpointConnections
+				linkedIds := []string{}
+				for _, ls := range cache.Properties.LinkedServers {
+					if ls != nil && ls.ID != nil {
+						linkedIds = append(linkedIds, *ls.ID)
+					}
+				}
+				mqlRedis.cacheLinkedServerIds = linkedIds
 			}
 			if cache.Identity != nil {
 				mqlRedis.cacheUserAssignedIdentityIds = sortedUserAssignedIdentityIDs(cache.Identity.UserAssignedIdentities)
@@ -213,7 +222,34 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		"zones":               llx.ArrayData(zones, types.String),
 		"identity":            llx.DictData(identity),
 		"principalId":         llx.StringDataPtr(principalId),
+
+		"disableAccessKeyAuthentication": llx.BoolDataPtr(cache.Properties.DisableAccessKeyAuthentication),
+		"updateChannel":                  llx.StringDataPtr(stringEnumPtr(cache.Properties.UpdateChannel)),
+		"zonalAllocationPolicy":          llx.StringDataPtr(stringEnumPtr(cache.Properties.ZonalAllocationPolicy)),
+		"tenantSettings":                 llx.MapData(convert.PtrMapStrToInterface(cache.Properties.TenantSettings), types.String),
 	}, nil
+}
+
+// linkedServers resolves the caches this one is geo-replicated with, so a
+// replica's own TLS and network settings can be read rather than assumed to
+// match this cache's.
+func (a *mqlAzureSubscriptionCacheServiceRedisInstance) linkedServers() ([]any, error) {
+	res := []any{}
+	for _, id := range a.cacheLinkedServerIds {
+		if id == "" {
+			continue
+		}
+		linked, err := NewResource(a.MqlRuntime, "azure.subscription.cacheService.redisInstance",
+			map[string]*llx.RawData{"id": llx.StringData(id)})
+		if err != nil {
+			// A linked cache in a subscription this credential cannot read is a
+			// supported configuration. Skip it rather than failing the cache.
+			log.Warn().Err(err).Str("id", id).Msg("could not resolve linked Redis cache")
+			continue
+		}
+		res = append(res, linked)
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnections() ([]any, error) {
