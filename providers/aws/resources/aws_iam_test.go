@@ -67,3 +67,34 @@ func TestIamLoginProfileCacheKeysAreDistinct(t *testing.T) {
 	assert.True(t, alice.(*mqlAwsIamLoginProfile).PasswordResetRequired.Data)
 	assert.False(t, bob.(*mqlAwsIamLoginProfile).PasswordResetRequired.Data)
 }
+
+// TestIsServiceLinkedRolePath pins the one signal IAM gives for a
+// service-linked role. roles() derived it inline while initAwsIamRole did not
+// set the field at all, so a role reached through the init reported null --
+// and since that init-built resource is cached under the role ARN, a query
+// touching aws.iam.role(...) degraded isServiceLinked to null for
+// aws.iam.roles in the same scan.
+func TestIsServiceLinkedRolePath(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		path string
+		want bool
+	}{
+		{"service-linked", "/aws-service-role/", true},
+		{"service-linked with service", "/aws-service-role/elasticbeanstalk.amazonaws.com/", true},
+		{"plain role", "/", false},
+		{"customer path", "/my-team/", false},
+		{"empty path", "", false},
+		// A customer-chosen path that merely mentions the segment is not
+		// service-linked: IAM only treats the leading prefix as the signal.
+		{"prefix not at start", "/team/aws-service-role/", false},
+		// The trailing slash in the prefix is load-bearing: a customer path that
+		// merely starts with the same characters must not be reported as
+		// service-linked.
+		{"similar prefix", "/aws-service-role-ish/", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, isServiceLinkedRolePath(tc.path))
+		})
+	}
+}
