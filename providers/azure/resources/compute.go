@@ -573,6 +573,11 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		"systemData":        llx.DictData(systemData),
 	}
 
+	// Cached for secureVmDiskEncryptionSet(); the confidential-VM guest state
+	// key is a separate encryption set from the disk's own, so it cannot be
+	// derived from diskEncryptionSetId.
+	var secureVMDesID *string
+
 	if disk.Properties != nil {
 		args["networkAccessPolicy"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.NetworkAccessPolicy))
 		args["publicNetworkAccess"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.PublicNetworkAccess))
@@ -589,6 +594,23 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 			encryptionSettingsEnabled = esc.Enabled
 		}
 		args["encryptionSettingsEnabled"] = llx.BoolDataPtr(encryptionSettingsEnabled)
+		var encryptionSettingsVersion *string
+		if esc := disk.Properties.EncryptionSettingsCollection; esc != nil {
+			encryptionSettingsVersion = esc.EncryptionSettingsVersion
+		}
+		args["encryptionSettingsVersion"] = llx.StringDataPtr(encryptionSettingsVersion)
+		var securityType *compute.DiskSecurityTypes
+		var confidentialVMVersion *compute.ConfidentialVMVersion
+		if sp := disk.Properties.SecurityProfile; sp != nil {
+			securityType = sp.SecurityType
+			confidentialVMVersion = sp.ConfidentialVMVersion
+			secureVMDesID = sp.SecureVMDiskEncryptionSetID
+		}
+		args["securityType"] = llx.StringDataPtr(stringEnumPtr(securityType))
+		args["confidentialVmVersion"] = llx.StringDataPtr(stringEnumPtr(confidentialVMVersion))
+		args["osType"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.OSType))
+		args["diskSizeGB"] = llx.IntDataPtr(disk.Properties.DiskSizeGB)
+		args["optimizedForFrequentAttach"] = llx.BoolDataPtr(disk.Properties.OptimizedForFrequentAttach)
 		args["dataAccessAuthMode"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DataAccessAuthMode))
 		args["diskState"] = llx.StringDataPtr(stringEnumPtr(disk.Properties.DiskState))
 		args["provisioningState"] = llx.StringDataPtr(disk.Properties.ProvisioningState)
@@ -616,7 +638,36 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAzureSubscriptionComputeServiceDisk), nil
+	mqlDisk := res.(*mqlAzureSubscriptionComputeServiceDisk)
+	mqlDisk.cacheSecureVMDiskEncryptionSetID = secureVMDesID
+	return mqlDisk, nil
+}
+
+type mqlAzureSubscriptionComputeServiceDiskInternal struct {
+	cacheSecureVMDiskEncryptionSetID *string
+}
+
+// secureVmDiskEncryptionSet resolves the encryption set protecting a
+// confidential VM's guest state. Only ConfidentialVM_DiskEncryptedWithCustomerKey
+// disks carry one; every other disk reports null.
+func (a *mqlAzureSubscriptionComputeServiceDisk) secureVmDiskEncryptionSet() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+	return resolveSecureVMDiskEncryptionSet(a.MqlRuntime, a.cacheSecureVMDiskEncryptionSetID, &a.SecureVmDiskEncryptionSet)
+}
+
+// resolveSecureVMDiskEncryptionSet is shared by disks and snapshots, which model
+// the same securityProfile block.
+func resolveSecureVMDiskEncryptionSet(runtime *plugin.Runtime, id *string, field *plugin.TValue[*mqlAzureSubscriptionComputeServiceDiskEncryptionSet]) (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+	if id == nil || *id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "azure.subscription.computeService.diskEncryptionSet", map[string]*llx.RawData{
+		"id": llx.StringData(strings.ToLower(*id)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) osDisk() (*mqlAzureSubscriptionComputeServiceDisk, error) {
@@ -1415,8 +1466,9 @@ func initAzureSubscriptionComputeServiceDiskEncryptionSet(runtime *plugin.Runtim
 }
 
 type mqlAzureSubscriptionComputeServiceSnapshotInternal struct {
-	cacheSourceDiskId *string
-	cacheDESId        *string
+	cacheSourceDiskId  *string
+	cacheDESId         *string
+	cacheSecureVMDESId *string
 }
 
 func (a *mqlAzureSubscriptionComputeServiceSnapshot) id() (string, error) {
@@ -1489,7 +1541,7 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		"systemData": llx.DictData(systemData),
 	}
 
-	var cacheSourceDiskId, cacheDESId *string
+	var cacheSourceDiskId, cacheDESId, cacheSecureVMDESId *string
 	if snap.Properties != nil {
 		props := snap.Properties
 		creationData, err := convert.JsonToDict(props.CreationData)
@@ -1515,6 +1567,25 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 			cacheDESId = props.Encryption.DiskEncryptionSetID
 		}
 		args["encryptionType"] = llx.StringDataPtr(stringEnumPtr(encryptionType))
+		var encryptionSettingsEnabled *bool
+		var encryptionSettingsVersion *string
+		if esc := props.EncryptionSettingsCollection; esc != nil {
+			encryptionSettingsEnabled = esc.Enabled
+			encryptionSettingsVersion = esc.EncryptionSettingsVersion
+		}
+		args["encryptionSettingsEnabled"] = llx.BoolDataPtr(encryptionSettingsEnabled)
+		args["encryptionSettingsVersion"] = llx.StringDataPtr(encryptionSettingsVersion)
+		var securityType *compute.DiskSecurityTypes
+		var confidentialVMVersion *compute.ConfidentialVMVersion
+		if sp := props.SecurityProfile; sp != nil {
+			securityType = sp.SecurityType
+			confidentialVMVersion = sp.ConfidentialVMVersion
+			cacheSecureVMDESId = sp.SecureVMDiskEncryptionSetID
+		}
+		args["securityType"] = llx.StringDataPtr(stringEnumPtr(securityType))
+		args["confidentialVmVersion"] = llx.StringDataPtr(stringEnumPtr(confidentialVMVersion))
+		args["diskSizeGB"] = llx.IntDataPtr(props.DiskSizeGB)
+		args["completionPercent"] = llx.FloatDataPtr(props.CompletionPercent)
 		args["dataAccessAuthMode"] = llx.StringDataPtr(stringEnumPtr(props.DataAccessAuthMode))
 		args["diskAccessId"] = llx.StringDataPtr(props.DiskAccessID)
 		args["snapshotAccessState"] = llx.StringDataPtr(stringEnumPtr(props.SnapshotAccessState))
@@ -1554,7 +1625,16 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 	mqlSnap := res.(*mqlAzureSubscriptionComputeServiceSnapshot)
 	mqlSnap.cacheSourceDiskId = cacheSourceDiskId
 	mqlSnap.cacheDESId = cacheDESId
+	mqlSnap.cacheSecureVMDESId = cacheSecureVMDESId
 	return mqlSnap, nil
+}
+
+// secureVmDiskEncryptionSet resolves the encryption set protecting a
+// confidential VM's guest state, carried over from the source disk. Null on
+// every snapshot other than one of a ConfidentialVM_DiskEncryptedWithCustomerKey
+// disk.
+func (a *mqlAzureSubscriptionComputeServiceSnapshot) secureVmDiskEncryptionSet() (*mqlAzureSubscriptionComputeServiceDiskEncryptionSet, error) {
+	return resolveSecureVMDiskEncryptionSet(a.MqlRuntime, a.cacheSecureVMDESId, &a.SecureVmDiskEncryptionSet)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceSnapshot) sourceDisk() (*mqlAzureSubscriptionComputeServiceDisk, error) {

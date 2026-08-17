@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.34.2",
-  "generated_at": "2026-08-14T18:25:29+03:00",
+  "version": "13.35.0",
+  "generated_at": "2026-08-17T13:55:03-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -1412,7 +1412,7 @@
     {
       "permission": "Microsoft.Network/ddosProtectionPlans/read",
       "service": "Microsoft.Network",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "network.go"
     },
     {
@@ -1568,7 +1568,7 @@
     {
       "permission": "Microsoft.Network/privateDnsZones/read",
       "service": "Microsoft.Privatedns",
-      "action": "NewListPager",
+      "action": "Get",
       "source_file": "dns.go"
     },
     {

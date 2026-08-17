@@ -257,6 +257,78 @@ func (a *mqlAzureSubscriptionDnsService) privateZones() ([]any, error) {
 	return res, nil
 }
 
+// initAzureSubscriptionDnsServicePrivateZone resolves a private DNS zone by its
+// resource ID, so references to one (for example the zone a flexible server
+// registers in) resolve without listing every zone in the subscription.
+func initAzureSubscriptionDnsServicePrivateZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	zoneName, err := azureId.Component("privateDnsZones")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	// Already fetched by an earlier reference: NewResource consults the cache
+	// only after this init returns, so without this a zone shared by many
+	// servers is fetched once per server.
+	if cached := cachedResource(runtime, "azure.subscription.dnsService.privateZone", id); cached != nil {
+		return args, cached, nil
+	}
+
+	client, err := armprivatedns.NewPrivateZonesClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.Get(context.Background(), azureId.ResourceGroup, zoneName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var numberOfRecordSets, maxNumberOfRecordSets, numberOfVirtualNetworkLinks int64
+	if resp.Properties != nil {
+		numberOfRecordSets = convert.ToValue(resp.Properties.NumberOfRecordSets)
+		maxNumberOfRecordSets = convert.ToValue(resp.Properties.MaxNumberOfRecordSets)
+		numberOfVirtualNetworkLinks = convert.ToValue(resp.Properties.NumberOfVirtualNetworkLinks)
+	}
+	res, err := CreateResource(runtime, "azure.subscription.dnsService.privateZone", map[string]*llx.RawData{
+		"id":                          llx.StringDataPtr(resp.ID),
+		"name":                        llx.StringDataPtr(resp.Name),
+		"location":                    llx.StringDataPtr(resp.Location),
+		"tags":                        llx.MapData(convert.PtrMapStrToInterface(resp.Tags), types.String),
+		"numberOfRecordSets":          llx.IntData(numberOfRecordSets),
+		"maxNumberOfRecordSets":       llx.IntData(maxNumberOfRecordSets),
+		"numberOfVirtualNetworkLinks": llx.IntData(numberOfVirtualNetworkLinks),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	sysData, err := convert.JsonToDict(resp.SystemData)
+	if err != nil {
+		return nil, nil, err
+	}
+	res.(*mqlAzureSubscriptionDnsServicePrivateZone).cacheSystemData = sysData
+	return args, res, nil
+}
+
 type mqlAzureSubscriptionDnsServicePrivateZoneInternal struct {
 	cacheSystemData any
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -89,6 +90,13 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 	var personalDesktopAssignmentType, ssoadfsAuthority, publicNetworkAccess, ssoSecretType string
 	var startVMOnConnect, validationEnvironment bool
 	var maxSessionLimit, ring *int64
+	var description, friendlyName, vmTemplate *string
+	var registrationTokenExpirationTime *time.Time
+	var registrationTokenOperation *string
+	var registrationTokenActive *bool
+	var agentUpdateType, agentUpdateMaintenanceWindowTimeZone *string
+	var agentUpdateUseSessionHostLocalTime *bool
+	agentUpdateMaintenanceWindows := []any{}
 	privateEndpointConnectionCount := int64(0)
 	if p := hp.Properties; p != nil {
 		hostPoolType = string(convert.ToValue(p.HostPoolType))
@@ -109,6 +117,32 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 		if p.Ring != nil {
 			v := int64(*p.Ring)
 			ring = &v
+		}
+		description = p.Description
+		friendlyName = p.FriendlyName
+		vmTemplate = p.VMTemplate
+		// The token value itself is deliberately not surfaced. What an audit
+		// needs is whether one is outstanding and when it lapses.
+		if ri := p.RegistrationInfo; ri != nil {
+			registrationTokenExpirationTime = ri.ExpirationTime
+			registrationTokenOperation = stringEnumPtr(ri.RegistrationTokenOperation)
+			active := ri.Token != nil && *ri.Token != ""
+			registrationTokenActive = &active
+		}
+		if au := p.AgentUpdate; au != nil {
+			agentUpdateType = stringEnumPtr(au.Type)
+			agentUpdateUseSessionHostLocalTime = au.UseSessionHostLocalTime
+			agentUpdateMaintenanceWindowTimeZone = au.MaintenanceWindowTimeZone
+			for _, w := range au.MaintenanceWindows {
+				if w == nil {
+					continue
+				}
+				d, err := convert.JsonToDict(w)
+				if err != nil {
+					return nil, err
+				}
+				agentUpdateMaintenanceWindows = append(agentUpdateMaintenanceWindows, d)
+			}
 		}
 	}
 
@@ -132,6 +166,17 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 			"publicNetworkAccess":            llx.StringData(publicNetworkAccess),
 			"ssoSecretType":                  llx.StringData(ssoSecretType),
 			"privateEndpointConnectionCount": llx.IntData(privateEndpointConnectionCount),
+
+			"registrationTokenActive":              llx.BoolDataPtr(registrationTokenActive),
+			"registrationTokenExpirationTime":      llx.TimeDataPtr(registrationTokenExpirationTime),
+			"registrationTokenOperation":           llx.StringDataPtr(registrationTokenOperation),
+			"agentUpdateType":                      llx.StringDataPtr(agentUpdateType),
+			"agentUpdateUseSessionHostLocalTime":   llx.BoolDataPtr(agentUpdateUseSessionHostLocalTime),
+			"agentUpdateMaintenanceWindowTimeZone": llx.StringDataPtr(agentUpdateMaintenanceWindowTimeZone),
+			"agentUpdateMaintenanceWindows":        llx.ArrayData(agentUpdateMaintenanceWindows, types.Dict),
+			"description":                          llx.StringDataPtr(description),
+			"friendlyName":                         llx.StringDataPtr(friendlyName),
+			"vmTemplate":                           llx.StringDataPtr(vmTemplate),
 		})
 	if err != nil {
 		return nil, err

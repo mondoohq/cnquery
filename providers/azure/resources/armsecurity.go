@@ -118,10 +118,17 @@ type PolicyAssignment struct {
 		Description     string `json:"description"`
 		AssignmentType  string `json:"assignmentType"`
 		EnforcementMode string `json:"enforcementMode"`
-		Metadata        struct {
-			Category string `json:"category"`
-		} `json:"metadata"`
-		PolicyDefinitionID string `json:"policyDefinitionId"`
+		// Metadata is open-ended: Azure and tooling write arbitrary keys here
+		// (assignedBy, createdBy, category, and more). Modeling it as a closed
+		// struct silently drops everything except the named key.
+		Metadata                   map[string]any `json:"metadata"`
+		DefinitionVersion          string         `json:"definitionVersion"`
+		EffectiveDefinitionVersion string         `json:"effectiveDefinitionVersion"`
+		LatestDefinitionVersion    string         `json:"latestDefinitionVersion"`
+		NonComplianceMessages      []any          `json:"nonComplianceMessages"`
+		Overrides                  []any          `json:"overrides"`
+		ResourceSelectors          []any          `json:"resourceSelectors"`
+		PolicyDefinitionID         string         `json:"policyDefinitionId"`
 		// Parameters is an open map keyed by parameter name, each value an
 		// object of the form {"value": <any>}. It must not be modeled as a
 		// closed struct: the parameter set differs per policy definition, and

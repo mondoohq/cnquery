@@ -98,6 +98,10 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 
 	var publicNetworkAccess, requiredNsgRules, diskEncryptionSetId, managedResourceGroupId, provisioningState, workspaceId string
 	var enableNoPublicIp, requireInfraEnc bool
+	var isUnityCatalogEnabled *bool
+	var computeMode, workspaceUrl, accessConnectorId *string
+	var defaultCatalogInitialType, defaultCatalogInitialName *string
+	var createdBy, updatedBy any
 	var customVnetId string
 	var defaultStorageFirewall, complianceSecurityProfile, enhancedSecurityMonitoring, automaticClusterUpdate string
 	complianceStandards := []any{}
@@ -210,6 +214,24 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 				}
 			}
 		}
+
+		isUnityCatalogEnabled = props.IsUcEnabled
+		computeMode = stringEnumPtr(props.ComputeMode)
+		workspaceUrl = props.WorkspaceURL
+		if ac := props.AccessConnector; ac != nil {
+			accessConnectorId = ac.ID
+		}
+		if dc := props.DefaultCatalog; dc != nil {
+			defaultCatalogInitialType = stringEnumPtr(dc.InitialType)
+			defaultCatalogInitialName = dc.InitialName
+		}
+		var convErr error
+		if createdBy, convErr = convert.JsonToDict(props.CreatedBy); convErr != nil {
+			return nil, convErr
+		}
+		if updatedBy, convErr = convert.JsonToDict(props.UpdatedBy); convErr != nil {
+			return nil, convErr
+		}
 	}
 
 	res, err := CreateResource(runtime, ResourceAzureSubscriptionDatabricksServiceWorkspace, map[string]*llx.RawData{
@@ -230,6 +252,14 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		"complianceStandards":             llx.ArrayData(complianceStandards, types.String),
 		"enhancedSecurityMonitoring":      llx.StringData(enhancedSecurityMonitoring),
 		"automaticClusterUpdate":          llx.StringData(automaticClusterUpdate),
+		"isUnityCatalogEnabled":           llx.BoolDataPtr(isUnityCatalogEnabled),
+		"computeMode":                     llx.StringDataPtr(computeMode),
+		"workspaceUrl":                    llx.StringDataPtr(workspaceUrl),
+		"accessConnectorId":               llx.StringDataPtr(accessConnectorId),
+		"defaultCatalogInitialType":       llx.StringDataPtr(defaultCatalogInitialType),
+		"defaultCatalogInitialName":       llx.StringDataPtr(defaultCatalogInitialName),
+		"createdBy":                       llx.DictData(createdBy),
+		"updatedBy":                       llx.DictData(updatedBy),
 		"diskEncryptionSetId":             llx.StringData(diskEncryptionSetId),
 		"managedResourceGroupId":          llx.StringData(managedResourceGroupId),
 		"provisioningState":               llx.StringData(provisioningState),

@@ -146,6 +146,66 @@ type mqlAzureSubscriptionPostgreSqlServiceFlexibleServerInternal struct {
 	cacheGeoBackupKeyURI         string
 	cacheSystemData              any
 	cacheUserAssignedIdentityIds []string
+	cacheDelegatedSubnetId       *string
+	cachePrivateDnsZoneId        *string
+	cacheSourceServerId          *string
+}
+
+// delegatedSubnet resolves the subnet a privately-accessible server is injected
+// into. Null on a server using public access with firewall rules.
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) delegatedSubnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	return resolveDelegatedSubnet(a.MqlRuntime, a.cacheDelegatedSubnetId, &a.DelegatedSubnet)
+}
+
+// privateDnsZone resolves the private DNS zone the server registers in. Null
+// unless the server is deployed with private access.
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) privateDnsZone() (*mqlAzureSubscriptionDnsServicePrivateZone, error) {
+	return resolveServerPrivateDnsZone(a.MqlRuntime, a.cachePrivateDnsZoneId, &a.PrivateDnsZone)
+}
+
+// sourceServer resolves the server this one was created from. Null on a server
+// that is neither a replica nor a restore.
+func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) sourceServer() (*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer, error) {
+	if a.cacheSourceServerId == nil || *a.cacheSourceServerId == "" {
+		a.SourceServer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.postgreSqlService.flexibleServer",
+		map[string]*llx.RawData{"id": llx.StringDataPtr(a.cacheSourceServerId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer), nil
+}
+
+// resolveDelegatedSubnet is shared by the PostgreSQL and MySQL flexible servers,
+// which model virtual network injection identically.
+func resolveDelegatedSubnet(runtime *plugin.Runtime, id *string, field *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]) (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if id == nil || *id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringDataPtr(id)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+}
+
+// resolveServerPrivateDnsZone is shared by the PostgreSQL and MySQL flexible
+// servers.
+func resolveServerPrivateDnsZone(runtime *plugin.Runtime, id *string, field *plugin.TValue[*mqlAzureSubscriptionDnsServicePrivateZone]) (*mqlAzureSubscriptionDnsServicePrivateZone, error) {
+	if id == nil || *id == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "azure.subscription.dnsService.privateZone",
+		map[string]*llx.RawData{"id": llx.StringDataPtr(id)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionDnsServicePrivateZone), nil
 }
 
 func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -214,6 +274,44 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 				}
 			}
 
+			var fullVersion, administratorLogin, state, availabilityZone *string
+			var haMode, haState, standbyAvailabilityZone *string
+			var storageAutoGrow, storageTier, storageType *string
+			var storageSizeGB *int32
+			var replicationRole, entraTenantId *string
+			var delegatedSubnetId, privateDnsZoneId, sourceServerId *string
+			var maintenanceWindow any
+			if p := dbServer.Properties; p != nil {
+				fullVersion = p.MinorVersion
+				administratorLogin = p.AdministratorLogin
+				state = stringEnumPtr(p.State)
+				availabilityZone = p.AvailabilityZone
+				sourceServerId = p.SourceServerResourceID
+				replicationRole = stringEnumPtr(p.ReplicationRole)
+				if ha := p.HighAvailability; ha != nil {
+					haMode = stringEnumPtr(ha.Mode)
+					haState = stringEnumPtr(ha.State)
+					standbyAvailabilityZone = ha.StandbyAvailabilityZone
+				}
+				if st := p.Storage; st != nil {
+					storageAutoGrow = stringEnumPtr(st.AutoGrow)
+					storageTier = stringEnumPtr(st.Tier)
+					storageType = stringEnumPtr(st.Type)
+					storageSizeGB = st.StorageSizeGB
+				}
+				if n := p.Network; n != nil {
+					delegatedSubnetId = n.DelegatedSubnetResourceID
+					privateDnsZoneId = n.PrivateDNSZoneArmResourceID
+				}
+				if ac := p.AuthConfig; ac != nil {
+					entraTenantId = ac.TenantID
+				}
+				maintenanceWindow, err = convert.JsonToDict(p.MaintenanceWindow)
+				if err != nil {
+					return nil, err
+				}
+			}
+
 			var backupRetentionDays int64
 			var geoRedundantBackup string
 			if dbServer.Properties != nil && dbServer.Properties.Backup != nil {
@@ -254,12 +352,30 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 					"identityType":                 llx.StringDataPtr(identityType),
 					"principalId":                  llx.StringDataPtr(identityPrincipalId),
 					"tenantId":                     llx.StringDataPtr(identityTenantId),
+
+					"fullVersion":             llx.StringDataPtr(fullVersion),
+					"administratorLogin":      llx.StringDataPtr(administratorLogin),
+					"state":                   llx.StringDataPtr(state),
+					"availabilityZone":        llx.StringDataPtr(availabilityZone),
+					"highAvailabilityMode":    llx.StringDataPtr(haMode),
+					"highAvailabilityState":   llx.StringDataPtr(haState),
+					"standbyAvailabilityZone": llx.StringDataPtr(standbyAvailabilityZone),
+					"storageSizeGB":           llx.IntDataPtr(storageSizeGB),
+					"storageAutoGrow":         llx.StringDataPtr(storageAutoGrow),
+					"storageTier":             llx.StringDataPtr(storageTier),
+					"storageType":             llx.StringDataPtr(storageType),
+					"replicationRole":         llx.StringDataPtr(replicationRole),
+					"entraTenantId":           llx.StringDataPtr(entraTenantId),
+					"maintenanceWindow":       llx.DictData(maintenanceWindow),
 				})
 			if err != nil {
 				return nil, err
 			}
 			mqlServer := mqlAzurePostgresServer.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer)
 			mqlServer.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+			mqlServer.cacheDelegatedSubnetId = delegatedSubnetId
+			mqlServer.cachePrivateDnsZoneId = privateDnsZoneId
+			mqlServer.cacheSourceServerId = sourceServerId
 			if dbServer.Properties != nil && dbServer.Properties.DataEncryption != nil {
 				if dbServer.Properties.DataEncryption.PrimaryKeyURI != nil {
 					mqlServer.cachePrimaryKeyURI = *dbServer.Properties.DataEncryption.PrimaryKeyURI

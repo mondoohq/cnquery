@@ -95,6 +95,7 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 
 	var publicNetworkAccess, cmkKeyIdentifier, cmkIdentityClientId string
 	var endpoint, provisioningState, createMode string
+	var dataPlaneProxyAuthenticationMode, dataPlaneProxyPrivateLinkDelegation *string
 	var disableLocalAuth, enablePurgeProtection bool
 	var softDeleteRetentionInDays, defaultKeyValueRevisionRetentionPeriodInSeconds int64
 	var creationTime *time.Time
@@ -133,24 +134,30 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		if p.CreateMode != nil {
 			createMode = string(*p.CreateMode)
 		}
+		if dpp := p.DataPlaneProxy; dpp != nil {
+			dataPlaneProxyAuthenticationMode = stringEnumPtr(dpp.AuthenticationMode)
+			dataPlaneProxyPrivateLinkDelegation = stringEnumPtr(dpp.PrivateLinkDelegation)
+		}
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.appConfigurationService.configurationStore", map[string]*llx.RawData{
-		"id":                        llx.StringDataPtr(store.ID),
-		"name":                      llx.StringDataPtr(store.Name),
-		"location":                  llx.StringDataPtr(store.Location),
-		"tags":                      llx.MapData(convert.PtrMapStrToInterface(store.Tags), types.String),
-		"sku":                       llx.DictData(sku),
-		"identity":                  llx.DictData(identity),
-		"publicNetworkAccess":       llx.StringData(publicNetworkAccess),
-		"disableLocalAuth":          llx.BoolData(disableLocalAuth),
-		"cmkKeyIdentifier":          llx.StringData(cmkKeyIdentifier),
-		"cmkIdentityClientId":       llx.StringData(cmkIdentityClientId),
-		"softDeleteRetentionInDays": llx.IntData(softDeleteRetentionInDays),
-		"enablePurgeProtection":     llx.BoolData(enablePurgeProtection),
-		"endpoint":                  llx.StringData(endpoint),
-		"provisioningState":         llx.StringData(provisioningState),
-		"createMode":                llx.StringData(createMode),
+		"id":                                  llx.StringDataPtr(store.ID),
+		"name":                                llx.StringDataPtr(store.Name),
+		"location":                            llx.StringDataPtr(store.Location),
+		"tags":                                llx.MapData(convert.PtrMapStrToInterface(store.Tags), types.String),
+		"sku":                                 llx.DictData(sku),
+		"identity":                            llx.DictData(identity),
+		"publicNetworkAccess":                 llx.StringData(publicNetworkAccess),
+		"disableLocalAuth":                    llx.BoolData(disableLocalAuth),
+		"cmkKeyIdentifier":                    llx.StringData(cmkKeyIdentifier),
+		"cmkIdentityClientId":                 llx.StringData(cmkIdentityClientId),
+		"softDeleteRetentionInDays":           llx.IntData(softDeleteRetentionInDays),
+		"enablePurgeProtection":               llx.BoolData(enablePurgeProtection),
+		"dataPlaneProxyAuthenticationMode":    llx.StringDataPtr(dataPlaneProxyAuthenticationMode),
+		"dataPlaneProxyPrivateLinkDelegation": llx.StringDataPtr(dataPlaneProxyPrivateLinkDelegation),
+		"endpoint":                            llx.StringData(endpoint),
+		"provisioningState":                   llx.StringData(provisioningState),
+		"createMode":                          llx.StringData(createMode),
 		"defaultKeyValueRevisionRetentionPeriodInSeconds": llx.IntData(defaultKeyValueRevisionRetentionPeriodInSeconds),
 		"creationTime": llx.TimeDataPtr(creationTime),
 	})

@@ -1196,6 +1196,18 @@ func azureVirtualNetworkToMql(runtime *plugin.Runtime, vn network.VirtualNetwork
 		args["enableVmProtection"] = llx.BoolDataPtr(vn.Properties.EnableVMProtection)
 		args["provisioningState"] = llx.StringDataPtr((*string)(vn.Properties.ProvisioningState))
 		args["flowTimeoutInMinutes"] = llx.IntDataPtr(vn.Properties.FlowTimeoutInMinutes)
+		args["privateEndpointVNetPolicies"] = llx.StringDataPtr((*string)(vn.Properties.PrivateEndpointVNetPolicies))
+		args["resourceGuid"] = llx.StringDataPtr(vn.Properties.ResourceGUID)
+		bgpCommunities, err := convert.JsonToDict(vn.Properties.BgpCommunities)
+		if err != nil {
+			return nil, err
+		}
+		args["bgpCommunities"] = llx.DictData(bgpCommunities)
+		if sgp := vn.Properties.SummarizedGatewayPrefixes; sgp != nil {
+			args["summarizedGatewayPrefixes"] = llx.ArrayData(strPtrsToAny(sgp.AddressPrefixes), types.String)
+		} else {
+			args["summarizedGatewayPrefixes"] = llx.ArrayData([]any{}, types.String)
+		}
 		if vn.Properties.AddressSpace != nil {
 			args["addressPrefixes"] = llx.ArrayData(strPtrsToAny(vn.Properties.AddressSpace.AddressPrefixes), types.String)
 		} else {
@@ -1231,6 +1243,10 @@ func azureVirtualNetworkToMql(runtime *plugin.Runtime, vn network.VirtualNetwork
 		args["encryptionEnabled"] = llx.BoolData(false)
 		args["encryptionEnforcement"] = llx.StringData("")
 		args["dhcpOptions"] = llx.NilData
+		args["privateEndpointVNetPolicies"] = llx.StringData("")
+		args["resourceGuid"] = llx.StringData("")
+		args["bgpCommunities"] = llx.NilData
+		args["summarizedGatewayPrefixes"] = llx.ArrayData([]any{}, types.String)
 	}
 
 	mqlVn, err := CreateResource(runtime, ResourceAzureSubscriptionNetworkServiceVirtualNetwork, args)
@@ -1242,14 +1258,18 @@ func azureVirtualNetworkToMql(runtime *plugin.Runtime, vn network.VirtualNetwork
 		if ng := vn.Properties.DefaultPublicNatGateway; ng != nil {
 			res.cacheDefaultNatGatewayId = ng.ID
 		}
+		if plan := vn.Properties.DdosProtectionPlan; plan != nil {
+			res.cacheDdosProtectionPlanId = plan.ID
+		}
 		res.cacheFlowLogs = vn.Properties.FlowLogs
 	}
 	return res, nil
 }
 
 type mqlAzureSubscriptionNetworkServiceVirtualNetworkInternal struct {
-	cacheDefaultNatGatewayId *string
-	cacheFlowLogs            []*network.FlowLog
+	cacheDefaultNatGatewayId  *string
+	cacheDdosProtectionPlanId *string
+	cacheFlowLogs             []*network.FlowLog
 }
 
 // defaultNatGateway resolves the typed default public NAT gateway that provides
@@ -1270,6 +1290,92 @@ func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) defaultNatGateway() (
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionNetworkServiceNatGateway), nil
+}
+
+// ddosProtectionPlan resolves the DDoS protection plan attached to the virtual
+// network. Returns null when the network relies on the platform's basic
+// protection, and when the attached plan lives in a subscription this
+// credential cannot read.
+func (a *mqlAzureSubscriptionNetworkServiceVirtualNetwork) ddosProtectionPlan() (*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan, error) {
+	id := convert.ToValue(a.cacheDdosProtectionPlanId)
+	if id == "" {
+		a.DdosProtectionPlan.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan,
+		map[string]*llx.RawData{"id": llx.StringData(id)})
+	if err != nil {
+		// A plan attached from another subscription is a supported
+		// configuration and reads as forbidden or not-found here. Report the
+		// absence rather than failing the virtual network.
+		log.Warn().Err(err).Str("id", id).Msg("could not resolve DDoS protection plan")
+		a.DdosProtectionPlan.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceDdosProtectionPlan), nil
+}
+
+func initAzureSubscriptionNetworkServiceDdosProtectionPlan(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+	if args["id"] == nil {
+		return args, nil, nil
+	}
+	id, ok := args["id"].Value.(string)
+	if !ok || id == "" {
+		return args, nil, nil
+	}
+
+	azureId, err := ParseResourceID(id)
+	if err != nil {
+		return nil, nil, err
+	}
+	planName, err := azureId.Component("ddosProtectionPlans")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	// Already fetched by an earlier reference: NewResource consults the cache
+	// only after this init returns, so without this a plan shared by many
+	// virtual networks is fetched once per network.
+	if cached := cachedResource(runtime, ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan, id); cached != nil {
+		return args, cached, nil
+	}
+
+	client, err := network.NewDdosProtectionPlansClient(azureId.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	plan, err := client.Get(context.Background(), azureId.ResourceGroup, planName, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var provisioningState string
+	if plan.Properties != nil && plan.Properties.ProvisioningState != nil {
+		provisioningState = string(*plan.Properties.ProvisioningState)
+	}
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionNetworkServiceDdosProtectionPlan,
+		map[string]*llx.RawData{
+			"id":                llx.StringDataPtr(plan.ID),
+			"name":              llx.StringDataPtr(plan.Name),
+			"location":          llx.StringDataPtr(plan.Location),
+			"tags":              llx.MapData(convert.PtrMapStrToInterface(plan.Tags), types.String),
+			"type":              llx.StringDataPtr(plan.Type),
+			"etag":              llx.StringDataPtr(plan.Etag),
+			"provisioningState": llx.StringData(provisioningState),
+		})
+	if err != nil {
+		return nil, nil, err
+	}
+	return args, res, nil
 }
 
 // flowLogs resolves the flow logs that target this virtual network. Returns an
@@ -3595,6 +3701,22 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		disableDefaultServerHeaderInResponse = ag.Properties.GlobalConfiguration.DisableDefaultServerHeaderInResponse
 	}
 
+	var enableHttp2, enableFips, forceFirewallPolicyAssociation *bool
+	var defaultPredefinedSslPolicy, operationalState, resourceGuid *string
+	var autoscaleMinCapacity, autoscaleMaxCapacity *int32
+	if ag.Properties != nil {
+		enableHttp2 = ag.Properties.EnableHTTP2
+		enableFips = ag.Properties.EnableFips
+		forceFirewallPolicyAssociation = ag.Properties.ForceFirewallPolicyAssociation
+		defaultPredefinedSslPolicy = stringEnumPtr(ag.Properties.DefaultPredefinedSSLPolicy)
+		operationalState = stringEnumPtr(ag.Properties.OperationalState)
+		resourceGuid = ag.Properties.ResourceGUID
+		if asc := ag.Properties.AutoscaleConfiguration; asc != nil {
+			autoscaleMinCapacity = asc.MinCapacity
+			autoscaleMaxCapacity = asc.MaxCapacity
+		}
+	}
+
 	args := map[string]*llx.RawData{
 		"id":                        llx.StringDataPtr(ag.ID),
 		"name":                      llx.StringDataPtr(ag.Name),
@@ -3618,6 +3740,15 @@ func azureAppGatewayToMql(runtime *plugin.Runtime, ag network.ApplicationGateway
 		"identityType":              llx.StringDataPtr(identityType),
 
 		"disableDefaultServerHeaderInResponse": llx.BoolDataPtr(disableDefaultServerHeaderInResponse),
+
+		"enableHttp2":                    llx.BoolDataPtr(enableHttp2),
+		"enableFips":                     llx.BoolDataPtr(enableFips),
+		"forceFirewallPolicyAssociation": llx.BoolDataPtr(forceFirewallPolicyAssociation),
+		"defaultPredefinedSslPolicy":     llx.StringDataPtr(defaultPredefinedSslPolicy),
+		"operationalState":               llx.StringDataPtr(operationalState),
+		"autoscaleMinCapacity":           llx.IntDataPtr(autoscaleMinCapacity),
+		"autoscaleMaxCapacity":           llx.IntDataPtr(autoscaleMaxCapacity),
+		"resourceGuid":                   llx.StringDataPtr(resourceGuid),
 	}
 
 	mqlAg, err := CreateResource(runtime, "azure.subscription.networkService.applicationGateway", args)
@@ -4446,6 +4577,47 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 	if fwp.Properties != nil {
 		provisioningState = (*string)(fwp.Properties.ProvisioningState)
 	}
+
+	var threatIntelMode, transportSecurityCertName, transportSecurityKvSecretId *string
+	var explicitProxyPacFile *string
+	var dnsProxyEnabled, dnsRequireProxy, explicitProxyEnabled, explicitProxyPacFileEnabled, insightsEnabled *bool
+	var explicitProxyHttpPort, explicitProxyHttpsPort, explicitProxyPacFilePort, insightsRetentionDays *int32
+	threatIntelAllowedFqdns := []any{}
+	threatIntelAllowedIps := []any{}
+	dnsServers := []any{}
+	snatPrivateRanges := []any{}
+	if p := fwp.Properties; p != nil {
+		threatIntelMode = stringEnumPtr(p.ThreatIntelMode)
+		if w := p.ThreatIntelWhitelist; w != nil {
+			threatIntelAllowedFqdns = strPtrsToAny(w.Fqdns)
+			threatIntelAllowedIps = strPtrsToAny(w.IPAddresses)
+		}
+		if ts := p.TransportSecurity; ts != nil && ts.CertificateAuthority != nil {
+			transportSecurityCertName = ts.CertificateAuthority.Name
+			transportSecurityKvSecretId = ts.CertificateAuthority.KeyVaultSecretID
+		}
+		if d := p.DNSSettings; d != nil {
+			dnsProxyEnabled = d.EnableProxy
+			dnsRequireProxy = d.RequireProxyForNetworkRules
+			dnsServers = strPtrsToAny(d.Servers)
+		}
+		if e := p.ExplicitProxySettings; e != nil {
+			explicitProxyEnabled = e.EnableExplicitProxy
+			explicitProxyPacFileEnabled = e.EnablePacFile
+			explicitProxyHttpPort = e.HTTPPort
+			explicitProxyHttpsPort = e.HTTPSPort
+			explicitProxyPacFile = e.PacFile
+			explicitProxyPacFilePort = e.PacFilePort
+		}
+		if i := p.Insights; i != nil {
+			insightsEnabled = i.IsEnabled
+			insightsRetentionDays = i.RetentionDays
+		}
+		if s := p.Snat; s != nil {
+			snatPrivateRanges = strPtrsToAny(s.PrivateRanges)
+		}
+	}
+
 	mqlFw, err := CreateResource(runtime, "azure.subscription.networkService.firewallPolicy",
 		map[string]*llx.RawData{
 			"id":                llx.StringDataPtr(fwp.ID),
@@ -4456,6 +4628,24 @@ func azureFirewallPolicyToMql(runtime *plugin.Runtime, fwp network.FirewallPolic
 			"etag":              llx.StringDataPtr(fwp.Etag),
 			"properties":        llx.DictData(props),
 			"provisioningState": llx.StringDataPtr(provisioningState),
+
+			"threatIntelMode":                   llx.StringDataPtr(threatIntelMode),
+			"threatIntelAllowedFqdns":           llx.ArrayData(threatIntelAllowedFqdns, types.String),
+			"threatIntelAllowedIpAddresses":     llx.ArrayData(threatIntelAllowedIps, types.String),
+			"transportSecurityCertificateName":  llx.StringDataPtr(transportSecurityCertName),
+			"transportSecurityKeyVaultSecretId": llx.StringDataPtr(transportSecurityKvSecretId),
+			"dnsProxyEnabled":                   llx.BoolDataPtr(dnsProxyEnabled),
+			"dnsRequireProxyForNetworkRules":    llx.BoolDataPtr(dnsRequireProxy),
+			"dnsServers":                        llx.ArrayData(dnsServers, types.String),
+			"explicitProxyEnabled":              llx.BoolDataPtr(explicitProxyEnabled),
+			"explicitProxyHttpPort":             llx.IntDataPtr(explicitProxyHttpPort),
+			"explicitProxyHttpsPort":            llx.IntDataPtr(explicitProxyHttpsPort),
+			"explicitProxyPacFileEnabled":       llx.BoolDataPtr(explicitProxyPacFileEnabled),
+			"explicitProxyPacFile":              llx.StringDataPtr(explicitProxyPacFile),
+			"explicitProxyPacFilePort":          llx.IntDataPtr(explicitProxyPacFilePort),
+			"insightsEnabled":                   llx.BoolDataPtr(insightsEnabled),
+			"insightsRetentionDays":             llx.IntDataPtr(insightsRetentionDays),
+			"snatPrivateRanges":                 llx.ArrayData(snatPrivateRanges, types.String),
 		})
 	if err != nil {
 		return nil, err
@@ -4730,6 +4920,7 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 	var addressPrefix *llx.RawData
 	var privateEndpointNetworkPolicies, privateLinkServiceNetworkPolicies *llx.RawData
 	var defaultOutboundAccess *llx.RawData
+	var sharingScope *llx.RawData
 	addressPrefixes := []any{}
 	serviceEndpoints := []any{}
 	delegations := []any{}
@@ -4751,6 +4942,7 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 			privateLinkServiceNetworkPolicies = llx.StringData("")
 		}
 		defaultOutboundAccess = llx.BoolDataPtr(subnet.Properties.DefaultOutboundAccess)
+		sharingScope = llx.StringDataPtr(stringEnumPtr(subnet.Properties.SharingScope))
 
 		for _, p := range subnet.Properties.AddressPrefixes {
 			if p != nil {
@@ -4788,6 +4980,7 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 		privateEndpointNetworkPolicies = llx.StringData("")
 		privateLinkServiceNetworkPolicies = llx.StringData("")
 		defaultOutboundAccess = llx.BoolData(false)
+		sharingScope = llx.StringData("")
 	}
 
 	mqlAzure, err := CreateResource(runtime, "azure.subscription.networkService.subnet",
@@ -4802,6 +4995,7 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 			"privateEndpointNetworkPolicies":    privateEndpointNetworkPolicies,
 			"privateLinkServiceNetworkPolicies": privateLinkServiceNetworkPolicies,
 			"defaultOutboundAccess":             defaultOutboundAccess,
+			"sharingScope":                      sharingScope,
 			"serviceEndpoints":                  llx.ArrayData(serviceEndpoints, types.Resource("azure.subscription.networkService.subnet.serviceEndpoint")),
 			"delegations":                       llx.ArrayData(delegations, types.Resource("azure.subscription.networkService.subnet.delegation")),
 		})
@@ -4970,7 +5164,11 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	}
 
 	var enableIPForwarding, enableAcceleratedNetworking, primary *llx.RawData
+	var disableTcpStateTracking *llx.RawData
 	var networkSecurityGroupId, internalDnsNameLabel string
+	var nicType, auxiliaryMode, auxiliarySku, migrationPhase string
+	var privateEndpointId, privateLinkServiceId, resourceGuid string
+	hostedWorkloads := []any{}
 	dnsServers := []any{}
 	appliedDnsServers := []any{}
 	ipConfigs := []any{}
@@ -4978,6 +5176,25 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 		enableIPForwarding = llx.BoolDataPtr(iface.Properties.EnableIPForwarding)
 		enableAcceleratedNetworking = llx.BoolDataPtr(iface.Properties.EnableAcceleratedNetworking)
 		primary = llx.BoolDataPtr(iface.Properties.Primary)
+		disableTcpStateTracking = llx.BoolDataPtr(iface.Properties.DisableTCPStateTracking)
+		nicType = convert.ToValue(stringEnumPtr(iface.Properties.NicType))
+		auxiliaryMode = convert.ToValue(stringEnumPtr(iface.Properties.AuxiliaryMode))
+		auxiliarySku = convert.ToValue(stringEnumPtr(iface.Properties.AuxiliarySKU))
+		migrationPhase = convert.ToValue(stringEnumPtr(iface.Properties.MigrationPhase))
+		if iface.Properties.ResourceGUID != nil {
+			resourceGuid = *iface.Properties.ResourceGUID
+		}
+		if pe := iface.Properties.PrivateEndpoint; pe != nil && pe.ID != nil {
+			privateEndpointId = *pe.ID
+		}
+		if pls := iface.Properties.PrivateLinkService; pls != nil && pls.ID != nil {
+			privateLinkServiceId = *pls.ID
+		}
+		for _, hw := range iface.Properties.HostedWorkloads {
+			if hw != nil {
+				hostedWorkloads = append(hostedWorkloads, *hw)
+			}
+		}
 		if iface.Properties.NetworkSecurityGroup != nil && iface.Properties.NetworkSecurityGroup.ID != nil {
 			networkSecurityGroupId = *iface.Properties.NetworkSecurityGroup.ID
 		}
@@ -5030,6 +5247,7 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 		enableIPForwarding = llx.BoolData(false)
 		enableAcceleratedNetworking = llx.BoolData(false)
 		primary = llx.BoolData(false)
+		disableTcpStateTracking = llx.BoolData(false)
 	}
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.interface",
@@ -5049,6 +5267,13 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 			"appliedDnsServers":           llx.ArrayData(appliedDnsServers, types.String),
 			"internalDnsNameLabel":        llx.StringData(internalDnsNameLabel),
 			"ipConfigurations":            llx.ArrayData(ipConfigs, types.Dict),
+			"disableTcpStateTracking":     disableTcpStateTracking,
+			"nicType":                     llx.StringData(nicType),
+			"auxiliaryMode":               llx.StringData(auxiliaryMode),
+			"auxiliarySku":                llx.StringData(auxiliarySku),
+			"migrationPhase":              llx.StringData(migrationPhase),
+			"hostedWorkloads":             llx.ArrayData(hostedWorkloads, types.String),
+			"resourceGuid":                llx.StringData(resourceGuid),
 		})
 	if err != nil {
 		return nil, err
@@ -5060,6 +5285,8 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 	// values a full read had already stored.
 	if iface.Properties != nil {
 		mqlIface.cacheNetworkSecurityGroupID = networkSecurityGroupId
+		mqlIface.cachePrivateEndpointID = privateEndpointId
+		mqlIface.cachePrivateLinkServiceID = privateLinkServiceId
 		mqlIface.cacheIPConfigurations = iface.Properties.IPConfigurations
 	}
 	return mqlIface, nil
@@ -5067,6 +5294,8 @@ func azureInterfaceToMql(runtime *plugin.Runtime, iface network.Interface) (*mql
 
 type mqlAzureSubscriptionNetworkServiceInterfaceInternal struct {
 	cacheNetworkSecurityGroupID string
+	cachePrivateEndpointID      string
+	cachePrivateLinkServiceID   string
 	cacheIPConfigurations       []*network.InterfaceIPConfiguration
 
 	// effNsgMu guards a memoized fetch of the NIC's effective NSGs, shared by
@@ -5104,6 +5333,36 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) networkSecurityGroup() (*m
 		return nil, err
 	}
 	return res.(*mqlAzureSubscriptionNetworkServiceSecurityGroup), nil
+}
+
+// privateEndpoint resolves the private endpoint a NIC belongs to. Null on an
+// ordinary virtual machine NIC, which is the common case.
+func (a *mqlAzureSubscriptionNetworkServiceInterface) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
+	if a.cachePrivateEndpointID == "" {
+		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServicePrivateEndpoint,
+		map[string]*llx.RawData{"id": llx.StringData(a.cachePrivateEndpointID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpoint), nil
+}
+
+// privateLinkService resolves the private link service a NIC forms part of the
+// frontend for. Null on an ordinary virtual machine NIC.
+func (a *mqlAzureSubscriptionNetworkServiceInterface) privateLinkService() (*mqlAzureSubscriptionNetworkServicePrivateLinkService, error) {
+	if a.cachePrivateLinkServiceID == "" {
+		a.PrivateLinkService.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateLinkService",
+		map[string]*llx.RawData{"id": llx.StringData(a.cachePrivateLinkServiceID)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateLinkService), nil
 }
 
 // see https://github.com/Azure/azure-sdk-for-go/issues/8224
