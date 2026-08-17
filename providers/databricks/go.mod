@@ -5,7 +5,7 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.5
 
 require (
-	github.com/databricks/databricks-sdk-go v0.172.0
+	github.com/databricks/databricks-sdk-go v0.173.0
 	github.com/stretchr/testify v1.11.1
 	go.mondoo.com/mql/v13 v13.32.2
 )
