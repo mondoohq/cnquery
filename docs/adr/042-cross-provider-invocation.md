@@ -11,7 +11,7 @@ subprocesses (except `core`, which is built in). Despite that isolation, a
 resource implemented in one provider routinely needs data from a resource
 owned by another provider. The `os` provider builds the `network` provider's
 `socket` and `tls` resources to model open ports; a dozen language-package
-resources build the `core` provider's `cpe`; `aws` and `k8s` build `core`'s
+resources build the `core` provider's `cpe`; `aws` and `k8s` build `network`'s
 `certificates`. This is real, load-bearing, in-production behavior.
 
 ### Relationship to ADR 030 / ADR 031
@@ -22,14 +22,14 @@ resources build the `core` provider's `cpe`; `aws` and `k8s` build `core`'s
 *separate* asset B (`…mcpServers.first.running.tools`), resolved through a
 typed `asset<root>` value backed by recording or a fresh connect. This ADR
 addresses **cross-*provider*, same-asset** invocation: P2 answering for the
-asset P1 is already connected to. No new asset is created; the two axes are
-orthogonal in both mechanism and code surface (031 touches `types/`, `mqlc/`,
-`llx/`, and recording; this ADR touches the provider manifest, the coordinator
-gate, and plugin lifecycle).
+asset P1 is already connected to. No new asset is created, and the two axes are
+orthogonal in code surface — 031 touches `types/`, `mqlc/`, `llx/`, and
+recording; this ADR touches the provider schema, the coordinator gate, and
+plugin lifecycle.
 
 They meet at one point, and this ADR owns it. ADR 031 originally carried a
 v14/v15 rule deprecating "undeclared cross-provider calls," but supplied only
-one declaration form — the typed field forward-reference (`running
+one declaration form: the typed field forward-reference (`running
 asset<mcp>`), which covers cross-asset references only. That left every
 same-asset `CreateSharedResource` call — 35 sites across `os`, `k8s`, `aws`,
 and `vsphere` — inside the scope of an enforcement rule with no declaration
@@ -50,11 +50,11 @@ A provider calls, on its SDK-side runtime, one of:
 Neither call names a provider or a connection. The request round-trips over
 gRPC back to the coordinator process
 (`providers-sdk/v1/plugin/runtime.go:150`), lands in
-`providerCallbacks.GetData` (`providers/runtime.go:779`), and the coordinator
+`providerCallbacks.GetData` (`providers/runtime.go:824`), and the coordinator
 `Runtime` resolves it:
 
 1. `lookupResource` asks the aggregated schema which provider owns the name:
-   `coordinator.Schema().Lookup(name)` (`providers/runtime.go:997`,
+   `coordinator.Schema().Lookup(name)` (`providers/runtime.go:1042`,
    `providers-sdk/v1/resources/schema.go:125`). Every `ResourceInfo` carries a
    `Provider` string, plus `Others` for names defined by more than one
    provider.
@@ -63,18 +63,24 @@ gRPC back to the coordinator process
    asset** (`crossProviderAsset()`, `providers/runtime.go:264`).
 3. It dispatches `GetData` to that provider's connection.
 
-### The two things we want to remove
+The two calls take **different paths**, and only one of them is gated:
+`CreateSharedResource` goes through `lookupResourceProvider`
+(`providers/runtime.go:955`), which checks the whitelist at `:1020`.
+`GetSharedData` and every query-driven field access go through
+`lookupFieldProvider` (`:1066`), which starts a foreign provider at `:1173`
+with **no check at all**.
+
+### What we want to remove
 
 **1. The hardcoded whitelist.** Before step 2, the coordinator gates the
 lookup against a literal slice baked into core
-(`providers/runtime.go:940`):
+(`providers/runtime.go:986`):
 
 ```go
 crossProviderList := []string{
     "go.mondoo.com/mql/providers/core",
     "go.mondoo.com/mql/providers/network",
     "go.mondoo.com/mql/providers/os",
-    "go.mondoo.com/mql/providers/ms365",
     ...
 }
 if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Provider) {
@@ -83,177 +89,354 @@ if info.Provider != providerConn && !stringx.Contains(crossProviderList, info.Pr
 ```
 
 This is exactly backwards for a distributed provider model. A provider is a
-self-contained, independently-versioned, independently-shipped artifact — but
+self-contained, independently-versioned, independently-shipped artifact, but
 whether it may participate in cross-calling is decided by a constant in a
 *different* module (core). Adding a cross-callable provider means editing core
-and re-releasing it. The list has already accreted three eras of legacy module
-paths (`mql/...`, `cnquery/...`, `cnquery/v9/...`) with `FIXME: DEPRECATED`
-markers. It does not scale, it is not discoverable, and it couples every
-provider's capability to a core release.
+and re-releasing it.
+
+Worse, the list's own `FIXME: DEPRECATED` markers are inverted. Of the nine
+whitelisted providers, only `core` matches the current
+`go.mondoo.com/mql/providers/*` block. `network`, `os`, `ms365`, and `azure`
+match **only** the block marked "remove in v12.0"; `networkdiscovery`, `ai`,
+`ipinfo`, and `yara` match **only** the block marked "remove in v14.0". Eight
+of nine are kept alive exclusively by entries scheduled for deletion, and
+honoring the v14 marker would break four providers outright. The module path is
+not a usable identity here — see the Decision.
 
 **2. The half-built parallel mechanism.** `Provider.CrossProviderTypes`
-(`providers-sdk/v1/plugin/start.go:23`) lets a provider declare asset
+(`providers-sdk/v1/plugin/start.go:33`) lets a provider declare asset
 connection types it is willing to serve resources for. Its own doc comment
-calls it "only a hotfix" and sketches the intended end state ("each provider
-creating an asset object when it tries to call out"). Only `networkdiscovery`
-uses it (`providers/defaults.go:1060`). We have two overlapping,
-half-specified mechanisms and one hardcoded gate doing related jobs.
+calls it "only a hotfix." It is **read by nothing** — four occurrences exist
+repo-wide: the struct field, its comment, and two declaration sites
+(`providers/network/config/config.go:19` and `providers/defaults.go:1359`). Both
+declarations are also wrong. `network` names three IDs no provider has
+(`go.mondoo.com/mql/providers/{os,k8s,aws}`; the real IDs are
+`cnquery/v9/…`), followed by a "DEPRECATED" block that is a byte-identical
+duplicate of the first three. The `defaults.go` entry is a hand-edit in a
+generated file that `providerTemplate`
+(`providers-sdk/v1/util/defaults/defaults.go:99-111`) silently drops on the
+next regeneration.
 
-### The three shapes of cross-calling
+It rotted because nothing read it *and* nothing checked it. The second half is
+the fixable one.
 
-Untangling the mechanism starts with naming what actually happens between a
-primary provider **P1** (owns the asset and the current connection) and a
-secondary provider **P2**. There are three distinct interactions, and the
-current code smears them together onto one asset-cloning path:
+### Cross-calling is a dependency, not a permission
 
-- **Mode 1 — Enrichment (P1 pulls from P2, same asset).** P1 explicitly asks
-  P2 to fill in data for the *existing* asset. The asset does not change; P2
-  receives the asset context plus the resource arguments P1 supplies, and
-  answers. `os` building `network.socket` for the host it is already connected
-  to is this mode. This is what `CreateSharedResource` does today.
+The mechanism to reach for here is **dependency declaration**, not consent:
 
-- **Mode 2 — Asset creation (P1 spawns a new asset via P2).** P1 explicitly
-  asks P2 to *connect to a new asset*. P2 opens its own connection, and from
-  there behaves as a primary provider for that new asset. `os` finding a
-  container image reference on disk and handing it to the `os`/container
-  provider to connect as a *separate* asset is this mode. There is no clean
-  API for this today — `crossProviderAsset()` reuses the same asset, which is
-  wrong here. **Mode 2 is out of scope for this ADR and is owned by
-  [ADR 031](031-in-query-cross-asset-traversal.md)** — it is a new-asset
-  connect, which is exactly 031's cross-asset machinery
-  (`RuntimeFor`+`Connect`+resolve+close) reached imperatively from Go instead
-  of through a typed `asset<root>` value in a query. Specifying it separately
-  here would fork that path and, critically, bypass 031's recording-first
-  resolution, making Mode-2 assets invisible to replay. It is named here only
-  to complete the taxonomy.
+- **A provider "provides" its resources by shipping a schema.** Referencing
+  another provider's resources is all cross-calling *is*. There is no separate
+  offer to make, and no reason for the target to opt in.
+- **Several providers may provide the same resource.** `certificate` may come
+  from `network` or from someone else, so the consumer must be able to name
+  which one it means.
+- **Extension is the reverse edge and needs no permission.** Any provider may
+  add `certificate.myfield`. The origin (`network`) never learns; the schema
+  already knows the field is only ever answered by the extending provider. What
+  the extender needs is *access to the origin resource*, which is a dependency
+  on `network` — declared by the extender, in the same way.
 
-- **Mode 3 — Attachment (P2 attaches itself to P1, implicit).** The inverse of
-  Mode 1: P2 declares that it contributes resources/fields to assets primarily
-  owned by P1, and gets pulled in *implicitly* when a user queries one of those
-  fields. P1 never wrote a `CreateSharedResource` call. P2 pulls the asset and
-  resource context from P1. This is the schema-extension / `networkdiscovery →
-  network` shape, and the direction `CrossProviderTypes` was groping toward.
+So both directions are declared by the **consumer**:
 
-The whitelist and `CrossProviderTypes` fail because they try to answer "may
-these two providers cross-call?" with one boolean, when the real questions are
-"in which mode?" and "declared by whom?".
-
-Modes 1 and 3 are this ADR's subject. Mode 2 belongs to ADR 031.
+- **peer** dependency: I call resources owned by another provider
+  (`os` → `network.socket`).
+- **source** dependency: I extend another provider's resources
+  (`my-provider` → `certificate.myfield`).
 
 ## Decision
 
-Replace the centralized whitelist and the ad-hoc `CrossProviderTypes` with a
-**distributed capability declaration**: each provider declares, in its own
-manifest and schema, what cross-provider interactions it participates in and in
-which mode. The coordinator's job shrinks from *deciding policy* to *reading
-declarations and brokering the call*. No provider's cross-calling capability
-lives in core anymore.
+Delete the centralized whitelist and `CrossProviderTypes`. Replace them with a
+**consumer-side dependency declaration** in the provider's own schema, and turn
+the coordinator's gate from a policy authority into a dependency check.
 
-### Declaration model
+### Two phases, two artifacts
 
-Extend the provider `Provider` manifest (`providers-sdk/v1/plugin/start.go`,
-serialized into each `dist/<provider>.json`) with a single `CrossProvider`
-block that subsumes and replaces `CrossProviderTypes`:
+The dependency story splits cleanly into a build phase and an execution phase,
+and they need different things:
 
-```go
-type CrossProvider struct {
-    // Offers declares that this provider is willing to answer cross-provider
-    // resource requests (Mode 1 / Mode 3). Absent an entry, the provider is
-    // never auto-started to satisfy another provider's lookup.
-    Offers []CrossProviderOffer
-}
+| | needs | source |
+|---|---|---|
+| **build** | the peer's schema, to type-check references and detect the minimum version | the peer's `.lr` + `.lr.versions`, read directly |
+| **execution** | the peer's identity and version floor, to find, fetch, and dispatch to it | the consuming provider's `config.go`, carried into its manifest |
 
-type CrossProviderOffer struct {
-    // Mode is "enrich" (Mode 1: reuse the caller's asset) or "attach"
-    // (Mode 3: this provider extends the caller's asset via schema
-    // extension). Mode 2 is not declared here; it is an explicit caller API
-    // (see below).
-    Mode string
+The `.lr` file is **purely a build-time artifact**. Nothing at runtime reads it,
+and nothing at runtime needs to: by then the question is not "does this resource
+exist" but "which provider answers for it, is it installed, and is it new
+enough."
 
-    // Resources this offer covers. Empty means "any resource this provider
-    // owns in the schema" (the common case for core).
-    Resources []string `json:",omitempty"`
+This is deliberately scoped to peers that are present in the build environment.
+Every cross-provider reference today satisfies that: all 35 call sites are
+in-repo (`os`, `k8s`, `aws`, `vsphere`), and the enterprise repo has **no live
+cross-provider calls at all** (`yara`'s two `CreateSharedResource("file")` calls
+are commented out, above a `TODO` recording that they never worked). Resolving a
+peer that is not in the build environment is therefore not a use case we have,
+and is left out until it is one.
 
-    // ForConnectionTypes restricts the offer to callers whose primary asset
-    // has one of these connection types. Empty means "any caller".
-    ForConnectionTypes []string `json:",omitempty"`
+### Declaring a peer
+
+Two declarations, checked against each other.
+
+**In the `.lr`, for the build:**
+
+```
+option provider = "go.mondoo.com/cnquery/v9/providers/os"
+import network
+
+os.rootCertificates {
+  []network.certificate(content)
+  files []file
 }
 ```
 
-The coordinator builds its allow-set at schema-aggregation time from these
-declarations, keyed by resource name and caller connection type — the same
-place `Schema.Lookup` and `Dependencies` are already assembled
-(`providers-sdk/v1/resources/schema.go`). The runtime gate at
-`providers/runtime.go:975` becomes:
+The import names the peer; resolution reads `providers/network/resources/network.lr`
+and its `.lr.versions`, both of which are **committed**. (`*.resources.json` is
+*not* — `.gitignore:19,23` excludes every provider except `core`. It carries the
+same data, but only as a local build artifact, so it cannot be the build input.)
+
+Reading committed source is what makes **same-PR co-evolution** work: when a PR
+adds a resource to `network` and a caller in `os` in one change, the caller sees
+it immediately, with no intermediate artifact and no build ordering between the
+two providers. This is exactly how today's path-based import behaves, and it is
+the property worth preserving.
+
+The name replaces today's filesystem path
+(`import "../../network/resources/network.lr"`). The path was never the
+identifier — `resolve.go` already reduces it to a bare name
+(`packName := strings.TrimSuffix(path.Base(importPath), ".lr")`) and everything
+downstream keys on that name. Dropping the path deletes a derivation step rather
+than adding a mechanism, and `Resolve`'s injected `readFile` is already the seam
+where resolution plugs in.
+
+Where two providers share a name, the import binds a local alias:
+
+```
+import nw1 from 'go.mondoo.com/cnquery/v9/providers/network'
+```
+
+Usage is then normal (`nw1.certificate`). An import name that collides with a
+local top-level resource namespace is a **build error** pointing at the alias
+form; silent shadowing in either direction is worse than a one-line fix. No
+collision exists today across the seven current importer/import pairs.
+
+**In `config.go`, for execution** — the declaration of record:
 
 ```go
-// was: stringx.Contains(hardcodedCrossProviderList, info.Provider)
-if info.Provider != providerConn && !r.schema.AllowsCrossCall(info.Provider, resource, callerConnType) {
-    return ..., errors.New("provider " + info.Provider + " does not offer '" + resource + "' for cross-provider use")
+Requires: []plugin.ProviderDep{
+    {ID: "go.mondoo.com/cnquery/v9/providers/network", Name: "network", MinVersion: "13.3.0"},
 }
 ```
 
-Because the declaration ships *inside each provider's manifest*, a new
-cross-callable provider requires zero changes to core. Installing the provider
-installs its cross-call contract.
+The ID is what the runtime matches and fetches against; the name is what the
+installer resolves (`Install(upstream.Name, …)`), so both are carried.
 
-### Mode 1 — Enrichment (formalize the existing path)
+**The build cross-checks the two.** It reads `option provider` from the peer's
+`.lr` and fails if it does not match the declared ID. That check is the whole
+reason the two declarations can coexist without drifting — the failure mode that
+killed `CrossProviderTypes`, whose `network` entry has named three non-existent
+provider IDs for two major versions because nothing ever compared it to reality.
 
-Keep `CreateSharedResource` / `GetSharedData` as the caller API. The only
-behavioral change: the gate consults declarations instead of the whitelist.
-The asset handed to P2 stays the `crossProviderAsset()` clone (same asset,
-`ParentConnectionId` cleared, per the reasoning already documented at
-`providers/runtime.go:259`).
+**`core` stays implicit.** It is already excluded from schema dependencies
+(`providers-sdk/v1/mqlr/lrcore/schema.go:29`) and remains the one globally
+available provider. `import core` disappears from `os.lr`, `vsphere.lr`, and
+`mondoo.lr`.
 
-Providers that are cross-called today declare, in their manifest:
+**The import is the declaration even with no type reference in the `.lr`.**
+`os.lr` references `cpe` as a type zero times, yet `os` makes 14 Go-side
+`CreateSharedResource("cpe")` calls. `import core` is what licenses them today,
+and the same holds for any peer used only from Go.
 
-- `core`: `{Mode: "enrich"}` with empty `Resources`/`ForConnectionTypes` (it
-  serves `cpe`, `certificates`, etc. to everyone).
-- `network`: `{Mode: "enrich", ForConnectionTypes: ["ssh","local",...]}` for
-  `socket`/`tls`.
+#### Fix the dependency ID while we are here
 
-This is a pure refactor of behavior we already ship — the migration target for
-everything currently in the whitelist.
+`Schema.Dependencies` already exists and is already derived from imports, but the
+`Id` it records is wrong. `lrcore/schema.go:30` builds it as
+`strings.TrimSuffix(ast.packPaths[dep], "/resources")` — the peer's **Go package
+path**, not its provider ID:
 
-### Mode 2 — Asset creation (deferred to ADR 031)
+| source | value |
+|---|---|
+| `network.lr` `option provider` | `go.mondoo.com/cnquery/v9/providers/network` |
+| `network/config/config.go` `ID` | `go.mondoo.com/cnquery/v9/providers/network` |
+| `os.resources.json` → `dependencies.network.id` | `go.mondoo.com/mql/v13/providers/network` |
 
-Not specified here. An imperative Go-side entry point for "connect to a new
-asset through P2" should be a thin wrapper over ADR 031's cross-asset
-resolution path, so that recording-first resolution, cycle/depth guards, and
-child-runtime lifecycle are shared rather than reimplemented. Mode 2 needs no
-`Offers` declaration in any case: the gate exists to stop a provider from being
-silently co-opted onto *someone else's* asset, and creating a genuinely new
-asset is not that.
+The one field that exists to name a peer at runtime holds a string no provider
+answers to. It must read `option provider`. This is also the proof that the
+`.lr` carries everything the build phase needs to hand off — including the
+runtime identity.
 
-### Mode 3 — Attachment (declared extension, implicit call)
+### Version constraints
 
-Mode 3 is Mode 1's contract plus a *schema extension* so the call is implicit.
-P2 declares `{Mode: "attach", ForConnectionTypes: [<P1 types>]}` and defines
-`extend` resources/fields in its `.lr` (the existing `IsExtension` mechanism,
-`providers-sdk/v1/resources/schema.go:38`). When a user queries an extended
-field:
+The minimum is **detected at build and reconciled with what the author
+declared**, rather than being either purely computed or purely hand-written.
 
-1. `lookupFieldProvider` already finds the field is owned by P2, not P1.
-2. The gate sees P2 declared an `attach` offer for P1's connection type and
-   allows it.
-3. P2 connects against the `crossProviderAsset()` clone and answers — pulling
-   P1's asset and resource context exactly as Mode 1 does, but without P1
-   having written any call site.
+Detection: collect each peer's reference set — `.lr` type references **plus**
+`CreateSharedResource`/`GetSharedData` string literals in Go, since the largest
+call group (`os` → `cpe`) exists only in Go — then resolve each reference against
+the peer's `.lr.versions` (committed, one entry per resource and field) and take
+the maximum.
 
-This turns `CrossProviderTypes` (a flat list of asset types) into a typed,
-per-mode declaration, and reuses the extension machinery we already have rather
-than a parallel one. `networkdiscovery`'s existing entry becomes an `attach`
-offer.
+Reconciliation against `config.go`:
+
+- **Missing** → create it.
+- **Lower than detected** → the declaration is wrong; suggest, or fix it
+  directly.
+- **Higher than detected** → accept silently. Deliberately over-constraining is
+  legitimate and the author may know something the scan does not.
+
+The **maximum is optional and usually unset** — we have no good rules yet for
+predicting where a peer's API will break. It is authored when someone has a
+reason.
+
+**Build checks existence; runtime checks version.** This split matters because
+the two phases see different truths. Mid-PR, a newly added resource in `network`
+carries the next-patch version in `.lr.versions` (say `13.4.0`) while
+`network`'s `config.go` still says `13.3.0` — CLAUDE.md forbids bumping it in a
+feature PR. A version comparison at build would compute `min(network) = 13.4.0`,
+compare against the locally-built `13.3.0`, and fail with the resource sitting
+right there. So the build asks only *does `network.newthing` exist in the peer's
+schema*, which is exact when both providers are in one tree. The version
+constraint is checked at runtime against the **installed** peer, the only place
+a version can genuinely disagree with reality.
+
+The co-evolution case then resolves correctly through the rules above: detected
+min (`13.4.0`) exceeds the declared min, so the build raises `os` to `13.4.0`,
+which is right — `os` really does need it. **The consequence for the release
+flow is that `network` must be released at or before `os`.** Between merge and
+that release, `os` declares a floor no one can install yet.
+
+Two edges. A namespace-only root such as `openpgp` or `pkix` carries no version
+because it has no fields, and must be treated as **not a valid reference
+target** rather than as version 0, so a typo like `network.pkix` fails instead of
+validating. And when the installed peer is *older* than the declared floor, the
+reference is simply absent from its schema — that must report "your installed
+peer predates the required version," not "resource not found."
+
+
+### Peer versus source is derived
+
+Nothing declares which kind a dependency is. A provider that writes
+`extend <peer resource>` has a source dependency on that peer; one that only
+references its resources has a peer dependency. The parser already records this
+as `IsExtension` (`providers-sdk/v1/resources/schema.go:38`).
+
+The distinction matters for installation, not for permission — see below. The
+source direction carries more weight than it first appears: extending an ADR 031
+**root** resource is how a provider declares it supports a whole class of asset,
+which is what replaces the whitelist for user-issued queries.
+
+### Resolution is lazy; peers are optional
+
+A declared peer is **not** an install requirement. If the call path is never
+taken, the peer is never needed, and the coordinator already behaves this way:
+`addProvider` → `GetRunningProvider` starts a provider only when a lookup
+reaches it. When a lookup does reach one, the declaration is what tells us
+which provider to resolve and at what version.
+
+For validation runs, an opt-in flag resolves and installs every declared peer
+up front.
+
+**Source dependencies never need forcing.** An extending provider is only
+reached when someone queries the extended field, at which point the origin is
+present by definition — it owns the resource being extended.
+
+### The gate becomes a dependency check
+
+One predicate, used by **both** dispatch paths:
+
+```go
+// allowsCrossCall reports whether the connected provider declared a dependency
+// on the provider that owns `resource`.
+func (r *Runtime) allowsCrossCall(owner string, resource string) (declared bool, legacy bool)
+```
+
+- `providers/runtime.go:1020` — replaces the
+  `stringx.Contains(crossProviderList, …)` test.
+- `providers/runtime.go:1173` — the same predicate in `lookupFieldProvider`,
+  which has no check today.
+
+**Matching is on provider ID**, and works precisely because of the ID fix above.
+`info.Provider` is stamped from the owning `.lr`'s `option provider`
+(`lrcore/schema.go`), and a provider's `config.go` `ID` is the same string — so
+once `Requires` declares that ID and the build verifies it against the peer's
+`.lr`, gate matching is an exact comparison with no normalization.
+
+This is only true after the fix. Today a third string is in play — the
+`packPaths`-derived `go.mondoo.com/mql/v13/providers/network` in
+`Schema.Dependencies` — which matches neither of the other two. Reading
+`option provider` collapses the three to one, which is what makes ID viable as
+the key instead of falling back to `Name`. `Name` is still carried, because
+installation resolves by name (`Install(upstream.Name, …)`), not by ID.
+
+The legacy whitelist keeps its own ad-hoc string matching for the v14 union
+window, and is deleted with it.
+
+Three existing pre-gate bypasses are preserved unchanged: the
+`info.Provider == ""` bridging case (`:961`), the already-connected
+short-circuit (`:970` / `:1161`), and `plugin.StaticProvider` (`:974` /
+`:1150`).
+
+### The two directions cover two populations
+
+The gate sees two kinds of traffic, and the declaration model's two directions
+map onto them exactly — peer for one, source for the other.
+
+**Population 1 — provider calls provider.** `os` building `network.socket`. A Go
+call site exists and the calling provider declares a **peer** dependency.
+
+**Population 2 — a user query names another provider's resource on the current
+asset.** There is no call site and no calling provider; the *user* made the call
+at the keyboard. This is not hypothetical, and it is why `ai`, `ipinfo`, `yara`,
+and `networkdiscovery` are whitelisted at all — no in-repo Go code calls any of
+them:
+
+```
+$ mql run local -c "ipinfo.city"
+ipinfo.city: "Los Angeles"
+
+$ mql run local -c "aws.regions"
+incorrect provider for asset, not adding go.mondoo.com/cnquery/v9/providers/aws
+```
+
+Both run against the same `local` (os) asset and take the same path —
+`llx/llx.go:713` → `Runtime.CreateResource` → `lookupResourceProvider` → the gate
+at `:1020`. `ipinfo` resolves because it is whitelisted; `aws` is rejected by the
+same check that gates Go-side calls.
+
+Population 2 is what **typed roots** are for, and it is served by the **source**
+direction. Every connection declares a root resource (ADR 031), and a provider
+that supports some class of asset says so explicitly by **extending that root**.
+That extension is a source dependency: declared by the extending provider,
+needing no permission from the root's owner, with the schema already knowing the
+field is only ever answered by the extender. `ipinfo` extends the root a local
+connection exposes, and the gate then sees a declared dependency rather than a
+whitelist entry.
+
+So the whitelist's two jobs are replaced by the two directions of one model:
+
+| population | who declares | direction |
+|---|---|---|
+| provider calls provider | the calling provider | peer |
+| user query on an asset | the augmenting provider | source (root extension) |
+
+Both are consumer-side declarations in the sense that matters: the provider that
+wants the relationship declares it, and the provider being reached never
+consents and never learns.
+
+Extending a root converts a global name into a field on that root, which is a
+user-visible change to how these queries are written — and is precisely ADR 031's
+namespace rule ("v15: root-chaining with only `core` global"). It therefore rides
+the same v14-warn / v15-enforce window as everything else here. No shipped
+content in `content/` uses these providers, so the in-repo migration surface is
+zero and the warn window exists for customer queries and policies.
 
 ### What the coordinator keeps doing
 
-Brokering stays centralized — and should. The coordinator is the only process
+Brokering stays centralized, and should. The coordinator is the only process
 that sees all providers; it owns lazy start, connection reuse, the asset clone,
 and dispatch. The change is narrow: it stops being the *authority on policy*
 (the hardcoded list) and becomes a *reader of declarations*. Providers never
-talk to each other directly; every cross-call still flows P2 → coordinator →
-P1's-owned target, so recording/replay, upstream config, and feature flags
-continue to work unchanged.
+talk to each other directly; every cross-call still flows through the
+coordinator, so recording/replay, upstream config, and feature flags continue
+to work unchanged.
 
 ### Enforcement timeline (v14 → v15)
 
@@ -262,86 +445,149 @@ coordinator gate (`providers/runtime.go:1020`) — this ADR's surface — and
 because it is unenforceable without the declaration form defined above.
 
 - **v14:** an undeclared cross-provider call still resolves, but warns. The
-  gate accepts `schema.AllowsCrossCall(...)` **or** the legacy whitelist, and
-  logs when only the legacy path matched. This surfaces every missing
+  gate accepts a declared dependency **or** the legacy whitelist, and logs when
+  only the legacy path matched. On the field path (`:1173`), which allows
+  everything today, the predicate is **log-only**. This surfaces every missing
   declaration without breaking a single user.
-- **v15:** undeclared cross-provider calls no longer resolve. The whitelist and
-  `CrossProviderTypes` are deleted.
+- **v15:** undeclared cross-provider calls no longer resolve, on both paths. The
+  whitelist and `CrossProviderTypes` are deleted.
 - **Stays legal in both:** providers **extending** each other's resources with
-  new fields (the `IsExtension` mechanism), and any call covered by a
-  declaration — an `Offers` entry (same-asset, this ADR) or a typed field
+  new fields, and any call covered by a declaration — a peer import (population
+  1, this ADR), a root extension (population 2, via ADR 031), or a typed field
   forward-reference such as `running asset<mcp>` (cross-asset, ADR 031).
 
-Both declaration forms are covered by one enforcement date. The v15 cutover
-must not land until every currently-cross-called provider carries an
-equivalent declaration — see the migration plan below, which gates the
-whitelist deletion on a full release with zero legacy-only log hits.
+All declaration forms share one enforcement date, so the v15 cutover must not
+land until every cross-called provider carries one. That set is smaller than it
+looks: the enterprise repo has **no live cross-provider calls** and its four
+`extend` blocks all target `asset`, which is `core`'s and therefore implicit.
+The whitelist can retire from `mql` alone; what the enterprise providers need is
+root extensions for population 2, not peer declarations.
 
 ADR 031 keeps the **namespace** half of its original point 5: the global
 namespace narrows to `core` and everything else chains off a typed root. That
-migration is 031's to sequence and is independent of this gate.
+migration is 031's to sequence, and population 2 rides it.
 
 ## Consequences
 
 **Positive**
 
-- A provider's cross-call contract ships with the provider. Adding or removing
-  a cross-callable provider no longer touches core or requires a core release.
-- Three genuinely different interactions get three names, instead of one
-  asset-cloning path plus a boolean gate. Two of them (enrich, attach) are
-  specified here; the third (asset creation) is routed to ADR 031's existing
-  cross-asset path rather than given a parallel implementation.
+- A provider's dependencies ship with the provider. Adding a cross-callable
+  provider touches no core code and needs no core release.
+- The declaration is a dependency, so it carries version information the
+  consent model had no place for. A call to a field that does not exist at the
+  version you claim to support becomes a build error rather than a runtime null.
+- Both dispatch paths get one predicate. Today `CreateSharedResource` is gated
+  and `GetSharedData` is not, which means half of cross-provider traffic is
+  already unpoliced.
 - ADR 031's v15 rule becomes enforceable. It currently deprecates a class of
-  call for which no declaration form exists, which would strand 35 shipped
-  call sites.
-- The whitelist's accumulated legacy-module-path cruft
-  (`providers/runtime.go:951-972`) is deleted, not extended again.
-- Declarations are introspectable — `mql providers list` can show cross-call
-  offers, and CI can validate that every `CreateSharedResource` target has a
-  matching `Offers` declaration somewhere in the installed set.
+  call for which no declaration form exists, which would strand 35 shipped call
+  sites.
+- The module-path problem disappears. Name matching is immune to the
+  cnquery→mql rename and to `/vN/` variants, and the inverted `FIXME:
+  DEPRECATED` blocks stop being load-bearing.
+- Declarations are introspectable: `mql providers list` can show what a provider
+  depends on, and CI can diff declarations against actual usage.
+- The `.lr` stays a build-time artifact and the manifest a runtime one, so
+  neither phase carries data it cannot act on.
+- It fixes `Schema.Dependencies[].Id`, which today records a Go package path
+  where a provider ID belongs.
 
 **Negative / risks**
 
-- Manifest schema change: every provider's `dist/<provider>.json` regenerates.
-  This is a wide diff (mechanical, via `make providers`).
-- Migration must be careful: the whitelist and `CrossProviderTypes` must keep
-  working until every currently-cross-called provider carries an equivalent
-  `Offers` declaration, or live cross-calls (os→network, *→core) break.
-- A missing or wrong declaration turns a previously-working cross-call into a
-  runtime error. Mitigate with a CI check that scans for
-  `CreateSharedResource`/`GetSharedData` targets lacking a declaration, and by
-  keeping the old whitelist as a logged fallback for one release.
-- "Any provider can declare itself cross-callable" is more permissive than a
-  curated list. That is the intent (distributed ownership), but it means a
-  buggy provider can offer a resource it answers poorly. The gate protects the
-  *asset* (you cannot be pulled onto an asset you did not opt into), not
-  resource quality — quality stays the owning provider's responsibility, same
-  as today.
+- **`.lr` grammar change.** The import form changes for every provider that has
+  one, and `resource2goname`'s existence check (`lrcore/go.go:579`) must be
+  rebuilt against a peer schema resolved by name rather than by path.
+- **Peers must be in the build environment.** Resolution reads the peer's `.lr`
+  directly, so a provider outside the build tree cannot be depended on. No such
+  case exists today, and supporting one means shipping a resolvable schema
+  artifact — deferred until there is a use case.
+- **Retroactive ambiguity.** Installing a second provider that also provides
+  `certificate` can change what an existing query means. Mitigated by the
+  consumer always naming the peer, so the reference is resolved by declaration
+  rather than by whatever happens to be installed.
+- **Late constraint failure.** Lazy resolution surfaces a version mismatch
+  mid-query rather than at connect. Mitigated by validating eagerly at connect
+  for peers that are already installed; only genuinely unresolved peers fail
+  late.
+- **Detected minimums can outrun releases.** A co-evolution PR raises a caller's
+  floor to the peer's unreleased next-patch version, so the peer must be released
+  at or before the caller. Between merge and that release the declared floor
+  names a version nobody can install.
+- **Population 2 is a user-visible change.** Queries like `ipinfo.city` on a
+  local asset become root-chained. No shipped content is affected, so the blast
+  radius is customer queries and policies, covered by the v14 warn window.
+- A missing declaration turns a working cross-call into a runtime error at v15.
+  Mitigated by the v14 warn window and the CI check.
 
 ## Migration plan
 
-1. Add the `CrossProvider`/`Offers` manifest fields (additive, alongside the
-   existing `CrossProviderTypes`).
-2. Populate `Offers` for the current cross-called set: `core` (enrich, all),
-   `network`/`os`/`ms365`/`azure`/`ai`/`ipinfo`/`yara` (enrich, scoped),
-   `networkdiscovery` (attach). Regenerate `dist/*.json`.
-3. Change the runtime gate to `schema.AllowsCrossCall(...)` **OR** the legacy
-   whitelist (union), logging when only the legacy path matched — surfaces any
-   missing declaration without breaking users.
-4. Add the CI check (every shared-resource target has a declaration).
+1. Add the name-based `import` form and the alias form to the `.lr` grammar,
+   alongside the existing path form. Migrate the seven existing imports, and fix
+   `Schema.Dependencies[].Id` to read the peer's `option provider`.
+2. Add `Requires` to the manifest, plus the build step that detects each peer's
+   minimum from `.lr.versions` and reconciles it with `config.go` (create when
+   missing, fix when low, accept when high). Add the `option provider` vs
+   declared-ID cross-check.
+3. Change both gates to `declared || legacy`, logging when only the legacy path
+   matched. Field path is log-only.
+4. Add the CI check: diff the reference scan against declared imports, failing
+   on a call with no import and on an import with no call. Add the
+   pre-install-all-peers flag.
 5. After one release with zero "legacy-only" log hits, delete the hardcoded
-   whitelist and `CrossProviderTypes`. This is the v15 cutover; it must be
-   sequenced with ADR 031's typed-field declarations so both forms are
-   enforced together.
+   whitelist and `CrossProviderTypes`. This is the v15 cutover, and it must be
+   sequenced with ADR 031's typed-field declarations and with the enterprise
+   providers' declarations so all forms are enforced together.
+
+Steps 1–4 are the v14 line. Step 5 is v15.
+
+## Future work
+
+Neither of these is in scope, and both are named here so the design leaves room
+for them.
+
+**Generic resources ("virtual packages").** Today a consumer names a concrete
+peer. In future a consumer will be able to depend on a *generic* resource — an
+interface, shipped as a JSON-only provider that defines the contract and holds
+the context for it, which several concrete providers may satisfy. Depending on
+a generic resource works like depending on a peer, and resolution picks whichever
+installed provider satisfies the interface. This is the same shape as an Arch
+Linux virtual package, and it is what lets a policy ask for `certificate`
+without caring who supplies it.
+
+**Reverse calls.** A lazily-started peer is currently connected with a `nil`
+callback (`providers/runtime.go:1034` and `:1174`), so it physically cannot call
+back into the coordinator. Provider-level dependency cycles are legitimate and
+expected; what must be guarded is re-entering the **same resource instance** —
+the `(resource, __id)` pair that already forms the runtime cache key. Passing a
+real `providerCallbacks` is what makes that guard necessary, and both are
+deferred to a follow-up.
 
 ## Alternatives considered
 
-- **Keep the whitelist, just move it to a config file.** Still centralized;
-  still a release-coupled edit; does not distinguish the three modes. Rejected.
-- **Let providers cross-call with no gate at all.** Removes the coupling but
-  also removes the protection that a provider cannot be silently attached to an
-  asset it never opted into. The `attach` vs `enrich` distinction exists
-  precisely to keep that opt-in. Rejected.
+- **Offering-side consent declarations** (the earlier draft of this ADR). Each
+  provider would declare `Offers` with a mode and a set of caller connection
+  types, and the coordinator would gate on that consent. Rejected: providing a
+  schema is already the offer, so the consent layer is redundant; extension
+  explicitly does not need the origin's permission; and a consent model has no
+  place to put version constraints, which is the part that actually prevents
+  wrong answers.
+- **Keep the whitelist, move it to a config file.** Still centralized, still a
+  release-coupled edit, and still carries no version information. Rejected.
+- **Declare dependencies in only one of the two places.** `config.go` alone
+  leaves the build with no way to resolve `network.certificate`; the `.lr` alone
+  leaves the runtime with no provider ID to fetch and dispatch against. The two
+  phases genuinely need different data, so both declarations exist — and the
+  build cross-checks them, which is the safeguard `CrossProviderTypes` never had.
+- **Constraints on the `.lr` import line.** Rejected: the `.lr` is a build-time
+  artifact and the constraint is a runtime fact, so it would put the version
+  where nothing reads it. Detection reads `.lr.versions`; the declaration lives
+  in `config.go`.
+- **Resolve peers through `*.resources.json`.** It carries both schema and
+  version data, but `.gitignore:19,23` excludes it for every provider except
+  `core`, so it is a local build artifact. Depending on it would break fresh
+  clones, impose a build ordering between providers, and silently serve a stale
+  schema — and it would break same-PR co-evolution, the case the `.lr` route
+  exists to preserve.
 - **Direct provider-to-provider gRPC (skip the coordinator).** Breaks
   recording/replay, upstream config propagation, and connection reuse, and
   would require every provider to discover every other provider's socket.
