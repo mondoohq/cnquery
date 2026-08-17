@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 // Package checksum computes canonical, structural content checksums over llx
-// values — the shared algorithm behind the scan-content manifests of the
-// unchanged-scan short-circuit (ADR in the server repo). This package owns
+// values. They exist so that the client and the server can both tell, one
+// row at a time, whether a scan's content is identical to the previous
+// upload — and skip re-transferring or re-processing what hasn't changed
+// (the ScanContentMode* features). This package owns
 // everything expressible in llx terms: the hash writer, the canonicalization
 // of llx primitives/results, and the data/resource row checksums. Checksums
 // over types that live outside mql (cnspec's scores and risk factors) build

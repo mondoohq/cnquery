@@ -89,14 +89,17 @@ func GetFeatures(ctx context.Context) Features {
 	return f
 }
 
-// ScanContentMode returns the single active scan-content mode feature
-// (unchanged-scan short-circuit ADR), or 0 when no mode is active — the
-// explicit form of the modes' mutual exclusivity. The server sends at most
-// one mode, but nothing type-level enforces that on arbitrary Features
-// values, so precedence is defined here: ScanContentModeNoCompare is the
-// kill switch and wins over everything; the remaining modes rank by how
-// much they enable (client_compare > server_compare > shadow), so a
-// contradictory feature set degrades predictably rather than arbitrarily.
+// ScanContentMode returns the single active scan-content mode feature, or 0
+// when no mode is active — the explicit form of the modes' mutual
+// exclusivity. The scan-content modes (see the ScanContentMode* feature
+// docs) let the client and server detect that a scan's content is identical
+// to the previous upload and skip redundant transfer and processing. The
+// server sends at most one mode, but nothing type-level enforces that on
+// arbitrary Features values, so precedence is defined here:
+// ScanContentModeNoCompare is the kill switch and wins over everything; the
+// remaining modes rank by how much they enable (client_compare >
+// server_compare > shadow), so a contradictory feature set degrades
+// predictably rather than arbitrarily.
 func (f Features) ScanContentMode() Feature {
 	switch {
 	case f.IsActive(ScanContentModeNoCompare):
@@ -112,12 +115,12 @@ func (f Features) ScanContentMode() Feature {
 	}
 }
 
-// ScanContentChecksumsActive reports whether the client should compute scan
-// content row checksums while writing the scandb (unchanged-scan
-// short-circuit ADR). ScanContentModeNoCompare is the kill switch and
-// overrides everything - including, once comparison ships
-// enabled-by-default, the client's own default - so every mode except it
-// (and off) computes checksums.
+// ScanContentChecksumsActive reports whether the client should compute a
+// checksum for every row while writing the scan database — the raw material
+// that lets either side detect an unchanged scan and skip redundant work.
+// ScanContentModeNoCompare is the kill switch and overrides everything -
+// including, once comparison ships enabled-by-default, the client's own
+// default - so every mode except it (and off) computes checksums.
 func (f Features) ScanContentChecksumsActive() bool {
 	switch f.ScanContentMode() {
 	case ScanContentModeShadow, ScanContentModeServerCompare, ScanContentModeClientCompare:

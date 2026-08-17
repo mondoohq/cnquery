@@ -97,17 +97,17 @@ const (
 	// status: new
 	TerraformResolveVars Feature = 17
 
-	// Server-activated scan-content mode (unchanged-scan short-circuit ADR): compute row/kind checksums while writing the scandb and stamp them into its metadata. Shadow changes nothing else - every scan still uploads in full.
+	// Server-activated scan-content mode. Most scans of an unchanged machine produce exactly the same results as the previous scan; these modes let both sides detect that and skip redundant transfer and processing. In shadow, the client computes a checksum for every row while writing the scan database and records the checksum algorithm version in its metadata - nothing else changes, every scan still uploads and is processed in full. The server uses the checksums to measure, per upload, whether content actually changed.
 	// start:  v13.x
 	// status: new
 	ScanContentModeShadow Feature = 18
 
-	// Server-activated scan-content mode: checksums computed and written; the server short-circuits ingest for unchanged uploads. Client behavior is identical to shadow.
+	// Server-activated scan-content mode: row checksums are computed and written as in shadow, and the server additionally skips reprocessing an upload whose rows are identical to the previous scan's. Client behavior is identical to shadow.
 	// start:  v13.x
 	// status: new
 	ScanContentModeServerCompare Feature = 19
 
-	// Server-activated scan-content mode: checksums computed and written, and the client may pull the staged manifest, diff rows, and skip the upload PUT when row-identical, completing with unchanged=true.
+	// Server-activated scan-content mode: row checksums as in shadow, and the client may additionally download a small per-row checksum summary (the manifest) of its previous upload, compare locally, and skip the upload entirely when every row is identical - completing the scan with unchanged=true instead of a PUT.
 	// start:  v13.x
 	// status: new
 	ScanContentModeClientCompare Feature = 20
