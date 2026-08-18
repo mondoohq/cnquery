@@ -235,6 +235,14 @@ func directoryObjectDisplayName(additionalData map[string]any) string {
 	return ""
 }
 
+// displayNamer matches every concrete directory type the Graph discriminator
+// produces that carries a typed displayName -- user, group, servicePrincipal,
+// device and so on. Matching on the accessor rather than enumerating the types
+// keeps this working when a principal turns out to be a kind we did not list.
+type displayNamer interface {
+	GetDisplayName() *string
+}
+
 // directoryPrincipalInfo derives the short principal type (e.g. "user",
 // "group", "servicePrincipal") and display name for a directory principal,
 // such as the assignee on a role assignment. Both values are best-effort and
@@ -246,7 +254,20 @@ func directoryPrincipalInfo(p models.DirectoryObjectable) (principalType string,
 	if t := normalizeOwnerType(p.GetOdataType()); t != nil {
 		principalType = *t
 	}
-	principalName = directoryObjectDisplayName(p.GetAdditionalData())
+	// An $expand-ed principal is deserialized through the discriminator, which
+	// builds a concrete type (*models.User, *models.Group, ...) where
+	// displayName is a typed property and so never reaches AdditionalData --
+	// leaving the bag empty and the name blank. Read the typed accessor first
+	// and keep the bag as the fallback for a bare DirectoryObject, which has no
+	// typed displayName at all.
+	if named, ok := p.(displayNamer); ok {
+		if n := named.GetDisplayName(); n != nil {
+			principalName = *n
+		}
+	}
+	if principalName == "" {
+		principalName = directoryObjectDisplayName(p.GetAdditionalData())
+	}
 	return principalType, principalName
 }
 
