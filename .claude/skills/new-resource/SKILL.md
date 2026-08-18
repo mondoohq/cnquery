@@ -113,6 +113,14 @@ Each of these is in CLAUDE.md. Each still gets walked into, because the failure 
 
 The two are otherwise the same shape, so the field is the whole difference. `os.lr` is split almost evenly — **32** resources taking a path declare the field and accept the named form, **41** do not and are positional-only — which means guessing gets it wrong about half the time. `sshd.config`, `mysql.conf`, `mariadb.conf`, `bind9`, `nginx.conf`, `apache2.conf`, `chrony.conf`, `ntp.conf`, `postgresql.conf` and every `parse.*` reach their file through `file()` and declare no `path`; `fstab`, `java.keystore`, `mount.point`, `registrykey` and most `*.packages` declare it and work either way.
 
+It is a property of **each argument**, not of the resource. `parse.ini` declares `delimiter` and not `path`, so the two halves of one init behave differently, and mixing is allowed:
+
+```
+parse.ini("/tmp/x.ini")                      # works
+parse.ini(path: "/tmp/x.ini")                # does not have a field named path
+parse.ini("/tmp/x.ini", delimiter: "=")      # works: positional path, named delimiter
+```
+
 Check before writing the doc comment, and run the form you wrote:
 
 ```bash
