@@ -11,6 +11,46 @@ import (
 	"github.com/microsoftgraph/msgraph-sdk-go/models/odataerrors"
 )
 
+// graphErrorCode returns the Microsoft Graph error code carried by an
+// ODataError -- "Request_ResourceNotFound", "Authorization_RequestDenied" and
+// so on -- or "" when the error is not an ODataError or carries no code.
+// Both the v1 and the beta SDK model the payload separately, so both are
+// checked.
+func graphErrorCode(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	var betaOdataErr *betaodataerrors.ODataError
+	if errors.As(err, &betaOdataErr) && betaOdataErr != nil {
+		if payload := betaOdataErr.GetErrorEscaped(); payload != nil {
+			if code := payload.GetCode(); code != nil {
+				return *code
+			}
+		}
+	}
+
+	var oDataErr *odataerrors.ODataError
+	if errors.As(err, &oDataErr) && oDataErr != nil {
+		if payload := oDataErr.GetErrorEscaped(); payload != nil {
+			if code := payload.GetCode(); code != nil {
+				return *code
+			}
+		}
+	}
+
+	return ""
+}
+
+// isResourceNotFound reports whether Graph rejected the request because a
+// referenced directory object no longer exists. Graph raises this for the whole
+// request when an $expand cannot resolve one of its targets, so callers that
+// expand a reference need it to tell a dangling reference apart from a real
+// failure.
+func isResourceNotFound(err error) bool {
+	return graphErrorCode(err) == "Request_ResourceNotFound"
+}
+
 func transformError(err error) error {
 	var betaOdataErr *betaodataerrors.ODataError
 	if errors.As(err, &betaOdataErr) {

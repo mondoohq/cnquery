@@ -231,6 +231,19 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]any, error) 
 	ctx := context.Background()
 	resp, err := graphClient.RoleManagement().Directory().RoleAssignments().Get(ctx, requestConfig)
 	if err != nil {
+		// Graph answers Request_ResourceNotFound when the role definition has
+		// no directory role behind it to hold assignments. Several built-in
+		// definitions are templates a tenant never instantiates, and they are
+		// returned by roleDefinitions all the same, so this is reachable on
+		// every tenant. It means "this role has no assignments to enumerate",
+		// not "the request failed" -- and returning the error would fail the
+		// caller's whole role list, since assignments is resolved per role.
+		if isResourceNotFound(err) {
+			log.Debug().
+				Str("roleDefinitionId", roleDefinitionId).
+				Msg("ms365> role definition has no assignable directory role; reporting no assignments")
+			return []any{}, nil
+		}
 		return nil, transformError(err)
 	}
 	roleAssignments, err := iterate[models.UnifiedRoleAssignmentable](ctx, resp, graphClient.GetAdapter(), models.CreateUnifiedRoleAssignmentCollectionResponseFromDiscriminatorValue)
