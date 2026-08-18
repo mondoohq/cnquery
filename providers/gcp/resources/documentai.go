@@ -266,6 +266,18 @@ func initGcpProjectDocumentaiServiceProcessorVersion(runtime *plugin.Runtime, ar
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
+	projectId := parseProjectFromPath(name)
+	if projectId == "" {
+		return nil, nil, fmt.Errorf("cannot determine project from processor version name %q", name)
+	}
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. Memoized per project, so this is free after the first caller.
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_documentai); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Document AI API is not enabled on project " + projectId)
+	}
+
 	creds, err := conn.Credentials(documentai.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
