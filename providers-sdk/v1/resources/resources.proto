@@ -48,6 +48,9 @@ message Init {
 }
 
 message ResourceInfo {
+  // 25 = min_mondoo_version, removed in v14 (superseded by min_provider_version)
+  reserved 25;
+
   // Canonical resource id. When a ResourceInfo is reached via an alias entry
   // in Schema.resources, `id` is the original (aliased-to) resource name, not
   // the alias key. Consumers that need the lookup key should use the map key
@@ -73,14 +76,12 @@ message ResourceInfo {
   repeated ResourceInfo others = 29;
 
   string maturity = 32;
-
-  // DEPRECATED: remove in v14, not used anymore as of v13.
-  // We now use min_provider_version to show what providers we require.
-  string min_mondoo_version = 25 [deprecated = true];
-  // ^^
 }
 
 message Field {
+  // 23 = min_mondoo_version, removed in v14 (superseded by min_provider_version)
+  reserved 23;
+
   string name = 1;
   string type = 2;
   bool is_mandatory = 3;
@@ -90,10 +91,6 @@ message Field {
   bool is_private = 22;
   string min_provider_version = 30;
   string provider = 27;
-
-  // DEPRECATED: remove in v14, not used anymore as of v13.
-  // We now use min_provider_version to show what providers we require.
-  string min_mondoo_version = 23 [deprecated = true];
   bool is_implicit_resource = 24;
   bool is_embedded = 25;
   string maturity = 26;

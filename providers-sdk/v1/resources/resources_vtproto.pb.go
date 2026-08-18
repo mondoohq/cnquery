@@ -392,15 +392,6 @@ func (m *ResourceInfo) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xd2
 	}
-	if len(m.MinMondooVersion) > 0 {
-		i -= len(m.MinMondooVersion)
-		copy(dAtA[i:], m.MinMondooVersion)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.MinMondooVersion)))
-		i--
-		dAtA[i] = 0x1
-		i--
-		dAtA[i] = 0xca
-	}
 	if m.Private {
 		i--
 		if m.Private {
@@ -585,15 +576,6 @@ func (m *Field) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xc0
-	}
-	if len(m.MinMondooVersion) > 0 {
-		i -= len(m.MinMondooVersion)
-		copy(dAtA[i:], m.MinMondooVersion)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.MinMondooVersion)))
-		i--
-		dAtA[i] = 0x1
-		i--
-		dAtA[i] = 0xba
 	}
 	if m.IsPrivate {
 		i--
@@ -816,10 +798,6 @@ func (m *ResourceInfo) SizeVT() (n int) {
 	if m.Private {
 		n += 3
 	}
-	l = len(m.MinMondooVersion)
-	if l > 0 {
-		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
 	l = len(m.Defaults)
 	if l > 0 {
 		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
@@ -886,10 +864,6 @@ func (m *Field) SizeVT() (n int) {
 	}
 	if m.IsPrivate {
 		n += 3
-	}
-	l = len(m.MinMondooVersion)
-	if l > 0 {
-		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	if m.IsImplicitResource {
 		n += 3
@@ -2052,38 +2026,6 @@ func (m *ResourceInfo) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 			m.Private = bool(v != 0)
-		case 25:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinMondooVersion", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MinMondooVersion = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 26:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Defaults", wireType)
@@ -2549,38 +2491,6 @@ func (m *Field) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 			m.IsPrivate = bool(v != 0)
-		case 23:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinMondooVersion", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return protohelpers.ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MinMondooVersion = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 24:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsImplicitResource", wireType)
