@@ -552,7 +552,7 @@ func init() {
 			Create: createGcpFolders,
 		},
 		"gcp.project.redisService": {
-			// to override args, implement: initGcpProjectRedisService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectRedisService,
 			Create: createGcpProjectRedisService,
 		},
 		"gcp.project.redisService.instance": {
@@ -904,7 +904,7 @@ func init() {
 			Create: createGcpProjectDnsServiceResponsePolicy,
 		},
 		"gcp.project.gkeService": {
-			// to override args, implement: initGcpProjectGkeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectGkeService,
 			Create: createGcpProjectGkeService,
 		},
 		"gcp.project.gkeService.cluster": {
@@ -1636,7 +1636,7 @@ func init() {
 			Create: createGcpProjectCloudTasksServiceQueue,
 		},
 		"gcp.project.cloudSchedulerService": {
-			// to override args, implement: initGcpProjectCloudSchedulerService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initGcpProjectCloudSchedulerService,
 			Create: createGcpProjectCloudSchedulerService,
 		},
 		"gcp.project.cloudSchedulerService.job": {
