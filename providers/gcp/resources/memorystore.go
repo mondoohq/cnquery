@@ -328,6 +328,15 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locRaw.Value.(string), name)
 	}
 
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. Placed here rather than earlier because projectId is only
+	// known once the name has been resolved. Memoized per project.
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_memorystore); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Memorystore API is not enabled on project " + projectId)
+	}
+
 	inst, err := client.GetInstance(ctx, &memorystorepb.GetInstanceRequest{Name: fullName})
 	if err != nil {
 		return nil, nil, err
