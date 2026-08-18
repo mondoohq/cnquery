@@ -44,3 +44,47 @@ func TestAllowsAnyHost(t *testing.T) {
 		}
 	}
 }
+
+// TestStringList covers the two shapes system.users.auth_type actually takes:
+// a scalar Enum8 up to the 24.8 LTS line, and an Array(Enum8) from 25.x. The
+// error cases matter as much as the happy ones -- an unrecognised shape read as
+// an empty list would make requiresCredential report a password-less account as
+// requiring a credential.
+func TestStringList(t *testing.T) {
+	cases := []struct {
+		name    string
+		in      any
+		want    []string
+		wantErr bool
+	}{
+		{"array, as 25.x returns it", []string{"sha256_password"}, []string{"sha256_password"}, false},
+		{"array with several methods", []string{"sha256_password", "kerberos"}, []string{"sha256_password", "kerberos"}, false},
+		{"scalar, as 24.8 returns it", "plaintext_password", []string{"plaintext_password"}, false},
+		{"empty scalar is no entry", "", nil, false},
+		{"nil column", nil, nil, false},
+		{"driver any-slice", []any{"no_password"}, []string{"no_password"}, false},
+		{"empty array stays empty", []string{}, []string{}, false},
+		{"unknown type errors rather than reading as empty", 42, nil, true},
+		{"mixed any-slice errors", []any{"ldap", 7}, nil, true},
+	}
+	for _, c := range cases {
+		got, err := stringList("auth_type", c.in)
+		if (err != nil) != c.wantErr {
+			t.Errorf("%s: stringList(%v) error = %v, wantErr %v", c.name, c.in, err, c.wantErr)
+			continue
+		}
+		if c.wantErr {
+			continue
+		}
+		if len(got) != len(c.want) {
+			t.Errorf("%s: stringList(%v) = %v, want %v", c.name, c.in, got, c.want)
+			continue
+		}
+		for i := range got {
+			if got[i] != c.want[i] {
+				t.Errorf("%s: stringList(%v) = %v, want %v", c.name, c.in, got, c.want)
+				break
+			}
+		}
+	}
+}
