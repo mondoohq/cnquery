@@ -289,10 +289,19 @@ func canonPrimitive(h *Hasher, p *llx.Primitive, depth int) error {
 // CanonResult hashes an llx.Result's error and data. The CodeId is NOT
 // hashed here — callers hash the row key themselves (it is the map key /
 // primary key at every call site).
+//
+// A nil Result folds exactly like the zero Result. proto3 maps cannot
+// represent a nil message value, so a nil inside an in-memory result map
+// round-trips through marshal/unmarshal as a non-nil empty Result: nil and
+// zero are one value on the wire, and hashing them differently would make
+// the same logical row checksum differently before and after storage — the
+// exact divergence that breaks write-time emission against a recompute
+// from the stored row. The fold direction (nil adopts the zero encoding,
+// never the reverse) is deliberate: decoded rows can never contain a nil,
+// so no checksum of stored data moves and AlgoVersion stays at "1".
 func CanonResult(h *Hasher, r *llx.Result) error {
 	if r == nil {
-		h.Str("<nil>")
-		return nil
+		r = &llx.Result{}
 	}
 	h.Str(r.Error)
 	return CanonPrimitive(h, r.Data)
