@@ -748,12 +748,8 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	// resource views of the policies above, decoded from the same payload (see
 	// ms365_exchange_policies.go). The deprecated []dict accessors keep
 	// returning every property; these expose the security-relevant subset.
-	//
-	// assignPolicies mirrors the null/empty distinction used by the other typed
-	// resources above: a field absent from the report (isNull) becomes a null
-	// value rather than an empty list. The isNull check must be made by the
-	// caller on the concrete report field, since a nil []any boxed into an
-	// `any` parameter would no longer compare equal to nil.
+	// They go through exchangeNullableList for the same absent-vs-empty
+	// distinction as the raw dict fields above.
 
 	transportRules, transportRulesErr := convertTransportRules(r, report.TransportRule)
 	r.TransportRules = exchangeNullableList(isAbsentSection(report.TransportRule), transportRules, transportRulesErr)
