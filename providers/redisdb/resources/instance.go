@@ -60,7 +60,6 @@ func initRedisdbInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 	args["mode"] = llx.StringData(mode)
 	args["os"] = llx.StringData(info["os"])
 	args["runId"] = llx.StringData(info["run_id"])
-	args["port"] = llx.IntData(atoiOr(info["tcp_port"], atoiOr(cfg["port"], 0)))
 
 	res, err := CreateResource(runtime, "redisdb.instance", args)
 	if err != nil {
@@ -83,6 +82,7 @@ func (r *mqlRedisdbInstance) setConfigFields(cfg map[string]string, readable boo
 		r.Bind = plugin.TValue[[]any]{State: null}
 		r.BindsAllInterfaces = plugin.TValue[bool]{State: null}
 		r.RequirepassSet = plugin.TValue[bool]{State: null}
+		r.Port = plugin.TValue[int64]{State: null}
 		r.TlsPort = plugin.TValue[int64]{State: null}
 		r.TlsEnabled = plugin.TValue[bool]{State: null}
 		r.TlsAuthClients = plugin.TValue[string]{State: null}
@@ -102,6 +102,12 @@ func (r *mqlRedisdbInstance) setConfigFields(cfg map[string]string, readable boo
 	r.Bind = plugin.TValue[[]any]{Data: bindList, State: set}
 	r.BindsAllInterfaces = plugin.TValue[bool]{Data: bindsAll(bind), State: set}
 	r.RequirepassSet = plugin.TValue[bool]{Data: cfg["requirepass"] != "", State: set}
+	// The configured plaintext port, not the port the server happens to be
+	// serving on. INFO's tcp_port reports whichever listener is active, so on a
+	// TLS-only server -- "port 0" with a TLS listener bound -- it reports the
+	// TLS port, and reading it here would make a correctly configured server
+	// indistinguishable from one still accepting cleartext connections.
+	r.Port = plugin.TValue[int64]{Data: atoiOr(cfg["port"], 0), State: set}
 	r.TlsPort = plugin.TValue[int64]{Data: tlsPort, State: set}
 	r.TlsEnabled = plugin.TValue[bool]{Data: tlsPort != 0, State: set}
 	r.TlsAuthClients = plugin.TValue[string]{Data: cfg["tls-auth-clients"], State: set}
