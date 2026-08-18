@@ -447,7 +447,6 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 	var mqlCloudAppSecurity plugin.Resource
 	var mqlPersistentBrowser plugin.Resource
 	var mqlAppEnforcedRestrictions plugin.Resource
-	var mqlSecureSignInSession plugin.Resource
 
 	// Create signInFrequency resource
 	if sessionControls != nil && sessionControls.GetSignInFrequency() != nil {
@@ -516,17 +515,14 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 		}
 	}
 
-	// Create secureSignInSession resource
-	if sessionControls != nil && sessionControls.GetDisableResilienceDefaults() != nil {
-		secureSignInSessionData := map[string]*llx.RawData{
-			"__id":                      llx.StringData(policyId + "_session_secureSignInSession"),
-			"disableResilienceDefaults": llx.BoolDataPtr(sessionControls.GetDisableResilienceDefaults()),
-		}
-		var err error
-		mqlSecureSignInSession, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls.secureSignInSession", secureSignInSessionData)
-		if err != nil {
-			return nil, err
-		}
+	// secureSignInSession is a dict, so it has to be built from JSON-native
+	// values. It previously created a resource type that does not exist, out of
+	// the unrelated disableResilienceDefaults scalar -- see secureSignInSessionDict.
+	secureSignInSession := secureSignInSessionDict(sessionControls)
+
+	var disableResilienceDefaults *bool
+	if sessionControls != nil {
+		disableResilienceDefaults = sessionControls.GetDisableResilienceDefaults()
 	}
 
 	return CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.sessionControls",
@@ -537,8 +533,30 @@ func (a *mqlMicrosoftConditionalAccess) createSessionControlsResource(
 			"cloudAppSecurity":                llx.ResourceData(mqlCloudAppSecurity, "microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"),
 			"persistentBrowser":               llx.ResourceData(mqlPersistentBrowser, "microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"),
 			"applicationEnforcedRestrictions": llx.ResourceData(mqlAppEnforcedRestrictions, "microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"),
-			"secureSignInSession":             llx.ResourceData(mqlSecureSignInSession, "microsoft.conditionalAccess.policy.sessionControls.secureSignInSession"),
+			"secureSignInSession":             llx.DictData(secureSignInSession),
+			"disableResilienceDefaults":       llx.BoolDataPtr(disableResilienceDefaults),
 		})
+}
+
+// secureSignInSessionDict renders the secureSignInSession session control as a
+// JSON-native dict, or nil when the policy does not set the control.
+//
+// The .lr declares this field as a dict, so its value must be built from
+// JSON-native types: a dict holding an llx resource fails conversion on read
+// with "unsupported child type". It is sourced from GetSecureSignInSession,
+// the property the field is named after -- disableResilienceDefaults is a
+// separate scalar on sessionControls and is surfaced as its own field.
+func secureSignInSessionDict(sessionControls models.ConditionalAccessSessionControlsable) map[string]any {
+	if sessionControls == nil {
+		return nil
+	}
+	control := sessionControls.GetSecureSignInSession()
+	if control == nil {
+		return nil
+	}
+	return map[string]any{
+		"isEnabled": convert.ToValue(control.GetIsEnabled()),
+	}
 }
 
 func convertEnumCollectionToStrings[T fmt.Stringer](enums []T) []string {

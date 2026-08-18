@@ -1655,13 +1655,16 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetCloudAppSecurity()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity"))
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetPersistentBrowser()).ToDataRes(types.Dict)
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetPersistentBrowser()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.sessionControls.persistentBrowser"))
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetApplicationEnforcedRestrictions()).ToDataRes(types.Resource("microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions"))
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.secureSignInSession": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetSecureSignInSession()).ToDataRes(types.Dict)
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.disableResilienceDefaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftConditionalAccessPolicySessionControls).GetDisableResilienceDefaults()).ToDataRes(types.Bool)
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftConditionalAccessIpNamedLocation).GetId()).ToDataRes(types.String)
@@ -6728,7 +6731,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.persistentBrowser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).PersistentBrowser, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).PersistentBrowser, ok = plugin.RawToTValue[*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6737,6 +6740,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.conditionalAccess.policy.sessionControls.secureSignInSession": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).SecureSignInSession, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.conditionalAccess.policy.sessionControls.disableResilienceDefaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftConditionalAccessPolicySessionControls).DisableResilienceDefaults, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.conditionalAccess.ipNamedLocation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16082,9 +16089,10 @@ type mqlMicrosoftConditionalAccessPolicySessionControls struct {
 	Id                              plugin.TValue[string]
 	SignInFrequency                 plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsSignInFrequency]
 	CloudAppSecurity                plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsCloudAppSecurity]
-	PersistentBrowser               plugin.TValue[any]
+	PersistentBrowser               plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser]
 	ApplicationEnforcedRestrictions plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsApplicationEnforcedRestrictions]
 	SecureSignInSession             plugin.TValue[any]
+	DisableResilienceDefaults       plugin.TValue[bool]
 }
 
 // createMicrosoftConditionalAccessPolicySessionControls creates a new instance of this resource
@@ -16136,7 +16144,7 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetCloudAppSecurity
 	return &c.CloudAppSecurity
 }
 
-func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetPersistentBrowser() *plugin.TValue[any] {
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetPersistentBrowser() *plugin.TValue[*mqlMicrosoftConditionalAccessPolicySessionControlsPersistentBrowser] {
 	return &c.PersistentBrowser
 }
 
@@ -16146,6 +16154,10 @@ func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetApplicationEnfor
 
 func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetSecureSignInSession() *plugin.TValue[any] {
 	return &c.SecureSignInSession
+}
+
+func (c *mqlMicrosoftConditionalAccessPolicySessionControls) GetDisableResilienceDefaults() *plugin.TValue[bool] {
+	return &c.DisableResilienceDefaults
 }
 
 // mqlMicrosoftConditionalAccessIpNamedLocation for the microsoft.conditionalAccess.ipNamedLocation resource
