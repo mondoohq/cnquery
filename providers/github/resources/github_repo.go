@@ -1597,8 +1597,10 @@ func (g *mqlGithubRepository) allFiles() ([]any, error) {
 
 	tree, _, err := conn.Client().Git.GetTree(conn.Context(), ownerLogin, repoName, ref, true)
 	if err != nil {
-		// An empty repository has no tree to read.
-		if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "409") {
+		// An empty repository has no tree to read: 404 when the ref does not
+		// resolve, 409 when the repository carries no commits.
+		switch githubResponseStatus(err) {
+		case http.StatusNotFound, http.StatusConflict:
 			return []any{}, nil
 		}
 		log.Error().Err(err).Msg("unable to get repository tree")
@@ -1612,7 +1614,7 @@ func (g *mqlGithubRepository) allFiles() ([]any, error) {
 			Msg("repository tree was truncated by the GitHub API, the file listing is incomplete")
 	}
 
-	res := []any{}
+	res := make([]any, 0, len(tree.Entries))
 	for i := range tree.Entries {
 		entryPath := convert.ToValue(tree.Entries[i].Path)
 		fileType := gitTreeEntryType(convert.ToValue(tree.Entries[i].Type))
