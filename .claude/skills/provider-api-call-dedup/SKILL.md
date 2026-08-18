@@ -43,6 +43,13 @@ the phases below address it. It is also cheaper to find and worth more —
 26.7% of one provider's traffic against the 5% the caching work recovered — so
 check it first. See *Check this first* below.
 
+**A fourth class, which none of the analysis below can find: work repeated per
+asset in the connection lifecycle.** Not an init, not an accessor, not the
+resource cache — something a provider redoes every time it builds a connection
+or a client for another asset. In three of five providers audited this was the
+single largest source of waste, and in every one of those the static passes came
+back clean. See *The class the classifiers cannot see*.
+
 ## The parent-child cache model
 
 Worth understanding on its own, not just for init migration: it governs every
@@ -245,6 +252,66 @@ differences; in the source provider all 14,557 score tuples were byte-identical
 while calls fell 80.8%, and the only change was 34 *fewer* "provider returned no
 data and no error" warnings — the wreckage of resources the bug had fabricated.
 
+## The class the classifiers cannot see
+
+Phases 2 and 3 read init and accessor *shapes*. A provider can pass both
+perfectly and still spend most of its calls re-doing per-asset work, because
+that work lives in connection setup rather than in a resource. This has been the
+biggest single finding in three of five providers audited. In two of them the
+classifiers reported a clean sweep; in the third they reported work and a
+too-hasty reading of it produced the wrong conclusion:
+
+| provider | static audit | what a scan found |
+|---|---|---|
+| gcp | classifier flagged 17 API-CALL inits; reading a few, all resolving from lists, produced "this provider is immune" | 1,050 calls, 40% of traffic, from the 6 that did not |
+| gitlab | 0 API-CALL inits, 0 INLINE accessors, no asset-identity adoption | 110 of 149 calls: discovery re-ran for every asset it produced |
+| vsphere | 0 API-CALL inits, 0 INLINE accessors | 550 of 1,529 calls: an esxcli executor rebuilt per command |
+
+None of those is an init or accessor defect. They are:
+
+- a **discovery guard that never fired**, because `inventory.WithoutDiscovery()`
+  clones a config with `Discover` set to an empty `&Discovery{}` rather than nil,
+  and the provider checked the pointer instead of `Targets`
+- a **client rebuilt per call** whose constructor itself costs round trips
+- a **helper that resolves from a list for some resources and not others**, where
+  reading a sample of the former is what produced the wrong conclusion
+
+**The signature is arithmetic.** Divide total calls by asset count. If some URL
+appears exactly once per asset, or the total is far above what the resource
+count justifies, the waste is per-asset:
+
+```bash
+grep "api call" scan.log | sed -E 's/.*url=([^ ]+).*/\1/' | sort | uniq -c | sort -rn | head
+grep -c "scan complete asset" scan.log
+```
+
+`37 /groups/acme/subgroups` next to `assets=37` is the whole diagnosis.
+
+**Then separate discovery from scanning.** Find the line number of the first
+completed asset and count calls either side. Work that belongs to discovery but
+appears after it has started scanning is being repeated per asset:
+
+```bash
+first=$(grep -n "scan complete asset" scan.log | head -1 | cut -d: -f1)
+grep -n "api call" scan.log | cut -d: -f1 | awk -v f=$first '{if($1<f) b++; else a++} END{print "discovery:", b, " scanning:", a}'
+```
+
+**And read the log around one occurrence.** The per-asset sequence is usually
+unmistakable once seen — a new runtime, then the same three setup calls:
+
+```
+DBG Started a new runtime (35 total)
+DBG finding group id=5409231                        → GET /groups/5409231
+DBG calling list subgroups with acme                → GET /groups/acme/subgroups
+DBG calling list descendant groups with acme        → GET /groups/acme/descendant_groups
+```
+
+A provider with no API tracing cannot be audited this way at all. Adding a
+round-tripper that logs method, path, status and duration is step one, not
+optional — gitlab and vsphere both needed one before anything could be measured,
+and ms365 still has none. Drop the query string: it carries pagination cursors
+and sometimes tokens.
+
 ## Phase 1 — Measure before touching anything
 
 Everything below is worthless without a before/after number. Providers log
@@ -284,6 +351,14 @@ never enters the init and no init-level change can move its numbers. Verify the
 path reaches your code before concluding anything from a flat A/B.
 
 ## Phase 2 — Classify every init
+
+**A clean result here is not a conclusion, and neither is a sampled one.** Two of
+five providers audited scored zero on every bucket and still had a large
+per-asset defect. A third scored 17 API-CALL inits, of which a sample read as
+harmless — the six not sampled were 40% of its traffic. Treat the classifiers as
+a way to find *some* work, never as evidence there is none, and read every entry
+they flag rather than enough to form an impression.
+
 
 `classify-inits.awk` sorts a provider's init functions into three buckets:
 
