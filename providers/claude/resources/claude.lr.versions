@@ -137,7 +137,6 @@ claude.organization.costEntry.endingAt 13.0.0
 claude.organization.costEntry.model 13.0.0
 claude.organization.costEntry.startingAt 13.0.0
 claude.organization.costEntry.workspace 13.0.13
-claude.organization.costEntry.workspaceId 13.0.0
 claude.organization.costReport 13.0.0
 claude.organization.id 13.0.0
 claude.organization.invite 13.0.0
@@ -172,7 +171,6 @@ claude.organization.usageEntry.serviceTier 13.0.0
 claude.organization.usageEntry.startingAt 13.0.0
 claude.organization.usageEntry.uncachedInputTokens 13.0.0
 claude.organization.usageEntry.workspace 13.0.13
-claude.organization.usageEntry.workspaceId 13.0.0
 claude.organization.usageReport 13.0.0
 claude.organization.workspace 13.0.0
 claude.organization.workspace.allowedInferenceGeos 13.0.0
@@ -183,9 +181,7 @@ claude.organization.workspace.displayColor 13.0.0
 claude.organization.workspace.id 13.0.0
 claude.organization.workspace.member 13.0.0
 claude.organization.workspace.member.user 13.0.13
-claude.organization.workspace.member.userId 13.0.0
 claude.organization.workspace.member.workspace 13.0.13
-claude.organization.workspace.member.workspaceId 13.0.0
 claude.organization.workspace.member.workspaceRole 13.0.0
 claude.organization.workspace.members 13.0.0
 claude.organization.workspace.name 13.0.0
@@ -196,7 +192,6 @@ claude.session 13.0.0
 claude.session.archivedAt 13.0.0
 claude.session.createdAt 13.0.0
 claude.session.environment 13.0.13
-claude.session.environmentId 13.0.0
 claude.session.id 13.0.0
 claude.session.status 13.0.0
 claude.session.title 13.0.0
@@ -232,7 +227,6 @@ claude.vault.credential.id 13.0.0
 claude.vault.credential.type 13.0.0
 claude.vault.credential.updatedAt 13.0.0
 claude.vault.credential.vault 13.0.13
-claude.vault.credential.vaultId 13.0.0
 claude.vault.credentials 13.0.0
 claude.vault.displayName 13.0.0
 claude.vault.id 13.0.0

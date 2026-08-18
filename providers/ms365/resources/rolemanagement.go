@@ -184,9 +184,13 @@ func (m *mqlMicrosoftRolemanagementRoleassignment) id() (string, error) {
 	return m.Id.Data, nil
 }
 
+type mqlMicrosoftRolemanagementRoleassignmentInternal struct {
+	cacheRoleDefinitionID string
+}
+
 // roleDefinition resolves the role definition this assignment grants.
 func (m *mqlMicrosoftRolemanagementRoleassignment) roleDefinition() (*mqlMicrosoftRolemanagementRoledefinition, error) {
-	id := m.RoleDefinitionId.Data
+	id := m.cacheRoleDefinitionID
 	if id == "" {
 		m.RoleDefinition.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -244,17 +248,20 @@ func (a *mqlMicrosoftRolemanagementRoledefinition) assignments() ([]any, error) 
 		principalType, principalName := directoryPrincipalInfo(directoryPrincipal)
 		mqlResource, err := CreateResource(a.MqlRuntime, "microsoft.rolemanagement.roleassignment",
 			map[string]*llx.RawData{
-				"id":               llx.StringDataPtr(roleAssignment.GetId()),
-				"roleDefinitionId": llx.StringDataPtr(roleAssignment.GetRoleDefinitionId()),
-				"principalId":      llx.StringDataPtr(roleAssignment.GetPrincipalId()),
-				"principalType":    llx.StringData(principalType),
-				"principalName":    llx.StringData(principalName),
-				"principal":        llx.DictData(principal),
+				"id":            llx.StringDataPtr(roleAssignment.GetId()),
+				"principalId":   llx.StringDataPtr(roleAssignment.GetPrincipalId()),
+				"principalType": llx.StringData(principalType),
+				"principalName": llx.StringData(principalName),
+				"principal":     llx.DictData(principal),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlResource)
+		mqlRoleAssignment := mqlResource.(*mqlMicrosoftRolemanagementRoleassignment)
+		if roleDefinitionID := roleAssignment.GetRoleDefinitionId(); roleDefinitionID != nil {
+			mqlRoleAssignment.cacheRoleDefinitionID = *roleDefinitionID
+		}
+		res = append(res, mqlRoleAssignment)
 	}
 	return res, nil
 }

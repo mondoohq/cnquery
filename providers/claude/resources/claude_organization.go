@@ -331,8 +331,6 @@ func (r *mqlClaudeOrganizationWorkspace) members() ([]interface{}, error) {
 	for _, m := range members {
 		mqlMember, err := CreateResource(r.MqlRuntime, "claude.organization.workspace.member", map[string]*llx.RawData{
 			"__id":          llx.StringData(m.WorkspaceID + "/" + m.UserID),
-			"userId":        llx.StringData(m.UserID),
-			"workspaceId":   llx.StringData(m.WorkspaceID),
 			"workspaceRole": llx.StringData(m.WorkspaceRole),
 		})
 		if err != nil {
@@ -410,7 +408,6 @@ func (r *mqlClaudeOrganization) usageReport() ([]interface{}, error) {
 				"startingAt":           llx.TimeData(startingAt),
 				"endingAt":             llx.TimeData(endingAt),
 				"model":                llx.StringData(result.Model),
-				"workspaceId":          llx.StringData(result.WorkspaceID),
 				"serviceTier":          llx.StringData(result.ServiceTier),
 				"uncachedInputTokens":  llx.IntData(result.UncachedInputTokens),
 				"cacheReadInputTokens": llx.IntData(result.CacheReadInputTokens),
@@ -471,14 +468,13 @@ func (r *mqlClaudeOrganization) costReport() ([]interface{}, error) {
 
 		for _, result := range b.Results {
 			mqlEntry, err := CreateResource(r.MqlRuntime, "claude.organization.costEntry", map[string]*llx.RawData{
-				"__id":        llx.StringData("cost/" + b.StartingAt + "/" + result.CostType + "/" + result.Model + "/" + result.WorkspaceID),
-				"startingAt":  llx.TimeData(startingAt),
-				"endingAt":    llx.TimeData(endingAt),
-				"amount":      llx.StringData(result.Amount),
-				"currency":    llx.StringData(result.Currency),
-				"costType":    llx.StringData(result.CostType),
-				"model":       llx.StringData(result.Model),
-				"workspaceId": llx.StringData(result.WorkspaceID),
+				"__id":       llx.StringData("cost/" + b.StartingAt + "/" + result.CostType + "/" + result.Model + "/" + result.WorkspaceID),
+				"startingAt": llx.TimeData(startingAt),
+				"endingAt":   llx.TimeData(endingAt),
+				"amount":     llx.StringData(result.Amount),
+				"currency":   llx.StringData(result.Currency),
+				"costType":   llx.StringData(result.CostType),
+				"model":      llx.StringData(result.Model),
 			})
 			if err != nil {
 				return nil, err

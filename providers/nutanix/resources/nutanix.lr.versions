@@ -121,7 +121,6 @@ nutanix.host.isSecureBooted 13.0.0
 nutanix.host.maintenanceState 13.0.0
 nutanix.host.memorySizeBytes 13.0.0
 nutanix.host.name 13.0.0
-nutanix.host.nodeSerial 13.0.0
 nutanix.host.nodeStatus 13.0.0
 nutanix.host.rackableUnitUuid 13.0.0
 nutanix.host.tenantId 13.1.4
@@ -284,7 +283,6 @@ nutanix.storage.container.isInlineEcEnabled 13.0.0
 nutanix.storage.container.isInternal 13.0.0
 nutanix.storage.container.isMarkedForRemoval 13.0.0
 nutanix.storage.container.isNfsWhitelistInherited 13.0.0
-nutanix.storage.container.isShared 13.0.0
 nutanix.storage.container.isSoftwareEncryptionEnabled 13.0.0
 nutanix.storage.container.logicalAdvertisedCapacityBytes 13.0.0
 nutanix.storage.container.logicalExplicitReservedCapacityBytes 13.0.0
@@ -408,7 +406,6 @@ nutanix.vm.numSockets 13.0.0
 nutanix.vm.numThreadsPerCore 13.0.0
 nutanix.vm.owner 13.1.4
 nutanix.vm.powerState 13.0.0
-nutanix.vm.projectId 13.1.4
 nutanix.vm.protectionType 13.0.0
 nutanix.vm.sourceId 13.1.4
 nutanix.vm.sourceType 13.1.4

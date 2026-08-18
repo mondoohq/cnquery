@@ -524,14 +524,8 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr := convert.JsonToDictSlice(report.HostedOutboundSpamFilterPolicy)
 	r.HostedOutboundSpamFilterPolicy = plugin.TValue[[]any]{Data: hostedOutboundSpamFilterPolicy, State: plugin.StateIsSet, Error: hostedOutboundSpamFilterPolicyErr}
 
-	hostedContentFilterPolicy, hostedContentFilterPolicyErr := convert.JsonToDictSlice(report.HostedContentFilterPolicy)
-	r.HostedContentFilterPolicy = plugin.TValue[[]any]{Data: hostedContentFilterPolicy, State: plugin.StateIsSet, Error: hostedContentFilterPolicyErr}
-
 	transportRule, transportRuleErr := convert.JsonToDictSlice(report.TransportRule)
 	r.TransportRule = plugin.TValue[[]any]{Data: transportRule, State: plugin.StateIsSet, Error: transportRuleErr}
-
-	remoteDomain, remoteDomainErr := convert.JsonToDictSlice(report.RemoteDomain)
-	r.RemoteDomain = plugin.TValue[[]any]{Data: remoteDomain, State: plugin.StateIsSet, Error: remoteDomainErr}
 
 	safeLinksPolicy, safeLinksPolicyErr := convert.JsonToDictSlice(report.SafeLinksPolicy)
 	r.SafeLinksPolicy = plugin.TValue[[]any]{Data: safeLinksPolicy, State: plugin.StateIsSet, Error: safeLinksPolicyErr}
@@ -541,9 +535,6 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	organizationConfig, organizationConfigErr := convert.JsonToDict(report.OrganizationConfig)
 	r.OrganizationConfig = plugin.TValue[any]{Data: organizationConfig, State: plugin.StateIsSet, Error: organizationConfigErr}
-
-	authenticationPolicy, authenticationPolicyErr := convert.JsonToDictSlice(report.AuthenticationPolicy)
-	r.AuthenticationPolicy = plugin.TValue[[]any]{Data: authenticationPolicy, State: plugin.StateIsSet, Error: authenticationPolicyErr}
 
 	antiPhishPolicy, antiPhishPolicyErr := convert.JsonToDictSlice(report.AntiPhishPolicy)
 	r.AntiPhishPolicy = plugin.TValue[[]any]{Data: antiPhishPolicy, State: plugin.StateIsSet, Error: antiPhishPolicyErr}
@@ -560,9 +551,6 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	phishFilterPolicy, phishFilterPolicyErr := convert.JsonToDictSlice(report.PhishFilterPolicy)
 	r.PhishFilterPolicy = plugin.TValue[[]any]{Data: phishFilterPolicy, State: plugin.StateIsSet, Error: phishFilterPolicyErr}
-
-	quarantinePolicy, quarantinePolicyErr := convert.JsonToDictSlice(report.QuarantinePolicy)
-	r.QuarantinePolicy = plugin.TValue[[]any]{Data: quarantinePolicy, State: plugin.StateIsSet, Error: quarantinePolicyErr}
 
 	mailbox, mailboxErr := convert.JsonToDictSlice(report.Mailbox)
 	r.Mailbox = plugin.TValue[[]any]{Data: mailbox, State: plugin.StateIsSet, Error: mailboxErr}
@@ -979,14 +967,6 @@ func (r *mqlMs365Exchangeonline) securityAndCompliance() (*mqlMs365Exchangeonlin
 		return nil, err
 	}
 	return resource.(*mqlMs365ExchangeonlineSecurityAndCompliance), nil
-}
-
-func (r *mqlMs365ExchangeonlineSecurityAndCompliance) dlpCompliancePolicies() ([]any, error) {
-	report, err := r.getSecurityAndComplianceReport()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDictSlice(report.DlpCompliancePolicy)
 }
 
 func (r *mqlMs365Exchangeonline) mailboxAuditBypassAssociation() ([]any, error) {

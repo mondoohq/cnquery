@@ -150,7 +150,6 @@ func newMicrosoftTenant(runtime *plugin.Runtime, org models.Organizationable) (*
 		map[string]*llx.RawData{
 			"id":                                   llx.StringDataPtr(org.GetId()),
 			"assignedPlans":                        llx.DictData(assignedPlans),
-			"createdDateTime":                      llx.TimeDataPtr(org.GetCreatedDateTime()), // deprecated
 			"name":                                 llx.StringDataPtr(org.GetDisplayName()),
 			"verifiedDomains":                      llx.DictData(verifiedDomains),
 			"onPremisesSyncEnabled":                llx.BoolDataPtr(org.GetOnPremisesSyncEnabled()),

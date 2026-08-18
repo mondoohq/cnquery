@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 )
 
 // resolveDirectoryRefs turns a Conditional Access scope list into typed
@@ -37,6 +38,16 @@ func resolveDirectoryRefs(runtime *plugin.Runtime, resource string, ids []any) (
 	return res, nil
 }
 
+// mqlMicrosoftConditionalAccessPolicyConditionsUsersInternal keeps the raw
+// group and role scope lists that back the typed reference accessors. They are
+// no longer part of the schema, so the reference accessors read them from here.
+type mqlMicrosoftConditionalAccessPolicyConditionsUsersInternal struct {
+	cacheIncludeGroups []string
+	cacheExcludeGroups []string
+	cacheIncludeRoles  []string
+	cacheExcludeRoles  []string
+}
+
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) includeUsersRefs() ([]any, error) {
 	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.user", c.IncludeUsers.Data)
 }
@@ -46,19 +57,19 @@ func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) excludeUsersRefs() 
 }
 
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) includeGroupsRefs() ([]any, error) {
-	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.group", c.IncludeGroups.Data)
+	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.group", convert.SliceAnyToInterface(c.cacheIncludeGroups))
 }
 
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) excludeGroupsRefs() ([]any, error) {
-	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.group", c.ExcludeGroups.Data)
+	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.group", convert.SliceAnyToInterface(c.cacheExcludeGroups))
 }
 
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) includeRolesRefs() ([]any, error) {
-	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.rolemanagement.roledefinition", c.IncludeRoles.Data)
+	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.rolemanagement.roledefinition", convert.SliceAnyToInterface(c.cacheIncludeRoles))
 }
 
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsUsers) excludeRolesRefs() ([]any, error) {
-	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.rolemanagement.roledefinition", c.ExcludeRoles.Data)
+	return resolveDirectoryRefs(c.MqlRuntime, "microsoft.rolemanagement.roledefinition", convert.SliceAnyToInterface(c.cacheExcludeRoles))
 }
 
 func (c *mqlMicrosoftConditionalAccessPolicyConditionsClientApplications) includeServicePrincipalsRefs() ([]any, error) {

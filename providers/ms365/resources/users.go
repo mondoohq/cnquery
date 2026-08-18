@@ -308,22 +308,10 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 			"__id":                       llx.StringDataPtr(u.GetId()),
 			"id":                         llx.StringDataPtr(u.GetId()),
 			"accountEnabled":             llx.BoolDataPtr(u.GetAccountEnabled()),
-			"city":                       llx.StringDataPtr(u.GetCity()),        // deprecated
-			"companyName":                llx.StringDataPtr(u.GetCompanyName()), // deprecated
-			"country":                    llx.StringDataPtr(u.GetCountry()),     // deprecated
+			"city":                       llx.StringDataPtr(u.GetCity()), // deprecated
 			"createdDateTime":            llx.TimeDataPtr(u.GetCreatedDateTime()),
-			"department":                 llx.StringDataPtr(u.GetDepartment()),
 			"displayName":                llx.StringDataPtr(u.GetDisplayName()),
-			"employeeId":                 llx.StringDataPtr(u.GetEmployeeId()), // deprecated
 			"givenName":                  llx.StringDataPtr(u.GetGivenName()),
-			"jobTitle":                   llx.StringDataPtr(u.GetJobTitle()), // deprecated
-			"mail":                       llx.StringDataPtr(u.GetMail()),
-			"mobilePhone":                llx.StringDataPtr(u.GetMobilePhone()),                        // deprecated
-			"otherMails":                 llx.ArrayData(llx.TArr2Raw(u.GetOtherMails()), types.String), // deprecated
-			"officeLocation":             llx.StringDataPtr(u.GetOfficeLocation()),                     // deprecated
-			"postalCode":                 llx.StringDataPtr(u.GetPostalCode()),                         // deprecated
-			"state":                      llx.StringDataPtr(u.GetState()),                              // deprecated
-			"streetAddress":              llx.StringDataPtr(u.GetStreetAddress()),                      // deprecated
 			"surname":                    llx.StringDataPtr(u.GetSurname()),
 			"userPrincipalName":          llx.StringDataPtr(u.GetUserPrincipalName()),
 			"userType":                   llx.StringDataPtr(u.GetUserType()),

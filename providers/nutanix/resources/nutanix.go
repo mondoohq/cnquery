@@ -743,7 +743,6 @@ func newMqlHost(runtime *plugin.Runtime, h *clustermgmtconfig.Host) (*mqlNutanix
 		"blockSerial":      llx.StringDataPtr(h.BlockSerial),
 		"rackableUnitUuid": llx.StringDataPtr(h.RackableUnitUuid),
 		// The v4.0 API does not report a node-level serial number.
-		"nodeSerial":                         llx.StringDataPtr(nil),
 		"cpuModel":                           llx.StringDataPtr(h.CpuModel),
 		"cpuCores":                           llx.IntData(derefInt64(h.NumberOfCpuCores)),
 		"cpuSockets":                         llx.IntData(derefInt64(h.NumberOfCpuSockets)),
@@ -913,7 +912,6 @@ func newMqlVm(runtime *plugin.Runtime, vm *vmmconfig.Vm) (*mqlNutanixVm, error) 
 		"id":       llx.StringDataPtr(vm.ExtId),
 		"tenantId": llx.StringDataPtr(vm.TenantId),
 		// The v4.0 API does not report a project reference on the VM.
-		"projectId":                         llx.StringDataPtr(nil),
 		"sourceType":                        llx.StringData(sourceType),
 		"sourceId":                          llx.StringData(sourceId),
 		"name":                              llx.StringDataPtr(vm.Name),

@@ -366,15 +366,14 @@ func (r *mqlClaude) sessions() ([]interface{}, error) {
 		s := pager.Current()
 
 		mqlSession, err := CreateResource(r.MqlRuntime, "claude.session", map[string]*llx.RawData{
-			"__id":          llx.StringData(s.ID),
-			"id":            llx.StringData(s.ID),
-			"title":         llx.StringData(s.Title),
-			"status":        llx.StringData(string(s.Status)),
-			"environmentId": llx.StringData(s.EnvironmentID),
-			"createdAt":     llx.TimeData(s.CreatedAt),
-			"updatedAt":     llx.TimeData(s.UpdatedAt),
-			"archivedAt":    llx.TimeData(s.ArchivedAt),
-			"type":          llx.StringData(string(s.Type)),
+			"__id":       llx.StringData(s.ID),
+			"id":         llx.StringData(s.ID),
+			"title":      llx.StringData(s.Title),
+			"status":     llx.StringData(string(s.Status)),
+			"createdAt":  llx.TimeData(s.CreatedAt),
+			"updatedAt":  llx.TimeData(s.UpdatedAt),
+			"archivedAt": llx.TimeData(s.ArchivedAt),
+			"type":       llx.StringData(string(s.Type)),
 		})
 		if err != nil {
 			return nil, err
@@ -532,7 +531,6 @@ func (r *mqlClaudeVault) credentials() ([]interface{}, error) {
 			"__id":        llx.StringData(cred.ID),
 			"id":          llx.StringData(cred.ID),
 			"displayName": llx.StringData(cred.DisplayName),
-			"vaultId":     llx.StringData(cred.VaultID),
 			"createdAt":   llx.TimeData(cred.CreatedAt),
 			"updatedAt":   llx.TimeData(cred.UpdatedAt),
 			"archivedAt":  llx.TimeData(cred.ArchivedAt),
