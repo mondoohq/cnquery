@@ -196,10 +196,10 @@ var servicePrincipalFields = []string{
 	"logoutUrl",
 	"servicePrincipalNames",
 	"signInAudience",
+	// sources termsOfServiceUrl; omitting it leaves that field unset, not null
+	"info",
 	"preferredSingleSignOnMode",
 	"notificationEmailAddresses",
-	"appRoleAssignmentRequired",
-	"accountEnabled",
 	"verifiedPublisher",
 	"appRoles",
 	"oauth2PermissionScopes",
@@ -433,10 +433,17 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		"passwordCredentials":        llx.ArrayData(secrets, types.Resource("microsoft.passwordCredential")),
 		"oauth2PermissionScopes":     llx.ArrayData(oauth2PermissionScopes, types.Dict),
 	}
-	info := sp.GetInfo()
-	if info != nil {
-		args["termsOfServiceUrl"] = llx.StringDataPtr(info.GetTermsOfServiceUrl())
+	// Set unconditionally. A CreateResource arg map must never omit a declared
+	// field: an omitted key leaves the field UNSET rather than null, and an
+	// unset field crosses the plugin boundary as an empty DataRes that surfaces
+	// client-side as "encountered a primitive with no type information", with
+	// no attribution back to the field.
+	var termsOfServiceUrl *string
+	if info := sp.GetInfo(); info != nil {
+		termsOfServiceUrl = info.GetTermsOfServiceUrl()
 	}
+	args["termsOfServiceUrl"] = llx.StringDataPtr(termsOfServiceUrl)
+
 	mqlResource, err := CreateResource(runtime, "microsoft.serviceprincipal", args)
 	if err != nil {
 		return nil, err
