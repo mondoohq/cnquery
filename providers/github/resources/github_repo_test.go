@@ -169,3 +169,31 @@ func TestGithubResponseStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestGitTreeEntryType(t *testing.T) {
+	tests := []struct {
+		objectType string
+		want       string
+	}{
+		{objectType: "blob", want: "file"},
+		{objectType: "tree", want: "dir"},
+		{objectType: "commit", want: "submodule"},
+		{objectType: "", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.objectType, func(t *testing.T) {
+			assert.Equal(t, tt.want, gitTreeEntryType(tt.objectType))
+		})
+	}
+}
+
+func TestIsBinaryFileFromTreeEntry(t *testing.T) {
+	// Tree entries carry a full path, so the extension has to be read off the
+	// last segment rather than by splitting the whole path on ".".
+	assert.True(t, isBinaryFile("file", "tools/vendor/bin/helper.so"))
+	assert.True(t, isBinaryFile("file", "build/my.app.exe"))
+	assert.False(t, isBinaryFile("file", "docs/readme.md"))
+	assert.False(t, isBinaryFile("dir", "tools/vendor/bin"))
+	assert.False(t, isBinaryFile("submodule", "third_party/dep"))
+}

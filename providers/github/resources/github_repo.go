@@ -1576,6 +1576,83 @@ func newMqlGithubFileDoesNotExist(runtime *plugin.Runtime, ownerName string, rep
 	return res.(*mqlGithubFile), nil
 }
 
+// allFiles lists every entry in the repository's default branch in one Git Trees
+// API call. files() returns the root level only, so a query built on it cannot
+// see anything nested more than one directory deep.
+func (g *mqlGithubRepository) allFiles() ([]any, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return nil, err
+	}
+
+	if g.DefaultBranchName.Error != nil {
+		return nil, g.DefaultBranchName.Error
+	}
+	ref := g.DefaultBranchName.Data
+	if ref == "" {
+		ref = "HEAD"
+	}
+
+	tree, _, err := conn.Client().Git.GetTree(conn.Context(), ownerLogin, repoName, ref, true)
+	if err != nil {
+		// An empty repository has no tree to read: 404 when the ref does not
+		// resolve, 409 when the repository carries no commits.
+		switch githubResponseStatus(err) {
+		case http.StatusNotFound, http.StatusConflict:
+			return []any{}, nil
+		}
+		log.Error().Err(err).Msg("unable to get repository tree")
+		return nil, err
+	}
+
+	if tree.GetTruncated() {
+		log.Warn().
+			Str("owner", ownerLogin).
+			Str("repo", repoName).
+			Msg("repository tree was truncated by the GitHub API, the file listing is incomplete")
+	}
+
+	res := make([]any, 0, len(tree.Entries))
+	for i := range tree.Entries {
+		entryPath := convert.ToValue(tree.Entries[i].Path)
+		fileType := gitTreeEntryType(convert.ToValue(tree.Entries[i].Type))
+
+		mqlFile, err := CreateResource(g.MqlRuntime, "github.file", map[string]*llx.RawData{
+			"path":        llx.StringData(entryPath),
+			"name":        llx.StringData(path.Base(entryPath)),
+			"type":        llx.StringData(fileType),
+			"sha":         llx.StringDataPtr(tree.Entries[i].SHA),
+			"isBinary":    llx.BoolData(isBinaryFile(fileType, entryPath)),
+			"ownerName":   llx.StringData(ownerLogin),
+			"repoName":    llx.StringData(repoName),
+			"downloadUrl": llx.StringDataPtr(nil),
+			"exists":      llx.BoolData(true),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlFile)
+	}
+	return res, nil
+}
+
+// gitTreeEntryType maps a Git object type onto the vocabulary github.file.type
+// already uses, so allFiles and files can be filtered the same way.
+func gitTreeEntryType(objectType string) string {
+	switch objectType {
+	case "tree":
+		return "dir"
+	case "blob":
+		return "file"
+	case "commit":
+		return "submodule"
+	default:
+		return objectType
+	}
+}
+
 func (g *mqlGithubRepository) files() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 
