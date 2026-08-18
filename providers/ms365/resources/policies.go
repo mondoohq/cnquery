@@ -461,12 +461,6 @@ func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) getCrossTenantAccessPolicy(
 
 	a.policy = policy
 
-	if policy.GetIsServiceDefault() != nil {
-		a.IsServiceDefault = plugin.TValue[bool]{Data: *policy.GetIsServiceDefault(), State: plugin.StateIsSet}
-	} else {
-		a.IsServiceDefault = plugin.TValue[bool]{State: plugin.StateIsNull}
-	}
-
 	if policy.GetAutomaticUserConsentSettings() != nil {
 		consentSettings := policy.GetAutomaticUserConsentSettings()
 		consentResource, err := CreateResource(a.MqlRuntime, ResourceMicrosoftCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings,
@@ -568,6 +562,26 @@ func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) automaticUserConsentSetting
 	}
 
 	return a.cachedAutomaticUserConsentSettings, nil
+}
+
+// isServiceDefault reports whether the tenant still runs the Microsoft-provided
+// cross-tenant defaults. It is computed rather than assigned during the fetch:
+// as a plain field it was only populated as a side effect of a sibling accessor
+// running first, so it read true, null, or unset depending on which other
+// fields the query happened to select -- and the fetch wrote it without the
+// lock that guards the rest of the shared policy state.
+func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) isServiceDefault() (bool, error) {
+	if err := a.getCrossTenantAccessPolicy(); err != nil {
+		return false, err
+	}
+	if a.policy == nil {
+		return false, nil
+	}
+	// An absent value means Microsoft did not report a customization, which is
+	// the service default. Returning explicit false instead of null also keeps
+	// a { isServiceDefault && ... } assertion from passing vacuously, since MQL
+	// evaluates null && null as true.
+	return convert.ToValue(a.policy.GetIsServiceDefault()), nil
 }
 
 func (a *mqlMicrosoftCrossTenantAccessPolicyDefault) b2bCollaborationInbound() (*mqlMicrosoftCrossTenantAccessPolicyDefaultB2bSetting, error) {

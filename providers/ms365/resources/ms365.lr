@@ -2636,7 +2636,7 @@ private microsoft.systemCredentialPreferences @defaults("state") {
 // defaults or have been customized.
 private microsoft.crossTenantAccessPolicyDefault @defaults("isServiceDefault automaticUserConsentSettings inboundTrust") {
   // True if the default configuration is inherited from the service default. False if the default configuration has been customized.
-  isServiceDefault bool
+  isServiceDefault() bool
   // Determines the default configuration for automatic user consent settings
   //
   // Controls if users consent automatically to apps on behalf of users in other tenants.

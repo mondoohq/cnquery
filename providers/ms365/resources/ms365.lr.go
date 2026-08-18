@@ -21390,7 +21390,9 @@ func (c *mqlMicrosoftCrossTenantAccessPolicyDefault) MqlID() string {
 }
 
 func (c *mqlMicrosoftCrossTenantAccessPolicyDefault) GetIsServiceDefault() *plugin.TValue[bool] {
-	return &c.IsServiceDefault
+	return plugin.GetOrCompute[bool](&c.IsServiceDefault, func() (bool, error) {
+		return c.isServiceDefault()
+	})
 }
 
 func (c *mqlMicrosoftCrossTenantAccessPolicyDefault) GetAutomaticUserConsentSettings() *plugin.TValue[*mqlMicrosoftCrossTenantAccessPolicyDefaultAutomaticUserConsentSettings] {
