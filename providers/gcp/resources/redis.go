@@ -24,6 +24,26 @@ import (
 	"google.golang.org/api/option"
 )
 
+// initGcpProjectRedisService fills in the project the service belongs to when the
+// resource is reached by its own type name rather than through the
+// gcp.project accessor. Without it the resource is built with an empty
+// projectId, and the serviceEnabled gate then asks Service Usage about
+// "projects/", which fails the whole query with an InvalidArgument.
+func initGcpProjectRedisService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+
+	args["projectId"] = llx.StringData(conn.ResourceID())
+
+	return args, nil, nil
+}
+
 type mqlGcpProjectRedisServiceInternal struct {
 	serviceGate
 }

@@ -22,6 +22,28 @@ import (
 	"google.golang.org/api/option"
 )
 
+// initGcpProjectGkeService fills in the project the service belongs to when the
+// resource is reached by its own type name (gcp.project.gkeService.clusters)
+// rather than through the gcp.project.gke() accessor. Without it the resource
+// is built with an empty projectId, and the serviceEnabled gate then asks
+// Service Usage about "projects/", which fails the whole query with an
+// InvalidArgument rather than returning clusters. Every sibling service
+// resource carries the same init.
+func initGcpProjectGkeService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	conn, ok := runtime.Connection.(*connection.GcpConnection)
+	if !ok {
+		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
+	}
+
+	args["projectId"] = llx.StringData(conn.ResourceID())
+
+	return args, nil, nil
+}
+
 type mqlGcpProjectGkeServiceInternal struct {
 	serviceGate
 }

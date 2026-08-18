@@ -282,7 +282,12 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 			var delegatedSubnetId, privateDnsZoneId, sourceServerId *string
 			var maintenanceWindow any
 			if p := dbServer.Properties; p != nil {
-				fullVersion = p.MinorVersion
+				// Azure splits the engine version across two properties: version
+				// carries the major ("16") and minorVersion only the minor ("14").
+				// Publishing minorVersion on its own reports a PostgreSQL 16.14
+				// server as "14", which reads as PostgreSQL 14 -- the wrong major
+				// release, and older than what is actually running.
+				fullVersion = postgresFullVersion(stringEnumPtr(p.Version), p.MinorVersion)
 				administratorLogin = p.AdministratorLogin
 				state = stringEnumPtr(p.State)
 				availabilityZone = p.AvailabilityZone
@@ -872,4 +877,21 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) threatProtectionSt
 		return "", nil
 	}
 	return string(*resp.Properties.State), nil
+}
+
+// postgresFullVersion joins Azure's split engine version into the single
+// "<major>.<minor>" string the fullVersion field documents.
+//
+// Returns nil when Azure reports only a major version, which the schema
+// describes as an empty fullVersion, so a caller cannot mistake a partial
+// answer for a complete one.
+func postgresFullVersion(version, minorVersion *string) *string {
+	if minorVersion == nil || *minorVersion == "" {
+		return nil
+	}
+	if version == nil || *version == "" {
+		return nil
+	}
+	full := *version + "." + *minorVersion
+	return &full
 }

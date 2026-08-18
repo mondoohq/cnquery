@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -367,16 +368,58 @@ func (g *mqlGcpProjectBigqueryServiceTableBigLakeConfig) connection() (*mqlGcpPr
 	if conns.Error != nil {
 		return nil, conns.Error
 	}
+	wantLocation, wantID, ok := bigqueryConnectionKey(g.cacheConnectionId)
+	if !ok {
+		return notFound()
+	}
+
 	for _, c := range conns.Data {
 		conn, ok := c.(*mqlGcpProjectBigqueryServiceConnection)
 		if !ok || conn.Name.Error != nil {
 			continue
 		}
-		if conn.Name.Data == g.cacheConnectionId {
+		gotLocation, gotID, ok := bigqueryConnectionKey(conn.Name.Data)
+		if !ok {
+			continue
+		}
+		if gotLocation == wantLocation && gotID == wantID {
 			return conn, nil
 		}
 	}
 	return notFound()
+}
+
+// bigqueryConnectionKey reduces the two spellings BigQuery uses for a
+// connection to the (location, id) pair that actually identifies it.
+//
+// A table's biglakeConfiguration.connectionId comes back in the dotted form
+// "<project-id>.<location>.<connection>", while the connections list reports
+// "projects/<project-number>/locations/<location>/connections/<connection>".
+// The project segment is not comparable between them -- one is the project ID
+// and the other the project number -- so the leading segment is dropped and the
+// match is made on the parts that do identify the connection. Comparing the two
+// strings directly never matches, which left every BigLake table reporting no
+// connection at all.
+func bigqueryConnectionKey(s string) (location string, id string, ok bool) {
+	if strings.Contains(s, "/") {
+		parts := strings.Split(s, "/")
+		for i := 0; i+1 < len(parts); i += 2 {
+			switch parts[i] {
+			case "locations":
+				location = parts[i+1]
+			case "connections":
+				id = parts[i+1]
+			}
+		}
+		return location, id, location != "" && id != ""
+	}
+
+	// dotted form: <project>.<location>.<connection>
+	parts := strings.Split(s, ".")
+	if len(parts) != 3 {
+		return "", "", false
+	}
+	return parts[1], parts[2], parts[1] != "" && parts[2] != ""
 }
 
 // bigqueryTableId is the resource identity of a table. The runtime stores the
