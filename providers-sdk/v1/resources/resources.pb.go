@@ -633,7 +633,7 @@ const file_resources_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1a\n" +
 	"\boptional\x18\x03 \x01(\bR\boptional\"6\n" +
 	"\x04Init\x12.\n" +
-	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\xd8\x04\n" +
+	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\xec\x04\n" +
 	"\fResourceInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12B\n" +
@@ -652,7 +652,7 @@ const file_resources_proto_rawDesc = "" +
 	"\bmaturity\x18  \x01(\tR\bmaturity\x1aR\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01J\x04\b\x19\x10\x1a\"\xa3\x03\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01J\x04\b\x19\x10\x1aR\x12min_mondoo_version\"\xb7\x03\n" +
 	"\x05Field\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12!\n" +
@@ -668,7 +668,7 @@ const file_resources_proto_rawDesc = "" +
 	"\vis_embedded\x18\x19 \x01(\bR\n" +
 	"isEmbedded\x12\x1a\n" +
 	"\bmaturity\x18\x1a \x01(\tR\bmaturity\x12/\n" +
-	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06othersJ\x04\b\x17\x10\x18B.Z,go.mondoo.com/mql/providers-sdk/v1/resourcesb\x06proto3"
+	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06othersJ\x04\b\x17\x10\x18R\x12min_mondoo_versionB.Z,go.mondoo.com/mql/providers-sdk/v1/resourcesb\x06proto3"
 
 var (
 	file_resources_proto_rawDescOnce sync.Once

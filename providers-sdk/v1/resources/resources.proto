@@ -48,8 +48,9 @@ message Init {
 }
 
 message ResourceInfo {
-  // 25 = min_mondoo_version, removed in v14 (superseded by min_provider_version)
+  // 25 = min_mondoo_version, removed in v14 (use min_provider_version)
   reserved 25;
+  reserved "min_mondoo_version";
 
   // Canonical resource id. When a ResourceInfo is reached via an alias entry
   // in Schema.resources, `id` is the original (aliased-to) resource name, not
@@ -79,8 +80,9 @@ message ResourceInfo {
 }
 
 message Field {
-  // 23 = min_mondoo_version, removed in v14 (superseded by min_provider_version)
+  // 23 = min_mondoo_version, removed in v14 (use min_provider_version)
   reserved 23;
+  reserved "min_mondoo_version";
 
   string name = 1;
   string type = 2;
