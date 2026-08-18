@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"sync"
 
 	"go.mondoo.com/mql/v13/llx"
@@ -83,4 +84,41 @@ func (s *serviceGate) recordEnabled(enabled bool) {
 	s.once.Do(func() {
 		s.enabled = enabled
 	})
+}
+
+// serviceEnabledForInit reports whether service is enabled on projectId.
+//
+// The serviceGate above is embedded in a service resource's Internal struct,
+// which init functions cannot use: they are plain functions with no receiver to
+// hang state on. They need the check just as much, though, and for a more
+// expensive reason -- an init that goes straight to a per-resource Get against a
+// disabled API fails, and the failure is not cached, so it is repeated for every
+// referrer on every asset. One scan of a project with Vertex AI and Memcache
+// switched off spent 1,050 calls that way, 40% of all its API traffic, on five
+// Get methods that could not have succeeded.
+//
+// The answer is memoized on the gcp.project resource (sync.Once around the
+// enabled-services map), and gcp.project is itself cached by id, so this costs
+// at most one ServiceUsage call per project no matter how many inits ask.
+// CreateResource is used rather than NewResource deliberately: it skips
+// initGcpProject, so asking the question never triggers a project fetch.
+//
+// A resolution failure is returned rather than folded into false, for the same
+// reason resolveEnabled does it: reporting "not enabled" for a project that was
+// never successfully checked would turn an unknown into a confident wrong answer.
+func serviceEnabledForInit(runtime *plugin.Runtime, projectId, service string) (bool, error) {
+	if projectId == "" {
+		return false, errors.New("project id required to check whether " + service + " is enabled")
+	}
+	proj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+		"id": llx.StringData(projectId),
+	})
+	if err != nil {
+		return false, err
+	}
+	p, ok := proj.(*mqlGcpProject)
+	if !ok {
+		return false, errors.New("unexpected resource type for gcp.project")
+	}
+	return p.isServiceEnabled(service)
 }

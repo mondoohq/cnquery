@@ -1105,10 +1105,11 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 
 	// Accept either the full resource path or a short name + location from
 	// the asset-identifier-driven discovery path.
-	var fullName, region string
+	var fullName, region, projectId string
 	if strings.HasPrefix(name, "projects/") {
 		fullName = name
 		region = parseLocationFromPath(name)
+		projectId = parseProjectFromPath(name)
 	} else {
 		locRaw := args["location"]
 		projRaw := args["projectId"]
@@ -1116,7 +1117,17 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 			return nil, nil, errors.New("vertexai custom job init: projectId and location required when name is not a full resource path")
 		}
 		region = locRaw.Value.(string)
-		fullName = fmt.Sprintf("projects/%s/locations/%s/customJobs/%s", projRaw.Value.(string), region, name)
+		projectId = projRaw.Value.(string)
+		fullName = fmt.Sprintf("projects/%s/locations/%s/customJobs/%s", projectId, region, name)
+	}
+
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. The answer is memoized per project, so this is free after the
+	// first caller.
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_aiplatform); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Vertex AI API is not enabled on project " + projectId)
 	}
 
 	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
@@ -1180,6 +1191,16 @@ func initGcpProjectVertexaiServiceEndpoint(runtime *plugin.Runtime, args map[str
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. The answer is memoized per project, so this is free after the
+	// first caller.
+	projectId := parseProjectFromPath(name)
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_aiplatform); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Vertex AI API is not enabled on project " + projectId)
+	}
+
 	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
@@ -1240,6 +1261,16 @@ func initGcpProjectVertexaiServicePipelineJob(runtime *plugin.Runtime, args map[
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. The answer is memoized per project, so this is free after the
+	// first caller.
+	projectId := parseProjectFromPath(name)
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_aiplatform); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Vertex AI API is not enabled on project " + projectId)
+	}
+
 	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
@@ -1300,6 +1331,16 @@ func initGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtim
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. The answer is memoized per project, so this is free after the
+	// first caller.
+	projectId := parseProjectFromPath(name)
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_aiplatform); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Vertex AI API is not enabled on project " + projectId)
+	}
+
 	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
@@ -2459,6 +2500,16 @@ func initGcpProjectVertexaiServiceSchedule(runtime *plugin.Runtime, args map[str
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. The answer is memoized per project, so this is free after the
+	// first caller.
+	projectId := parseProjectFromPath(name)
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_aiplatform); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Vertex AI API is not enabled on project " + projectId)
+	}
+
 	creds, err := conn.Credentials(aiplatform.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err
