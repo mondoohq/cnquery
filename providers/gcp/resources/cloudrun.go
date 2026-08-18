@@ -413,19 +413,6 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	if g.Regions.Error != nil {
-		return nil, g.Regions.Error
-	}
-	regions := g.Regions.Data
-	if len(regions) == 0 {
-		// regions data has not been fetched, we need to get it
-		r, err := g.regions()
-		if err != nil {
-			return nil, err
-		}
-		regions = r
-	}
-
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	creds, err := conn.Credentials(run.DefaultAuthScopes()...)
@@ -446,14 +433,16 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 		MaxInstanceCount int32 `json:"maxInstanceCount"`
 	}
 
-	var wg sync.WaitGroup
+	// One call for every region. Cloud Run v2 accepts "-" as the location, which
+	// this provider previously fanned out over ~43 regions to achieve: verified
+	// against the live API, projects/{p}/locations/-/services returns 200 with
+	// services from every region. (ListJobs rejects the same wildcard with
+	// INVALID_ARGUMENT, which is why the jobs lister below still fans out.)
+	// Each service's own region is read back off its resource name.
 	var services []any
-	wg.Add(len(regions))
-	mux := &sync.Mutex{}
-	for _, region := range regions {
-		go func(region string) {
-			defer wg.Done()
-			it := runSvc.ListServices(ctx, &runpb.ListServicesRequest{Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region)})
+	{
+		{
+			it := runSvc.ListServices(ctx, &runpb.ListServicesRequest{Parent: fmt.Sprintf("projects/%s/locations/-", projectId)})
 			for {
 				s, err := it.Next()
 				if err == iterator.Done {
@@ -592,7 +581,7 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 				mqlS, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
 					"id":                            llx.StringData(s.Name),
 					"projectId":                     llx.StringData(projectId),
-					"region":                        llx.StringData(region),
+					"region":                        llx.StringData(parseLocationFromPath(s.Name)),
 					"name":                          llx.StringData(parseResourceName(s.Name)),
 					"description":                   llx.StringData(s.Description),
 					"generation":                    llx.IntData(s.Generation),
@@ -641,13 +630,10 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 					continue
 				}
 				mqlS.(*mqlGcpProjectCloudRunServiceService).cacheEncryptionKey = s.GetTemplate().GetEncryptionKey()
-				mux.Lock()
 				services = append(services, mqlS)
-				mux.Unlock()
 			}
-		}(region.(string))
+		}
 	}
-	wg.Wait()
 	return services, nil
 }
 

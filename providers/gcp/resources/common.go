@@ -549,9 +549,18 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 
 	// Use NewResource so initGcpProjectComputeServiceSubnetwork runs and
 	// populates every field instead of leaving the resource partially set.
+	//
+	// regionUrl has to go in the args, not just onto cacheRegionUrl afterwards.
+	// The init matches a listed subnetwork on name, project *and* region, and
+	// with no regionUrl its region is "", which matches nothing. It then falls
+	// through to a direct Get carrying that empty region and GCP rejects it:
+	//   GET .../projects/{p}/regions//subnetworks/{n} -> 400 Invalid value for
+	//   field 'region': ''
+	// which surfaces as an errored check rather than a resolved subnetwork.
 	res, err := NewResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
 		"name":      llx.StringData(name),
 		"projectId": llx.StringData(project),
+		"regionUrl": llx.StringData(regionUrl),
 	})
 	if err != nil {
 		return nil, err

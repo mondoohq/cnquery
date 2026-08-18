@@ -105,6 +105,15 @@ func initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[str
 		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locRaw.Value.(string), name)
 	}
 
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. The answer is memoized per project, so this is free after the
+	// first caller.
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_memcache); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Cloud Memorystore for Memcached API is not enabled on project " + projectId)
+	}
+
 	creds, err := conn.Credentials(memcache.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err

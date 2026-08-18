@@ -92,6 +92,16 @@ func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return nil, nil, errors.New("gcp.project requires a project id")
 	}
 
+	// NewResource consults the resource cache only after this init returns, so
+	// without this check every typed project reference re-fetches a record the
+	// runtime is already holding and the result is then discarded. gcp.project
+	// is referenced from a dozen files (iam, logging, apikeys, cloud functions,
+	// filestore, shared VPC, the service gate, discovery), which on one measured
+	// scan meant 452 identical Projects.Get calls, half of all HTTP traffic.
+	if cached, ok := runtime.Resources.Get(ResourceGcpProject + "\x00" + projectRef); ok {
+		return args, cached, nil
+	}
+
 	project, err := svc.Projects.Get(fmt.Sprintf("projects/%s", projectRef)).Do()
 	if err != nil {
 		return nil, nil, err
