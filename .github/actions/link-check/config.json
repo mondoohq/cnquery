@@ -17,6 +17,9 @@
     },
     {
       "pattern": "^https:\\/\\/console\\.mistral\\.ai"
+    },
+    {
+      "pattern": "^https:\\/\\/nmap\\.org\\/"
     }
   ]
 }
