@@ -2,7 +2,7 @@ name: "Build & Release Providers"
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "v13"]
     paths: ["providers/**"]
   workflow_dispatch:
     inputs:
