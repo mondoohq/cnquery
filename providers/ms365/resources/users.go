@@ -1136,28 +1136,33 @@ func (m *mqlMicrosoft) loadUserAuthRequirements(ids []string) (map[string]any, m
 
 // Needs the permission AuditLog.Read.All
 func (a *mqlMicrosoftUserAuthenticationMethods) registrationDetails() (*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
-	if err != nil {
-		return nil, err
-	}
-
 	userID := a.__id
 	if userID == "" {
 		return nil, errors.New("cannot fetch user registration details without a user ID")
 	}
 
-	ctx := context.Background()
-	userRegistrationDetails, err := graphClient.Reports().
-		AuthenticationMethods().
-		UserRegistrationDetails().
-		ByUserRegistrationDetailsId(userID).
-		Get(ctx, nil)
+	// From the tenant-wide report, read once and indexed, rather than a Get per
+	// user: this record used to cost 50 calls on a tenant whose whole
+	// authMethods parent cost 4 batched ones.
+	ms, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
-		return nil, transformError(err)
+		return nil, err
+	}
+	byUser, err := ms.(*mqlMicrosoft).loadRegistrationDetails()
+	if err != nil {
+		return nil, err
 	}
 
-	return newMqlUserRegistrationDetails(a.MqlRuntime, userRegistrationDetails)
+	details, ok := byUser[userID]
+	if !ok {
+		// A user with no registration record is a legitimate state -- the report
+		// omits users who have never registered a method -- so report null
+		// rather than the 404 the per-user Get returned.
+		a.RegistrationDetails.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	return newMqlUserRegistrationDetails(a.MqlRuntime, details)
 }
 
 func newMqlUserRegistrationDetails(runtime *plugin.Runtime, details models.UserRegistrationDetailsable) (*mqlMicrosoftUserAuthenticationMethodsUserRegistrationDetails, error) {
