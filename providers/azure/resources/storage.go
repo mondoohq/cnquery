@@ -1162,13 +1162,10 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionKeySource() (strin
 }
 
 func (a *mqlAzureSubscriptionStorageServiceAccount) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
-	if a.cacheEncryptionKeyVaultURI == "" || a.cacheEncryptionKeyName == "" {
+	keyURI := keyVaultKeyURI(a.cacheEncryptionKeyVaultURI, a.cacheEncryptionKeyName, a.cacheEncryptionKeyVersion)
+	if keyURI == "" {
 		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
-	}
-	keyURI := a.cacheEncryptionKeyVaultURI + "/keys/" + a.cacheEncryptionKeyName
-	if a.cacheEncryptionKeyVersion != "" {
-		keyURI += "/" + a.cacheEncryptionKeyVersion
 	}
 	return newKeyVaultKeyResource(a.MqlRuntime, keyURI)
 }

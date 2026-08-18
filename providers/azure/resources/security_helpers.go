@@ -4,9 +4,35 @@
 package resources
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
+
+// keyVaultKeyURI builds the canonical Key Vault key identifier from the parts
+// ARM reports on a resource's customer-managed-key settings.
+//
+// ARM returns the vault URI WITH a trailing slash
+// ("https://myvault.vault.azure.net/"), so appending "/keys/" naively yields a
+// doubled separator that parseKeyVaultId's regex rejects -- the key then reads
+// as an error on exactly the resources that use a customer-managed key. Trim
+// the separator rather than assuming ARM's shape.
+//
+// Returns "" when either required part is missing, which callers surface as a
+// null reference rather than a broken URI.
+func keyVaultKeyURI(vaultURI, keyName, keyVersion string) string {
+	vaultURI = strings.TrimSuffix(strings.TrimSpace(vaultURI), "/")
+	keyName = strings.TrimSpace(keyName)
+	if vaultURI == "" || keyName == "" {
+		return ""
+	}
+	uri := vaultURI + "/keys/" + keyName
+	if keyVersion = strings.TrimSpace(keyVersion); keyVersion != "" {
+		uri += "/" + keyVersion
+	}
+	return uri
+}
 
 // newKeyVaultKeyResource creates a typed azure.subscription.keyVaultService.key
 // reference from a Key Vault key URI (e.g. https://myvault.vault.azure.net/keys/mykey/version).
