@@ -454,6 +454,8 @@ const (
 	ResourceWindowsSmbShare                               string = "windows.smb.share"
 	ResourceWindowsSmbSession                             string = "windows.smb.session"
 	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
+	ResourceWindowsAcl                                    string = "windows.acl"
+	ResourceWindowsAclEntry                               string = "windows.acl.entry"
 	ResourceWindowsPrinterDrivers                         string = "windows.printerDrivers"
 	ResourceWindowsPrinterDriver                          string = "windows.printerDriver"
 	ResourceWindowsBitlocker                              string = "windows.bitlocker"
@@ -2356,6 +2358,14 @@ func init() {
 			// to override args, implement: initWindowsSmbConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsSmbConnection,
 		},
+		"windows.acl": {
+			// to override args, implement: initWindowsAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsAcl,
+		},
+		"windows.acl.entry": {
+			// to override args, implement: initWindowsAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsAclEntry,
+		},
 		"windows.printerDrivers": {
 			// to override args, implement: initWindowsPrinterDrivers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsPrinterDrivers,
@@ -3416,6 +3426,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"file.empty": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFile).GetEmpty()).ToDataRes(types.Bool)
+	},
+	"file.acl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlFile).GetAcl()).ToDataRes(types.Resource("windows.acl"))
 	},
 	"file.context.file": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlFileContext).GetFile()).ToDataRes(types.Resource("file"))
@@ -12522,6 +12535,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.smb.connection.dialect": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSmbConnection).GetDialect()).ToDataRes(types.String)
 	},
+	"windows.acl.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetPath()).ToDataRes(types.String)
+	},
+	"windows.acl.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetOwner()).ToDataRes(types.String)
+	},
+	"windows.acl.ownerSid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetOwnerSid()).ToDataRes(types.String)
+	},
+	"windows.acl.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetGroup()).ToDataRes(types.String)
+	},
+	"windows.acl.inheritanceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetInheritanceEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.acl.sddl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetSddl()).ToDataRes(types.String)
+	},
+	"windows.acl.entries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetEntries()).ToDataRes(types.Array(types.Resource("windows.acl.entry")))
+	},
+	"windows.acl.allowedWritePrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetAllowedWritePrincipals()).ToDataRes(types.Array(types.String))
+	},
+	"windows.acl.entry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetIdentity()).ToDataRes(types.String)
+	},
+	"windows.acl.entry.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetSid()).ToDataRes(types.String)
+	},
+	"windows.acl.entry.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetType()).ToDataRes(types.String)
+	},
+	"windows.acl.entry.rights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetRights()).ToDataRes(types.String)
+	},
+	"windows.acl.entry.rightsMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetRightsMask()).ToDataRes(types.Int)
+	},
+	"windows.acl.entry.allowsRead": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetAllowsRead()).ToDataRes(types.Bool)
+	},
+	"windows.acl.entry.allowsWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetAllowsWrite()).ToDataRes(types.Bool)
+	},
+	"windows.acl.entry.allowsExecute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetAllowsExecute()).ToDataRes(types.Bool)
+	},
+	"windows.acl.entry.allowsDelete": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetAllowsDelete()).ToDataRes(types.Bool)
+	},
+	"windows.acl.entry.allowsFullControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetAllowsFullControl()).ToDataRes(types.Bool)
+	},
+	"windows.acl.entry.allowsPermissionChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetAllowsPermissionChange()).ToDataRes(types.Bool)
+	},
+	"windows.acl.entry.isInherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetIsInherited()).ToDataRes(types.Bool)
+	},
+	"windows.acl.entry.inheritanceFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetInheritanceFlags()).ToDataRes(types.String)
+	},
+	"windows.acl.entry.propagationFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclEntry).GetPropagationFlags()).ToDataRes(types.String)
+	},
 	"windows.printerDrivers.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsPrinterDrivers).GetList()).ToDataRes(types.Array(types.Resource("windows.printerDriver")))
 	},
@@ -16231,6 +16310,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"file.empty": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlFile).Empty, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"file.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlFile).Acl, ok = plugin.RawToTValue[*mqlWindowsAcl](v.Value, v.Error)
 		return
 	},
 	"file.context.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30005,6 +30088,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsSmbConnection).Dialect, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"windows.acl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.acl.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.ownerSid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).OwnerSid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.inheritanceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).InheritanceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.sddl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).Sddl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.acl.allowedWritePrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).AllowedWritePrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.acl.entry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.rights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).Rights, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.rightsMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).RightsMask, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.allowsRead": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).AllowsRead, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.allowsWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).AllowsWrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.allowsExecute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).AllowsExecute, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.allowsDelete": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).AllowsDelete, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.allowsFullControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).AllowsFullControl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.allowsPermissionChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).AllowsPermissionChange, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.isInherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).IsInherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.inheritanceFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).InheritanceFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.entry.propagationFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclEntry).PropagationFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"windows.printerDrivers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsPrinterDrivers).__id, ok = v.Value.(string)
 		return
@@ -36901,6 +37080,7 @@ type mqlFile struct {
 	User        plugin.TValue[*mqlUser]
 	Group       plugin.TValue[*mqlGroup]
 	Empty       plugin.TValue[bool]
+	Acl         plugin.TValue[*mqlWindowsAcl]
 }
 
 // createFile creates a new instance of this resource
@@ -37065,6 +37245,27 @@ func (c *mqlFile) GetEmpty() *plugin.TValue[bool] {
 		}
 
 		return c.empty(vargPath.Data)
+	})
+}
+
+func (c *mqlFile) GetAcl() *plugin.TValue[*mqlWindowsAcl] {
+	return plugin.GetOrCompute[*mqlWindowsAcl](&c.Acl, func() (*mqlWindowsAcl, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("file", c.__id, "acl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsAcl), nil
+			}
+		}
+
+		vargPath := c.GetPath()
+		if vargPath.Error != nil {
+			return nil, vargPath.Error
+		}
+
+		return c.acl(vargPath.Data)
 	})
 }
 
@@ -78274,6 +78475,223 @@ func (c *mqlWindowsSmbConnection) GetUserName() *plugin.TValue[string] {
 
 func (c *mqlWindowsSmbConnection) GetDialect() *plugin.TValue[string] {
 	return &c.Dialect
+}
+
+// mqlWindowsAcl for the windows.acl resource
+type mqlWindowsAcl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsAclInternal
+	Path                   plugin.TValue[string]
+	Owner                  plugin.TValue[string]
+	OwnerSid               plugin.TValue[string]
+	Group                  plugin.TValue[string]
+	InheritanceEnabled     plugin.TValue[bool]
+	Sddl                   plugin.TValue[string]
+	Entries                plugin.TValue[[]any]
+	AllowedWritePrincipals plugin.TValue[[]any]
+}
+
+// createWindowsAcl creates a new instance of this resource
+func createWindowsAcl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsAcl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.acl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsAcl) MqlName() string {
+	return "windows.acl"
+}
+
+func (c *mqlWindowsAcl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsAcl) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlWindowsAcl) GetOwner() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Owner, func() (string, error) {
+		return c.owner()
+	})
+}
+
+func (c *mqlWindowsAcl) GetOwnerSid() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OwnerSid, func() (string, error) {
+		return c.ownerSid()
+	})
+}
+
+func (c *mqlWindowsAcl) GetGroup() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Group, func() (string, error) {
+		return c.group()
+	})
+}
+
+func (c *mqlWindowsAcl) GetInheritanceEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.InheritanceEnabled, func() (bool, error) {
+		return c.inheritanceEnabled()
+	})
+}
+
+func (c *mqlWindowsAcl) GetSddl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Sddl, func() (string, error) {
+		return c.sddl()
+	})
+}
+
+func (c *mqlWindowsAcl) GetEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Entries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.acl", c.__id, "entries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entries()
+	})
+}
+
+func (c *mqlWindowsAcl) GetAllowedWritePrincipals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedWritePrincipals, func() ([]any, error) {
+		return c.allowedWritePrincipals()
+	})
+}
+
+// mqlWindowsAclEntry for the windows.acl.entry resource
+type mqlWindowsAclEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsAclEntryInternal it will be used here
+	Identity               plugin.TValue[string]
+	Sid                    plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Rights                 plugin.TValue[string]
+	RightsMask             plugin.TValue[int64]
+	AllowsRead             plugin.TValue[bool]
+	AllowsWrite            plugin.TValue[bool]
+	AllowsExecute          plugin.TValue[bool]
+	AllowsDelete           plugin.TValue[bool]
+	AllowsFullControl      plugin.TValue[bool]
+	AllowsPermissionChange plugin.TValue[bool]
+	IsInherited            plugin.TValue[bool]
+	InheritanceFlags       plugin.TValue[string]
+	PropagationFlags       plugin.TValue[string]
+}
+
+// createWindowsAclEntry creates a new instance of this resource
+func createWindowsAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsAclEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.acl.entry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsAclEntry) MqlName() string {
+	return "windows.acl.entry"
+}
+
+func (c *mqlWindowsAclEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsAclEntry) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlWindowsAclEntry) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
+func (c *mqlWindowsAclEntry) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlWindowsAclEntry) GetRights() *plugin.TValue[string] {
+	return &c.Rights
+}
+
+func (c *mqlWindowsAclEntry) GetRightsMask() *plugin.TValue[int64] {
+	return &c.RightsMask
+}
+
+func (c *mqlWindowsAclEntry) GetAllowsRead() *plugin.TValue[bool] {
+	return &c.AllowsRead
+}
+
+func (c *mqlWindowsAclEntry) GetAllowsWrite() *plugin.TValue[bool] {
+	return &c.AllowsWrite
+}
+
+func (c *mqlWindowsAclEntry) GetAllowsExecute() *plugin.TValue[bool] {
+	return &c.AllowsExecute
+}
+
+func (c *mqlWindowsAclEntry) GetAllowsDelete() *plugin.TValue[bool] {
+	return &c.AllowsDelete
+}
+
+func (c *mqlWindowsAclEntry) GetAllowsFullControl() *plugin.TValue[bool] {
+	return &c.AllowsFullControl
+}
+
+func (c *mqlWindowsAclEntry) GetAllowsPermissionChange() *plugin.TValue[bool] {
+	return &c.AllowsPermissionChange
+}
+
+func (c *mqlWindowsAclEntry) GetIsInherited() *plugin.TValue[bool] {
+	return &c.IsInherited
+}
+
+func (c *mqlWindowsAclEntry) GetInheritanceFlags() *plugin.TValue[string] {
+	return &c.InheritanceFlags
+}
+
+func (c *mqlWindowsAclEntry) GetPropagationFlags() *plugin.TValue[string] {
+	return &c.PropagationFlags
 }
 
 // mqlWindowsPrinterDrivers for the windows.printerDrivers resource

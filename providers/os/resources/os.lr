@@ -562,6 +562,13 @@ file @defaults("path size permissions.string") {
   group() group
   // Whether the path is empty
   empty(path) bool
+  // Windows access control list for this file
+  //
+  // Null on systems that do not use Windows security descriptors. Use it
+  // together with `files.find` to answer who may write to a set of paths, for
+  // example `files.find(from: "C:\\inetpub", type: "directory") { acl { ... } }`.
+  // On POSIX systems read `permissions` instead.
+  acl(path) windows.acl
 }
 
 // File context is a range of lines/columns in a file
@@ -11853,6 +11860,125 @@ private windows.smb.connection @defaults("serverName shareName") {
   userName string
   // SMB dialect negotiated for the connection (e.g. 3.1.1)
   dialect string
+}
+
+// Windows access control list
+//
+// Discretionary access control list of a filesystem object, selected by
+// `path`, for example `windows.acl("C:\\inetpub")` or
+// `windows.acl(path: "C:\\Windows\\System32\\dns")`. Exposes the object's
+// owner and primary group, whether it still inherits permissions from its
+// parent, the security descriptor in SDDL form, and every access control
+// entry with the principal it applies to and the rights it grants or denies.
+//
+// This is the Windows counterpart of `file.permissions`, which models a POSIX
+// mode and cannot express an access control entry, an inherited permission,
+// or the difference between an owner and a principal. Also reachable as
+// `file.acl` so it composes with `files.find`.
+//
+// Each entry carries both the raw `rightsMask` and named predicates derived
+// from it (`allowsWrite`, `allowsFullControl`, and so on). Prefer the
+// predicates: the `rights` label is unreliable, since .NET renders a mask
+// containing generic bits as a bare number rather than a name, and a
+// principal granted Modify is a writer whose label does not contain the word
+// Write.
+windows.acl @defaults("path owner") {
+  init(path string)
+  // Path of the filesystem object
+  path string
+  // Account that owns the object
+  //
+  // In DOMAIN\name form, for example BUILTIN\Administrators. The owner can
+  // always rewrite the access control list regardless of the entries in it,
+  // so an unexpected owner defeats every other restriction on the object.
+  owner() string
+  // Security identifier of the owning account, empty when it cannot be resolved
+  ownerSid() string
+  // Primary group of the object
+  group() string
+  // Whether the object still inherits access control entries from its parent
+  //
+  // False when inheritance has been broken, in which case the entries on the
+  // object are the whole story and changes to the parent no longer reach it.
+  inheritanceEnabled() bool
+  // Security descriptor in Security Descriptor Definition Language form
+  sddl() string
+  // Access control entries
+  entries() []windows.acl.entry
+  // Principals granted write access by an allow entry
+  //
+  // The account names of every allow entry whose rights include any form of
+  // write, in the order the entries appear. Answers "who can change this
+  // object" directly, for example
+  // `windows.acl("C:\\inetpub").allowedWritePrincipals.all(_ in ["BUILTIN\\Administrators", "NT AUTHORITY\\SYSTEM"])`.
+  //
+  // Deny entries are not subtracted. A deny entry only removes access, so
+  // this list is a superset of the principals that can really write, and an
+  // audit built on it reports a principal that a deny entry had already
+  // stopped rather than missing one that can write. Read `entries` when the
+  // deny entries matter.
+  allowedWritePrincipals() []string
+}
+
+// Windows access control entry
+//
+// Single entry of a discretionary access control list: the principal it
+// applies to, whether it allows or denies, the rights involved, and whether
+// it was inherited from a parent object. Iterated from `windows.acl.entries`.
+private windows.acl.entry @defaults("identity type rights") {
+  // Account the entry applies to, in DOMAIN\name form
+  identity string
+  // Security identifier of the account, empty when it cannot be resolved
+  //
+  // An entry whose identity cannot be translated is still reported, with the
+  // raw identity kept, rather than being dropped from the list.
+  sid string
+  // Whether the entry grants or denies the rights
+  //
+  // Either Allow or Deny. A deny entry takes precedence over an allow entry
+  // for the same principal.
+  type string
+  // Rights as Windows labels them
+  //
+  // For example FullControl, or "Modify, Synchronize". Unreliable for
+  // assertions: a mask containing generic bits has no label and renders as a
+  // bare signed number, and Modify grants write without saying so. Use the
+  // allows* predicates instead.
+  rights string
+  // Raw access mask
+  //
+  // The 32 bit access mask widened to a signed 64 bit value, so masks with
+  // the high generic bits set stay positive rather than appearing negative.
+  rightsMask int
+  // Whether the entry grants any form of read
+  allowsRead bool
+  // Whether the entry grants any form of write
+  //
+  // True for writing data, appending, changing attributes or extended
+  // attributes, deleting, and for the Modify, FullControl and generic
+  // write or all masks that contain those. This is the predicate behind
+  // "who can change this object".
+  allowsWrite bool
+  // Whether the entry grants execute or directory traverse
+  allowsExecute bool
+  // Whether the entry grants delete on the object or its children
+  allowsDelete bool
+  // Whether the entry grants full control
+  allowsFullControl bool
+  // Whether the entry grants the right to change permissions or take ownership
+  //
+  // A principal with either can grant itself everything else, so it is
+  // equivalent to full control even when the mask does not say so.
+  allowsPermissionChange bool
+  // Whether the entry was inherited from a parent object rather than set on this one
+  isInherited bool
+  // How the entry propagates to child objects
+  //
+  // For example "ContainerInherit, ObjectInherit", or None when the entry
+  // applies only to this object.
+  inheritanceFlags string
+  // How inheritance is applied to children, for example InheritOnly or None
+  propagationFlags string
 }
 
 // Print drivers registered with the Windows spooler
