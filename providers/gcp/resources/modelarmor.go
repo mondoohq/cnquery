@@ -182,6 +182,15 @@ func initGcpProjectModelArmorServiceTemplate(runtime *plugin.Runtime, args map[s
 	if !ok {
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
+	projectId := parseProjectFromPath(name)
+	// Ask whether the API is on before paying for a Get that cannot succeed
+	// without it. Memoized per project, so this is free after the first caller.
+	if enabled, err := serviceEnabledForInit(runtime, projectId, service_modelarmor); err != nil {
+		return nil, nil, err
+	} else if !enabled {
+		return nil, nil, errors.New("Model Armor API is not enabled on project " + projectId)
+	}
+
 	creds, err := conn.Credentials(modelarmor.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, nil, err

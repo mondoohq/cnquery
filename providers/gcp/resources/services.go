@@ -66,6 +66,8 @@ const (
 	service_networkmanagement   = "networkmanagement.googleapis.com"
 	service_memcache            = "memcache.googleapis.com"
 	service_aiplatform          = "aiplatform.googleapis.com"
+	service_datastream          = "datastream.googleapis.com"
+	service_memorystore         = "memorystore.googleapis.com"
 )
 
 func serviceName(name string) string {
