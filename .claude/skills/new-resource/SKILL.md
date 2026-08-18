@@ -104,14 +104,23 @@ Each of these is in CLAUDE.md. Each still gets walked into, because the failure 
 
 `strings` on the binary will not settle it: Go concatenates string literals, so even terms you know are present grep to zero. Rebuild, or use a control.
 
-**The init argument form is positional, not named.** This is not in CLAUDE.md and the `nginx.conf` doc comment gets it wrong:
+**A named init argument resolves against the resource's fields, not its init parameters.** `init(path? string)` does not make `r(path: "…")` compile. The resource has to *declare* a field of that name:
 
-```
-bind9(path: "/etc/named.conf")   # failed to compile: resource bind9 does not have a field named path
-bind9("/etc/named.conf")         # works
+| resource | `init` | declares `path` | `r(path: "…")` | `r("…")` |
+|---|---|---|---|---|
+| `file` | `init(path string)` | **yes** | works | works |
+| `sshd.config` | `init(path? string)` | no | `does not have a field named path` | works |
+
+The two are otherwise the same shape, so the field is the whole difference. `os.lr` is split almost evenly — **32** resources taking a path declare the field and accept the named form, **41** do not and are positional-only — which means guessing gets it wrong about half the time. `sshd.config`, `mysql.conf`, `mariadb.conf`, `bind9`, `nginx.conf`, `apache2.conf`, `chrony.conf`, `ntp.conf`, `postgresql.conf` and every `parse.*` reach their file through `file()` and declare no `path`; `fstab`, `java.keystore`, `mount.point`, `registrykey` and most `*.packages` declare it and work either way.
+
+Check before writing the doc comment, and run the form you wrote:
+
+```bash
+# note the trailing space, not "{": a resource may be declared `name @defaults(...) {`
+grep -A20 '^<resource> ' providers/<p>/resources/<p>.lr | grep -E '^\s+path\s+string'
 ```
 
-Write the positional form in the resource's doc comment, and use it for local verification.
+If you want the named form on a resource that lacks the field, that is a **schema change, not a doc fix**: declare `path string`, accepting that it then duplicates `file.path`, and only where the duplicate earns its place. Five resources' comments documented a form that could not compile — the cheap correction is the positional one.
 
 ## 4. Build and test without clobbering the installed provider
 
