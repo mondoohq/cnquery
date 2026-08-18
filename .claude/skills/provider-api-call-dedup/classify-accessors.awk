@@ -21,10 +21,13 @@
 #
 # Output: <bucket>\t<file>:<line>\t<signature>
 #
-#   INLINE   reaches the API itself; never calls NewResource. Not reachable
-#            from init-level work. Triage by fan-in before doing anything.
-#   VIA-NEW  calls NewResource, so it routes through the target's init and the
-#            init-level fixes apply.
+#   INLINE   reaches the API itself and never resolves through the resource
+#            layer. Not reachable from init-level work. Triage by fan-in
+#            before doing anything.
+#   VIA-NEW  resolves through the resource layer. NewResource routes through
+#            the target's init, so the init-level fixes apply; CreateResource
+#            skips init, so they do not -- but either way it is not an inline
+#            fetch. Read which one it is before planning work.
 #   BOTH     does both -- typically a cache or list check with a fetch as the
 #            fallback, which is usually correct. Read it before touching it;
 #            bucketing these as VIA-NEW would hide a live fetch.
@@ -51,9 +54,10 @@
 #
 #   rg -c '"<target.mql.name>"' providers/<name>/resources/*.go | grep -v _test
 #
-# In azure the split is roughly 30 owned sub-objects to 12 shared targets, so
-# the real backlog is small and specific. Do not report the raw INLINE count as
-# though all of it were work.
+# The backlog is usually far smaller than it first looks. Once CreateResource is
+# counted as resource-layer resolution (see below), INLINE drops to 13 in aws, 4
+# in azure and 2 in gcp -- and most of what remains is owned sub-objects. Do not
+# report the raw INLINE count as though all of it were work.
 
 BEGIN {
     # An SDK operation always takes a context; an MQL list getter takes no
@@ -88,7 +92,14 @@ inFunc && /^}/ {
              (scrubbed ~ /conn\.[A-Z][A-Za-z]*\(/) ||   # aws: conn.Ec2(region)
              (scrubbed ~ /svc\.[A-Z][A-Za-z]*\((ctx|context\.)/) || # aws sdk ops
              (scrubbed ~ /client\.[A-Z][A-Za-z]*\(ctx/) # gcp sdk operations
-    newres = (scrubbed ~ /NewResource\(/)
+    # CreateResource counts too. It does NOT run the target's init, so
+    # init-level fixes do not reach it -- but an accessor that resolves through
+    # the resource layer is not fetching inline, and filing it under INLINE puts
+    # already-correct code on the backlog. gcp's machineType() is the case that
+    # exposed this: it resolves through the project's aggregated machine-type
+    # list via CreateResource and keeps a direct Get only as a fallback for
+    # custom types, yet it read as INLINE.
+    newres = (scrubbed ~ /(New|Create)Resource\(/)
 
     if (newres && client) bucket = "BOTH"
     else if (newres)      bucket = "VIA-NEW"
