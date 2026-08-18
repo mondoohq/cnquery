@@ -16,7 +16,6 @@ import (
 
 	"github.com/microsoftgraph/msgraph-sdk-go/applications"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
-	"github.com/microsoftgraph/msgraph-sdk-go/serviceprincipals"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -351,31 +350,45 @@ func (a *mqlMicrosoftApplication) hasExpiredCredentials() (bool, error) {
 }
 
 func (a *mqlMicrosoftApplication) servicePrincipal() (*mqlMicrosoftServiceprincipal, error) {
-	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
-	graphClient, err := conn.GraphClient()
+	// Resolve from the tenant's service principal list rather than running one
+	// filtered Graph query per application. microsoft.serviceprincipals is a
+	// single paginated call and is memoized on the microsoft resource, so the
+	// whole set costs one fetch however many applications ask.
+	//
+	// Measured on a 72-application tenant: reading servicePrincipal for every
+	// application took 123s through the per-application filter and 4s to list
+	// the applications alone. Graph throttles on request volume, so the cost
+	// grows faster than linearly on a tenant with thousands of registrations.
+	msResource, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
-
-	ctx := context.Background()
-	filter := fmt.Sprintf("appId eq '%s'", a.GetAppId().Data)
-	resp, err := graphClient.ServicePrincipals().Get(ctx, &serviceprincipals.ServicePrincipalsRequestBuilderGetRequestConfiguration{
-		QueryParameters: &serviceprincipals.ServicePrincipalsRequestBuilderGetQueryParameters{
-			Filter: &filter,
-		},
-	})
-	if err != nil {
-		return nil, err
+	principals := msResource.(*mqlMicrosoft).GetServiceprincipals()
+	if principals.Error != nil {
+		return nil, principals.Error
 	}
 
-	servicePrincipals := resp.GetValue()
-	if len(servicePrincipals) == 0 {
-		return nil, errors.New("service principal not found")
+	wantAppId := a.GetAppId().Data
+	if wantAppId != "" {
+		for i := range principals.Data {
+			sp, ok := principals.Data[i].(*mqlMicrosoftServiceprincipal)
+			if !ok {
+				continue
+			}
+			if sp.AppId.Data == wantAppId {
+				return sp, nil
+			}
+		}
 	}
-	if len(servicePrincipals) > 1 {
-		return nil, errors.New("multiple service principals found")
-	}
-	return newMqlMicrosoftServicePrincipal(a.MqlRuntime, servicePrincipals[0])
+
+	// Not every application registration has a service principal in this
+	// tenant -- a multi-tenant app nobody has consented to has none -- so this
+	// is a legitimate empty state rather than a failure. The field has to be
+	// marked set-and-null before returning nil: without it the runtime does not
+	// know the field was resolved, and the query fails for an application whose
+	// only problem is that it is exactly what it claims to be.
+	a.ServicePrincipal.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (a *mqlMicrosoftApplication) owners() ([]any, error) {
