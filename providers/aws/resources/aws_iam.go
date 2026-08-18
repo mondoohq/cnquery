@@ -201,6 +201,21 @@ func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]any
 // (aws.iam.passwordPolicy) rather than only through the aws.iam accessor. A bare
 // instantiation has no __id, so it delegates to the parent accessor to populate
 // the policy data.
+func initAwsIamPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	iam, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	pp := iam.(*mqlAwsIam).GetPasswordPolicy()
+	if pp.Error != nil {
+		return nil, nil, pp.Error
+	}
+	return args, pp.Data, nil
+}
+
 // iamUserFromList resolves an IAM user out of the aws.iam users list, which a
 // scan fetches once for the whole account, instead of spending a GetUser per
 // referrer.
@@ -232,8 +247,14 @@ func iamUserFromList(runtime *plugin.Runtime, name, arn string) *mqlAwsIamUser {
 		if !ok {
 			continue
 		}
-		if arn != "" && usr.Arn.Data == arn {
-			return usr
+		// An ARN identifies exactly one user, so when the caller has one it
+		// decides on its own. Testing both per element would let an ARN match on
+		// one entry beat a name match on another purely by list order.
+		if arn != "" {
+			if usr.Arn.Data == arn {
+				return usr
+			}
+			continue
 		}
 		if name != "" && usr.Name.Data == name {
 			return usr
@@ -260,29 +281,20 @@ func iamGroupFromList(runtime *plugin.Runtime, name, arn string) *mqlAwsIamGroup
 		if !ok {
 			continue
 		}
-		if arn != "" && grp.Arn.Data == arn {
-			return grp
+		// An ARN identifies exactly one group, so when the caller has one it
+		// decides on its own. Testing both per element would let an ARN match on
+		// one entry beat a name match on another purely by list order.
+		if arn != "" {
+			if grp.Arn.Data == arn {
+				return grp
+			}
+			continue
 		}
 		if name != "" && grp.Name.Data == name {
 			return grp
 		}
 	}
 	return nil
-}
-
-func initAwsIamPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if _, ok := args["__id"]; ok {
-		return args, nil, nil
-	}
-	iam, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, nil, err
-	}
-	pp := iam.(*mqlAwsIam).GetPasswordPolicy()
-	if pp.Error != nil {
-		return nil, nil, pp.Error
-	}
-	return args, pp.Data, nil
 }
 
 func (a *mqlAwsIam) passwordPolicy() (*mqlAwsIamPasswordPolicy, error) {
