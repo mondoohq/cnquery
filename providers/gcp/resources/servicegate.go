@@ -59,7 +59,14 @@ func (s *serviceGate) resolveEnabled(runtime *plugin.Runtime, projectId plugin.T
 			s.err = projectId.Error
 			return
 		}
-		proj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+		// NewResource, not CreateResource, for the reason spelled out on
+		// serviceEnabledForInit below: CreateResource would cache a gcp.project
+		// holding nothing but an id, and NewResource returns whatever is already
+		// cached even after building the full record -- so a husk cached here
+		// wins for every later caller, and its name/state/parentId/labels/
+		// createTime/number are placeholders that only ever return
+		// "not implemented".
+		proj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
 			"id": llx.StringData(projectId.Data),
 		})
 		if err != nil {
@@ -100,8 +107,16 @@ func (s *serviceGate) recordEnabled(enabled bool) {
 // The answer is memoized on the gcp.project resource (sync.Once around the
 // enabled-services map), and gcp.project is itself cached by id, so this costs
 // at most one ServiceUsage call per project no matter how many inits ask.
-// CreateResource is used rather than NewResource deliberately: it skips
-// initGcpProject, so asking the question never triggers a project fetch.
+//
+// NewResource, not CreateResource. CreateResource would build a gcp.project
+// carrying nothing but an id and cache it under that id, and initGcpProject
+// hands whatever is cached to every later caller -- so whichever ran first
+// decided what everyone got. A stub does not fill itself in later either: name,
+// state, parentId, labels, createTime and number are declared as computed
+// fields but implemented as placeholders that return "not implemented", because
+// they are meant to be populated by the init. Asking whether an API is enabled
+// must therefore resolve the project properly rather than leave a husk behind.
+// It costs one Projects.Get per project, which initGcpProject then caches.
 //
 // A resolution failure is returned rather than folded into false, for the same
 // reason resolveEnabled does it: reporting "not enabled" for a project that was
@@ -110,7 +125,7 @@ func serviceEnabledForInit(runtime *plugin.Runtime, projectId, service string) (
 	if projectId == "" {
 		return false, errors.New("project id required to check whether " + service + " is enabled")
 	}
-	proj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+	proj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
 		"id": llx.StringData(projectId),
 	})
 	if err != nil {
