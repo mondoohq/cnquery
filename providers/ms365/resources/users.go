@@ -252,6 +252,17 @@ func (a *mqlMicrosoftUser) microsoftParent() (*mqlMicrosoft, error) {
 	return resource.(*mqlMicrosoft), nil
 }
 
+// userAssignedLicenseID is the cache key for a microsoft.user.assignedLicense.
+//
+// The SKU id alone does not identify the assignment. A license assignment only
+// exists in the context of one user, and disabledPlans varies per user for the
+// same SKU, so keying on the SKU makes every user holding it share one cache
+// entry. CreateResource is first-wins, so the first user's disabledPlans would
+// then be reported for everyone else on that SKU. The key carries both.
+func userAssignedLicenseID(userID, skuID string) string {
+	return userID + "/" + skuID
+}
+
 func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicrosoftUser, error) {
 	identities := []any{}
 	uid := convert.ToValue(u.GetId())
@@ -287,7 +298,7 @@ func newMqlMicrosoftUser(runtime *plugin.Runtime, u models.Userable) (*mqlMicros
 
 			mqlAssignedLicenses, err := CreateResource(runtime, "microsoft.user.assignedLicense",
 				map[string]*llx.RawData{
-					"__id":          llx.StringData(skuId),
+					"__id":          llx.StringData(userAssignedLicenseID(uid, skuId)),
 					"disabledPlans": llx.ArrayData(convert.SliceAnyToInterface(disabledPlanStrings), types.String),
 					"skuId":         llx.StringData(skuId),
 				})
