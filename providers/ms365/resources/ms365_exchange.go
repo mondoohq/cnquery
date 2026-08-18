@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"sync"
 
@@ -476,6 +477,64 @@ func (r *mqlMs365Exchangeonline) fetchExchangeReportViaPowershell(conn *connecti
 	return report, nil
 }
 
+// isAbsentSection reports whether an Exchange report section was never
+// populated, i.e. its cmdlet did not run or failed.
+//
+// fetchExchangeReport only errors when EVERY section fails, so a report with
+// one denied cmdlet is returned successfully with that one field left nil. The
+// distinction matters because a section that ran and matched nothing decodes to
+// a non-nil empty slice: absent means "not collected", empty means "collected,
+// none found".
+//
+// Sections declared as `any` are assigned from a []any, so a failed one can
+// hold a TYPED nil, which does not compare equal to nil. Check reflectively so
+// both shapes read as absent.
+func isAbsentSection(v any) bool {
+	if v == nil {
+		return true
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Map, reflect.Ptr, reflect.Interface, reflect.Func:
+		return rv.IsNil()
+	}
+	return false
+}
+
+// exchangeNullableList builds the value for a list field sourced from one
+// report section. An absent section reads null rather than as an empty list.
+//
+// convert.JsonToDictSlice(nil) returns (nil, nil) -- no error -- and assigning
+// that with StateIsSet but no StateIsNull makes ToDataRes take the non-null
+// path, so the field renders as [] rather than null. That reports "this tenant
+// has none of these" as fact for data that was never collected.
+func exchangeNullableList(isAbsent bool, data []any, err error) plugin.TValue[[]any] {
+	if isAbsent {
+		return plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	return plugin.TValue[[]any]{Data: data, State: plugin.StateIsSet, Error: err}
+}
+
+// exchangeNullableDict is exchangeNullableList for a scalar dict field.
+// convert.JsonToDict(nil) behaves the same way, rendering as {} rather than
+// null.
+func exchangeNullableDict(isAbsent bool, data any, err error) plugin.TValue[any] {
+	if isAbsent {
+		return plugin.TValue[any]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	return plugin.TValue[any]{Data: data, State: plugin.StateIsSet, Error: err}
+}
+
+// exchangeNullableBool is exchangeNullableList for a bool derived from a
+// section. A derived false is indistinguishable from a real one, so an absent
+// section must read null instead.
+func exchangeNullableBool(isAbsent bool, data bool, err error) plugin.TValue[bool] {
+	if isAbsent {
+		return plugin.TValue[bool]{State: plugin.StateIsSet | plugin.StateIsNull}
+	}
+	return plugin.TValue[bool]{Data: data, State: plugin.StateIsSet, Error: err}
+}
+
 func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	conn := r.MqlRuntime.Connection.(*connection.Ms365Connection)
 
@@ -535,53 +594,53 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		}
 		mailboxesWithAudit = append(mailboxesWithAudit, mql)
 	}
-	r.MailboxesWithAudit = plugin.TValue[[]any]{Data: mailboxesWithAudit, State: plugin.StateIsSet, Error: mailboxesWithAuditErr}
+	r.MailboxesWithAudit = exchangeNullableList(isAbsentSection(report.Mailbox), mailboxesWithAudit, mailboxesWithAuditErr)
 
 	malwareFilterPolicy, malwareFilterPolicyErr := convert.JsonToDictSlice(report.MalwareFilterPolicy)
-	r.MalwareFilterPolicy = plugin.TValue[[]any]{Data: malwareFilterPolicy, State: plugin.StateIsSet, Error: malwareFilterPolicyErr}
+	r.MalwareFilterPolicy = exchangeNullableList(isAbsentSection(report.MalwareFilterPolicy), malwareFilterPolicy, malwareFilterPolicyErr)
 
 	hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr := convert.JsonToDictSlice(report.HostedOutboundSpamFilterPolicy)
-	r.HostedOutboundSpamFilterPolicy = plugin.TValue[[]any]{Data: hostedOutboundSpamFilterPolicy, State: plugin.StateIsSet, Error: hostedOutboundSpamFilterPolicyErr}
+	r.HostedOutboundSpamFilterPolicy = exchangeNullableList(isAbsentSection(report.HostedOutboundSpamFilterPolicy), hostedOutboundSpamFilterPolicy, hostedOutboundSpamFilterPolicyErr)
 
 	transportRule, transportRuleErr := convert.JsonToDictSlice(report.TransportRule)
-	r.TransportRule = plugin.TValue[[]any]{Data: transportRule, State: plugin.StateIsSet, Error: transportRuleErr}
+	r.TransportRule = exchangeNullableList(isAbsentSection(report.TransportRule), transportRule, transportRuleErr)
 
 	safeLinksPolicy, safeLinksPolicyErr := convert.JsonToDictSlice(report.SafeLinksPolicy)
-	r.SafeLinksPolicy = plugin.TValue[[]any]{Data: safeLinksPolicy, State: plugin.StateIsSet, Error: safeLinksPolicyErr}
+	r.SafeLinksPolicy = exchangeNullableList(isAbsentSection(report.SafeLinksPolicy), safeLinksPolicy, safeLinksPolicyErr)
 
 	safeAttachmentPolicy, safeAttachmentPolicyErr := convert.JsonToDictSlice(report.SafeAttachmentPolicy)
-	r.SafeAttachmentPolicy = plugin.TValue[[]any]{Data: safeAttachmentPolicy, State: plugin.StateIsSet, Error: safeAttachmentPolicyErr}
+	r.SafeAttachmentPolicy = exchangeNullableList(isAbsentSection(report.SafeAttachmentPolicy), safeAttachmentPolicy, safeAttachmentPolicyErr)
 
 	organizationConfig, organizationConfigErr := convert.JsonToDict(report.OrganizationConfig)
-	r.OrganizationConfig = plugin.TValue[any]{Data: organizationConfig, State: plugin.StateIsSet, Error: organizationConfigErr}
+	r.OrganizationConfig = exchangeNullableDict(isAbsentSection(report.OrganizationConfig), organizationConfig, organizationConfigErr)
 
 	antiPhishPolicy, antiPhishPolicyErr := convert.JsonToDictSlice(report.AntiPhishPolicy)
-	r.AntiPhishPolicy = plugin.TValue[[]any]{Data: antiPhishPolicy, State: plugin.StateIsSet, Error: antiPhishPolicyErr}
+	r.AntiPhishPolicy = exchangeNullableList(isAbsentSection(report.AntiPhishPolicy), antiPhishPolicy, antiPhishPolicyErr)
 
 	dkimSigningConfig, dkimSigningConfigErr := convert.JsonToDictSlice(report.DkimSigningConfig)
-	r.DkimSigningConfig = plugin.TValue[[]any]{Data: dkimSigningConfig, State: plugin.StateIsSet, Error: dkimSigningConfigErr}
+	r.DkimSigningConfig = exchangeNullableList(isAbsentSection(report.DkimSigningConfig), dkimSigningConfig, dkimSigningConfigErr)
 
 	owaMailboxPolicy, owaMailboxPolicyErr := convert.JsonToDictSlice(report.OwaMailboxPolicy)
-	r.OwaMailboxPolicy = plugin.TValue[[]any]{Data: owaMailboxPolicy, State: plugin.StateIsSet, Error: owaMailboxPolicyErr}
+	r.OwaMailboxPolicy = exchangeNullableList(isAbsentSection(report.OwaMailboxPolicy), owaMailboxPolicy, owaMailboxPolicyErr)
 
 	adminAuditLogConfig, adminAuditLogConfigErr := convert.JsonToDict(report.AdminAuditLogConfig)
-	r.AdminAuditLogConfig = plugin.TValue[any]{Data: adminAuditLogConfig, State: plugin.StateIsSet, Error: adminAuditLogConfigErr}
-	r.UnifiedAuditLogIngestionEnabled = plugin.TValue[bool]{Data: dictBoolValue(adminAuditLogConfig, "unifiedAuditLogIngestionEnabled"), State: plugin.StateIsSet, Error: adminAuditLogConfigErr}
+	r.AdminAuditLogConfig = exchangeNullableDict(isAbsentSection(report.AdminAuditLogConfig), adminAuditLogConfig, adminAuditLogConfigErr)
+	r.UnifiedAuditLogIngestionEnabled = exchangeNullableBool(isAbsentSection(report.AdminAuditLogConfig), dictBoolValue(adminAuditLogConfig, "unifiedAuditLogIngestionEnabled"), adminAuditLogConfigErr)
 
 	phishFilterPolicy, phishFilterPolicyErr := convert.JsonToDictSlice(report.PhishFilterPolicy)
-	r.PhishFilterPolicy = plugin.TValue[[]any]{Data: phishFilterPolicy, State: plugin.StateIsSet, Error: phishFilterPolicyErr}
+	r.PhishFilterPolicy = exchangeNullableList(isAbsentSection(report.PhishFilterPolicy), phishFilterPolicy, phishFilterPolicyErr)
 
 	mailbox, mailboxErr := convert.JsonToDictSlice(report.Mailbox)
-	r.Mailbox = plugin.TValue[[]any]{Data: mailbox, State: plugin.StateIsSet, Error: mailboxErr}
+	r.Mailbox = exchangeNullableList(isAbsentSection(report.Mailbox), mailbox, mailboxErr)
 
 	atpPolicyForO365, atpPolicyForO365Err := convert.JsonToDictSlice(report.AtpPolicyForO365)
-	r.AtpPolicyForO365 = plugin.TValue[[]any]{Data: atpPolicyForO365, State: plugin.StateIsSet, Error: atpPolicyForO365Err}
+	r.AtpPolicyForO365 = exchangeNullableList(isAbsentSection(report.AtpPolicyForO365), atpPolicyForO365, atpPolicyForO365Err)
 
 	sharingPolicy, sharingPolicyErr := convert.JsonToDictSlice(report.SharingPolicy)
-	r.SharingPolicy = plugin.TValue[[]any]{Data: sharingPolicy, State: plugin.StateIsSet, Error: sharingPolicyErr}
+	r.SharingPolicy = exchangeNullableList(isAbsentSection(report.SharingPolicy), sharingPolicy, sharingPolicyErr)
 
 	roleAssignmentPolicy, roleAssignmentPolicyErr := convert.JsonToDictSlice(report.RoleAssignmentPolicy)
-	r.RoleAssignmentPolicy = plugin.TValue[[]any]{Data: roleAssignmentPolicy, State: plugin.StateIsSet, Error: roleAssignmentPolicyErr}
+	r.RoleAssignmentPolicy = exchangeNullableList(isAbsentSection(report.RoleAssignmentPolicy), roleAssignmentPolicy, roleAssignmentPolicyErr)
 
 	externalInOutlook := []any{}
 	var externalInOutlookErr error
@@ -603,7 +662,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 		externalInOutlook = append(externalInOutlook, mql)
 	}
-	r.ExternalInOutlook = plugin.TValue[[]any]{Data: externalInOutlook, State: plugin.StateIsSet, Error: externalInOutlookErr}
+	r.ExternalInOutlook = exchangeNullableList(isAbsentSection(report.ExternalInOutlook), externalInOutlook, externalInOutlookErr)
 
 	sharedMailboxes := []any{}
 	var sharedMailboxesErr error
@@ -624,7 +683,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 		sharedMailboxes = append(sharedMailboxes, mql)
 	}
-	r.SharedMailboxes = plugin.TValue[[]any]{Data: sharedMailboxes, State: plugin.StateIsSet, Error: sharedMailboxesErr}
+	r.SharedMailboxes = exchangeNullableList(isAbsentSection(report.ExoMailbox), sharedMailboxes, sharedMailboxesErr)
 
 	// Related to TeamsProtectionPolicy
 	if report.TeamsProtectionPolicy != nil {
@@ -667,7 +726,7 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	}
 
 	transportConfig, transportConfigErr := convert.JsonToDict(report.TransportConfig)
-	r.TransportConfig = plugin.TValue[any]{Data: transportConfig, State: plugin.StateIsSet, Error: transportConfigErr}
+	r.TransportConfig = exchangeNullableDict(isAbsentSection(report.TransportConfig), transportConfig, transportConfigErr)
 
 	mailboxAuditBypassAssociations := []any{}
 	var mailboxAuditBypassAssociationErr error
@@ -684,68 +743,58 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 		}
 		mailboxAuditBypassAssociations = append(mailboxAuditBypassAssociations, mql)
 	}
-	r.MailboxAuditBypassAssociation = plugin.TValue[[]any]{Data: mailboxAuditBypassAssociations, State: plugin.StateIsSet, Error: mailboxAuditBypassAssociationErr}
+	r.MailboxAuditBypassAssociation = exchangeNullableList(isAbsentSection(report.MailboxAuditBypassAssociation), mailboxAuditBypassAssociations, mailboxAuditBypassAssociationErr)
 
 	// resource views of the policies above, decoded from the same payload (see
 	// ms365_exchange_policies.go). The deprecated []dict accessors keep
 	// returning every property; these expose the security-relevant subset.
-	//
-	// assignPolicies mirrors the null/empty distinction used by the other typed
-	// resources above: a field absent from the report (isNull) becomes a null
-	// value rather than an empty list. The isNull check must be made by the
-	// caller on the concrete report field, since a nil []any boxed into an
-	// `any` parameter would no longer compare equal to nil.
-	assignPolicies := func(isNull bool, data []any, err error) plugin.TValue[[]any] {
-		if isNull {
-			return plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
-		}
-		return plugin.TValue[[]any]{Data: data, State: plugin.StateIsSet, Error: err}
-	}
+	// They go through exchangeNullableList for the same absent-vs-empty
+	// distinction as the raw dict fields above.
 
 	transportRules, transportRulesErr := convertTransportRules(r, report.TransportRule)
-	r.TransportRules = assignPolicies(report.TransportRule == nil, transportRules, transportRulesErr)
+	r.TransportRules = exchangeNullableList(isAbsentSection(report.TransportRule), transportRules, transportRulesErr)
 
 	antiPhishPolicies, antiPhishPoliciesErr := convertAntiPhishPolicies(r, report.AntiPhishPolicy)
-	r.AntiPhishPolicies = assignPolicies(report.AntiPhishPolicy == nil, antiPhishPolicies, antiPhishPoliciesErr)
+	r.AntiPhishPolicies = exchangeNullableList(isAbsentSection(report.AntiPhishPolicy), antiPhishPolicies, antiPhishPoliciesErr)
 
 	safeLinksPolicies, safeLinksPoliciesErr := convertSafeLinksPolicies(r, report.SafeLinksPolicy)
-	r.SafeLinksPolicies = assignPolicies(report.SafeLinksPolicy == nil, safeLinksPolicies, safeLinksPoliciesErr)
+	r.SafeLinksPolicies = exchangeNullableList(isAbsentSection(report.SafeLinksPolicy), safeLinksPolicies, safeLinksPoliciesErr)
 
 	safeAttachmentPolicies, safeAttachmentPoliciesErr := convertSafeAttachmentPolicies(r, report.SafeAttachmentPolicy)
-	r.SafeAttachmentPolicies = assignPolicies(report.SafeAttachmentPolicy == nil, safeAttachmentPolicies, safeAttachmentPoliciesErr)
+	r.SafeAttachmentPolicies = exchangeNullableList(isAbsentSection(report.SafeAttachmentPolicy), safeAttachmentPolicies, safeAttachmentPoliciesErr)
 
 	malwareFilterPolicies, malwareFilterPoliciesErr := convertMalwareFilterPolicies(r, report.MalwareFilterPolicy)
-	r.MalwareFilterPolicies = assignPolicies(report.MalwareFilterPolicy == nil, malwareFilterPolicies, malwareFilterPoliciesErr)
+	r.MalwareFilterPolicies = exchangeNullableList(isAbsentSection(report.MalwareFilterPolicy), malwareFilterPolicies, malwareFilterPoliciesErr)
 
 	hostedContentFilterPolicies, hostedContentFilterPoliciesErr := convertHostedContentFilterPolicies(r, report.HostedContentFilterPolicy)
-	r.HostedContentFilterPolicies = assignPolicies(report.HostedContentFilterPolicy == nil, hostedContentFilterPolicies, hostedContentFilterPoliciesErr)
+	r.HostedContentFilterPolicies = exchangeNullableList(isAbsentSection(report.HostedContentFilterPolicy), hostedContentFilterPolicies, hostedContentFilterPoliciesErr)
 
 	hostedOutboundSpamFilterPolicies, hostedOutboundSpamFilterPoliciesErr := convertHostedOutboundSpamFilterPolicies(r, report.HostedOutboundSpamFilterPolicy)
-	r.HostedOutboundSpamFilterPolicies = assignPolicies(report.HostedOutboundSpamFilterPolicy == nil, hostedOutboundSpamFilterPolicies, hostedOutboundSpamFilterPoliciesErr)
+	r.HostedOutboundSpamFilterPolicies = exchangeNullableList(isAbsentSection(report.HostedOutboundSpamFilterPolicy), hostedOutboundSpamFilterPolicies, hostedOutboundSpamFilterPoliciesErr)
 
 	dkimSigningConfigs, dkimSigningConfigsErr := convertDkimSigningConfigs(r, report.DkimSigningConfig)
-	r.DkimSigningConfigs = assignPolicies(report.DkimSigningConfig == nil, dkimSigningConfigs, dkimSigningConfigsErr)
+	r.DkimSigningConfigs = exchangeNullableList(isAbsentSection(report.DkimSigningConfig), dkimSigningConfigs, dkimSigningConfigsErr)
 
 	authenticationPolicies, authenticationPoliciesErr := convertAuthenticationPolicies(r, report.AuthenticationPolicy)
-	r.AuthenticationPolicies = assignPolicies(report.AuthenticationPolicy == nil, authenticationPolicies, authenticationPoliciesErr)
+	r.AuthenticationPolicies = exchangeNullableList(isAbsentSection(report.AuthenticationPolicy), authenticationPolicies, authenticationPoliciesErr)
 
 	owaMailboxPolicies, owaMailboxPoliciesErr := convertOwaMailboxPolicies(r, report.OwaMailboxPolicy)
-	r.OwaMailboxPolicies = assignPolicies(report.OwaMailboxPolicy == nil, owaMailboxPolicies, owaMailboxPoliciesErr)
+	r.OwaMailboxPolicies = exchangeNullableList(isAbsentSection(report.OwaMailboxPolicy), owaMailboxPolicies, owaMailboxPoliciesErr)
 
 	remoteDomains, remoteDomainsErr := convertRemoteDomains(r, report.RemoteDomain)
-	r.RemoteDomains = assignPolicies(report.RemoteDomain == nil, remoteDomains, remoteDomainsErr)
+	r.RemoteDomains = exchangeNullableList(isAbsentSection(report.RemoteDomain), remoteDomains, remoteDomainsErr)
 
 	quarantinePolicies, quarantinePoliciesErr := convertQuarantinePolicies(r, report.QuarantinePolicy)
-	r.QuarantinePolicies = assignPolicies(report.QuarantinePolicy == nil, quarantinePolicies, quarantinePoliciesErr)
+	r.QuarantinePolicies = exchangeNullableList(isAbsentSection(report.QuarantinePolicy), quarantinePolicies, quarantinePoliciesErr)
 
 	atpPoliciesForO365, atpPoliciesForO365Err := convertAtpPoliciesForO365(r, report.AtpPolicyForO365)
-	r.AtpPoliciesForO365 = assignPolicies(report.AtpPolicyForO365 == nil, atpPoliciesForO365, atpPoliciesForO365Err)
+	r.AtpPoliciesForO365 = exchangeNullableList(isAbsentSection(report.AtpPolicyForO365), atpPoliciesForO365, atpPoliciesForO365Err)
 
 	sharingPolicies, sharingPoliciesErr := convertSharingPolicies(r, report.SharingPolicy)
-	r.SharingPolicies = assignPolicies(report.SharingPolicy == nil, sharingPolicies, sharingPoliciesErr)
+	r.SharingPolicies = exchangeNullableList(isAbsentSection(report.SharingPolicy), sharingPolicies, sharingPoliciesErr)
 
 	roleAssignmentPolicies, roleAssignmentPoliciesErr := convertRoleAssignmentPolicies(r, report.RoleAssignmentPolicy)
-	r.RoleAssignmentPolicies = assignPolicies(report.RoleAssignmentPolicy == nil, roleAssignmentPolicies, roleAssignmentPoliciesErr)
+	r.RoleAssignmentPolicies = exchangeNullableList(isAbsentSection(report.RoleAssignmentPolicy), roleAssignmentPolicies, roleAssignmentPoliciesErr)
 
 	r.fetched = true
 	return nil
