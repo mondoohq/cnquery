@@ -201,6 +201,75 @@ func ParsePasswordPolicy(passwordPolicy *iamtypes.PasswordPolicy) map[string]any
 // (aws.iam.passwordPolicy) rather than only through the aws.iam accessor. A bare
 // instantiation has no __id, so it delegates to the parent accessor to populate
 // the policy data.
+// iamUserFromList resolves an IAM user out of the aws.iam users list, which a
+// scan fetches once for the whole account, instead of spending a GetUser per
+// referrer.
+//
+// The init runs before NewResource consults the resource cache, and the cache is
+// keyed on the resource's ARN while this lookup arrives with a name, so the
+// ARN-keyed check cannot fire and every reference re-fetched the same user: one
+// measured scan spent 59 GetUser calls on 4 distinct users.
+//
+// Resolving from the list costs nothing extra because ListUsers is already made
+// once per scan, and it loses no data: everything ListUsers omits is resolved
+// lazily anyway -- tags() through ListUserTags, and permissionsBoundary()
+// through its own GetUser fallback when the boundary was never set.
+//
+// Returns nil when the list cannot be read or holds no match, so callers keep
+// their existing fetch as the fallback rather than turning a readable user into
+// an error.
+func iamUserFromList(runtime *plugin.Runtime, name, arn string) *mqlAwsIamUser {
+	obj, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
+	if err != nil {
+		return nil
+	}
+	users := obj.(*mqlAwsIam).GetUsers()
+	if users.Error != nil {
+		return nil
+	}
+	for i := range users.Data {
+		usr, ok := users.Data[i].(*mqlAwsIamUser)
+		if !ok {
+			continue
+		}
+		if arn != "" && usr.Arn.Data == arn {
+			return usr
+		}
+		if name != "" && usr.Name.Data == name {
+			return usr
+		}
+	}
+	return nil
+}
+
+// iamGroupFromList is the group counterpart of iamUserFromList. GetGroup made no
+// calls in the account measured, so this is a latent case rather than a measured
+// one -- but the group init has no cache check at all, so it is the weaker of
+// the two.
+func iamGroupFromList(runtime *plugin.Runtime, name, arn string) *mqlAwsIamGroup {
+	obj, err := NewResource(runtime, "aws.iam", map[string]*llx.RawData{})
+	if err != nil {
+		return nil
+	}
+	groups := obj.(*mqlAwsIam).GetGroups()
+	if groups.Error != nil {
+		return nil
+	}
+	for i := range groups.Data {
+		grp, ok := groups.Data[i].(*mqlAwsIamGroup)
+		if !ok {
+			continue
+		}
+		if arn != "" && grp.Arn.Data == arn {
+			return grp
+		}
+		if name != "" && grp.Name.Data == name {
+			return grp
+		}
+	}
+	return nil
+}
+
 func initAwsIamPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if _, ok := args["__id"]; ok {
 		return args, nil, nil
@@ -1088,6 +1157,15 @@ func initAwsIamUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	if args["name"] == nil {
 		return nil, nil, errors.New("name required to fetch aws iam user")
 	}
+
+	// Resolve from the account's user list before falling back to a GetUser the
+	// ARN-keyed cache check above cannot serve, because this lookup is by name.
+	if name, ok := args["name"].Value.(string); ok && name != "" {
+		if usr := iamUserFromList(runtime, name, ""); usr != nil {
+			return args, usr, nil
+		}
+	}
+
 	conn := runtime.Connection.(*connection.AwsConnection)
 
 	svc := conn.Iam("")
@@ -2036,6 +2114,26 @@ func initAwsIamGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	}
 	if args["arn"] == nil && args["name"] == nil {
 		return nil, nil, errors.New("arn or name required to fetch aws iam group")
+	}
+
+	// Same as the user init: resolve from the account's group list first. This
+	// one has no cache check at all, so without it every reference to a group
+	// paid for its own GetGroup.
+	// args["x"] on an absent key is a nil *llx.RawData; dereferencing it panics
+	// the provider and takes the whole scan with it, and only one of the two is
+	// guaranteed present here.
+	wantName := ""
+	if args["name"] != nil {
+		wantName, _ = args["name"].Value.(string)
+	}
+	wantArn := ""
+	if args["arn"] != nil {
+		wantArn, _ = args["arn"].Value.(string)
+	}
+	if wantName != "" || wantArn != "" {
+		if grp := iamGroupFromList(runtime, wantName, wantArn); grp != nil {
+			return args, grp, nil
+		}
 	}
 
 	conn := runtime.Connection.(*connection.AwsConnection)
