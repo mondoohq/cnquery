@@ -202,6 +202,7 @@ microsoft.conditionalAccess.policy.sessionControls.applicationEnforcedRestrictio
 microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity 11.1.38
 microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.cloudAppSecurityType 11.1.38
 microsoft.conditionalAccess.policy.sessionControls.cloudAppSecurity.isEnabled 11.1.38
+microsoft.conditionalAccess.policy.sessionControls.disableResilienceDefaults 13.12.1
 microsoft.conditionalAccess.policy.sessionControls.id 11.1.38
 microsoft.conditionalAccess.policy.sessionControls.persistentBrowser 11.1.38
 microsoft.conditionalAccess.policy.sessionControls.persistentBrowser.isEnabled 11.1.38
