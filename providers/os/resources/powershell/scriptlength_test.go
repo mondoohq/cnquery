@@ -81,9 +81,9 @@ func flattenStringExpr(e ast.Expr) (string, bool) {
 		if v.Op != token.ADD {
 			return "", false
 		}
-		l, lok := flattenStringExpr(v.X)
-		r, rok := flattenStringExpr(v.Y)
-		if !lok || !rok {
+		l, leftOK := flattenStringExpr(v.X)
+		r, rightOK := flattenStringExpr(v.Y)
+		if !leftOK || !rightOK {
 			return "", false
 		}
 		return l + r, true
