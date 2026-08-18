@@ -28,8 +28,7 @@ func initOktaOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	conn := runtime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
-	client := conn.Client()
-	settings, _, err := client.OrgSettingGeneralAPI.GetOrgSettings(ctx).Execute()
+	settings, err := conn.OrgSettings(ctx)
 	if err != nil {
 		return nil, nil, err
 	}

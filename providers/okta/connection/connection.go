@@ -6,13 +6,14 @@ package connection
 import (
 	"context"
 	"errors"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
 	goCache "github.com/patrickmn/go-cache"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
@@ -51,6 +52,20 @@ type OktaConnection struct {
 	// the generated SDK, so the raw endpoints in resources/sdk authenticate the
 	// same way the SDK-served ones do.
 	authorize func(req *http.Request) error
+	// orgSettings is the org record, fetched at most once.
+	//
+	// There is exactly one organization per connection, but initOktaOrganization
+	// fetched it unconditionally and NewResource runs an init before it consults
+	// the resource cache -- so every query referencing okta.organization spent
+	// its own GET /api/v1/org. A scan of a near-empty org made 7 API calls, 5 of
+	// them this one. The count follows how many checks mention the organization,
+	// so it grows with policy breadth rather than with org size.
+	//
+	// The resource cache cannot serve this: the org's id comes back in the
+	// response, so there is no key to look it up by beforehand.
+	orgOnce     sync.Once
+	orgSettings *okta.OrgSetting
+	orgErr      error
 	// apiExtension is the client for the endpoints the generated SDK does not
 	// serve correctly. It is immutable once built, so it is shared rather than
 	// rebuilt by each caller.
@@ -244,7 +259,9 @@ func (c *OktaConnection) ApiExtension() *sdk.ApiExtension {
 }
 
 func (c *OktaConnection) Identifier() (string, error) {
-	settings, _, err := c.client.OrgSettingGeneralAPI.GetOrgSettings(context.Background()).Execute()
+	// Through the memoized accessor: this and initOktaOrganization are the only
+	// two readers of the org record, and both used to fetch their own.
+	settings, err := c.OrgSettings(context.Background())
 	if err != nil {
 		return "", errors.Join(errors.New("failed to get Okta org ID"), err)
 	}
@@ -253,4 +270,15 @@ func (c *OktaConnection) Identifier() (string, error) {
 	}
 
 	return *settings.Id, nil
+}
+
+// OrgSettings returns the organization record, fetching it at most once per
+// connection. See the orgSettings field for why this is memoized here rather
+// than through the resource cache.
+func (c *OktaConnection) OrgSettings(ctx context.Context) (*okta.OrgSetting, error) {
+	c.orgOnce.Do(func() {
+		settings, _, err := c.Client().OrgSettingGeneralAPI.GetOrgSettings(ctx).Execute()
+		c.orgSettings, c.orgErr = settings, err
+	})
+	return c.orgSettings, c.orgErr
 }
