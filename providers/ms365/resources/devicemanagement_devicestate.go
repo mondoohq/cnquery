@@ -13,6 +13,15 @@ import (
 	"go.mondoo.com/mql/v13/types"
 )
 
+type mqlMicrosoftDevicemanagementPolicyAssignmentInternal struct {
+	cacheGroupID  string
+	cacheFilterID string
+}
+
+type mqlMicrosoftDevicemanagementManageddeviceInternal struct {
+	cacheUserID string
+}
+
 func (m *mqlMicrosoftDevicemanagementPolicyAssignment) id() (string, error) {
 	return m.Id.Data, nil
 }
@@ -20,7 +29,7 @@ func (m *mqlMicrosoftDevicemanagementPolicyAssignment) id() (string, error) {
 // group resolves the Entra ID group a policy assignment targets, when the
 // assignment targets a group.
 func (m *mqlMicrosoftDevicemanagementPolicyAssignment) group() (*mqlMicrosoftGroup, error) {
-	id := m.GroupId.Data
+	id := m.cacheGroupID
 	if id == "" {
 		m.Group.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -36,7 +45,7 @@ func (m *mqlMicrosoftDevicemanagementPolicyAssignment) group() (*mqlMicrosoftGro
 
 // user resolves the Entra ID user associated with the managed device.
 func (m *mqlMicrosoftDevicemanagementManageddevice) user() (*mqlMicrosoftUser, error) {
-	id := m.UserId.Data
+	id := m.cacheUserID
 	if id == "" {
 		m.User.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

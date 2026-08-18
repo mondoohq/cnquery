@@ -215,10 +215,6 @@ microsoft.tenant @defaults("name") {
   // `SharePoint` or `exchange`) and `capabilityStatus` (one of `Enabled`,
   // `Warning`, `Suspended`, `Deleted`, or `LockedOut`).
   provisionedPlans []dict
-  // Tenant creation date and time
-  //
-  // Deprecated in favor of `createdAt`.
-  createdDateTime @maturity("deprecated") time
   // Tenant display name
   name string
   // Organization verified domains
@@ -359,13 +355,6 @@ microsoft.users {
 // Container for identity and sign-in policies, PIM role eligibilities and policies,
 // and tenant organization information.
 microsoft.identityAndAccess {
-  []microsoft.identityAndAccess.policy
-  init(filter? string)
-  // Policy filter expression
-  //
-  // Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policies`.
-  filter @maturity("deprecated") string
-
   // Get the instances of role eligibilities
   roleEligibilityScheduleInstances() []microsoft.identityAndAccess.roleEligibilityScheduleInstance
   // Privileged Identity Management resources
@@ -406,10 +395,6 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   id string
   // The identifier of the principal (user, group, or service principal) that has the role eligibility
   principalId string
-  // The identifier of the role definition that the eligibility is for
-  //
-  // Deprecated in favor of roleDefinition.
-  roleDefinitionId @maturity("deprecated") string
   // Role definition the eligibility grants
   roleDefinition() microsoft.rolemanagement.roledefinition
   // The identifier of the directory object representing the scope of the role eligibility
@@ -424,56 +409,6 @@ private microsoft.identityAndAccess.roleEligibilityScheduleInstance @defaults("m
   memberType string
   // The identifier of the role eligibility schedule from which this instance is created
   roleEligibilityScheduleId string
-}
-
-// PIM role management policy for Microsoft Entra ID roles
-//
-// Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policy`.
-private microsoft.identityAndAccess.policy @defaults("id displayName scopeType") @maturity("deprecated") {
-  // Policy ID
-  id string
-  // Policy display name
-  displayName string
-  // Policy description
-  description string
-  // True if this policy is the default organization policy
-  isOrganizationDefault bool
-  // The identifier of the scope where the policy is defined
-  scopeId string
-  // The type of the scope where the policy is defined
-  scopeType string
-  // The time when this policy was last modified
-  lastModifiedDateTime time
-  // The identity of the user who last modified the policy
-  lastModifiedBy dict
-  // The collection of rules that are part of the policy
-  rules() []microsoft.identityAndAccess.policy.rule
-}
-
-// Rule defined for a PIM role management policy
-//
-// Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule`.
-private microsoft.identityAndAccess.policy.rule @defaults("id") @maturity("deprecated") {
-  // The unique identifier for the rule
-  id string
-  // Defines details of scope that's targeted by role management policy rule
-  target microsoft.identityAndAccess.policy.ruleTarget
-}
-
-// Scope targeted by a PIM role management policy rule
-//
-// Deprecated in favor of `microsoft.identityAndAccess.privilegedIdentityManagement.policy.rule.target`.
-private microsoft.identityAndAccess.policy.ruleTarget @defaults("caller level") @maturity("deprecated") {
-  // The type of caller that's the target of the policy rule. Allowed values are: None, Admin, EndUser
-  caller string
-  // The list of role settings that are enforced and cannot be overridden by child scopes
-  enforcedSettings []string
-  // The list of role settings that are inherited from the parent scope
-  inheritableSettings []string
-  // The assignment type that's the target of policy rule. Allowed values are: Eligibility, Assignment
-  level string
-  // The list of role management operations that are the target of the policy rule
-  operations []string
 }
 
 // A PIM role management policy for Microsoft Entra ID roles
@@ -813,22 +748,6 @@ private microsoft.conditionalAccess.policy.conditions.users @defaults("includeUs
   includeUsers []string
   // User IDs excluded from scope of policy and/or GuestsOrExternalUsers
   excludeUsers []string
-  // Group IDs in scope of policy unless explicitly excluded
-  //
-  // Deprecated in favor of includeGroupsRefs.
-  includeGroups @maturity("deprecated") []string
-  // Group IDs excluded from scope of policy
-  //
-  // Deprecated in favor of excludeGroupsRefs.
-  excludeGroups @maturity("deprecated") []string
-  // Role IDs in scope of policy unless explicitly excluded
-  //
-  // Deprecated in favor of includeRolesRefs.
-  includeRoles @maturity("deprecated") []string
-  // Role IDs excluded from scope of policy
-  //
-  // Deprecated in favor of excludeRolesRefs.
-  excludeRoles @maturity("deprecated") []string
   // Users in scope of policy
   includeUsersRefs() []microsoft.user
   // Users excluded from scope of policy
@@ -948,60 +867,12 @@ private microsoft.user @defaults("id displayName userPrincipalName") {
   isAdministrator() bool
   // User city
   city string
-  // User company name
-  //
-  // Deprecated in favor of `job.companyName`.
-  companyName @maturity("deprecated") string
-  // User country
-  //
-  // Deprecated in favor of `contact.country`.
-  country @maturity("deprecated") string
   // User create time
   createdDateTime time
-  // User department
-  //
-  // Deprecated in favor of `job.department`.
-  department @maturity("deprecated") string
   // User display name
   displayName string
-  // User employee ID
-  //
-  // Deprecated in favor of `job.employeeId`.
-  employeeId @maturity("deprecated") string
   // User given name
   givenName string
-  // User job title
-  //
-  // Deprecated in favor of `job.title`.
-  jobTitle @maturity("deprecated") string
-  // User email address
-  //
-  // Deprecated in favor of `contact.email`.
-  mail @maturity("deprecated") string
-  // User mobile phone number
-  //
-  // Deprecated in favor of `contact.mobilePhone`.
-  mobilePhone @maturity("deprecated") string
-  // Additional email addresses for the user
-  //
-  // Deprecated in favor of `contact.otherMails`.
-  otherMails @maturity("deprecated") []string
-  // User office location
-  //
-  // Deprecated in favor of `job.officeLocation`.
-  officeLocation @maturity("deprecated") string
-  // User postal code
-  //
-  // Deprecated in favor of `contact.postalCode`.
-  postalCode @maturity("deprecated") string
-  // User state or province
-  //
-  // Deprecated in favor of `contact.state`.
-  state @maturity("deprecated") string
-  // User street address
-  //
-  // Deprecated in favor of `contact.streetAddress`.
-  streetAddress @maturity("deprecated") string
   // User surname
   surname string
   // User service principal name
@@ -1566,10 +1437,6 @@ private microsoft.domaindnsrecord @defaults("id label") {
   // The relative weight for records with the same priority for an SRV
   // record. Zero for record types other than SRV.
   weight int
-  // Raw domain record properties
-  //
-  // Deprecated in favor of the individual fields on this resource (`recordType`, `supportedService`, `ttl`, `label`, `text`, `canonicalName`, `mailExchange`, `preference`, `nameTarget`, `service`, `protocol`, `port`, `priority`, `weight`).
-  properties @maturity("deprecated") dict
 }
 
 // Microsoft Entra ID Application Registration
@@ -1858,10 +1725,6 @@ microsoft.serviceprincipal @defaults("name") {
   notificationEmailAddresses []string
   // App role assignment required
   appRoleAssignmentRequired bool
-  // Whether the service principal account is enabled
-  //
-  // Deprecated in favor of `enabled`.
-  accountEnabled @maturity("deprecated") bool
   // Whether it is a first-party Microsoft application
   //
   // True when the service principal is owned by Microsoft, derived from
@@ -2906,10 +2769,6 @@ private microsoft.rolemanagement.roledefinition @defaults("id displayName") {
 private microsoft.rolemanagement.roleassignment @defaults("id principalId") {
   // Role assignment ID
   id string
-  // Role definition ID
-  //
-  // Deprecated in favor of roleDefinition.
-  roleDefinitionId @maturity("deprecated") string
   // Role definition assigned
   roleDefinition() microsoft.rolemanagement.roledefinition
   // Service principal ID
@@ -3481,10 +3340,6 @@ private microsoft.devicemanagement.deviceEnrollmentConfiguration @defaults("id d
 private microsoft.devicemanagement.manageddevice {
   // Managed device ID
   id string
-  // Unique identifier for the user associated with the device
-  //
-  // Deprecated in favor of user.
-  userId @maturity("deprecated") string
   // User associated with the device
   user() microsoft.user
   // Name of the device
@@ -3606,10 +3461,6 @@ private microsoft.devicemanagement.deviceconfiguration @defaults("id displayName
   displayName string
   // Device configuration version
   version int
-  // Raw device configuration properties
-  //
-  // Deprecated in favor of `settings` and `policyAssignments`.
-  properties @maturity("deprecated") dict
   // Assignments targeting this configuration profile, with each target resolved to its kind, group, and any assignment filter
   policyAssignments []microsoft.devicemanagement.policyAssignment
   // Platform this configuration profile targets
@@ -3641,10 +3492,6 @@ private microsoft.devicemanagement.devicecompliancepolicy @defaults("id displayN
   // For the resolved target of each assignment (kind, group, and any filter),
   // use `policyAssignments`.
   assignments []dict
-  // Raw device compliance policy properties
-  //
-  // Deprecated in favor of `settings` and `policyAssignments`.
-  properties @maturity("deprecated") dict
   // Assignments targeting this compliance policy, with each target resolved to its kind, group, and any assignment filter
   policyAssignments []microsoft.devicemanagement.policyAssignment
   // Platform this compliance policy targets
@@ -3676,20 +3523,12 @@ private microsoft.devicemanagement.policyAssignment @defaults("id targetType") {
   id string
   // Target kind (groupAssignmentTarget, exclusionGroupAssignmentTarget, allDevicesAssignmentTarget, allLicensedUsersAssignmentTarget)
   targetType string
-  // Group ID when the target is a group, empty otherwise
-  //
-  // Deprecated in favor of group.
-  groupId @maturity("deprecated") string
   // Group the assignment targets, when targetType is a group
   group() microsoft.group
   // Whether the assignment excludes the target rather than including it
   excluded bool
   // Assignment filter type (none, include, exclude)
   filterType string
-  // Assignment filter ID when a filter is applied, empty otherwise
-  //
-  // Deprecated in favor of filter.
-  filterId @maturity("deprecated") string
   // Assignment filter applied to the target, when one is set
   filter() microsoft.devicemanagement.assignmentFilter
 }
@@ -4094,10 +3933,6 @@ ms365.exchangeonline {
   // Each policy exposes fields for the sending limits and the automatic
   // email-forwarding mode.
   hostedOutboundSpamFilterPolicies() []ms365.exchangeonline.hostedOutboundSpamFilterPolicyEntry
-  // Hosted content (anti-spam) filter policies as raw dictionaries
-  //
-  // Deprecated in favor of hostedContentFilterPolicies.
-  hostedContentFilterPolicy() @maturity("deprecated") []dict
   // Inbound anti-spam policies
   //
   // Each policy exposes fields for the spam, phishing, and bulk-mail actions and the
@@ -4112,10 +3947,6 @@ ms365.exchangeonline {
   // Each rule exposes fields for its name, evaluation priority, and
   // enablement state.
   transportRules() []ms365.exchangeonline.transportRuleEntry
-  // Remote domains as raw dictionaries
-  //
-  // Deprecated in favor of remoteDomains.
-  remoteDomain() @maturity("deprecated") []dict
   // Remote domain configurations
   //
   // Each configuration exposes fields for the automatic reply, forwarding, and
@@ -4140,10 +3971,6 @@ ms365.exchangeonline {
   safeAttachmentPolicies() []ms365.exchangeonline.safeAttachmentPolicyEntry
   // Organization configurations
   organizationConfig() dict
-  // Authentication policies as raw dictionaries
-  //
-  // Deprecated in favor of authenticationPolicies.
-  authenticationPolicy() @maturity("deprecated") []dict
   // Authentication policies
   //
   // Each policy exposes fields for which legacy basic authentication protocols are
@@ -4185,10 +4012,6 @@ ms365.exchangeonline {
   unifiedAuditLogIngestionEnabled() bool
   // List of phishing filter policies
   phishFilterPolicy() []dict
-  // Quarantine policies as raw dictionaries
-  //
-  // Deprecated in favor of quarantinePolicies.
-  quarantinePolicy() @maturity("deprecated") []dict
   // Quarantine policies
   //
   // Each policy exposes fields for the end-user permission bitmask and whether
@@ -4265,11 +4088,6 @@ private ms365.exchangeonlineMailboxAuditBypassAssociation @defaults("name auditB
 
 // Microsoft 365 Exchange Online Security and Compliance
 private ms365.exchangeonline.securityAndCompliance {
-  // Data Loss Prevention (DLP) compliance policies as raw dictionaries
-  //
-  // Deprecated in favor of dlpPolicies, which models the same policies as
-  // typed resources.
-  dlpCompliancePolicies() @maturity("deprecated") []dict
   // Data Loss Prevention (DLP) compliance policies
   dlpPolicies() []ms365.exchangeonline.dlpCompliancePolicy
   // Data Loss Prevention (DLP) compliance rules

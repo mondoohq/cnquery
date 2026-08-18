@@ -282,19 +282,20 @@ func (a *mqlMicrosoftConditionalAccess) createConditionsResource(
 	if conditions != nil && conditions.GetUsers() != nil {
 		users := conditions.GetUsers()
 		usersData := map[string]*llx.RawData{
-			"__id":          llx.StringData(policyId + "_conditions_users"),
-			"includeUsers":  llx.ArrayData(convert.SliceAnyToInterface(users.GetIncludeUsers()), types.String),
-			"excludeUsers":  llx.ArrayData(convert.SliceAnyToInterface(users.GetExcludeUsers()), types.String),
-			"includeGroups": llx.ArrayData(convert.SliceAnyToInterface(users.GetIncludeGroups()), types.String),
-			"excludeGroups": llx.ArrayData(convert.SliceAnyToInterface(users.GetExcludeGroups()), types.String),
-			"includeRoles":  llx.ArrayData(convert.SliceAnyToInterface(users.GetIncludeRoles()), types.String),
-			"excludeRoles":  llx.ArrayData(convert.SliceAnyToInterface(users.GetExcludeRoles()), types.String),
+			"__id":         llx.StringData(policyId + "_conditions_users"),
+			"includeUsers": llx.ArrayData(convert.SliceAnyToInterface(users.GetIncludeUsers()), types.String),
+			"excludeUsers": llx.ArrayData(convert.SliceAnyToInterface(users.GetExcludeUsers()), types.String),
 		}
 
 		mqlUsers, err = CreateResource(a.MqlRuntime, "microsoft.conditionalAccess.policy.conditions.users", usersData)
 		if err != nil {
 			return nil, err
 		}
+		mqlConditionsUsers := mqlUsers.(*mqlMicrosoftConditionalAccessPolicyConditionsUsers)
+		mqlConditionsUsers.cacheIncludeGroups = users.GetIncludeGroups()
+		mqlConditionsUsers.cacheExcludeGroups = users.GetExcludeGroups()
+		mqlConditionsUsers.cacheIncludeRoles = users.GetIncludeRoles()
+		mqlConditionsUsers.cacheExcludeRoles = users.GetExcludeRoles()
 	}
 
 	if conditions != nil && conditions.GetApplications() != nil {

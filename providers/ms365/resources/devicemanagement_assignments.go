@@ -56,16 +56,7 @@ func trimOdataType(s string) string {
 // from an assignment id and target. The id is used as the resource cache key.
 func newPolicyAssignmentResource(runtime *plugin.Runtime, id string, target models.DeviceAndAppManagementAssignmentTargetable) (any, error) {
 	targetType, groupId, excluded, filterType, filterId := assignmentTargetInfo(target)
-	return CreateResource(runtime, "microsoft.devicemanagement.policyAssignment",
-		map[string]*llx.RawData{
-			"__id":       llx.StringData(id),
-			"id":         llx.StringData(id),
-			"targetType": llx.StringData(targetType),
-			"groupId":    llx.StringData(groupId),
-			"excluded":   llx.BoolData(excluded),
-			"filterType": llx.StringData(filterType),
-			"filterId":   llx.StringData(filterId),
-		})
+	return createPolicyAssignmentResource(runtime, id, targetType, groupId, excluded, filterType, filterId)
 }
 
 // betaAssignmentTargetInfo mirrors assignmentTargetInfo for the beta SDK's
@@ -103,14 +94,26 @@ func betaAssignmentTargetInfo(target betamodels.DeviceAndAppManagementAssignment
 // beta SDK. The resulting MQL schema is identical to the v1 path.
 func newBetaPolicyAssignmentResource(runtime *plugin.Runtime, id string, target betamodels.DeviceAndAppManagementAssignmentTargetable) (any, error) {
 	targetType, groupId, excluded, filterType, filterId := betaAssignmentTargetInfo(target)
-	return CreateResource(runtime, "microsoft.devicemanagement.policyAssignment",
+	return createPolicyAssignmentResource(runtime, id, targetType, groupId, excluded, filterType, filterId)
+}
+
+// createPolicyAssignmentResource is the shared builder behind the v1 and beta
+// paths. The group and filter IDs are kept on the resource rather than in the
+// schema, because only the group and filter accessors consume them.
+func createPolicyAssignmentResource(runtime *plugin.Runtime, id, targetType, groupId string, excluded bool, filterType, filterId string) (any, error) {
+	resource, err := CreateResource(runtime, "microsoft.devicemanagement.policyAssignment",
 		map[string]*llx.RawData{
 			"__id":       llx.StringData(id),
 			"id":         llx.StringData(id),
 			"targetType": llx.StringData(targetType),
-			"groupId":    llx.StringData(groupId),
 			"excluded":   llx.BoolData(excluded),
 			"filterType": llx.StringData(filterType),
-			"filterId":   llx.StringData(filterId),
 		})
+	if err != nil {
+		return nil, err
+	}
+	mqlAssignment := resource.(*mqlMicrosoftDevicemanagementPolicyAssignment)
+	mqlAssignment.cacheGroupID = groupId
+	mqlAssignment.cacheFilterID = filterId
+	return mqlAssignment, nil
 }

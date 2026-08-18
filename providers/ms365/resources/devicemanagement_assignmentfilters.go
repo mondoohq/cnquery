@@ -91,7 +91,7 @@ func initMicrosoftDevicemanagementAssignmentFilter(runtime *plugin.Runtime, args
 
 // filter resolves the assignment filter applied to the target, when one is set.
 func (m *mqlMicrosoftDevicemanagementPolicyAssignment) filter() (*mqlMicrosoftDevicemanagementAssignmentFilter, error) {
-	id := m.FilterId.Data
+	id := m.cacheFilterID
 	if id == "" {
 		m.Filter.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

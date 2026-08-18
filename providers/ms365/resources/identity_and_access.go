@@ -22,6 +22,7 @@ import (
 const (
 	defaultRequestFilterDirectoryRole = "scopeId eq '/' and scopeType eq 'DirectoryRole'"
 
+	identityAndAccessID                                     = "microsoft.identityAndAccess"
 	identityAndAccessPrivilegedIdentityManagementID         = "microsoft.identityAndAccess/privilegedIdentityManagement"
 	identityAndAccessPrivilegedIdentityManagementPoliciesID = "microsoft.identityAndAccess/privilegedIdentityManagement/policies"
 )
@@ -74,10 +75,6 @@ func (pim *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagement) policies()
 	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies), nil
 }
 
-func initMicrosoftIdentityAndAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return args, nil, nil
-}
-
 func initMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	return args, nil, nil
 }
@@ -92,12 +89,8 @@ func filterID(filter string) string {
 	return filter
 }
 
-// id derives the resource cache key from the filter so that querying the same
-// resource with different filters yields distinct instances. Without the
-// filter in the __id, the runtime caches the first result and reuses it for
-// every later filter.
 func (a *mqlMicrosoftIdentityAndAccess) id() (string, error) {
-	return "microsoft.identityAndAccess/filter/" + filterID(a.Filter.Data), nil
+	return identityAndAccessID, nil
 }
 
 func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) id() (string, error) {
@@ -108,17 +101,11 @@ func (a *mqlMicrosoftIdentityAndAccessAccessReviews) id() (string, error) {
 	return "microsoft.identityAndAccess.accessReviews/filter/" + filterID(a.Filter.Data), nil
 }
 
-func (a *mqlMicrosoftIdentityAndAccess) list() ([]any, error) {
-	return listRoleManagementPolicies(a.MqlRuntime, a.Filter.Data, newDeprecatedMqlRoleManagementPolicy)
-}
-
 func (a *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicies) list() ([]any, error) {
-	return listRoleManagementPolicies(a.MqlRuntime, a.Filter.Data, newMqlRoleManagementPolicy)
+	return listRoleManagementPolicies(a.MqlRuntime, a.Filter.Data)
 }
 
-type roleManagementPolicyFactory func(*plugin.Runtime, models.UnifiedRoleManagementPolicyable) (any, error)
-
-func listRoleManagementPolicies(runtime *plugin.Runtime, requestFilter string, createPolicy roleManagementPolicyFactory) ([]any, error) {
+func listRoleManagementPolicies(runtime *plugin.Runtime, requestFilter string) ([]any, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -167,7 +154,7 @@ func listRoleManagementPolicies(runtime *plugin.Runtime, requestFilter string, c
 	var policyResources []any
 	for _, policy := range policies {
 		if policy.GetId() != nil && policy.GetDisplayName() != nil {
-			policyResource, err := createPolicy(runtime, policy)
+			policyResource, err := newMqlRoleManagementPolicy(runtime, policy)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create MQL resource for policy ID %s: %w", *policy.GetId(), err)
 			}
@@ -178,23 +165,7 @@ func listRoleManagementPolicies(runtime *plugin.Runtime, requestFilter string, c
 	return policyResources, nil
 }
 
-func newDeprecatedMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (any, error) {
-	resource, err := newRoleManagementPolicyResource(runtime, u, ResourceMicrosoftIdentityAndAccessPolicy)
-	if err != nil {
-		return nil, err
-	}
-	return resource.(*mqlMicrosoftIdentityAndAccessPolicy), nil
-}
-
 func newMqlRoleManagementPolicy(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable) (any, error) {
-	resource, err := newRoleManagementPolicyResource(runtime, u, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy)
-	if err != nil {
-		return nil, err
-	}
-	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy), nil
-}
-
-func newRoleManagementPolicyResource(runtime *plugin.Runtime, u models.UnifiedRoleManagementPolicyable, resourceName string) (plugin.Resource, error) {
 	lastModifiedByDict := map[string]any{}
 	var err error
 
@@ -205,7 +176,7 @@ func newRoleManagementPolicyResource(runtime *plugin.Runtime, u models.UnifiedRo
 		}
 	}
 
-	return CreateResource(runtime, resourceName,
+	resource, err := CreateResource(runtime, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy,
 		map[string]*llx.RawData{
 			"__id":                  llx.StringDataPtr(u.GetId()),
 			"id":                    llx.StringDataPtr(u.GetId()),
@@ -217,19 +188,17 @@ func newRoleManagementPolicyResource(runtime *plugin.Runtime, u models.UnifiedRo
 			"lastModifiedDateTime":  llx.TimeDataPtr(u.GetLastModifiedDateTime()),
 			"lastModifiedBy":        llx.DictData(lastModifiedByDict),
 		})
-}
-
-func (m *mqlMicrosoftIdentityAndAccessPolicy) rules() ([]any, error) {
-	return listRoleManagementPolicyRules(m.MqlRuntime, m.Id.Data, newDeprecatedMqlRoleManagementPolicyRule)
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy), nil
 }
 
 func (m *mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicy) rules() ([]any, error) {
-	return listRoleManagementPolicyRules(m.MqlRuntime, m.Id.Data, newMqlRoleManagementPolicyRule)
+	return listRoleManagementPolicyRules(m.MqlRuntime, m.Id.Data)
 }
 
-type roleManagementPolicyRuleFactory func(*plugin.Runtime, models.UnifiedRoleManagementPolicyRuleable) (any, error)
-
-func listRoleManagementPolicyRules(runtime *plugin.Runtime, policyID string, createRule roleManagementPolicyRuleFactory) ([]any, error) {
+func listRoleManagementPolicyRules(runtime *plugin.Runtime, policyID string) ([]any, error) {
 	conn := runtime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
 	if err != nil {
@@ -263,7 +232,7 @@ func listRoleManagementPolicyRules(runtime *plugin.Runtime, policyID string, cre
 		if rule.GetId() == nil {
 			continue
 		}
-		ruleResource, err := createRule(runtime, rule)
+		ruleResource, err := newMqlRoleManagementPolicyRule(runtime, rule)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create MQL resource for rule ID %s: %w", *rule.GetId(), err)
 		}
@@ -273,33 +242,8 @@ func listRoleManagementPolicyRules(runtime *plugin.Runtime, policyID string, cre
 	return ruleResources, nil
 }
 
-func newDeprecatedMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (any, error) {
-	resource, err := newRoleManagementPolicyRuleResource(
-		runtime,
-		rule,
-		ResourceMicrosoftIdentityAndAccessPolicyRule,
-		ResourceMicrosoftIdentityAndAccessPolicyRuleTarget,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return resource.(*mqlMicrosoftIdentityAndAccessPolicyRule), nil
-}
-
 func newMqlRoleManagementPolicyRule(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable) (any, error) {
-	resource, err := newRoleManagementPolicyRuleResource(
-		runtime,
-		rule,
-		ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule,
-		ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule), nil
-}
-
-func newRoleManagementPolicyRuleResource(runtime *plugin.Runtime, rule models.UnifiedRoleManagementPolicyRuleable, ruleResourceName string, targetResourceName string) (plugin.Resource, error) {
+	const targetResource = ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRuleTarget
 	var mqlPolicyRuleTarget plugin.Resource
 	var err error
 
@@ -314,18 +258,22 @@ func newRoleManagementPolicyRuleResource(runtime *plugin.Runtime, rule models.Un
 			"operations":          llx.ArrayData(convert.SliceAnyToInterface(convertEnumCollectionToStrings(rule.GetTarget().GetOperations())), types.String),
 		}
 
-		mqlPolicyRuleTarget, err = CreateResource(runtime, targetResourceName, targetData)
+		mqlPolicyRuleTarget, err = CreateResource(runtime, targetResource, targetData)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return CreateResource(runtime, ruleResourceName,
+	resource, err := CreateResource(runtime, ResourceMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule,
 		map[string]*llx.RawData{
 			"__id":   llx.StringDataPtr(rule.GetId()),
 			"id":     llx.StringDataPtr(rule.GetId()),
-			"target": llx.ResourceData(mqlPolicyRuleTarget, targetResourceName),
+			"target": llx.ResourceData(mqlPolicyRuleTarget, targetResource),
 		})
+	if err != nil {
+		return nil, err
+	}
+	return resource.(*mqlMicrosoftIdentityAndAccessPrivilegedIdentityManagementPolicyRule), nil
 }
 
 // Least privileged permissions: RoleEligibilitySchedule.Read.Directory
@@ -364,12 +312,15 @@ func (a *mqlMicrosoftIdentityAndAccess) roleEligibilityScheduleInstances() ([]an
 	return instances, nil
 }
 
+type mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstanceInternal struct {
+	cacheRoleDefinitionID string
+}
+
 func newMqlRoleEligibilityScheduleInstance(runtime *plugin.Runtime, inst models.UnifiedRoleEligibilityScheduleInstanceable) (*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance, error) {
 	resource, err := CreateResource(runtime, "microsoft.identityAndAccess.roleEligibilityScheduleInstance", map[string]*llx.RawData{
 		"id":                        llx.StringDataPtr(inst.GetId()),
 		"__id":                      llx.StringDataPtr(inst.GetId()),
 		"principalId":               llx.StringDataPtr(inst.GetPrincipalId()),
-		"roleDefinitionId":          llx.StringDataPtr(inst.GetRoleDefinitionId()),
 		"directoryScopeId":          llx.StringDataPtr(inst.GetDirectoryScopeId()),
 		"appScopeId":                llx.StringDataPtr(inst.GetAppScopeId()),
 		"startDateTime":             llx.TimeDataPtr(inst.GetStartDateTime()),
@@ -380,12 +331,16 @@ func newMqlRoleEligibilityScheduleInstance(runtime *plugin.Runtime, inst models.
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance), nil
+	mqlInstance := resource.(*mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance)
+	if roleDefinitionID := inst.GetRoleDefinitionId(); roleDefinitionID != nil {
+		mqlInstance.cacheRoleDefinitionID = *roleDefinitionID
+	}
+	return mqlInstance, nil
 }
 
 // roleDefinition resolves the role definition this eligibility grants.
 func (a *mqlMicrosoftIdentityAndAccessRoleEligibilityScheduleInstance) roleDefinition() (*mqlMicrosoftRolemanagementRoledefinition, error) {
-	id := a.RoleDefinitionId.Data
+	id := a.cacheRoleDefinitionID
 	if id == "" {
 		a.RoleDefinition.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

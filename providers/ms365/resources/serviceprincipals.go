@@ -424,7 +424,6 @@ func newMqlMicrosoftServicePrincipal(runtime *plugin.Runtime, sp models.ServiceP
 		"preferredSingleSignOnMode":  llx.StringDataPtr(sp.GetPreferredSingleSignOnMode()),
 		"notificationEmailAddresses": llx.ArrayData(convert.SliceAnyToInterface(sp.GetNotificationEmailAddresses()), types.String),
 		"appRoleAssignmentRequired":  llx.BoolDataPtr(sp.GetAppRoleAssignmentRequired()),
-		"accountEnabled":             llx.BoolDataPtr(sp.GetAccountEnabled()),
 		"verifiedPublisher":          llx.DictData(verifiedPublisher),
 		"appRoles":                   llx.ArrayData(mqlAppRoleList, types.Resource("microsoft.application.role")),
 		"alternativeNames":           llx.ArrayData(convert.SliceAnyToInterface(sp.GetAlternativeNames()), types.String),

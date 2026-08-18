@@ -254,11 +254,6 @@ private nutanix.host @defaults("name cpuModel hypervisorType") {
   blockSerial string
   // Rackable unit UUID
   rackableUnitUuid string
-  // Node serial number
-  //
-  // Always null. The v4.0 Prism Central API does not report a node-level
-  // serial number, only the block serial in blockSerial.
-  nodeSerial @maturity("deprecated") string
   // CPU model name
   cpuModel string
   // Number of physical CPU cores
@@ -488,11 +483,6 @@ private nutanix.vm @defaults("name powerState memorySizeBytes") {
   updateTime time
   // External UUID of the tenant that owns the virtual machine
   tenantId string
-  // External UUID of the project the virtual machine belongs to
-  //
-  // Always null. The v4.0 Prism Central API does not report a project
-  // reference on the virtual machine.
-  projectId @maturity("deprecated") string
   // Source entity type the virtual machine was created from
   //
   // One of VM, VM_RECOVERY_POINT, or UNKNOWN.
@@ -1067,11 +1057,6 @@ private nutanix.storage.container @defaults("name replicationFactor isEncrypted"
   nfsWhitelistAddresses []string
   // Whether the NFS allowlist is inherited from the global configuration
   isNfsWhitelistInherited bool
-  // Whether the container is shared across registered clusters
-  //
-  // Always null. The v4.0 Prism Central API does not report whether a
-  // storage container is shared across registered clusters.
-  isShared @maturity("deprecated") bool
   // Whether the container is internal and Nutanix-managed
   isInternal bool
   // Whether the container is marked for removal
