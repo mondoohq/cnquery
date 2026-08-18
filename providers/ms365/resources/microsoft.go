@@ -8,7 +8,9 @@ import (
 	"sync"
 
 	betamodels "github.com/microsoftgraph/msgraph-beta-sdk-go/models"
-	"github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
+	betareports "github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
+	"github.com/microsoftgraph/msgraph-sdk-go/models"
+	"github.com/microsoftgraph/msgraph-sdk-go/reports"
 	"go.mondoo.com/mql/v13/providers/ms365/connection"
 )
 
@@ -31,6 +33,10 @@ type mqlMicrosoftInternal struct {
 	mfaOnce sync.Once
 	// the response when asking for the user registration details
 	mfaResp mfaResp
+	// guards regDetails; the whole tenant's registration details, fetched once
+	regOnce    sync.Once
+	regDetails map[string]models.UserRegistrationDetailsable
+	regErr     error
 	// per-user fields resolved in one batched Graph call on first access
 	userBatches userBatchCaches
 	// per-service-principal fields resolved in one batched Graph call
@@ -165,8 +171,8 @@ func (a *mqlMicrosoft) loadMfaResp() *mfaResp {
 			Reports().
 			AuthenticationMethods().
 			UserRegistrationDetails().
-			Get(ctx, &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
-				QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
+			Get(ctx, &betareports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
+				QueryParameters: &betareports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
 					Top: &top,
 				},
 			})
@@ -237,4 +243,58 @@ func (a *mqlMicrosoft) deviceById(id string) (*mqlMicrosoftDevice, bool) {
 	}
 	res, ok := a.idxDevicesById[id]
 	return res, ok
+}
+
+// loadRegistrationDetails reads every user's authentication-method registration
+// record in one paginated pass and indexes it by user id.
+//
+// microsoft.user.authMethods.registrationDetails previously fetched its own
+// record per user. Measured on this tenant: 50 per-user Gets against 4 $batch
+// calls for the whole of authMethods, so the child cost roughly twelve times its
+// parent and 86% of that query's traffic. The v1 request builder exposes a
+// collection Get alongside the per-item one, and Graph returns the same record
+// either way.
+//
+// Deliberately separate from loadMfaResp, which reads the same report through
+// the beta client for mfaEnabled only. Unifying them means moving mfaEnabled to
+// v1, which changes a field's data source and belongs in its own change.
+func (a *mqlMicrosoft) loadRegistrationDetails() (map[string]models.UserRegistrationDetailsable, error) {
+	a.regOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+		graphClient, err := conn.GraphClient()
+		if err != nil {
+			a.regErr = err
+			return
+		}
+
+		ctx := context.Background()
+		top := int32(999)
+		resp, err := graphClient.Reports().AuthenticationMethods().UserRegistrationDetails().
+			Get(ctx, &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetRequestConfiguration{
+				QueryParameters: &reports.AuthenticationMethodsUserRegistrationDetailsRequestBuilderGetQueryParameters{
+					Top: &top,
+				},
+			})
+		if err != nil {
+			a.regErr = transformError(err)
+			return
+		}
+
+		details, err := iterate[models.UserRegistrationDetailsable](ctx, resp, graphClient.GetAdapter(),
+			models.CreateUserRegistrationDetailsCollectionResponseFromDiscriminatorValue)
+		if err != nil {
+			a.regErr = transformError(err)
+			return
+		}
+
+		idx := make(map[string]models.UserRegistrationDetailsable, len(details))
+		for _, d := range details {
+			if d == nil || d.GetId() == nil {
+				continue
+			}
+			idx[*d.GetId()] = d
+		}
+		a.regDetails = idx
+	})
+	return a.regDetails, a.regErr
 }
