@@ -10,6 +10,24 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 )
 
+// additionalDataString reads a string out of a kiota AdditionalData bag.
+//
+// Kiota stores unmatched JSON scalars as pointers, so a value that arrived as a
+// JSON string is a *string in the bag, not a string. A direct assertion to
+// string therefore never succeeds and silently yields the zero value. Accept
+// both shapes so the read works regardless of how the property was stored.
+func additionalDataString(add map[string]any, key string) string {
+	switch v := add[key].(type) {
+	case string:
+		return v
+	case *string:
+		if v != nil {
+			return *v
+		}
+	}
+	return ""
+}
+
 // assignmentTargetInfo extracts the discriminator, group id, exclusion flag,
 // and optional assignment-filter metadata from a Graph assignment target.
 // The filter id and type live in AdditionalData because the v1 SDK does not
@@ -33,12 +51,8 @@ func assignmentTargetInfo(target models.DeviceAndAppManagementAssignmentTargetab
 		}
 	}
 	add := target.GetAdditionalData()
-	if v, ok := add["deviceAndAppManagementAssignmentFilterType"].(string); ok {
-		filterType = v
-	}
-	if v, ok := add["deviceAndAppManagementAssignmentFilterId"].(string); ok {
-		filterId = v
-	}
+	filterType = additionalDataString(add, "deviceAndAppManagementAssignmentFilterType")
+	filterId = additionalDataString(add, "deviceAndAppManagementAssignmentFilterId")
 	return targetType, groupId, excluded, filterType, filterId
 }
 
@@ -62,6 +76,11 @@ func newPolicyAssignmentResource(runtime *plugin.Runtime, id string, target mode
 // betaAssignmentTargetInfo mirrors assignmentTargetInfo for the beta SDK's
 // parallel target type. Endpoint security intents, app detections per device,
 // and Windows Autopilot live on the beta endpoint.
+//
+// Unlike v1, the beta target declares the assignment-filter properties as real
+// field deserializers, so they are consumed into the backing store and never
+// reach AdditionalData. Read the typed getters here; the AdditionalData lookup
+// is kept only as a fallback in case a future SDK drops the typed accessors.
 func betaAssignmentTargetInfo(target betamodels.DeviceAndAppManagementAssignmentTargetable) (targetType, groupId string, excluded bool, filterType, filterId string) {
 	if target == nil {
 		return "", "", false, "", ""
@@ -80,12 +99,18 @@ func betaAssignmentTargetInfo(target betamodels.DeviceAndAppManagementAssignment
 			groupId = *g
 		}
 	}
-	add := target.GetAdditionalData()
-	if v, ok := add["deviceAndAppManagementAssignmentFilterType"].(string); ok {
-		filterType = v
+	if v := target.GetDeviceAndAppManagementAssignmentFilterType(); v != nil {
+		filterType = v.String()
 	}
-	if v, ok := add["deviceAndAppManagementAssignmentFilterId"].(string); ok {
-		filterId = v
+	if v := target.GetDeviceAndAppManagementAssignmentFilterId(); v != nil {
+		filterId = *v
+	}
+	add := target.GetAdditionalData()
+	if filterType == "" {
+		filterType = additionalDataString(add, "deviceAndAppManagementAssignmentFilterType")
+	}
+	if filterId == "" {
+		filterId = additionalDataString(add, "deviceAndAppManagementAssignmentFilterId")
 	}
 	return targetType, groupId, excluded, filterType, filterId
 }
