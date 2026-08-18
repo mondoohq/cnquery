@@ -11995,6 +11995,464 @@ private windows.acl.entry @defaults("identity type rights") {
   propagationFlags string
 }
 
+// Windows DNS Server
+//
+// Configuration of the Windows DNS Server role: global server settings,
+// recursion, resolver cache hardening, forwarders, root hints, response rate
+// limiting, stale record scavenging, event and debug logging, and every zone
+// the server hosts together with its zone transfer, dynamic update and DNSSEC
+// signing configuration. Backed by the DnsServer PowerShell module, which is
+// read once per scan in a single batched call rather than one call per field.
+// Every field requires the DNS Server role to be installed; gate an audit on
+// `windows.serverFeature(name: "DNS").installed` so the checks do not run on
+// hosts that are not name servers. Complements the client-side `dns` resource
+// in the network provider, which resolves names through the public DNS system
+// and cannot see a server's own configuration.
+windows.dnsServer {
+  // Global server settings
+  settings() windows.dnsServer.settings
+  // Recursion configuration
+  recursion() windows.dnsServer.recursion
+  // Resolver cache configuration
+  cache() windows.dnsServer.cache
+  // Event log and debug log configuration
+  diagnostics() windows.dnsServer.diagnostics
+  // Stale resource record scavenging configuration
+  scavenging() windows.dnsServer.scavenging
+  // Response rate limiting configuration
+  responseRateLimiting() windows.dnsServer.responseRateLimiting
+  // Forwarder configuration
+  forwarderConfiguration() windows.dnsServer.forwarderConfiguration
+  // Root hint name servers the resolver falls back to
+  rootHints() []windows.dnsServer.rootHint
+  // Zones hosted by this server
+  zones() []windows.dnsServer.zone
+}
+
+// Windows DNS Server global settings
+//
+// Server-wide settings reported by Get-DnsServerSetting, covering the
+// addresses the service answers on, the socket pool that randomizes source
+// ports against cache poisoning, whether the server is DNSSEC aware, and
+// whether it discloses its build in response to a version query.
+private windows.dnsServer.settings {
+  // Host name the DNS server reports for itself
+  computerName string
+  // Major version of the DNS server
+  majorVersion int
+  // Minor version of the DNS server
+  minorVersion int
+  // Build number of the DNS server
+  buildNumber int
+  // Whether the server performs DNSSEC validation on responses it resolves
+  enableDnsSec bool
+  // Level of build information returned in response to a version query
+  //
+  // 0 returns no version information, 1 returns the full version string, and
+  // 2 returns the version number only. A server that answers a version query
+  // discloses its exact build to an unauthenticated client, so 0 is the
+  // hardened value.
+  enableVersionQuery int
+  // Whether the server answers over IPv6
+  enableIPv6 bool
+  // IP addresses the DNS service is configured to answer on
+  //
+  // Empty when the server has not been restricted to specific addresses, in
+  // which case it answers on every address in `allIpAddresses`.
+  listeningIpAddresses []string
+  // All IP addresses present on the host
+  allIpAddresses []string
+  // Number of sockets the server randomizes source ports across
+  //
+  // A larger pool makes the source port of an outbound query harder to guess
+  // and is the primary mitigation against cache poisoning. The Windows
+  // default is 2500 and the maximum is 10000; 0 disables randomization.
+  socketPoolSize int
+  // Port ranges excluded from the socket pool
+  excludedPortRanges []string
+  // Whether the server rotates the order of multiple records in a response
+  roundRobin bool
+  // Whether the server sends zone transfers to non-Microsoft secondaries in the slower, single-record format
+  bindSecondaries bool
+  // Whether the server rejects a zone file containing a bad record rather than loading it partially
+  strictFileParsing bool
+  // Character set the server enforces on names
+  //
+  // 0 allows any character, 1 enforces strict RFC 1035 names, 2 allows
+  // non-RFC ANSI names, and 3 allows multibyte UTF-8. Higher values are more
+  // permissive about what a name may contain.
+  nameCheckFlag int
+  // Whether the server signs and re-signs DNSSEC zones online without operator action
+  enableOnlineSigning bool
+  // Maximum number of address records returned in a response, or 0 for no limit
+  addressAnswerLimit int
+  // Seconds the server waits for a zone transfer connection to be established
+  xfrConnectTimeoutSeconds int
+  // Whether Active Directory is reachable, which is required to host directory-integrated zones
+  dsAvailable bool
+  // Whether the server runs on a read-only domain controller
+  isReadOnlyDC bool
+  // Path of a server-level plug-in DLL, empty when none is loaded
+  //
+  // A plug-in DLL runs inside the DNS service and can rewrite any answer, so
+  // an unexpected value here is a server compromise indicator.
+  serverLevelPluginDll string
+  // URL the server retrieves the root trust anchors from
+  rootTrustAnchorsUrl string
+}
+
+// Windows DNS Server recursion configuration
+//
+// Whether the server resolves names it is not authoritative for on behalf of
+// clients, and the timers it applies while doing so. An authoritative server
+// that is reachable from untrusted networks should not recurse, since an open
+// resolver can be used to amplify reflection attacks and its cache can be
+// poisoned.
+private windows.dnsServer.recursion @defaults("enabled") {
+  // Whether the server performs recursive resolution
+  enabled bool
+  // Whether the server discards responses that do not match the outstanding query
+  //
+  // Also known as cache pollution protection. When true the server refuses
+  // records outside the queried domain, which is what stops an off-path
+  // attacker from injecting unrelated records into the cache.
+  secureResponse bool
+  // Seconds the server waits for a recursive lookup to complete
+  timeoutSeconds int
+  // Seconds the server waits before retrying a recursive lookup
+  retryIntervalSeconds int
+  // Extra seconds allowed for a recursive lookup over a slow link
+  additionalTimeoutSeconds int
+}
+
+// Windows DNS Server resolver cache configuration
+//
+// Settings that govern how long the server retains resolved records and how
+// aggressively it rejects records it did not ask for. Cache locking and
+// pollution protection are the two settings that decide whether a cached
+// entry can be overwritten before it expires.
+private windows.dnsServer.cache {
+  // Whether the server discards records outside the queried domain
+  enablePollutionProtection bool
+  // Percentage of a record's time to live during which it cannot be overwritten
+  //
+  // 100 locks a cached record for its full lifetime, which is the hardened
+  // value; a lower percentage leaves a window in which a forged response can
+  // replace it.
+  lockingPercent int
+  // Maximum cache size in kilobytes, or 0 for no limit
+  maxKbSize int
+  // Maximum seconds a record is retained regardless of its own time to live
+  maxTtlSeconds int
+  // Maximum seconds a negative (name does not exist) answer is retained
+  maxNegativeTtlSeconds int
+  // Whether the server caches responses that carry no authentication data
+  storeEmptyAuthenticationResponse bool
+  // Whether the cache ignores DNS server policies
+  ignorePolicies bool
+}
+
+// Windows DNS Server logging configuration
+//
+// Event log severity and the per-packet debug log. The debug log records
+// query and answer content, so it is diagnostic rather than security
+// auditing, and leaving it on writes every query a client makes to disk.
+private windows.dnsServer.diagnostics @defaults("eventLogLevel") {
+  // Severity of events written to the DNS Server event log
+  //
+  // 0 logs nothing, 1 logs errors, 2 logs errors and warnings, and 4 logs all
+  // events. A server that logs nothing leaves no record of a zone transfer or
+  // update failure.
+  eventLogLevel int
+  // Whether events go to the system event log rather than the DNS Server log
+  useSystemEventLog bool
+  // Whether per-packet debug logging to a file is enabled
+  enableLoggingToFile bool
+  // Path of the debug log file, empty when the default path is used
+  logFilePath string
+  // Maximum debug log file size in megabytes
+  maxFileSizeMb int
+  // Whether the debug log wraps rather than stopping when it reaches its size limit
+  enableLogFileRollover bool
+  // Whether debug log entries are flushed to disk as they are written
+  saveLogsToPersistentStorage bool
+  // Whether incoming queries are written to the debug log
+  logQueries bool
+  // Whether outgoing answers are written to the debug log
+  logAnswers bool
+  // Whether zone change notifications are written to the debug log
+  logNotifications bool
+  // Whether dynamic updates are written to the debug log
+  logUpdates bool
+  // Whether the question section of each packet is written to the debug log
+  logQuestionTransactions bool
+  // Whether responses that match no outstanding query are written to the debug log
+  logUnmatchedResponses bool
+  // Whether sent packets are written to the debug log
+  logSendPackets bool
+  // Whether received packets are written to the debug log
+  logReceivePackets bool
+  // Whether TCP packets are written to the debug log
+  logTcpPackets bool
+  // Whether UDP packets are written to the debug log
+  logUdpPackets bool
+  // Whether whole packet contents are written to the debug log
+  logFullPackets bool
+  // Whether each debug log entry is written through to disk immediately
+  writeThrough bool
+  // IP addresses the debug log is restricted to, empty when every address is logged
+  filterIpAddresses []string
+}
+
+// Windows DNS Server scavenging configuration
+//
+// Automatic removal of stale dynamically registered records. Records that are
+// never scavenged accumulate and can point a name at an address that has been
+// reassigned to a different host.
+private windows.dnsServer.scavenging @defaults("enabled") {
+  // Whether the server scavenges stale records
+  enabled bool
+  // Seconds between scavenging passes
+  scavengingIntervalSeconds int
+  // Seconds after which a record becomes eligible to be refreshed
+  refreshIntervalSeconds int
+  // Seconds during which a record's timestamp is not refreshed
+  noRefreshIntervalSeconds int
+  // Time of the last scavenging pass, null when the server has never scavenged
+  lastScavengeTime time
+}
+
+// Windows DNS Server response rate limiting configuration
+//
+// Rate limits applied to identical answers sent to the same client subnet.
+// Without them an authoritative server can be used to amplify a reflection
+// attack against a spoofed source address.
+private windows.dnsServer.responseRateLimiting @defaults("mode") {
+  // Whether rate limiting is applied
+  //
+  // One of Disable, Enable, or LogOnly. LogOnly records what would have been
+  // dropped without dropping it, so it does not mitigate an attack.
+  mode string
+  // Identical responses per second allowed to a client subnet
+  responsesPerSecond int
+  // Identical error responses per second allowed to a client subnet
+  errorsPerSecond int
+  // Seconds over which responses are counted
+  windowSeconds int
+  // IPv4 prefix length that defines a client subnet
+  ipv4PrefixLength int
+  // IPv6 prefix length that defines a client subnet
+  ipv6PrefixLength int
+  // Rate at which the server still answers one in N rate-limited queries
+  leakRate int
+  // Rate at which the server returns a truncated response inviting a TCP retry
+  truncateRate int
+  // Maximum responses allowed within a window
+  maximumResponsesPerWindow int
+}
+
+// Windows DNS Server forwarder configuration
+//
+// Servers that queries the host cannot answer itself are forwarded to, and
+// whether the host falls back to the root hints when none of them respond.
+private windows.dnsServer.forwarderConfiguration {
+  // IP addresses queries are forwarded to, empty when no forwarders are configured
+  ipAddresses []string
+  // Whether the server falls back to the root hints when no forwarder responds
+  //
+  // A server intended to forward all external traffic to controlled resolvers
+  // bypasses them entirely when this is true and the forwarders are
+  // unreachable.
+  useRootHint bool
+  // Seconds the server waits for a forwarder to respond
+  timeoutSeconds int
+  // Whether the server reorders forwarders by observed response time
+  enableReordering bool
+}
+
+// Root hint name server
+//
+// Single name server the resolver falls back to when it has no forwarder and
+// no cached answer, with the addresses it is reached at. Iterated from
+// `windows.dnsServer.rootHints`. An internal-only server is normally expected
+// to have no root hints at all, so that a query it cannot answer fails rather
+// than leaving the network.
+private windows.dnsServer.rootHint @defaults("nameServer") {
+  // Fully qualified name of the root name server
+  nameServer string
+  // IPv4 and IPv6 addresses the root name server is reached at
+  ipAddresses []string
+}
+
+// DNS zone hosted by a Windows DNS Server
+//
+// Single zone the server is authoritative for or forwards, with the settings
+// that decide who may transfer it, who may change it, and whether its answers
+// are signed. Iterated from `windows.dnsServer.zones`. The `dnssec` and
+// `signingKeys` fields are populated only for a signed zone.
+private windows.dnsServer.zone @defaults("name zoneType isSigned") {
+  // Zone name, for example example.com
+  name string
+  // Zone classification
+  //
+  // One of Primary, Secondary, Stub, or Forwarder. Only a primary zone holds
+  // authoritative data this server can change.
+  zoneType string
+  // Which clients may register records in the zone through dynamic update
+  //
+  // One of None, NonsecureAndSecure, or Secure. NonsecureAndSecure lets any
+  // host on the network create or overwrite a record without authenticating,
+  // so a zone that accepts it cannot be trusted to name what it claims to.
+  dynamicUpdate string
+  // Which servers the zone may be transferred to
+  //
+  // One of NoTransfer, TransferAnyServer, TransferToZoneNameServer, or
+  // TransferToSecureServers. TransferAnyServer hands the full contents of the
+  // zone, and therefore an inventory of the network, to anyone who asks.
+  secureSecondaries string
+  // Servers explicitly allowed to transfer the zone, used when secureSecondaries is TransferToSecureServers
+  secondaryServers []string
+  // Which secondaries are notified when the zone changes
+  //
+  // One of NoNotify, Notify, or NotifyServers.
+  notify string
+  // Servers notified when the zone changes, used when notify is NotifyServers
+  notifyServers []string
+  // Whether the zone is DNSSEC signed
+  //
+  // A signed zone serves an RRSIG alongside every answer, which is what lets
+  // a validating resolver detect a forged or modified response.
+  isSigned bool
+  // Whether the zone is stored in Active Directory rather than in a zone file
+  isDsIntegrated bool
+  // Whether the server created the zone itself rather than an operator creating it
+  isAutoCreated bool
+  // Whether the zone maps addresses back to names
+  isReverseLookupZone bool
+  // Whether the zone is loaded but not answering
+  isPaused bool
+  // Whether the zone is not loaded
+  isShutdown bool
+  // Whether the zone cannot be changed on this server
+  isReadOnly bool
+  // Whether the zone resolves single-label names through WINS
+  //
+  // WINS lookup embeds an unauthenticated legacy name service in the zone's
+  // answers.
+  isWinsEnabled bool
+  // Name of the zone file, empty for a directory-integrated zone
+  zoneFile string
+  // How far a directory-integrated zone replicates
+  //
+  // One of Forest, Domain, Legacy, or Custom, and None for a zone held in a
+  // file rather than in the directory.
+  replicationScope string
+  // Directory partition holding a directory-integrated zone
+  directoryPartitionName string
+  // DNSSEC settings, null when the zone is not signed
+  dnssec windows.dnsServer.zone.dnssec
+  // DNSSEC signing keys, empty when the zone is not signed
+  signingKeys []windows.dnsServer.zone.signingKey
+}
+
+// DNSSEC settings of a signed zone
+//
+// How a signed zone proves that a name does not exist, how long its generated
+// records live, and whether it publishes a trust anchor. Present only for a
+// zone whose `isSigned` is true.
+private windows.dnsServer.zone.dnssec @defaults("denialOfExistence") {
+  // How the zone proves a name does not exist
+  //
+  // NSec lists the next existing name in the zone, which lets anyone walk the
+  // zone and enumerate every name in it. NSec3 publishes a hash instead.
+  denialOfExistence string
+  // Hash algorithm used for NSEC3 records
+  nsec3HashAlgorithm string
+  // Number of additional hash iterations applied to an NSEC3 record
+  nsec3Iterations int
+  // Whether unsigned delegations may be left unproven
+  nsec3OptOut bool
+  // Length in bytes of the randomly generated NSEC3 salt
+  nsec3RandomSaltLength int
+  // Where the zone's trust anchor is published
+  distributeTrustAnchor []string
+  // Whether the zone performs automated trust anchor rollover as described in RFC 5011
+  enableRfc5011KeyRollover bool
+  // Digest algorithms used to generate delegation signer records
+  dsRecordGenerationAlgorithm []string
+  // Seconds a delegation signer record set is cached
+  dsRecordSetTtlSeconds int
+  // Seconds a DNSKEY record set is cached
+  dnsKeyRecordSetTtlSeconds int
+  // Seconds a signature is backdated to tolerate clock skew
+  signatureInceptionOffsetSeconds int
+  // Seconds between checks for an updated delegation signer record at the parent
+  secureDelegationPollingPeriodSeconds int
+  // Whether the parent zone holds a delegation signer record for this zone
+  //
+  // Without it a validating resolver has no path from the parent's key to
+  // this zone's, so the signatures cannot be verified.
+  parentHasSecureDelegation bool
+  // Seconds allowed for a change to reach every server hosting the zone
+  propagationTimeSeconds int
+  // Whether this server holds the zone's signing keys
+  isKeyMasterServer bool
+  // Server that holds the zone's signing keys
+  keyMasterServer string
+}
+
+// DNSSEC signing key of a zone
+//
+// Single key signing key or zone signing key, described by the properties a
+// policy can assert on: its algorithm, its length, its rollover
+// configuration, and how long the signatures it generates stay valid. Key
+// tags are deliberately not exposed, because they are derived from the key
+// material and change every time the zone is re-signed, so no stable check
+// can be written against them. Iterated from
+// `windows.dnsServer.zone.signingKeys`.
+private windows.dnsServer.zone.signingKey @defaults("keyType cryptoAlgorithm keyLength") {
+  // Identifier of the key, stable for the life of the key
+  keyId string
+  // Zone the key signs
+  zoneName string
+  // Role of the key
+  //
+  // KeySigningKey signs the zone's DNSKEY record set and is the key the
+  // parent's delegation signer record points at. ZoneSigningKey signs every
+  // other record set in the zone.
+  keyType string
+  // Signing algorithm
+  //
+  // For example RsaSha1, RsaSha1NSec3, RsaSha256, RsaSha512, ECDsaP256Sha256,
+  // or ECDsaP384Sha384. The SHA-1 variants are retained for compatibility and
+  // are no longer considered collision resistant.
+  cryptoAlgorithm string
+  // Key length in bits
+  keyLength int
+  // Lifecycle state of the key, for example Active or Standby
+  currentState string
+  // Cryptographic provider storing the private key
+  keyStorageProvider string
+  // Whether the private key is stored in Active Directory
+  storeKeysInAD bool
+  // Whether the key is replaced automatically when its rollover period elapses
+  //
+  // A key that never rolls over stays valid indefinitely, so a compromise of
+  // its private key is permanent until an operator notices.
+  isRolloverEnabled bool
+  // Seconds between automatic key rollovers
+  rolloverPeriodSeconds int
+  // Seconds a signature over the DNSKEY record set stays valid
+  dnsKeySignatureValidityPeriodSeconds int
+  // Seconds a signature over the delegation signer record set stays valid
+  dsSignatureValidityPeriodSeconds int
+  // Seconds a signature over the rest of the zone stays valid
+  //
+  // A long validity period widens the window in which a captured signed
+  // response can be replayed after the record behind it has changed.
+  zoneSignatureValidityPeriodSeconds int
+}
+
 // Print drivers registered with the Windows spooler
 //
 // Print drivers as the spooler reports them, with the vendor version, the

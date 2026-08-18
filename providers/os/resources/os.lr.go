@@ -456,6 +456,18 @@ const (
 	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
 	ResourceWindowsAcl                                    string = "windows.acl"
 	ResourceWindowsAclEntry                               string = "windows.acl.entry"
+	ResourceWindowsDnsServer                              string = "windows.dnsServer"
+	ResourceWindowsDnsServerSettings                      string = "windows.dnsServer.settings"
+	ResourceWindowsDnsServerRecursion                     string = "windows.dnsServer.recursion"
+	ResourceWindowsDnsServerCache                         string = "windows.dnsServer.cache"
+	ResourceWindowsDnsServerDiagnostics                   string = "windows.dnsServer.diagnostics"
+	ResourceWindowsDnsServerScavenging                    string = "windows.dnsServer.scavenging"
+	ResourceWindowsDnsServerResponseRateLimiting          string = "windows.dnsServer.responseRateLimiting"
+	ResourceWindowsDnsServerForwarderConfiguration        string = "windows.dnsServer.forwarderConfiguration"
+	ResourceWindowsDnsServerRootHint                      string = "windows.dnsServer.rootHint"
+	ResourceWindowsDnsServerZone                          string = "windows.dnsServer.zone"
+	ResourceWindowsDnsServerZoneDnssec                    string = "windows.dnsServer.zone.dnssec"
+	ResourceWindowsDnsServerZoneSigningKey                string = "windows.dnsServer.zone.signingKey"
 	ResourceWindowsPrinterDrivers                         string = "windows.printerDrivers"
 	ResourceWindowsPrinterDriver                          string = "windows.printerDriver"
 	ResourceWindowsBitlocker                              string = "windows.bitlocker"
@@ -2365,6 +2377,54 @@ func init() {
 		"windows.acl.entry": {
 			// to override args, implement: initWindowsAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsAclEntry,
+		},
+		"windows.dnsServer": {
+			// to override args, implement: initWindowsDnsServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServer,
+		},
+		"windows.dnsServer.settings": {
+			// to override args, implement: initWindowsDnsServerSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerSettings,
+		},
+		"windows.dnsServer.recursion": {
+			// to override args, implement: initWindowsDnsServerRecursion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerRecursion,
+		},
+		"windows.dnsServer.cache": {
+			// to override args, implement: initWindowsDnsServerCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerCache,
+		},
+		"windows.dnsServer.diagnostics": {
+			// to override args, implement: initWindowsDnsServerDiagnostics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerDiagnostics,
+		},
+		"windows.dnsServer.scavenging": {
+			// to override args, implement: initWindowsDnsServerScavenging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerScavenging,
+		},
+		"windows.dnsServer.responseRateLimiting": {
+			// to override args, implement: initWindowsDnsServerResponseRateLimiting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerResponseRateLimiting,
+		},
+		"windows.dnsServer.forwarderConfiguration": {
+			// to override args, implement: initWindowsDnsServerForwarderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerForwarderConfiguration,
+		},
+		"windows.dnsServer.rootHint": {
+			// to override args, implement: initWindowsDnsServerRootHint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerRootHint,
+		},
+		"windows.dnsServer.zone": {
+			// to override args, implement: initWindowsDnsServerZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerZone,
+		},
+		"windows.dnsServer.zone.dnssec": {
+			// to override args, implement: initWindowsDnsServerZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerZoneDnssec,
+		},
+		"windows.dnsServer.zone.signingKey": {
+			// to override args, implement: initWindowsDnsServerZoneSigningKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsDnsServerZoneSigningKey,
 		},
 		"windows.printerDrivers": {
 			// to override args, implement: initWindowsPrinterDrivers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12603,6 +12663,402 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.acl.entry.propagationFlags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsAclEntry).GetPropagationFlags()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.settings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetSettings()).ToDataRes(types.Resource("windows.dnsServer.settings"))
+	},
+	"windows.dnsServer.recursion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetRecursion()).ToDataRes(types.Resource("windows.dnsServer.recursion"))
+	},
+	"windows.dnsServer.cache": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetCache()).ToDataRes(types.Resource("windows.dnsServer.cache"))
+	},
+	"windows.dnsServer.diagnostics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetDiagnostics()).ToDataRes(types.Resource("windows.dnsServer.diagnostics"))
+	},
+	"windows.dnsServer.scavenging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetScavenging()).ToDataRes(types.Resource("windows.dnsServer.scavenging"))
+	},
+	"windows.dnsServer.responseRateLimiting": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetResponseRateLimiting()).ToDataRes(types.Resource("windows.dnsServer.responseRateLimiting"))
+	},
+	"windows.dnsServer.forwarderConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetForwarderConfiguration()).ToDataRes(types.Resource("windows.dnsServer.forwarderConfiguration"))
+	},
+	"windows.dnsServer.rootHints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetRootHints()).ToDataRes(types.Array(types.Resource("windows.dnsServer.rootHint")))
+	},
+	"windows.dnsServer.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServer).GetZones()).ToDataRes(types.Array(types.Resource("windows.dnsServer.zone")))
+	},
+	"windows.dnsServer.settings.computerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetComputerName()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.settings.majorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetMajorVersion()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.minorVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetMinorVersion()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.buildNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetBuildNumber()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.enableDnsSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetEnableDnsSec()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.enableVersionQuery": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetEnableVersionQuery()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.enableIPv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetEnableIPv6()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.listeningIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetListeningIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.settings.allIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetAllIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.settings.socketPoolSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetSocketPoolSize()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.excludedPortRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetExcludedPortRanges()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.settings.roundRobin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetRoundRobin()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.bindSecondaries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetBindSecondaries()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.strictFileParsing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetStrictFileParsing()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.nameCheckFlag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetNameCheckFlag()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.enableOnlineSigning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetEnableOnlineSigning()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.addressAnswerLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetAddressAnswerLimit()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.xfrConnectTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetXfrConnectTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.settings.dsAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetDsAvailable()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.isReadOnlyDC": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetIsReadOnlyDC()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.settings.serverLevelPluginDll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetServerLevelPluginDll()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.settings.rootTrustAnchorsUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerSettings).GetRootTrustAnchorsUrl()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.recursion.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerRecursion).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.recursion.secureResponse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerRecursion).GetSecureResponse()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.recursion.timeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerRecursion).GetTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.recursion.retryIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerRecursion).GetRetryIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.recursion.additionalTimeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerRecursion).GetAdditionalTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.cache.enablePollutionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerCache).GetEnablePollutionProtection()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.cache.lockingPercent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerCache).GetLockingPercent()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.cache.maxKbSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerCache).GetMaxKbSize()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.cache.maxTtlSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerCache).GetMaxTtlSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.cache.maxNegativeTtlSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerCache).GetMaxNegativeTtlSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.cache.storeEmptyAuthenticationResponse": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerCache).GetStoreEmptyAuthenticationResponse()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.cache.ignorePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerCache).GetIgnorePolicies()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.eventLogLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetEventLogLevel()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.diagnostics.useSystemEventLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetUseSystemEventLog()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.enableLoggingToFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetEnableLoggingToFile()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logFilePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogFilePath()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetMaxFileSizeMb()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.diagnostics.enableLogFileRollover": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetEnableLogFileRollover()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.saveLogsToPersistentStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetSaveLogsToPersistentStorage()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logQueries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogQueries()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logAnswers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogAnswers()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logNotifications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogNotifications()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logUpdates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogUpdates()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logQuestionTransactions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogQuestionTransactions()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logUnmatchedResponses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogUnmatchedResponses()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logSendPackets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogSendPackets()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logReceivePackets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogReceivePackets()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logTcpPackets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogTcpPackets()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logUdpPackets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogUdpPackets()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.logFullPackets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogFullPackets()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.writeThrough": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetWriteThrough()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.diagnostics.filterIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetFilterIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.scavenging.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerScavenging).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.scavenging.scavengingIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerScavenging).GetScavengingIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.scavenging.refreshIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerScavenging).GetRefreshIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.scavenging.noRefreshIntervalSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerScavenging).GetNoRefreshIntervalSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.scavenging.lastScavengeTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerScavenging).GetLastScavengeTime()).ToDataRes(types.Time)
+	},
+	"windows.dnsServer.responseRateLimiting.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetMode()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.responseRateLimiting.responsesPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetResponsesPerSecond()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.responseRateLimiting.errorsPerSecond": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetErrorsPerSecond()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.responseRateLimiting.windowSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetWindowSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.responseRateLimiting.ipv4PrefixLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetIpv4PrefixLength()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.responseRateLimiting.ipv6PrefixLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetIpv6PrefixLength()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.responseRateLimiting.leakRate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetLeakRate()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.responseRateLimiting.truncateRate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetTruncateRate()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.responseRateLimiting.maximumResponsesPerWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerResponseRateLimiting).GetMaximumResponsesPerWindow()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.forwarderConfiguration.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerForwarderConfiguration).GetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.forwarderConfiguration.useRootHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerForwarderConfiguration).GetUseRootHint()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.forwarderConfiguration.timeoutSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerForwarderConfiguration).GetTimeoutSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.forwarderConfiguration.enableReordering": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerForwarderConfiguration).GetEnableReordering()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.rootHint.nameServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerRootHint).GetNameServer()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.rootHint.ipAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerRootHint).GetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.zone.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetName()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.zoneType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetZoneType()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.dynamicUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetDynamicUpdate()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.secureSecondaries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetSecureSecondaries()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.secondaryServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetSecondaryServers()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.zone.notify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetNotify()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.notifyServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetNotifyServers()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.zone.isSigned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsSigned()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.isDsIntegrated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsDsIntegrated()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.isAutoCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsAutoCreated()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.isReverseLookupZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsReverseLookupZone()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.isPaused": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsPaused()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.isShutdown": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsShutdown()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.isReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsReadOnly()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.isWinsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetIsWinsEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.zoneFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetZoneFile()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.replicationScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetReplicationScope()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.directoryPartitionName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetDirectoryPartitionName()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.dnssec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetDnssec()).ToDataRes(types.Resource("windows.dnsServer.zone.dnssec"))
+	},
+	"windows.dnsServer.zone.signingKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZone).GetSigningKeys()).ToDataRes(types.Array(types.Resource("windows.dnsServer.zone.signingKey")))
+	},
+	"windows.dnsServer.zone.dnssec.denialOfExistence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetDenialOfExistence()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.dnssec.nsec3HashAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetNsec3HashAlgorithm()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.dnssec.nsec3Iterations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetNsec3Iterations()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.dnssec.nsec3OptOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetNsec3OptOut()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.dnssec.nsec3RandomSaltLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetNsec3RandomSaltLength()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.dnssec.distributeTrustAnchor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetDistributeTrustAnchor()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.zone.dnssec.enableRfc5011KeyRollover": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetEnableRfc5011KeyRollover()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.dnssec.dsRecordGenerationAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetDsRecordGenerationAlgorithm()).ToDataRes(types.Array(types.String))
+	},
+	"windows.dnsServer.zone.dnssec.dsRecordSetTtlSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetDsRecordSetTtlSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.dnssec.dnsKeyRecordSetTtlSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetDnsKeyRecordSetTtlSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.dnssec.signatureInceptionOffsetSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetSignatureInceptionOffsetSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.dnssec.secureDelegationPollingPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetSecureDelegationPollingPeriodSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.dnssec.parentHasSecureDelegation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetParentHasSecureDelegation()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.dnssec.propagationTimeSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetPropagationTimeSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.dnssec.isKeyMasterServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetIsKeyMasterServer()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.dnssec.keyMasterServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneDnssec).GetKeyMasterServer()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.signingKey.keyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetKeyId()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.signingKey.zoneName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetZoneName()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.signingKey.keyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetKeyType()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.signingKey.cryptoAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetCryptoAlgorithm()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.signingKey.keyLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetKeyLength()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.signingKey.currentState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetCurrentState()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.signingKey.keyStorageProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetKeyStorageProvider()).ToDataRes(types.String)
+	},
+	"windows.dnsServer.zone.signingKey.storeKeysInAD": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetStoreKeysInAD()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.signingKey.isRolloverEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetIsRolloverEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.dnsServer.zone.signingKey.rolloverPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetRolloverPeriodSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.signingKey.dnsKeySignatureValidityPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetDnsKeySignatureValidityPeriodSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.signingKey.dsSignatureValidityPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetDsSignatureValidityPeriodSeconds()).ToDataRes(types.Int)
+	},
+	"windows.dnsServer.zone.signingKey.zoneSignatureValidityPeriodSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerZoneSigningKey).GetZoneSignatureValidityPeriodSeconds()).ToDataRes(types.Int)
 	},
 	"windows.printerDrivers.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsPrinterDrivers).GetList()).ToDataRes(types.Array(types.Resource("windows.printerDriver")))
@@ -30264,6 +30720,582 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.acl.entry.propagationFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsAclEntry).PropagationFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).Settings, ok = plugin.RawToTValue[*mqlWindowsDnsServerSettings](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.recursion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).Recursion, ok = plugin.RawToTValue[*mqlWindowsDnsServerRecursion](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).Cache, ok = plugin.RawToTValue[*mqlWindowsDnsServerCache](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).Diagnostics, ok = plugin.RawToTValue[*mqlWindowsDnsServerDiagnostics](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.scavenging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).Scavenging, ok = plugin.RawToTValue[*mqlWindowsDnsServerScavenging](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).ResponseRateLimiting, ok = plugin.RawToTValue[*mqlWindowsDnsServerResponseRateLimiting](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.forwarderConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).ForwarderConfiguration, ok = plugin.RawToTValue[*mqlWindowsDnsServerForwarderConfiguration](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.rootHints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).RootHints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServer).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.settings.computerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).ComputerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.majorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).MajorVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.minorVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).MinorVersion, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.buildNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).BuildNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.enableDnsSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).EnableDnsSec, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.enableVersionQuery": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).EnableVersionQuery, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.enableIPv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).EnableIPv6, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.listeningIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).ListeningIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.allIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).AllIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.socketPoolSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).SocketPoolSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.excludedPortRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).ExcludedPortRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.roundRobin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).RoundRobin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.bindSecondaries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).BindSecondaries, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.strictFileParsing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).StrictFileParsing, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.nameCheckFlag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).NameCheckFlag, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.enableOnlineSigning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).EnableOnlineSigning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.addressAnswerLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).AddressAnswerLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.xfrConnectTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).XfrConnectTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.dsAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).DsAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.isReadOnlyDC": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).IsReadOnlyDC, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.serverLevelPluginDll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).ServerLevelPluginDll, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.settings.rootTrustAnchorsUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerSettings).RootTrustAnchorsUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.recursion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRecursion).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.recursion.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRecursion).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.recursion.secureResponse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRecursion).SecureResponse, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.recursion.timeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRecursion).TimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.recursion.retryIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRecursion).RetryIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.recursion.additionalTimeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRecursion).AdditionalTimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.cache.enablePollutionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).EnablePollutionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache.lockingPercent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).LockingPercent, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache.maxKbSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).MaxKbSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache.maxTtlSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).MaxTtlSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache.maxNegativeTtlSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).MaxNegativeTtlSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache.storeEmptyAuthenticationResponse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).StoreEmptyAuthenticationResponse, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.cache.ignorePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerCache).IgnorePolicies, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.diagnostics.eventLogLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).EventLogLevel, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.useSystemEventLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).UseSystemEventLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.enableLoggingToFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).EnableLoggingToFile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logFilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogFilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).MaxFileSizeMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.enableLogFileRollover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).EnableLogFileRollover, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.saveLogsToPersistentStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).SaveLogsToPersistentStorage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logQueries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogQueries, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logAnswers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogAnswers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logNotifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogNotifications, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logUpdates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogUpdates, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logQuestionTransactions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogQuestionTransactions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logUnmatchedResponses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogUnmatchedResponses, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logSendPackets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogSendPackets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logReceivePackets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogReceivePackets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logTcpPackets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogTcpPackets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logUdpPackets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogUdpPackets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.logFullPackets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).LogFullPackets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.writeThrough": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).WriteThrough, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.filterIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).FilterIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.scavenging.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerScavenging).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.scavenging.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerScavenging).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.scavenging.scavengingIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerScavenging).ScavengingIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.scavenging.refreshIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerScavenging).RefreshIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.scavenging.noRefreshIntervalSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerScavenging).NoRefreshIntervalSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.scavenging.lastScavengeTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerScavenging).LastScavengeTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.responsesPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).ResponsesPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.errorsPerSecond": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).ErrorsPerSecond, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.windowSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).WindowSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.ipv4PrefixLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).Ipv4PrefixLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.ipv6PrefixLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).Ipv6PrefixLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.leakRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).LeakRate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.truncateRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).TruncateRate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.responseRateLimiting.maximumResponsesPerWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerResponseRateLimiting).MaximumResponsesPerWindow, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.forwarderConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerForwarderConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.forwarderConfiguration.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerForwarderConfiguration).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.forwarderConfiguration.useRootHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerForwarderConfiguration).UseRootHint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.forwarderConfiguration.timeoutSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerForwarderConfiguration).TimeoutSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.forwarderConfiguration.enableReordering": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerForwarderConfiguration).EnableReordering, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.rootHint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRootHint).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.rootHint.nameServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRootHint).NameServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.rootHint.ipAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerRootHint).IpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.zone.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.zoneType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).ZoneType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dynamicUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).DynamicUpdate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.secureSecondaries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).SecureSecondaries, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.secondaryServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).SecondaryServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.notify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).Notify, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.notifyServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).NotifyServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isSigned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsSigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isDsIntegrated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsDsIntegrated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isAutoCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsAutoCreated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isReverseLookupZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsReverseLookupZone, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isPaused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsPaused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isShutdown": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsShutdown, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.isWinsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).IsWinsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.zoneFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).ZoneFile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.replicationScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).ReplicationScope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.directoryPartitionName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).DirectoryPartitionName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).Dnssec, ok = plugin.RawToTValue[*mqlWindowsDnsServerZoneDnssec](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZone).SigningKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.denialOfExistence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).DenialOfExistence, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.nsec3HashAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).Nsec3HashAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.nsec3Iterations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).Nsec3Iterations, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.nsec3OptOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).Nsec3OptOut, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.nsec3RandomSaltLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).Nsec3RandomSaltLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.distributeTrustAnchor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).DistributeTrustAnchor, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.enableRfc5011KeyRollover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).EnableRfc5011KeyRollover, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.dsRecordGenerationAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).DsRecordGenerationAlgorithm, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.dsRecordSetTtlSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).DsRecordSetTtlSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.dnsKeyRecordSetTtlSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).DnsKeyRecordSetTtlSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.signatureInceptionOffsetSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).SignatureInceptionOffsetSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.secureDelegationPollingPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).SecureDelegationPollingPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.parentHasSecureDelegation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).ParentHasSecureDelegation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.propagationTimeSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).PropagationTimeSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.isKeyMasterServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).IsKeyMasterServer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.dnssec.keyMasterServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneDnssec).KeyMasterServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.keyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).KeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.zoneName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).ZoneName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.keyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).KeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.cryptoAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).CryptoAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.keyLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).KeyLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.currentState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).CurrentState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.keyStorageProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).KeyStorageProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.storeKeysInAD": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).StoreKeysInAD, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.isRolloverEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).IsRolloverEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.rolloverPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).RolloverPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.dnsKeySignatureValidityPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).DnsKeySignatureValidityPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.dsSignatureValidityPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).DsSignatureValidityPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.zone.signingKey.zoneSignatureValidityPeriodSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerZoneSigningKey).ZoneSignatureValidityPeriodSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.printerDrivers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -78879,6 +79911,1247 @@ func (c *mqlWindowsAclEntry) GetInheritanceFlags() *plugin.TValue[string] {
 
 func (c *mqlWindowsAclEntry) GetPropagationFlags() *plugin.TValue[string] {
 	return &c.PropagationFlags
+}
+
+// mqlWindowsDnsServer for the windows.dnsServer resource
+type mqlWindowsDnsServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlWindowsDnsServerInternal
+	Settings               plugin.TValue[*mqlWindowsDnsServerSettings]
+	Recursion              plugin.TValue[*mqlWindowsDnsServerRecursion]
+	Cache                  plugin.TValue[*mqlWindowsDnsServerCache]
+	Diagnostics            plugin.TValue[*mqlWindowsDnsServerDiagnostics]
+	Scavenging             plugin.TValue[*mqlWindowsDnsServerScavenging]
+	ResponseRateLimiting   plugin.TValue[*mqlWindowsDnsServerResponseRateLimiting]
+	ForwarderConfiguration plugin.TValue[*mqlWindowsDnsServerForwarderConfiguration]
+	RootHints              plugin.TValue[[]any]
+	Zones                  plugin.TValue[[]any]
+}
+
+// createWindowsDnsServer creates a new instance of this resource
+func createWindowsDnsServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServer) MqlName() string {
+	return "windows.dnsServer"
+}
+
+func (c *mqlWindowsDnsServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServer) GetSettings() *plugin.TValue[*mqlWindowsDnsServerSettings] {
+	return plugin.GetOrCompute[*mqlWindowsDnsServerSettings](&c.Settings, func() (*mqlWindowsDnsServerSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "settings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDnsServerSettings), nil
+			}
+		}
+
+		return c.settings()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetRecursion() *plugin.TValue[*mqlWindowsDnsServerRecursion] {
+	return plugin.GetOrCompute[*mqlWindowsDnsServerRecursion](&c.Recursion, func() (*mqlWindowsDnsServerRecursion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "recursion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDnsServerRecursion), nil
+			}
+		}
+
+		return c.recursion()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetCache() *plugin.TValue[*mqlWindowsDnsServerCache] {
+	return plugin.GetOrCompute[*mqlWindowsDnsServerCache](&c.Cache, func() (*mqlWindowsDnsServerCache, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "cache")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDnsServerCache), nil
+			}
+		}
+
+		return c.cache()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetDiagnostics() *plugin.TValue[*mqlWindowsDnsServerDiagnostics] {
+	return plugin.GetOrCompute[*mqlWindowsDnsServerDiagnostics](&c.Diagnostics, func() (*mqlWindowsDnsServerDiagnostics, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "diagnostics")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDnsServerDiagnostics), nil
+			}
+		}
+
+		return c.diagnostics()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetScavenging() *plugin.TValue[*mqlWindowsDnsServerScavenging] {
+	return plugin.GetOrCompute[*mqlWindowsDnsServerScavenging](&c.Scavenging, func() (*mqlWindowsDnsServerScavenging, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "scavenging")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDnsServerScavenging), nil
+			}
+		}
+
+		return c.scavenging()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetResponseRateLimiting() *plugin.TValue[*mqlWindowsDnsServerResponseRateLimiting] {
+	return plugin.GetOrCompute[*mqlWindowsDnsServerResponseRateLimiting](&c.ResponseRateLimiting, func() (*mqlWindowsDnsServerResponseRateLimiting, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "responseRateLimiting")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDnsServerResponseRateLimiting), nil
+			}
+		}
+
+		return c.responseRateLimiting()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetForwarderConfiguration() *plugin.TValue[*mqlWindowsDnsServerForwarderConfiguration] {
+	return plugin.GetOrCompute[*mqlWindowsDnsServerForwarderConfiguration](&c.ForwarderConfiguration, func() (*mqlWindowsDnsServerForwarderConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "forwarderConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlWindowsDnsServerForwarderConfiguration), nil
+			}
+		}
+
+		return c.forwarderConfiguration()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetRootHints() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RootHints, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "rootHints")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rootHints()
+	})
+}
+
+func (c *mqlWindowsDnsServer) GetZones() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Zones, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.dnsServer", c.__id, "zones")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.zones()
+	})
+}
+
+// mqlWindowsDnsServerSettings for the windows.dnsServer.settings resource
+type mqlWindowsDnsServerSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerSettingsInternal it will be used here
+	ComputerName             plugin.TValue[string]
+	MajorVersion             plugin.TValue[int64]
+	MinorVersion             plugin.TValue[int64]
+	BuildNumber              plugin.TValue[int64]
+	EnableDnsSec             plugin.TValue[bool]
+	EnableVersionQuery       plugin.TValue[int64]
+	EnableIPv6               plugin.TValue[bool]
+	ListeningIpAddresses     plugin.TValue[[]any]
+	AllIpAddresses           plugin.TValue[[]any]
+	SocketPoolSize           plugin.TValue[int64]
+	ExcludedPortRanges       plugin.TValue[[]any]
+	RoundRobin               plugin.TValue[bool]
+	BindSecondaries          plugin.TValue[bool]
+	StrictFileParsing        plugin.TValue[bool]
+	NameCheckFlag            plugin.TValue[int64]
+	EnableOnlineSigning      plugin.TValue[bool]
+	AddressAnswerLimit       plugin.TValue[int64]
+	XfrConnectTimeoutSeconds plugin.TValue[int64]
+	DsAvailable              plugin.TValue[bool]
+	IsReadOnlyDC             plugin.TValue[bool]
+	ServerLevelPluginDll     plugin.TValue[string]
+	RootTrustAnchorsUrl      plugin.TValue[string]
+}
+
+// createWindowsDnsServerSettings creates a new instance of this resource
+func createWindowsDnsServerSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.settings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerSettings) MqlName() string {
+	return "windows.dnsServer.settings"
+}
+
+func (c *mqlWindowsDnsServerSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerSettings) GetComputerName() *plugin.TValue[string] {
+	return &c.ComputerName
+}
+
+func (c *mqlWindowsDnsServerSettings) GetMajorVersion() *plugin.TValue[int64] {
+	return &c.MajorVersion
+}
+
+func (c *mqlWindowsDnsServerSettings) GetMinorVersion() *plugin.TValue[int64] {
+	return &c.MinorVersion
+}
+
+func (c *mqlWindowsDnsServerSettings) GetBuildNumber() *plugin.TValue[int64] {
+	return &c.BuildNumber
+}
+
+func (c *mqlWindowsDnsServerSettings) GetEnableDnsSec() *plugin.TValue[bool] {
+	return &c.EnableDnsSec
+}
+
+func (c *mqlWindowsDnsServerSettings) GetEnableVersionQuery() *plugin.TValue[int64] {
+	return &c.EnableVersionQuery
+}
+
+func (c *mqlWindowsDnsServerSettings) GetEnableIPv6() *plugin.TValue[bool] {
+	return &c.EnableIPv6
+}
+
+func (c *mqlWindowsDnsServerSettings) GetListeningIpAddresses() *plugin.TValue[[]any] {
+	return &c.ListeningIpAddresses
+}
+
+func (c *mqlWindowsDnsServerSettings) GetAllIpAddresses() *plugin.TValue[[]any] {
+	return &c.AllIpAddresses
+}
+
+func (c *mqlWindowsDnsServerSettings) GetSocketPoolSize() *plugin.TValue[int64] {
+	return &c.SocketPoolSize
+}
+
+func (c *mqlWindowsDnsServerSettings) GetExcludedPortRanges() *plugin.TValue[[]any] {
+	return &c.ExcludedPortRanges
+}
+
+func (c *mqlWindowsDnsServerSettings) GetRoundRobin() *plugin.TValue[bool] {
+	return &c.RoundRobin
+}
+
+func (c *mqlWindowsDnsServerSettings) GetBindSecondaries() *plugin.TValue[bool] {
+	return &c.BindSecondaries
+}
+
+func (c *mqlWindowsDnsServerSettings) GetStrictFileParsing() *plugin.TValue[bool] {
+	return &c.StrictFileParsing
+}
+
+func (c *mqlWindowsDnsServerSettings) GetNameCheckFlag() *plugin.TValue[int64] {
+	return &c.NameCheckFlag
+}
+
+func (c *mqlWindowsDnsServerSettings) GetEnableOnlineSigning() *plugin.TValue[bool] {
+	return &c.EnableOnlineSigning
+}
+
+func (c *mqlWindowsDnsServerSettings) GetAddressAnswerLimit() *plugin.TValue[int64] {
+	return &c.AddressAnswerLimit
+}
+
+func (c *mqlWindowsDnsServerSettings) GetXfrConnectTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.XfrConnectTimeoutSeconds
+}
+
+func (c *mqlWindowsDnsServerSettings) GetDsAvailable() *plugin.TValue[bool] {
+	return &c.DsAvailable
+}
+
+func (c *mqlWindowsDnsServerSettings) GetIsReadOnlyDC() *plugin.TValue[bool] {
+	return &c.IsReadOnlyDC
+}
+
+func (c *mqlWindowsDnsServerSettings) GetServerLevelPluginDll() *plugin.TValue[string] {
+	return &c.ServerLevelPluginDll
+}
+
+func (c *mqlWindowsDnsServerSettings) GetRootTrustAnchorsUrl() *plugin.TValue[string] {
+	return &c.RootTrustAnchorsUrl
+}
+
+// mqlWindowsDnsServerRecursion for the windows.dnsServer.recursion resource
+type mqlWindowsDnsServerRecursion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerRecursionInternal it will be used here
+	Enabled                  plugin.TValue[bool]
+	SecureResponse           plugin.TValue[bool]
+	TimeoutSeconds           plugin.TValue[int64]
+	RetryIntervalSeconds     plugin.TValue[int64]
+	AdditionalTimeoutSeconds plugin.TValue[int64]
+}
+
+// createWindowsDnsServerRecursion creates a new instance of this resource
+func createWindowsDnsServerRecursion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerRecursion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.recursion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerRecursion) MqlName() string {
+	return "windows.dnsServer.recursion"
+}
+
+func (c *mqlWindowsDnsServerRecursion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerRecursion) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsDnsServerRecursion) GetSecureResponse() *plugin.TValue[bool] {
+	return &c.SecureResponse
+}
+
+func (c *mqlWindowsDnsServerRecursion) GetTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.TimeoutSeconds
+}
+
+func (c *mqlWindowsDnsServerRecursion) GetRetryIntervalSeconds() *plugin.TValue[int64] {
+	return &c.RetryIntervalSeconds
+}
+
+func (c *mqlWindowsDnsServerRecursion) GetAdditionalTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.AdditionalTimeoutSeconds
+}
+
+// mqlWindowsDnsServerCache for the windows.dnsServer.cache resource
+type mqlWindowsDnsServerCache struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerCacheInternal it will be used here
+	EnablePollutionProtection        plugin.TValue[bool]
+	LockingPercent                   plugin.TValue[int64]
+	MaxKbSize                        plugin.TValue[int64]
+	MaxTtlSeconds                    plugin.TValue[int64]
+	MaxNegativeTtlSeconds            plugin.TValue[int64]
+	StoreEmptyAuthenticationResponse plugin.TValue[bool]
+	IgnorePolicies                   plugin.TValue[bool]
+}
+
+// createWindowsDnsServerCache creates a new instance of this resource
+func createWindowsDnsServerCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerCache{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.cache", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerCache) MqlName() string {
+	return "windows.dnsServer.cache"
+}
+
+func (c *mqlWindowsDnsServerCache) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerCache) GetEnablePollutionProtection() *plugin.TValue[bool] {
+	return &c.EnablePollutionProtection
+}
+
+func (c *mqlWindowsDnsServerCache) GetLockingPercent() *plugin.TValue[int64] {
+	return &c.LockingPercent
+}
+
+func (c *mqlWindowsDnsServerCache) GetMaxKbSize() *plugin.TValue[int64] {
+	return &c.MaxKbSize
+}
+
+func (c *mqlWindowsDnsServerCache) GetMaxTtlSeconds() *plugin.TValue[int64] {
+	return &c.MaxTtlSeconds
+}
+
+func (c *mqlWindowsDnsServerCache) GetMaxNegativeTtlSeconds() *plugin.TValue[int64] {
+	return &c.MaxNegativeTtlSeconds
+}
+
+func (c *mqlWindowsDnsServerCache) GetStoreEmptyAuthenticationResponse() *plugin.TValue[bool] {
+	return &c.StoreEmptyAuthenticationResponse
+}
+
+func (c *mqlWindowsDnsServerCache) GetIgnorePolicies() *plugin.TValue[bool] {
+	return &c.IgnorePolicies
+}
+
+// mqlWindowsDnsServerDiagnostics for the windows.dnsServer.diagnostics resource
+type mqlWindowsDnsServerDiagnostics struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerDiagnosticsInternal it will be used here
+	EventLogLevel               plugin.TValue[int64]
+	UseSystemEventLog           plugin.TValue[bool]
+	EnableLoggingToFile         plugin.TValue[bool]
+	LogFilePath                 plugin.TValue[string]
+	MaxFileSizeMb               plugin.TValue[int64]
+	EnableLogFileRollover       plugin.TValue[bool]
+	SaveLogsToPersistentStorage plugin.TValue[bool]
+	LogQueries                  plugin.TValue[bool]
+	LogAnswers                  plugin.TValue[bool]
+	LogNotifications            plugin.TValue[bool]
+	LogUpdates                  plugin.TValue[bool]
+	LogQuestionTransactions     plugin.TValue[bool]
+	LogUnmatchedResponses       plugin.TValue[bool]
+	LogSendPackets              plugin.TValue[bool]
+	LogReceivePackets           plugin.TValue[bool]
+	LogTcpPackets               plugin.TValue[bool]
+	LogUdpPackets               plugin.TValue[bool]
+	LogFullPackets              plugin.TValue[bool]
+	WriteThrough                plugin.TValue[bool]
+	FilterIpAddresses           plugin.TValue[[]any]
+}
+
+// createWindowsDnsServerDiagnostics creates a new instance of this resource
+func createWindowsDnsServerDiagnostics(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerDiagnostics{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.diagnostics", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) MqlName() string {
+	return "windows.dnsServer.diagnostics"
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetEventLogLevel() *plugin.TValue[int64] {
+	return &c.EventLogLevel
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetUseSystemEventLog() *plugin.TValue[bool] {
+	return &c.UseSystemEventLog
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetEnableLoggingToFile() *plugin.TValue[bool] {
+	return &c.EnableLoggingToFile
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogFilePath() *plugin.TValue[string] {
+	return &c.LogFilePath
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetMaxFileSizeMb() *plugin.TValue[int64] {
+	return &c.MaxFileSizeMb
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetEnableLogFileRollover() *plugin.TValue[bool] {
+	return &c.EnableLogFileRollover
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetSaveLogsToPersistentStorage() *plugin.TValue[bool] {
+	return &c.SaveLogsToPersistentStorage
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogQueries() *plugin.TValue[bool] {
+	return &c.LogQueries
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogAnswers() *plugin.TValue[bool] {
+	return &c.LogAnswers
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogNotifications() *plugin.TValue[bool] {
+	return &c.LogNotifications
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogUpdates() *plugin.TValue[bool] {
+	return &c.LogUpdates
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogQuestionTransactions() *plugin.TValue[bool] {
+	return &c.LogQuestionTransactions
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogUnmatchedResponses() *plugin.TValue[bool] {
+	return &c.LogUnmatchedResponses
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogSendPackets() *plugin.TValue[bool] {
+	return &c.LogSendPackets
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogReceivePackets() *plugin.TValue[bool] {
+	return &c.LogReceivePackets
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogTcpPackets() *plugin.TValue[bool] {
+	return &c.LogTcpPackets
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogUdpPackets() *plugin.TValue[bool] {
+	return &c.LogUdpPackets
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetLogFullPackets() *plugin.TValue[bool] {
+	return &c.LogFullPackets
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetWriteThrough() *plugin.TValue[bool] {
+	return &c.WriteThrough
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetFilterIpAddresses() *plugin.TValue[[]any] {
+	return &c.FilterIpAddresses
+}
+
+// mqlWindowsDnsServerScavenging for the windows.dnsServer.scavenging resource
+type mqlWindowsDnsServerScavenging struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerScavengingInternal it will be used here
+	Enabled                   plugin.TValue[bool]
+	ScavengingIntervalSeconds plugin.TValue[int64]
+	RefreshIntervalSeconds    plugin.TValue[int64]
+	NoRefreshIntervalSeconds  plugin.TValue[int64]
+	LastScavengeTime          plugin.TValue[*time.Time]
+}
+
+// createWindowsDnsServerScavenging creates a new instance of this resource
+func createWindowsDnsServerScavenging(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerScavenging{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.scavenging", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerScavenging) MqlName() string {
+	return "windows.dnsServer.scavenging"
+}
+
+func (c *mqlWindowsDnsServerScavenging) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerScavenging) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsDnsServerScavenging) GetScavengingIntervalSeconds() *plugin.TValue[int64] {
+	return &c.ScavengingIntervalSeconds
+}
+
+func (c *mqlWindowsDnsServerScavenging) GetRefreshIntervalSeconds() *plugin.TValue[int64] {
+	return &c.RefreshIntervalSeconds
+}
+
+func (c *mqlWindowsDnsServerScavenging) GetNoRefreshIntervalSeconds() *plugin.TValue[int64] {
+	return &c.NoRefreshIntervalSeconds
+}
+
+func (c *mqlWindowsDnsServerScavenging) GetLastScavengeTime() *plugin.TValue[*time.Time] {
+	return &c.LastScavengeTime
+}
+
+// mqlWindowsDnsServerResponseRateLimiting for the windows.dnsServer.responseRateLimiting resource
+type mqlWindowsDnsServerResponseRateLimiting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerResponseRateLimitingInternal it will be used here
+	Mode                      plugin.TValue[string]
+	ResponsesPerSecond        plugin.TValue[int64]
+	ErrorsPerSecond           plugin.TValue[int64]
+	WindowSeconds             plugin.TValue[int64]
+	Ipv4PrefixLength          plugin.TValue[int64]
+	Ipv6PrefixLength          plugin.TValue[int64]
+	LeakRate                  plugin.TValue[int64]
+	TruncateRate              plugin.TValue[int64]
+	MaximumResponsesPerWindow plugin.TValue[int64]
+}
+
+// createWindowsDnsServerResponseRateLimiting creates a new instance of this resource
+func createWindowsDnsServerResponseRateLimiting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerResponseRateLimiting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.responseRateLimiting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) MqlName() string {
+	return "windows.dnsServer.responseRateLimiting"
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetResponsesPerSecond() *plugin.TValue[int64] {
+	return &c.ResponsesPerSecond
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetErrorsPerSecond() *plugin.TValue[int64] {
+	return &c.ErrorsPerSecond
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetWindowSeconds() *plugin.TValue[int64] {
+	return &c.WindowSeconds
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetIpv4PrefixLength() *plugin.TValue[int64] {
+	return &c.Ipv4PrefixLength
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetIpv6PrefixLength() *plugin.TValue[int64] {
+	return &c.Ipv6PrefixLength
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetLeakRate() *plugin.TValue[int64] {
+	return &c.LeakRate
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetTruncateRate() *plugin.TValue[int64] {
+	return &c.TruncateRate
+}
+
+func (c *mqlWindowsDnsServerResponseRateLimiting) GetMaximumResponsesPerWindow() *plugin.TValue[int64] {
+	return &c.MaximumResponsesPerWindow
+}
+
+// mqlWindowsDnsServerForwarderConfiguration for the windows.dnsServer.forwarderConfiguration resource
+type mqlWindowsDnsServerForwarderConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerForwarderConfigurationInternal it will be used here
+	IpAddresses      plugin.TValue[[]any]
+	UseRootHint      plugin.TValue[bool]
+	TimeoutSeconds   plugin.TValue[int64]
+	EnableReordering plugin.TValue[bool]
+}
+
+// createWindowsDnsServerForwarderConfiguration creates a new instance of this resource
+func createWindowsDnsServerForwarderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerForwarderConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.forwarderConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerForwarderConfiguration) MqlName() string {
+	return "windows.dnsServer.forwarderConfiguration"
+}
+
+func (c *mqlWindowsDnsServerForwarderConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerForwarderConfiguration) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
+}
+
+func (c *mqlWindowsDnsServerForwarderConfiguration) GetUseRootHint() *plugin.TValue[bool] {
+	return &c.UseRootHint
+}
+
+func (c *mqlWindowsDnsServerForwarderConfiguration) GetTimeoutSeconds() *plugin.TValue[int64] {
+	return &c.TimeoutSeconds
+}
+
+func (c *mqlWindowsDnsServerForwarderConfiguration) GetEnableReordering() *plugin.TValue[bool] {
+	return &c.EnableReordering
+}
+
+// mqlWindowsDnsServerRootHint for the windows.dnsServer.rootHint resource
+type mqlWindowsDnsServerRootHint struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerRootHintInternal it will be used here
+	NameServer  plugin.TValue[string]
+	IpAddresses plugin.TValue[[]any]
+}
+
+// createWindowsDnsServerRootHint creates a new instance of this resource
+func createWindowsDnsServerRootHint(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerRootHint{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.rootHint", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerRootHint) MqlName() string {
+	return "windows.dnsServer.rootHint"
+}
+
+func (c *mqlWindowsDnsServerRootHint) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerRootHint) GetNameServer() *plugin.TValue[string] {
+	return &c.NameServer
+}
+
+func (c *mqlWindowsDnsServerRootHint) GetIpAddresses() *plugin.TValue[[]any] {
+	return &c.IpAddresses
+}
+
+// mqlWindowsDnsServerZone for the windows.dnsServer.zone resource
+type mqlWindowsDnsServerZone struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerZoneInternal it will be used here
+	Name                   plugin.TValue[string]
+	ZoneType               plugin.TValue[string]
+	DynamicUpdate          plugin.TValue[string]
+	SecureSecondaries      plugin.TValue[string]
+	SecondaryServers       plugin.TValue[[]any]
+	Notify                 plugin.TValue[string]
+	NotifyServers          plugin.TValue[[]any]
+	IsSigned               plugin.TValue[bool]
+	IsDsIntegrated         plugin.TValue[bool]
+	IsAutoCreated          plugin.TValue[bool]
+	IsReverseLookupZone    plugin.TValue[bool]
+	IsPaused               plugin.TValue[bool]
+	IsShutdown             plugin.TValue[bool]
+	IsReadOnly             plugin.TValue[bool]
+	IsWinsEnabled          plugin.TValue[bool]
+	ZoneFile               plugin.TValue[string]
+	ReplicationScope       plugin.TValue[string]
+	DirectoryPartitionName plugin.TValue[string]
+	Dnssec                 plugin.TValue[*mqlWindowsDnsServerZoneDnssec]
+	SigningKeys            plugin.TValue[[]any]
+}
+
+// createWindowsDnsServerZone creates a new instance of this resource
+func createWindowsDnsServerZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerZone{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.zone", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerZone) MqlName() string {
+	return "windows.dnsServer.zone"
+}
+
+func (c *mqlWindowsDnsServerZone) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerZone) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsDnsServerZone) GetZoneType() *plugin.TValue[string] {
+	return &c.ZoneType
+}
+
+func (c *mqlWindowsDnsServerZone) GetDynamicUpdate() *plugin.TValue[string] {
+	return &c.DynamicUpdate
+}
+
+func (c *mqlWindowsDnsServerZone) GetSecureSecondaries() *plugin.TValue[string] {
+	return &c.SecureSecondaries
+}
+
+func (c *mqlWindowsDnsServerZone) GetSecondaryServers() *plugin.TValue[[]any] {
+	return &c.SecondaryServers
+}
+
+func (c *mqlWindowsDnsServerZone) GetNotify() *plugin.TValue[string] {
+	return &c.Notify
+}
+
+func (c *mqlWindowsDnsServerZone) GetNotifyServers() *plugin.TValue[[]any] {
+	return &c.NotifyServers
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsSigned() *plugin.TValue[bool] {
+	return &c.IsSigned
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsDsIntegrated() *plugin.TValue[bool] {
+	return &c.IsDsIntegrated
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsAutoCreated() *plugin.TValue[bool] {
+	return &c.IsAutoCreated
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsReverseLookupZone() *plugin.TValue[bool] {
+	return &c.IsReverseLookupZone
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsPaused() *plugin.TValue[bool] {
+	return &c.IsPaused
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsShutdown() *plugin.TValue[bool] {
+	return &c.IsShutdown
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsReadOnly() *plugin.TValue[bool] {
+	return &c.IsReadOnly
+}
+
+func (c *mqlWindowsDnsServerZone) GetIsWinsEnabled() *plugin.TValue[bool] {
+	return &c.IsWinsEnabled
+}
+
+func (c *mqlWindowsDnsServerZone) GetZoneFile() *plugin.TValue[string] {
+	return &c.ZoneFile
+}
+
+func (c *mqlWindowsDnsServerZone) GetReplicationScope() *plugin.TValue[string] {
+	return &c.ReplicationScope
+}
+
+func (c *mqlWindowsDnsServerZone) GetDirectoryPartitionName() *plugin.TValue[string] {
+	return &c.DirectoryPartitionName
+}
+
+func (c *mqlWindowsDnsServerZone) GetDnssec() *plugin.TValue[*mqlWindowsDnsServerZoneDnssec] {
+	return &c.Dnssec
+}
+
+func (c *mqlWindowsDnsServerZone) GetSigningKeys() *plugin.TValue[[]any] {
+	return &c.SigningKeys
+}
+
+// mqlWindowsDnsServerZoneDnssec for the windows.dnsServer.zone.dnssec resource
+type mqlWindowsDnsServerZoneDnssec struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerZoneDnssecInternal it will be used here
+	DenialOfExistence                    plugin.TValue[string]
+	Nsec3HashAlgorithm                   plugin.TValue[string]
+	Nsec3Iterations                      plugin.TValue[int64]
+	Nsec3OptOut                          plugin.TValue[bool]
+	Nsec3RandomSaltLength                plugin.TValue[int64]
+	DistributeTrustAnchor                plugin.TValue[[]any]
+	EnableRfc5011KeyRollover             plugin.TValue[bool]
+	DsRecordGenerationAlgorithm          plugin.TValue[[]any]
+	DsRecordSetTtlSeconds                plugin.TValue[int64]
+	DnsKeyRecordSetTtlSeconds            plugin.TValue[int64]
+	SignatureInceptionOffsetSeconds      plugin.TValue[int64]
+	SecureDelegationPollingPeriodSeconds plugin.TValue[int64]
+	ParentHasSecureDelegation            plugin.TValue[bool]
+	PropagationTimeSeconds               plugin.TValue[int64]
+	IsKeyMasterServer                    plugin.TValue[bool]
+	KeyMasterServer                      plugin.TValue[string]
+}
+
+// createWindowsDnsServerZoneDnssec creates a new instance of this resource
+func createWindowsDnsServerZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerZoneDnssec{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.zone.dnssec", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) MqlName() string {
+	return "windows.dnsServer.zone.dnssec"
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetDenialOfExistence() *plugin.TValue[string] {
+	return &c.DenialOfExistence
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetNsec3HashAlgorithm() *plugin.TValue[string] {
+	return &c.Nsec3HashAlgorithm
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetNsec3Iterations() *plugin.TValue[int64] {
+	return &c.Nsec3Iterations
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetNsec3OptOut() *plugin.TValue[bool] {
+	return &c.Nsec3OptOut
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetNsec3RandomSaltLength() *plugin.TValue[int64] {
+	return &c.Nsec3RandomSaltLength
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetDistributeTrustAnchor() *plugin.TValue[[]any] {
+	return &c.DistributeTrustAnchor
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetEnableRfc5011KeyRollover() *plugin.TValue[bool] {
+	return &c.EnableRfc5011KeyRollover
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetDsRecordGenerationAlgorithm() *plugin.TValue[[]any] {
+	return &c.DsRecordGenerationAlgorithm
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetDsRecordSetTtlSeconds() *plugin.TValue[int64] {
+	return &c.DsRecordSetTtlSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetDnsKeyRecordSetTtlSeconds() *plugin.TValue[int64] {
+	return &c.DnsKeyRecordSetTtlSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetSignatureInceptionOffsetSeconds() *plugin.TValue[int64] {
+	return &c.SignatureInceptionOffsetSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetSecureDelegationPollingPeriodSeconds() *plugin.TValue[int64] {
+	return &c.SecureDelegationPollingPeriodSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetParentHasSecureDelegation() *plugin.TValue[bool] {
+	return &c.ParentHasSecureDelegation
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetPropagationTimeSeconds() *plugin.TValue[int64] {
+	return &c.PropagationTimeSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetIsKeyMasterServer() *plugin.TValue[bool] {
+	return &c.IsKeyMasterServer
+}
+
+func (c *mqlWindowsDnsServerZoneDnssec) GetKeyMasterServer() *plugin.TValue[string] {
+	return &c.KeyMasterServer
+}
+
+// mqlWindowsDnsServerZoneSigningKey for the windows.dnsServer.zone.signingKey resource
+type mqlWindowsDnsServerZoneSigningKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsDnsServerZoneSigningKeyInternal it will be used here
+	KeyId                                plugin.TValue[string]
+	ZoneName                             plugin.TValue[string]
+	KeyType                              plugin.TValue[string]
+	CryptoAlgorithm                      plugin.TValue[string]
+	KeyLength                            plugin.TValue[int64]
+	CurrentState                         plugin.TValue[string]
+	KeyStorageProvider                   plugin.TValue[string]
+	StoreKeysInAD                        plugin.TValue[bool]
+	IsRolloverEnabled                    plugin.TValue[bool]
+	RolloverPeriodSeconds                plugin.TValue[int64]
+	DnsKeySignatureValidityPeriodSeconds plugin.TValue[int64]
+	DsSignatureValidityPeriodSeconds     plugin.TValue[int64]
+	ZoneSignatureValidityPeriodSeconds   plugin.TValue[int64]
+}
+
+// createWindowsDnsServerZoneSigningKey creates a new instance of this resource
+func createWindowsDnsServerZoneSigningKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsDnsServerZoneSigningKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.dnsServer.zone.signingKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) MqlName() string {
+	return "windows.dnsServer.zone.signingKey"
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetKeyId() *plugin.TValue[string] {
+	return &c.KeyId
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetZoneName() *plugin.TValue[string] {
+	return &c.ZoneName
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetKeyType() *plugin.TValue[string] {
+	return &c.KeyType
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetCryptoAlgorithm() *plugin.TValue[string] {
+	return &c.CryptoAlgorithm
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetKeyLength() *plugin.TValue[int64] {
+	return &c.KeyLength
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetCurrentState() *plugin.TValue[string] {
+	return &c.CurrentState
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetKeyStorageProvider() *plugin.TValue[string] {
+	return &c.KeyStorageProvider
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetStoreKeysInAD() *plugin.TValue[bool] {
+	return &c.StoreKeysInAD
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetIsRolloverEnabled() *plugin.TValue[bool] {
+	return &c.IsRolloverEnabled
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetRolloverPeriodSeconds() *plugin.TValue[int64] {
+	return &c.RolloverPeriodSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetDnsKeySignatureValidityPeriodSeconds() *plugin.TValue[int64] {
+	return &c.DnsKeySignatureValidityPeriodSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetDsSignatureValidityPeriodSeconds() *plugin.TValue[int64] {
+	return &c.DsSignatureValidityPeriodSeconds
+}
+
+func (c *mqlWindowsDnsServerZoneSigningKey) GetZoneSignatureValidityPeriodSeconds() *plugin.TValue[int64] {
+	return &c.ZoneSignatureValidityPeriodSeconds
 }
 
 // mqlWindowsPrinterDrivers for the windows.printerDrivers resource
