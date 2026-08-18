@@ -1006,7 +1006,20 @@ github.repository @defaults("fullName") {
   // Secret scanning alerts for the repository
   secretScanningAlerts() []github.secretScanningAlert
   // Code scanning alerts for the repository
+  //
+  // Empty both when the repository has no open alerts and when code scanning
+  // was never turned on, so pair it with `codeScanningEnabled` before reading
+  // an empty list as a clean result.
   codeScanningAlerts() []github.codeScanningAlert
+  // Whether code scanning is configured for the repository
+  //
+  // True when CodeQL default setup reports `configured`, and also when at
+  // least one code scanning analysis has been uploaded, which is how advanced
+  // setup through a GitHub Actions workflow presents itself. Null when neither
+  // can be read, for example with a token that lacks the `security_events`
+  // scope, so an authorization failure is not reported as the feature being
+  // off.
+  codeScanningEnabled() bool
   // Self-hosted runners for the repository
   runners() []github.runner
   // Deployment environments for the repository

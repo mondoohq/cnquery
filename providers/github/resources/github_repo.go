@@ -2391,6 +2391,49 @@ func (g *mqlGithubCodeScanningAlert) id() (string, error) {
 	return "github.codeScanningAlert/" + strconv.FormatInt(g.Number.Data, 10), nil
 }
 
+// codeScanningEnabled answers whether the repository has code scanning
+// configured at all. codeScanningAlerts returns an empty list both for a
+// repository with no findings and for one that never enabled scanning, so a
+// check asserting there are no open alerts cannot tell the two apart without
+// this.
+//
+// Two endpoints are needed because the two setup modes report differently.
+// Default setup is visible on the default-setup endpoint. Advanced setup runs
+// from a GitHub Actions workflow, never reports a configured default setup,
+// and shows up only as uploaded analyses.
+func (g *mqlGithubRepository) codeScanningEnabled() (bool, error) {
+	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+	ownerLogin, repoName, err := repoOwnerAndName(g)
+	if err != nil {
+		return false, err
+	}
+
+	setup, _, setupErr := conn.Client().CodeScanning.GetDefaultSetupConfiguration(conn.Context(), ownerLogin, repoName)
+	if setupErr == nil && setup.GetState() == "configured" {
+		return true, nil
+	}
+
+	analyses, _, analysisErr := conn.Client().CodeScanning.ListAnalysesForRepo(conn.Context(), ownerLogin, repoName,
+		&github.AnalysesListOptions{ListOptions: github.ListOptions{PerPage: 1}})
+	if analysisErr == nil {
+		return len(analyses) > 0, nil
+	}
+
+	// A repository with scanning available but no analysis yet answers 404
+	// here, which is a real negative rather than an unknown, provided the
+	// default-setup endpoint answered.
+	if githubResponseStatus(analysisErr) == http.StatusNotFound && setupErr == nil {
+		return false, nil
+	}
+
+	log.Debug().
+		Str("owner", ownerLogin).Str("repo", repoName).
+		AnErr("defaultSetup", setupErr).AnErr("analyses", analysisErr).
+		Msg("unable to determine whether code scanning is enabled")
+	g.CodeScanningEnabled.State = plugin.StateIsSet | plugin.StateIsNull
+	return false, nil
+}
+
 func (g *mqlGithubRepository) codeScanningAlerts() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
 	ownerLogin, repoName, err := repoOwnerAndName(g)

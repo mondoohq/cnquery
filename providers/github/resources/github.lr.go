@@ -1418,6 +1418,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.codeScanningAlerts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetCodeScanningAlerts()).ToDataRes(types.Array(types.Resource("github.codeScanningAlert")))
 	},
+	"github.repository.codeScanningEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetCodeScanningEnabled()).ToDataRes(types.Bool)
+	},
 	"github.repository.runners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetRunners()).ToDataRes(types.Array(types.Resource("github.runner")))
 	},
@@ -4158,6 +4161,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.codeScanningAlerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).CodeScanningAlerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.codeScanningEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).CodeScanningEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"github.repository.runners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9174,6 +9181,7 @@ type mqlGithubRepository struct {
 	DependabotAlerts                     plugin.TValue[[]any]
 	SecretScanningAlerts                 plugin.TValue[[]any]
 	CodeScanningAlerts                   plugin.TValue[[]any]
+	CodeScanningEnabled                  plugin.TValue[bool]
 	Runners                              plugin.TValue[[]any]
 	Environments                         plugin.TValue[[]any]
 	Deployments                          plugin.TValue[[]any]
@@ -9800,6 +9808,12 @@ func (c *mqlGithubRepository) GetCodeScanningAlerts() *plugin.TValue[[]any] {
 		}
 
 		return c.codeScanningAlerts()
+	})
+}
+
+func (c *mqlGithubRepository) GetCodeScanningEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CodeScanningEnabled, func() (bool, error) {
+		return c.codeScanningEnabled()
 	})
 }
 
