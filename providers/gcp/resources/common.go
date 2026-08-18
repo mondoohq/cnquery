@@ -549,6 +549,14 @@ func getSubnetworkByUrl(subnetUrl string, runtime *plugin.Runtime) (*mqlGcpProje
 
 	// Use NewResource so initGcpProjectComputeServiceSubnetwork runs and
 	// populates every field instead of leaving the resource partially set.
+	//
+	// regionUrl has to go in the args, not just onto cacheRegionUrl afterwards.
+	// The init matches a listed subnetwork on name, project *and* region, and
+	// with no regionUrl its region is "", which matches nothing. It then falls
+	// through to a direct Get carrying that empty region and GCP rejects it:
+	//   GET .../projects/{p}/regions//subnetworks/{n} -> 400 Invalid value for
+	//   field 'region': ''
+	// which surfaces as an errored check rather than a resolved subnetwork.
 	res, err := NewResource(runtime, "gcp.project.computeService.subnetwork", map[string]*llx.RawData{
 		"name":      llx.StringData(name),
 		"projectId": llx.StringData(project),
@@ -642,4 +650,20 @@ func getZoneByUrl(zoneUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComput
 		return nil, err
 	}
 	return res.(*mqlGcpProjectComputeServiceZone), nil
+}
+
+// cachedResource returns a resource already built in this runtime, or nil.
+//
+// The runtime keys its resource cache on resourceName + "\x00" + id. Callers
+// that check the cache before doing I/O need that same key, and spelling it out
+// at each call site means a future change to the format has to find every copy.
+// Mirrors the helper of the same name in the azure provider.
+func cachedResource(runtime *plugin.Runtime, resourceName, id string) plugin.Resource {
+	if id == "" || runtime == nil || runtime.Resources == nil {
+		return nil
+	}
+	if res, ok := runtime.Resources.Get(resourceName + "\x00" + id); ok {
+		return res
+	}
+	return nil
 }

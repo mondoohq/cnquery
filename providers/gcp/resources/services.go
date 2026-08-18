@@ -64,6 +64,8 @@ const (
 	service_pam                 = "privilegedaccessmanager.googleapis.com"
 	service_networkconnectivity = "networkconnectivity.googleapis.com"
 	service_networkmanagement   = "networkmanagement.googleapis.com"
+	service_memcache            = "memcache.googleapis.com"
+	service_aiplatform          = "aiplatform.googleapis.com"
 )
 
 func serviceName(name string) string {

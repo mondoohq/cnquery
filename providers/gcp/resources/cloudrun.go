@@ -413,19 +413,6 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	if g.Regions.Error != nil {
-		return nil, g.Regions.Error
-	}
-	regions := g.Regions.Data
-	if len(regions) == 0 {
-		// regions data has not been fetched, we need to get it
-		r, err := g.regions()
-		if err != nil {
-			return nil, err
-		}
-		regions = r
-	}
-
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
 	creds, err := conn.Credentials(run.DefaultAuthScopes()...)
@@ -446,214 +433,209 @@ func (g *mqlGcpProjectCloudRunService) services() ([]any, error) {
 		MaxInstanceCount int32 `json:"maxInstanceCount"`
 	}
 
-	var wg sync.WaitGroup
+	// One call for every region. Cloud Run v2 accepts "-" as the location, which
+	// this provider previously fanned out over ~43 regions to achieve: verified
+	// against the live API, projects/{p}/locations/-/services returns 200 with
+	// services from every region. (ListJobs rejects the same wildcard with
+	// INVALID_ARGUMENT, which is why the jobs lister below still fans out.)
+	// Each service's own region is read back off its resource name.
 	var services []any
-	wg.Add(len(regions))
-	mux := &sync.Mutex{}
-	for _, region := range regions {
-		go func(region string) {
-			defer wg.Done()
-			it := runSvc.ListServices(ctx, &runpb.ListServicesRequest{Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, region)})
-			for {
-				s, err := it.Next()
-				if err == iterator.Done {
-					break
-				}
-				if err != nil {
-					log.Error().Err(err).Send()
-					break
-				}
+	it := runSvc.ListServices(ctx, &runpb.ListServicesRequest{Parent: fmt.Sprintf("projects/%s/locations/-", projectId)})
+	for {
+		s, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Error().Err(err).Send()
+			break
+		}
 
-				var mqlTemplate plugin.Resource
-				if s.Template != nil {
-					var scalingCfg map[string]any
-					if s.Template.Scaling != nil {
-						scalingCfg, err = convert.JsonToDict(mqlRevisionScaling{
-							MinInstanceCount: s.Template.Scaling.MinInstanceCount,
-							MaxInstanceCount: s.Template.Scaling.MaxInstanceCount,
-						})
-						if err != nil {
-							log.Error().Err(err).Send()
-						}
-					}
-
-					vpcCfg, err := mqlVpcAccess(s.Template.VpcAccess)
-					if err != nil {
-						log.Error().Err(err).Send()
-					}
-
-					templateId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s/revisionTemplate", projectId, s.Name)
-					mqlVpcAccessCfg, err := mqlVpcAccessConfig(g.MqlRuntime, templateId+"/vpcAccess", s.Template.VpcAccess)
-					if err != nil {
-						log.Error().Err(err).Send()
-					}
-
-					mqlContainers, err := mqlContainers(g.MqlRuntime, s.Template.Containers, templateId)
-					if err != nil {
-						log.Error().Err(err).Send()
-					}
-
-					mqlTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service.revisionTemplate", map[string]*llx.RawData{
-						"id":                                   llx.StringData(templateId),
-						"projectId":                            llx.StringData(projectId),
-						"name":                                 llx.StringData(s.Template.Revision),
-						"labels":                               llx.MapData(convert.MapToInterfaceMap(s.Template.Labels), types.String),
-						"annotations":                          llx.MapData(convert.MapToInterfaceMap(s.Template.Annotations), types.String),
-						"scaling":                              llx.DictData(scalingCfg),
-						"vpcAccess":                            llx.DictData(vpcCfg),
-						"vpcAccessConfig":                      llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
-						"timeout":                              llx.TimeData(llx.DurationToTime(s.Template.GetTimeout().GetSeconds())),
-						"serviceAccountEmail":                  llx.StringData(s.Template.ServiceAccount),
-						"containers":                           llx.ArrayData(mqlContainers, "gcp.project.cloudRunService.container"),
-						"volumes":                              llx.ArrayData(mqlVolumes(s.Template.Volumes), types.Dict),
-						"executionEnvironment":                 llx.StringData(s.Template.ExecutionEnvironment.String()),
-						"encryptionKey":                        llx.StringData(s.Template.EncryptionKey),
-						"maxInstanceRequestConcurrency":        llx.IntData(int64(s.Template.MaxInstanceRequestConcurrency)),
-						"encryptionKeyRevocationAction":        llx.StringData(s.Template.GetEncryptionKeyRevocationAction().String()),
-						"encryptionKeyShutdownDurationSeconds": llx.IntData(s.Template.GetEncryptionKeyShutdownDuration().GetSeconds()),
-						"serviceMesh":                          llx.StringData(s.Template.GetServiceMesh().GetMesh()),
-						"sessionAffinity":                      llx.BoolData(s.Template.GetSessionAffinity()),
-						"healthCheckDisabled":                  llx.BoolData(s.Template.GetHealthCheckDisabled()),
-						"nodeSelectorAccelerator":              llx.StringData(s.Template.GetNodeSelector().GetAccelerator()),
-						"gpuZonalRedundancyDisabled":           llx.BoolData(s.Template.GetGpuZonalRedundancyDisabled()),
-					})
-					if err != nil {
-						log.Error().Err(err).Send()
-					}
-				}
-
-				mqlTraffic := make([]any, 0, len(s.Traffic))
-				for _, t := range s.Traffic {
-					mqlTraffic = append(mqlTraffic, map[string]any{
-						"type":     t.Type.String(),
-						"revision": t.Revision,
-						"percent":  strconv.Itoa(int(t.Percent)),
-						"tag":      t.Tag,
-					})
-				}
-
-				mqlTerminalCondition, err := mqlCondition(g.MqlRuntime, s.TerminalCondition, s.Name, "terminal")
-				if err != nil {
-					log.Error().Err(err).Send()
-				}
-
-				mqlConditions := make([]any, 0, len(s.Conditions))
-				for i, c := range s.Conditions {
-					mqlCondition, err := mqlCondition(g.MqlRuntime, c, s.Name, fmt.Sprintf("%d", i))
-					if err != nil {
-						log.Error().Err(err).Send()
-					}
-					mqlConditions = append(mqlConditions, mqlCondition)
-				}
-
-				mqlTrafficStatuses := make([]any, 0, len(s.TrafficStatuses))
-				for _, t := range s.TrafficStatuses {
-					mqlTrafficStatuses = append(mqlTrafficStatuses, map[string]any{
-						"type":     t.Type.String(),
-						"revision": t.Revision,
-						"percent":  strconv.Itoa(int(t.Percent)),
-						"tag":      t.Tag,
-						"uri":      t.Uri,
-					})
-				}
-
-				baDict, err := protoToDict(s.BinaryAuthorization)
-				if err != nil {
-					log.Error().Err(err).Msg("failed to convert BinaryAuthorization to dict")
-				}
-				var baUseDefault bool
-				var baBreakglass string
-				if s.BinaryAuthorization != nil {
-					baUseDefault = s.BinaryAuthorization.GetUseDefault()
-					baBreakglass = s.BinaryAuthorization.GetBreakglassJustification()
-				}
-				// Only a service Cloud Run built from source carries a build
-				// config. Leaving it null on image-deployed services keeps a
-				// check on the base image or build identity from matching a
-				// service that was never built here.
-				buildConfigData := llx.NilData
-				if bc := s.GetBuildConfig(); bc != nil {
-					mqlBuild, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service.buildSettings", map[string]*llx.RawData{
-						"__id":                   llx.StringData(fmt.Sprintf("%s/buildConfig", s.Name)),
-						"name":                   llx.StringData(bc.GetName()),
-						"sourceLocation":         llx.StringData(bc.GetSourceLocation()),
-						"functionTarget":         llx.StringData(bc.GetFunctionTarget()),
-						"imageUri":               llx.StringData(bc.GetImageUri()),
-						"baseImage":              llx.StringData(bc.GetBaseImage()),
-						"enableAutomaticUpdates": llx.BoolData(bc.GetEnableAutomaticUpdates()),
-						"workerPool":             llx.StringData(bc.GetWorkerPool()),
-						"environmentVariables":   llx.MapData(convert.MapToInterfaceMap(bc.GetEnvironmentVariables()), types.String),
-					})
-					if err != nil {
-						// Match the surrounding loop: one malformed build config
-						// must not drop the whole service list. The field stays
-						// null rather than reporting a build that was not read.
-						log.Error().Err(err).Str("service", s.Name).Msg("failed to create cloud run build config")
-					} else {
-						mqlBuild.(*mqlGcpProjectCloudRunServiceServiceBuildSettings).cacheServiceAccount = bc.GetServiceAccount()
-						buildConfigData = llx.ResourceData(mqlBuild, "gcp.project.cloudRunService.service.buildSettings")
-					}
-				}
-
-				mqlS, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
-					"id":                            llx.StringData(s.Name),
-					"projectId":                     llx.StringData(projectId),
-					"region":                        llx.StringData(region),
-					"name":                          llx.StringData(parseResourceName(s.Name)),
-					"description":                   llx.StringData(s.Description),
-					"generation":                    llx.IntData(s.Generation),
-					"labels":                        llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
-					"annotations":                   llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
-					"created":                       llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
-					"updated":                       llx.TimeDataPtr(timestampAsTimePtr(s.UpdateTime)),
-					"deleted":                       llx.TimeDataPtr(timestampAsTimePtr(s.DeleteTime)),
-					"expired":                       llx.TimeDataPtr(timestampAsTimePtr(s.ExpireTime)),
-					"creator":                       llx.StringData(s.Creator),
-					"lastModifier":                  llx.StringData(s.LastModifier),
-					"ingress":                       llx.StringData(s.Ingress.String()),
-					"invokerIamDisabled":            llx.BoolData(s.InvokerIamDisabled),
-					"iapEnabled":                    llx.BoolData(s.IapEnabled),
-					"threatDetectionEnabled":        llx.BoolData(s.ThreatDetectionEnabled),
-					"launchStage":                   llx.StringData(s.LaunchStage.String()),
-					"template":                      llx.ResourceData(mqlTemplate, "gcp.project.cloudRunService.service.revisionTemplate"),
-					"traffic":                       llx.ArrayData(mqlTraffic, types.Dict),
-					"observedGeneration":            llx.IntData(s.ObservedGeneration),
-					"terminalCondition":             llx.ResourceData(mqlTerminalCondition, "gcp.project.cloudRunService.condition"),
-					"conditions":                    llx.ArrayData(mqlConditions, types.Resource("gcp.project.cloudRunService.condition")),
-					"latestReadyRevision":           llx.StringData(s.LatestReadyRevision),
-					"latestCreatedRevision":         llx.StringData(s.LatestCreatedRevision),
-					"trafficStatuses":               llx.ArrayData(mqlTrafficStatuses, types.Dict),
-					"uri":                           llx.StringData(s.Uri),
-					"reconciling":                   llx.BoolData(s.Reconciling),
-					"customAudiences":               llx.ArrayData(convert.SliceAnyToInterface(s.CustomAudiences), types.String),
-					"defaultUriDisabled":            llx.BoolData(s.DefaultUriDisabled),
-					"satisfiesPzs":                  llx.BoolData(s.SatisfiesPzs),
-					"scalingMode":                   llx.StringData(s.GetScaling().GetScalingMode().String()),
-					"minInstanceCount":              llx.IntData(int64(s.GetScaling().GetMinInstanceCount())),
-					"maxInstanceCount":              llx.IntData(int64(s.GetScaling().GetMaxInstanceCount())),
-					"manualInstanceCount":           llx.IntData(int64(s.GetScaling().GetManualInstanceCount())),
-					"urls":                          llx.ArrayData(convert.SliceAnyToInterface(s.GetUrls()), types.String),
-					"buildConfig":                   buildConfigData,
-					"uid":                           llx.StringData(s.Uid),
-					"etag":                          llx.StringData(s.Etag),
-					"client":                        llx.StringData(s.Client),
-					"clientVersion":                 llx.StringData(s.ClientVersion),
-					"binaryAuthorization":           llx.DictData(baDict),
-					"binaryAuthorizationUseDefault": llx.BoolData(baUseDefault),
-					"binaryAuthorizationBreakglassJustification": llx.StringData(baBreakglass),
+		var mqlTemplate plugin.Resource
+		if s.Template != nil {
+			var scalingCfg map[string]any
+			if s.Template.Scaling != nil {
+				scalingCfg, err = convert.JsonToDict(mqlRevisionScaling{
+					MinInstanceCount: s.Template.Scaling.MinInstanceCount,
+					MaxInstanceCount: s.Template.Scaling.MaxInstanceCount,
 				})
 				if err != nil {
 					log.Error().Err(err).Send()
-					continue
 				}
-				mqlS.(*mqlGcpProjectCloudRunServiceService).cacheEncryptionKey = s.GetTemplate().GetEncryptionKey()
-				mux.Lock()
-				services = append(services, mqlS)
-				mux.Unlock()
 			}
-		}(region.(string))
+
+			vpcCfg, err := mqlVpcAccess(s.Template.VpcAccess)
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+
+			templateId := fmt.Sprintf("gcp.project.cloudRunService.service/%s/%s/revisionTemplate", projectId, s.Name)
+			mqlVpcAccessCfg, err := mqlVpcAccessConfig(g.MqlRuntime, templateId+"/vpcAccess", s.Template.VpcAccess)
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+
+			mqlContainers, err := mqlContainers(g.MqlRuntime, s.Template.Containers, templateId)
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+
+			mqlTemplate, err = CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service.revisionTemplate", map[string]*llx.RawData{
+				"id":                                   llx.StringData(templateId),
+				"projectId":                            llx.StringData(projectId),
+				"name":                                 llx.StringData(s.Template.Revision),
+				"labels":                               llx.MapData(convert.MapToInterfaceMap(s.Template.Labels), types.String),
+				"annotations":                          llx.MapData(convert.MapToInterfaceMap(s.Template.Annotations), types.String),
+				"scaling":                              llx.DictData(scalingCfg),
+				"vpcAccess":                            llx.DictData(vpcCfg),
+				"vpcAccessConfig":                      llx.ResourceData(mqlVpcAccessCfg, "gcp.project.cloudRunService.vpcAccessConfig"),
+				"timeout":                              llx.TimeData(llx.DurationToTime(s.Template.GetTimeout().GetSeconds())),
+				"serviceAccountEmail":                  llx.StringData(s.Template.ServiceAccount),
+				"containers":                           llx.ArrayData(mqlContainers, "gcp.project.cloudRunService.container"),
+				"volumes":                              llx.ArrayData(mqlVolumes(s.Template.Volumes), types.Dict),
+				"executionEnvironment":                 llx.StringData(s.Template.ExecutionEnvironment.String()),
+				"encryptionKey":                        llx.StringData(s.Template.EncryptionKey),
+				"maxInstanceRequestConcurrency":        llx.IntData(int64(s.Template.MaxInstanceRequestConcurrency)),
+				"encryptionKeyRevocationAction":        llx.StringData(s.Template.GetEncryptionKeyRevocationAction().String()),
+				"encryptionKeyShutdownDurationSeconds": llx.IntData(s.Template.GetEncryptionKeyShutdownDuration().GetSeconds()),
+				"serviceMesh":                          llx.StringData(s.Template.GetServiceMesh().GetMesh()),
+				"sessionAffinity":                      llx.BoolData(s.Template.GetSessionAffinity()),
+				"healthCheckDisabled":                  llx.BoolData(s.Template.GetHealthCheckDisabled()),
+				"nodeSelectorAccelerator":              llx.StringData(s.Template.GetNodeSelector().GetAccelerator()),
+				"gpuZonalRedundancyDisabled":           llx.BoolData(s.Template.GetGpuZonalRedundancyDisabled()),
+			})
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+		}
+
+		mqlTraffic := make([]any, 0, len(s.Traffic))
+		for _, t := range s.Traffic {
+			mqlTraffic = append(mqlTraffic, map[string]any{
+				"type":     t.Type.String(),
+				"revision": t.Revision,
+				"percent":  strconv.Itoa(int(t.Percent)),
+				"tag":      t.Tag,
+			})
+		}
+
+		mqlTerminalCondition, err := mqlCondition(g.MqlRuntime, s.TerminalCondition, s.Name, "terminal")
+		if err != nil {
+			log.Error().Err(err).Send()
+		}
+
+		mqlConditions := make([]any, 0, len(s.Conditions))
+		for i, c := range s.Conditions {
+			mqlCondition, err := mqlCondition(g.MqlRuntime, c, s.Name, fmt.Sprintf("%d", i))
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+			mqlConditions = append(mqlConditions, mqlCondition)
+		}
+
+		mqlTrafficStatuses := make([]any, 0, len(s.TrafficStatuses))
+		for _, t := range s.TrafficStatuses {
+			mqlTrafficStatuses = append(mqlTrafficStatuses, map[string]any{
+				"type":     t.Type.String(),
+				"revision": t.Revision,
+				"percent":  strconv.Itoa(int(t.Percent)),
+				"tag":      t.Tag,
+				"uri":      t.Uri,
+			})
+		}
+
+		baDict, err := protoToDict(s.BinaryAuthorization)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to convert BinaryAuthorization to dict")
+		}
+		var baUseDefault bool
+		var baBreakglass string
+		if s.BinaryAuthorization != nil {
+			baUseDefault = s.BinaryAuthorization.GetUseDefault()
+			baBreakglass = s.BinaryAuthorization.GetBreakglassJustification()
+		}
+		// Only a service Cloud Run built from source carries a build
+		// config. Leaving it null on image-deployed services keeps a
+		// check on the base image or build identity from matching a
+		// service that was never built here.
+		buildConfigData := llx.NilData
+		if bc := s.GetBuildConfig(); bc != nil {
+			mqlBuild, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service.buildSettings", map[string]*llx.RawData{
+				"__id":                   llx.StringData(fmt.Sprintf("%s/buildConfig", s.Name)),
+				"name":                   llx.StringData(bc.GetName()),
+				"sourceLocation":         llx.StringData(bc.GetSourceLocation()),
+				"functionTarget":         llx.StringData(bc.GetFunctionTarget()),
+				"imageUri":               llx.StringData(bc.GetImageUri()),
+				"baseImage":              llx.StringData(bc.GetBaseImage()),
+				"enableAutomaticUpdates": llx.BoolData(bc.GetEnableAutomaticUpdates()),
+				"workerPool":             llx.StringData(bc.GetWorkerPool()),
+				"environmentVariables":   llx.MapData(convert.MapToInterfaceMap(bc.GetEnvironmentVariables()), types.String),
+			})
+			if err != nil {
+				// Match the surrounding loop: one malformed build config
+				// must not drop the whole service list. The field stays
+				// null rather than reporting a build that was not read.
+				log.Error().Err(err).Str("service", s.Name).Msg("failed to create cloud run build config")
+			} else {
+				mqlBuild.(*mqlGcpProjectCloudRunServiceServiceBuildSettings).cacheServiceAccount = bc.GetServiceAccount()
+				buildConfigData = llx.ResourceData(mqlBuild, "gcp.project.cloudRunService.service.buildSettings")
+			}
+		}
+
+		mqlS, err := CreateResource(g.MqlRuntime, "gcp.project.cloudRunService.service", map[string]*llx.RawData{
+			"id":                            llx.StringData(s.Name),
+			"projectId":                     llx.StringData(projectId),
+			"region":                        llx.StringData(parseLocationFromPath(s.Name)),
+			"name":                          llx.StringData(parseResourceName(s.Name)),
+			"description":                   llx.StringData(s.Description),
+			"generation":                    llx.IntData(s.Generation),
+			"labels":                        llx.MapData(convert.MapToInterfaceMap(s.Labels), types.String),
+			"annotations":                   llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
+			"created":                       llx.TimeDataPtr(timestampAsTimePtr(s.CreateTime)),
+			"updated":                       llx.TimeDataPtr(timestampAsTimePtr(s.UpdateTime)),
+			"deleted":                       llx.TimeDataPtr(timestampAsTimePtr(s.DeleteTime)),
+			"expired":                       llx.TimeDataPtr(timestampAsTimePtr(s.ExpireTime)),
+			"creator":                       llx.StringData(s.Creator),
+			"lastModifier":                  llx.StringData(s.LastModifier),
+			"ingress":                       llx.StringData(s.Ingress.String()),
+			"invokerIamDisabled":            llx.BoolData(s.InvokerIamDisabled),
+			"iapEnabled":                    llx.BoolData(s.IapEnabled),
+			"threatDetectionEnabled":        llx.BoolData(s.ThreatDetectionEnabled),
+			"launchStage":                   llx.StringData(s.LaunchStage.String()),
+			"template":                      llx.ResourceData(mqlTemplate, "gcp.project.cloudRunService.service.revisionTemplate"),
+			"traffic":                       llx.ArrayData(mqlTraffic, types.Dict),
+			"observedGeneration":            llx.IntData(s.ObservedGeneration),
+			"terminalCondition":             llx.ResourceData(mqlTerminalCondition, "gcp.project.cloudRunService.condition"),
+			"conditions":                    llx.ArrayData(mqlConditions, types.Resource("gcp.project.cloudRunService.condition")),
+			"latestReadyRevision":           llx.StringData(s.LatestReadyRevision),
+			"latestCreatedRevision":         llx.StringData(s.LatestCreatedRevision),
+			"trafficStatuses":               llx.ArrayData(mqlTrafficStatuses, types.Dict),
+			"uri":                           llx.StringData(s.Uri),
+			"reconciling":                   llx.BoolData(s.Reconciling),
+			"customAudiences":               llx.ArrayData(convert.SliceAnyToInterface(s.CustomAudiences), types.String),
+			"defaultUriDisabled":            llx.BoolData(s.DefaultUriDisabled),
+			"satisfiesPzs":                  llx.BoolData(s.SatisfiesPzs),
+			"scalingMode":                   llx.StringData(s.GetScaling().GetScalingMode().String()),
+			"minInstanceCount":              llx.IntData(int64(s.GetScaling().GetMinInstanceCount())),
+			"maxInstanceCount":              llx.IntData(int64(s.GetScaling().GetMaxInstanceCount())),
+			"manualInstanceCount":           llx.IntData(int64(s.GetScaling().GetManualInstanceCount())),
+			"urls":                          llx.ArrayData(convert.SliceAnyToInterface(s.GetUrls()), types.String),
+			"buildConfig":                   buildConfigData,
+			"uid":                           llx.StringData(s.Uid),
+			"etag":                          llx.StringData(s.Etag),
+			"client":                        llx.StringData(s.Client),
+			"clientVersion":                 llx.StringData(s.ClientVersion),
+			"binaryAuthorization":           llx.DictData(baDict),
+			"binaryAuthorizationUseDefault": llx.BoolData(baUseDefault),
+			"binaryAuthorizationBreakglassJustification": llx.StringData(baBreakglass),
+		})
+		if err != nil {
+			log.Error().Err(err).Send()
+			continue
+		}
+		mqlS.(*mqlGcpProjectCloudRunServiceService).cacheEncryptionKey = s.GetTemplate().GetEncryptionKey()
+		services = append(services, mqlS)
 	}
-	wg.Wait()
 	return services, nil
 }
 
