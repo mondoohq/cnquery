@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
 	"github.com/microsoft/kiota-abstractions-go/serialization"
@@ -91,6 +92,16 @@ func batchGet[T serialization.Parsable](
 			out.errs[key] = fmt.Errorf("batch request failed with status %d", code)
 			continue
 		}
+		// A no-content success has no body to deserialize. GetBatchResponseById
+		// dereferences it anyway and panics, which the recover below would turn
+		// into a per-item error -- but this is not a failure. Graph answers 204
+		// for a sub-request whose target has no value for the selected property
+		// (for example signInActivity on a user who has never signed in), so
+		// leave the key out of both results and errs and let the field read
+		// null.
+		if hasCode && batchStatusHasNoBody(code) {
+			continue
+		}
 		// ...and recover defensively around the parse itself, since the helper
 		// can still panic on malformed/error bodies the status map does not flag.
 		val, err := safeGetBatchResponseByID[T](resp, id, constructor)
@@ -101,6 +112,16 @@ func batchGet[T serialization.Parsable](
 		out.results[key] = val
 	}
 	return out, nil
+}
+
+// batchStatusHasNoBody reports whether a successful batch sub-response status
+// carries no body, so there is nothing for the caller to deserialize.
+//
+// This has to be checked separately from the non-2xx guard because these codes
+// ARE successes: they fall inside the 2xx range and would otherwise reach the
+// parse, which panics on the absent body.
+func batchStatusHasNoBody(code int32) bool {
+	return code == http.StatusNoContent || code == http.StatusResetContent
 }
 
 // safeGetBatchResponseByID wraps msgraphgocore.GetBatchResponseById, which can
