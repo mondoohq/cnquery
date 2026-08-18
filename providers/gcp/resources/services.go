@@ -68,6 +68,7 @@ const (
 	service_aiplatform          = "aiplatform.googleapis.com"
 	service_datastream          = "datastream.googleapis.com"
 	service_memorystore         = "memorystore.googleapis.com"
+	service_documentai          = "documentai.googleapis.com"
 )
 
 func serviceName(name string) string {
