@@ -106,6 +106,7 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 
 	resource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy,
 		map[string]*llx.RawData{
+			"__id":             llx.StringData(exchangeEntryID("hostedConnectionFilterPolicy", policy.Identity, 0)),
 			"identity":         llx.StringData(policy.Identity),
 			"adminDisplayName": llx.StringData(policy.AdminDisplayName),
 			"ipAllowList":      llx.ArrayData(convert.SliceAnyToInterface(policy.IPAllowList), types.String),
