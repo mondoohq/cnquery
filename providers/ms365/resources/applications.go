@@ -359,7 +359,7 @@ func (a *mqlMicrosoftApplication) servicePrincipal() (*mqlMicrosoftServiceprinci
 	// application took 123s through the per-application filter and 4s to list
 	// the applications alone. Graph throttles on request volume, so the cost
 	// grows faster than linearly on a tenant with thousands of registrations.
-	msResource, err := a.MqlRuntime.CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
+	msResource, err := CreateResource(a.MqlRuntime, "microsoft", map[string]*llx.RawData{})
 	if err != nil {
 		return nil, err
 	}
@@ -369,19 +369,26 @@ func (a *mqlMicrosoftApplication) servicePrincipal() (*mqlMicrosoftServiceprinci
 	}
 
 	wantAppId := a.GetAppId().Data
-	if wantAppId == "" {
-		return nil, errors.New("service principal not found")
-	}
-	for i := range principals.Data {
-		sp, ok := principals.Data[i].(*mqlMicrosoftServiceprincipal)
-		if !ok {
-			continue
+	if wantAppId != "" {
+		for i := range principals.Data {
+			sp, ok := principals.Data[i].(*mqlMicrosoftServiceprincipal)
+			if !ok {
+				continue
+			}
+			if sp.AppId.Data == wantAppId {
+				return sp, nil
+			}
 		}
-		if sp.AppId.Data == wantAppId {
-			return sp, nil
-		}
 	}
-	return nil, errors.New("service principal not found")
+
+	// Not every application registration has a service principal in this
+	// tenant -- a multi-tenant app nobody has consented to has none -- so this
+	// is a legitimate empty state rather than a failure. The field has to be
+	// marked set-and-null before returning nil: without it the runtime does not
+	// know the field was resolved, and the query fails for an application whose
+	// only problem is that it is exactly what it claims to be.
+	a.ServicePrincipal.State = plugin.StateIsNull | plugin.StateIsSet
+	return nil, nil
 }
 
 func (a *mqlMicrosoftApplication) owners() ([]any, error) {
