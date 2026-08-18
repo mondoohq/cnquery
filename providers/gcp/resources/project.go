@@ -98,7 +98,7 @@ func initGcpProject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	// is referenced from a dozen files (iam, logging, apikeys, cloud functions,
 	// filestore, shared VPC, the service gate, discovery), which on one measured
 	// scan meant 452 identical Projects.Get calls, half of all HTTP traffic.
-	if cached, ok := runtime.Resources.Get(ResourceGcpProject + "\x00" + projectRef); ok {
+	if cached := cachedResource(runtime, ResourceGcpProject, projectRef); cached != nil {
 		return args, cached, nil
 	}
 

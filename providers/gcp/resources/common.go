@@ -653,3 +653,19 @@ func getZoneByUrl(zoneUrl string, runtime *plugin.Runtime) (*mqlGcpProjectComput
 	}
 	return res.(*mqlGcpProjectComputeServiceZone), nil
 }
+
+// cachedResource returns a resource already built in this runtime, or nil.
+//
+// The runtime keys its resource cache on resourceName + "\x00" + id. Callers
+// that check the cache before doing I/O need that same key, and spelling it out
+// at each call site means a future change to the format has to find every copy.
+// Mirrors the helper of the same name in the azure provider.
+func cachedResource(runtime *plugin.Runtime, resourceName, id string) plugin.Resource {
+	if id == "" || runtime == nil || runtime.Resources == nil {
+		return nil
+	}
+	if res, ok := runtime.Resources.Get(resourceName + "\x00" + id); ok {
+		return res
+	}
+	return nil
+}
