@@ -35,9 +35,12 @@ func (a *mqlWindowsAcl) id() (string, error) {
 // missing or unreadable: an empty entry list satisfies every assertion made
 // about it, which is the worst possible answer.
 func (a *mqlWindowsAcl) acl() (*windows.WindowsAcl, error) {
-	if a.fetched {
-		return a.data, nil
-	}
+	// The guard is read under the lock, never before it. A fast path that
+	// tests the flag first is a data race: the goroutine that publishes the
+	// result writes the flag and the pointer with no happens-before edge to
+	// the reader, so a racing accessor can see the flag set and the data still
+	// nil. The lock is uncontended in the common case and the work it guards
+	// is a remote command, so there is nothing to win by skipping it.
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.fetched {
