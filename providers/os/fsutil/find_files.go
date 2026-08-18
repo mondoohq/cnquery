@@ -67,12 +67,17 @@ func (m findFilesMatcher) DepthReached(p string) bool {
 	return depth > *m.depth
 }
 
+// Match reports whether a walked path passes every filter.
+//
+// The three tests are ordered by cost, and they short circuit. matchesType
+// reads the mode the walk already carries. matchesRegex runs the pattern.
+// matchesPerm stats the path, and matchesType stats a symlink as well, so both
+// can cost a syscall per path. A path that fails an earlier test never pays for
+// a later one.
+//
+// All three are pure, so the result does not depend on how many of them run.
 func (m findFilesMatcher) Match(path string, t fs.FileMode) bool {
-	matchesType := m.matchesType(path, t)
-	matchesRegex := m.matchesRegex(path)
-	matchesPerm := m.matchesPerm(path)
-
-	return matchesType && matchesRegex && matchesPerm
+	return m.matchesType(path, t) && m.matchesRegex(path) && m.matchesPerm(path)
 }
 
 func (m findFilesMatcher) matchesRegex(path string) bool {
