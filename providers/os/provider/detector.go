@@ -84,6 +84,9 @@ func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {
 				asset.Name = cloudPlatformInfo.Name
 			}
 			asset.Platform.Kind = cloudPlatformInfo.Kind
+			// RelatedAssets is kept for backward compatibility until
+			// consumers migrate to relationships (ADR 030).
+			//nolint:staticcheck
 			asset.RelatedAssets = append(asset.RelatedAssets, relatedIds2assets(cloudPlatformInfo.RelatedPlatformIDs)...)
 		}
 	}
@@ -118,6 +121,10 @@ func relatedIds2assets(ids []string) []*inventory.Asset {
 	return res
 }
 
+// RelatedAssets is kept for backward compatibility until consumers migrate to
+// relationships (ADR 030).
+//
+//nolint:staticcheck
 func appendRelatedAssetsFromFingerprint(f *id.PlatformFingerprint, a *inventory.Asset) {
 	if f == nil || len(f.RelatedAssets) == 0 {
 		return

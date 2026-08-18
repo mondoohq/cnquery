@@ -575,9 +575,6 @@ func (a *mqlAristaEosStp) mstInstances() ([]any, error) {
 				"portNumber":           llx.IntData(int64(iface.PortNumber)),
 				"isEdgePort":           llx.BoolData(iface.IsEdgePort),
 				"detail":               llx.DictData(detail),
-				// Deprecated: duplicates state; no real boundary source exists
-				// in the SDK response yet.
-				"boundaryType": llx.StringData(iface.State),
 			})
 			if err != nil {
 				return nil, err
@@ -1009,8 +1006,6 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 				"uptime":                 llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
 				"prefixesReceived":       llx.IntData(peerData.PrefixReceived),
 				"prefixesAccepted":       llx.IntData(peerData.PrefixAccepted),
-				"inboundRouteMap":        llx.StringData(inRouteMap),
-				"outboundRouteMap":       llx.StringData(outRouteMap),
 				"description":            llx.StringData(description),
 				"passwordConfigured":     llx.BoolData(conf.PasswordConfigured),
 				"passwordEncryptionType": llx.StringData(conf.PasswordEncryptionType),
@@ -1023,7 +1018,10 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			peers = append(peers, mqlPeer)
+			peer := mqlPeer.(*mqlAristaEosBgpPeer)
+			peer.cacheInboundRouteMap = inRouteMap
+			peer.cacheOutboundRouteMap = outRouteMap
+			peers = append(peers, peer)
 		}
 
 		mqlVrf, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.vrf", map[string]*llx.RawData{

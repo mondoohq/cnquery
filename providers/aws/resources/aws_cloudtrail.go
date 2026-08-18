@@ -144,9 +144,6 @@ func buildCloudtrailTrailResource(runtime *plugin.Runtime, trail types.Trail) (*
 		"isOrganizationTrail":        llx.BoolDataPtr(trail.IsOrganizationTrail),
 		"logFileValidationEnabled":   llx.BoolDataPtr(trail.LogFileValidationEnabled),
 		"includeGlobalServiceEvents": llx.BoolDataPtr(trail.IncludeGlobalServiceEvents),
-		"snsTopicARN":                llx.StringDataPtr(trail.SnsTopicARN),
-		"cloudWatchLogsRoleArn":      llx.StringDataPtr(trail.CloudWatchLogsRoleArn),
-		"cloudWatchLogsLogGroupArn":  llx.StringDataPtr(trail.CloudWatchLogsLogGroupArn),
 		"region":                     llx.StringDataPtr(trail.HomeRegion),
 		"hasInsightSelectors":        llx.BoolDataPtr(trail.HasInsightSelectors),
 		"hasCustomEventSelectors":    llx.BoolDataPtr(trail.HasCustomEventSelectors),
@@ -315,85 +312,12 @@ func (a *mqlAwsCloudtrailTrail) getTrailStatus() (*cloudtrail.GetTrailStatusOutp
 	return trailstatus, nil
 }
 
-func (a *mqlAwsCloudtrailTrail) status() (any, error) {
-	trailstatus, err := a.getTrailStatus()
-	if err != nil {
-		return nil, err
-	}
-	return convert.JsonToDict(trailstatus)
-}
-
 func (a *mqlAwsCloudtrailTrail) isLogging() (bool, error) {
 	trailstatus, err := a.getTrailStatus()
 	if err != nil {
 		return false, err
 	}
 	return convert.ToValue(trailstatus.IsLogging), nil
-}
-
-func (a *mqlAwsCloudtrailTrail) eventSelectors() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Cloudtrail(a.Region.Data)
-	ctx := context.Background()
-
-	arnValue := a.Arn.Data
-	// no pagination required
-	eventSelectorsOutput, err := svc.GetEventSelectors(ctx, &cloudtrail.GetEventSelectorsInput{
-		TrailName: &arnValue,
-	})
-	if err != nil {
-		// An organization trail's event selectors are only readable from the
-		// management account that owns it; a member-account scan gets access
-		// denied, so report no selectors instead of failing the query.
-		if Is400AccessDeniedError(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	// Basic event selectors
-	basicSelectors, err := convert.JsonToDictSlice(eventSelectorsOutput.EventSelectors)
-	if err != nil {
-		return nil, err
-	}
-
-	allSelectors := basicSelectors
-
-	// Advanced event selectors if they exist
-	if len(eventSelectorsOutput.AdvancedEventSelectors) > 0 {
-		advancedSelectors, err := convert.JsonToDictSlice(eventSelectorsOutput.AdvancedEventSelectors)
-		if err != nil {
-			return nil, err
-		}
-
-		// Basic plus advanced event selectors
-		allSelectors = append(basicSelectors, advancedSelectors...)
-	}
-
-	return allSelectors, nil
-}
-
-func (a *mqlAwsCloudtrailTrail) insightSelectors() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Cloudtrail(a.Region.Data)
-	ctx := context.Background()
-
-	arnValue := a.Arn.Data
-	resp, err := svc.GetInsightSelectors(ctx, &cloudtrail.GetInsightSelectorsInput{
-		TrailName: &arnValue,
-	})
-	if err != nil {
-		if Is400AccessDeniedError(err) {
-			return []any{}, nil
-		}
-		var insightErr *types.InsightNotEnabledException
-		if errors.As(err, &insightErr) {
-			return []any{}, nil
-		}
-		return nil, err
-	}
-
-	return convert.JsonToDictSlice(resp.InsightSelectors)
 }
 
 func (a *mqlAwsCloudtrailTrail) tags() (map[string]any, error) {
@@ -601,28 +525,12 @@ func (a *mqlAwsCloudtrailTrail) insightSelectorEntries() ([]any, error) {
 	return res, nil
 }
 
-func (a *mqlAwsCloudtrailTrail) latestDeliveryTime() (*time.Time, error) {
-	return a.latestDeliveredAt()
-}
-
-func (a *mqlAwsCloudtrailTrail) latestNotificationTime() (*time.Time, error) {
-	return a.latestNotifiedAt()
-}
-
-func (a *mqlAwsCloudtrailTrail) latestCloudWatchLogsDeliveryTime() (*time.Time, error) {
-	return a.latestCloudWatchLogsDeliveredAt()
-}
-
 func (a *mqlAwsCloudtrailTrail) latestDeliveryError() (string, error) {
 	trailstatus, err := a.getTrailStatus()
 	if err != nil {
 		return "", err
 	}
 	return convert.ToValue(trailstatus.LatestDeliveryError), nil
-}
-
-func (a *mqlAwsCloudtrailTrail) latestDigestDeliveryTime() (*time.Time, error) {
-	return a.latestDigestDeliveredAt()
 }
 
 func (a *mqlAwsCloudtrailTrail) latestDigestDeliveredAt() (*time.Time, error) {

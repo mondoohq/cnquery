@@ -16,7 +16,7 @@ import (
 
 func TestTunnels(t *testing.T) {
 	env := setupTestEnv(t)
-	zone := createTestZone(t, env)
+	acc := createTestAccount(t, env)
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/cfd_tunnel", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -34,7 +34,7 @@ func TestTunnels(t *testing.T) {
 		jsonResponse(w, loadFixture("tunnel_connections"))
 	})
 
-	result, err := zone.tunnels()
+	result, err := acc.tunnels()
 	require.NoError(t, err)
 	require.Len(t, result, 2)
 
@@ -64,7 +64,7 @@ func TestTunnels(t *testing.T) {
 
 func TestTunnelRoutes(t *testing.T) {
 	env := setupTestEnv(t)
-	zone := createTestZone(t, env)
+	acc := createTestAccount(t, env)
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/teamnet/routes", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
@@ -75,7 +75,7 @@ func TestTunnelRoutes(t *testing.T) {
 		jsonResponse(w, loadFixture("tunnel_routes"))
 	})
 
-	result, err := zone.tunnelRoutes()
+	result, err := acc.tunnelRoutes()
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 
@@ -88,14 +88,14 @@ func TestTunnelRoutes(t *testing.T) {
 
 func TestTunnelVirtualNetworks(t *testing.T) {
 	env := setupTestEnv(t)
-	zone := createTestZone(t, env)
+	acc := createTestAccount(t, env)
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/teamnet/virtual_networks", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		jsonResponse(w, loadFixture("tunnel_virtual_networks"))
 	})
 
-	result, err := zone.tunnelVirtualNetworks()
+	result, err := acc.tunnelVirtualNetworks()
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 
@@ -112,7 +112,7 @@ func TestTunnelVirtualNetworks(t *testing.T) {
 // The previous __id `tunnelRoute@<network>@<tunnelId>` collided in this case.
 func TestTunnelRoutesVnetIDInCacheKey(t *testing.T) {
 	env := setupTestEnv(t)
-	zone := createTestZone(t, env)
+	acc := createTestAccount(t, env)
 
 	env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/teamnet/routes", testAccountID), func(w http.ResponseWriter, r *http.Request) {
 		jsonResponse(w, `{
@@ -124,7 +124,7 @@ func TestTunnelRoutesVnetIDInCacheKey(t *testing.T) {
 		}`)
 	})
 
-	result, err := zone.tunnelRoutes()
+	result, err := acc.tunnelRoutes()
 	require.NoError(t, err)
 	require.Len(t, result, 2, "routes with distinct virtual_network_id must not collapse into one")
 
@@ -144,7 +144,7 @@ func TestTunnelRoutesVnetIDInCacheKey(t *testing.T) {
 // three pages and bumped page numbers monotonically.
 func TestTunnelRoutesPagination(t *testing.T) {
 	env := setupTestEnv(t)
-	zone := createTestZone(t, env)
+	acc := createTestAccount(t, env)
 
 	const perPage = 50
 	var calls int32
@@ -170,7 +170,7 @@ func TestTunnelRoutesPagination(t *testing.T) {
 		fmt.Fprint(w, `]}`)
 	})
 
-	result, err := zone.tunnelRoutes()
+	result, err := acc.tunnelRoutes()
 	require.NoError(t, err)
 	require.Equal(t, perPage*2+7, len(result), "all three pages must be consumed")
 	require.Equal(t, int32(3), atomic.LoadInt32(&calls), "exactly three calls (page=1,2,3)")

@@ -126,19 +126,12 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 					created = &bucket.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.objectStorage.bucket", map[string]*llx.RawData{
-					"__id": llx.StringData(ociBucketCacheKey(stringValue(bucket.Namespace), stringValue(bucket.Name))),
-					// ListBuckets carries no OCID. Set the deprecated id field
-					// explicitly null so it reads as a null rather than crossing
-					// the plugin boundary unset, which surfaced client-side as an
-					// unattributed "primitive with no type information" warning.
-					// Use ocid for a value that resolves on both paths.
-					"id":            llx.NilData,
-					"namespace":     llx.StringDataPtr(bucket.Namespace),
-					"name":          llx.StringDataPtr(bucket.Name),
-					"compartmentID": llx.StringDataPtr(bucket.CompartmentId),
-					"region":        llx.ResourceData(regionResource, "oci.region"),
-					"created":       llx.TimeDataPtr(created),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.objectStorage.bucket", stringValue(bucket.CompartmentId), map[string]*llx.RawData{
+					"__id":      llx.StringData(ociBucketCacheKey(stringValue(bucket.Namespace), stringValue(bucket.Name))),
+					"namespace": llx.StringDataPtr(bucket.Namespace),
+					"name":      llx.StringDataPtr(bucket.Name),
+					"region":    llx.ResourceData(regionResource, "oci.region"),
+					"created":   llx.TimeDataPtr(created),
 				})
 				if err != nil {
 					return nil, err
@@ -154,6 +147,7 @@ func (o *mqlOciObjectStorage) getBuckets(conn *connection.OciConnection, namespa
 }
 
 type mqlOciObjectStorageBucketInternal struct {
+	ociCompartmentRef
 	bucket ociRetryLazy[*objectstorage.Bucket]
 }
 
@@ -166,9 +160,9 @@ func ociBucketCacheKey(namespace, name string) string {
 	return "oci.objectStorage.bucket/" + namespace + "/" + name
 }
 
-// ocid reports the bucket OCID, which ListBuckets does not return. The
-// deprecated `id` field is left as-is for compatibility; this accessor resolves
-// identically on the listing and single-bucket paths.
+// ocid reports the bucket OCID, which ListBuckets does not return. It resolves
+// identically on the listing and single-bucket paths, since both reach the
+// detail call.
 func (o *mqlOciObjectStorageBucket) ocid() (string, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {
@@ -231,12 +225,16 @@ func initOciObjectStorageBucket(runtime *plugin.Runtime, args map[string]*llx.Ra
 	}
 	bucket := obj.(*mqlOciObjectStorageBucket)
 
-	// getBucketDetails sets Id on the resource itself. Writing args["id"] here
-	// would be a no-op: NewResource discards the returned args whenever the
-	// init also returns a resource.
-	if _, err := bucket.getBucketDetails(); err != nil {
+	// This is the only compartment-bearing resource whose init constructs its
+	// own resource rather than handing back one the listing path already built,
+	// so nothing has recorded the compartment OCID for it. The detail call is
+	// made here anyway, and it carries the compartment - take it from there, or
+	// a single-bucket lookup reports a null compartment().
+	details, err := bucket.getBucketDetails()
+	if err != nil {
 		return nil, nil, err
 	}
+	bucket.setCompartmentID(stringValue(details.CompartmentId))
 
 	return args, bucket, nil
 }
@@ -287,13 +285,6 @@ func (o *mqlOciObjectStorageBucket) getBucketDetails() (*objectstorage.Bucket, e
 			return nil, err
 		}
 
-		// ListBuckets returns a BucketSummary, which carries no Id at all, so
-		// the bucket OCID is only knowable from this call. Populate it here so
-		// both the collection path and the single-bucket init resolve `id`
-		// identically.
-		if response.Bucket.Id != nil {
-			o.Id = plugin.TValue[string]{Data: *response.Bucket.Id, State: plugin.StateIsSet}
-		}
 		return &response.Bucket, nil
 	})
 }

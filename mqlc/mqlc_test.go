@@ -311,14 +311,14 @@ func TestCompiler_Semicolon(t *testing.T) {
 func TestCompiler_DeterministicChecksum(t *testing.T) {
 	// this is a query that in the past used to produce different checksum every now and then
 	// this test ensures that the checksum is always deterministic now
-	mql := `azure.subscription.sql.servers.all(databases.one (transparentDataEncryption["state"] == "Enabled") && encryptionProtector["serverKeyType"] == "AzureKeyVault" )`
+	mql := `azure.subscription.sql.servers.all(databases.one (transparentDataEncryptionEnabled) && encryptionProtectorServerKeyType == "AzureKeyVault" )`
 	azure_schema := testutils.MustLoadSchema(testutils.SchemaProvider{Provider: "azure"})
 
 	for range 10000 {
 		azureConf := mqlc.NewConfig(azure_schema, features)
 		res, err := mqlc.Compile(mql, mqlc.EmptyPropsHandler, azureConf)
 		require.Nil(t, err)
-		require.Equal(t, res.CodeV2.Id, "kQFJ+8v6Z98=")
+		require.Equal(t, res.CodeV2.Id, "TJlKTvhw1pU=")
 	}
 }
 

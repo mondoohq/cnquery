@@ -91,7 +91,6 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 							"__id":       llx.StringDataPtr(database.Arn),
 							"arn":        llx.StringDataPtr(database.Arn),
 							"name":       llx.StringDataPtr(database.DatabaseName),
-							"kmsKeyId":   llx.StringDataPtr(database.KmsKeyId),
 							"region":     llx.StringData(region),
 							"createdAt":  llx.TimeDataPtr(database.CreationTime),
 							"updatedAt":  llx.TimeDataPtr(database.LastUpdatedTime),
@@ -100,6 +99,7 @@ func (a *mqlAwsTimestreamLiveanalytics) getDatabases(conn *connection.AwsConnect
 					if err != nil {
 						return nil, err
 					}
+					mqlCluster.(*mqlAwsTimestreamLiveanalyticsDatabase).cacheKmsKeyId = convert.ToValue(database.KmsKeyId)
 					res = append(res, mqlCluster)
 				}
 			}
@@ -135,13 +135,13 @@ func (a *mqlAwsTimestreamLiveanalyticsDatabase) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsTimestreamLiveanalyticsDatabase) kmsKey() (*mqlAwsKmsKey, error) {
-	if a.KmsKeyId.Data == "" {
+	if a.cacheKmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
 	}
 	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey,
 		map[string]*llx.RawData{
-			"arn": llx.StringData(a.KmsKeyId.Data),
+			"arn": llx.StringData(a.cacheKmsKeyId),
 		})
 	if err != nil {
 		return nil, err
@@ -236,4 +236,8 @@ func (a *mqlAwsTimestreamLiveanalytics) getTables(conn *connection.AwsConnection
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+type mqlAwsTimestreamLiveanalyticsDatabaseInternal struct {
+	cacheKmsKeyId string
 }

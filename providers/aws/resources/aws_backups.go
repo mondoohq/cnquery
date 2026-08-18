@@ -27,6 +27,7 @@ func (a *mqlAwsBackup) id() (string, error) {
 
 type mqlAwsBackupVaultInternal struct {
 	lazyTags
+	cacheEncryptionKeyArn string
 }
 
 func (a *mqlAwsBackupVault) id() (string, error) {
@@ -39,6 +40,8 @@ func (a *mqlAwsBackupVault) tags() (map[string]any, error) {
 
 type mqlAwsBackupVaultRecoveryPointInternal struct {
 	lazyTags
+	cacheEncryptionKeyArn string
+	cacheIamRoleArn       string
 }
 
 func (a *mqlAwsBackupVaultRecoveryPoint) id() (string, error) {
@@ -163,7 +166,6 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 						map[string]*llx.RawData{
 							"arn":              llx.StringDataPtr(v.BackupVaultArn),
 							"createdAt":        llx.TimeDataPtr(v.CreationDate),
-							"encryptionKeyArn": llx.StringDataPtr(v.EncryptionKeyArn),
 							"locked":           llx.BoolDataPtr(v.Locked),
 							"lockedAt":         llx.TimeDataPtr(v.LockDate),
 							"maxRetentionDays": llx.IntDataPtr(v.MaxRetentionDays),
@@ -174,6 +176,7 @@ func (a *mqlAwsBackup) getVaults(conn *connection.AwsConnection) []*jobpool.Job 
 					if err != nil {
 						return nil, err
 					}
+					mqlGroup.(*mqlAwsBackupVault).cacheEncryptionKeyArn = convert.ToValue(v.EncryptionKeyArn)
 					res = append(res, mqlGroup)
 				}
 			}
@@ -285,6 +288,8 @@ func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlRP.(*mqlAwsBackupVaultRecoveryPoint).cacheEncryptionKeyArn = convert.ToValue(rp.EncryptionKeyArn)
+			mqlRP.(*mqlAwsBackupVaultRecoveryPoint).cacheIamRoleArn = convert.ToValue(rp.IamRoleArn)
 			res = append(res, mqlRP)
 		}
 	}
@@ -446,44 +451,6 @@ func (a *mqlAwsBackupPlan) rules() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, mqlRule)
-	}
-	return res, nil
-}
-
-func (a *mqlAwsBackupPlan) selections() ([]any, error) {
-	planId := a.Id.Data
-	planArn := a.Arn.Data
-
-	region, err := GetRegionFromArn(planArn)
-	if err != nil {
-		return nil, err
-	}
-
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.Backup(region)
-	ctx := context.Background()
-
-	res := []any{}
-	var nextToken *string
-	for {
-		resp, err := svc.ListBackupSelections(ctx, &backup.ListBackupSelectionsInput{
-			BackupPlanId: &planId,
-			NextToken:    nextToken,
-		})
-		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return nil, nil
-			}
-			return nil, err
-		}
-		for _, sel := range resp.BackupSelectionsList {
-			d, _ := convert.JsonToDict(sel)
-			res = append(res, d)
-		}
-		if resp.NextToken == nil {
-			break
-		}
-		nextToken = resp.NextToken
 	}
 	return res, nil
 }
@@ -833,7 +800,6 @@ func newMqlBackupCopyAction(runtime *plugin.Runtime, ruleId string, ca backuptyp
 		map[string]*llx.RawData{
 			"__id":                                llx.StringData(uniqueId),
 			"id":                                  llx.StringData(uniqueId),
-			"destinationBackupVaultArn":           llx.StringData(destArn),
 			"deleteAfterDays":                     llx.IntData(deleteAfterDays),
 			"moveToColdStorageAfterDays":          llx.IntData(moveToColdStorageDays),
 			"optInToArchiveForSupportedResources": llx.BoolData(optInToArchive),
@@ -841,6 +807,7 @@ func newMqlBackupCopyAction(runtime *plugin.Runtime, ruleId string, ca backuptyp
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsBackupPlanRuleCopyAction).cacheDestinationBackupVaultArn = destArn
 	return resource.(*mqlAwsBackupPlanRuleCopyAction), nil
 }
 
@@ -882,7 +849,7 @@ func (a *mqlAwsBackupPlanRuleCopyAction) id() (string, error) {
 }
 
 func (a *mqlAwsBackupVault) encryptionKey() (*mqlAwsKmsKey, error) {
-	arnVal := a.EncryptionKeyArn.Data
+	arnVal := a.cacheEncryptionKeyArn
 	if arnVal == "" {
 		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -896,7 +863,7 @@ func (a *mqlAwsBackupVault) encryptionKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsBackupVaultRecoveryPoint) iamRole() (*mqlAwsIamRole, error) {
-	arnVal := a.IamRoleArn.Data
+	arnVal := a.cacheIamRoleArn
 	if arnVal == "" {
 		a.IamRole.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -910,7 +877,7 @@ func (a *mqlAwsBackupVaultRecoveryPoint) iamRole() (*mqlAwsIamRole, error) {
 }
 
 func (a *mqlAwsBackupVaultRecoveryPoint) encryptionKey() (*mqlAwsKmsKey, error) {
-	arnVal := a.EncryptionKeyArn.Data
+	arnVal := a.cacheEncryptionKeyArn
 	if arnVal == "" {
 		a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -924,7 +891,7 @@ func (a *mqlAwsBackupVaultRecoveryPoint) encryptionKey() (*mqlAwsKmsKey, error) 
 }
 
 func (a *mqlAwsBackupPlanRuleCopyAction) destinationVault() (*mqlAwsBackupVault, error) {
-	arnVal := a.DestinationBackupVaultArn.Data
+	arnVal := a.cacheDestinationBackupVaultArn
 	if arnVal == "" {
 		a.DestinationVault.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -1224,4 +1191,8 @@ func (a *mqlAwsBackupScanJob) backupPlan() (*mqlAwsBackupPlan, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsBackupPlan), nil
+}
+
+type mqlAwsBackupPlanRuleCopyActionInternal struct {
+	cacheDestinationBackupVaultArn string
 }

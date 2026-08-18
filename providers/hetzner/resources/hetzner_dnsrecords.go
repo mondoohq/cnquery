@@ -151,7 +151,7 @@ func (m *mqlHetznerZoneRrset) entries() ([]any, error) {
 	}
 	out := make([]any, 0, len(m.cacheRrset.Records))
 	for _, rec := range m.cacheRrset.Records {
-		res, err := newMqlHetznerZoneRrsetRecord(m.MqlRuntime, m.ZoneId.Data, m.cacheRrset, rec)
+		res, err := newMqlHetznerZoneRrsetRecord(m.MqlRuntime, m.cacheZoneID, m.cacheRrset, rec)
 		if err != nil {
 			return nil, err
 		}

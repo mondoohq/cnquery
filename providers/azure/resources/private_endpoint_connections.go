@@ -38,6 +38,22 @@ func azurePrivateEndpointConnectionsToMql[T any](runtime *plugin.Runtime, entrie
 // azurePrivateEndpointConnectionToMql builds a single shared private endpoint
 // connection resource from any Azure SDK connection value. It returns nil when
 // the value carries no usable data (e.g. a nil pointer in the slice).
+type mqlAzureSubscriptionPrivateEndpointConnectionInternal struct {
+	cachePrivateEndpointId string
+}
+
+// newAzurePrivateEndpointConnection creates the shared private endpoint
+// connection resource. The linked private endpoint's ARM ID is kept off the
+// schema and cached here so privateEndpoint() can resolve it on demand.
+func newAzurePrivateEndpointConnection(runtime *plugin.Runtime, args map[string]*llx.RawData, privateEndpointID string) (plugin.Resource, error) {
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlAzureSubscriptionPrivateEndpointConnection).cachePrivateEndpointId = privateEndpointID
+	return res, nil
+}
+
 // newPrivateLinkServiceConnectionState builds the typed connection-state
 // resource for a private endpoint connection.
 //
@@ -72,6 +88,7 @@ func azurePrivateEndpointConnectionToMql(runtime *plugin.Runtime, entry any) (pl
 	if id == "" {
 		return nil, nil
 	}
+	var privateEndpointID string
 	// Seed every declared field with an explicit default. A key that never
 	// lands in args leaves its TValue unset rather than null, which crosses
 	// the plugin boundary as an empty DataRes and surfaces client-side as
@@ -82,7 +99,6 @@ func azurePrivateEndpointConnectionToMql(runtime *plugin.Runtime, entry any) (pl
 		"name":                              llx.NilData,
 		"type":                              llx.NilData,
 		"ipAddresses":                       llx.ArrayData([]any{}, types.String),
-		"privateEndpointId":                 llx.NilData,
 		"provisioningState":                 llx.NilData,
 		"properties":                        llx.NilData,
 		"privateLinkServiceConnectionState": llx.NilData,
@@ -124,9 +140,7 @@ func azurePrivateEndpointConnectionToMql(runtime *plugin.Runtime, entry any) (pl
 			args["ipAddresses"] = llx.ArrayData(addrs, types.String)
 		}
 		if pe, ok := props["privateEndpoint"].(map[string]any); ok {
-			if peID, _ := pe["id"].(string); peID != "" {
-				args["privateEndpointId"] = llx.StringData(peID)
-			}
+			privateEndpointID, _ = pe["id"].(string)
 		}
 		if provState, _ := props["provisioningState"].(string); provState != "" {
 			args["provisioningState"] = llx.StringData(provState)
@@ -154,5 +168,5 @@ func azurePrivateEndpointConnectionToMql(runtime *plugin.Runtime, entry any) (pl
 		}
 	}
 
-	return CreateResource(runtime, ResourceAzureSubscriptionPrivateEndpointConnection, args)
+	return newAzurePrivateEndpointConnection(runtime, args, privateEndpointID)
 }

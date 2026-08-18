@@ -169,31 +169,6 @@ func (a *mqlAwsLightsailInstance) ramSizeInGb() (float64, error) {
 	return float64(*a.cacheHardware.RamSizeInGb), nil
 }
 
-func (a *mqlAwsLightsailInstance) firewallRules() ([]any, error) {
-	if a.cacheNetworking == nil {
-		return []any{}, nil
-	}
-	res := make([]any, 0, len(a.cacheNetworking.Ports))
-	for _, p := range a.cacheNetworking.Ports {
-		rule := map[string]any{
-			"fromPort":   int64(p.FromPort),
-			"toPort":     int64(p.ToPort),
-			"protocol":   string(p.Protocol),
-			"accessType": string(p.AccessType),
-			"cidrs":      stringsToInterface(p.Cidrs),
-			"ipv6Cidrs":  stringsToInterface(p.Ipv6Cidrs),
-		}
-		if p.AccessFrom != nil {
-			rule["accessFrom"] = *p.AccessFrom
-		}
-		if p.CommonName != nil {
-			rule["commonName"] = *p.CommonName
-		}
-		res = append(res, rule)
-	}
-	return res, nil
-}
-
 func (a *mqlAwsLightsailInstance) inboundRules() ([]any, error) {
 	if a.cacheNetworking == nil {
 		return []any{}, nil

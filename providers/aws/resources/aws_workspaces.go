@@ -127,12 +127,12 @@ func newMqlAwsWorkspacesDirectory(runtime *plugin.Runtime, region string, dir wo
 			"ipGroupIds":                     llx.ArrayData(toInterfaceArr(dir.IpGroupIds), types.String),
 			"selfservicePermissions":         llx.MapData(selfservicePerms, types.Any),
 			"iamRoleId":                      llx.StringDataPtr(dir.IamRoleId),
-			"subnetIds":                      llx.ArrayData(toInterfaceArr(dir.SubnetIds), types.String),
 			"region":                         llx.StringData(region),
 		})
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsWorkspacesDirectory).cacheSubnetIds = toInterfaceArr(dir.SubnetIds)
 	return resource.(*mqlAwsWorkspacesDirectory), nil
 }
 
@@ -155,6 +155,7 @@ type mqlAwsWorkspacesDirectoryInternal struct {
 	clientPropsFetched atomic.Bool
 	clientProps        *workspacestypes.ClientProperties
 	clientPropsLock    sync.Mutex
+	cacheSubnetIds     []any
 }
 
 // fetchClientProperties loads the directory's client properties once and shares
@@ -313,7 +314,6 @@ func newMqlAwsWorkspacesWorkspace(runtime *plugin.Runtime, region string, ws wor
 			"ipAddress":                   llx.StringDataPtr(ws.IpAddress),
 			"computerName":                llx.StringDataPtr(ws.ComputerName),
 			"bundleId":                    llx.StringDataPtr(ws.BundleId),
-			"subnetId":                    llx.StringDataPtr(ws.SubnetId),
 			"state":                       llx.StringData(string(ws.State)),
 			"rootVolumeEncryptionEnabled": llx.BoolDataPtr(ws.RootVolumeEncryptionEnabled),
 			"userVolumeEncryptionEnabled": llx.BoolDataPtr(ws.UserVolumeEncryptionEnabled),
@@ -325,10 +325,12 @@ func newMqlAwsWorkspacesWorkspace(runtime *plugin.Runtime, region string, ws wor
 	if err != nil {
 		return nil, err
 	}
+	resource.(*mqlAwsWorkspacesWorkspace).cacheSubnetId = convert.ToValue(ws.SubnetId)
 	return resource.(*mqlAwsWorkspacesWorkspace), nil
 }
 
 type mqlAwsWorkspacesWorkspaceInternal struct {
+	cacheSubnetId     string
 	connStatusFetched bool
 	connStatusLock    sync.Mutex
 }
@@ -839,7 +841,7 @@ func (a *mqlAwsWorkspacesIpGroup) arn() (string, error) {
 }
 
 func (a *mqlAwsWorkspacesDirectory) subnets() ([]any, error) {
-	subnetIds := a.SubnetIds.Data
+	subnetIds := a.cacheSubnetIds
 	if len(subnetIds) == 0 {
 		return nil, nil
 	}
@@ -886,7 +888,7 @@ func (a *mqlAwsWorkspacesWorkspace) bundle() (*mqlAwsWorkspacesBundle, error) {
 }
 
 func (a *mqlAwsWorkspacesWorkspace) subnet() (*mqlAwsVpcSubnet, error) {
-	subnetId := a.SubnetId.Data
+	subnetId := a.cacheSubnetId
 	if subnetId == "" {
 		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

@@ -289,7 +289,6 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnectio
 				"id":                llx.StringDataPtr(pec.ID),
 				"name":              llx.StringDataPtr(pec.Name),
 				"type":              llx.StringDataPtr(pec.Type),
-				"privateEndpointId": llx.StringDataPtr(privateEndpointId),
 				"status":            llx.StringDataPtr(status),
 				"description":       llx.StringDataPtr(description),
 				"provisioningState": llx.StringDataPtr(pecProvisioningState),
@@ -302,7 +301,9 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) privateEndpointConnectio
 		if err != nil {
 			return nil, err
 		}
-		pecResource.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection).cacheSystemData = sysData
+		mqlPec := pecResource.(*mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection)
+		mqlPec.cacheSystemData = sysData
+		mqlPec.cachePrivateEndpointId = convert.ToValue(privateEndpointId)
 		res = append(res, pecResource)
 	}
 	return res, nil
@@ -445,17 +446,6 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstance) patchSchedules() ([]any,
 	return res, nil
 }
 
-// encryptionKey always resolves to null for Azure Cache for Redis. Customer-
-// managed key encryption is a Redis Enterprise / Azure Managed Redis feature
-// (Microsoft.Cache/redisEnterprise), and armredis/v4 exposes no encryption or
-// customer-managed-key model on the classic Redis resource at all, so there is
-// nothing to read. Null is the truthful answer rather than a stub, but the
-// field is marked deprecated so no new audit is written against it.
-func (a *mqlAzureSubscriptionCacheServiceRedisInstance) encryptionKey() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
-	a.EncryptionKey.State = plugin.StateIsNull | plugin.StateIsSet
-	return nil, nil
-}
-
 func (a *mqlAzureSubscriptionCacheServiceRedisInstanceFirewallRule) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -485,7 +475,8 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection)
 }
 
 type mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnectionInternal struct {
-	cacheSystemData any
+	cacheSystemData        any
+	cachePrivateEndpointId string
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -493,7 +484,7 @@ func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection)
 }
 
 func (a *mqlAzureSubscriptionCacheServiceRedisInstancePrivateEndpointConnection) privateEndpoint() (*mqlAzureSubscriptionNetworkServicePrivateEndpoint, error) {
-	peId := a.PrivateEndpointId.Data
+	peId := a.cachePrivateEndpointId
 	if peId == "" {
 		a.PrivateEndpoint.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

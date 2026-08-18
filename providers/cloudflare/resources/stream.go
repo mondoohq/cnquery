@@ -55,14 +55,6 @@ func (c *mqlCloudflareStreamsVideo) id() (string, error) {
 	return v.Data, nil
 }
 
-func (c *mqlCloudflareZone) liveInputs() ([]any, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return fetchLiveInputs(c.MqlRuntime, accountID)
-}
-
 func (c *mqlCloudflareAccount) liveInputs() ([]any, error) {
 	return fetchLiveInputs(c.MqlRuntime, c.Id.Data)
 }
@@ -103,14 +95,6 @@ func fetchLiveInputs(runtime *plugin.Runtime, accountID string) ([]any, error) {
 	}
 
 	return res, nil
-}
-
-func (c *mqlCloudflareZone) videos() ([]any, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return fetchVideos(c.MqlRuntime, accountID)
 }
 
 func (c *mqlCloudflareAccount) videos() ([]any, error) {

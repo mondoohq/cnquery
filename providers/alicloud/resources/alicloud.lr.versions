@@ -562,7 +562,6 @@ alicloud.ecs.disk.enableAutoSnapshot 13.0.0
 alicloud.ecs.disk.encrypted 13.0.0
 alicloud.ecs.disk.instance 13.0.0
 alicloud.ecs.disk.kmsKey 13.0.1
-alicloud.ecs.disk.kmsKeyId 13.0.0
 alicloud.ecs.disk.performanceLevel 13.0.0
 alicloud.ecs.disk.portable 13.0.0
 alicloud.ecs.disk.regionId 13.0.0
@@ -634,7 +633,6 @@ alicloud.ecs.instance.ramRole 13.2.5
 alicloud.ecs.instance.regionId 13.0.0
 alicloud.ecs.instance.resourceGroup 13.3.2
 alicloud.ecs.instance.resourceGroupId 13.0.0
-alicloud.ecs.instance.securityGroupIds 13.0.0
 alicloud.ecs.instance.securityGroups 13.0.0
 alicloud.ecs.instance.serialNumber 13.0.0
 alicloud.ecs.instance.spotDuration 13.0.0
@@ -952,7 +950,6 @@ alicloud.mongodb.instance.dbInstanceStorage 13.0.0
 alicloud.mongodb.instance.dbInstanceType 13.0.0
 alicloud.mongodb.instance.destroyTime 13.0.0
 alicloud.mongodb.instance.encrypted 13.0.0
-alicloud.mongodb.instance.encryptionKey 13.0.0
 alicloud.mongodb.instance.engine 13.0.0
 alicloud.mongodb.instance.engineVersion 13.0.0
 alicloud.mongodb.instance.expireTime 13.0.0
@@ -973,7 +970,6 @@ alicloud.mongodb.instance.replicationFactor 13.0.0
 alicloud.mongodb.instance.resourceGroup 13.3.2
 alicloud.mongodb.instance.resourceGroupId 13.0.0
 alicloud.mongodb.instance.secondaryZoneId 13.0.0
-alicloud.mongodb.instance.securityGroupIds 13.0.0
 alicloud.mongodb.instance.securityGroups 13.2.5
 alicloud.mongodb.instance.securityIPList 13.0.0
 alicloud.mongodb.instance.sslEnabled 13.0.0
@@ -1330,7 +1326,6 @@ alicloud.rds.instance.readOnlyStatus 13.4.1
 alicloud.rds.instance.regionId 13.0.0
 alicloud.rds.instance.resourceGroup 13.3.2
 alicloud.rds.instance.resourceGroupId 13.0.0
-alicloud.rds.instance.securityGroupIds 13.0.0
 alicloud.rds.instance.securityGroups 13.2.5
 alicloud.rds.instance.securityIPList 13.0.0
 alicloud.rds.instance.sslEnabled 13.0.0
@@ -1370,7 +1365,6 @@ alicloud.redis.instance.regionId 13.0.0
 alicloud.redis.instance.resourceGroup 13.3.2
 alicloud.redis.instance.resourceGroupId 13.0.0
 alicloud.redis.instance.secondaryZoneId 13.0.0
-alicloud.redis.instance.securityGroupIds 13.0.0
 alicloud.redis.instance.securityGroups 13.2.5
 alicloud.redis.instance.securityIPList 13.0.0
 alicloud.redis.instance.sslEnabled 13.0.0

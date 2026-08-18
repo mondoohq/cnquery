@@ -575,7 +575,6 @@ func buildCloudformationStackResource(runtime *plugin.Runtime, region string, st
 			"enableTerminationProtection": llx.BoolDataPtr(stack.EnableTerminationProtection),
 			"capabilities":                llx.ArrayData(capabilities, types.String),
 			"driftStatus":                 llx.StringData(normalizeDriftStatus(driftStatus)),
-			"roleArn":                     llx.StringData(aws.ToString(stack.RoleARN)),
 			"tags":                        llx.MapData(cfnTagsToMap(stack.Tags), types.String),
 			"createdAt":                   llx.TimeDataPtr(stack.CreationTime),
 			"updatedAt":                   llx.TimeDataPtr(stack.LastUpdatedTime),

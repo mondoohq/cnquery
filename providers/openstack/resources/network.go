@@ -1089,18 +1089,17 @@ func buildSecurityGroupRules(runtime *plugin.Runtime, sg *groups.SecGroup) ([]an
 	for i := range sg.Rules {
 		rule := &sg.Rules[i]
 		res, err := CreateResource(runtime, "openstack.securityGroup.rule", map[string]*llx.RawData{
-			"__id":                 llx.StringData("openstack.securityGroup.rule/" + rule.ID),
-			"id":                   llx.StringData(rule.ID),
-			"direction":            llx.StringData(rule.Direction),
-			"ethertype":            llx.StringData(rule.EtherType),
-			"protocol":             llx.StringData(rule.Protocol),
-			"portRangeMin":         llx.IntData(int64(rule.PortRangeMin)),
-			"portRangeMax":         llx.IntData(int64(rule.PortRangeMax)),
-			"remoteIpPrefix":       llx.StringData(rule.RemoteIPPrefix),
-			"remoteAddressGroupId": llx.StringData(rule.RemoteAddressGroupID),
-			"description":          llx.StringData(rule.Description),
-			"createdAt":            llx.TimeDataPtr(timePtr(rule.CreatedAt)),
-			"updatedAt":            llx.TimeDataPtr(timePtr(rule.UpdatedAt)),
+			"__id":           llx.StringData("openstack.securityGroup.rule/" + rule.ID),
+			"id":             llx.StringData(rule.ID),
+			"direction":      llx.StringData(rule.Direction),
+			"ethertype":      llx.StringData(rule.EtherType),
+			"protocol":       llx.StringData(rule.Protocol),
+			"portRangeMin":   llx.IntData(int64(rule.PortRangeMin)),
+			"portRangeMax":   llx.IntData(int64(rule.PortRangeMax)),
+			"remoteIpPrefix": llx.StringData(rule.RemoteIPPrefix),
+			"description":    llx.StringData(rule.Description),
+			"createdAt":      llx.TimeDataPtr(timePtr(rule.CreatedAt)),
+			"updatedAt":      llx.TimeDataPtr(timePtr(rule.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
@@ -1209,8 +1208,11 @@ func lookupSecurityGroupIDByName(runtime *plugin.Runtime, name string) (string, 
 
 // ---- openstack.network.quotaSet ----
 
-func (r *mqlOpenstackNetworkQuotaSet) id() (string, error) {
-	return "openstack.network.quotaSet/" + r.ProjectId.Data, nil
+// mqlOpenstackNetworkQuotaSetInternal holds the project id the quota applies
+// to, which project() resolves. The __id is supplied explicitly by the creator,
+// so this resource needs no id() function.
+type mqlOpenstackNetworkQuotaSetInternal struct {
+	cacheProjectID string
 }
 
 func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
@@ -1234,7 +1236,6 @@ func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
 	}
 	res, err := CreateResource(o.MqlRuntime, "openstack.network.quotaSet", map[string]*llx.RawData{
 		"__id":              llx.StringData("openstack.network.quotaSet/" + projectId),
-		"projectId":         llx.StringData(projectId),
 		"network":           llx.IntData(int64(q.Network)),
 		"subnet":            llx.IntData(int64(q.Subnet)),
 		"port":              llx.IntData(int64(q.Port)),
@@ -1249,9 +1250,11 @@ func (o *mqlOpenstack) networkQuotaSet() (*mqlOpenstackNetworkQuotaSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlOpenstackNetworkQuotaSet), nil
+	mqlQuota := res.(*mqlOpenstackNetworkQuotaSet)
+	mqlQuota.cacheProjectID = projectId
+	return mqlQuota, nil
 }
 
 func (r *mqlOpenstackNetworkQuotaSet) project() (*mqlOpenstackProject, error) {
-	return resolveProject(r.MqlRuntime, r.ProjectId.Data, &r.Project)
+	return resolveProject(r.MqlRuntime, r.cacheProjectID, &r.Project)
 }

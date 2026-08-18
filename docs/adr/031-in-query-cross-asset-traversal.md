@@ -144,18 +144,36 @@ would entrench an untyped escape hatch we'd have to unwind).
       recording is available and a Config is present.
    This generalizes the existing recording-first, then-provider resolution across
    assets.
+   **This path is also the one imperative Go-side callers use.** A provider that
+   needs to spawn a *new* asset through another provider mid-resolution (an `os`
+   resource finding a container image reference on disk and connecting it as a
+   separate asset) goes through this same resolution, exposed as a thin SDK-side
+   wrapper rather than a parallel API. A second connect path would bypass the
+   recording-first ordering above and make those assets invisible to replay,
+   which is precisely what this ADR exists to avoid. Note this is *not* the
+   same-asset cross-provider call that
+   [ADR 042](042-cross-provider-invocation.md) governs: no peer declaration is
+   involved, because creating a genuinely new asset is not calling another
+   provider for the asset you are already on.
 5. **Namespace evolution (v14 → v15).** This ADR is part of the v14 line.
    - **v14:** collect and **warn** when a resource is used from the global namespace
      in a way that isn't expected — `time`/`regex` (core) are fine; calling `aws`
-     from inside the `os` provider is not. Undeclared cross-provider calls are
-     deprecated (warn only, still resolve).
-   - **v15:** undeclared cross-provider calls **no longer resolve**; the model is
-     root-chaining with only `core` global.
+     from inside the `os` provider is not.
+   - **v15:** the model is root-chaining with only `core` global.
    - **Stays legal (both versions):** providers **extending** each other's resources
-     with new fields, and **intentional, declared** cross-provider calls (a resource
-     deliberately referencing another provider's resource — including
-     `running asset<mcp>`). This ADR is what makes it *explicit* when a resource in a
-     tree points at another provider.
+     with new fields. This ADR is what makes it *explicit* when a resource in a
+     tree points at another provider: the typed field forward-reference
+     (`running asset<mcp>`) **is** the declaration for a cross-asset reference.
+
+   **Cross-provider call legality is not decided here.** Whether an undeclared
+   cross-provider call still resolves — and the v14-warn / v15-enforce timeline
+   for that — is owned by
+   [ADR 042](042-cross-provider-invocation.md#enforcement-timeline-v14--v15),
+   because it is enforced at the coordinator gate (`providers/runtime.go:1020`)
+   and requires a declaration form for *same-asset* calls
+   (`CreateSharedResource`, 35 sites today) that this ADR does not supply. The
+   two declaration forms — typed field here, a named peer `import` there — share
+   one enforcement date.
 
 ## Phased plan
 
@@ -171,7 +189,10 @@ would entrench an untyped escape hatch we'd have to unwind).
 3. **Live-connect backend.** Add the `RuntimeFor`+`Connect`+resolve+close path for
    when there's no recording; sub-runtime lifecycle/cleanup; per-item error
    isolation; timeouts. Interactive verification: `…running.tools` against the
-   installed `ai` provider + the dummy server.
+   installed `ai` provider + the dummy server. Expose the imperative SDK-side
+   wrapper for Go callers that spawn a new asset over this same path once it
+   lands — additive, and registering the produced asset as a discovered child
+   reuses the existing discovery plumbing.
 4. **Per-asset roots + namespace migration.** Introduce the root-resource schema
    concept broadly; migrate providers; long horizon.
 5. **Secrets for live connect** (out of the earlier phases): vault/credential
@@ -214,9 +235,9 @@ would entrench an untyped escape hatch we'd have to unwind).
   failure.
 - **Static vs. dynamic root → moot.** The field statically declares the root *name*,
   so chaining always has a statically-known root; no dynamic-root chaining needed.
-- **Namespace migration → v14 warns, v15 enforces.** Extensions and declared
-  cross-calls stay legal; undeclared global-namespace cross-calls are deprecated in
-  v14 and stop resolving in v15.
+- **Namespace migration → v14 warns, v15 enforces.** Extensions stay legal; the
+  global namespace narrows to `core`. Cross-provider *call* legality moved to
+  [ADR 042](042-cross-provider-invocation.md) (see Decision point 5).
 - **Recording backend → local or upstream.** Upstream requires identifiers on the
   value to resolve the target resource's MRN; local keys on the same identity.
 - **Secrets → explicit, never implicit** (consistent with the `--env` decision).

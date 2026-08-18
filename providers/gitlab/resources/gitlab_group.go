@@ -191,7 +191,6 @@ func populateGroupArgs(args map[string]*llx.RawData, grp *gitlab.Group) {
 	args["membershipLock"] = llx.BoolData(grp.MembershipLock)
 	args["preventForkingOutsideGroup"] = llx.BoolData(grp.PreventForkingOutsideGroup)
 	args["mentionsDisabled"] = llx.BoolData(grp.MentionsDisabled)
-	args["emailsDisabled"] = llx.BoolData(!grp.EmailsEnabled)
 	args["requestAccessEnabled"] = llx.BoolData(grp.RequestAccessEnabled)
 	// Convert ISOTime to time.Time
 	var markedForDeletionOn *time.Time
@@ -506,7 +505,6 @@ func (g *mqlGitlabGroup) labels() ([]any, error) {
 			// no value to report. Null says "unknown"; an empty string would
 			// claim, for every label on every project, that no HTML
 			// description exists.
-			"descriptionHtml":        llx.NilData,
 			"openIssuesCount":        llx.IntData(label.OpenIssuesCount),
 			"closedIssuesCount":      llx.IntData(label.ClosedIssuesCount),
 			"openMergeRequestsCount": llx.IntData(label.OpenMergeRequestsCount),

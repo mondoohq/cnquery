@@ -76,7 +76,6 @@ portainer.settings.displayExternalContributors 13.0.0
 portainer.settings.edgeAgentCheckinInterval 13.0.0
 portainer.settings.edgePortainerUrl 13.0.0
 portainer.settings.enableEdgeComputeFeatures 13.0.0
-portainer.settings.enableHostManagementFeatures 13.0.0
 portainer.settings.enableTelemetry 13.0.0
 portainer.settings.enforceEdgeId 13.0.0
 portainer.settings.helmRepositoryUrl 13.0.0

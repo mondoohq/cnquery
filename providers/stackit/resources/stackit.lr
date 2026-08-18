@@ -153,13 +153,6 @@ private stackit.server @defaults("id name status machineType") {
   errorMessage string
   // Whether a config drive is attached
   configDrive bool
-  // Whether a virtual TPM (vTPM) device is attached for measured boot
-  //
-  // Always false. STACKIT withdrew the vTPM server attribute because the
-  // feature was never functional, so the API no longer reports it and this
-  // field cannot describe real server state. Do not write audits against
-  // it. It will be removed in the next major release.
-  vtpmEnabled @maturity("deprecated") bool
   // SSH key pair name used at boot (empty if none)
   keypairName string
   // SSH key pair used at boot (nullable)
@@ -178,20 +171,8 @@ private stackit.server @defaults("id name status machineType") {
   securityGroups() []stackit.securityGroup
   // Internet-exposure breakdown (public IP combined with security group ingress)
   exposure() stackit.network.exposure
-  // Service account mail addresses
-  //
-  // Deprecated in favor of serviceAccounts, which resolves each mail to a
-  // resource exposing the service account's email and project.
-  serviceAccountMails @maturity("deprecated") []string
   // Service accounts attached to the server
   serviceAccounts() []stackit.serviceAccount
-  // Network interface summaries
-  //
-  // Deprecated in favor of networkInterfaces, which exposes each interface
-  // as a resource with network and security-group references. Each entry
-  // has {nicId, networkId, networkName, ipv4, ipv6, mac, securityGroups,
-  // allowedAddresses, publicIp, nicSecurity}.
-  nics @maturity("deprecated") []dict
   // Network interfaces attached to the server
   networkInterfaces() []stackit.nic
   // Point-in-time backups taken from the server by the Server Backup service

@@ -197,7 +197,6 @@ func (r *mqlDigitaloceanGradientai) dedicatedInferenceEndpoints() ([]interface{}
 				"name":                llx.StringData(e.Name),
 				"region":              llx.StringData(e.Region),
 				"status":              llx.StringData(e.Status),
-				"vpcUuid":             llx.StringData(e.VPCUUID),
 				"providerModelIds":    llx.ArrayData(modelIDs, types.String),
 				"publicEndpointFqdn":  llx.StringData(publicFQDN),
 				"privateEndpointFqdn": llx.StringData(privateFQDN),
@@ -207,6 +206,9 @@ func (r *mqlDigitaloceanGradientai) dedicatedInferenceEndpoints() ([]interface{}
 			if err != nil {
 				return nil, err
 			}
+			// Cache the VPC UUID so the typed vpc() accessor can resolve it
+			// without a refetch.
+			res.(*mqlDigitaloceanGradientaiDedicatedInferenceEndpoint).cacheVPCUUID = e.VPCUUID
 			all = append(all, res)
 		}
 		if resp == nil || resp.Links == nil || resp.Links.IsLastPage() {
@@ -221,12 +223,19 @@ func (r *mqlDigitaloceanGradientai) dedicatedInferenceEndpoints() ([]interface{}
 	return all, nil
 }
 
+// mqlDigitaloceanGradientaiDedicatedInferenceEndpointInternal caches the UUID
+// of the VPC the endpoint runs in so the typed vpc() accessor can resolve it
+// without a refetch.
+type mqlDigitaloceanGradientaiDedicatedInferenceEndpointInternal struct {
+	cacheVPCUUID string
+}
+
 func (r *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) id() (string, error) {
 	return "digitalocean.gradientai.dedicatedInferenceEndpoint/" + r.Id.Data, nil
 }
 
 func (r *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) vpc() (*mqlDigitaloceanVpc, error) {
-	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.VpcUuid.Data)
+	return resolveVpcRef(r.MqlRuntime, &r.Vpc, r.cacheVPCUUID)
 }
 
 func (r *mqlDigitaloceanGradientaiDedicatedInferenceEndpoint) accelerators() ([]interface{}, error) {

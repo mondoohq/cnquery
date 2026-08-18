@@ -807,7 +807,6 @@ func listKmsGrantsForKey(runtime *plugin.Runtime, conn *connection.AwsConnection
 				map[string]*llx.RawData{
 					"__id":              llx.StringData(keyArn + "/grant/" + convert.ToValue(grant.GrantId)),
 					"grantId":           llx.StringDataPtr(grant.GrantId),
-					"keyArn":            llx.StringData(keyArn),
 					"name":              llx.StringDataPtr(grant.Name),
 					"granteePrincipal":  llx.StringDataPtr(grant.GranteePrincipal),
 					"retiringPrincipal": llx.StringDataPtr(grant.RetiringPrincipal),
@@ -819,6 +818,7 @@ func listKmsGrantsForKey(runtime *plugin.Runtime, conn *connection.AwsConnection
 			if err != nil {
 				return nil, err
 			}
+			mqlGrant.(*mqlAwsKmsGrant).cacheKeyArn = keyArn
 			res = append(res, mqlGrant)
 		}
 	}
@@ -851,11 +851,11 @@ func kmsGrantConstraintsToDict(c *types.GrantConstraints) (any, error) {
 }
 
 func (a *mqlAwsKmsGrant) id() (string, error) {
-	return a.KeyArn.Data + "/grant/" + a.GrantId.Data, nil
+	return a.cacheKeyArn + "/grant/" + a.GrantId.Data, nil
 }
 
 func (a *mqlAwsKmsGrant) key() (*mqlAwsKmsKey, error) {
-	keyArn := a.KeyArn.Data
+	keyArn := a.cacheKeyArn
 	if keyArn == "" {
 		a.Key.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -1250,4 +1250,8 @@ func (a *mqlAwsKmsKey) encryptedVolumes() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+type mqlAwsKmsGrantInternal struct {
+	cacheKeyArn string
 }

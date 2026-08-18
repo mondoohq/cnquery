@@ -27,8 +27,6 @@ grafana {
   contactPoints() []grafana.contactPoint
   // Notification policy tree
   notificationPolicy() grafana.notificationPolicy
-  // Legacy API keys (distinct from service account tokens)
-  apiKeys() []grafana.apiKey
   // RBAC roles (Grafana Enterprise/Cloud)
   roles() []grafana.role
   // SSO settings for all configured identity providers
@@ -255,34 +253,6 @@ grafana.contactPoint @defaults("uid name type") {
   tlsSkipVerify() bool
   // Whether HTTP authentication (basic auth or bearer token) is configured
   hasHttpAuth() bool
-}
-
-// Legacy Grafana API key
-//
-// Deprecated in favor of service accounts and tokens, which should be
-// used for new integrations. Legacy API key granting a fixed role
-// (Admin, Editor, or Viewer) for programmatic access to a Grafana
-// organization. Auditing these surfaces long-lived credentials that
-// predate service accounts, including keys that never expire or have
-// already expired, and whether a key has been migrated to a service
-// account.
-grafana.apiKey @defaults("name role") @maturity("deprecated") {
-  // API key ID
-  id int
-  // Organization ID
-  orgId int
-  // Key name
-  name string
-  // Role granted by the key (Admin, Editor, Viewer)
-  role string
-  // Timestamp when the key expires (zero if no expiration)
-  expiration time
-  // Whether an expiration is set on the key
-  hasExpiration bool
-  // Whether the key has expired
-  isExpired bool
-  // Service account ID this key was migrated to (zero if not migrated)
-  serviceAccountId int
 }
 
 // Grafana RBAC role (Enterprise / Cloud)

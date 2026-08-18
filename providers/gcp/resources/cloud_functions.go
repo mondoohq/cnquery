@@ -182,7 +182,6 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 			"labels":              llx.MapData(convert.MapToInterfaceMap(f.Labels), types.String),
 			"envVars":             llx.MapData(convert.MapToInterfaceMap(f.EnvironmentVariables), types.String),
 			"buildEnvVars":        llx.MapData(convert.MapToInterfaceMap(f.BuildEnvironmentVariables), types.String),
-			"network":             llx.StringData(f.Network),
 			"maxInstances":        llx.IntData(int64(f.MaxInstances)),
 			"minInstances":        llx.IntData(int64(f.MinInstances)),
 			"vpcConnector":        llx.StringData(f.VpcConnector),
@@ -194,12 +193,14 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 			"buildName":           llx.StringData(f.BuildName),
 			"secretEnvVars":       llx.MapData(secretEnvVars, types.Dict),
 			"secretVolumes":       llx.ArrayData(secretVolumes, types.Dict),
-			"dockerRepository":    llx.StringData(f.DockerRepository),
 			"dockerRegistry":      llx.StringData(f.DockerRegistry.String()),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlCloudFuncs.(*mqlGcpProjectCloudFunction)
+		mqlRef.cacheNetwork = f.Network
+		mqlRef.cacheDockerRepository = f.DockerRepository
 		mqlFunc := mqlCloudFuncs.(*mqlGcpProjectCloudFunction)
 		mqlFunc.cacheKmsKeyName = f.KmsKeyName
 		mqlFunc.cacheBuildServiceAccount = f.BuildServiceAccount
@@ -213,6 +214,8 @@ type mqlGcpProjectCloudFunctionInternal struct {
 	cacheKmsKeyName           string
 	cacheBuildServiceAccount  string
 	cacheEventTriggerResource string
+	cacheDockerRepository     string
+	cacheNetwork              string
 }
 
 func (g *mqlGcpProjectCloudFunction) managedBy() (string, error) {
@@ -220,10 +223,7 @@ func (g *mqlGcpProjectCloudFunction) managedBy() (string, error) {
 }
 
 func (g *mqlGcpProjectCloudFunction) dockerRepositoryRef() (*mqlGcpProjectArtifactRegistryServiceRepository, error) {
-	if g.DockerRepository.Error != nil {
-		return nil, g.DockerRepository.Error
-	}
-	project, location, repo := artifactRegistryRepoFromPath(g.DockerRepository.Data)
+	project, location, repo := artifactRegistryRepoFromPath(g.cacheDockerRepository)
 	ref, err := resolveArtifactRegistryRepoRef(g.MqlRuntime, project, location, repo)
 	if err != nil {
 		return nil, err
@@ -380,10 +380,7 @@ func (g *mqlGcpProjectCloudFunction) buildServiceAccount() (*mqlGcpProjectIamSer
 }
 
 func (g *mqlGcpProjectCloudFunction) networkRef() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.Network.Error != nil {
-		return nil, g.Network.Error
-	}
-	n, err := getNetworkByUrl(g.Network.Data, g.MqlRuntime)
+	n, err := getNetworkByUrl(g.cacheNetwork, g.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}

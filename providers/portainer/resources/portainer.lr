@@ -80,12 +80,6 @@ portainer.settings @defaults("authenticationMethod requiredPasswordLength") {
   disableKubeShell bool
   // Whether kubeconfig download is disabled
   disableKubeconfigDownload bool
-  // Host-management features
-  //
-  // Deprecated in favor of the per-environment securitySettings override of
-  // the same name. Portainer stopped maintaining this instance-wide flag, so
-  // it reads false regardless of how individual environments are configured.
-  enableHostManagementFeatures @maturity("deprecated") bool
   // Whether syncing of built-in Kubernetes roles is disabled
   disableKubeRolesSync bool
   // Custom kubectl shell image used for the Kubernetes web console

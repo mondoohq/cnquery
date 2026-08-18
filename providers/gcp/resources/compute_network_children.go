@@ -162,10 +162,5 @@ func (g *mqlGcpProjectComputeServiceNetwork) firewalls() ([]any, error) {
 func (g *mqlGcpProjectComputeServiceNetwork) routes() ([]any, error) {
 	return networkChildren(g,
 		func(s *mqlGcpProjectComputeService) *plugin.TValue[[]any] { return s.GetRoutes() },
-		func(r *mqlGcpProjectComputeServiceRoute) string {
-			if r.NetworkUrl.Error != nil {
-				return ""
-			}
-			return r.NetworkUrl.Data
-		})
+		func(r *mqlGcpProjectComputeServiceRoute) string { return r.cacheNetworkUrl })
 }

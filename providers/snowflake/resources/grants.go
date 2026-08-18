@@ -68,12 +68,12 @@ func (r *mqlSnowflakeUser) grants() ([]any, error) {
 			"grantedTo":   llx.StringData(string(sdk.ObjectTypeUser)),
 			"granteeName": llx.StringData(r.Name.Data),
 			"grantOption": llx.BoolData(false),
-			"grantedBy":   llx.StringData(g.grantedBy),
 			"createdAt":   g.createdOn,
 		})
 		if err != nil {
 			return nil, err
 		}
+		res.(*mqlSnowflakeGrant).cacheGrantedBy = g.grantedBy
 		list = append(list, res)
 	}
 	return list, nil
@@ -251,9 +251,15 @@ func (r *mqlSnowflakeGrant) granteeUser() (*mqlSnowflakeUser, error) {
 	return resolveUser(r.MqlRuntime, r.GranteeName.Data, &r.GranteeUser)
 }
 
+// mqlSnowflakeGrantInternal holds the name of the granting role, which SHOW
+// GRANTS reports as a bare string and grantedByRole resolves to a role.
+type mqlSnowflakeGrantInternal struct {
+	cacheGrantedBy string
+}
+
 // grantedByRole resolves the role that issued the grant.
 func (r *mqlSnowflakeGrant) grantedByRole() (*mqlSnowflakeRole, error) {
-	return resolveOwnerRole(r.MqlRuntime, r.GrantedBy.Data, &r.GrantedByRole)
+	return resolveOwnerRole(r.MqlRuntime, r.cacheGrantedBy, &r.GrantedByRole)
 }
 
 // resolveUser resolves a user name to a user resource, reporting the reference
@@ -396,11 +402,12 @@ func newMqlSnowflakeGrant(runtime *plugin.Runtime, grant snowflakeGrant) (*mqlSn
 		"grantedTo":   llx.StringData(grant.grantedTo),
 		"granteeName": llx.StringData(grant.granteeName),
 		"grantOption": llx.BoolData(grant.grantOption),
-		"grantedBy":   llx.StringData(grant.grantedBy),
 		"createdAt":   grant.createdOn,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return r.(*mqlSnowflakeGrant), nil
+	mqlGrant := r.(*mqlSnowflakeGrant)
+	mqlGrant.cacheGrantedBy = grant.grantedBy
+	return mqlGrant, nil
 }

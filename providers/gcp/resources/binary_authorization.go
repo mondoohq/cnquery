@@ -184,11 +184,6 @@ func (g *mqlGcpProjectBinaryAuthorizationControl) attestors() ([]any, error) {
 			return nil, err
 		}
 
-		userOwnedGrafeasNote, err := protoToDict(attestor.GetUserOwnedGrafeasNote())
-		if err != nil {
-			return nil, err
-		}
-
 		note := attestor.GetUserOwnedGrafeasNote()
 		publicKeys, err := flattenAttestorPublicKeys(g.MqlRuntime, attestor.GetName(), note)
 		if err != nil {
@@ -198,7 +193,6 @@ func (g *mqlGcpProjectBinaryAuthorizationControl) attestors() ([]any, error) {
 		mqlAttestor, err := CreateResource(g.MqlRuntime, "gcp.project.binaryAuthorizationControl.attestor", map[string]*llx.RawData{
 			"name":                          llx.StringData(attestor.GetName()),
 			"description":                   llx.StringData(attestor.GetDescription()),
-			"userOwnedGrafeasNote":          llx.DictData(userOwnedGrafeasNote),
 			"noteReference":                 llx.StringData(note.GetNoteReference()),
 			"publicKeys":                    llx.ArrayData(publicKeys, types.Resource("gcp.project.binaryAuthorizationControl.attestor.publicKey")),
 			"delegationServiceAccountEmail": llx.StringData(note.GetDelegationServiceAccountEmail()),

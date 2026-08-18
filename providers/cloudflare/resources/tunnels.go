@@ -32,17 +32,6 @@ func (c *mqlCloudflareAccount) tunnels() ([]any, error) {
 	return fetchTunnels(c.MqlRuntime, c.Id.Data)
 }
 
-// Deprecated: tunnels are account-scoped. Use cloudflare.account.tunnels.
-// Retained so existing queries keep working; resolves the parent account and
-// delegates.
-func (c *mqlCloudflareZone) tunnels() ([]any, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return fetchTunnels(c.MqlRuntime, accountID)
-}
-
 func fetchTunnels(runtime *plugin.Runtime, accountID string) ([]any, error) {
 	conn := runtime.Connection.(*connection.CloudflareConnection)
 
@@ -177,16 +166,6 @@ func (c *mqlCloudflareAccount) tunnelRoutes() ([]any, error) {
 	return fetchTunnelRoutes(c.MqlRuntime, c.Id.Data)
 }
 
-// Deprecated: tunnel routes are account-scoped. Use
-// cloudflare.account.tunnelRoutes. Retained so existing queries keep working.
-func (c *mqlCloudflareZone) tunnelRoutes() ([]any, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return fetchTunnelRoutes(c.MqlRuntime, accountID)
-}
-
 func fetchTunnelRoutes(runtime *plugin.Runtime, accountID string) ([]any, error) {
 	conn := runtime.Connection.(*connection.CloudflareConnection)
 
@@ -240,16 +219,6 @@ func (c *mqlCloudflareTunnelVirtualNetwork) id() (string, error) {
 
 func (c *mqlCloudflareAccount) tunnelVirtualNetworks() ([]any, error) {
 	return fetchTunnelVirtualNetworks(c.MqlRuntime, c.Id.Data)
-}
-
-// Deprecated: tunnel virtual networks are account-scoped. Use
-// cloudflare.account.tunnelVirtualNetworks. Retained for existing queries.
-func (c *mqlCloudflareZone) tunnelVirtualNetworks() ([]any, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return fetchTunnelVirtualNetworks(c.MqlRuntime, accountID)
 }
 
 func fetchTunnelVirtualNetworks(runtime *plugin.Runtime, accountID string) ([]any, error) {

@@ -601,11 +601,9 @@ stackit.server.machineType 13.0.0
 stackit.server.metadata 13.0.0
 stackit.server.name 13.0.0
 stackit.server.networkInterfaces 13.4.2
-stackit.server.nics 13.0.0
 stackit.server.powerStatus 13.0.0
 stackit.server.securityGroupIds 13.0.0
 stackit.server.securityGroups 13.0.0
-stackit.server.serviceAccountMails 13.0.0
 stackit.server.serviceAccounts 13.4.2
 stackit.server.status 13.0.0
 stackit.server.update 13.4.2
@@ -632,7 +630,6 @@ stackit.server.updates 13.4.2
 stackit.server.userData 13.0.0
 stackit.server.volumeIds 13.0.0
 stackit.server.volumes 13.0.0
-stackit.server.vtpmEnabled 13.4.2
 stackit.servers 13.0.0
 stackit.serviceAccount 13.0.0
 stackit.serviceAccount.accessTokens 13.0.0

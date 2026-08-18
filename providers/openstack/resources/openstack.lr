@@ -962,12 +962,6 @@ private openstack.securityGroup.rule @defaults("id direction protocol portRangeM
   portRangeMax int
   // Remote IP prefix (CIDR; empty when matched by remote group instead)
   remoteIpPrefix string
-  // Remote address group ID the rule matches
-  //
-  // Deprecated in favor of remoteAddressGroup, which resolves the same
-  // value to the address group and its addresses. Empty when the rule
-  // is matched by IP prefix or remote security group instead.
-  remoteAddressGroupId @maturity("deprecated") string
   // Description
   description string
   // Creation timestamp
@@ -2209,10 +2203,6 @@ private openstack.dns.zone @defaults("id name type ttl status") {
   type string
   // Master nameservers for SECONDARY zones (empty for PRIMARY zones)
   masters []string
-  // Owning project ID
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2241,10 +2231,6 @@ private openstack.dns.recordset @defaults("id name type ttl") {
   id string
   // Recordset name (FQDN, e.g. "www.example.com.")
   name string
-  // Owning zone ID
-  //
-  // Deprecated in favor of zone.
-  zoneId @maturity("deprecated") string
   // Record type (A, AAAA, MX, CNAME, TXT, SRV, NS, PTR, SPF, SSHFP, CAA, ...)
   type string
   // TTL in seconds; null when the zone default applies
@@ -2417,10 +2403,6 @@ private openstack.blockstorage.backup @defaults("id name status size createdAt")
   availabilityZone string
   // Free-form backup metadata (requires Cinder microversion >= 3.43)
   metadata map[string]string
-  // Owning project ID (admin-only attribute; empty for non-admin tokens)
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Timestamp when the data on the source volume was first saved (matches the source's data, not the backup's creation)
   dataTimestamp time
   // Backup creation timestamp
@@ -2657,10 +2639,6 @@ private openstack.compute.aggregate @defaults("id name availabilityZone hostCoun
 //
 // Reports both the configured maximum (`max*`) and the current usage (`*Used`) for each tracked resource. Limits without a usage counter are admin-set caps only.
 private openstack.compute.limits @defaults("maxTotalInstances totalInstancesUsed maxTotalCores totalCoresUsed maxTotalRAMSize totalRAMUsed") {
-  // Project ID the limits report applies to
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Project the limits report applies to
   project() openstack.project
   // Maximum number of vCPU cores
@@ -2738,10 +2716,6 @@ private openstack.placement.resourceProvider @defaults("id name generation") {
 
 // OpenStack Cinder block-storage quota for the scoped project (configured maximums; usage values are not exposed by the default API path).
 private openstack.blockstorage.quotaSet @defaults("volumes snapshots gigabytes backups") {
-  // Project ID the quota applies to
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Project the quota applies to
   project() openstack.project
   // Maximum number of volumes
@@ -2769,10 +2743,6 @@ private openstack.blockstorage.quotaSet @defaults("volumes snapshots gigabytes b
 // the default API path. The quota applies to the scoped project,
 // reachable through project.
 private openstack.network.quotaSet @defaults("network subnet port floatingIp router") {
-  // Project ID the quota applies to
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Project the quota applies to
   project() openstack.project
   // Maximum number of networks
@@ -2848,10 +2818,6 @@ private openstack.sharedfilesystem.share @defaults("id name shareProto status si
   snapshotSupport bool
   // Snapshot ID the share was created from; empty when not created from a snapshot
   snapshotId string
-  // Owning project ID
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // User-defined metadata
   metadata map[string]string
   // Creation timestamp
@@ -2926,10 +2892,6 @@ private openstack.sharedfilesystem.securityService @defaults("id name type statu
   user string
   // Directory server hostname or IP address
   server string
-  // Owning project ID
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -2964,10 +2926,6 @@ private openstack.sharedfilesystem.shareNetwork @defaults("id name networkType c
   cidr string
   // IP version (4 or 6)
   ipVersion int
-  // Owning project ID
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -3022,10 +2980,6 @@ private openstack.containerinfra.cluster @defaults("id name status nodeCount mas
   discoveryUrl string
   // Labels (key/value tuning and feature flags) applied to the cluster
   labels map[string]string
-  // Owning project ID
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Creation timestamp
   createdAt time
   // Last update timestamp
@@ -3330,10 +3284,6 @@ private openstack.orchestration.stack @defaults("id name status") {
 // openstack.compute.limits) surfaces projects near capacity or with
 // overly permissive quotas.
 private openstack.compute.quotaSet @defaults("instances cores ram") {
-  // Project ID the quota applies to
-  //
-  // Deprecated in favor of project.
-  projectId @maturity("deprecated") string
   // Project the quota applies to
   project() openstack.project
   // Maximum number of instances

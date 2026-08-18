@@ -115,25 +115,6 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 	if err := req.Pages(ctx, func(page *logging.ListBucketsResponse) error {
 		for _, bucket := range page.Buckets {
 
-			var mqlCmekSettingsDict map[string]any
-			if bucket.CmekSettings != nil {
-				type mqlCmekSettings struct {
-					KmsKeyName        string `json:"kmsKeyName"`
-					KmsKeyVersionName string `json:"kmsKeyVersionName"`
-					Name              string `json:"name"`
-					ServiceAccountId  string `json:"serviceAccountId"`
-				}
-				mqlCmekSettingsDict, err = convert.JsonToDict(mqlCmekSettings{
-					KmsKeyName:        bucket.CmekSettings.KmsKeyName,
-					KmsKeyVersionName: bucket.CmekSettings.KmsKeyVersionName,
-					Name:              bucket.CmekSettings.Name,
-					ServiceAccountId:  bucket.CmekSettings.ServiceAccountId,
-				})
-				if err != nil {
-					return err
-				}
-			}
-
 			indexConfigs := make([]any, 0, len(bucket.IndexConfigs))
 			for _, cfg := range bucket.IndexConfigs {
 				mqlIndexConfig, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket.indexConfig", map[string]*llx.RawData{
@@ -157,7 +138,6 @@ func (g *mqlGcpProjectLoggingservice) buckets() ([]any, error) {
 			mqlBucket, err := CreateResource(g.MqlRuntime, "gcp.project.loggingservice.bucket", map[string]*llx.RawData{
 				"projectId":            llx.StringData(projectId),
 				"location":             llx.StringData(parseLocationFromPath(bucket.Name)),
-				"cmekSettings":         llx.DictData(mqlCmekSettingsDict),
 				"cmekServiceAccountId": llx.StringData(cmekServiceAccountId),
 				"created":              llx.TimeDataPtr(parseTime(bucket.CreateTime)),
 				"description":          llx.StringData(bucket.Description),

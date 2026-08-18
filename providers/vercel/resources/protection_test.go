@@ -13,8 +13,7 @@ func TestProjectRecordDecodesOptionsAllowlist(t *testing.T) {
 	const payload = `{
 		"id": "prj_1",
 		"name": "web",
-		"optionsAllowlist": {"paths": [{"value": "/api/webhook"}, {"value": ""}, {"value": "/api/health"}]},
-		"protectionConfig": {"mode": "custom"}
+		"optionsAllowlist": {"paths": [{"value": "/api/webhook"}, {"value": ""}, {"value": "/api/health"}]}
 	}`
 
 	var rec projectRecord
@@ -31,10 +30,6 @@ func TestProjectRecordDecodesOptionsAllowlist(t *testing.T) {
 		if paths[i] != want[i] {
 			t.Errorf("allowlistPaths[%d] = %v, want %v", i, paths[i], want[i])
 		}
-	}
-
-	if rec.ProtectionConfig == nil {
-		t.Error("protectionConfig decoded to nil, want the config object")
 	}
 }
 

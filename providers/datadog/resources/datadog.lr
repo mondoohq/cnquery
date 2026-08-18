@@ -518,11 +518,6 @@ datadog.monitor @defaults("id name type") {
   created time
   // Modified at
   modified time
-  // Creator email
-  //
-  // Deprecated in favor of createdBy, which resolves the same person to their
-  // user account.
-  creator @maturity("deprecated") string
   // User that created the monitor
   //
   // Null when the creator no longer has an account in the organization.
@@ -567,11 +562,6 @@ datadog.dashboard @defaults("id title") {
   createdAt time
   // Modified at
   modifiedAt time
-  // Author handle
-  //
-  // Deprecated in favor of author, which resolves the same person to their
-  // user account.
-  authorHandle @maturity("deprecated") string
   // User that authored the dashboard
   //
   // Null when the author no longer has an account in the organization.
@@ -618,11 +608,6 @@ datadog.syntheticsTest @defaults("publicId name type") {
   locations []string
   // Monitor ID
   monitorId int
-  // Creator email
-  //
-  // Deprecated in favor of createdBy, which resolves the same person to their
-  // user account.
-  creator @maturity("deprecated") string
   // User that created the test
   //
   // Null when the creator no longer has an account in the organization.
@@ -667,11 +652,6 @@ datadog.slo @defaults("id name type") {
   warningThreshold float
   // Timeframe (7d, 30d, 90d)
   timeframe string
-  // Creator email
-  //
-  // Deprecated in favor of createdBy, which resolves the same person to their
-  // user account.
-  creator @maturity("deprecated") string
   // User that created the SLO
   //
   // Null when the creator no longer has an account in the organization.

@@ -183,10 +183,9 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 					}
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.oke.cluster", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.oke.cluster", stringValue(cluster.CompartmentId), map[string]*llx.RawData{
 					"id":                             llx.StringDataPtr(cluster.Id),
 					"name":                           llx.StringDataPtr(cluster.Name),
-					"compartmentID":                  llx.StringDataPtr(cluster.CompartmentId),
 					"kubernetesVersion":              llx.StringDataPtr(cluster.KubernetesVersion),
 					"type":                           llx.StringData(string(cluster.Type)),
 					"isPublicEndpointEnabled":        llx.BoolData(isPublicEndpointEnabled),
@@ -236,6 +235,7 @@ func (o *mqlOciOke) clusters() ([]any, error) {
 }
 
 type mqlOciOkeClusterInternal struct {
+	ociCompartmentRef
 	cluster                 ociRetryLazy[*containerengine.Cluster]
 	cacheVcnID              string
 	cacheRegion             string
@@ -408,7 +408,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 	clusterId := o.Id.Data
 	pools, err := ociPaginate(ctx, func(ctx context.Context, page *string) ([]containerengine.NodePoolSummary, *string, error) {
 		response, err := svc.ListNodePools(ctx, containerengine.ListNodePoolsRequest{
-			CompartmentId: common.String(o.CompartmentID.Data),
+			CompartmentId: common.String(o.cacheCompartmentID),
 			ClusterId:     common.String(clusterId),
 			Page:          page,
 		})
@@ -484,14 +484,12 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			bootVolumeSizeInGBs = src.BootVolumeSizeInGBs
 		}
 
-		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.oke.nodePool", map[string]*llx.RawData{
+		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.oke.nodePool", stringValue(np.CompartmentId), map[string]*llx.RawData{
 			"id":                  llx.StringDataPtr(np.Id),
 			"name":                llx.StringDataPtr(np.Name),
-			"compartmentID":       llx.StringDataPtr(np.CompartmentId),
 			"kubernetesVersion":   llx.StringDataPtr(np.KubernetesVersion),
 			"nodeShape":           llx.StringDataPtr(np.NodeShape),
 			"nodeShapeConfig":     llx.DictData(nodeShapeConfig),
-			"nodeImageName":       llx.StringDataPtr(np.NodeImageName),
 			"bootVolumeSizeInGBs": llx.IntDataPtr(bootVolumeSizeInGBs),
 			"sshPublicKey":        llx.StringDataPtr(np.SshPublicKey),
 			"state":               llx.StringData(string(np.LifecycleState)),
@@ -525,6 +523,7 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 }
 
 type mqlOciOkeNodePoolInternal struct {
+	ociCompartmentRef
 	cacheSubnetIDs    []string
 	cacheNsgIDs       []string
 	cacheClusterID    string

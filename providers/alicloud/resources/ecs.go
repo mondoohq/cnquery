@@ -87,13 +87,19 @@ type mqlAlicloudEcsInstanceInternal struct {
 	// ran", which is the case for an instance built by its init function.
 	cacheRamRoleName string
 	ramRoleFetched   bool
+
+	// cacheSecurityGroupIDs holds the security groups the instance is a member
+	// of, which securityGroups() resolves and the reverse edge on a group
+	// matches against.
+	cacheSecurityGroupIDs []string
 }
 
 // mqlAlicloudEcsDiskInternal caches the identifiers needed to resolve the
-// disk's typed instance reference without a repeat API call.
+// disk's typed instance and KMS key references without a repeat API call.
 type mqlAlicloudEcsDiskInternal struct {
 	cacheRegion     string
 	cacheInstanceID string
+	cacheKmsKeyID   string
 }
 
 // mqlAlicloudEcsSecuritygroupPermissionInternal caches the identifiers needed
@@ -410,7 +416,6 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 		"localStorageCapacity":    llx.IntDataPtr(inst.LocalStorageCapacity),
 		"resourceGroupId":         llx.StringDataPtr(inst.ResourceGroupId),
 		"networkType":             llx.StringDataPtr(inst.InstanceNetworkType),
-		"securityGroupIds":        llx.ArrayData(llx.TArr2Raw(securityGroupIds), types.String),
 		"privateIpAddresses":      llx.ArrayData(llx.TArr2Raw(privateIps), types.String),
 		"publicIpAddresses":       llx.ArrayData(llx.TArr2Raw(publicIps), types.String),
 		"eipAddress":              llx.StringDataPtr(eip),
@@ -429,6 +434,7 @@ func newMqlEcsInstance(runtime *plugin.Runtime, region string, inst *ecsclient.D
 	mqlInst.cacheVpcID = strDeref(vpcId)
 	mqlInst.cacheVswitchID = strDeref(vswitchId)
 	mqlInst.cacheImageID = strDeref(inst.ImageId)
+	mqlInst.cacheSecurityGroupIDs = securityGroupIds
 	return mqlInst, nil
 }
 
@@ -488,10 +494,8 @@ func (r *mqlAlicloudEcsInstance) id() (string, error) {
 // listing the groups in the instance's region and matching by ID.
 func (r *mqlAlicloudEcsInstance) securityGroups() ([]any, error) {
 	wanted := map[string]struct{}{}
-	for _, id := range r.SecurityGroupIds.Data {
-		if s, ok := id.(string); ok {
-			wanted[s] = struct{}{}
-		}
+	for _, id := range r.cacheSecurityGroupIDs {
+		wanted[id] = struct{}{}
 	}
 	if len(wanted) == 0 {
 		return []any{}, nil
@@ -585,7 +589,6 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 					"size":               llx.IntDataPtr(disk.Size),
 					"status":             llx.StringDataPtr(disk.Status),
 					"encrypted":          llx.BoolDataPtr(disk.Encrypted),
-					"kmsKeyId":           llx.StringDataPtr(disk.KMSKeyId),
 					"device":             llx.StringDataPtr(disk.Device),
 					"deleteWithInstance": llx.BoolDataPtr(disk.DeleteWithInstance),
 					"deleteAutoSnapshot": llx.BoolDataPtr(disk.DeleteAutoSnapshot),
@@ -606,6 +609,7 @@ func (r *mqlAlicloudEcs) disks() ([]any, error) {
 				mqlDisk := resource.(*mqlAlicloudEcsDisk)
 				mqlDisk.cacheRegion = region
 				mqlDisk.cacheInstanceID = strDeref(disk.InstanceId)
+				mqlDisk.cacheKmsKeyID = strDeref(disk.KMSKeyId)
 				res = append(res, mqlDisk)
 			}
 
@@ -634,11 +638,11 @@ func (r *mqlAlicloudEcsDisk) instance() (*mqlAlicloudEcsInstance, error) {
 // kmsKey resolves the KMS key that encrypts the disk, or null when the disk is
 // not encrypted.
 func (r *mqlAlicloudEcsDisk) kmsKey() (*mqlAlicloudKmsKey, error) {
-	if r.KmsKeyId.Data == "" {
+	if r.cacheKmsKeyID == "" {
 		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	key, err := resolveKmsKey(r.MqlRuntime, r.RegionId.Data, r.KmsKeyId.Data)
+	key, err := resolveKmsKey(r.MqlRuntime, r.cacheRegion, r.cacheKmsKeyID)
 	if err != nil || key == nil {
 		r.KmsKey.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -1097,8 +1101,8 @@ func (r *mqlAlicloudEcsSecuritygroup) instances() ([]any, error) {
 		if !ok {
 			continue
 		}
-		for _, id := range inst.SecurityGroupIds.Data {
-			if s, ok := id.(string); ok && s == sgId {
+		for _, id := range inst.cacheSecurityGroupIDs {
+			if id == sgId {
 				res = append(res, inst)
 				break
 			}

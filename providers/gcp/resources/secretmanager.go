@@ -27,6 +27,10 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type mqlGcpProjectSecretmanagerServiceSecretInternal struct {
+	cacheCustomerManagedEncryption []any
+}
+
 func (g *mqlGcpProjectSecretmanagerService) id() (string, error) {
 	if g.ProjectId.Error != nil {
 		return "", g.ProjectId.Error
@@ -195,7 +199,6 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 			"versionAliases":            llx.MapData(versionAliasesMap, types.Int),
 			"annotations":               llx.MapData(convert.MapToInterfaceMap(s.Annotations), types.String),
 			"versionDestroyTtl":         llx.TimeDataPtr(mqlVersionDestroyTtl),
-			"customerManagedEncryption": llx.ArrayData(cmeKeys, types.String),
 			"tags":                      llx.MapData(convert.MapToInterfaceMap(s.Tags), types.String),
 			"secretType":                llx.StringData(s.GetSecretType().String()),
 			"policyMemberNamePrincipal": llx.StringData(s.GetPolicyMember().GetIamPolicyNamePrincipal()),
@@ -204,6 +207,8 @@ func (g *mqlGcpProjectSecretmanagerService) secrets() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlSecret.(*mqlGcpProjectSecretmanagerServiceSecret)
+		mqlRef.cacheCustomerManagedEncryption = cmeKeys
 		secrets = append(secrets, mqlSecret)
 	}
 	return secrets, nil
@@ -367,10 +372,7 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) public() (bool, error) {
 }
 
 func (g *mqlGcpProjectSecretmanagerServiceSecret) kmsKeys() ([]any, error) {
-	if g.CustomerManagedEncryption.Error != nil {
-		return nil, g.CustomerManagedEncryption.Error
-	}
-	keys := g.CustomerManagedEncryption.Data
+	keys := g.cacheCustomerManagedEncryption
 	if len(keys) == 0 {
 		return []any{}, nil
 	}
@@ -425,10 +427,7 @@ func (g *mqlGcpProjectSecretmanagerServiceSecret) managedBy() (string, error) {
 }
 
 func (g *mqlGcpProjectSecretmanagerServiceSecret) customerManagedEncryptionEnabled() (bool, error) {
-	if g.CustomerManagedEncryption.Error != nil {
-		return false, g.CustomerManagedEncryption.Error
-	}
-	return len(g.CustomerManagedEncryption.Data) > 0, nil
+	return len(g.cacheCustomerManagedEncryption) > 0, nil
 }
 
 func (g *mqlGcpProjectSecretmanagerServiceSecret) iamPolicy() ([]any, error) {

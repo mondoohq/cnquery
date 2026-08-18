@@ -498,12 +498,6 @@ arista.eos.spt.mstInterface @defaults("name") {
   // designated bridge and port; `regionalRootAddress` and
   // `regionalRootPriority` identify the MST regional root.
   detail dict
-  // Interface boundary type
-  //
-  // Deprecated, please use state. This field never carried a distinct
-  // boundary type: it returns the same value as state. It will be removed in
-  // a future major release once a real boundary source is wired up.
-  boundaryType @maturity("deprecated") string
   // BPDU transaction counters for the interface
   //
   // Keys `bpduSent`, `bpduReceived`, `bpduTaggedError`, `bpduOtherError`,
@@ -652,16 +646,6 @@ private arista.eos.bgp.peer @defaults("peerAddress") {
   prefixesReceived int
   // Number of prefixes accepted from peer (after inbound filtering)
   prefixesAccepted int
-  // Inbound route map name
-  //
-  // Deprecated in favor of inboundPolicy, which resolves to the route-map
-  // itself so its clauses can be inspected.
-  inboundRouteMap @maturity("deprecated") string
-  // Outbound route map name
-  //
-  // Deprecated in favor of outboundPolicy, which resolves to the route-map
-  // itself so its clauses can be inspected.
-  outboundRouteMap @maturity("deprecated") string
   // Route-map applied to routes received from the peer
   //
   // Null when no inbound policy is applied, which accepts whatever the peer
@@ -1068,18 +1052,6 @@ arista.eos.aaa {
   accountingCommands map[string][]string
   // Accounting exec method lists
   accountingExec map[string][]string
-  // TACACS+ server hostnames
-  //
-  // Deprecated in favor of tacacsServerHosts, which reports the same hosts
-  // along with the routing instance, ports, timeout, and whether the shared
-  // secret is stored in the clear.
-  tacacsServers @maturity("deprecated") []string
-  // RADIUS server hostnames
-  //
-  // Deprecated in favor of radiusServerHosts, which reports the same hosts
-  // along with the routing instance, ports, timeout, retransmit count, and
-  // whether the shared secret is stored in the clear.
-  radiusServers @maturity("deprecated") []string
   // TACACS+ servers with their transport and shared-secret state
   tacacsServerHosts() []arista.eos.aaa.tacacsServer
   // RADIUS servers with their transport and shared-secret state

@@ -184,16 +184,6 @@ okta.policies {
 private okta.user @defaults("profile['email']" ){
   // Unique key for user
   id string
-  // User's type identifier
-  //
-  // Deprecated in favor of userType, which resolves the full user type.
-  typeId @maturity("deprecated") string
-  // User type object
-  //
-  // Deprecated in favor of userType. Carries the user-type `id`, plus any
-  // additional attributes the API returns for that type (name, displayName,
-  // description).
-  type @maturity("deprecated") dict
   // User credential summary
   //
   // Keys: provider ({ type, name } where type is one of OKTA,

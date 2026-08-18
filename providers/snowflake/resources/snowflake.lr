@@ -171,19 +171,10 @@ snowflake.user @defaults("name") {
   email string
   // Comment for the user
   comment string
-  // Virtual warehouse that is active by default
-  //
-  // Deprecated in favor of defaultWarehouseRef. The name of the user's
-  // default virtual warehouse.
-  defaultWarehouse @maturity("deprecated") string
   // Virtual warehouse that is active by default for the user
   defaultWarehouseRef() snowflake.warehouse
   // Namespace that is active by default
   defaultNamespace string
-  // Default role for the user
-  //
-  // Deprecated in favor of defaultRoleRef. The name of the user's default role.
-  defaultRole @maturity("deprecated") string
   // User's default role
   defaultRoleRef() snowflake.role
   // Whether the user is disabled
@@ -287,10 +278,6 @@ snowflake.role @defaults("name") {
   grantedToRoles int
   // Number of roles granted to this role (this role's privileges)
   grantedRoles int
-  // Owner of the role
-  //
-  // Deprecated in favor of ownerRole. The name of the role that owns this role.
-  owner @maturity("deprecated") string
   // Role that owns the role
   ownerRole() snowflake.role
   // Comment for the role
@@ -397,11 +384,6 @@ snowflake.passwordPolicy @defaults("name") {
   schemaName string
   // Policy kind classifier (e.g., PASSWORD)
   kind string
-  // Name of the owner
-  //
-  // Deprecated in favor of ownerRole. The name of the role that owns the
-  // password policy.
-  owner @maturity("deprecated") string
   // Role that owns the password policy
   ownerRole() snowflake.role
   // Comment for the password policy
@@ -565,11 +547,6 @@ snowflake.stage @defaults("name") {
   type string
   // Cloud provider of the stage
   cloud string
-  // Storage integration of the stage
-  //
-  // Deprecated in favor of storageIntegration. The name of the storage
-  // integration backing an external stage.
-  storeIntegration @maturity("deprecated") string
   // Storage integration backing an external stage
   storageIntegration() snowflake.storageIntegration
   // Endpoint of the stage
@@ -604,11 +581,6 @@ snowflake.database @defaults("name") {
   // Populated when the database was created from a share or as a replica,
   // naming the origin object. Empty for a standard, locally created database.
   origin string
-  // Database owner
-  //
-  // Deprecated in favor of ownerRole. The name of the role that owns the
-  // database.
-  owner @maturity("deprecated") string
   // Role that owns the database
   ownerRole() snowflake.role
   // Comment for the database
@@ -731,11 +703,6 @@ snowflake.warehouse @defaults("name") {
   enableQueryAcceleration bool
   // Query acceleration scale factor
   queryAccelerationMaxScaleFactor int
-  // Resource monitor of the warehouse
-  //
-  // Deprecated in favor of resourceMonitorRef. The name of the resource
-  // monitor governing this warehouse's credit usage.
-  resourceMonitor @maturity("deprecated") string
   // Resource monitor governing the warehouse's credit usage
   resourceMonitorRef() snowflake.resourceMonitor
   // Scaling policy
@@ -791,11 +758,6 @@ snowflake.grant @defaults("privilege grantedOn name granteeName") {
   grantOption bool
   // Role that issued the grant
   //
-  // Deprecated in favor of grantedByRole. The name of the role that ran the
-  // GRANT statement.
-  grantedBy @maturity("deprecated") string
-  // Role that issued the grant
-  //
   // Null when no issuing role was recorded, such as for a privilege Snowflake
   // grants implicitly, and when the role is not one the session can list.
   grantedByRole() snowflake.role
@@ -849,17 +811,9 @@ snowflake.share @defaults("name kind") {
   // Kind of share: INBOUND or OUTBOUND
   kind string
   // Database backing the share
-  //
-  // Deprecated in favor of database, the typed snowflake.database reference.
-  databaseName @maturity("deprecated") string
-  // Database backing the share
   database() snowflake.database
   // For OUTBOUND shares, list of accounts the share has been granted to
   to []string
-  // Owner of the share
-  //
-  // Deprecated in favor of ownerRole. The name of the role that owns the share.
-  owner @maturity("deprecated") string
   // Role that owns the share
   ownerRole() snowflake.role
   // Comment for the share
@@ -987,11 +941,6 @@ snowflake.failoverGroup @defaults("name type isPrimary secondaryState") {
   regionGroup string
   // Snowflake region (e.g., AWS_US_WEST_2)
   snowflakeRegion string
-  // Owning role
-  //
-  // Deprecated in favor of ownerRole. The name of the role that owns the
-  // failover group.
-  owner @maturity("deprecated") string
   // Role that owns the failover group
   ownerRole() snowflake.role
   // Optional comment
@@ -1109,11 +1058,6 @@ snowflake.resourceMonitor @defaults("name creditQuota usedCredits level") {
   startTime string
   // When the current period ends (Snowflake-formatted string)
   endTime string
-  // Owning role
-  //
-  // Deprecated in favor of ownerRole. The name of the role that owns the
-  // resource monitor.
-  owner @maturity("deprecated") string
   // Role that owns the resource monitor
   ownerRole() snowflake.role
   // Optional comment

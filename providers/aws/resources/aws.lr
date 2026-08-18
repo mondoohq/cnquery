@@ -545,7 +545,7 @@ private aws.vpc.encryptionControl @defaults("id mode state") {
 }
 
 // Amazon Virtual Private Cloud (VPC) route table
-private aws.vpc.routetable @defaults("id routes.length") {
+private aws.vpc.routetable @defaults("id routeEntries.length") {
   // ARN of the route table
   arn string
   // A list of association descriptions
@@ -554,10 +554,6 @@ private aws.vpc.routetable @defaults("id routes.length") {
   id string
   // Region where the route table exists
   region string
-  // Raw route entries dict
-  //
-  // Deprecated in favor of `routeEntries`.
-  routes @maturity("deprecated") []dict
   // List of routes in the route table
   routeEntries() []aws.vpc.routetable.route
   // Tags on the route table
@@ -572,10 +568,6 @@ private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
   destinationCidrBlock string
   // IPv6 CIDR block used for the destination match
   destinationIpv6CidrBlock string
-  // Prefix list ID for the destination match
-  //
-  // Deprecated in favor of `managedPrefixList`.
-  destinationPrefixListId @maturity("deprecated") string
   // Managed prefix list used for the destination match
   managedPrefixList() aws.ec2.managedPrefixList
   // ID of a gateway attached to the VPC
@@ -594,49 +586,25 @@ private aws.vpc.routetable.route @defaults("destinationCidrBlock state") {
   // Resolves the next hop when `gatewayId` names a virtual private gateway
   // (vgw-), the on-ramp for a Site-to-Site VPN. Null for any other gateway kind.
   vpnGateway() aws.vpc.vpnGateway
-  // ID of a NAT instance in the VPC
-  //
-  // Deprecated in favor of `instance`.
-  instanceId @maturity("deprecated") string
   // NAT instance the route sends traffic to
   instance() aws.ec2.instance
   // ID of the Amazon Web Services account that owns the instance
   instanceOwnerId string
-  // ID of the network interface
-  //
-  // Deprecated in favor of `networkInterface`.
-  networkInterfaceId @maturity("deprecated") string
   // Network interface a route sends traffic to
   networkInterface() aws.ec2.networkinterface
-  // ID of a NAT gateway
-  //
-  // Deprecated in favor of `natGateway`.
-  natGatewayId @maturity("deprecated") string
   // NAT gateway the route sends traffic to
   natGateway() aws.vpc.natgateway
-  // ID of a transit gateway
-  //
-  // Deprecated in favor of `transitGateway`.
-  transitGatewayId @maturity("deprecated") string
   // Transit gateway the route sends traffic to
   //
   // Resolves the next hop for traffic leaving the VPC across a transit gateway,
   // the path to other VPCs, on-premises networks, and peered regions. Null when
   // the route does not target a transit gateway.
   transitGateway() aws.ec2.transitgateway
-  // ID of a VPC peering connection
-  //
-  // Deprecated in favor of `peeringConnection`.
-  vpcPeeringConnectionId @maturity("deprecated") string
   // VPC peering connection the route sends traffic to
   //
   // Resolves the next hop for traffic crossing into a peered VPC. Null when the
   // route does not target a peering connection.
   peeringConnection() aws.vpc.peeringConnection
-  // ID of the egress-only internet gateway
-  //
-  // Deprecated in favor of `egressOnlyInternetGateway`.
-  egressOnlyInternetGatewayId @maturity("deprecated") string
   // Egress-only internet gateway the route sends traffic to
   //
   // Resolves the next hop for IPv6 outbound-only internet access. Null when the
@@ -1488,10 +1456,6 @@ private aws.networkfirewall.firewall @defaults("arn name region") {
   encryptionType string
   // KMS key used to encrypt firewall resources (set when encryptionType is CUSTOMER_KMS)
   kmsKey() aws.kms.key
-  // Raw encryption configuration dict
-  //
-  // Deprecated in favor of `encryptionType` and `kmsKey()`.
-  encryptionConfiguration @maturity("deprecated") dict
   // Whether the firewall forwards traffic without preserving the original source IP
   //
   // When true the firewall rewrites the source address, so rules downstream of
@@ -1848,16 +1812,8 @@ private aws.efs.filesystem.replicationConfiguration @defaults("sourceFileSystemI
   sourceFileSystemId string
   // Source file system region
   sourceFileSystemRegion string
-  // Source file system ARN
-  //
-  // Deprecated in favor of `sourceFileSystem`.
-  sourceFileSystemArn @maturity("deprecated") string
   // Source file system being replicated
   sourceFileSystem() aws.efs.filesystem
-  // Original source file system ARN
-  //
-  // Deprecated in favor of `originalSourceFileSystem`.
-  originalSourceFileSystemArn @maturity("deprecated") string
   // Original source file system in the replication chain
   originalSourceFileSystem() aws.efs.filesystem
   // When replication was created
@@ -1867,11 +1823,7 @@ private aws.efs.filesystem.replicationConfiguration @defaults("sourceFileSystemI
 }
 
 // AWS EFS replication destination
-private aws.efs.filesystem.replicationDestination @defaults("fileSystemId region status") {
-  // Destination file system ID
-  //
-  // Deprecated in favor of `fileSystem`.
-  fileSystemId @maturity("deprecated") string
+private aws.efs.filesystem.replicationDestination @defaults("region status") {
   // Destination file system replicated to
   fileSystem() aws.efs.filesystem
   // Destination region
@@ -1883,19 +1835,11 @@ private aws.efs.filesystem.replicationDestination @defaults("fileSystemId region
 }
 
 // AWS EFS mount target
-private aws.efs.mountTarget @defaults("mountTargetId subnetId") {
+private aws.efs.mountTarget @defaults("mountTargetId availabilityZone") {
   // Mount target ID
   mountTargetId string
-  // Associated file system ID
-  //
-  // Deprecated in favor of `fileSystem`.
-  fileSystemId @maturity("deprecated") string
   // File system the mount target exposes
   fileSystem() aws.efs.filesystem
-  // Subnet ID where mount target resides
-  //
-  // Deprecated in favor of `subnet`.
-  subnetId @maturity("deprecated") string
   // Subnet where the mount target resides
   subnet() aws.vpc.subnet
   // Availability zone
@@ -1906,10 +1850,6 @@ private aws.efs.mountTarget @defaults("mountTargetId subnetId") {
   securityGroups() []aws.ec2.securitygroup
   // Mount target state (creating, available, deleting)
   lifecycleState string
-  // Network interface ID
-  //
-  // Deprecated in favor of `networkInterface`.
-  networkInterfaceId @maturity("deprecated") string
   // Network interface the mount target uses
   networkInterface() aws.ec2.networkinterface
   // Region where the mount target exists
@@ -1922,10 +1862,6 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   accessPointId string
   // Access point ARN
   arn string
-  // Associated file system ID
-  //
-  // Deprecated in favor of `fileSystem`.
-  fileSystemId @maturity("deprecated") string
   // File system the access point belongs to
   fileSystem() aws.efs.filesystem
   // Access point name
@@ -1983,22 +1919,10 @@ private aws.fsx.filesystem @defaults("id type region") {
   storageType string
   // Whether file system is encrypted at rest (true if kmsKeyId is set)
   encrypted() bool
-  // KMS key ID used for encryption
-  //
-  // Deprecated in favor of `kmsKey`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used for encryption
   kmsKey() aws.kms.key
-  // VPC ID where the file system resides
-  //
-  // Deprecated in favor of `vpc`.
-  vpcId @maturity("deprecated") string
   // VPC where the file system resides
   vpc() aws.vpc
-  // Subnet IDs for the file system
-  //
-  // Deprecated in favor of `subnets`.
-  subnetIds @maturity("deprecated") []string
   // Subnets for the file system
   subnets() []aws.vpc.subnet
   // Resource tags
@@ -2021,16 +1945,8 @@ private aws.fsx.cache @defaults("id lifecycle") {
   createdAt time
   // Storage capacity in TiB
   storageCapacity int
-  // VPC ID where the cache resides
-  //
-  // Deprecated in favor of `vpc`.
-  vpcId @maturity("deprecated") string
   // VPC where the cache resides
   vpc() aws.vpc
-  // Subnet IDs for the cache
-  //
-  // Deprecated in favor of `subnets`.
-  subnetIds @maturity("deprecated") []string
   // Subnets for the cache
   subnets() []aws.vpc.subnet
   // Lustre cache configuration
@@ -2060,18 +1976,10 @@ private aws.fsx.backup @defaults("backupId type lifecycle") {
   type string
   // Lifecycle status
   lifecycle string
-  // Associated file system ID
-  //
-  // Deprecated in favor of `fileSystem`.
-  fileSystemId @maturity("deprecated") string
   // File system this backup was taken from
   fileSystem() aws.fsx.filesystem
   // File system type
   fileSystemType string
-  // KMS key ID used for encryption
-  //
-  // Deprecated in favor of `kmsKey`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used for encryption
   kmsKey() aws.kms.key
   // Creation timestamp
@@ -2090,10 +1998,6 @@ private aws.fsx.volume @defaults("id name lifecycle region") {
   arn string
   // Volume name
   name string
-  // Associated file system ID
-  //
-  // Deprecated in favor of `fileSystem`.
-  fileSystemId @maturity("deprecated") string
   // File system this volume belongs to
   fileSystem() aws.fsx.filesystem
   // Volume type (ONTAP or OPENZFS)
@@ -2271,10 +2175,6 @@ private aws.kms.grant @defaults("grantId name granteePrincipal") {
   grantId string
   // KMS key the grant applies to
   key() aws.kms.key
-  // ARN of the KMS key the grant applies to
-  //
-  // Deprecated in favor of `key()`.
-  keyArn @maturity("deprecated") string
   // Friendly name supplied at grant creation, or empty when none was provided
   name string
   // Principal that receives the grant's permissions
@@ -2381,11 +2281,6 @@ aws.iam {
   attachedPolicies() []aws.iam.policy
   // IAM credential report
   credentialReport() []aws.iam.usercredentialreportentry
-  // Raw IAM account password policy
-  //
-  // Deprecated in favor of passwordPolicy, which resolves each setting to a
-  // typed field with null semantics for unset values.
-  accountPasswordPolicy() @maturity("deprecated") dict
   // Account password policy
   passwordPolicy() aws.iam.passwordPolicy
   // IAM account summary
@@ -2557,11 +2452,6 @@ private aws.iam.user @defaults("arn name createdAt") {
   attachedPolicies() []aws.iam.policy
   // List of group ARNs that the user belongs to
   groups() []string
-  // List of access keys metadata associated with the user
-  //
-  // Deprecated in favor of accessKeyDetails, which resolves each key to a
-  // typed aws.iam.user.accessKey exposing status and last-used data.
-  accessKeys() @maturity("deprecated") []dict
   // Access keys associated with the user, including last-used data
   accessKeyDetails() []aws.iam.user.accessKey
   // Login profile for the user
@@ -2858,10 +2748,6 @@ private aws.iam.role @defaults("arn name") {
   lastUsedRegion() string
   // Maximum session duration in seconds for the role (3600-43200)
   maxSessionDuration int
-  // ARN of the permissions boundary policy attached to the role
-  //
-  // Deprecated in favor of `permissionsBoundary()`. Empty string if none.
-  permissionsBoundaryArn @maturity("deprecated") string
   // Permissions boundary policy attached to the role
   permissionsBoundary() aws.iam.policy
   // EC2 instances that use this role through an instance profile
@@ -3471,13 +3357,6 @@ private aws.sagemaker.endpoint @defaults("arn name") {
   arn string
   // Name of the endpoint
   name string
-  // Raw endpoint configuration
-  //
-  // Deprecated in favor of the endpointConfig field, which resolves the same
-  // configuration as a typed aws.sagemaker.endpointConfig resource with
-  // structured production variants, data capture, KMS key, network isolation,
-  // and VPC configuration.
-  config() @maturity("deprecated") dict
   // Endpoint configuration attached to this endpoint
   endpointConfig() aws.sagemaker.endpointConfig
   // Region where the endpoint exists
@@ -3570,18 +3449,8 @@ private aws.sagemaker.model @defaults("arn name") {
   enableNetworkIsolation() bool
   // IAM execution role for the model
   iamRole() aws.iam.role
-  // Primary container definition
-  //
-  // Deprecated in favor of the primaryContainerRef field, which resolves the
-  // primary container as a typed aws.sagemaker.model.container resource with
-  // the image, model data URL, and environment queryable directly.
-  primaryContainer() @maturity("deprecated") dict
   // Primary container the model serves inference from
   primaryContainerRef() aws.sagemaker.model.container
-  // Raw VPC configuration dict
-  //
-  // Deprecated in favor of the vpc field.
-  vpcConfig() @maturity("deprecated") dict
   // VPC associated with this model
   vpc() aws.vpc
   // Security groups attached to the model's VPC configuration
@@ -3655,10 +3524,6 @@ private aws.sagemaker.trainingjob @defaults("arn name status") {
   failureReason() string
   // Billable time in seconds
   billableTimeInSeconds() int
-  // Raw VPC configuration dict
-  //
-  // Deprecated in favor of the vpc field.
-  vpcConfig() @maturity("deprecated") dict
   // VPC associated with this training job
   vpc() aws.vpc
   // Input data channels the training job consumed
@@ -3780,10 +3645,6 @@ private aws.sagemaker.processingjob @defaults("arn name status") {
   enableNetworkIsolation() bool
   // Whether inter-container traffic encryption is enabled
   enableInterContainerTrafficEncryption() bool
-  // Raw VPC configuration dict
-  //
-  // Deprecated in favor of the vpc field.
-  vpcConfig() @maturity("deprecated") dict
   // VPC associated with this processing job
   vpc() aws.vpc
   // Processing resources configuration
@@ -5953,10 +5814,6 @@ private aws.es.domain @defaults("arn name") {
   customEndpointEnabled bool
   // Custom endpoint hostname for the domain
   customEndpoint string
-  // ACM certificate ARN for the custom endpoint
-  //
-  // Deprecated in favor of `customEndpointCertificate`.
-  customEndpointCertificateArn @maturity("deprecated") string
   // ACM certificate for the custom endpoint
   customEndpointCertificate() aws.acm.certificate
   // VPC the domain is deployed into
@@ -6021,10 +5878,6 @@ private aws.es.domain @defaults("arn name") {
   cognitoUserPoolId string
   // Cognito identity pool ID for Kibana authentication
   cognitoIdentityPoolId string
-  // ARN of the IAM role granting Elasticsearch access to Cognito resources
-  //
-  // Deprecated in favor of `cognitoRole`.
-  cognitoRoleArn @maturity("deprecated") string
   // IAM role granting Elasticsearch access to Cognito resources
   cognitoRole() aws.iam.role
   // State of Auto-Tune for the domain
@@ -6106,10 +5959,6 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   endpoint string
   // Whether encryption at rest is enabled
   encryptionAtRestEnabled bool
-  // KMS key ID for encryption at rest
-  //
-  // Deprecated in favor of `encryptionAtRestKmsKey()`.
-  encryptionAtRestKmsKeyId @maturity("deprecated") string
   // KMS key used for encryption at rest
   encryptionAtRestKmsKey() aws.kms.key
   // Whether node-to-node encryption is enabled
@@ -6146,10 +5995,6 @@ private aws.opensearch.domain @defaults("name engineVersion") {
   ebsIops int
   // EBS throughput
   ebsThroughput int
-  // VPC ID if the domain is in a VPC
-  //
-  // Deprecated in favor of `vpc()`.
-  vpcId @maturity("deprecated") string
   // VPC associated with the domain
   vpc() aws.vpc
   // Whether outbound traffic from the domain is routed through the customer VPC
@@ -6801,10 +6646,6 @@ private aws.elb.listener @defaults("arn port protocol") {
   arn string
   // Load balancer this listener belongs to
   loadBalancer() aws.elb.loadbalancer
-  // ARN of the load balancer this listener belongs to
-  //
-  // Deprecated in favor of `loadBalancer()`.
-  loadBalancerArn @maturity("deprecated") string
   // Port on which the listener listens
   port int
   // Protocol for connections from clients to the load balancer (HTTP, HTTPS, TCP, TLS, UDP, TCP_UDP, GENEVE)
@@ -7222,10 +7063,6 @@ private aws.codepipeline.pipeline @defaults("arn name pipelineType region") {
   pipelineType string
   // Execution mode: QUEUED, SUPERSEDED, or PARALLEL
   executionMode string
-  // ARN of the IAM service role CodePipeline uses to execute actions
-  //
-  // Deprecated in favor of `role`.
-  roleArn @maturity("deprecated") string
   // IAM service role CodePipeline uses to execute actions
   role() aws.iam.role
   // Single-region artifact store
@@ -7343,10 +7180,6 @@ private aws.codeartifact.domain @defaults("arn name owner status region") {
   repositoryCount int
   // Total size in bytes of all package assets in the domain
   assetSizeBytes int
-  // ARN of the S3 bucket that stores package assets for the domain
-  //
-  // Deprecated in favor of `s3Bucket`.
-  s3BucketArn @maturity("deprecated") string
   // S3 bucket that stores package assets for the domain
   s3Bucket() aws.s3.bucket
   // Resource policy attached to the domain
@@ -7432,10 +7265,6 @@ private aws.guardduty.detector @defaults("id region") {
   region string
   // Status of the detector: ENABLED or DISABLED
   status() string
-  // Raw feature configurations dict list
-  //
-  // Deprecated in favor of `featureConfigurations`.
-  features() @maturity("deprecated") []dict
   // Typed feature configurations for the detector
   featureConfigurations() []aws.guardduty.detector.feature
   // Tags for the detector
@@ -8223,16 +8052,6 @@ private aws.securityhub.hub @defaults("arn region") {
   subscribedAt string
   // Region where the Security Hub is enabled
   region string
-  // Raw list of enabled security standards
-  //
-  // Deprecated in favor of standardSubscriptions, which resolves each
-  // subscription with its control details. Each dict mirrors the
-  // standards-subscription shape, with keys including `StandardsArn`,
-  // `StandardsSubscriptionArn`, `StandardsStatus` (one of PENDING, READY,
-  // FAILED, DELETING, or INCOMPLETE), and `StandardsInput`. Examples of
-  // standards include CIS AWS Foundations, PCI DSS, and AWS Foundational
-  // Security Best Practices.
-  enabledStandards() @maturity("deprecated") []dict
   // Typed standard subscriptions with control details
   standardSubscriptions() []aws.securityhub.standardSubscription
   // Active findings (non-archived) in this hub
@@ -8298,10 +8117,6 @@ private aws.securityhub.finding @defaults("title severity workflowStatus") {
   description string
   // Normalized severity label: CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
   severity string
-  // Legacy normalized severity score (0-100 integer)
-  //
-  // Deprecated in favor of the `severity` label.
-  severityNormalized @maturity("deprecated") int
   // Record state: ACTIVE, ARCHIVED
   recordState string
   // Compliance status: PASSED, FAILED, WARNING, NOT_AVAILABLE
@@ -8456,23 +8271,10 @@ private aws.shield.subscription @defaults("arn startTime") {
   startTime time
   // End time of the subscription
   endTime time
-  // Time period remaining in the subscription in days (truncated from seconds)
-  //
-  // Deprecated in favor of `lengthInSeconds`.
-  timeCommitmentInDays @maturity("deprecated") int
   // Length of the subscription period in seconds (raw value from TimeCommitmentInSeconds)
   lengthInSeconds int
-  // Auto-renew status as a string enum (ENABLED or DISABLED)
-  //
-  // Deprecated in favor of `autoRenewEnabled`.
-  autoRenew @maturity("deprecated") string
   // Whether auto-renew is enabled
   autoRenewEnabled bool
-  // Legacy per-type list of {Type, Max} dicts
-  //
-  // Deprecated in favor of `protectedResourceTypeLimits`,
-  // `maxProtectionGroups`, and `maxArbitraryPatternMembers`.
-  limits @maturity("deprecated") []dict
   // Per-protected-resource-type protection limits, keyed by resource type with the maximum protection count as the value
   protectedResourceTypeLimits map[string]int
   // Maximum number of protection groups allowed in the subscription
@@ -8495,13 +8297,6 @@ private aws.shield.protection @defaults("arn name resourceArn") {
   resourceArn string
   // Route 53 health check IDs associated with the protection
   healthCheckIds []string
-  // Raw application-layer automatic response configuration dict
-  //
-  // Keyed by Status (ENABLED or DISABLED) and Action (a nested object holding
-  // either Block or Count). Deprecated in favor of
-  // `applicationLayerAutomaticResponseEnabled` and
-  // `applicationLayerAutomaticResponseAction`.
-  applicationLayerAutomaticResponseConfiguration @maturity("deprecated") dict
   // Whether automatic application-layer DDoS mitigation is enabled for the protection
   applicationLayerAutomaticResponseEnabled bool
   // WAF rule action used by automatic application-layer mitigation (BLOCK or COUNT; empty when not configured)
@@ -8639,10 +8434,6 @@ private aws.secretsmanager.secret.replicaRegion @defaults("region status") {
   status string
   // Status message (additional details about the replication status)
   statusMessage string
-  // KMS key ID used for encryption in this region
-  //
-  // Deprecated in favor of `kmsKey()`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used for encryption in this region
   kmsKey() aws.kms.key
   // Last date the replica was accessed
@@ -8990,10 +8781,6 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
   clusterName string
   // Task definition associated with the ECS container
   taskDefinition() aws.ecs.taskDefinition
-  // ARN for the task definition associated with the ECS container
-  //
-  // Deprecated in favor of `taskDefinition()`.
-  taskDefinitionArn @maturity("deprecated") string
   // logDriver setting for the ECS container
   logDriver string
   // Platform family associated with the ECS container
@@ -9008,10 +8795,6 @@ private aws.ecs.container @defaults("containerName runtimeId clusterName region"
   command []string
   // Task used to create the container
   task() aws.ecs.task
-  // ARN for the task used to create the container
-  //
-  // Deprecated in favor of `task()`.
-  taskArn @maturity("deprecated") string
   // Runtime ID for the container
   runtimeId string
   // Name of the ECS container
@@ -9109,10 +8892,6 @@ private aws.ecs.service @defaults("arn name launchType status") {
   name string
   // Cluster the service belongs to
   cluster() aws.ecs.cluster
-  // ARN of the cluster the service belongs to
-  //
-  // Deprecated in favor of `cluster()`.
-  clusterArn @maturity("deprecated") string
   // Status of the service
   status string
   // Desired number of tasks for the service
@@ -9191,16 +8970,8 @@ private aws.ecs.taskSet @defaults("arn status taskDefinition launchType") {
   id string
   // Cluster the task set belongs to
   cluster() aws.ecs.cluster
-  // ARN of the cluster the task set belongs to
-  //
-  // Deprecated in favor of `cluster()`.
-  clusterArn @maturity("deprecated") string
   // Service the task set belongs to
   service() aws.ecs.service
-  // ARN of the service the task set belongs to
-  //
-  // Deprecated in favor of `service()`.
-  serviceArn @maturity("deprecated") string
   // Status of the task set (PRIMARY, ACTIVE, DRAINING)
   status string
   // ARN of the task definition used by the task set
@@ -9421,10 +9192,6 @@ private aws.ecs.taskDefinition.volume {
 
 // Amazon ECS Task Definition Volume EFS Configuration
 private aws.ecs.taskDefinition.volume.efsVolumeConfiguration {
-  // ID of the EFS file system
-  //
-  // Deprecated in favor of `fileSystem`.
-  fileSystemId @maturity("deprecated") string
   // EFS file system this volume mounts
   fileSystem() aws.efs.filesystem
   // Directory within the EFS file system to mount
@@ -9870,20 +9637,10 @@ private aws.eventbridge.rule @defaults("arn name state") {
   eventPattern string
   // Schedule expression (cron or rate)
   scheduleExpression string
-  // ARN of the IAM role associated with the rule
-  //
-  // Deprecated in favor of `iamRole`.
-  roleArn @maturity("deprecated") string
   // IAM role associated with the rule
   iamRole() aws.iam.role
   // Tags for the rule
   tags() map[string]string
-  // Raw target records for this rule
-  //
-  // Deprecated in favor of eventTargets, which exposes each target as a
-  // structured resource with typed references to its destination role and
-  // dead-letter queue.
-  targets() @maturity("deprecated") []dict
   // Targets that matched events are delivered to
   eventTargets() []aws.eventbridge.rule.target
 }
@@ -10143,10 +9900,6 @@ private aws.eventbridge.endpoint @defaults("arn name state") {
   // replicated from the primary to the secondary Region; a `roleArn`
   // with permission to put events on the secondary bus is required.
   replicationConfig dict
-  // ARN of the IAM role used to replicate events to the secondary Region
-  //
-  // Deprecated in favor of `iamRole`.
-  roleArn @maturity("deprecated") string
   // IAM role used to replicate events to the secondary Region
   iamRole() aws.iam.role
   // Time the endpoint was created
@@ -10684,10 +10437,6 @@ private aws.eventbridge.schedule.target @defaults("targetType arn") {
   // Raw target ARN
   arn string
   // IAM role assumed when invoking the target
-  //
-  // Deprecated in favor of `iamRole`.
-  roleArn @maturity("deprecated") string
-  // IAM role assumed when invoking the target
   iamRole() aws.iam.role
   // Target.Input payload sent to the target. WARNING: may contain sensitive data. Audit carefully for credentials, tokens, or PII.
   input string
@@ -10729,16 +10478,8 @@ private aws.eventbridge.schedule.target.ecsParameters @defaults("launchType task
   propagateTags string
   // Reference ID for tracking
   referenceId string
-  // Subnet IDs the task ENI is placed in
-  //
-  // Deprecated in favor of `subnets`.
-  subnetIds @maturity("deprecated") []string
   // Subnets the task ENI is placed in
   subnets() []aws.vpc.subnet
-  // Security group IDs attached to the task ENI
-  //
-  // Deprecated in favor of `securityGroups`.
-  securityGroupIds @maturity("deprecated") []string
   // Security groups attached to the task ENI
   securityGroups() []aws.ec2.securitygroup
   // Whether the task ENI is assigned a public IP: ENABLED or DISABLED. Audit signal.
@@ -11112,10 +10853,6 @@ private aws.cloudwatch.loggroup.subscriptionfilter @defaults("filterName destina
   firehoseDeliveryStream() aws.kinesis.firehoseDeliveryStream
   // IAM role used to write to the destination
   iamRole() aws.iam.role
-  // ARN of the IAM role used to write to the destination
-  //
-  // Deprecated in favor of `iamRole()`.
-  roleArn @maturity("deprecated") string
   // Method used to distribute log data to the destination (Random, ByLogStream)
   distribution string
   // Whether the filter is applied on transformed log events
@@ -11802,10 +11539,6 @@ private aws.cloudhsm.hsm @defaults("hsmId state availabilityZone") {
   availabilityZone string
   // HSM instance type
   hsmType string
-  // ID of the elastic network interface attached to the HSM
-  //
-  // Deprecated in favor of `networkInterface`.
-  eniId @maturity("deprecated") string
   // Elastic network interface attached to the HSM
   networkInterface() aws.ec2.networkinterface
   // Private IP address of the HSM's elastic network interface
@@ -11899,31 +11632,10 @@ private aws.cloudtrail.trail @defaults("name region") {
   s3bucket() aws.s3.bucket
   // SNS topic the trail uses to send notifications
   snsTopic() aws.sns.topic
-  // ARN of the SNS topic the trail uses to send notifications
-  //
-  // Deprecated in favor of `snsTopic`.
-  snsTopicARN @maturity("deprecated") string
-  // Raw status dict for the trail
-  //
-  // Deprecated in favor of individual status fields like `isLogging`,
-  // `latestDeliveryTime`, etc.
-  status() @maturity("deprecated") dict
   // Log group where trail files are delivered
   logGroup() aws.cloudwatch.loggroup
   // IAM role for the logs endpoint to assume when writing to log group
   cloudWatchLogsRole() aws.iam.role
-  // ARN of the IAM role for the logs endpoint
-  //
-  // Deprecated in favor of `cloudWatchLogsRole`.
-  cloudWatchLogsRoleArn @maturity("deprecated") string
-  // ARN of the CloudWatch Logs log group used by the trail
-  //
-  // Deprecated in favor of `logGroup`.
-  cloudWatchLogsLogGroupArn @maturity("deprecated") string
-  // Raw list of event selectors configured for the trail
-  //
-  // Deprecated in favor of `eventSelectorEntries`.
-  eventSelectors() @maturity("deprecated") []dict
   // Typed event selector configuration for the trail
   eventSelectorEntries() []aws.cloudtrail.trail.eventSelector
   // Whether the trail logs all management events
@@ -11937,10 +11649,6 @@ private aws.cloudtrail.trail @defaults("name region") {
   region string
   // Whether CloudTrail Insights is enabled for the trail (detects unusual API activity)
   hasInsightSelectors bool
-  // Raw list of insight selectors configured for the trail
-  //
-  // Deprecated in favor of `insightSelectorEntries`.
-  insightSelectors() @maturity("deprecated") []dict
   // Typed insight selector configuration for the trail
   insightSelectorEntries() []aws.cloudtrail.trail.insightSelector
   // Whether custom event selectors are configured (enables data event logging for S3/Lambda/DynamoDB)
@@ -11964,30 +11672,14 @@ private aws.cloudtrail.trail @defaults("name region") {
   managedBy() string
   // Time of the most recent delivery of log files to the trail's S3 bucket
   latestDeliveredAt() time
-  // Time of the most recent delivery of log files to the trail's S3 bucket
-  //
-  // Deprecated in favor of `latestDeliveredAt`.
-  latestDeliveryTime() @maturity("deprecated") time
   // Time of the most recent notification sent to the trail's SNS topic
   latestNotifiedAt() time
-  // Time of the most recent notification sent to the trail's SNS topic
-  //
-  // Deprecated in favor of `latestNotifiedAt`.
-  latestNotificationTime() @maturity("deprecated") time
   // Time of the most recent log delivery to CloudWatch Logs
   latestCloudWatchLogsDeliveredAt() time
-  // Time of the most recent log delivery to CloudWatch Logs
-  //
-  // Deprecated in favor of `latestCloudWatchLogsDeliveredAt`.
-  latestCloudWatchLogsDeliveryTime() @maturity("deprecated") time
   // Most recent error message from delivering log files to S3
   latestDeliveryError() string
   // Time of the most recent digest file delivery to the trail's S3 bucket
   latestDigestDeliveredAt() time
-  // Time of the most recent digest file delivery to the trail's S3 bucket
-  //
-  // Deprecated in favor of `latestDigestDeliveredAt`.
-  latestDigestDeliveryTime() @maturity("deprecated") time
   // Time of the most recent delivery attempt to S3 (string-formatted timestamp from AWS legacy API)
   latestDeliveryAttemptedAt() string
   // Timestamp of the most recent successful log file delivery attempt to S3 (string-formatted, or empty if there has been no successful delivery)
@@ -12201,10 +11893,6 @@ private aws.s3.bucket @defaults("name location public") {
   // `TargetPrefix` (the key prefix applied to log objects). Empty when server
   // access logging is disabled.
   logging() map[string]string
-  // Static website hosting configuration for the bucket
-  //
-  // Deprecated in favor of `website`.
-  staticWebsiteHosting() @maturity("deprecated") map[string]string
   // Website configuration for the bucket
   website() aws.s3.bucket.websiteConfiguration
   // Object Lock enablement state of the bucket
@@ -12218,10 +11906,6 @@ private aws.s3.bucket @defaults("name location public") {
   // raw replication rules). See `replicationRules` for the same rules resolved
   // to typed records.
   replication() dict
-  // Bucket default encryption configuration
-  //
-  // Deprecated in favor of encryptionRules, encrypted, and kmsKey.
-  encryption() @maturity("deprecated") dict
   // Typed encryption rules for the bucket
   encryptionRules() []aws.s3.bucket.encryptionRule
   // Whether default server-side encryption is configured on the bucket
@@ -12424,10 +12108,6 @@ private aws.s3.bucket.replicationRule @defaults("id status") {
   destinationStorageClass string
   // Whether delete marker replication is enabled
   deleteMarkerReplicationEnabled bool
-  // Legacy prefix filter (retained because AWS still returns it on existing rules)
-  //
-  // Deprecated in favor of the `filter` configuration.
-  prefix @maturity("deprecated") string
 }
 
 // Amazon S3 bucket metrics configuration
@@ -12451,10 +12131,6 @@ private aws.s3.bucket.lifecycleRule @defaults("resourceId id status") {
   id string
   // Status of the rule: Enabled or Disabled
   status string
-  // Legacy prefix filter for the rule
-  //
-  // Deprecated in favor of `filter`.
-  prefix @maturity("deprecated") string
   // Filter for the rule (prefix, tags, object size)
   filter dict
   // Transitions to different storage classes
@@ -12484,11 +12160,6 @@ private aws.s3.bucket.policy @defaults("bucketName version") {
   document string
   // Policy-language version of the document
   version() string
-  // List of statements for the policy
-  //
-  // Deprecated in favor of aws.s3.bucket.policyStatements, which resolves each
-  // statement to a typed aws.iam.policyStatement.
-  statements() @maturity("deprecated") []dict
 }
 
 // Amazon S3 bucket static-website hosting configuration
@@ -12778,10 +12449,6 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   stagingArea dict
   // Replication direction: FAILOVER_AND_FAILBACK or ONE_WAY
   replicationDirection string
-  // ID of the recovery instance launched from this source server
-  //
-  // Deprecated in favor of `recoveryInstance`.
-  recoveryInstanceId @maturity("deprecated") string
   // Recovery instance launched from this source server
   recoveryInstance() aws.drs.recoveryInstance
   // Resource tags
@@ -12966,10 +12633,6 @@ private aws.drs.replicationConfigurationTemplate @defaults("replicationConfigura
 private aws.drs.replicationConfiguration @defaults("sourceServerID") {
   // Associated source server ID
   sourceServerID string
-  // Staging area subnet ID
-  //
-  // Deprecated in favor of `stagingAreaSubnet`.
-  stagingAreaSubnetId @maturity("deprecated") string
   // Subnet used for the replication staging area
   stagingAreaSubnet() aws.vpc.subnet
   // Staging area tags
@@ -12982,10 +12645,6 @@ private aws.drs.replicationConfiguration @defaults("sourceServerID") {
   ebsEncryption string
   // Custom KMS key for EBS encryption
   ebsEncryptionKey() aws.kms.key
-  // ARN of the custom KMS key for EBS encryption
-  //
-  // Deprecated in favor of `ebsEncryptionKey`.
-  ebsEncryptionKeyArn @maturity("deprecated") string
   // Disk replication configuration
   //
   // Each disk has keys: DeviceName, IsBootDisk, StagingDiskType,
@@ -13125,10 +12784,6 @@ private aws.backup.vault @defaults("name region") {
   lockedAt time
   // Encryption key for the vault
   encryptionKey() aws.kms.key
-  // ARN of the encryption key
-  //
-  // Deprecated in favor of `encryptionKey()`.
-  encryptionKeyArn @maturity("deprecated") string
   // The maximum retention period that the vault retains its recovery points
   maxRetentionDays int
   // The minimum retention period that the vault retains its recovery points
@@ -13165,10 +12820,6 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   createdBy dict
   // IAM role used to create the recovery point
   iamRole() aws.iam.role
-  // ARN of the IAM role used to create the recovery point
-  //
-  // Deprecated in favor of `iamRole()`.
-  iamRoleArn @maturity("deprecated") string
   // Status of the recovery point
   status string
   // Date the recovery point was created
@@ -13177,10 +12828,6 @@ private aws.backup.vaultRecoveryPoint @defaults("resourceType completionDate sta
   completionDate time
   // Encryption key for the recovery point
   encryptionKey() aws.kms.key
-  // ARN of the key used to encrypt the recovery point
-  //
-  // Deprecated in favor of `encryptionKey()`.
-  encryptionKeyArn @maturity("deprecated") string
   // Whether the recovery point is encrypted
   isEncrypted bool
   // Backup access points exposing this recovery point through S3 APIs
@@ -13229,11 +12876,6 @@ private aws.backup.plan @defaults("name region") {
   rules() []aws.backup.plan.rule
   // Advanced backup settings for the plan
   advancedBackupSettings []aws.backup.plan.advancedBackupSetting
-  // Backup selection summaries (selection ID, name, and IAM role)
-  //
-  // Deprecated in favor of `resourceSelections`, which additionally exposes
-  // the assigned resource ARNs, exclusions, and tag-based conditions.
-  selections() @maturity("deprecated") []dict
   // Resource selections that assign resources to this backup plan
   resourceSelections() []aws.backup.plan.selection
 
@@ -13318,15 +12960,11 @@ private aws.backup.plan.rule @defaults("ruleName targetBackupVaultName") {
 }
 
 // AWS Backup plan rule copy action
-private aws.backup.plan.rule.copyAction @defaults("destinationBackupVaultArn") {
+private aws.backup.plan.rule.copyAction @defaults("id") {
   // Unique identifier
   id string
   // Destination backup vault
   destinationVault() aws.backup.vault
-  // ARN of the destination backup vault
-  //
-  // Deprecated in favor of `destinationVault()`.
-  destinationBackupVaultArn @maturity("deprecated") string
   // Number of days after creation that a recovery point is deleted
   deleteAfterDays int
   // Number of days after creation that a recovery point is moved to cold storage
@@ -14271,10 +13909,6 @@ aws.rds.dbinstance @defaults("id region engine engineVersion") {
 
 // IAM role associated with an RDS DB instance for accessing other AWS services
 private aws.rds.dbinstance.associatedRole @defaults("featureName status") {
-  // ARN of the IAM role
-  //
-  // Deprecated in favor of `iamRole`.
-  roleArn @maturity("deprecated") string
   // IAM role attached to the DB instance
   iamRole() aws.iam.role
   // Feature the role is associated with (e.g., s3Import, s3Export, Lambda)
@@ -14722,10 +14356,6 @@ private aws.elasticache.serverlessCache @defaults("name description status engin
   engineVersion string
   // Version number of the engine with which the serverless cache is compatible
   majorEngineVersion string
-  // ID of the Amazon Web Services Key Management Service (KMS) key
-  //
-  // Deprecated in favor of `kmsKey()`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used to encrypt the serverless cache
   kmsKey() aws.kms.key
   // A list of VPC security groups associated with the cluster
@@ -15010,12 +14640,6 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   preferredMaintenanceWindow string
   // Whether the cluster is publicly accessible
   publiclyAccessible bool
-  // Whether the cluster is reachable from the internet
-  //
-  // Deprecated in favor of exposure.internetReachable, which additionally
-  // accounts for whether an attached security group opens the cluster to the
-  // internet.
-  internetReachable() @maturity("deprecated") bool
   // Connection endpoint address for the cluster (empty when the cluster has no endpoint)
   endpointAddress string
   // Connection endpoint port for the cluster (0 when the cluster has no endpoint)
@@ -15030,10 +14654,6 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   region string
   // Tags for the cluster
   tags map[string]string
-  // ID of the VPC where the cluster is running
-  //
-  // Deprecated in favor of `vpc()`.
-  vpcId @maturity("deprecated") string
   // VPC where the cluster is running
   vpc() aws.vpc
   // Availability status (Available, Unavailable, Maintenance, Modifying)
@@ -15230,10 +14850,6 @@ private aws.redshift.eventSubscription @defaults("name status") {
   eventCategories []string
   // Event severity filter (ERROR or INFO)
   severity string
-  // ARN of the SNS topic for notifications
-  //
-  // Deprecated in favor of `snsTopic()`.
-  snsTopicArn @maturity("deprecated") string
   // SNS topic for notifications
   snsTopic() aws.sns.topic
   // List of source IDs the subscription applies to
@@ -15414,12 +15030,6 @@ private aws.route53.hostedZone @defaults("id name type isPrivate") {
   nameServers() []string
   // Query logging configuration, if enabled
   queryLoggingConfig() aws.route53.queryLoggingConfig
-  // DNSSEC signing status as a raw dict
-  //
-  // Deprecated in favor of `dnssec`. The typed
-  // `aws.route53.hostedZone.dnssec` resource exposes status, status
-  // message, and key signing keys together.
-  dnssecStatus() @maturity("deprecated") dict
   // DNSSEC signing posture and key signing keys for this zone
   //
   // Wraps `GetDNSSEC` so a single accessor returns both the signing status
@@ -15460,10 +15070,6 @@ private aws.route53.hostedZone.dnssec @defaults("status") {
 // describe how Route 53 chooses among records that share a name, and
 // `healthCheck` ties the record to its failover health check.
 private aws.route53.record @defaults("name type") {
-  // Hosted zone ID this record belongs to
-  //
-  // Deprecated in favor of `hostedZone`.
-  hostedZoneId @maturity("deprecated") string
   // Hosted zone this record belongs to
   hostedZone() aws.route53.hostedZone
   // Fully qualified domain name (e.g., www.example.com.)
@@ -15609,10 +15215,6 @@ private aws.route53.queryLoggingConfig @defaults("id hostedZoneId") {
   hostedZoneId string
   // CloudWatch Logs log group where queries are logged
   logGroup() aws.cloudwatch.loggroup
-  // CloudWatch Logs log group ARN where queries are logged
-  //
-  // Deprecated in favor of `logGroup()`.
-  cloudWatchLogsLogGroupArn @maturity("deprecated") string
   // Associated hosted zone
   hostedZone() aws.route53.hostedZone
 }
@@ -15626,10 +15228,6 @@ private aws.route53.queryLoggingConfig @defaults("id hostedZoneId") {
 private aws.route53.keySigningKey @defaults("name status") {
   // Name of the key signing key
   name string
-  // ARN of the KMS key used for signing
-  //
-  // Deprecated in favor of `kmsKey()`.
-  kmsArn @maturity("deprecated") string
   // Hosted zone ID
   hostedZoneId string
   // Flag value (always 257 for KSK)
@@ -15903,10 +15501,6 @@ private aws.route53.resolver.ruleAssociation @defaults("id name status") {
   resolverRuleId string
   // Associated resolver rule
   resolverRule() aws.route53.resolver.rule
-  // VPC ID the rule is associated with
-  //
-  // Deprecated in favor of `vpc`.
-  vpcId @maturity("deprecated") string
   // Associated VPC
   vpc() aws.vpc
   // Status of the association
@@ -16025,17 +15619,6 @@ private aws.route53.resolver.firewallRuleGroup @defaults("id name ruleCount stat
   modificationTime string
   // Caller-supplied request id used to create the rule group
   creatorRequestId string
-  // Ordered list of rules in the group as raw dicts
-  //
-  // Deprecated in favor of `firewallRules`, which returns typed
-  // `aws.route53.resolver.firewallRule` resources that also expose the
-  // rule classification (`firewallRuleType`), DNS threat protection
-  // settings, and a `firewallDomainList()` reference. Each dict entry has
-  // `name`, `priority`, `action` (`ALLOW`/`BLOCK`/`ALERT`),
-  // `blockResponse`, `blockOverrideDomain`, `blockOverrideDnsType`,
-  // `blockOverrideTtl`, `firewallDomainListId`, `qtype`, `creationTime`,
-  // and `modificationTime`.
-  rules() @maturity("deprecated") []dict
   // Ordered list of rules in the group
   firewallRules() []aws.route53.resolver.firewallRule
 }
@@ -16126,10 +15709,6 @@ private aws.route53.resolver.firewallRuleGroupAssociation @defaults("id name sta
   firewallRuleGroupId string
   // Associated rule group
   firewallRuleGroup() aws.route53.resolver.firewallRuleGroup
-  // VPC ID the rule group is associated with
-  //
-  // Deprecated in favor of `vpc`.
-  vpcId @maturity("deprecated") string
   // Associated VPC
   vpc() aws.vpc
   // Evaluation priority among rule groups bound to the same VPC
@@ -16714,10 +16293,6 @@ private aws.apigateway.stage @defaults("arn") {
   clientCertificateId string
   // WAF web ACL associated with the stage
   webAcl() aws.waf.acl
-  // ARN of the WAF web ACL associated with the stage
-  //
-  // Deprecated in favor of `webAcl()`.
-  webAclArn @maturity("deprecated") string
   // Time when the stage was created
   createdAt time
   // Time when the stage was last updated
@@ -17281,10 +16856,6 @@ private aws.lambda.function @defaults("arn") {
   // scoping condition on `aws:SourceArn`, `aws:SourceAccount`, or
   // `aws:PrincipalOrgID`. False when the function has no resource policy.
   allowsPublicAccess() bool
-  // Raw VPC configuration for the Lambda function
-  //
-  // Deprecated in favor of `vpc()`, `subnets()`, and `securityGroups()`.
-  vpcConfig @maturity("deprecated") dict
   // VPC the Lambda function is connected to
   vpc() aws.vpc
   // Subnets the Lambda function is connected to
@@ -17347,10 +16918,6 @@ private aws.lambda.function @defaults("arn") {
   lastUpdateStatus string
   // Reason for the last update status
   lastUpdateStatusReason string
-  // KMS key ARN used to encrypt environment variables
-  //
-  // Deprecated in favor of `kmsKey()`.
-  kmsKeyArn @maturity("deprecated") string
   // KMS key used to encrypt environment variables
   kmsKey() aws.kms.key
   // Environment variables configured for the function
@@ -17549,10 +17116,6 @@ private aws.lambda.eventSourceMapping @defaults("uuid eventSourceArn") {
   eventSourceArn string
   // Lambda function for the event source mapping
   function() aws.lambda.function
-  // ARN of the Lambda function
-  //
-  // Deprecated in favor of `function()`.
-  functionArn @maturity("deprecated") string
   // Region where the event source mapping exists
   region string
   // State of the event source mapping: Creating, Enabling, Enabled, Disabling, Disabled, Updating, Deleting
@@ -18041,10 +17604,6 @@ private aws.vpc.natgateway {
 private aws.vpc.natgateway.address {
   // Allocation ID for the address
   allocationId string
-  // Network interface ID for the address
-  //
-  // Deprecated in favor of `networkInterface`.
-  networkInterfaceId @maturity("deprecated") string
   // Network interface associated with the address
   networkInterface() aws.ec2.networkinterface
   // Private IP associated with the address
@@ -18123,10 +17682,6 @@ private aws.vpc.peeringConnection.peeringVpc {
   region string
   // VPC associated with the peering connection (populated if it's in the same account)
   vpc() aws.vpc
-  // ID of the VPC associated with the peering connection
-  //
-  // Deprecated in favor of `vpc`.
-  vpcId @maturity("deprecated") string
 }
 
 // Amazon EC2 network ACL
@@ -18148,15 +17703,11 @@ private aws.ec2.networkacl @defaults("id region") {
 }
 
 // Association between an Amazon EC2 network ACL and a VPC subnet
-private aws.ec2.networkacl.association @defaults("associationId subnetId") {
+private aws.ec2.networkacl.association @defaults("associationId networkAclId") {
   // ID for the association
   associationId string
   // Network ACL ID for the association
   networkAclId string
-  // Subnet ID for the association
-  //
-  // Deprecated in favor of `subnet`.
-  subnetId @maturity("deprecated") string
   // Subnet associated with this network ACL
   subnet() aws.vpc.subnet
 }
@@ -18523,10 +18074,6 @@ private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   createdAt time
   // VPC associated with the Client VPN endpoint
   vpc() aws.vpc
-  // ARN of the server certificate
-  //
-  // Deprecated in favor of `serverCertificate`.
-  serverCertificateArn @maturity("deprecated") string
   // Server certificate presented by the endpoint
   serverCertificate() aws.acm.certificate
   // Transport protocol: tcp or udp
@@ -18584,10 +18131,6 @@ private aws.ec2.customerGateway @defaults("id state type") {
   bgpAsnExtended string
   // Public IP address of the customer gateway device
   ipAddress string
-  // ARN of the certificate for the customer gateway
-  //
-  // Deprecated in favor of `certificate`.
-  certificateArn @maturity("deprecated") string
   // Certificate associated with the customer gateway device
   certificate() aws.acm.certificate
   // Name of the customer gateway device
@@ -18672,7 +18215,7 @@ private aws.ec2.capacityReservation @defaults("id instanceType state availabilit
 }
 
 // Amazon EC2 Instance Connect endpoint
-private aws.ec2.instanceConnectEndpoint @defaults("id state subnetId") {
+private aws.ec2.instanceConnectEndpoint @defaults("id state") {
   // ID of the Instance Connect endpoint
   id string
   // ARN of the Instance Connect endpoint
@@ -18681,22 +18224,10 @@ private aws.ec2.instanceConnectEndpoint @defaults("id state subnetId") {
   region string
   // State: create-in-progress, create-complete, create-failed, delete-in-progress, delete-complete, delete-failed
   state string
-  // Subnet ID the endpoint is in
-  //
-  // Deprecated in favor of `subnet`.
-  subnetId @maturity("deprecated") string
   // Subnet the endpoint is in
   subnet() aws.vpc.subnet
-  // VPC ID the endpoint is in
-  //
-  // Deprecated in favor of `vpc`.
-  vpcId @maturity("deprecated") string
   // VPC the endpoint is in
   vpc() aws.vpc
-  // Security group IDs associated with the endpoint
-  //
-  // Deprecated in favor of `securityGroups`.
-  securityGroupIds @maturity("deprecated") []string
   // Security groups associated with the endpoint
   securityGroups() []aws.ec2.securitygroup
   // Whether the endpoint preserves client IP
@@ -18799,10 +18330,6 @@ private aws.ec2.launchconfiguration @defaults("name region") {
   name string
   // Region for the launch configuration
   region string
-  // AMI ID used by the launch configuration
-  //
-  // Deprecated in favor of `image`.
-  imageId @maturity("deprecated") string
   // AMI used by the launch configuration
   image() aws.ec2.image
   // Instance type
@@ -18847,10 +18374,6 @@ private aws.ec2.launchconfiguration.blockDeviceMapping @defaults("deviceName") {
 private aws.ec2.launchconfiguration.ebsBlockDevice @defaults("volumeSize volumeType encrypted") {
   // Whether the volume is encrypted
   encrypted bool
-  // ID of the snapshot used to create the volume
-  //
-  // Deprecated in favor of `snapshot`.
-  snapshotId @maturity("deprecated") string
   // Snapshot the volume is created from
   snapshot() aws.ec2.snapshot
   // Size of the volume in GiB
@@ -19031,10 +18554,6 @@ private aws.signer.signingProfile @defaults("profileName platformId status") {
   platformDisplayName string
   // Status of the signing profile: Active, Canceled, or Revoked
   status string
-  // Certificate ARN of the signing material used to sign artifacts
-  //
-  // Deprecated in favor of `signingMaterialCertificate`.
-  signingMaterialCertificateArn @maturity("deprecated") string
   // Certificate of the signing material used to sign artifacts
   signingMaterialCertificate() aws.acm.certificate
   // Validity period unit applied to generated signatures: DAYS, MONTHS, or YEARS
@@ -19475,10 +18994,6 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   // Image that was used for the instance
   image() aws.ec2.image
   // Launch time of the instance
-  //
-  // Deprecated in favor of `launchedAt`.
-  launchTime @maturity("deprecated") time
-  // Launch time of the instance
   launchedAt time
   // Private IP address for the instance
   privateIp string
@@ -19488,10 +19003,6 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   keypair() aws.ec2.keypair
   // Time when the last state transition occurred
   stateTransitionTime time
-  // ARN of the VPC the instance is in
-  //
-  // Deprecated in favor of `vpc`.
-  vpcArn @maturity("deprecated") string
   // Hypervisor type of the instance: ovm or xen
   hypervisor string
   // Hypervisor of the instance type: nitro or xen
@@ -19659,10 +19170,6 @@ private aws.ec2.keypair @defaults("name type region") {
 
 // Amazon EC2 image (AMI)
 private aws.ec2.image @defaults("ownerAlias id name") {
-  // Legacy ARN field
-  //
-  // Deprecated in favor of `id`. AMIs do not have ARNs.
-  arn @maturity("deprecated") string
   // ID of the image
   id string
   // Name for the image
@@ -19797,10 +19304,6 @@ private aws.ec2.image.ebsBlockDevice @defaults("volumeSize volumeType encrypted"
   volumeSize int
   // Volume type (gp2, gp3, io1, io2, etc.)
   volumeType string
-  // ARN of the KMS key for encryption
-  //
-  // Deprecated in favor of `kmsKey`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used for encryption
   kmsKey() aws.kms.key
   // IOPS for the volume
@@ -19835,15 +19338,11 @@ private aws.ec2.instance.exposure @defaults("internetReachable hasPublicIp inPub
 }
 
 // Amazon EC2 instance block device
-private aws.ec2.instance.device @defaults("deviceName volumeId status") {
+private aws.ec2.instance.device @defaults("deviceName status") {
   // Whether the volume should be deleted on instance termination
   deleteOnTermination bool
   // Status of the device
   status string
-  // Volume ID for the device
-  //
-  // Deprecated in favor of `volume`.
-  volumeId @maturity("deprecated") string
   // EBS volume backing the device
   volume() aws.ec2.volume
   // Name for the device
@@ -20110,10 +19609,6 @@ private aws.config.rule.remediation @defaults("targetType targetId") {
 private aws.config.recorder @defaults("name region") {
   // Name of the recorder
   name string
-  // ARN of the IAM role used to describe AWS resources for the account
-  //
-  // Deprecated in favor of `iamRole()`.
-  roleArn @maturity("deprecated") string
   // IAM role used to describe the AWS resources associated with the account
   iamRole() aws.iam.role
   // Whether the recorder records config changes for every supported type of regional resource
@@ -20144,10 +19639,6 @@ private aws.config.deliverychannel @defaults("name region") {
   s3KeyPrefix string
   // SNS topic that AWS Config delivers notifications to
   snsTopic() aws.sns.topic
-  // ARN of the SNS topic that AWS Config delivers notifications to
-  //
-  // Deprecated in favor of `snsTopic()`.
-  snsTopicARN @maturity("deprecated") string
   // Region for the delivery channel
   region string
   // Frequency at which AWS Config delivers configuration snapshots: One_Hour, Three_Hours, Six_Hours, Twelve_Hours, TwentyFour_Hours
@@ -20393,10 +19884,6 @@ aws.eks.cluster @defaults("arn version status") {
   platformVersion() string
   // Cluster status
   status() string
-  // Raw encryption configuration list for the cluster
-  //
-  // Deprecated in favor of `encryptionKmsKey()` and `encryptionResources()`.
-  encryptionConfig() @maturity("deprecated") []dict
   // KMS key used for envelope encryption of Kubernetes secrets
   encryptionKmsKey() aws.kms.key
   // Resource types encrypted with the KMS key (e.g., "secrets")
@@ -20420,11 +19907,6 @@ aws.eks.cluster @defaults("arn version status") {
   // making you responsible for ensuring the control plane can reach endpoints
   // such as webhook servers and OIDC providers.
   controlPlaneEgressMode() string
-  // Raw VPC configuration dict for the cluster resources
-  //
-  // Deprecated in favor of `vpc()`, `clusterSubnets()`,
-  // `clusterSecurityGroups()`, and `clusterSecurityGroup()`.
-  resourcesVpcConfig() @maturity("deprecated") dict
   // Cluster creation timestamp
   createdAt() time
   // List of EKS node groups
@@ -20564,10 +20046,6 @@ private aws.eks.fargateProfile @defaults("name status") {
   name string
   // Name of the EKS cluster
   clusterName string
-  // ARN of the pod execution role
-  //
-  // Deprecated in favor of `podExecutionRole()`.
-  podExecutionRoleArn() @maturity("deprecated") string
   // IAM role used for Fargate pod execution
   podExecutionRole() aws.iam.role
   // Selectors that determine which pods run on Fargate
@@ -20575,10 +20053,6 @@ private aws.eks.fargateProfile @defaults("name status") {
   // Each entry has `Namespace` and `Labels` (a map of label key-value pairs);
   // a pod must match the namespace and all labels to run on the profile.
   selectors() []dict
-  // Subnet IDs for the Fargate profile
-  //
-  // Deprecated in favor of `fargateSubnets()`.
-  subnets() @maturity("deprecated") []string
   // Subnets associated with the Fargate profile
   fargateSubnets() []aws.vpc.subnet
   // Status of the Fargate profile: CREATING, ACTIVE, DELETING, CREATE_FAILED, DELETE_FAILED
@@ -20603,10 +20077,6 @@ private aws.eks.podIdentityAssociation @defaults("associationId namespace servic
   namespace() string
   // Kubernetes service account name
   serviceAccount() string
-  // ARN of the IAM role to assume
-  //
-  // Deprecated in favor of `iamRole()`.
-  roleArn() @maturity("deprecated") string
   // IAM role associated with the pod identity
   iamRole() aws.iam.role
   // Region where the cluster exists
@@ -20753,10 +20223,6 @@ private aws.neptune.cluster @defaults("arn name status") {
   engine string
   // Database engine version
   engineVersion string
-  // Amazon KMS key identifier for the encrypted DB cluster
-  //
-  // Deprecated in favor of `kmsKey()`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used to encrypt the DB cluster
   kmsKey() aws.kms.key
   // Region where the cluster exists
@@ -20870,10 +20336,6 @@ private aws.neptune.instance @defaults("arn name status"){
   iamDatabaseAuthenticationEnabled bool
   // Time when the instance was created
   createdAt time
-  // Amazon KMS key identifier for the encrypted DB instance
-  //
-  // Deprecated in favor of `kmsKey()`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used to encrypt the DB instance
   kmsKey() aws.kms.key
   // Latest time to which a database can be restored
@@ -20884,10 +20346,6 @@ private aws.neptune.instance @defaults("arn name status"){
   monitoringInterval int
   // IAM role that permits Neptune to send Enhanced Monitoring metrics to Amazon CloudWatch Logs
   monitoringRole() aws.iam.role
-  // ARN for the IAM role that permits Neptune to send Enhanced Monitoring metrics to CloudWatch Logs
-  //
-  // Deprecated in favor of `monitoringRole()`.
-  monitoringRoleArn @maturity("deprecated") string
   // Whether the instance is a Multi-AZ deployment
   multiAZ bool
   // Daily time range during which automated backups are created
@@ -21388,11 +20846,6 @@ private aws.documentdb.instance @defaults("arn name status") {
   status string
   // List of log types that this DB instance is configured to export to CloudWatch logs
   enabledCloudwatchLogsExports []string
-  // Legacy endpoint dict
-  //
-  // Deprecated in favor of `endpointAddress`, `endpointPort`, and
-  // `endpointHostedZoneId`.
-  endpoint @maturity("deprecated") dict
   // DNS address of the connection endpoint
   endpointAddress string
   // Port on which the database engine is listening
@@ -21682,10 +21135,6 @@ private aws.timestream.liveanalytics.database @defaults("name region") {
   arn string
   // Name of the database
   name string
-  // KMS key ID used to encrypt the data stored in the database
-  //
-  // Deprecated in favor of `kmsKey()`.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used to encrypt the data stored in the database
   kmsKey() aws.kms.key
   // Region where the database exists
@@ -21792,10 +21241,6 @@ private aws.codedeploy.deploymentGroup @defaults("deploymentGroupName computePla
   computePlatform string
   // Service role for the deployment group
   serviceRole() aws.iam.role
-  // Service role ARN for the deployment group
-  //
-  // Deprecated in favor of `serviceRole()`.
-  serviceRoleArn @maturity("deprecated") string
   // Application revision most recently targeted for deployment
   //
   // Location of the revision. The `RevisionType` key selects the source (S3,
@@ -21874,10 +21319,6 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
   createdAt time
   // Time the deployment was completed
   completedAt time
-  // Legacy completion timestamp (typo-named alias)
-  //
-  // Deprecated in favor of `completedAt`.
-  compleatedAt @maturity("deprecated") time
   // Description of the deployment
   description string
   // Creator of the deployment (user, autoscaling, codeDeployRollback, etc.)
@@ -22129,10 +21570,6 @@ private aws.appstream.fleet @defaults("name state fleetType region") {
   securityGroups() []aws.ec2.securitygroup
   // IAM role applied to the fleet
   iamRole() aws.iam.role
-  // ARN of the IAM role applied to the fleet
-  //
-  // Deprecated in favor of `iamRole()`.
-  iamRoleArn @maturity("deprecated") string
   // Name of the image used to create the fleet
   imageName string
   // ARN of the image used to create the fleet
@@ -22294,10 +21731,6 @@ private aws.appstream.imageBuilder @defaults("name state platform region") {
   vpcConfig dict
   // IAM role applied to the image builder
   iamRole() aws.iam.role
-  // ARN of the IAM role applied to the image builder
-  //
-  // Deprecated in favor of `iamRole()`.
-  iamRoleArn @maturity("deprecated") string
   // Elastic network interface configuration
   //
   // Dict with keys `EniId` (the network interface attached to the image
@@ -22432,10 +21865,6 @@ private aws.appstream.session @defaults("id userId state fleetName stackName") {
   startTime time
   // Time when the session is set to expire (per the fleet's max-user-duration)
   maxExpirationTime time
-  // ENI ID for the session network access (VPC-enabled fleets only)
-  //
-  // Deprecated in favor of `networkInterface`.
-  eniId @maturity("deprecated") string
   // Network interface for the session network access (VPC-enabled fleets only)
   networkInterface() aws.ec2.networkinterface
   // Private IP address attached to the session ENI (VPC-enabled fleets only)
@@ -22876,11 +22305,6 @@ private aws.athena.workgroup @defaults("name state region") {
   // `EffectiveEngineVersion` (the version actually running, resolved from
   // the selection when the requested version is "AUTO").
   engineVersion() dict
-  // Query result configuration
-  //
-  // Deprecated in favor of resultOutputLocation, encrypted,
-  // resultEncryptionOption, and kmsKey.
-  resultConfiguration() @maturity("deprecated") dict
   // Amazon S3 location where query and calculation results are stored
   resultOutputLocation() string
   // Whether query results are encrypted at rest in Amazon S3
@@ -22954,10 +22378,6 @@ private aws.athena.namedQuery @defaults("name database region") {
   queryString string
   // Description of the named query
   description string
-  // Workgroup name the named query belongs to
-  //
-  // Deprecated in favor of queryWorkgroup.
-  workGroup @maturity("deprecated") string
   // Workgroup the named query belongs to
   queryWorkgroup() aws.athena.workgroup
   // Region where the named query exists
@@ -23121,23 +22541,11 @@ private aws.directoryservice.radiusSettings @defaults("authenticationProtocol ra
 }
 
 // VPC settings for a Directory Service directory
-private aws.directoryservice.vpcSettings @defaults("vpcId securityGroupId") {
-  // Identifier of the VPC
-  //
-  // Deprecated in favor of `vpc()`.
-  vpcId @maturity("deprecated") string
+private aws.directoryservice.vpcSettings @defaults("availabilityZones") {
   // VPC for the directory
   vpc() aws.vpc
-  // Identifier of the security group for the directory
-  //
-  // Deprecated in favor of `securityGroup()`.
-  securityGroupId @maturity("deprecated") string
   // Security group for the directory
   securityGroup() aws.ec2.securitygroup
-  // Identifiers of the subnets for the directory
-  //
-  // Deprecated in favor of `subnets()`.
-  subnetIds @maturity("deprecated") []string
   // Subnets for the directory
   subnets() []aws.vpc.subnet
   // Availability zones of the directory
@@ -23145,23 +22553,11 @@ private aws.directoryservice.vpcSettings @defaults("vpcId securityGroupId") {
 }
 
 // AD Connector settings for a Directory Service directory
-private aws.directoryservice.connectSettings @defaults("vpcId customerUserName") {
-  // Identifier of the VPC
-  //
-  // Deprecated in favor of `vpc()`.
-  vpcId @maturity("deprecated") string
+private aws.directoryservice.connectSettings @defaults("customerUserName") {
   // VPC for the directory
   vpc() aws.vpc
-  // Identifier of the security group for the directory
-  //
-  // Deprecated in favor of `securityGroup()`.
-  securityGroupId @maturity("deprecated") string
   // Security group for the directory
   securityGroup() aws.ec2.securitygroup
-  // Identifiers of the subnets for the directory
-  //
-  // Deprecated in favor of `subnets()`.
-  subnetIds @maturity("deprecated") []string
   // Subnets for the directory
   subnets() []aws.vpc.subnet
   // Availability zones of the directory
@@ -23255,10 +22651,6 @@ private aws.workspaces.directory @defaults("directoryId directoryName state regi
   selfservicePermissions dict
   // IAM role identifier
   iamRoleId string
-  // Subnet identifiers
-  //
-  // Deprecated in favor of `subnets`.
-  subnetIds @maturity("deprecated") []string
   // Subnets the directory uses
   subnets() []aws.vpc.subnet
   // Which WorkSpaces clients users may connect from
@@ -23336,28 +22728,12 @@ private aws.workspacesweb.portal @defaults("displayName portalStatus region") {
   browserSettingsArn string
   // Associated network settings ARN
   networkSettingsArn string
-  // ARN of the associated user settings
-  //
-  // Deprecated in favor of `userSettings`.
-  userSettingsArn @maturity("deprecated") string
   // User session and browser settings applied to this portal; null if not configured
   userSettings() aws.workspacesweb.userSetting
-  // ARN of the associated trust store
-  //
-  // Deprecated in favor of `trustStore`.
-  trustStoreArn @maturity("deprecated") string
   // Certificate trust store used to verify peer certificates for this portal; null if not configured
   trustStore() aws.workspacesweb.trustStore
-  // ARN of the associated IP access settings
-  //
-  // Deprecated in favor of `ipAccessSettings`.
-  ipAccessSettingsArn @maturity("deprecated") string
   // IP-based access controls applied to this portal; null if not configured
   ipAccessSettings() aws.workspacesweb.ipAccessSetting
-  // ARN of the associated user access logging settings
-  //
-  // Deprecated in favor of `userAccessLoggingSetting`.
-  userAccessLoggingSettingsArn @maturity("deprecated") string
   // User access logging configuration for this portal; null if not configured
   userAccessLoggingSetting() aws.workspacesweb.userAccessLoggingSetting
   // Associated data protection settings ARN
@@ -23478,10 +22854,6 @@ private aws.workspaces.workspace @defaults("workspaceId userName state region") 
   // account-owned ones. Use `bundle.owner` to tell the two apart; the
   // account-wide `aws.workspaces.bundles` list holds only the latter.
   bundle() aws.workspaces.bundle
-  // Subnet ID
-  //
-  // Deprecated in favor of `subnet`.
-  subnetId @maturity("deprecated") string
   // Subnet the WorkSpace resides in
   subnet() aws.vpc.subnet
   // State: PENDING, AVAILABLE, IMPAIRED, UNHEALTHY, REBOOTING, etc.
@@ -23612,10 +22984,6 @@ private aws.workspacesweb.userAccessLoggingSetting @defaults("userAccessLoggingS
   userAccessLoggingSettingsArn string
   // Kinesis data stream for logging
   kinesisStream() aws.kinesis.stream
-  // Kinesis data stream ARN for logging
-  //
-  // Deprecated in favor of `kinesisStream`.
-  kinesisStreamArn @maturity("deprecated") string
   // AWS region
   region string
 }
@@ -23652,10 +23020,6 @@ private aws.kinesis.stream @defaults("name status region") {
   status string
   // Encryption type used (NONE or KMS)
   encryptionType() string
-  // KMS key ID for encryption
-  //
-  // Deprecated in favor of `kmsKey()`.
-  keyId() @maturity("deprecated") string
   // KMS key used for encryption
   kmsKey() aws.kms.key
   // Number of hours data records are accessible after being added to the stream
@@ -23744,16 +23108,8 @@ private aws.kinesis.firehoseDeliveryStream @defaults("name status region") {
   status string
   // Type of the delivery stream (DirectPut or KinesisStreamAsSource)
   deliveryStreamType string
-  // Raw encryption configuration dict
-  //
-  // Deprecated in favor of `serverSideEncryption`.
-  encryption @maturity("deprecated") dict
   // Server-side encryption configuration for the delivery stream
   serverSideEncryption() aws.kinesis.firehoseDeliveryStream.encryption
-  // Raw source configuration dict
-  //
-  // Deprecated in favor of `kinesisStream()`.
-  source @maturity("deprecated") dict
   // Source Kinesis data stream when deliveryStreamType is KinesisStreamAsSource (null otherwise)
   kinesisStream() aws.kinesis.stream
   // Destinations for the delivery stream
@@ -23815,11 +23171,7 @@ private aws.kinesis.firehoseDeliveryStream.cloudWatchLogging @defaults("enabled 
 }
 
 // Amazon Kinesis Firehose S3 (Extended) destination
-private aws.kinesis.firehoseDeliveryStream.destination.s3 @defaults("bucketArn compressionFormat") {
-  // ARN of the S3 bucket
-  //
-  // Deprecated in favor of `bucket`.
-  bucketArn @maturity("deprecated") string
+private aws.kinesis.firehoseDeliveryStream.destination.s3 @defaults("compressionFormat prefix") {
   // S3 bucket records are delivered to
   bucket() aws.s3.bucket
   // IAM role for delivery
@@ -24997,10 +24349,6 @@ private aws.rds.eventSubscription @defaults("arn name status") {
   region string
   // Status of the event subscription: creating, modifying, deleting, active, no-permission, topic-not-exist
   status string
-  // SNS topic ARN that events are published to
-  //
-  // Deprecated in favor of `snsTopic()`.
-  snsTopicArn @maturity("deprecated") string
   // SNS topic that events are published to
   snsTopic() aws.sns.topic
   // Source type: db-instance, db-cluster, db-parameter-group, db-security-group, db-snapshot, db-cluster-snapshot, custom-availability-zone
@@ -25599,15 +24947,7 @@ private aws.msk.cluster.serverlessConfig @defaults("iamEnabled networkType") {
 }
 
 // VPC configuration entry for a serverless MSK cluster
-private aws.msk.cluster.serverlessConfig.vpcConfig @defaults("subnetIds") {
-  // Subnet IDs the serverless cluster is attached to
-  //
-  // Deprecated in favor of `subnets`.
-  subnetIds @maturity("deprecated") []string
-  // Security group IDs attached to the serverless cluster
-  //
-  // Deprecated in favor of `securityGroups`.
-  securityGroupIds @maturity("deprecated") []string
+private aws.msk.cluster.serverlessConfig.vpcConfig {
   // Subnets the serverless cluster is attached to
   subnets() []aws.vpc.subnet
   // Security groups attached to the serverless cluster
@@ -25678,14 +25018,6 @@ private aws.msk.replicator.kafkaCluster @defaults("kafkaClusterAlias amazonMskCl
   amazonMskClusterArn string
   // Alias used to prefix names of replicated topics
   kafkaClusterAlias string
-  // Subnet IDs the replicator attaches ENIs to in the client VPC
-  //
-  // Deprecated in favor of `subnets`.
-  subnetIds @maturity("deprecated") []string
-  // Security group IDs attached to the replicator ENIs
-  //
-  // Deprecated in favor of `securityGroups`.
-  securityGroupIds @maturity("deprecated") []string
   // MSK cluster resource (tolerates cross-account ARNs)
   cluster() aws.msk.cluster
   // Subnets the replicator attaches ENIs to
@@ -26015,10 +25347,6 @@ private aws.batch.computeEnvironment @defaults("arn name state status") {
   subnets() []aws.vpc.subnet
   // Security groups for the compute resources
   securityGroups() []aws.ec2.securitygroup
-  // IAM service role for the compute environment
-  //
-  // Deprecated in favor of `serviceRole()`.
-  iamRole() @maturity("deprecated") aws.iam.role
   // IAM service role granting Batch access to other AWS services
   serviceRole() aws.iam.role
   // Instance profile attached to EC2 instances in the compute environment
@@ -26031,10 +25359,6 @@ private aws.batch.computeEnvironment @defaults("arn name state status") {
   bidPercentage() int
   // Placement group name for the compute environment
   placementGroup() string
-  // AMI ID for the compute environment
-  //
-  // Deprecated in favor of `ec2Configurations` for per-architecture images.
-  imageId() @maturity("deprecated") string
   // Typed AMI reference (nullable on Fargate)
   image() aws.ec2.image
   // Per-architecture image configurations (imageType, imageIdOverride, imageKubernetesVersion)
@@ -26081,10 +25405,6 @@ private aws.batch.jobQueue @defaults("arn name state status") {
   statusReason string
   // Priority of the job queue (lower is higher priority)
   priority int
-  // Raw compute environment order dict list
-  //
-  // Deprecated in favor of `computeEnvironmentOrderTyped()`.
-  computeEnvironmentOrder() @maturity("deprecated") []dict
   // Compute environments attached to this queue (ordered by priority)
   computeEnvironmentOrderTyped() []aws.batch.jobQueue.computeEnvironmentOrder
   // Fair-share scheduling policy attached to this queue (null when absent)
@@ -26126,15 +25446,6 @@ private aws.batch.jobDefinition @defaults("arn name type status") {
   parameters() map[string]string
   // Typed container properties with IAM role references
   container() aws.batch.jobDefinition.containerProperties
-  // Raw container properties dict
-  //
-  // Deprecated in favor of `container()`.
-  containerProperties() @maturity("deprecated") dict
-  // Raw node properties dict for multi-node parallel jobs
-  //
-  // Deprecated in favor of `nodeMainNode`, `nodeNumNodes`, and
-  // `nodeRangeProperties`.
-  nodeProperties() @maturity("deprecated") dict
   // Index (0-based) of the main node for multi-node parallel jobs
   nodeMainNode() int
   // Total number of nodes for multi-node parallel jobs
@@ -26157,16 +25468,8 @@ private aws.batch.jobDefinition @defaults("arn name type status") {
   images() []dict
   // Typed retry strategy
   retry() aws.batch.jobDefinition.retryStrategy
-  // Raw retry strategy dict
-  //
-  // Deprecated in favor of `retry()`.
-  retryStrategy() @maturity("deprecated") dict
   // Typed timeout configuration
   jobTimeout() aws.batch.jobDefinition.timeout
-  // Raw timeout dict
-  //
-  // Deprecated in favor of `jobTimeout()`.
-  timeout() @maturity("deprecated") dict
   // Tags for the job definition
   tags map[string]string
 }
@@ -26185,38 +25488,20 @@ private aws.batch.jobDefinition.containerProperties @defaults("image") {
   jobRole() aws.iam.role
   // IAM role for ECS agent and Docker daemon
   executionRole() aws.iam.role
-  // Raw environment variables dict list
-  //
-  // Deprecated in favor of `environmentVariables`.
-  environment @maturity("deprecated") []dict
   // Environment variables passed to the container. Warning: values may contain plaintext secrets.
   environmentVariables() map[string]string
   // Whether the container has elevated privileges
   privileged bool
   // Whether the container is read-only
   readonlyRootFilesystem bool
-  // Raw resource requirements dict list
-  //
-  // Deprecated in favor of `resourceRequirementsMap`.
-  resourceRequirements @maturity("deprecated") []dict
   // Resource requirements keyed by type (GPU, MEMORY, VCPU)
   resourceRequirementsMap() map[string]string
-  // Raw log configuration dict
-  //
-  // Deprecated in favor of `logDriver`, `logOptions`, and `logSecretOptions`.
-  logConfiguration @maturity("deprecated") dict
   // Log driver (awslogs, fluentd, gelf, journald, json-file, splunk, syslog, awsfirelens)
   logDriver() string
   // Log driver configuration options
   logOptions() map[string]string
   // Secrets injected into the log configuration (e.g., Splunk tokens)
   logSecretOptions() []aws.batch.jobDefinition.containerProperties.secret
-  // Raw Linux parameters dict
-  //
-  // Deprecated in favor of `linuxInitProcessEnabled`, `linuxMaxSwap`,
-  // `linuxSharedMemorySize`, `linuxSwappiness`, `linuxDevices`, and
-  // `linuxTmpfs`.
-  linuxParameters @maturity("deprecated") dict
   // Whether an init process runs inside the container
   linuxInitProcessEnabled() bool
   // Total amount of swap memory (in MiB) the container can use
@@ -26229,10 +25514,6 @@ private aws.batch.jobDefinition.containerProperties @defaults("image") {
   linuxDevices() []dict
   // Tmpfs mounts (containerPath, size, mountOptions)
   linuxTmpfs() []dict
-  // Raw Fargate platform configuration dict
-  //
-  // Deprecated in favor of `fargatePlatformVersion`.
-  fargateConfig @maturity("deprecated") dict
   // Fargate platform version (e.g., LATEST, 1.4.0)
   fargatePlatformVersion() string
   // Secrets to expose to the container
@@ -26589,12 +25870,6 @@ private aws.lightsail.instance @defaults("name arn state") {
   createdAt time
   // Tags for the instance
   tags map[string]string
-  // Raw inbound firewall rule dicts
-  //
-  // Deprecated in favor of `inboundRules`, which resolves each rule to an
-  // aws.lightsail.instance.inboundRule exposing fromPort, toPort, protocol,
-  // cidrs, ipv6Cidrs, and a publicAccess predicate.
-  firewallRules() @maturity("deprecated") []dict
   // Inbound firewall rules
   //
   // Inbound firewall governing the instance. Each rule exposes the port range
@@ -26891,10 +26166,6 @@ private aws.cloudformation.stack @defaults("name status") {
   notificationTopics() []aws.sns.topic
   // Drift detection status: DRIFTED, IN_SYNC, NOT_CHECKED, UNKNOWN
   driftStatus string
-  // ARN of the IAM role used to create or update the stack
-  //
-  // Deprecated in favor of `iamRole`.
-  roleArn @maturity("deprecated") string
   // IAM role used to create/update the stack
   iamRole() aws.iam.role
   // Stack parameters
@@ -27499,10 +26770,6 @@ private aws.cloudwatch.logDestination @defaults("name arn") {
   region string
   // ARN of the target (Kinesis stream or Firehose delivery stream)
   targetArn string
-  // ARN of the IAM role used to write to the target
-  //
-  // Deprecated in favor of `iamRole()`.
-  roleArn @maturity("deprecated") string
   // IAM role used to write to the target
   iamRole() aws.iam.role
   // Access policy controlling who can write to this destination
@@ -27781,11 +27048,6 @@ private aws.sfn.stateMachine @defaults("arn name type status") {
   loggingIncludeExecutionData() bool
   // CloudWatch Logs log groups that receive execution history events
   loggingDestinations() []aws.cloudwatch.loggroup
-  // Raw logging configuration dict
-  //
-  // Deprecated in favor of `loggingLevel`, `loggingIncludeExecutionData`,
-  // and `loggingDestinations`.
-  loggingConfiguration() @maturity("deprecated") dict
   // Whether X-Ray tracing is enabled
   tracingEnabled() bool
   // Encryption type: AWS_OWNED_KEY or CUSTOMER_MANAGED_KMS_KEY
@@ -27796,11 +27058,6 @@ private aws.sfn.stateMachine @defaults("arn name type status") {
   kmsKey() aws.kms.key
   // Maximum duration in seconds that Step Functions reuses data keys before calling GenerateDataKey
   encryptionKmsDataKeyReusePeriodSeconds() int
-  // Raw encryption configuration dict
-  //
-  // Deprecated in favor of `encryptionType`, `encryptionKmsKeyId`,
-  // `kmsKey`, and `encryptionKmsDataKeyReusePeriodSeconds`.
-  encryptionConfiguration() @maturity("deprecated") dict
   // Date the state machine was created
   createdAt time
   // Tags for the state machine
@@ -28304,10 +27561,6 @@ private aws.appmesh.virtualNode @defaults("arn name") {
   lastUpdatedAt() time
   // Status of the virtual node: ACTIVE, INACTIVE, DELETED
   status() string
-  // Number of backend services
-  //
-  // Deprecated in favor of `backendServices`.
-  backends() @maturity("deprecated") int
   // Backend services this node communicates with, including per-backend client policy
   backendServices() []dict
   // Listeners that the node receives inbound traffic on, including port mapping, health check, TLS, timeout, outlier detection, and connection pool
@@ -28330,11 +27583,6 @@ private aws.appmesh.virtualNode @defaults("arn name") {
   serviceDiscoveryCloudMapAttributes() map[string]string
   // IP preference for Cloud Map service discovery
   serviceDiscoveryCloudMapIpPreference() string
-  // Raw service discovery configuration dict
-  //
-  // Deprecated in favor of `serviceDiscoveryType` and the flattened
-  // `serviceDiscovery*` fields.
-  serviceDiscovery() @maturity("deprecated") dict
   // File path for access logs written by the Envoy proxy
   loggingAccessLogPath() string
   // Format of access log entries, describing either the JSON key/value pairs or the text format string
@@ -28578,10 +27826,6 @@ private aws.identitycenter.accountAssignment @defaults("accountId principalType 
   id string
   // AWS account ID
   accountId string
-  // ARN of the permission set
-  //
-  // Deprecated in favor of `permissionSet()`.
-  permissionSetArn @maturity("deprecated") string
   // Permission set for this assignment
   permissionSet() aws.identitycenter.permissionSet
   // Type of principal: USER or GROUP
@@ -28751,10 +27995,6 @@ private aws.securitylake.dataLake @defaults("dataLakeArn region createStatus") {
   // (the centralized rollup Regions that receive replicated objects)
   // and `RoleArn` (the IAM role Security Lake uses to replicate).
   replicationConfiguration dict
-  // S3 bucket ARN for the data lake
-  //
-  // Deprecated in favor of `s3Bucket`.
-  s3BucketArn @maturity("deprecated") string
   // S3 bucket for the data lake
   s3Bucket() aws.s3.bucket
 }
@@ -28785,16 +28025,8 @@ private aws.securitylake.subscriber @defaults("subscriberArn subscriberName subs
   accessTypes []string
   // Status: ACTIVE, DEACTIVATED, PENDING, or READY
   subscriberStatus string
-  // IAM role ARN used by the subscriber
-  //
-  // Deprecated in favor of `iamRole`.
-  roleArn @maturity("deprecated") string
   // IAM role used by the subscriber
   iamRole() aws.iam.role
-  // S3 bucket ARN for the subscriber
-  //
-  // Deprecated in favor of `s3Bucket`.
-  s3BucketArn @maturity("deprecated") string
   // S3 bucket for the subscriber
   s3Bucket() aws.s3.bucket
   // Date the subscriber was created
@@ -28921,10 +28153,6 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   endpointType string
   // Attachment type
   attachmentType string
-  // Domain certificate ARN
-  //
-  // Deprecated in favor of `domainCertificate`.
-  domainCertificateArn @maturity("deprecated") string
   // Domain certificate presented by the endpoint
   domainCertificate() aws.acm.certificate
   // Status of the endpoint
@@ -29860,10 +29088,6 @@ private aws.bedrock.customModel @defaults("modelArn modelName") {
   region string
   // Base model used for customization
   baseModel() aws.bedrock.foundationModel
-  // ARN of the base model used for customization
-  //
-  // Deprecated in favor of baseModel.
-  baseModelArn @maturity("deprecated") string
   // Customization type: FINE_TUNING or CONTINUED_PRE_TRAINING
   customizationType string
   // KMS key used for model encryption
@@ -29960,10 +29184,6 @@ private aws.bedrock.provisionedModelThroughput @defaults("provisionedModelName m
   modelArn string
   // Foundation model for the provisioned throughput
   foundationModel() aws.bedrock.foundationModel
-  // ARN of the foundation model
-  //
-  // Deprecated in favor of foundationModel.
-  foundationModelArn @maturity("deprecated") string
   // Number of model units provisioned
   modelUnits int
   // Status: Creating, InService, Updating, or Failed
@@ -30535,10 +29755,6 @@ private aws.bedrock.batchInferenceJob @defaults("jobName modelId status") {
   outputDataConfig dict
   // IAM service role used by the batch inference job
   iamRole() aws.iam.role
-  // ARN of the IAM service role used by the batch inference job
-  //
-  // Deprecated in favor of `iamRole`.
-  roleArn @maturity("deprecated") string
   // Time the batch inference job was submitted
   submitTime time
   // Time the batch inference job was last modified

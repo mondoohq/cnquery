@@ -171,17 +171,6 @@ func (c *mqlCloudflareAccount) one() (*mqlCloudflareOne, error) {
 	return newOne(c.MqlRuntime, c.Id.Data, "")
 }
 
-// Deprecated: Zero Trust is account-scoped. Use cloudflare.account.one.
-// Retained so existing queries keep working; resolves the parent account and
-// delegates, keeping the zone id so apps/identityProviders stay zone-scoped.
-func (c *mqlCloudflareZone) one() (*mqlCloudflareOne, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return newOne(c.MqlRuntime, accountID, c.Id.Data)
-}
-
 type mqlCloudflareOneAppInternal struct {
 	// appPolicies caches the access policies embedded in the application
 	// record so the policies() accessor needs no extra API call.

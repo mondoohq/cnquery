@@ -48,16 +48,15 @@ func (o *mqlOciLogging) logGroups() ([]any, error) {
 					created = &lg.TimeCreated.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.logging.logGroup", map[string]*llx.RawData{
-					"id":            llx.StringDataPtr(lg.Id),
-					"name":          llx.StringDataPtr(lg.DisplayName),
-					"description":   llx.StringDataPtr(lg.Description),
-					"compartmentID": llx.StringDataPtr(lg.CompartmentId),
-					"state":         llx.StringData(string(lg.LifecycleState)),
-					"created":       llx.TimeDataPtr(created),
-					"freeformTags":  llx.MapData(strMapToAny(lg.FreeformTags), types.String),
-					"definedTags":   llx.MapData(definedTagsToAny(lg.DefinedTags), types.Any),
-					"systemTags":    llx.MapData(definedTagsToAny(lg.SystemTags), types.Dict),
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.logging.logGroup", stringValue(lg.CompartmentId), map[string]*llx.RawData{
+					"id":           llx.StringDataPtr(lg.Id),
+					"name":         llx.StringDataPtr(lg.DisplayName),
+					"description":  llx.StringDataPtr(lg.Description),
+					"state":        llx.StringData(string(lg.LifecycleState)),
+					"created":      llx.TimeDataPtr(created),
+					"freeformTags": llx.MapData(strMapToAny(lg.FreeformTags), types.String),
+					"definedTags":  llx.MapData(definedTagsToAny(lg.DefinedTags), types.Any),
+					"systemTags":   llx.MapData(definedTagsToAny(lg.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -93,6 +92,7 @@ func (o *mqlOciLogging) getLogGroupsForRegion(ctx context.Context, client *loggi
 }
 
 type mqlOciLoggingLogGroupInternal struct {
+	ociCompartmentRef
 	cacheRegion string
 }
 

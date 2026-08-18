@@ -20,6 +20,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectIdsServiceEndpointInternal struct {
+	cacheNetworkUrl string
+}
+
 type mqlGcpProjectIdsServiceInternal struct {
 	serviceGate
 }
@@ -126,7 +130,6 @@ func (g *mqlGcpProjectIdsService) endpoints() ([]any, error) {
 		mqlEp, err := CreateResource(g.MqlRuntime, "gcp.project.idsService.endpoint", map[string]*llx.RawData{
 			"name":                   llx.StringData(ep.Name),
 			"description":            llx.StringData(ep.Description),
-			"networkUrl":             llx.StringData(ep.Network),
 			"endpointForwardingRule": llx.StringData(ep.EndpointForwardingRule),
 			"endpointIp":             llx.StringData(ep.EndpointIp),
 			"severity":               llx.StringData(ep.Severity.String()),
@@ -139,6 +142,8 @@ func (g *mqlGcpProjectIdsService) endpoints() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlEp.(*mqlGcpProjectIdsServiceEndpoint)
+		mqlRef.cacheNetworkUrl = ep.Network
 		res = append(res, mqlEp)
 	}
 
@@ -146,10 +151,7 @@ func (g *mqlGcpProjectIdsService) endpoints() ([]any, error) {
 }
 
 func (g *mqlGcpProjectIdsServiceEndpoint) network() (*mqlGcpProjectComputeServiceNetwork, error) {
-	if g.NetworkUrl.Error != nil {
-		return nil, g.NetworkUrl.Error
-	}
-	networkUrl := g.NetworkUrl.Data
+	networkUrl := g.cacheNetworkUrl
 	if networkUrl == "" {
 		g.Network.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

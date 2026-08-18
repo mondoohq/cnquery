@@ -19,6 +19,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+type mqlGcpProjectFilestoreServiceInstanceInternal struct {
+	cacheKmsKeyName string
+}
+
 func (g *mqlGcpProject) filestore() (*mqlGcpProjectFilestoreService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -158,7 +162,6 @@ func (g *mqlGcpProjectFilestoreService) instances() ([]any, error) {
 			"labels":                    llx.MapData(convert.MapToInterfaceMap(instance.Labels), types.String),
 			"fileShares":                llx.ArrayData(fileShares, types.Resource("gcp.project.filestoreService.instance.fileShare")),
 			"networks":                  llx.ArrayData(networks, types.Resource("gcp.project.filestoreService.instance.network")),
-			"kmsKeyName":                llx.StringData(instance.KmsKeyName),
 			"satisfiesPzi":              llx.BoolData(instance.SatisfiesPzi),
 			"satisfiesPzs":              llx.BoolDataPtr(satisfiesPzs),
 			"deletionProtectionEnabled": llx.BoolData(instance.DeletionProtectionEnabled),
@@ -167,6 +170,8 @@ func (g *mqlGcpProjectFilestoreService) instances() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlRef := mqlInstance.(*mqlGcpProjectFilestoreServiceInstance)
+		mqlRef.cacheKmsKeyName = instance.KmsKeyName
 		res = append(res, mqlInstance)
 	}
 
@@ -181,11 +186,7 @@ func (g *mqlGcpProjectFilestoreServiceInstance) id() (string, error) {
 }
 
 func (g *mqlGcpProjectFilestoreServiceInstance) kmsKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
-	keyName := g.GetKmsKeyName()
-	if keyName.Error != nil {
-		return nil, keyName.Error
-	}
-	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, keyName.Data)
+	return newKmsCryptoKeyRef(g.MqlRuntime, &g.KmsKey, g.cacheKmsKeyName)
 }
 
 func (g *mqlGcpProjectFilestoreServiceInstanceFileShare) id() (string, error) {

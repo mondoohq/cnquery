@@ -157,26 +157,6 @@ func (g *mqlGoogleworkspaceMember) user() (*mqlGoogleworkspaceUser, error) {
 	return user, nil
 }
 
-func (g *mqlGoogleworkspaceGroup) settings() (any, error) {
-	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
-	service, err := groupSettingsService(conn, groupssettings.AppsGroupsSettingsScope)
-	if err != nil {
-		return nil, err
-	}
-
-	if g.Email.Error != nil {
-		return nil, g.Email.Error
-	}
-	email := g.Email.Data
-
-	settings, err := service.Groups.Get(email).Do()
-	if err != nil {
-		return nil, err
-	}
-
-	return convert.JsonToDict(settings)
-}
-
 // parseGroupSettingBool converts a Groups Settings API boolean, which the API
 // encodes as the string "true"/"false", into a typed bool.
 func parseGroupSettingBool(s string) bool {

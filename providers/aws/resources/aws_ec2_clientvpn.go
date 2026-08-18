@@ -40,6 +40,7 @@ func (a *mqlAwsEc2ClientVpnEndpoint) id() (string, error) {
 }
 
 type mqlAwsEc2ClientVpnEndpointInternal struct {
+	cacheServerCertificateArn string
 	securityGroupIdHandler
 	cacheVpcId            *string
 	cacheTransitGatewayId *string
@@ -129,7 +130,6 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 							"description":                     llx.StringData(convert.ToValue(ep.Description)),
 							"status":                          llx.StringData(status),
 							"createdAt":                       llx.TimeData(parseTimeOrZero(ep.CreationTime)),
-							"serverCertificateArn":            llx.StringData(convert.ToValue(ep.ServerCertificateArn)),
 							"transportProtocol":               llx.StringData(string(ep.TransportProtocol)),
 							"vpnProtocol":                     llx.StringData(string(ep.VpnProtocol)),
 							"splitTunnel":                     llx.BoolData(convert.ToValue(ep.SplitTunnel)),
@@ -147,6 +147,7 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 					if err != nil {
 						return nil, err
 					}
+					mqlEp.(*mqlAwsEc2ClientVpnEndpoint).cacheServerCertificateArn = convert.ToValue(ep.ServerCertificateArn)
 
 					mqlCvpn := mqlEp.(*mqlAwsEc2ClientVpnEndpoint)
 					mqlCvpn.cacheVpcId = ep.VpcId
@@ -191,7 +192,7 @@ func (a *mqlAwsEc2ClientVpnEndpoint) vpc() (*mqlAwsVpc, error) {
 }
 
 func (a *mqlAwsEc2ClientVpnEndpoint) serverCertificate() (*mqlAwsAcmCertificate, error) {
-	arnVal := a.ServerCertificateArn.Data
+	arnVal := a.cacheServerCertificateArn
 	if arnVal == "" {
 		a.ServerCertificate.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil

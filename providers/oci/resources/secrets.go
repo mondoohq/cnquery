@@ -74,10 +74,9 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 					nextRotation = &s.NextRotationTime.Time
 				}
 
-				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.vault.secret", map[string]*llx.RawData{
+				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.vault.secret", stringValue(s.CompartmentId), map[string]*llx.RawData{
 					"id":                      llx.StringDataPtr(s.Id),
 					"name":                    llx.StringDataPtr(s.SecretName),
-					"compartmentID":           llx.StringDataPtr(s.CompartmentId),
 					"description":             llx.StringDataPtr(s.Description),
 					"state":                   llx.StringData(string(s.LifecycleState)),
 					"rotationStatus":          llx.StringData(string(s.RotationStatus)),
@@ -112,6 +111,7 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 }
 
 type mqlOciVaultSecretInternal struct {
+	ociCompartmentRef
 	cacheKeyID   string
 	cacheVaultID string
 	cacheRegion  string

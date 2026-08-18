@@ -639,7 +639,6 @@ func (a *mqlAwsDocumentdb) getDbInstances(conn *connection.AwsConnection) []*job
 }
 
 func newMqlAwsDocumentdbInstance(runtime *plugin.Runtime, region, accountID string, instance docdb_types.DBInstance) (*mqlAwsDocumentdbInstance, error) {
-	endpoint, _ := convert.JsonToDict(instance.Endpoint)
 	endpointAddress := ""
 	endpointHostedZone := ""
 	endpointPort := int64(0)
@@ -691,7 +690,6 @@ func newMqlAwsDocumentdbInstance(runtime *plugin.Runtime, region, accountID stri
 			"backupRetentionPeriod":            llx.IntDataPtr(instance.BackupRetentionPeriod),
 			"instanceClass":                    llx.StringDataPtr(instance.DBInstanceClass),
 			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(instance.EnabledCloudwatchLogsExports), types.String),
-			"endpoint":                         llx.MapData(endpoint, types.Any),
 			"endpointAddress":                  llx.StringData(endpointAddress),
 			"endpointPort":                     llx.IntData(endpointPort),
 			"endpointHostedZoneId":             llx.StringData(endpointHostedZone),

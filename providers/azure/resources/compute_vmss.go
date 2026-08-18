@@ -153,7 +153,6 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		"zones":       llx.ArrayData(strPtrsToAny(vmss.Zones), types.String),
 		"sku":         llx.DictData(sku),
 		"properties":  llx.DictData(properties),
-		"systemData":  llx.DictData(systemData),
 		"identity":    llx.DictData(identityDict),
 		"principalId": llx.StringDataPtr(principalId),
 	}
@@ -233,11 +232,13 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 	}
 	mqlVmss := res.(*mqlAzureSubscriptionComputeServiceVmScaleSet)
 	mqlVmss.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	mqlVmss.cacheSystemData = systemData
 	return mqlVmss, nil
 }
 
 type mqlAzureSubscriptionComputeServiceVmScaleSetInternal struct {
 	cacheUserAssignedIdentityIds []string
+	cacheSystemData              any
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVmScaleSet) userAssignedIdentities() ([]any, error) {

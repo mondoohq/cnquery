@@ -528,10 +528,6 @@ alicloud.ecs.instance @defaults("instanceId instanceName status instanceType") {
   vpc() alicloud.vpc.network
   // vSwitch the instance is connected to
   vswitch() alicloud.vpc.vswitch
-  // Security group IDs applied to the instance
-  //
-  // Deprecated in favor of securityGroups.
-  securityGroupIds @maturity("deprecated") []string
   // Private IP addresses assigned to the instance
   privateIpAddresses []string
   // Public IP addresses assigned directly to the instance
@@ -613,10 +609,6 @@ alicloud.ecs.disk @defaults("diskId diskName category size status") {
   status string
   // Whether the disk is encrypted
   encrypted bool
-  // KMS key ID used to encrypt the disk
-  //
-  // Deprecated in favor of kmsKey.
-  kmsKeyId @maturity("deprecated") string
   // KMS key used to encrypt the disk, null when the disk is not encrypted
   kmsKey() alicloud.kms.key
   // Instance the disk is attached to
@@ -2251,10 +2243,6 @@ alicloud.rds.instance {
   // The IP addresses and CIDR blocks allowed to connect to the instance. A
   // whitelist entry of 0.0.0.0/0 exposes the instance to the entire internet.
   securityIPList() []string
-  // IDs of the ECS security groups attached to the instance
-  //
-  // Deprecated in favor of securityGroups.
-  securityGroupIds() @maturity("deprecated") []string
   // ECS security groups attached to the instance
   //
   // The groups whose rules govern which sources may reach the instance.
@@ -2398,10 +2386,6 @@ alicloud.redis.instance {
   tdeEnabled() bool
   // IP addresses and CIDR blocks allowed by the instance whitelists
   securityIPList() []string
-  // IDs of the ECS security groups associated with the instance
-  //
-  // Deprecated in favor of securityGroups.
-  securityGroupIds() @maturity("deprecated") []string
   // ECS security groups associated with the instance
   //
   // The groups whose rules govern which sources may reach the instance.
@@ -2532,10 +2516,6 @@ alicloud.mongodb.instance {
   maintainEndTime() string
   // Whether disk encryption is enabled for the instance
   encrypted() bool
-  // KMS key ID used for disk encryption, empty when disk encryption is disabled
-  //
-  // Deprecated in favor of kmsKey.
-  encryptionKey() @maturity("deprecated") string
   // KMS key used for disk encryption, null when disk encryption is disabled
   kmsKey() alicloud.kms.key
   // Whether release protection is enabled for the instance
@@ -2550,10 +2530,6 @@ alicloud.mongodb.instance {
   tdeEnabled() bool
   // IP addresses and CIDR blocks in the instance whitelist
   securityIPList() []string
-  // IDs of the ECS security groups bound to the instance
-  //
-  // Deprecated in favor of securityGroups.
-  securityGroupIds() @maturity("deprecated") []string
   // ECS security groups bound to the instance
   //
   // The groups whose rules govern which sources may reach the instance.

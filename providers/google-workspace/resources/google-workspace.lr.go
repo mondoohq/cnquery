@@ -701,9 +701,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"googleworkspace.group.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceGroup).GetMembers()).ToDataRes(types.Array(types.Resource("googleworkspace.member")))
 	},
-	"googleworkspace.group.settings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGoogleworkspaceGroup).GetSettings()).ToDataRes(types.Dict)
-	},
 	"googleworkspace.group.securitySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceGroup).GetSecuritySettings()).ToDataRes(types.Dict)
 	},
@@ -898,12 +895,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"googleworkspace.report.usage.parameters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportUsage).GetParameters()).ToDataRes(types.Array(types.Dict))
-	},
-	"googleworkspace.report.usage.account": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGoogleworkspaceReportUsage).GetAccount()).ToDataRes(types.Dict)
-	},
-	"googleworkspace.report.usage.security": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGoogleworkspaceReportUsage).GetSecurity()).ToDataRes(types.Dict)
 	},
 	"googleworkspace.report.usage.appUsage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoogleworkspaceReportUsage).GetAppUsage()).ToDataRes(types.Dict)
@@ -1952,10 +1943,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGoogleworkspaceGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"googleworkspace.group.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceGroup).Settings, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
 	"googleworkspace.group.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceGroup).SecuritySettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -2250,14 +2237,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"googleworkspace.report.usage.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoogleworkspaceReportUsage).Parameters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"googleworkspace.report.usage.account": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportUsage).Account, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
-	"googleworkspace.report.usage.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGoogleworkspaceReportUsage).Security, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"googleworkspace.report.usage.appUsage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4398,7 +4377,6 @@ type mqlGoogleworkspaceGroup struct {
 	DirectMembersCount plugin.TValue[int64]
 	AdminCreated       plugin.TValue[bool]
 	Members            plugin.TValue[[]any]
-	Settings           plugin.TValue[any]
 	SecuritySettings   plugin.TValue[any]
 	GroupSettings      plugin.TValue[*mqlGoogleworkspaceGroupSettingsConfig]
 }
@@ -4485,12 +4463,6 @@ func (c *mqlGoogleworkspaceGroup) GetMembers() *plugin.TValue[[]any] {
 		}
 
 		return c.members()
-	})
-}
-
-func (c *mqlGoogleworkspaceGroup) GetSettings() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.Settings, func() (any, error) {
-		return c.settings()
 	})
 }
 
@@ -5239,8 +5211,6 @@ type mqlGoogleworkspaceReportUsage struct {
 	UserEmail                     plugin.TValue[string]
 	Date                          plugin.TValue[*time.Time]
 	Parameters                    plugin.TValue[[]any]
-	Account                       plugin.TValue[any]
-	Security                      plugin.TValue[any]
 	AppUsage                      plugin.TValue[any]
 	IsDisabled                    plugin.TValue[bool]
 	IsSuperAdmin                  plugin.TValue[bool]
@@ -5319,18 +5289,6 @@ func (c *mqlGoogleworkspaceReportUsage) GetDate() *plugin.TValue[*time.Time] {
 
 func (c *mqlGoogleworkspaceReportUsage) GetParameters() *plugin.TValue[[]any] {
 	return &c.Parameters
-}
-
-func (c *mqlGoogleworkspaceReportUsage) GetAccount() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.Account, func() (any, error) {
-		return c.account()
-	})
-}
-
-func (c *mqlGoogleworkspaceReportUsage) GetSecurity() *plugin.TValue[any] {
-	return plugin.GetOrCompute[any](&c.Security, func() (any, error) {
-		return c.security()
-	})
 }
 
 func (c *mqlGoogleworkspaceReportUsage) GetAppUsage() *plugin.TValue[any] {

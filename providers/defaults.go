@@ -426,21 +426,6 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
-	"equinix": {
-		Provider: &plugin.Provider{
-			Name:            "equinix",
-			ID:              "go.mondoo.com/cnquery/v9/providers/equinix",
-			ConnectionTypes: []string{"equinix"},
-			Connectors: []plugin.Connector{
-				{
-					Name:  "equinix",
-					Use:   "equinix [org <org id>] [project <project-id>] [--token <token>]",
-					Short: "an Equinix Metal organization",
-				},
-			},
-		},
-	},
-
 	"gcp": {
 		Provider: &plugin.Provider{
 			Name:            "gcp",

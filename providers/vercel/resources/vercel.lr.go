@@ -611,9 +611,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.optionsAllowlistPaths": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetOptionsAllowlistPaths()).ToDataRes(types.Array(types.String))
 	},
-	"vercel.project.protectionConfig": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVercelProject).GetProtectionConfig()).ToDataRes(types.Dict)
-	},
 	"vercel.project.protectionBypassCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetProtectionBypassCount()).ToDataRes(types.Int)
 	},
@@ -895,12 +892,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.alias.creatorEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelAlias).GetCreatorEmail()).ToDataRes(types.String)
-	},
-	"vercel.alias.protectionBypassCount": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVercelAlias).GetProtectionBypassCount()).ToDataRes(types.Int)
-	},
-	"vercel.alias.protectionBypassScopes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlVercelAlias).GetProtectionBypassScopes()).ToDataRes(types.Array(types.String))
 	},
 	"vercel.alias.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelAlias).GetCreatedAt()).ToDataRes(types.Time)
@@ -1854,10 +1845,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelProject).OptionsAllowlistPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"vercel.project.protectionConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVercelProject).ProtectionConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
-		return
-	},
 	"vercel.project.protectionBypassCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProject).ProtectionBypassCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -2252,14 +2239,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.alias.creatorEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelAlias).CreatorEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"vercel.alias.protectionBypassCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVercelAlias).ProtectionBypassCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"vercel.alias.protectionBypassScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlVercelAlias).ProtectionBypassScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.alias.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3904,7 +3883,6 @@ type mqlVercelProject struct {
 	TrustedIpsDeploymentType             plugin.TValue[string]
 	TrustedIpsAddresses                  plugin.TValue[[]any]
 	OptionsAllowlistPaths                plugin.TValue[[]any]
-	ProtectionConfig                     plugin.TValue[any]
 	ProtectionBypassCount                plugin.TValue[int64]
 	ProtectionBypassScopes               plugin.TValue[[]any]
 	RepositoryType                       plugin.TValue[string]
@@ -4085,10 +4063,6 @@ func (c *mqlVercelProject) GetTrustedIpsAddresses() *plugin.TValue[[]any] {
 
 func (c *mqlVercelProject) GetOptionsAllowlistPaths() *plugin.TValue[[]any] {
 	return &c.OptionsAllowlistPaths
-}
-
-func (c *mqlVercelProject) GetProtectionConfig() *plugin.TValue[any] {
-	return &c.ProtectionConfig
 }
 
 func (c *mqlVercelProject) GetProtectionBypassCount() *plugin.TValue[int64] {
@@ -4750,20 +4724,18 @@ type mqlVercelAlias struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVercelAliasInternal
-	Id                     plugin.TValue[string]
-	Alias                  plugin.TValue[string]
-	Redirect               plugin.TValue[string]
-	RedirectStatusCode     plugin.TValue[int64]
-	CreatorUid             plugin.TValue[string]
-	CreatorUsername        plugin.TValue[string]
-	CreatorEmail           plugin.TValue[string]
-	ProtectionBypassCount  plugin.TValue[int64]
-	ProtectionBypassScopes plugin.TValue[[]any]
-	CreatedAt              plugin.TValue[*time.Time]
-	UpdatedAt              plugin.TValue[*time.Time]
-	DeletedAt              plugin.TValue[*time.Time]
-	Deployment             plugin.TValue[*mqlVercelDeployment]
-	Project                plugin.TValue[*mqlVercelProject]
+	Id                 plugin.TValue[string]
+	Alias              plugin.TValue[string]
+	Redirect           plugin.TValue[string]
+	RedirectStatusCode plugin.TValue[int64]
+	CreatorUid         plugin.TValue[string]
+	CreatorUsername    plugin.TValue[string]
+	CreatorEmail       plugin.TValue[string]
+	CreatedAt          plugin.TValue[*time.Time]
+	UpdatedAt          plugin.TValue[*time.Time]
+	DeletedAt          plugin.TValue[*time.Time]
+	Deployment         plugin.TValue[*mqlVercelDeployment]
+	Project            plugin.TValue[*mqlVercelProject]
 }
 
 // createVercelAlias creates a new instance of this resource
@@ -4829,14 +4801,6 @@ func (c *mqlVercelAlias) GetCreatorUsername() *plugin.TValue[string] {
 
 func (c *mqlVercelAlias) GetCreatorEmail() *plugin.TValue[string] {
 	return &c.CreatorEmail
-}
-
-func (c *mqlVercelAlias) GetProtectionBypassCount() *plugin.TValue[int64] {
-	return &c.ProtectionBypassCount
-}
-
-func (c *mqlVercelAlias) GetProtectionBypassScopes() *plugin.TValue[[]any] {
-	return &c.ProtectionBypassScopes
 }
 
 func (c *mqlVercelAlias) GetCreatedAt() *plugin.TValue[*time.Time] {

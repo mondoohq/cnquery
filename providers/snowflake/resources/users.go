@@ -17,7 +17,9 @@ import (
 )
 
 type mqlSnowflakeUserInternal struct {
-	cacheOwner string
+	cacheOwner            string
+	cacheDefaultRole      string
+	cacheDefaultWarehouse string
 }
 
 // parseSecondaryRoles converts Snowflake's default_secondary_roles column into
@@ -73,9 +75,7 @@ func newMqlSnowflakeUser(runtime *plugin.Runtime, user sdk.User) (*mqlSnowflakeU
 		"lastName":              llx.StringData(user.LastName),
 		"email":                 llx.StringData(user.Email),
 		"comment":               llx.StringData(user.Comment),
-		"defaultWarehouse":      llx.StringData(user.DefaultWarehouse),
 		"defaultNamespace":      llx.StringData(user.DefaultNamespace),
-		"defaultRole":           llx.StringData(user.DefaultRole),
 		"disabled":              llx.BoolData(user.Disabled),
 		"hasPassword":           llx.BoolData(user.HasPassword),
 		"hasRsaPublicKey":       llx.BoolData(user.HasRsaPublicKey),
@@ -97,6 +97,8 @@ func newMqlSnowflakeUser(runtime *plugin.Runtime, user sdk.User) (*mqlSnowflakeU
 	}
 	mqlResource := r.(*mqlSnowflakeUser)
 	mqlResource.cacheOwner = user.Owner
+	mqlResource.cacheDefaultRole = user.DefaultRole
+	mqlResource.cacheDefaultWarehouse = user.DefaultWarehouse
 	return mqlResource, nil
 }
 
@@ -160,11 +162,11 @@ func (r *mqlSnowflakeUser) parameters() ([]any, error) {
 }
 
 func (r *mqlSnowflakeUser) defaultRoleRef() (*mqlSnowflakeRole, error) {
-	return resolveOwnerRole(r.MqlRuntime, r.DefaultRole.Data, &r.DefaultRoleRef)
+	return resolveOwnerRole(r.MqlRuntime, r.cacheDefaultRole, &r.DefaultRoleRef)
 }
 
 func (r *mqlSnowflakeUser) defaultWarehouseRef() (*mqlSnowflakeWarehouse, error) {
-	name := r.DefaultWarehouse.Data
+	name := r.cacheDefaultWarehouse
 	if name == "" {
 		r.DefaultWarehouseRef.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil

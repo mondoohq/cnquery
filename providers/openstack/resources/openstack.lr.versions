@@ -76,7 +76,6 @@ openstack.blockstorage.backup.metadata 13.0.1
 openstack.blockstorage.backup.name 13.0.1
 openstack.blockstorage.backup.objectCount 13.0.1
 openstack.blockstorage.backup.project 13.0.1
-openstack.blockstorage.backup.projectId 13.0.1
 openstack.blockstorage.backup.size 13.0.1
 openstack.blockstorage.backup.sourceSnapshot 13.0.1
 openstack.blockstorage.backup.status 13.0.1
@@ -94,7 +93,6 @@ openstack.blockstorage.quotaSet.gigabytes 13.0.1
 openstack.blockstorage.quotaSet.groups 13.0.1
 openstack.blockstorage.quotaSet.perVolumeGigabytes 13.0.1
 openstack.blockstorage.quotaSet.project 13.4.2
-openstack.blockstorage.quotaSet.projectId 13.0.1
 openstack.blockstorage.quotaSet.snapshots 13.0.1
 openstack.blockstorage.quotaSet.volumes 13.0.1
 openstack.blockstorage.snapshot 13.0.1
@@ -220,7 +218,6 @@ openstack.compute.limits.maxTotalInstances 13.0.1
 openstack.compute.limits.maxTotalKeypairs 13.0.1
 openstack.compute.limits.maxTotalRAMSize 13.0.1
 openstack.compute.limits.project 13.4.2
-openstack.compute.limits.projectId 13.0.1
 openstack.compute.limits.totalCoresUsed 13.0.1
 openstack.compute.limits.totalFloatingIpsUsed 13.0.1
 openstack.compute.limits.totalInstancesUsed 13.0.1
@@ -238,7 +235,6 @@ openstack.compute.quotaSet.instances 13.5.2
 openstack.compute.quotaSet.keyPairs 13.5.2
 openstack.compute.quotaSet.metadataItems 13.5.2
 openstack.compute.quotaSet.project 13.5.2
-openstack.compute.quotaSet.projectId 13.5.2
 openstack.compute.quotaSet.ram 13.5.2
 openstack.compute.quotaSet.securityGroupRules 13.5.2
 openstack.compute.quotaSet.securityGroups 13.5.2
@@ -359,7 +355,6 @@ openstack.containerinfra.cluster.nodeGroup.status 13.7.6
 openstack.containerinfra.cluster.nodeGroup.statusReason 13.7.6
 openstack.containerinfra.cluster.nodeGroups 13.7.6
 openstack.containerinfra.cluster.project 13.1.4
-openstack.containerinfra.cluster.projectId 13.1.4
 openstack.containerinfra.cluster.stack 13.2.1
 openstack.containerinfra.cluster.status 13.1.4
 openstack.containerinfra.cluster.statusReason 13.1.4
@@ -440,7 +435,6 @@ openstack.dns.recordset.ttl 13.0.1
 openstack.dns.recordset.type 13.0.1
 openstack.dns.recordset.updatedAt 13.0.1
 openstack.dns.recordset.zone 13.0.1
-openstack.dns.recordset.zoneId 13.0.1
 openstack.dns.transferAccept 13.7.6
 openstack.dns.transferAccept.createdAt 13.7.6
 openstack.dns.transferAccept.id 13.7.6
@@ -477,7 +471,6 @@ openstack.dns.zone.id 13.0.1
 openstack.dns.zone.masters 13.0.1
 openstack.dns.zone.name 13.0.1
 openstack.dns.zone.project 13.0.1
-openstack.dns.zone.projectId 13.0.1
 openstack.dns.zone.recordsets 13.0.1
 openstack.dns.zone.serial 13.0.1
 openstack.dns.zone.status 13.0.1
@@ -764,7 +757,6 @@ openstack.network.quotaSet.floatingIp 13.0.1
 openstack.network.quotaSet.network 13.0.1
 openstack.network.quotaSet.port 13.0.1
 openstack.network.quotaSet.project 13.4.2
-openstack.network.quotaSet.projectId 13.0.1
 openstack.network.quotaSet.rbacPolicy 13.0.1
 openstack.network.quotaSet.router 13.0.1
 openstack.network.quotaSet.securityGroup 13.0.1
@@ -1142,7 +1134,6 @@ openstack.securityGroup.rule.portRangeMin 13.0.1
 openstack.securityGroup.rule.project 13.2.1
 openstack.securityGroup.rule.protocol 13.0.1
 openstack.securityGroup.rule.remoteAddressGroup 13.7.6
-openstack.securityGroup.rule.remoteAddressGroupId 13.5.2
 openstack.securityGroup.rule.remoteGroup 13.0.1
 openstack.securityGroup.rule.remoteIpPrefix 13.0.1
 openstack.securityGroup.rule.securityGroup 13.0.1
@@ -1166,7 +1157,6 @@ openstack.sharedfilesystem.securityService.id 13.1.4
 openstack.sharedfilesystem.securityService.name 13.1.4
 openstack.sharedfilesystem.securityService.ou 13.1.4
 openstack.sharedfilesystem.securityService.project 13.1.4
-openstack.sharedfilesystem.securityService.projectId 13.1.4
 openstack.sharedfilesystem.securityService.server 13.1.4
 openstack.sharedfilesystem.securityService.status 13.1.4
 openstack.sharedfilesystem.securityService.type 13.1.4
@@ -1194,7 +1184,6 @@ openstack.sharedfilesystem.share.isPublic 13.1.4
 openstack.sharedfilesystem.share.metadata 13.1.4
 openstack.sharedfilesystem.share.name 13.1.4
 openstack.sharedfilesystem.share.project 13.1.4
-openstack.sharedfilesystem.share.projectId 13.1.4
 openstack.sharedfilesystem.share.replicationType 13.1.4
 openstack.sharedfilesystem.share.shareNetwork 13.1.4
 openstack.sharedfilesystem.share.shareProto 13.1.4
@@ -1217,7 +1206,6 @@ openstack.sharedfilesystem.shareNetwork.networkType 13.1.4
 openstack.sharedfilesystem.shareNetwork.neutronNetId 13.1.4
 openstack.sharedfilesystem.shareNetwork.neutronSubnetId 13.1.4
 openstack.sharedfilesystem.shareNetwork.project 13.1.4
-openstack.sharedfilesystem.shareNetwork.projectId 13.1.4
 openstack.sharedfilesystem.shareNetwork.segmentationId 13.1.4
 openstack.sharedfilesystem.shareNetwork.subnet 13.1.4
 openstack.sharedfilesystem.shareNetwork.updatedAt 13.1.4

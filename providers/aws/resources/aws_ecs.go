@@ -620,8 +620,6 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 				"region":             llx.StringData(t.region),
 				"runtimeId":          llx.StringDataPtr(c.RuntimeId),
 				"status":             llx.StringDataPtr(c.LastStatus),
-				"taskArn":            llx.StringData(t.Arn.Data),
-				"taskDefinitionArn":  llx.StringDataPtr(t.taskDefArn),
 				"memorySoftLimit":    llx.StringDataPtr(c.MemoryReservation),
 				"memoryHardLimit":    llx.StringDataPtr(c.Memory),
 				"reason":             llx.StringDataPtr(c.Reason),
@@ -631,6 +629,8 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlContainer.(*mqlAwsEcsContainer).cacheTaskArn = t.Arn.Data
+		mqlContainer.(*mqlAwsEcsContainer).cacheTaskDefinitionArn = convert.ToValue(t.taskDefArn)
 		mqlContainer.(*mqlAwsEcsContainer).cacheRepositoryCredentialsArn = containerRepoCredsMap[convert.ToValue(c.Name)]
 		containers = append(containers, mqlContainer)
 	}
@@ -638,6 +638,8 @@ func (t *mqlAwsEcsTask) containers() ([]any, error) {
 }
 
 type mqlAwsEcsContainerInternal struct {
+	cacheTaskArn                  string
+	cacheTaskDefinitionArn        string
 	cacheRepositoryCredentialsArn string
 }
 
@@ -1273,7 +1275,6 @@ func createVolumeResource(runtime *plugin.Runtime, region string, taskDefArn str
 		mqlEfsConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
 			map[string]*llx.RawData{
 				"__id":                  llx.StringData(volKey + "/efs"),
-				"fileSystemId":          llx.StringData(fileSystemId),
 				"rootDirectory":         llx.StringData(rootDirectory),
 				"transitEncryption":     llx.StringData(transitEncryption),
 				"transitEncryptionPort": llx.IntData(transitEncryptionPort),
@@ -1282,6 +1283,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, taskDefArn str
 		if err != nil {
 			return nil, err
 		}
+		mqlEfsConfig.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).cacheFileSystemId = fileSystemId
 		mqlEfsConfig.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).region = region
 		efsVolConfig = mqlEfsConfig
 	} else {
@@ -1299,7 +1301,6 @@ func createVolumeResource(runtime *plugin.Runtime, region string, taskDefArn str
 		mqlEfsConfig, err := CreateResource(runtime, "aws.ecs.taskDefinition.volume.efsVolumeConfiguration",
 			map[string]*llx.RawData{
 				"__id":                  llx.StringData(volKey + "/efs"),
-				"fileSystemId":          llx.StringData(""),
 				"rootDirectory":         llx.StringData(""),
 				"transitEncryption":     llx.StringData(""),
 				"transitEncryptionPort": llx.IntData(0),
@@ -1308,6 +1309,7 @@ func createVolumeResource(runtime *plugin.Runtime, region string, taskDefArn str
 		if err != nil {
 			return nil, err
 		}
+		mqlEfsConfig.(*mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration).cacheFileSystemId = ""
 		efsVolConfig = mqlEfsConfig
 	}
 
@@ -1931,7 +1933,8 @@ func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) authorizationConfi
 }
 
 type mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfigurationInternal struct {
-	region string
+	cacheFileSystemId string
+	region            string
 }
 
 func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) id() (string, error) {
@@ -1939,7 +1942,7 @@ func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) id() (string, erro
 }
 
 func (a *mqlAwsEcsTaskDefinitionVolumeEfsVolumeConfiguration) fileSystem() (*mqlAwsEfsFilesystem, error) {
-	fsID := a.FileSystemId.Data
+	fsID := a.cacheFileSystemId
 	if fsID == "" {
 		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2166,7 +2169,6 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	}
 
 	args["name"] = llx.StringDataPtr(s.ServiceName)
-	args["clusterArn"] = llx.StringDataPtr(s.ClusterArn)
 	args["status"] = llx.StringDataPtr(s.Status)
 	args["desiredCount"] = llx.IntData(int64(s.DesiredCount))
 	args["runningCount"] = llx.IntData(int64(s.RunningCount))
@@ -2233,12 +2235,14 @@ func initAwsEcsService(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 	if err != nil {
 		return args, nil, err
 	}
+	res.(*mqlAwsEcsService).cacheClusterArn = convert.ToValue(s.ClusterArn)
 	res.(*mqlAwsEcsService).cacheRoleArn = s.RoleArn
 	return args, res, nil
 }
 
 type mqlAwsEcsServiceInternal struct {
-	cacheRoleArn *string
+	cacheClusterArn string
+	cacheRoleArn    *string
 }
 
 func (a *mqlAwsEcsService) iamRole() (*mqlAwsIamRole, error) {
@@ -2387,7 +2391,7 @@ func (t *mqlAwsEcsTaskSet) networkConfiguration() (*mqlAwsEcsTaskSetNetworkConfi
 func (s *mqlAwsEcsService) taskSets() ([]any, error) {
 	conn := s.MqlRuntime.Connection.(*connection.AwsConnection)
 	serviceArn := s.Arn.Data
-	clusterArn := s.ClusterArn.Data
+	clusterArn := s.cacheClusterArn
 
 	parsedARN, err := arn.Parse(serviceArn)
 	if err != nil {
@@ -2433,8 +2437,6 @@ func (s *mqlAwsEcsService) taskSets() ([]any, error) {
 		args := map[string]*llx.RawData{
 			"arn":                  llx.StringData(taskSetArn),
 			"id":                   llx.StringData(convert.ToValue(ts.Id)),
-			"clusterArn":           llx.StringData(convert.ToValue(ts.ClusterArn)),
-			"serviceArn":           llx.StringData(convert.ToValue(ts.ServiceArn)),
 			"status":               llx.StringData(convert.ToValue(ts.Status)),
 			"taskDefinition":       llx.StringData(convert.ToValue(ts.TaskDefinition)),
 			"launchType":           llx.StringData(string(ts.LaunchType)),
@@ -2461,6 +2463,8 @@ func (s *mqlAwsEcsService) taskSets() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		mqlTaskSet.(*mqlAwsEcsTaskSet).cacheClusterArn = convert.ToValue(ts.ClusterArn)
+		mqlTaskSet.(*mqlAwsEcsTaskSet).cacheServiceArn = convert.ToValue(ts.ServiceArn)
 		res = append(res, mqlTaskSet)
 	}
 
@@ -2493,7 +2497,7 @@ func createTaskSetNetworkConfigurationResource(runtime *plugin.Runtime, nc *ecst
 }
 
 func (a *mqlAwsEcsContainer) taskDefinition() (*mqlAwsEcsTaskDefinition, error) {
-	arnVal := a.TaskDefinitionArn.Data
+	arnVal := a.cacheTaskDefinitionArn
 	if arnVal == "" {
 		a.TaskDefinition.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2511,7 +2515,7 @@ func (a *mqlAwsEcsContainer) taskDefinition() (*mqlAwsEcsTaskDefinition, error) 
 }
 
 func (a *mqlAwsEcsContainer) task() (*mqlAwsEcsTask, error) {
-	arnVal := a.TaskArn.Data
+	arnVal := a.cacheTaskArn
 	if arnVal == "" {
 		a.Task.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2543,7 +2547,7 @@ func (a *mqlAwsEcsService) taskDefinitionRef() (*mqlAwsEcsTaskDefinition, error)
 }
 
 func (a *mqlAwsEcsService) cluster() (*mqlAwsEcsCluster, error) {
-	arnVal := a.ClusterArn.Data
+	arnVal := a.cacheClusterArn
 	if arnVal == "" {
 		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2557,7 +2561,7 @@ func (a *mqlAwsEcsService) cluster() (*mqlAwsEcsCluster, error) {
 }
 
 func (a *mqlAwsEcsTaskSet) cluster() (*mqlAwsEcsCluster, error) {
-	arnVal := a.ClusterArn.Data
+	arnVal := a.cacheClusterArn
 	if arnVal == "" {
 		a.Cluster.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2571,7 +2575,7 @@ func (a *mqlAwsEcsTaskSet) cluster() (*mqlAwsEcsCluster, error) {
 }
 
 func (a *mqlAwsEcsTaskSet) service() (*mqlAwsEcsService, error) {
-	arnVal := a.ServiceArn.Data
+	arnVal := a.cacheServiceArn
 	if arnVal == "" {
 		a.Service.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -2842,4 +2846,9 @@ func ecsIamRoleRef(runtime *plugin.Runtime, arnPtr *string, field *plugin.TValue
 		return nil, err
 	}
 	return res.(*mqlAwsIamRole), nil
+}
+
+type mqlAwsEcsTaskSetInternal struct {
+	cacheClusterArn string
+	cacheServiceArn string
 }

@@ -81,11 +81,6 @@ private hetzner.server @defaults("id name status") {
   primaryDiskSize int
   // Server type (VM size)
   serverType() hetzner.serverType
-  // Datacenter the server runs in
-  //
-  // Deprecated, please use location. Hetzner removed the datacenter
-  // association from servers, so this always resolves to null.
-  datacenter() @maturity("deprecated") hetzner.datacenter
   // Location the server runs in
   location() hetzner.location
   // Image the server was created from (nullable)
@@ -156,14 +151,6 @@ private hetzner.server @defaults("id name status") {
 
 // Hetzner Cloud server private network attachment
 private hetzner.server.privateNet @defaults("ip macAddress") {
-  // Parent server ID
-  //
-  // Deprecated in favor of server.
-  serverId @maturity("deprecated") int
-  // Attached network ID
-  //
-  // Deprecated in favor of network.
-  networkId @maturity("deprecated") int
   // Server the network is attached to
   server() hetzner.server
   // Hetzner Cloud network attached to the server
@@ -178,14 +165,6 @@ private hetzner.server.privateNet @defaults("ip macAddress") {
 
 // Hetzner Cloud server firewall binding
 private hetzner.server.firewallBinding @defaults("status") {
-  // Parent server ID
-  //
-  // Deprecated in favor of server.
-  serverId @maturity("deprecated") int
-  // Bound firewall ID
-  //
-  // Deprecated in favor of firewall.
-  firewallId @maturity("deprecated") int
   // Server the firewall is bound to
   server() hetzner.server
   // Hetzner Cloud firewall bound to the server
@@ -259,14 +238,6 @@ private hetzner.serverType @defaults("id name cores memory") {
 
 // Hetzner Cloud server type availability in a single location
 private hetzner.serverType.location @defaults("available recommended") {
-  // Parent server type ID
-  //
-  // Deprecated in favor of serverType.
-  serverTypeId @maturity("deprecated") int
-  // Location ID
-  //
-  // Deprecated in favor of location.
-  locationId @maturity("deprecated") int
   // Server type offered in this location
   serverType() hetzner.serverType
   // Hetzner location where the server type is offered
@@ -513,11 +484,6 @@ private hetzner.primaryIp @defaults("id ip type") {
   autoDelete bool
   // Whether the IP is blocked
   blocked bool
-  // Datacenter the IP belongs to
-  //
-  // Deprecated, please use location. Hetzner removed the datacenter
-  // association from primary IPs, so this always resolves to null.
-  datacenter() @maturity("deprecated") hetzner.datacenter
   // Location the IP belongs to
   location() hetzner.location
   // Server the IP is assigned to (nullable)
@@ -591,14 +557,6 @@ hetzner.loadBalancer @defaults("id name") {
 
 // Hetzner Cloud load balancer private network attachment
 private hetzner.loadBalancer.privateNet @defaults("ip") {
-  // Parent load balancer ID
-  //
-  // Deprecated in favor of loadBalancer.
-  loadBalancerId @maturity("deprecated") int
-  // Attached network ID
-  //
-  // Deprecated in favor of network.
-  networkId @maturity("deprecated") int
   // Load balancer the network is attached to
   loadBalancer() hetzner.loadBalancer
   // Hetzner Cloud network attached to the load balancer
@@ -609,10 +567,6 @@ private hetzner.loadBalancer.privateNet @defaults("ip") {
 
 // Load balancer service definition
 private hetzner.loadBalancer.service @defaults("protocol listenPort") {
-  // Parent load balancer ID
-  //
-  // Deprecated in favor of loadBalancer.
-  loadBalancerId @maturity("deprecated") int
   // Load balancer the service forwards for
   loadBalancer() hetzner.loadBalancer
   // Protocol (tcp, http, https)
@@ -643,10 +597,6 @@ private hetzner.loadBalancer.service @defaults("protocol listenPort") {
 
 // Load balancer target
 private hetzner.loadBalancer.target @defaults("type") {
-  // Parent load balancer ID
-  //
-  // Deprecated in favor of loadBalancer.
-  loadBalancerId @maturity("deprecated") int
   // Load balancer the target sits behind
   loadBalancer() hetzner.loadBalancer
   // Target type (server, label_selector, ip)
@@ -676,7 +626,7 @@ private hetzner.loadBalancer.target @defaults("type") {
 // maximum concurrent connections, services, targets, and assigned TLS
 // certificates. Use it to confirm a load balancer is provisioned on a
 // class that fits its expected traffic, or to spot classes that are
-// scheduled for retirement through the `deprecated` timestamp. Select a
+// scheduled for retirement through the `deprecation` schedule. Select a
 // type by id with `hetzner.loadBalancerType(id: 1)`.
 private hetzner.loadBalancerType @defaults("id name") {
   init(id? int)
@@ -694,12 +644,6 @@ private hetzner.loadBalancerType @defaults("id name") {
   maxTargets int
   // Maximum assigned certificates
   maxAssignedCertificates int
-  // Announcement timestamp
-  //
-  // Deprecated in favor of deprecation, which carries the retirement date
-  // as well. Holds the timestamp the deprecation was announced, and is null
-  // while the load balancer type is current.
-  deprecated @maturity("deprecated") time
   // Deprecation schedule
   //
   // Empty when the load balancer type is not deprecated. When present it
@@ -922,8 +866,7 @@ private hetzner.location @defaults("id name city") {
 // hetzner.datacenter(id: 4). Reports the location it belongs to, the
 // server types it supports, which of those are currently available for
 // new servers, and which are open for migration, so you can plan
-// placement and capacity. The servers field lists the servers running
-// in this datacenter.
+// placement and capacity.
 private hetzner.datacenter @defaults("id name") {
   init(id? int)
   // Datacenter ID
@@ -940,12 +883,6 @@ private hetzner.datacenter @defaults("id name") {
   availableServerTypes() []hetzner.serverType
   // Server types available for migration into this datacenter
   serverTypesAvailableForMigration() []hetzner.serverType
-  // Servers running in this datacenter
-  //
-  // Hetzner removed the datacenter association from servers, so servers can
-  // no longer be mapped back to a datacenter. This field is deprecated and
-  // always resolves to an empty list.
-  servers() @maturity("deprecated") []hetzner.server
 }
 
 // Hetzner Cloud Storage Box (managed backup/file storage)
@@ -1047,10 +984,6 @@ private hetzner.storageBoxType @defaults("id name size") {
 private hetzner.storageBox.subaccount @defaults("id username") {
   // Subaccount ID
   id int
-  // Parent Storage Box ID
-  //
-  // Deprecated in favor of storageBox.
-  storageBoxId @maturity("deprecated") int
   // Storage Box the subaccount grants access to
   storageBox() hetzner.storageBox
   // Subaccount name
@@ -1089,10 +1022,6 @@ private hetzner.storageBox.subaccount @defaults("id username") {
 private hetzner.storageBox.snapshot @defaults("id name created") {
   // Snapshot ID
   id int
-  // Parent Storage Box ID
-  //
-  // Deprecated in favor of storageBox.
-  storageBoxId @maturity("deprecated") int
   // Storage Box the snapshot was taken from
   storageBox() hetzner.storageBox
   // Snapshot name
@@ -1174,10 +1103,6 @@ private hetzner.zone @defaults("id name mode status") {
 private hetzner.zone.rrset @defaults("name type") {
   // Record set ID (name/type)
   id string
-  // Parent zone ID
-  //
-  // Deprecated in favor of zone.
-  zoneId @maturity("deprecated") int
   // Zone the record set belongs to
   zone() hetzner.zone
   // Record name relative to the zone (e.g., "@", "www")
@@ -1186,10 +1111,6 @@ private hetzner.zone.rrset @defaults("name type") {
   type string
   // TTL in seconds (0 when the record falls back to the zone default)
   ttl int
-  // Records in the set [{value, comment}]
-  //
-  // Deprecated in favor of entries.
-  records @maturity("deprecated") []dict
   // Values in the record set and the project resources they point at
   entries() []hetzner.zone.rrset.record
   // Resource protection (change)

@@ -117,7 +117,6 @@ func newMqlSnowflakeDatabase(runtime *plugin.Runtime, database sdk.Database) (*m
 		"isDefault":     llx.BoolData(database.IsDefault),
 		"isCurrent":     llx.BoolData(database.IsCurrent),
 		"origin":        llx.StringData(origin),
-		"owner":         llx.StringData(database.Owner),
 		"comment":       llx.StringData(database.Comment),
 		"options":       llx.StringData(database.Options),
 		"retentionTime": llx.IntData(database.RetentionTime),
@@ -130,9 +129,16 @@ func newMqlSnowflakeDatabase(runtime *plugin.Runtime, database sdk.Database) (*m
 		return nil, err
 	}
 	mqlResource := r.(*mqlSnowflakeDatabase)
+	mqlResource.cacheOwner = database.Owner
 	return mqlResource, nil
 }
 
+// mqlSnowflakeDatabaseInternal holds the owning role name that ownerRole()
+// resolves.
+type mqlSnowflakeDatabaseInternal struct {
+	cacheOwner string
+}
+
 func (r *mqlSnowflakeDatabase) ownerRole() (*mqlSnowflakeRole, error) {
-	return resolveOwnerRole(r.MqlRuntime, r.Owner.Data, &r.OwnerRole)
+	return resolveOwnerRole(r.MqlRuntime, r.cacheOwner, &r.OwnerRole)
 }

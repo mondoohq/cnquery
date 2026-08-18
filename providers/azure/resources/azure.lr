@@ -670,12 +670,6 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   resiliencyProfile dict
   // Scheduled-events policy (UserInitiatedReboot, UserInitiatedRedeploy, additional publishing targets)
   scheduledEventsPolicy dict
-  // Azure Resource Manager system metadata
-  //
-  // Deprecated in favor of systemMetadata, which exposes createdBy,
-  // createdByType, createdAt, lastModifiedBy, lastModifiedByType, and
-  // lastModifiedAt as typed fields.
-  systemData @maturity("deprecated") dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
   // VM computer name (OS hostname)
@@ -863,12 +857,6 @@ azure.subscription.computeService.hybridMachine @defaults("name location osName 
   licenseProfile dict
   // Raw HybridCompute machine properties
   properties dict
-  // Azure Resource Manager system metadata
-  //
-  // Deprecated in favor of systemMetadata, which exposes createdBy,
-  // createdByType, createdAt, lastModifiedBy, lastModifiedByType, and
-  // lastModifiedAt as typed fields.
-  systemData @maturity("deprecated") dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
   // Installed Arc machine extensions
@@ -903,12 +891,6 @@ private azure.subscription.computeService.hybridMachine.extension @defaults("nam
   settings dict
   // Tag used to trigger a re-run of the extension handler even when settings are unchanged
   forceUpdateTag string
-  // Azure Resource Manager system metadata
-  //
-  // Deprecated in favor of systemMetadata, which exposes createdBy,
-  // createdByType, createdAt, lastModifiedBy, lastModifiedByType, and
-  // lastModifiedAt as typed fields.
-  systemData @maturity("deprecated") dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
   // Latest extension instance view reported by the handler (status code, level, display status, message)
@@ -1037,12 +1019,6 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   diskAccessId string
   // Behavior when the disk experiences slow I/O (AutomaticReattach)
   availabilityPolicy dict
-  // Azure Resource Manager system metadata
-  //
-  // Deprecated in favor of systemMetadata, which exposes createdBy,
-  // createdByType, createdAt, lastModifiedBy, lastModifiedByType, and
-  // lastModifiedAt as typed fields.
-  systemData @maturity("deprecated") dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1228,12 +1204,6 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   immutabilityPolicyStartTime time
   // When the immutability policy expires on the snapshot
   immutabilityPolicyExpirationTime time
-  // Azure Resource Manager system metadata
-  //
-  // Deprecated in favor of systemMetadata, which exposes createdBy,
-  // createdByType, createdAt, lastModifiedBy, lastModifiedByType, and
-  // lastModifiedAt as typed fields.
-  systemData @maturity("deprecated") dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
   // Source disk for this snapshot (resolved from creationData.sourceResourceId when it points to a managed disk)
@@ -1309,12 +1279,6 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   vtpmEnabled bool
   // Align mode between VMSS compute and storage Fault Domain count
   zonalPlatformFaultDomainAlignMode string
-  // Azure Resource Manager system metadata
-  //
-  // Deprecated in favor of systemMetadata, which exposes createdBy,
-  // createdByType, createdAt, lastModifiedBy, lastModifiedByType, and
-  // lastModifiedAt as typed fields.
-  systemData @maturity("deprecated") dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
   // VMs that belong to this scale set
@@ -1686,10 +1650,6 @@ azure.subscription.batchService.account @defaults("id name location") {
   tags map[string]string
   // Batch account type
   type string
-  // Raw identity block for the Batch account
-  //
-  // Deprecated in favor of principalId and userAssignedIdentities.
-  identity @maturity("deprecated") dict
   // Principal ID of the account's system-assigned managed identity; empty when only user-assigned identities are used
   principalId string
   // User-assigned managed identities attached to the Batch account
@@ -1728,18 +1688,6 @@ azure.subscription.batchService.account @defaults("id name location") {
   poolQuota int
   // Batch account allowed authentication modes
   allowedAuthenticationModes []string
-  // Batch account auto storage settings
-  //
-  // Deprecated in favor of autoStorageAccount.
-  autoStorage @maturity("deprecated") dict
-  // Batch account encryption settings
-  //
-  // Deprecated in favor of encryptionKey.
-  encryption @maturity("deprecated") dict
-  // Batch account key vault reference
-  //
-  // Deprecated in favor of keyVault.
-  keyVaultReference @maturity("deprecated") dict
   // Storage account used for auto-storage by the Batch account
   autoStorageAccount() azure.subscription.storageService.account
   // Key Vault associated with the Batch account for user-subscription pool allocation
@@ -2363,12 +2311,6 @@ azure.subscription.networkService.virtualNetworkGateway @defaults("id name locat
   // lifetimes. Empty when the gateway has no point-to-site configuration
   // or uses Azure default cryptography.
   vpnClientIpsecPolicies() []azure.subscription.networkService.virtualNetworkGateway.connection.ipsecPolicy
-  // VPN client configuration, set only when P2S is configured
-  //
-  // Deprecated in favor of vpnClientAuthenticationTypes,
-  // vpnClientAddressPool, aadTenant, aadAudience, aadIssuer, and
-  // radiusAuthenticationConfigured.
-  vpnClientConfiguration @maturity("deprecated") dict
   // Point-to-site client authentication types enabled ("AAD", "Certificate", "Radius"); empty when P2S is not configured
   vpnClientAuthenticationTypes []string
   // Address pool (CIDRs) assigned to point-to-site VPN clients
@@ -2482,10 +2424,6 @@ private azure.subscription.networkService.firewall.networkRule @defaults("name a
   name string
   // Firewall network rule etag
   etag string
-  // Raw rule collection properties
-  //
-  // Deprecated in favor of action, priority, and rules.
-  properties @maturity("deprecated") dict
   // Action applied to traffic matching a rule in this collection ("Allow" or "Deny")
   action string
   // Evaluation priority of the rule collection; lower numbers are evaluated first
@@ -2502,10 +2440,6 @@ private azure.subscription.networkService.firewall.applicationRule @defaults("na
   name string
   // Firewall application rule etag
   etag string
-  // Raw rule collection properties
-  //
-  // Deprecated in favor of action, priority, and rules.
-  properties @maturity("deprecated") dict
   // Action applied to traffic matching a rule in this collection ("Allow" or "Deny")
   action string
   // Evaluation priority of the rule collection; lower numbers are evaluated first
@@ -2522,10 +2456,6 @@ private azure.subscription.networkService.firewall.natRule @defaults("name actio
   name string
   // Firewall NAT rule etag
   etag string
-  // Raw rule collection properties
-  //
-  // Deprecated in favor of action, priority, and rules.
-  properties @maturity("deprecated") dict
   // NAT action applied by this collection ("Dnat" or "Snat")
   action string
   // Evaluation priority of the rule collection; lower numbers are evaluated first
@@ -2692,20 +2622,10 @@ private azure.subscription.networkService.firewallPolicy.idpsBypassRule @default
   protocol string
   // Source IP addresses or ranges
   sourceAddresses []string
-  // Source IP group IDs
-  //
-  // Deprecated in favor of sourceIpGroupRefs, which resolves each IP group to
-  // its typed resource.
-  sourceIpGroups @maturity("deprecated") []string
   // Source IP groups referenced by the bypass rule
   sourceIpGroupRefs() []azure.subscription.networkService.ipGroup
   // Destination IP addresses or ranges
   destinationAddresses []string
-  // Destination IP group IDs
-  //
-  // Deprecated in favor of destinationIpGroupRefs, which resolves each IP
-  // group to its typed resource.
-  destinationIpGroups @maturity("deprecated") []string
   // Destination IP groups referenced by the bypass rule
   destinationIpGroupRefs() []azure.subscription.networkService.ipGroup
   // Destination ports or ranges
@@ -3240,10 +3160,6 @@ azure.subscription.networkService.virtualNetwork.peering @defaults("id name peer
   peeringSyncLevel string
   // The provisioning state: Succeeded, Updating, Deleting, Failed, Creating, Canceled
   provisioningState string
-  // The remote virtual network reference ID
-  //
-  // Deprecated in favor of remoteVirtualNetwork.
-  remoteVirtualNetworkId @maturity("deprecated") string
   // The peered remote virtual network
   remoteVirtualNetwork() azure.subscription.networkService.virtualNetwork
   // Whether traffic between the two VNets is encrypted (Azure global VNet peering encryption)
@@ -3383,11 +3299,6 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
   zones []string
   // Whether this frontend IP configuration uses a public IP address
   isPublic bool
-  // Resource ID of the associated public IP address
-  //
-  // Deprecated in favor of publicIpAddress, which resolves to the typed public
-  // IP address resource.
-  publicIpAddressId @maturity("deprecated") string
   // Public IP address bound to this frontend (internet-facing); null for an internal frontend
   publicIpAddress() azure.subscription.networkService.ipAddress
   // Subnet the frontend is bound to (internal load balancer); null for a public frontend
@@ -3506,10 +3417,6 @@ azure.subscription.networkService.interface @defaults("name location properties.
   migrationPhase string
   // Immutable GUID Azure assigns to the network interface
   resourceGuid string
-  // Raw network security group resource ID
-  //
-  // Deprecated in favor of `networkSecurityGroup()`.
-  networkSecurityGroupId @maturity("deprecated") string
   // Network security group attached to the NIC; null when the NIC inherits NSG enforcement from its subnet only
   networkSecurityGroup() azure.subscription.networkService.securityGroup
   // Custom DNS servers configured on the network interface (overrides VNet-level DNS); empty when the NIC inherits VNet DNS
@@ -3518,12 +3425,6 @@ azure.subscription.networkService.interface @defaults("name location properties.
   appliedDnsServers []string
   // Internal DNS name label assigned to the NIC; empty when unset
   internalDnsNameLabel string
-  // Raw IP configuration dicts
-  //
-  // Deprecated in favor of ipConfigs, which exposes each IP configuration as a
-  // resource with typed subnet, public IP, and application security group
-  // references.
-  ipConfigurations @maturity("deprecated") []dict
   // IP configurations bound to the network interface
   ipConfigs() []azure.subscription.networkService.interface.ipConfiguration
   // Network interface compute vm
@@ -3965,19 +3866,10 @@ private azure.subscription.networkService.watcher.flowlog @defaults("name locati
   version int
   // Network watcher flow log format
   format string
-  // Network watcher flow log retention policy
-  //
-  // Deprecated in favor of retentionEnabled and retentionDays.
-  retentionPolicy @maturity("deprecated") dict
   // Whether a retention policy is enforced on the flow logs
   retentionEnabled bool
   // Number of days flow logs are retained; 0 means logs are retained indefinitely
   retentionDays int
-  // Network watcher flow log analytics
-  //
-  // Deprecated in favor of trafficAnalyticsEnabled,
-  // trafficAnalyticsInterval, and trafficAnalyticsWorkspaceId.
-  analytics @maturity("deprecated") dict
   // Whether Traffic Analytics is enabled for the flow logs
   trafficAnalyticsEnabled bool
   // Traffic Analytics processing interval, in minutes
@@ -4263,11 +4155,6 @@ private azure.subscription.networkService.applicationGateway.sslCertificate @def
   id string
   // Certificate name
   name string
-  // Key Vault secret URI backing the certificate
-  //
-  // Deprecated in favor of keyVaultSecret, which resolves the typed Key
-  // Vault secret. Empty when the certificate was uploaded directly.
-  keyVaultSecretId @maturity("deprecated") string
   // Key Vault secret backing the certificate (null when the cert was uploaded directly)
   keyVaultSecret() azure.subscription.keyVaultService.secret
   // Base64-encoded public certificate data
@@ -4443,10 +4330,6 @@ azure.subscription.networkService.applicationFirewallPolicy @defaults("id name l
   properties dict
   // Policy enforcement mode ("Prevention" blocks matching requests; "Detection" only logs them)
   mode string
-  // Policy enabled state
-  //
-  // Deprecated in favor of enabled, which exposes this as a boolean.
-  enabledState @maturity("deprecated") string
   // Whether the policy is enabled
   enabled bool
   // Whether the request body is inspected by the WAF
@@ -4647,10 +4530,6 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
   type string
   // Provisioning state of the private endpoint
   provisioningState string
-  // Subnet ID from which the private IP is allocated
-  //
-  // Deprecated in favor of subnet.
-  subnetId @maturity("deprecated") string
   // Subnet the private endpoint's network interface is allocated in; null when the endpoint has no subnet
   //
   // Resolves the subnet hosting the private endpoint so its network security
@@ -4678,15 +4557,11 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
 }
 
 // Azure network private endpoint service connection
-private azure.subscription.networkService.privateEndpoint.serviceconnection @defaults("name privateLinkServiceId") {
+private azure.subscription.networkService.privateEndpoint.serviceconnection @defaults("name connectionStatus") {
   // Connection ID
   id string
   // Connection name
   name string
-  // Raw private link service resource ID
-  //
-  // Deprecated in favor of `privateLinkService()`.
-  privateLinkServiceId @maturity("deprecated") string
   // Private link service being connected to
   privateLinkService() azure.subscription.networkService.privateLinkService
   // Group IDs obtained from the remote resource
@@ -4834,10 +4709,6 @@ azure.subscription.networkService.trafficManagerProfile @defaults("id name locat
   type string
   // Traffic Manager profile properties
   properties dict
-  // Profile status
-  //
-  // Deprecated in favor of status, which exposes this as a boolean.
-  profileStatus @maturity("deprecated") string
   // Whether the profile is enabled
   status bool
   // Traffic routing method ("Performance", "Weighted", "Priority", "Geographic", "MultiValue", "Subnet")
@@ -4880,10 +4751,6 @@ private azure.subscription.networkService.trafficManagerProfile.endpoint @defaul
   type string
   // Endpoint properties
   properties dict
-  // Endpoint status
-  //
-  // Deprecated in favor of status, which exposes this as a boolean.
-  endpointStatus @maturity("deprecated") string
   // Whether the endpoint is enabled
   status bool
   // Most recent monitor probe result ("CheckingEndpoint", "Online", "Degraded", "Disabled", "Inactive", "Stopped")
@@ -5949,12 +5816,6 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // fields, the encryption fields, and so on); prefer those over reading
   // raw keys here.
   properties dict
-  // Storage account identity
-  //
-  // Deprecated in favor of principalId, tenantId, userAssignedIdentities,
-  // and encryptionIdentity, which expose the managed identity configuration
-  // as typed accessors.
-  identity @maturity("deprecated") dict
   // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // Tenant ID of the account's managed identity; empty when no managed identity is configured
@@ -6554,10 +6415,6 @@ private azure.subscription.storageService.account.privateEndpointConnection @def
   name string
   // Resource type
   type string
-  // ARM resource ID of the consumer-side private endpoint, when present
-  //
-  // Deprecated in favor of privateEndpoint.
-  privateEndpointId @maturity("deprecated") string
   // Consumer-side private endpoint, or null when the connection has none
   //
   // Resolves the private endpoint connecting to this storage account so the
@@ -6786,10 +6643,6 @@ azure.subscription.webService.appsite @defaults("id name location") {
   tags map[string]string
   // App site properties
   properties dict
-  // App site identity
-  //
-  // Deprecated in favor of principalId, userAssignedIdentities, and identityType.
-  identity @maturity("deprecated") dict
   // Managed identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned,UserAssigned")
   identityType string
   // Principal ID of the app's system-assigned managed identity; empty when no system-assigned identity is enabled
@@ -6901,10 +6754,6 @@ private azure.subscription.privateEndpointConnection @defaults("id name type") {
   // return an empty list; the addresses are always available through
   // privateEndpoint and its network interfaces.
   ipAddresses []string
-  // Raw private endpoint resource ID
-  //
-  // Deprecated in favor of `privateEndpoint()`.
-  privateEndpointId @maturity("deprecated") string
   // Associated private endpoint
   privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Private link service connection state details
@@ -7365,28 +7214,8 @@ private azure.subscription.sqlService.server @defaults("name location properties
   firewallRules() []azure.subscription.sqlService.firewallrule
   // SQL Database server Entra ID administrators
   azureAdAdministrators() []azure.subscription.sqlService.server.administrator
-  // Raw server connection policy
-  //
-  // Deprecated in favor of `connectionType`.
-  connectionPolicy() @maturity("deprecated") dict
-  // Raw server auditing policy
-  //
-  // Deprecated in favor of `blobAuditingPolicy`.
-  auditingPolicy() @maturity("deprecated") dict
   // SQL Database server administrator login
   administratorLogin string
-  // Raw server security alert policy
-  //
-  // Deprecated in favor of `securityAlertPolicyConfig`.
-  securityAlertPolicy() @maturity("deprecated") dict
-  // Raw server encryption protector
-  //
-  // Deprecated in favor of `encryptionProtectorConfig`.
-  encryptionProtector() @maturity("deprecated") dict
-  // Legacy preview threat detection policy
-  //
-  // Deprecated in favor of `securityAlertPolicyConfig` and `advancedThreatProtectionSetting`.
-  threatDetectionPolicy() @maturity("deprecated") dict
   // SQL Database server vulnerability assessment settings
   vulnerabilityAssessmentSettings() azure.subscription.sqlService.server.vulnerabilityassessmentsettings
   virtualNetworkRules() []azure.subscription.sqlService.virtualNetworkRule
@@ -7578,10 +7407,6 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   //
   // Null on a provisioned (non-serverless) database.
   minCapacity float
-  // Raw transparent data encryption configuration
-  //
-  // Deprecated in favor of `transparentDataEncryptionEnabled`.
-  transparentDataEncryption() @maturity("deprecated") dict
   // Automatic tuning advisors for the database
   //
   // Raw Database Advisor objects returned by Azure SQL. Each entry has
@@ -7589,18 +7414,6 @@ private azure.subscription.sqlService.database @defaults("name edition zoneRedun
   // `recommendedActions` list holds the index and query-plan
   // recommendations Azure SQL generated for the database.
   advisor() []dict
-  // Legacy preview threat detection policy
-  //
-  // Deprecated in favor of `securityAlertPolicy`.
-  threatDetectionPolicy() @maturity("deprecated") dict
-  // Legacy per-database connection policy
-  //
-  // Deprecated, please use `azure.subscription.sqlService.server.connectionType`. Azure SQL DB has no per-database connection policy.
-  connectionPolicy() @maturity("deprecated") dict
-  // Raw database auditing policy
-  //
-  // Deprecated in favor of `blobAuditingPolicy`.
-  auditingPolicy() @maturity("deprecated") dict
   // SQL database advanced threat protection settings
   advancedThreatProtection() azure.subscription.sqlService.database.advancedthreatprotection
   // SQL database backup short-term retention policy
@@ -10038,73 +9851,33 @@ private azure.subscription.monitorService.diagnosticSettingsCategory @defaults("
 // access policies, alert suppression rules, workspace settings, and security
 // contacts. Audit it to confirm the intended protections are turned on and to
 // review the subscription's overall security posture.
-private azure.subscription.cloudDefenderService @defaults("defenderForServers.enabled defenderForContainers.enabled"){
+private azure.subscription.cloudDefenderService @defaults("forServers.enabled forContainers.enabled"){
   // Subscription identifier
   subscriptionId string
   // Whether the monitoring agent is automatically provisioned on new VMs
   monitoringAgentAutoProvision() bool
   // List of Defender for Servers components and whether they are enabled
-  //
-  // Deprecated in favor of `forServers`.
-  defenderForServers() @maturity("deprecated") dict
-  // List of Defender for Servers components and whether they are enabled
   forServers() azure.subscription.cloudDefenderService.defenderForServers
-  // Microsoft Defender for App Service configuration
-  //
-  // Deprecated in favor of `forAppServices`.
-  defenderForAppServices() @maturity("deprecated") dict
   // Microsoft Defender for App Service configuration
   forAppServices() azure.subscription.cloudDefenderService.defenderForAppServices
   // Microsoft Defender for SQL servers on machines configuration
-  //
-  // Deprecated in favor of `forSqlServersOnMachines`.
-  defenderForSqlServersOnMachines() @maturity("deprecated") dict
-  // Microsoft Defender for SQL servers on machines configuration
   forSqlServersOnMachines() azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines
-  // Microsoft Defender for Azure SQL Databases configuration
-  //
-  // Deprecated in favor of `forSqlDatabases`.
-  defenderForSqlDatabases() @maturity("deprecated") dict
   // Microsoft Defender for Azure SQL Databases configuration
   forSqlDatabases() azure.subscription.cloudDefenderService.defenderForSqlDatabases
   // Microsoft Defender for open-source relational databases configuration
-  //
-  // Deprecated in favor of `forOpenSourceDatabases`.
-  defenderForOpenSourceDatabases() @maturity("deprecated") dict
-  // Microsoft Defender for open-source relational databases configuration
   forOpenSourceDatabases() azure.subscription.cloudDefenderService.defenderForOpenSourceDatabases
-  // Microsoft Defender for Azure Cosmos DB configuration
-  //
-  // Deprecated in favor of `forCosmosDb`.
-  defenderForCosmosDb() @maturity("deprecated") dict
   // Microsoft Defender for Azure Cosmos DB configuration
   forCosmosDb() azure.subscription.cloudDefenderService.defenderForCosmosDb
   // Microsoft Defender for Storage Accounts configuration
-  //
-  // Deprecated in favor of `forStorageAccounts`.
-  defenderForStorageAccounts() @maturity("deprecated") dict
-  // Microsoft Defender for Storage Accounts configuration
   forStorageAccounts() azure.subscription.cloudDefenderService.defenderForStorageAccounts
   // Microsoft Defender for Key Vault configuration
-  //
-  // Deprecated in favor of `forKeyVaults`.
-  defenderForKeyVaults() @maturity("deprecated") dict
-  // Microsoft Defender for Key Vault configuration
   forKeyVaults() azure.subscription.cloudDefenderService.defenderForKeyVaults
-  // Microsoft Defender for Resource Manager configuration
-  //
-  // Deprecated in favor of `forResourceManager`.
-  defenderForResourceManager() @maturity("deprecated") dict
   // Microsoft Defender for Resource Manager configuration
   forResourceManager() azure.subscription.cloudDefenderService.defenderForResourceManager
   // Microsoft Defender for APIs configuration
   defenderForApis() azure.subscription.cloudDefenderService.defenderForApis
   // Microsoft Defender Cloud Security Posture Management (CSPM) configuration
   defenderCSPM() azure.subscription.cloudDefenderService.defenderCSPM
-  // Defender for Containers components configuration
-  //
-  // Deprecated in favor of `forContainers`.
-  defenderForContainers() @maturity("deprecated") dict
   // Defender for Containers components configuration
   forContainers() azure.subscription.cloudDefenderService.defenderForContainers
   // List of configured security contacts
@@ -11239,12 +11012,6 @@ private azure.subscription.authorizationService.roleDefinition.permission @defau
 private azure.subscription.authorizationService.roleAssignment  @defaults("principalId principalType role.name") {
   id string
   description string
-  // Principal type of the assignment
-  //
-  // Deprecated in favor of `principalType`, which carries the same value
-  // under a correctly descriptive name (this field is named `type` but
-  // holds the principal type, not the ARM resource type).
-  type @maturity("deprecated") string
   scope string
   principalId string
   // Type of the assigned principal ("User", "Group", "ServicePrincipal", "ForeignGroup", or "Device")
@@ -11388,10 +11155,6 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   // or `ingressApplicationGateway`) and whose value is an object with
   // `enabled`, `config`, and `identity`.
   addonProfiles []dict
-  // Raw agent pool profiles attached to the cluster
-  //
-  // Deprecated in favor of `nodePools()`.
-  agentPoolProfiles @maturity("deprecated") []dict
   // Node pools (agent pools) attached to the cluster
   nodePools() []azure.subscription.aksService.cluster.nodePool
   // Kubernetes API server access configuration
@@ -12089,10 +11852,6 @@ private azure.subscription.policy.complianceSummary @defaults("nonCompliantResou
 private azure.subscription.iotService {
   // Subscription identifier
   subscriptionId string
-  // Raw IoT hubs in the subscription
-  //
-  // Deprecated in favor of `iotHubs`.
-  hubs() @maturity("deprecated") []dict
   // Typed IoT hubs in the subscription
   iotHubs() []azure.subscription.iotService.iotHub
 }
@@ -12292,13 +12051,6 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   principalId string
   // User-assigned managed identities attached to the cache
   userAssignedIdentities() []azure.subscription.managedIdentity
-  // Key Vault key used for customer-managed encryption
-  //
-  // Deprecated in favor of the Redis Enterprise resources. Always null:
-  // customer-managed key encryption is not available on Azure Cache for
-  // Redis, only on Redis Enterprise / Azure Managed Redis, and the Redis
-  // management API exposes no encryption model on this resource.
-  encryptionKey() @maturity("deprecated") azure.subscription.keyVaultService.key
   // Private endpoint connections for the Redis cache
   privateEndpointConnections() []azure.subscription.cacheService.redisInstance.privateEndpointConnection
   // Firewall rules for the Redis cache
@@ -12347,10 +12099,6 @@ private azure.subscription.cacheService.redisInstance.privateEndpointConnection 
   name string
   // Private endpoint connection type
   type string
-  // Raw private endpoint resource ID
-  //
-  // Deprecated in favor of `privateEndpoint()`.
-  privateEndpointId @maturity("deprecated") string
   // Associated private endpoint
   privateEndpoint() azure.subscription.networkService.privateEndpoint
   // Connection status (Approved, Pending, Rejected)
@@ -12414,27 +12162,6 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   // (Azure DevOps only), repositoryName, collaborationBranch, rootFolder,
   // and lastCommitId. Null when the factory is not bound to a repository.
   repoConfiguration dict
-  // Encryption configuration
-  //
-  // Deprecated in favor of cmkKeyName, cmkKeyVaultUri, cmkKeyVersion, and
-  // cmkUserAssignedIdentity.
-  encryption @maturity("deprecated") dict
-  // Customer-managed key name in Key Vault used to encrypt the factory
-  //
-  // Deprecated in favor of cmkKey.
-  cmkKeyName @maturity("deprecated") string
-  // Key Vault base URL backing the customer-managed encryption key
-  //
-  // Deprecated in favor of cmkKey.
-  cmkKeyVaultUri @maturity("deprecated") string
-  // Version of the customer-managed encryption key
-  //
-  // Deprecated in favor of cmkKey.
-  cmkKeyVersion @maturity("deprecated") string
-  // User-assigned identity resource ID used to access the customer-managed key
-  //
-  // Deprecated in favor of cmkIdentity.
-  cmkUserAssignedIdentity @maturity("deprecated") string
   // Customer-managed key in Key Vault used to encrypt the factory (null for platform-managed encryption)
   cmkKey() azure.subscription.keyVaultService.key
   // User-assigned managed identity used to access the customer-managed encryption key (null when the factory's system-assigned identity is used)
@@ -12812,11 +12539,6 @@ azure.subscription.containerRegistryService.registry @defaults("id name location
   tags map[string]string
   // SKU name ("Basic", "Standard", or "Premium")
   skuName string
-  // Identity configuration
-  //
-  // Deprecated in favor of principalId, tenantId, and userAssignedIdentities,
-  // which expose the managed identity configuration as typed accessors.
-  identity @maturity("deprecated") dict
   // Principal ID of the registry's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // Tenant ID of the registry's managed identity; empty when no managed identity is configured
@@ -13729,10 +13451,6 @@ azure.subscription.functionsService.functionApp @defaults("id name location") {
   clientCertEnabled bool
   // Client certificate mode (Required, Optional, OptionalInteractiveUser)
   clientCertMode string
-  // Managed service identity ID
-  //
-  // Deprecated in favor of principalId and userAssignedIdentities.
-  managedServiceIdentityId @maturity("deprecated") string
   // Principal ID of the function app's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the function app; null when no system-assigned identity is enabled
@@ -13883,10 +13601,6 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   // Each entry has keys `keyName`, `keyVaultUri`, `keyVersion`, and
   // `identity` (the user-assigned identity used to reach the vault).
   cmkKeys []dict
-  // Raw namespace network rule set
-  //
-  // Deprecated in favor of `networkRules()`.
-  networkRuleSet() @maturity("deprecated") dict
   // Namespace network rules (default action, public network access, IP / VNet rules, trusted-service access)
   networkRules() azure.subscription.serviceBusService.namespace.networkRules
   // Queues in this namespace
@@ -14136,10 +13850,6 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   // `keyName`, `keyVaultUri`, `keyVersion`, and an `identity` used to
   // reach the key.
   cmkKeys []dict
-  // Raw namespace network rule set
-  //
-  // Deprecated in favor of `networkRules()`.
-  networkRuleSet() @maturity("deprecated") dict
   // Namespace network rules (default action, public network access, IP / VNet rules, trusted-service access)
   networkRules() azure.subscription.eventHubService.namespace.networkRules
   // Event Hubs in this namespace
@@ -15401,10 +15111,6 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   //   azureQueue: {queueName, queueLength}
   //   custom:     {type, metadata, identity}
   scaleRules []dict
-  // Identity block (system + user-assigned principal IDs)
-  //
-  // Deprecated in favor of principalId and userAssignedIdentities.
-  identity @maturity("deprecated") dict
   // Principal ID of the container app's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the container app; null when no system-assigned identity is enabled
@@ -15698,12 +15404,6 @@ private azure.subscription.containerInstanceService.containerGroup.container @de
   // Keys: exec, httpGet, initialDelaySeconds, periodSeconds,
   // failureThreshold, successThreshold, and timeoutSeconds.
   readinessProbe dict
-  // Raw security context
-  //
-  // Deprecated in favor of privileged, allowPrivilegeEscalation,
-  // runAsUser, runAsGroup, seccompProfile, addedCapabilities, and
-  // droppedCapabilities.
-  securityContext @maturity("deprecated") dict
   // Whether the container runs in privileged mode (full host access)
   privileged bool
   // Whether a process can gain more privileges than its parent
@@ -15945,10 +15645,6 @@ azure.subscription.apiManagementService.service @defaults("name location skuName
   privateIpAddresses []string
   // Outbound public IPv4 prefixes associated with NAT Gateway-deployed services (Premium SKU on stv2)
   outboundPublicIpAddresses []string
-  // Number of private endpoint connections to the service
-  //
-  // Deprecated in favor of `privateEndpointConnections`.
-  privateEndpointConnectionCount @maturity("deprecated") int
   // Private endpoint connections to the service
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Availability zones the service is spread across
@@ -17617,10 +17313,6 @@ private azure.subscription.cognitiveServicesService.account.raiTopic @defaults("
   failedReason string
   // URL of the sample blob used to train the topic
   sampleBlobUrl string
-  // When the topic was created
-  //
-  // Deprecated in favor of creationTime.
-  createdAt @maturity("deprecated") time
   // When the topic was created
   creationTime time
   // When the topic was last modified

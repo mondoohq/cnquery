@@ -182,10 +182,6 @@ digitalocean.droplet @defaults("id name status") {
   publicIpv6 string
   // Tags applied to the droplet
   tags []string
-  // VPC UUID
-  //
-  // Deprecated in favor of `vpc()`.
-  vpcUuid @maturity("deprecated") string
   // VPC the droplet is attached to
   vpc() digitalocean.vpc
   // Features (e.g., monitoring, backups)
@@ -194,10 +190,6 @@ digitalocean.droplet @defaults("id name status") {
   backupsEnabled bool
   // Monitoring enabled
   monitoringEnabled bool
-  // Raw image details dict (id, name, distribution, slug)
-  //
-  // Deprecated in favor of `baseImage`.
-  image @maturity("deprecated") dict
   // Base image the droplet runs
   baseImage() digitalocean.image
   // Firewalls covering this droplet (by id or matching tag)
@@ -317,22 +309,10 @@ digitalocean.firewall @defaults("id name status") {
   status string
   // Time the resource was created
   createdAt time
-  // Rules controlling incoming traffic to protected droplets
-  //
-  // Deprecated in favor of `ingressRules`.
-  inboundRules @maturity("deprecated") []dict
-  // Rules controlling outgoing traffic from protected droplets
-  //
-  // Deprecated in favor of `egressRules`.
-  outboundRules @maturity("deprecated") []dict
   // Ingress rules controlling incoming traffic to protected droplets
   ingressRules() []digitalocean.firewall.ingressRule
   // Egress rules controlling outgoing traffic from protected droplets
   egressRules() []digitalocean.firewall.egressRule
-  // Droplet IDs protected by this firewall
-  //
-  // Deprecated in favor of `droplets()`.
-  dropletIds @maturity("deprecated") []int
   // Droplets covered by this firewall (by direct ID or matching tag)
   droplets() []digitalocean.droplet
   // Tags used to target droplets
@@ -863,10 +843,6 @@ digitalocean.volume @defaults("id name sizeGigabytes") {
   createdAt time
   // Tags
   tags []string
-  // Droplet IDs attached to this volume
-  //
-  // Deprecated in favor of `droplets`.
-  dropletIds @maturity("deprecated") []int
   // Droplets this volume is attached to
   droplets() []digitalocean.droplet
   // Snapshots taken of this volume
@@ -908,27 +884,12 @@ digitalocean.loadBalancer @defaults("id name status") {
   enableProxyProtocol bool
   // Enable backend keepalive
   enableBackendKeepalive bool
-  // VPC UUID
-  //
-  // Deprecated in favor of `vpc()`.
-  vpcUuid @maturity("deprecated") string
   // VPC the load balancer is attached to
   vpc() digitalocean.vpc
-  // Droplet IDs attached to the load balancer
-  //
-  // Deprecated in favor of `droplets()`.
-  dropletIds @maturity("deprecated") []int
   // Droplets attached to this load balancer
   droplets() []digitalocean.droplet
   // Tags
   tags []string
-  // Forwarding rules
-  //
-  // Deprecated in favor of listeners, which resolves the certificate each
-  // rule presents. Listener mappings from incoming connections to backend
-  // targets. Each dict has keys entryProtocol, entryPort, targetProtocol,
-  // targetPort, certificateId, and tlsPassthrough.
-  forwardingRules @maturity("deprecated") []dict
   // Listeners the load balancer accepts connections on
   //
   // One entry per forwarding rule, carrying the protocol and port traffic
@@ -1094,10 +1055,6 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   clusterSubnet string
   // Service subnet
   serviceSubnet string
-  // VPC UUID
-  //
-  // Deprecated in favor of `vpc()`.
-  vpcUuid @maturity("deprecated") string
   // VPC the cluster is attached to
   vpc() digitalocean.vpc
   // Auto-upgrade enabled
@@ -2560,10 +2517,6 @@ digitalocean.gradientai.agent @defaults("uuid name region") {
   versionHash string
   // ID of the project the agent belongs to
   projectId string
-  // UUID of the VPC the agent runs in
-  //
-  // Deprecated in favor of `vpc`.
-  vpcUuid @maturity("deprecated") string
   // Public IPs the agent egresses from
   vpcEgressIps []string
   // Tags applied to the agent
@@ -3046,10 +2999,6 @@ private digitalocean.gradientai.dedicatedInferenceEndpoint @defaults("id name re
   region string
   // Lifecycle status
   status string
-  // UUID of the VPC the endpoint runs in
-  //
-  // Deprecated in favor of `vpc`.
-  vpcUuid @maturity("deprecated") string
   // Model IDs served by the endpoint
   providerModelIds []string
   // Public endpoint FQDN

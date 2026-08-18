@@ -178,12 +178,12 @@ func buildSecretReplicaRegions(runtime *plugin.Runtime, arn string, replicas []s
 				"region":           llx.StringDataPtr(replica.Region),
 				"status":           llx.StringData(string(replica.Status)),
 				"statusMessage":    llx.StringDataPtr(replica.StatusMessage),
-				"kmsKeyId":         llx.StringDataPtr(replica.KmsKeyId),
 				"lastAccessedDate": llx.TimeDataPtr(replica.LastAccessedDate),
 			})
 		if err != nil {
 			return nil, err
 		}
+		mqlReplica.(*mqlAwsSecretsmanagerSecretReplicaRegion).cacheKmsKeyId = convert.ToValue(replica.KmsKeyId)
 		res = append(res, mqlReplica)
 	}
 	return res, nil
@@ -462,7 +462,7 @@ func (a *mqlAwsSecretsmanagerSecret) deletedAt() (*time.Time, error) {
 }
 
 func (a *mqlAwsSecretsmanagerSecretReplicaRegion) kmsKey() (*mqlAwsKmsKey, error) {
-	kmsKeyId := a.KmsKeyId.Data
+	kmsKeyId := a.cacheKmsKeyId
 	if kmsKeyId == "" {
 		a.KmsKey.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -483,4 +483,8 @@ func (a *mqlAwsSecretsmanagerSecretReplicaRegion) kmsKey() (*mqlAwsKmsKey, error
 
 func secretTagsToMap(tags []secretstypes.Tag) map[string]any {
 	return tagsToMap(tags, func(t secretstypes.Tag) *string { return t.Key }, func(t secretstypes.Tag) *string { return t.Value })
+}
+
+type mqlAwsSecretsmanagerSecretReplicaRegionInternal struct {
+	cacheKmsKeyId string
 }

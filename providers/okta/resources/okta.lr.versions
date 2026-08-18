@@ -601,8 +601,6 @@ okta.user.roles 9.0.0
 okta.user.status 9.0.0
 okta.user.statusChanged 9.0.0
 okta.user.transitioningToStatus 9.0.0
-okta.user.type 9.0.0
-okta.user.typeId 9.0.0
 okta.user.userType 13.5.1
 okta.userFactor 13.1.6
 okta.userFactor.created 13.1.6

@@ -273,6 +273,9 @@ func (g *mqlGcpProjectGkeServiceClusterNetworkConfig) id() (string, error) {
 
 type mqlGcpProjectGkeServiceClusterInternal struct {
 	cacheDatabaseEncryptionKeyName string
+	cacheLoggingService            string
+	cacheMonitoringService         string
+	cacheNetworkPolicyConfig       any
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) databaseEncryptionKey() (*mqlGcpProjectKmsServiceKeyringCryptokey, error) {
@@ -301,10 +304,7 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) bootDiskKmsKeyRef() (*mql
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServiceClusterNetworkPolicy, error) {
-	if g.NetworkPolicyConfig.Error != nil {
-		return nil, g.NetworkPolicyConfig.Error
-	}
-	npConfig := g.NetworkPolicyConfig.Data
+	npConfig := g.cacheNetworkPolicyConfig
 	if npConfig == nil {
 		g.NetworkPolicy.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -590,20 +590,9 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			}
 		}
 
-		var binAuth map[string]any
-		var binaryAuthorizationEnabled bool
 		var binaryAuthorizationEvaluationMode string
 		if c.BinaryAuthorization != nil {
-			binAuth = map[string]any{
-				"enabled":        c.BinaryAuthorization.Enabled,
-				"evaluationMode": c.BinaryAuthorization.EvaluationMode.String(),
-			}
-			// Binary Auth is "enabled" when evaluationMode is anything other than
-			// DISABLED/UNSPECIFIED, or when the legacy boolean Enabled field is set.
-			mode := c.BinaryAuthorization.EvaluationMode
-			binaryAuthorizationEnabled = c.BinaryAuthorization.Enabled ||
-				(mode != containerpb.BinaryAuthorization_EVALUATION_MODE_UNSPECIFIED && mode != containerpb.BinaryAuthorization_DISABLED)
-			binaryAuthorizationEvaluationMode = mode.String()
+			binaryAuthorizationEvaluationMode = c.BinaryAuthorization.EvaluationMode.String()
 		}
 
 		var legacyAbac map[string]any
@@ -641,27 +630,15 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			}
 		}
 
-		var masterAuthorizedNetworksCfg map[string]any
-		var masterAuthorizedNetworksEnabled bool
 		// Derived: the CIDR allowlist and enablement read from the modern
 		// ControlPlaneEndpointsConfig when present, otherwise the legacy
 		// MasterAuthorizedNetworksConfig.
 		var masterAuthorizedNetworksCidrs []any
 		var masterAuthorizedNetworksAllowed bool
 		if c.MasterAuthorizedNetworksConfig != nil {
-			masterAuthorizedNetworksEnabled = c.MasterAuthorizedNetworksConfig.Enabled
 			masterAuthorizedNetworksAllowed = c.MasterAuthorizedNetworksConfig.Enabled
-			cidrBlocks := make([]any, 0, len(c.MasterAuthorizedNetworksConfig.CidrBlocks))
 			for _, cidrBlock := range c.MasterAuthorizedNetworksConfig.CidrBlocks {
-				cidrBlocks = append(cidrBlocks, map[string]any{
-					"displayName": cidrBlock.DisplayName,
-					"cidrBlock":   cidrBlock.CidrBlock,
-				})
 				masterAuthorizedNetworksCidrs = append(masterAuthorizedNetworksCidrs, cidrBlock.CidrBlock)
-			}
-			masterAuthorizedNetworksCfg = map[string]any{
-				"enabled":    c.MasterAuthorizedNetworksConfig.Enabled,
-				"cidrBlocks": cidrBlocks,
 			}
 		}
 
@@ -700,13 +677,9 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 
 		var privateClusterCfg map[string]any
-		var privateNodesEnabled, privateEndpointEnabled, masterGlobalAccessEnabled bool
 		if c.PrivateClusterConfig != nil {
-			privateNodesEnabled = c.PrivateClusterConfig.EnablePrivateNodes
-			privateEndpointEnabled = c.PrivateClusterConfig.EnablePrivateEndpoint
 			var masterGlobalAccessCfg map[string]any
 			if c.PrivateClusterConfig.MasterGlobalAccessConfig != nil {
-				masterGlobalAccessEnabled = c.PrivateClusterConfig.MasterGlobalAccessConfig.Enabled
 				masterGlobalAccessCfg = map[string]any{
 					"enabled": c.PrivateClusterConfig.MasterGlobalAccessConfig.Enabled,
 				}
@@ -943,8 +916,6 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"id":                                       llx.StringData(c.Id),
 			"name":                                     llx.StringData(c.Name),
 			"description":                              llx.StringData(c.Description),
-			"loggingService":                           llx.StringData(c.LoggingService),
-			"monitoringService":                        llx.StringData(c.MonitoringService),
 			"network":                                  llx.StringData(c.Network),
 			"clusterIpv4Cidr":                          llx.StringData(c.ClusterIpv4Cidr),
 			"subnetwork":                               llx.StringData(c.Subnetwork),
@@ -970,20 +941,13 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"workloadIdentityEnabled":                  llx.BoolData(workloadIdentityEnabled),
 			"ipAllocationPolicy":                       llx.ResourceData(ipAllocPolicy, "gcp.project.gkeService.cluster.ipAllocationPolicy"),
 			"networkConfig":                            llx.ResourceData(networkConfig, "gcp.project.gkeService.cluster.networkConfig"),
-			"binaryAuthorization":                      llx.DictData(binAuth),
-			"binaryAuthorizationEnabled":               llx.BoolData(binaryAuthorizationEnabled),
 			"binaryAuthorizationEvaluationMode":        llx.StringData(binaryAuthorizationEvaluationMode),
 			"legacyAbac":                               llx.DictData(legacyAbac),
 			"legacyAbacEnabled":                        llx.BoolData(legacyAbacEnabled),
 			"masterAuth":                               llx.DictData(masterAuth),
 			"clientCertificateEnabled":                 llx.BoolData(clientCertificateEnabled),
 			"basicAuthEnabled":                         llx.BoolData(basicAuthEnabled),
-			"masterAuthorizedNetworksConfig":           llx.DictData(masterAuthorizedNetworksCfg),
-			"masterAuthorizedNetworksEnabled":          llx.BoolData(masterAuthorizedNetworksEnabled),
 			"privateClusterConfig":                     llx.DictData(privateClusterCfg),
-			"privateNodesEnabled":                      llx.BoolData(privateNodesEnabled),
-			"privateEndpointEnabled":                   llx.BoolData(privateEndpointEnabled),
-			"masterGlobalAccessEnabled":                llx.BoolData(masterGlobalAccessEnabled),
 			"databaseEncryption":                       llx.DictData(databaseEncryption),
 			"databaseEncryptionState":                  llx.StringData(databaseEncryptionState),
 			"shieldedNodesConfig":                      llx.DictData(shieldedNodesConfig),
@@ -992,7 +956,6 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"confidentialNodesConfig":                  llx.DictData(confidentialNodesConfig),
 			"confidentialNodesEnabled":                 llx.BoolData(confidentialNodesEnabled),
 			"identityServiceConfig":                    llx.DictData(identityServiceConfig),
-			"networkPolicyConfig":                      llx.DictData(networkPolicyConfig),
 			"releaseChannel":                           llx.StringData(strings.ToLower(c.ReleaseChannel.GetChannel().String())),
 			"enableTpu":                                llx.BoolData(c.EnableTpu),
 			"currentNodeCount":                         llx.IntData(int64(c.CurrentNodeCount)),
@@ -1049,6 +1012,9 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 		}
 		mqlC := mqlCluster.(*mqlGcpProjectGkeServiceCluster)
 		mqlC.cacheDatabaseEncryptionKeyName = databaseEncryptionKeyName
+		mqlC.cacheLoggingService = c.LoggingService
+		mqlC.cacheMonitoringService = c.MonitoringService
+		mqlC.cacheNetworkPolicyConfig = networkPolicyConfig
 		if notificationConfig == nil {
 			mqlC.NotificationConfig.State = plugin.StateIsNull | plugin.StateIsSet
 		}
@@ -1563,18 +1529,12 @@ func (g *mqlGcpProjectGkeServiceClusterNotificationConfig) topic() (*mqlGcpProje
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) loggingEnabled() (bool, error) {
-	if g.LoggingService.Error != nil {
-		return false, g.LoggingService.Error
-	}
-	v := strings.ToLower(g.LoggingService.Data)
+	v := strings.ToLower(g.cacheLoggingService)
 	return v != "" && v != "none", nil
 }
 
 func (g *mqlGcpProjectGkeServiceCluster) monitoringEnabled() (bool, error) {
-	if g.MonitoringService.Error != nil {
-		return false, g.MonitoringService.Error
-	}
-	v := strings.ToLower(g.MonitoringService.Data)
+	v := strings.ToLower(g.cacheMonitoringService)
 	return v != "" && v != "none", nil
 }
 

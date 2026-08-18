@@ -21,7 +21,6 @@ arista.eos.aaa.radiusServer.retransmit 13.3.15
 arista.eos.aaa.radiusServer.timeout 13.3.15
 arista.eos.aaa.radiusServer.vrf 13.3.15
 arista.eos.aaa.radiusServerHosts 13.3.15
-arista.eos.aaa.radiusServers 13.1.9
 arista.eos.aaa.rootAccountEnabled 13.3.15
 arista.eos.aaa.rootAccountNoPassword 13.3.15
 arista.eos.aaa.rootSecretFormat 13.3.15
@@ -40,7 +39,6 @@ arista.eos.aaa.tacacsServer.singleConnection 13.3.15
 arista.eos.aaa.tacacsServer.timeout 13.3.15
 arista.eos.aaa.tacacsServer.vrf 13.3.15
 arista.eos.aaa.tacacsServerHosts 13.3.15
-arista.eos.aaa.tacacsServers 13.1.9
 arista.eos.acl 13.0.1
 arista.eos.acl.entries 13.0.1
 arista.eos.acl.entry 13.0.1
@@ -85,10 +83,8 @@ arista.eos.bgp.peer 13.0.1
 arista.eos.bgp.peer.description 13.0.1
 arista.eos.bgp.peer.ebgpMultihop 13.3.15
 arista.eos.bgp.peer.inboundPolicy 13.3.15
-arista.eos.bgp.peer.inboundRouteMap 13.0.1
 arista.eos.bgp.peer.maximumRoutes 13.3.15
 arista.eos.bgp.peer.outboundPolicy 13.3.15
-arista.eos.bgp.peer.outboundRouteMap 13.0.1
 arista.eos.bgp.peer.passwordConfigured 13.3.15
 arista.eos.bgp.peer.passwordEncryptionType 13.3.15
 arista.eos.bgp.peer.peerAddress 13.0.1
@@ -403,7 +399,6 @@ arista.eos.snmpSetting 9.0.0
 arista.eos.snmpSetting.enabled 9.0.0
 arista.eos.snmpSetting.notifications 9.0.0
 arista.eos.spt.mstInterface 9.0.0
-arista.eos.spt.mstInterface.boundaryType 9.0.0
 arista.eos.spt.mstInterface.cost 9.0.0
 arista.eos.spt.mstInterface.counters 9.0.0
 arista.eos.spt.mstInterface.detail 9.0.0

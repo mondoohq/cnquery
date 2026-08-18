@@ -128,7 +128,6 @@ func (a *mqlAwsRds) eventSubscriptions() ([]any, error) {
 						"name":                     llx.StringDataPtr(sub.CustSubscriptionId),
 						"region":                   llx.StringData(region),
 						"status":                   llx.StringDataPtr(sub.Status),
-						"snsTopicArn":              llx.StringDataPtr(sub.SnsTopicArn),
 						"sourceType":               llx.StringDataPtr(sub.SourceType),
 						"sourceIds":                llx.ArrayData(sourceIds, types.String),
 						"enabled":                  llx.BoolData(convert.ToValue(sub.Enabled)),
@@ -139,6 +138,7 @@ func (a *mqlAwsRds) eventSubscriptions() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				mqlSub.(*mqlAwsRdsEventSubscription).cacheSnsTopicArn = convert.ToValue(sub.SnsTopicArn)
 				res = append(res, mqlSub)
 			}
 		}
@@ -148,6 +148,7 @@ func (a *mqlAwsRds) eventSubscriptions() ([]any, error) {
 
 type mqlAwsRdsEventSubscriptionInternal struct {
 	lazyTags
+	cacheSnsTopicArn string
 }
 
 func (a *mqlAwsRdsEventSubscription) id() (string, error) {
@@ -161,7 +162,7 @@ func (a *mqlAwsRdsEventSubscription) tags() (map[string]any, error) {
 }
 
 func (a *mqlAwsRdsEventSubscription) snsTopic() (*mqlAwsSnsTopic, error) {
-	arn := a.SnsTopicArn.Data
+	arn := a.cacheSnsTopicArn
 	if arn == "" {
 		a.SnsTopic.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -509,20 +510,20 @@ func (a *mqlAwsRdsDbinstance) associatedRoles() ([]any, error) {
 		mqlRole, err := CreateResource(a.MqlRuntime, ResourceAwsRdsDbinstanceAssociatedRole,
 			map[string]*llx.RawData{
 				"__id":        llx.StringData(fmt.Sprintf("%s/role/%s/feature/%s", instanceArn, roleArn, featureName)),
-				"roleArn":     llx.StringData(roleArn),
 				"featureName": llx.StringData(featureName),
 				"status":      llx.StringDataPtr(role.Status),
 			})
 		if err != nil {
 			return nil, err
 		}
+		mqlRole.(*mqlAwsRdsDbinstanceAssociatedRole).cacheRoleArn = roleArn
 		res = append(res, mqlRole)
 	}
 	return res, nil
 }
 
 func (a *mqlAwsRdsDbinstanceAssociatedRole) iamRole() (*mqlAwsIamRole, error) {
-	arn := a.RoleArn.Data
+	arn := a.cacheRoleArn
 	if arn == "" {
 		a.IamRole.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -2049,4 +2050,8 @@ func (a *mqlAwsRdsDbcluster) globalCluster() (*mqlAwsRdsGlobalCluster, error) {
 		return nil, nil
 	}
 	return newMqlAwsRdsGlobalCluster(a.MqlRuntime, a.Region.Data, resp.GlobalClusters[0])
+}
+
+type mqlAwsRdsDbinstanceAssociatedRoleInternal struct {
+	cacheRoleArn string
 }

@@ -6,8 +6,18 @@ package resources
 import (
 	"fmt"
 
+	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/v13/llx"
 )
+
+// mqlDigitaloceanFirewallInternal caches the raw rule set and protected
+// droplet IDs of a cloud firewall so the typed ingressRules(), egressRules(),
+// and droplets() accessors can resolve them without a refetch.
+type mqlDigitaloceanFirewallInternal struct {
+	cacheInboundRules  []godo.InboundRule
+	cacheOutboundRules []godo.OutboundRule
+	cacheDropletIDs    []any
+}
 
 // mqlDigitaloceanFirewallIngressRuleInternal caches the source target IDs
 // of an ingress rule so the typed source* accessors can resolve them
@@ -26,30 +36,12 @@ type mqlDigitaloceanFirewallEgressRuleInternal struct {
 	destinationKubernetesIDs    []any
 }
 
-// ruleString returns the string value stored under key in a firewall-rule
-// dict, or the empty string when absent.
-func ruleString(rule map[string]any, key string) string {
-	if v, ok := rule[key].(string); ok {
-		return v
-	}
-	return ""
-}
-
-// ruleSlice returns the list stored under key in a firewall-rule dict, or
-// an empty slice when absent.
-func ruleSlice(rule map[string]any, key string) []any {
-	if v, ok := rule[key].([]any); ok {
-		return v
-	}
-	return []any{}
-}
-
 // openToInternet reports whether any of the given source/destination CIDRs
 // admit traffic from (or to) every address — the IPv4 or IPv6 "everything"
 // range.
-func openToInternet(addresses []any) bool {
-	for _, a := range addresses {
-		if s, ok := a.(string); ok && (s == "0.0.0.0/0" || s == "::/0") {
+func openToInternet(addresses []string) bool {
+	for _, s := range addresses {
+		if s == "0.0.0.0/0" || s == "::/0" {
 			return true
 		}
 	}
@@ -57,66 +49,66 @@ func openToInternet(addresses []any) bool {
 }
 
 func (r *mqlDigitaloceanFirewall) ingressRules() ([]any, error) {
-	rules := r.GetInboundRules()
-	if rules.Error != nil {
-		return nil, rules.Error
-	}
-	out := make([]any, 0, len(rules.Data))
-	for i, raw := range rules.Data {
-		rule, ok := raw.(map[string]any)
-		if !ok {
-			continue
+	out := make([]any, 0, len(r.cacheInboundRules))
+	for i, rule := range r.cacheInboundRules {
+		var addresses, tags, loadBalancerUIDs, kubernetesIDs []string
+		var dropletIDs []int
+		if rule.Sources != nil {
+			addresses = rule.Sources.Addresses
+			tags = rule.Sources.Tags
+			dropletIDs = rule.Sources.DropletIDs
+			loadBalancerUIDs = rule.Sources.LoadBalancerUIDs
+			kubernetesIDs = rule.Sources.KubernetesIDs
 		}
-		addresses := ruleSlice(rule, "sourceAddresses")
 
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall.ingressRule", map[string]*llx.RawData{
 			"__id":            llx.StringData(fmt.Sprintf("%s/inbound/%d", r.Id.Data, i)),
-			"protocol":        llx.StringData(ruleString(rule, "protocol")),
-			"ports":           llx.StringData(ruleString(rule, "ports")),
+			"protocol":        llx.StringData(rule.Protocol),
+			"ports":           llx.StringData(rule.PortRange),
 			"openToInternet":  llx.BoolData(openToInternet(addresses)),
-			"sourceAddresses": llx.ArrayData(addresses, "\x02"),
-			"sourceTags":      llx.ArrayData(ruleSlice(rule, "sourceTags"), "\x02"),
+			"sourceAddresses": llx.ArrayData(toStringSlice(addresses), "\x02"),
+			"sourceTags":      llx.ArrayData(toStringSlice(tags), "\x02"),
 		})
 		if err != nil {
 			return nil, err
 		}
 		mqlRule := res.(*mqlDigitaloceanFirewallIngressRule)
-		mqlRule.sourceDropletIDs = ruleSlice(rule, "sourceDropletIds")
-		mqlRule.sourceLoadBalancerUIDs = ruleSlice(rule, "sourceLoadBalancerUids")
-		mqlRule.sourceKubernetesIDs = ruleSlice(rule, "sourceKubernetesIds")
+		mqlRule.sourceDropletIDs = toIntSlice(dropletIDs)
+		mqlRule.sourceLoadBalancerUIDs = toStringSlice(loadBalancerUIDs)
+		mqlRule.sourceKubernetesIDs = toStringSlice(kubernetesIDs)
 		out = append(out, res)
 	}
 	return out, nil
 }
 
 func (r *mqlDigitaloceanFirewall) egressRules() ([]any, error) {
-	rules := r.GetOutboundRules()
-	if rules.Error != nil {
-		return nil, rules.Error
-	}
-	out := make([]any, 0, len(rules.Data))
-	for i, raw := range rules.Data {
-		rule, ok := raw.(map[string]any)
-		if !ok {
-			continue
+	out := make([]any, 0, len(r.cacheOutboundRules))
+	for i, rule := range r.cacheOutboundRules {
+		var addresses, tags, loadBalancerUIDs, kubernetesIDs []string
+		var dropletIDs []int
+		if rule.Destinations != nil {
+			addresses = rule.Destinations.Addresses
+			tags = rule.Destinations.Tags
+			dropletIDs = rule.Destinations.DropletIDs
+			loadBalancerUIDs = rule.Destinations.LoadBalancerUIDs
+			kubernetesIDs = rule.Destinations.KubernetesIDs
 		}
-		addresses := ruleSlice(rule, "destinationAddresses")
 
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.firewall.egressRule", map[string]*llx.RawData{
 			"__id":                 llx.StringData(fmt.Sprintf("%s/outbound/%d", r.Id.Data, i)),
-			"protocol":             llx.StringData(ruleString(rule, "protocol")),
-			"ports":                llx.StringData(ruleString(rule, "ports")),
+			"protocol":             llx.StringData(rule.Protocol),
+			"ports":                llx.StringData(rule.PortRange),
 			"openToInternet":       llx.BoolData(openToInternet(addresses)),
-			"destinationAddresses": llx.ArrayData(addresses, "\x02"),
-			"destinationTags":      llx.ArrayData(ruleSlice(rule, "destinationTags"), "\x02"),
+			"destinationAddresses": llx.ArrayData(toStringSlice(addresses), "\x02"),
+			"destinationTags":      llx.ArrayData(toStringSlice(tags), "\x02"),
 		})
 		if err != nil {
 			return nil, err
 		}
 		mqlRule := res.(*mqlDigitaloceanFirewallEgressRule)
-		mqlRule.destinationDropletIDs = ruleSlice(rule, "destinationDropletIds")
-		mqlRule.destinationLoadBalancerUIDs = ruleSlice(rule, "destinationLoadBalancerUids")
-		mqlRule.destinationKubernetesIDs = ruleSlice(rule, "destinationKubernetesIds")
+		mqlRule.destinationDropletIDs = toIntSlice(dropletIDs)
+		mqlRule.destinationLoadBalancerUIDs = toStringSlice(loadBalancerUIDs)
+		mqlRule.destinationKubernetesIDs = toStringSlice(kubernetesIDs)
 		out = append(out, res)
 	}
 	return out, nil

@@ -610,6 +610,7 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) privateEndpointConnec
 			resType = "Microsoft.RecoveryServices/vaults/privateEndpointConnections"
 		}
 
+		var pecPrivateEndpointID string
 		pecArgs := map[string]*llx.RawData{
 			"__id": llx.StringDataPtr(pec.ID),
 			"id":   llx.StringDataPtr(pec.ID),
@@ -626,7 +627,7 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) privateEndpointConnec
 			pecArgs["properties"] = llx.DictData(propsMap)
 
 			if props.PrivateEndpoint != nil {
-				pecArgs["privateEndpointId"] = llx.StringDataPtr(props.PrivateEndpoint.ID)
+				pecPrivateEndpointID = convert.ToValue(props.PrivateEndpoint.ID)
 			}
 			if props.PrivateLinkServiceConnectionState != nil {
 				stateRes, err := newPrivateLinkServiceConnectionState(a.MqlRuntime, convert.ToValue(pec.ID),
@@ -643,7 +644,7 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceVault) privateEndpointConnec
 			}
 		}
 
-		mqlRes, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionPrivateEndpointConnection, pecArgs)
+		mqlRes, err := newAzurePrivateEndpointConnection(a.MqlRuntime, pecArgs, pecPrivateEndpointID)
 		if err != nil {
 			return nil, err
 		}

@@ -895,9 +895,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.group.preventForkingOutsideGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetPreventForkingOutsideGroup()).ToDataRes(types.Bool)
 	},
-	"gitlab.group.emailsDisabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabGroup).GetEmailsDisabled()).ToDataRes(types.Bool)
-	},
 	"gitlab.group.emailsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroup).GetEmailsEnabled()).ToDataRes(types.Bool)
 	},
@@ -1192,9 +1189,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.webURL": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetWebURL()).ToDataRes(types.String)
 	},
-	"gitlab.project.emailsDisabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetEmailsDisabled()).ToDataRes(types.Bool)
-	},
 	"gitlab.project.emailsEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetEmailsEnabled()).ToDataRes(types.Bool)
 	},
@@ -1207,32 +1201,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.onlyAllowMergeIfAllDiscussionsAreResolved": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetOnlyAllowMergeIfAllDiscussionsAreResolved()).ToDataRes(types.Bool)
 	},
-	"gitlab.project.issuesEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetIssuesEnabled()).ToDataRes(types.Bool)
-	},
 	"gitlab.project.issuesAccessLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetIssuesAccessLevel()).ToDataRes(types.String)
-	},
-	"gitlab.project.mergeRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetMergeRequestsEnabled()).ToDataRes(types.Bool)
 	},
 	"gitlab.project.mergeRequestsAccessLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetMergeRequestsAccessLevel()).ToDataRes(types.String)
 	},
-	"gitlab.project.wikiEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetWikiEnabled()).ToDataRes(types.Bool)
-	},
 	"gitlab.project.wikiAccessLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetWikiAccessLevel()).ToDataRes(types.String)
 	},
-	"gitlab.project.snippetsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetSnippetsEnabled()).ToDataRes(types.Bool)
-	},
 	"gitlab.project.snippetsAccessLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetSnippetsAccessLevel()).ToDataRes(types.String)
-	},
-	"gitlab.project.containerRegistryEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetContainerRegistryEnabled()).ToDataRes(types.Bool)
 	},
 	"gitlab.project.containerRegistryAccessLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetContainerRegistryAccessLevel()).ToDataRes(types.String)
@@ -1311,9 +1290,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.project.webhooks": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetWebhooks()).ToDataRes(types.Array(types.Resource("gitlab.project.webhook")))
-	},
-	"gitlab.project.jobsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProject).GetJobsEnabled()).ToDataRes(types.Bool)
 	},
 	"gitlab.project.buildsAccessLevel": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProject).GetBuildsAccessLevel()).ToDataRes(types.String)
@@ -2029,9 +2005,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gitlab.project.label.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectLabel).GetDescription()).ToDataRes(types.String)
 	},
-	"gitlab.project.label.descriptionHtml": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabProjectLabel).GetDescriptionHtml()).ToDataRes(types.String)
-	},
 	"gitlab.project.label.openIssuesCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabProjectLabel).GetOpenIssuesCount()).ToDataRes(types.Int)
 	},
@@ -2064,9 +2037,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gitlab.group.label.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroupLabel).GetDescription()).ToDataRes(types.String)
-	},
-	"gitlab.group.label.descriptionHtml": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGitlabGroupLabel).GetDescriptionHtml()).ToDataRes(types.String)
 	},
 	"gitlab.group.label.openIssuesCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGitlabGroupLabel).GetOpenIssuesCount()).ToDataRes(types.Int)
@@ -3795,10 +3765,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabGroup).PreventForkingOutsideGroup, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gitlab.group.emailsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabGroup).EmailsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"gitlab.group.emailsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroup).EmailsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -4207,10 +4173,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProject).WebURL, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.emailsDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).EmailsDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"gitlab.project.emailsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).EmailsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -4227,40 +4189,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProject).OnlyAllowMergeIfAllDiscussionsAreResolved, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.issuesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).IssuesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"gitlab.project.issuesAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).IssuesAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.mergeRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).MergeRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.mergeRequestsAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).MergeRequestsAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.wikiEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).WikiEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"gitlab.project.wikiAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).WikiAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.snippetsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).SnippetsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"gitlab.project.snippetsAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).SnippetsAccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.containerRegistryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).ContainerRegistryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.containerRegistryAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4365,10 +4307,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.project.webhooks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProject).Webhooks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"gitlab.project.jobsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProject).JobsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gitlab.project.buildsAccessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5395,10 +5333,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGitlabProjectLabel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"gitlab.project.label.descriptionHtml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabProjectLabel).DescriptionHtml, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"gitlab.project.label.openIssuesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabProjectLabel).OpenIssuesCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -5445,10 +5379,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gitlab.group.label.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGitlabGroupLabel).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"gitlab.group.label.descriptionHtml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGitlabGroupLabel).DescriptionHtml, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gitlab.group.label.openIssuesCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8282,7 +8212,6 @@ type mqlGitlabGroup struct {
 	TwoFactorGracePeriod           plugin.TValue[int64]
 	MembershipLock                 plugin.TValue[bool]
 	PreventForkingOutsideGroup     plugin.TValue[bool]
-	EmailsDisabled                 plugin.TValue[bool]
 	EmailsEnabled                  plugin.TValue[bool]
 	MentionsDisabled               plugin.TValue[bool]
 	RequestAccessEnabled           plugin.TValue[bool]
@@ -8414,10 +8343,6 @@ func (c *mqlGitlabGroup) GetMembershipLock() *plugin.TValue[bool] {
 
 func (c *mqlGitlabGroup) GetPreventForkingOutsideGroup() *plugin.TValue[bool] {
 	return &c.PreventForkingOutsideGroup
-}
-
-func (c *mqlGitlabGroup) GetEmailsDisabled() *plugin.TValue[bool] {
-	return &c.EmailsDisabled
 }
 
 func (c *mqlGitlabGroup) GetEmailsEnabled() *plugin.TValue[bool] {
@@ -9336,20 +9261,14 @@ type mqlGitlabProject struct {
 	Archived                                  plugin.TValue[bool]
 	Mirror                                    plugin.TValue[bool]
 	WebURL                                    plugin.TValue[string]
-	EmailsDisabled                            plugin.TValue[bool]
 	EmailsEnabled                             plugin.TValue[bool]
 	AllowMergeOnSkippedPipeline               plugin.TValue[bool]
 	OnlyAllowMergeIfPipelineSucceeds          plugin.TValue[bool]
 	OnlyAllowMergeIfAllDiscussionsAreResolved plugin.TValue[bool]
-	IssuesEnabled                             plugin.TValue[bool]
 	IssuesAccessLevel                         plugin.TValue[string]
-	MergeRequestsEnabled                      plugin.TValue[bool]
 	MergeRequestsAccessLevel                  plugin.TValue[string]
-	WikiEnabled                               plugin.TValue[bool]
 	WikiAccessLevel                           plugin.TValue[string]
-	SnippetsEnabled                           plugin.TValue[bool]
 	SnippetsAccessLevel                       plugin.TValue[string]
-	ContainerRegistryEnabled                  plugin.TValue[bool]
 	ContainerRegistryAccessLevel              plugin.TValue[string]
 	ServiceDeskEnabled                        plugin.TValue[bool]
 	PackagesEnabled                           plugin.TValue[bool]
@@ -9376,7 +9295,6 @@ type mqlGitlabProject struct {
 	ProjectMembers                            plugin.TValue[[]any]
 	ProjectFiles                              plugin.TValue[[]any]
 	Webhooks                                  plugin.TValue[[]any]
-	JobsEnabled                               plugin.TValue[bool]
 	BuildsAccessLevel                         plugin.TValue[string]
 	EmptyRepo                                 plugin.TValue[bool]
 	SharedRunnersEnabled                      plugin.TValue[bool]
@@ -9507,10 +9425,6 @@ func (c *mqlGitlabProject) GetWebURL() *plugin.TValue[string] {
 	return &c.WebURL
 }
 
-func (c *mqlGitlabProject) GetEmailsDisabled() *plugin.TValue[bool] {
-	return &c.EmailsDisabled
-}
-
 func (c *mqlGitlabProject) GetEmailsEnabled() *plugin.TValue[bool] {
 	return &c.EmailsEnabled
 }
@@ -9527,40 +9441,20 @@ func (c *mqlGitlabProject) GetOnlyAllowMergeIfAllDiscussionsAreResolved() *plugi
 	return &c.OnlyAllowMergeIfAllDiscussionsAreResolved
 }
 
-func (c *mqlGitlabProject) GetIssuesEnabled() *plugin.TValue[bool] {
-	return &c.IssuesEnabled
-}
-
 func (c *mqlGitlabProject) GetIssuesAccessLevel() *plugin.TValue[string] {
 	return &c.IssuesAccessLevel
-}
-
-func (c *mqlGitlabProject) GetMergeRequestsEnabled() *plugin.TValue[bool] {
-	return &c.MergeRequestsEnabled
 }
 
 func (c *mqlGitlabProject) GetMergeRequestsAccessLevel() *plugin.TValue[string] {
 	return &c.MergeRequestsAccessLevel
 }
 
-func (c *mqlGitlabProject) GetWikiEnabled() *plugin.TValue[bool] {
-	return &c.WikiEnabled
-}
-
 func (c *mqlGitlabProject) GetWikiAccessLevel() *plugin.TValue[string] {
 	return &c.WikiAccessLevel
 }
 
-func (c *mqlGitlabProject) GetSnippetsEnabled() *plugin.TValue[bool] {
-	return &c.SnippetsEnabled
-}
-
 func (c *mqlGitlabProject) GetSnippetsAccessLevel() *plugin.TValue[string] {
 	return &c.SnippetsAccessLevel
-}
-
-func (c *mqlGitlabProject) GetContainerRegistryEnabled() *plugin.TValue[bool] {
-	return &c.ContainerRegistryEnabled
 }
 
 func (c *mqlGitlabProject) GetContainerRegistryAccessLevel() *plugin.TValue[string] {
@@ -9739,10 +9633,6 @@ func (c *mqlGitlabProject) GetWebhooks() *plugin.TValue[[]any] {
 
 		return c.webhooks()
 	})
-}
-
-func (c *mqlGitlabProject) GetJobsEnabled() *plugin.TValue[bool] {
-	return &c.JobsEnabled
 }
 
 func (c *mqlGitlabProject) GetBuildsAccessLevel() *plugin.TValue[string] {
@@ -12114,7 +12004,6 @@ type mqlGitlabProjectLabel struct {
 	Color                  plugin.TValue[string]
 	TextColor              plugin.TValue[string]
 	Description            plugin.TValue[string]
-	DescriptionHtml        plugin.TValue[string]
 	OpenIssuesCount        plugin.TValue[int64]
 	ClosedIssuesCount      plugin.TValue[int64]
 	OpenMergeRequestsCount plugin.TValue[int64]
@@ -12180,10 +12069,6 @@ func (c *mqlGitlabProjectLabel) GetDescription() *plugin.TValue[string] {
 	return &c.Description
 }
 
-func (c *mqlGitlabProjectLabel) GetDescriptionHtml() *plugin.TValue[string] {
-	return &c.DescriptionHtml
-}
-
 func (c *mqlGitlabProjectLabel) GetOpenIssuesCount() *plugin.TValue[int64] {
 	return &c.OpenIssuesCount
 }
@@ -12218,7 +12103,6 @@ type mqlGitlabGroupLabel struct {
 	Color                  plugin.TValue[string]
 	TextColor              plugin.TValue[string]
 	Description            plugin.TValue[string]
-	DescriptionHtml        plugin.TValue[string]
 	OpenIssuesCount        plugin.TValue[int64]
 	ClosedIssuesCount      plugin.TValue[int64]
 	OpenMergeRequestsCount plugin.TValue[int64]
@@ -12282,10 +12166,6 @@ func (c *mqlGitlabGroupLabel) GetTextColor() *plugin.TValue[string] {
 
 func (c *mqlGitlabGroupLabel) GetDescription() *plugin.TValue[string] {
 	return &c.Description
-}
-
-func (c *mqlGitlabGroupLabel) GetDescriptionHtml() *plugin.TValue[string] {
-	return &c.DescriptionHtml
 }
 
 func (c *mqlGitlabGroupLabel) GetOpenIssuesCount() *plugin.TValue[int64] {

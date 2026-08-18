@@ -317,7 +317,6 @@ func (a *mqlAwsEfsFilesystem) replicationConfiguration() (*mqlAwsEfsFilesystemRe
 		mqlDest, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem.replicationDestination",
 			map[string]*llx.RawData{
 				"__id":                    llx.StringData(destId),
-				"fileSystemId":            llx.StringDataPtr(dest.FileSystemId),
 				"region":                  llx.StringDataPtr(dest.Region),
 				"status":                  llx.StringData(string(dest.Status)),
 				"lastReplicatedTimestamp": llx.TimeDataPtr(dest.LastReplicatedTimestamp),
@@ -325,23 +324,24 @@ func (a *mqlAwsEfsFilesystem) replicationConfiguration() (*mqlAwsEfsFilesystemRe
 		if err != nil {
 			return nil, err
 		}
+		mqlDest.(*mqlAwsEfsFilesystemReplicationDestination).cacheFileSystemId = convert.ToValue(dest.FileSystemId)
 		destinations = append(destinations, mqlDest)
 	}
 
 	replId := convert.ToValue(repl.SourceFileSystemArn) + "/replication"
 	mqlRepl, err := CreateResource(a.MqlRuntime, "aws.efs.filesystem.replicationConfiguration",
 		map[string]*llx.RawData{
-			"__id":                        llx.StringData(replId),
-			"sourceFileSystemId":          llx.StringDataPtr(repl.SourceFileSystemId),
-			"sourceFileSystemRegion":      llx.StringDataPtr(repl.SourceFileSystemRegion),
-			"sourceFileSystemArn":         llx.StringDataPtr(repl.SourceFileSystemArn),
-			"originalSourceFileSystemArn": llx.StringDataPtr(repl.OriginalSourceFileSystemArn),
-			"creationTime":                llx.TimeDataPtr(repl.CreationTime),
-			"destinations":                llx.ArrayData(destinations, types.Resource("aws.efs.filesystem.replicationDestination")),
+			"__id":                   llx.StringData(replId),
+			"sourceFileSystemId":     llx.StringDataPtr(repl.SourceFileSystemId),
+			"sourceFileSystemRegion": llx.StringDataPtr(repl.SourceFileSystemRegion),
+			"creationTime":           llx.TimeDataPtr(repl.CreationTime),
+			"destinations":           llx.ArrayData(destinations, types.Resource("aws.efs.filesystem.replicationDestination")),
 		})
 	if err != nil {
 		return nil, err
 	}
+	mqlRepl.(*mqlAwsEfsFilesystemReplicationConfiguration).cacheSourceFileSystemArn = convert.ToValue(repl.SourceFileSystemArn)
+	mqlRepl.(*mqlAwsEfsFilesystemReplicationConfiguration).cacheOriginalSourceFileSystemArn = convert.ToValue(repl.OriginalSourceFileSystemArn)
 	return mqlRepl.(*mqlAwsEfsFilesystemReplicationConfiguration), nil
 }
 
@@ -350,7 +350,7 @@ func (a *mqlAwsEfsFilesystemReplicationConfiguration) id() (string, error) {
 }
 
 func (a *mqlAwsEfsFilesystemReplicationConfiguration) sourceFileSystem() (*mqlAwsEfsFilesystem, error) {
-	arnVal := a.SourceFileSystemArn.Data
+	arnVal := a.cacheSourceFileSystemArn
 	if arnVal == "" {
 		a.SourceFileSystem.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -364,7 +364,7 @@ func (a *mqlAwsEfsFilesystemReplicationConfiguration) sourceFileSystem() (*mqlAw
 }
 
 func (a *mqlAwsEfsFilesystemReplicationConfiguration) originalSourceFileSystem() (*mqlAwsEfsFilesystem, error) {
-	arnVal := a.OriginalSourceFileSystemArn.Data
+	arnVal := a.cacheOriginalSourceFileSystemArn
 	if arnVal == "" {
 		a.OriginalSourceFileSystem.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -382,7 +382,7 @@ func (a *mqlAwsEfsFilesystemReplicationDestination) id() (string, error) {
 }
 
 func (a *mqlAwsEfsFilesystemReplicationDestination) fileSystem() (*mqlAwsEfsFilesystem, error) {
-	fsId := a.FileSystemId.Data
+	fsId := a.cacheFileSystemId
 	if fsId == "" {
 		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -444,21 +444,21 @@ func (a *mqlAwsEfsFilesystem) mountTargets() ([]any, error) {
 			}
 
 			args := map[string]*llx.RawData{
-				"__id":               llx.StringDataPtr(mt.MountTargetId),
-				"mountTargetId":      llx.StringDataPtr(mt.MountTargetId),
-				"fileSystemId":       llx.StringDataPtr(mt.FileSystemId),
-				"subnetId":           llx.StringDataPtr(mt.SubnetId),
-				"availabilityZone":   llx.StringDataPtr(mt.AvailabilityZoneName),
-				"ipAddress":          llx.StringDataPtr(mt.IpAddress),
-				"lifecycleState":     llx.StringData(string(mt.LifeCycleState)),
-				"networkInterfaceId": llx.StringDataPtr(mt.NetworkInterfaceId),
-				"region":             llx.StringData(region),
+				"__id":             llx.StringDataPtr(mt.MountTargetId),
+				"mountTargetId":    llx.StringDataPtr(mt.MountTargetId),
+				"availabilityZone": llx.StringDataPtr(mt.AvailabilityZoneName),
+				"ipAddress":        llx.StringDataPtr(mt.IpAddress),
+				"lifecycleState":   llx.StringData(string(mt.LifeCycleState)),
+				"region":           llx.StringData(region),
 			}
 
 			mqlMountTarget, err := CreateResource(a.MqlRuntime, ResourceAwsEfsMountTarget, args)
 			if err != nil {
 				return nil, err
 			}
+			mqlMountTarget.(*mqlAwsEfsMountTarget).cacheFileSystemId = convert.ToValue(mt.FileSystemId)
+			mqlMountTarget.(*mqlAwsEfsMountTarget).cacheSubnetId = convert.ToValue(mt.SubnetId)
+			mqlMountTarget.(*mqlAwsEfsMountTarget).cacheNetworkInterfaceId = convert.ToValue(mt.NetworkInterfaceId)
 
 			// Cache the security group IDs for lazy loading
 			if sgRes != nil && len(sgRes.SecurityGroups) > 0 {
@@ -531,7 +531,6 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 				"__id":           llx.StringDataPtr(ap.AccessPointArn),
 				"accessPointId":  llx.StringDataPtr(ap.AccessPointId),
 				"arn":            llx.StringDataPtr(ap.AccessPointArn),
-				"fileSystemId":   llx.StringDataPtr(ap.FileSystemId),
 				"name":           llx.StringDataPtr(ap.Name),
 				"lifecycleState": llx.StringData(string(ap.LifeCycleState)),
 				"region":         llx.StringData(region),
@@ -549,6 +548,7 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
+			mqlAccessPoint.(*mqlAwsEfsAccessPoint).cacheFileSystemId = convert.ToValue(ap.FileSystemId)
 
 			res = append(res, mqlAccessPoint)
 		}
@@ -590,7 +590,10 @@ func (a *mqlAwsEfsFilesystem) fileSystemPolicy() (string, error) {
 
 // Mount Target implementation
 type mqlAwsEfsMountTargetInternal struct {
-	cacheSecurityGroupIDs []string
+	cacheFileSystemId       string
+	cacheSubnetId           string
+	cacheNetworkInterfaceId string
+	cacheSecurityGroupIDs   []string
 }
 
 func (a *mqlAwsEfsMountTarget) securityGroups() ([]any, error) {
@@ -616,7 +619,7 @@ func (a *mqlAwsEfsMountTarget) securityGroups() ([]any, error) {
 }
 
 func (a *mqlAwsEfsMountTarget) subnet() (*mqlAwsVpcSubnet, error) {
-	subnetId := a.SubnetId.Data
+	subnetId := a.cacheSubnetId
 	if subnetId == "" {
 		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
@@ -631,7 +634,7 @@ func (a *mqlAwsEfsMountTarget) subnet() (*mqlAwsVpcSubnet, error) {
 }
 
 func (a *mqlAwsEfsMountTarget) networkInterface() (*mqlAwsEc2Networkinterface, error) {
-	eniId := a.NetworkInterfaceId.Data
+	eniId := a.cacheNetworkInterfaceId
 	if eniId == "" {
 		a.NetworkInterface.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -645,7 +648,7 @@ func (a *mqlAwsEfsMountTarget) networkInterface() (*mqlAwsEc2Networkinterface, e
 }
 
 func (a *mqlAwsEfsMountTarget) fileSystem() (*mqlAwsEfsFilesystem, error) {
-	fsId := a.FileSystemId.Data
+	fsId := a.cacheFileSystemId
 	if fsId == "" {
 		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -661,7 +664,7 @@ func (a *mqlAwsEfsMountTarget) fileSystem() (*mqlAwsEfsFilesystem, error) {
 }
 
 func (a *mqlAwsEfsAccessPoint) fileSystem() (*mqlAwsEfsFilesystem, error) {
-	fsId := a.FileSystemId.Data
+	fsId := a.cacheFileSystemId
 	if fsId == "" {
 		a.FileSystem.State = plugin.StateIsNull | plugin.StateIsSet
 		return nil, nil
@@ -674,4 +677,17 @@ func (a *mqlAwsEfsAccessPoint) fileSystem() (*mqlAwsEfsFilesystem, error) {
 		return nil, err
 	}
 	return res.(*mqlAwsEfsFilesystem), nil
+}
+
+type mqlAwsEfsFilesystemReplicationConfigurationInternal struct {
+	cacheSourceFileSystemArn         string
+	cacheOriginalSourceFileSystemArn string
+}
+
+type mqlAwsEfsFilesystemReplicationDestinationInternal struct {
+	cacheFileSystemId string
+}
+
+type mqlAwsEfsAccessPointInternal struct {
+	cacheFileSystemId string
 }

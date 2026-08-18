@@ -124,8 +124,15 @@ func (m *mqlHetznerLoadBalancer) privateNet() ([]any, error) {
 
 // --- loadBalancer.privateNet sub-resource ---
 
+// mqlHetznerLoadBalancerPrivateNetInternal holds the load balancer and network
+// the attachment joins, which the loadBalancer and network accessors resolve.
+type mqlHetznerLoadBalancerPrivateNetInternal struct {
+	cacheLoadBalancerID int64
+	cacheNetworkID      int64
+}
+
 func (r *mqlHetznerLoadBalancerPrivateNet) id() (string, error) {
-	return fmt.Sprintf("hetzner.loadBalancer.privateNet/%d/%d", r.LoadBalancerId.Data, r.NetworkId.Data), nil
+	return fmt.Sprintf("hetzner.loadBalancer.privateNet/%d/%d", r.cacheLoadBalancerID, r.cacheNetworkID), nil
 }
 
 func newMqlHetznerLoadBalancerPrivateNet(runtime *plugin.Runtime, lbID int64, p hcloud.LoadBalancerPrivateNet) (*mqlHetznerLoadBalancerPrivateNet, error) {
@@ -134,15 +141,16 @@ func newMqlHetznerLoadBalancerPrivateNet(runtime *plugin.Runtime, lbID int64, p 
 		networkID = p.Network.ID
 	}
 	res, err := CreateResource(runtime, "hetzner.loadBalancer.privateNet", map[string]*llx.RawData{
-		"__id":           llx.StringData(fmt.Sprintf("hetzner.loadBalancer.privateNet/%d/%d", lbID, networkID)),
-		"loadBalancerId": llx.IntData(lbID),
-		"networkId":      llx.IntData(networkID),
-		"ip":             llx.StringData(ipString(p.IP)),
+		"__id": llx.StringData(fmt.Sprintf("hetzner.loadBalancer.privateNet/%d/%d", lbID, networkID)),
+		"ip":   llx.StringData(ipString(p.IP)),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerLoadBalancerPrivateNet), nil
+	m := res.(*mqlHetznerLoadBalancerPrivateNet)
+	m.cacheLoadBalancerID = lbID
+	m.cacheNetworkID = networkID
+	return m, nil
 }
 
 // loadBalancerRef builds a lazy hetzner.loadBalancer reference from its id,
@@ -162,16 +170,16 @@ func loadBalancerRef(runtime *plugin.Runtime, field *plugin.TValue[*mqlHetznerLo
 }
 
 func (m *mqlHetznerLoadBalancerPrivateNet) loadBalancer() (*mqlHetznerLoadBalancer, error) {
-	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.LoadBalancerId.Data)
+	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.cacheLoadBalancerID)
 }
 
 func (m *mqlHetznerLoadBalancerPrivateNet) network() (*mqlHetznerNetwork, error) {
-	if m.NetworkId.Data == 0 {
+	if m.cacheNetworkID == 0 {
 		m.Network.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	ref, err := NewResource(m.MqlRuntime, "hetzner.network", map[string]*llx.RawData{
-		"id": llx.IntData(m.NetworkId.Data),
+		"id": llx.IntData(m.cacheNetworkID),
 	})
 	if err != nil {
 		return nil, err
@@ -206,11 +214,12 @@ func (m *mqlHetznerLoadBalancer) targets() ([]any, error) {
 // --- service sub-resource ---
 
 type mqlHetznerLoadBalancerServiceInternal struct {
-	cacheCertificates []*hcloud.Certificate
+	cacheCertificates   []*hcloud.Certificate
+	cacheLoadBalancerID int64
 }
 
 func (r *mqlHetznerLoadBalancerService) id() (string, error) {
-	return fmt.Sprintf("hetzner.loadBalancer/%d/service/%d", r.LoadBalancerId.Data, r.ListenPort.Data), nil
+	return fmt.Sprintf("hetzner.loadBalancer/%d/service/%d", r.cacheLoadBalancerID, r.ListenPort.Data), nil
 }
 
 // loadBalancerHealthCheckDict renders a service health check as a dict. Port and
@@ -250,7 +259,6 @@ func newMqlHetznerLoadBalancerService(runtime *plugin.Runtime, lbID int64, s hcl
 
 	res, err := CreateResource(runtime, "hetzner.loadBalancer.service", map[string]*llx.RawData{
 		"__id":            llx.StringData(fmt.Sprintf("hetzner.loadBalancer/%d/service/%d", lbID, s.ListenPort)),
-		"loadBalancerId":  llx.IntData(lbID),
 		"protocol":        llx.StringData(string(s.Protocol)),
 		"listenPort":      llx.IntData(int64(s.ListenPort)),
 		"destinationPort": llx.IntData(int64(s.DestinationPort)),
@@ -263,11 +271,12 @@ func newMqlHetznerLoadBalancerService(runtime *plugin.Runtime, lbID int64, s hcl
 	}
 	m := res.(*mqlHetznerLoadBalancerService)
 	m.cacheCertificates = s.HTTP.Certificates
+	m.cacheLoadBalancerID = lbID
 	return m, nil
 }
 
 func (m *mqlHetznerLoadBalancerService) loadBalancer() (*mqlHetznerLoadBalancer, error) {
-	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.LoadBalancerId.Data)
+	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.cacheLoadBalancerID)
 }
 
 func (m *mqlHetznerLoadBalancerService) certificates() ([]any, error) {
@@ -287,7 +296,8 @@ func (m *mqlHetznerLoadBalancerService) certificates() ([]any, error) {
 // --- target sub-resource ---
 
 type mqlHetznerLoadBalancerTargetInternal struct {
-	cacheServerID int64
+	cacheLoadBalancerID int64
+	cacheServerID       int64
 	// cacheLabelSelectorServerIDs holds the servers a label_selector target
 	// currently resolves to (from the target's nested Targets), so
 	// labelSelectorTargets() can surface the effective backend set without a
@@ -305,7 +315,7 @@ func (r *mqlHetznerLoadBalancerTarget) id() (string, error) {
 	case "ip":
 		key = fmt.Sprintf("ip/%s", r.Ip.Data)
 	}
-	return fmt.Sprintf("hetzner.loadBalancer/%d/target/%s", r.LoadBalancerId.Data, key), nil
+	return fmt.Sprintf("hetzner.loadBalancer/%d/target/%s", r.cacheLoadBalancerID, key), nil
 }
 
 // loadBalancerHealthStatusDicts renders a target's per-listener health status as
@@ -355,25 +365,25 @@ func newMqlHetznerLoadBalancerTarget(runtime *plugin.Runtime, lbID int64, idx in
 	}
 
 	res, err := CreateResource(runtime, "hetzner.loadBalancer.target", map[string]*llx.RawData{
-		"__id":           llx.StringData(fmt.Sprintf("hetzner.loadBalancer/%d/target/%s", lbID, keyForId)),
-		"loadBalancerId": llx.IntData(lbID),
-		"type":           llx.StringData(string(t.Type)),
-		"healthStatus":   dictArrayData(healthStatus),
-		"usePrivateIp":   llx.BoolData(t.UsePrivateIP),
-		"labelSelector":  llx.StringData(labelSelector),
-		"ip":             llx.StringData(ip),
+		"__id":          llx.StringData(fmt.Sprintf("hetzner.loadBalancer/%d/target/%s", lbID, keyForId)),
+		"type":          llx.StringData(string(t.Type)),
+		"healthStatus":  dictArrayData(healthStatus),
+		"usePrivateIp":  llx.BoolData(t.UsePrivateIP),
+		"labelSelector": llx.StringData(labelSelector),
+		"ip":            llx.StringData(ip),
 	})
 	if err != nil {
 		return nil, err
 	}
 	m := res.(*mqlHetznerLoadBalancerTarget)
+	m.cacheLoadBalancerID = lbID
 	m.cacheServerID = serverID
 	m.cacheLabelSelectorServerIDs = labelSelectorServerIDs
 	return m, nil
 }
 
 func (m *mqlHetznerLoadBalancerTarget) loadBalancer() (*mqlHetznerLoadBalancer, error) {
-	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.LoadBalancerId.Data)
+	return loadBalancerRef(m.MqlRuntime, &m.LoadBalancer, m.cacheLoadBalancerID)
 }
 
 func (m *mqlHetznerLoadBalancerTarget) server() (*mqlHetznerServer, error) {

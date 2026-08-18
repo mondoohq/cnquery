@@ -54,17 +54,6 @@ func (c *mqlCloudflareAccount) workers() (*mqlCloudflareWorkers, error) {
 	return newWorkers(c.MqlRuntime, c.Id.Data)
 }
 
-// Deprecated: Workers are account-scoped. Use cloudflare.account.workers.
-// Retained so existing queries keep working; resolves the parent account and
-// delegates.
-func (c *mqlCloudflareZone) workers() (*mqlCloudflareWorkers, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return newWorkers(c.MqlRuntime, accountID)
-}
-
 // workerScript mirrors the account workers-scripts list entry. We decode it via
 // the client's generic Get to preserve fields (size, deployment_id,
 // pipeline_hash) that the typed cloudflare-go script struct no longer

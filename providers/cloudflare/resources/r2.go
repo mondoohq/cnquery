@@ -4,7 +4,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -14,20 +13,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
 )
-
-// zoneAccountID returns the parent account id, guarding the nullable account
-// field so the R2/Workers/Stream accessors don't nil-deref on a zone whose
-// account wasn't resolved (e.g. a zone reached by id without discovery).
-func (c *mqlCloudflareZone) zoneAccountID() (string, error) {
-	acc := c.GetAccount()
-	if acc.Error != nil {
-		return "", acc.Error
-	}
-	if acc.Data == nil {
-		return "", errors.New("cloudflare zone has no associated account")
-	}
-	return acc.Data.GetId().Data, nil
-}
 
 func (c *mqlCloudflareR2) id() (string, error) {
 	return "cloudflare.r2", nil
@@ -74,16 +59,6 @@ func initCloudflareR2(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 
 func (c *mqlCloudflareAccount) r2() (*mqlCloudflareR2, error) {
 	return newR2(c.MqlRuntime, c.Id.Data)
-}
-
-// Deprecated: R2 is account-scoped. Use cloudflare.account.r2. Retained so
-// existing queries keep working; resolves the parent account and delegates.
-func (c *mqlCloudflareZone) r2() (*mqlCloudflareR2, error) {
-	accountID, err := c.zoneAccountID()
-	if err != nil {
-		return nil, err
-	}
-	return newR2(c.MqlRuntime, accountID)
 }
 
 type mqlCloudflareR2BucketInternal struct {

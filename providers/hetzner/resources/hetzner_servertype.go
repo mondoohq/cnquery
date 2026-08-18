@@ -74,8 +74,16 @@ func (m *mqlHetznerServerType) locations() ([]any, error) {
 
 // --- serverType.location sub-resource ---
 
+// mqlHetznerServerTypeLocationInternal holds the server type and location the
+// availability entry joins, which the serverType and location accessors
+// resolve.
+type mqlHetznerServerTypeLocationInternal struct {
+	cacheServerTypeID int64
+	cacheLocationID   int64
+}
+
 func (r *mqlHetznerServerTypeLocation) id() (string, error) {
-	return fmt.Sprintf("hetzner.serverType.location/%d/%d", r.ServerTypeId.Data, r.LocationId.Data), nil
+	return fmt.Sprintf("hetzner.serverType.location/%d/%d", r.cacheServerTypeID, r.cacheLocationID), nil
 }
 
 func newMqlHetznerServerTypeLocation(runtime *plugin.Runtime, serverTypeID int64, stl hcloud.ServerTypeLocation) (*mqlHetznerServerTypeLocation, error) {
@@ -85,26 +93,27 @@ func newMqlHetznerServerTypeLocation(runtime *plugin.Runtime, serverTypeID int64
 	}
 	dep := deprecationDict(stl.Deprecation)
 	res, err := CreateResource(runtime, "hetzner.serverType.location", map[string]*llx.RawData{
-		"__id":         llx.StringData(fmt.Sprintf("hetzner.serverType.location/%d/%d", serverTypeID, locationID)),
-		"serverTypeId": llx.IntData(serverTypeID),
-		"locationId":   llx.IntData(locationID),
-		"available":    llx.BoolData(stl.Available),
-		"recommended":  llx.BoolData(stl.Recommended),
-		"deprecation":  llx.DictData(dep),
+		"__id":        llx.StringData(fmt.Sprintf("hetzner.serverType.location/%d/%d", serverTypeID, locationID)),
+		"available":   llx.BoolData(stl.Available),
+		"recommended": llx.BoolData(stl.Recommended),
+		"deprecation": llx.DictData(dep),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHetznerServerTypeLocation), nil
+	m := res.(*mqlHetznerServerTypeLocation)
+	m.cacheServerTypeID = serverTypeID
+	m.cacheLocationID = locationID
+	return m, nil
 }
 
 func (m *mqlHetznerServerTypeLocation) serverType() (*mqlHetznerServerType, error) {
-	if m.ServerTypeId.Data == 0 {
+	if m.cacheServerTypeID == 0 {
 		m.ServerType.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	ref, err := NewResource(m.MqlRuntime, "hetzner.serverType", map[string]*llx.RawData{
-		"id": llx.IntData(m.ServerTypeId.Data),
+		"id": llx.IntData(m.cacheServerTypeID),
 	})
 	if err != nil {
 		return nil, err
@@ -113,12 +122,12 @@ func (m *mqlHetznerServerTypeLocation) serverType() (*mqlHetznerServerType, erro
 }
 
 func (m *mqlHetznerServerTypeLocation) location() (*mqlHetznerLocation, error) {
-	if m.LocationId.Data == 0 {
+	if m.cacheLocationID == 0 {
 		m.Location.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	ref, err := NewResource(m.MqlRuntime, "hetzner.location", map[string]*llx.RawData{
-		"id": llx.IntData(m.LocationId.Data),
+		"id": llx.IntData(m.cacheLocationID),
 	})
 	if err != nil {
 		return nil, err

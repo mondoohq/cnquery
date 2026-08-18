@@ -137,40 +137,39 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 			}
 
 			var (
-				provisioningState              string
-				targetProvisioningState        string
-				publisherEmail                 string
-				publisherName                  string
-				notificationSenderEmail        string
-				gatewayUrl                     string
-				gatewayRegionalUrl             string
-				managementApiUrl               string
-				portalUrl                      string
-				developerPortalUrl             string
-				scmUrl                         string
-				virtualNetworkType             string
-				publicNetworkAccess            string
-				natGatewayState                string
-				disableGateway                 *bool
-				enableClientCertificate        *bool
-				developerPortalStatus          string
-				legacyPortalStatus             string
-				platformVersion                string
-				customProperties               = map[string]any{}
-				tls10Enabled                   *bool
-				tls11Enabled                   *bool
-				ssl30Enabled                   *bool
-				backendTls10Enabled            *bool
-				backendTls11Enabled            *bool
-				backendSsl30Enabled            *bool
-				tripleDesEnabled               *bool
-				http2Enabled                   *bool
-				publicIpAddresses              = []any{}
-				privateIpAddresses             = []any{}
-				outboundPublicIpAddresses      = []any{}
-				privateEndpointConnectionCount int64
-				publicIpAddressId              string
-				createdAt                      *time.Time
+				provisioningState         string
+				targetProvisioningState   string
+				publisherEmail            string
+				publisherName             string
+				notificationSenderEmail   string
+				gatewayUrl                string
+				gatewayRegionalUrl        string
+				managementApiUrl          string
+				portalUrl                 string
+				developerPortalUrl        string
+				scmUrl                    string
+				virtualNetworkType        string
+				publicNetworkAccess       string
+				natGatewayState           string
+				disableGateway            *bool
+				enableClientCertificate   *bool
+				developerPortalStatus     string
+				legacyPortalStatus        string
+				platformVersion           string
+				customProperties          = map[string]any{}
+				tls10Enabled              *bool
+				tls11Enabled              *bool
+				ssl30Enabled              *bool
+				backendTls10Enabled       *bool
+				backendTls11Enabled       *bool
+				backendSsl30Enabled       *bool
+				tripleDesEnabled          *bool
+				http2Enabled              *bool
+				publicIpAddresses         = []any{}
+				privateIpAddresses        = []any{}
+				outboundPublicIpAddresses = []any{}
+				publicIpAddressId         string
+				createdAt                 *time.Time
 			)
 			if p := svc.Properties; p != nil {
 				if p.ProvisioningState != nil {
@@ -254,7 +253,6 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 						outboundPublicIpAddresses = append(outboundPublicIpAddresses, *ip)
 					}
 				}
-				privateEndpointConnectionCount = int64(len(p.PrivateEndpointConnections))
 				if p.PublicIPAddressID != nil {
 					publicIpAddressId = *p.PublicIPAddressID
 				}
@@ -270,49 +268,48 @@ func (a *mqlAzureSubscriptionApiManagementService) services() ([]any, error) {
 
 			mqlSvc, err := CreateResource(a.MqlRuntime, "azure.subscription.apiManagementService.service",
 				map[string]*llx.RawData{
-					"id":                             llx.StringDataPtr(svc.ID),
-					"name":                           llx.StringDataPtr(svc.Name),
-					"location":                       llx.StringDataPtr(svc.Location),
-					"tags":                           llx.MapData(convert.PtrMapStrToInterface(svc.Tags), types.String),
-					"skuName":                        llx.StringData(skuName),
-					"skuCapacity":                    llx.IntDataPtr(skuCapacity),
-					"provisioningState":              llx.StringData(provisioningState),
-					"targetProvisioningState":        llx.StringData(targetProvisioningState),
-					"publisherEmail":                 llx.StringData(publisherEmail),
-					"publisherName":                  llx.StringData(publisherName),
-					"notificationSenderEmail":        llx.StringData(notificationSenderEmail),
-					"gatewayUrl":                     llx.StringData(gatewayUrl),
-					"gatewayRegionalUrl":             llx.StringData(gatewayRegionalUrl),
-					"managementApiUrl":               llx.StringData(managementApiUrl),
-					"portalUrl":                      llx.StringData(portalUrl),
-					"developerPortalUrl":             llx.StringData(developerPortalUrl),
-					"scmUrl":                         llx.StringData(scmUrl),
-					"virtualNetworkType":             llx.StringData(virtualNetworkType),
-					"publicNetworkAccess":            llx.StringData(publicNetworkAccess),
-					"natGatewayState":                llx.StringData(natGatewayState),
-					"disableGateway":                 llx.BoolDataPtr(disableGateway),
-					"enableClientCertificate":        llx.BoolDataPtr(enableClientCertificate),
-					"developerPortalStatus":          llx.StringData(developerPortalStatus),
-					"legacyPortalStatus":             llx.StringData(legacyPortalStatus),
-					"platformVersion":                llx.StringData(platformVersion),
-					"customProperties":               llx.MapData(customProperties, types.String),
-					"tls10Enabled":                   llx.BoolDataPtr(tls10Enabled),
-					"tls11Enabled":                   llx.BoolDataPtr(tls11Enabled),
-					"ssl30Enabled":                   llx.BoolDataPtr(ssl30Enabled),
-					"backendTls10Enabled":            llx.BoolDataPtr(backendTls10Enabled),
-					"backendTls11Enabled":            llx.BoolDataPtr(backendTls11Enabled),
-					"backendSsl30Enabled":            llx.BoolDataPtr(backendSsl30Enabled),
-					"tripleDesEnabled":               llx.BoolDataPtr(tripleDesEnabled),
-					"http2Enabled":                   llx.BoolDataPtr(http2Enabled),
-					"identityType":                   llx.StringData(identityType),
-					"principalId":                    llx.StringDataPtr(identityPrincipalId),
-					"tenantId":                       llx.StringDataPtr(identityTenantId),
-					"publicIpAddresses":              llx.ArrayData(publicIpAddresses, types.String),
-					"privateIpAddresses":             llx.ArrayData(privateIpAddresses, types.String),
-					"outboundPublicIpAddresses":      llx.ArrayData(outboundPublicIpAddresses, types.String),
-					"privateEndpointConnectionCount": llx.IntData(privateEndpointConnectionCount),
-					"zones":                          llx.ArrayData(zones, types.String),
-					"createdAt":                      llx.TimeDataPtr(createdAt),
+					"id":                        llx.StringDataPtr(svc.ID),
+					"name":                      llx.StringDataPtr(svc.Name),
+					"location":                  llx.StringDataPtr(svc.Location),
+					"tags":                      llx.MapData(convert.PtrMapStrToInterface(svc.Tags), types.String),
+					"skuName":                   llx.StringData(skuName),
+					"skuCapacity":               llx.IntDataPtr(skuCapacity),
+					"provisioningState":         llx.StringData(provisioningState),
+					"targetProvisioningState":   llx.StringData(targetProvisioningState),
+					"publisherEmail":            llx.StringData(publisherEmail),
+					"publisherName":             llx.StringData(publisherName),
+					"notificationSenderEmail":   llx.StringData(notificationSenderEmail),
+					"gatewayUrl":                llx.StringData(gatewayUrl),
+					"gatewayRegionalUrl":        llx.StringData(gatewayRegionalUrl),
+					"managementApiUrl":          llx.StringData(managementApiUrl),
+					"portalUrl":                 llx.StringData(portalUrl),
+					"developerPortalUrl":        llx.StringData(developerPortalUrl),
+					"scmUrl":                    llx.StringData(scmUrl),
+					"virtualNetworkType":        llx.StringData(virtualNetworkType),
+					"publicNetworkAccess":       llx.StringData(publicNetworkAccess),
+					"natGatewayState":           llx.StringData(natGatewayState),
+					"disableGateway":            llx.BoolDataPtr(disableGateway),
+					"enableClientCertificate":   llx.BoolDataPtr(enableClientCertificate),
+					"developerPortalStatus":     llx.StringData(developerPortalStatus),
+					"legacyPortalStatus":        llx.StringData(legacyPortalStatus),
+					"platformVersion":           llx.StringData(platformVersion),
+					"customProperties":          llx.MapData(customProperties, types.String),
+					"tls10Enabled":              llx.BoolDataPtr(tls10Enabled),
+					"tls11Enabled":              llx.BoolDataPtr(tls11Enabled),
+					"ssl30Enabled":              llx.BoolDataPtr(ssl30Enabled),
+					"backendTls10Enabled":       llx.BoolDataPtr(backendTls10Enabled),
+					"backendTls11Enabled":       llx.BoolDataPtr(backendTls11Enabled),
+					"backendSsl30Enabled":       llx.BoolDataPtr(backendSsl30Enabled),
+					"tripleDesEnabled":          llx.BoolDataPtr(tripleDesEnabled),
+					"http2Enabled":              llx.BoolDataPtr(http2Enabled),
+					"identityType":              llx.StringData(identityType),
+					"principalId":               llx.StringDataPtr(identityPrincipalId),
+					"tenantId":                  llx.StringDataPtr(identityTenantId),
+					"publicIpAddresses":         llx.ArrayData(publicIpAddresses, types.String),
+					"privateIpAddresses":        llx.ArrayData(privateIpAddresses, types.String),
+					"outboundPublicIpAddresses": llx.ArrayData(outboundPublicIpAddresses, types.String),
+					"zones":                     llx.ArrayData(zones, types.String),
+					"createdAt":                 llx.TimeDataPtr(createdAt),
 				})
 			if err != nil {
 				return nil, err
