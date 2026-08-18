@@ -197,11 +197,13 @@ type ExoMailbox struct {
 }
 
 type TeamsProtectionPolicy struct {
-	ZapEnabled bool `json:"ZapEnabled"`
-	IsValid    bool `json:"IsValid"`
+	Identity   string `json:"Identity"`
+	ZapEnabled bool   `json:"ZapEnabled"`
+	IsValid    bool   `json:"IsValid"`
 }
 
 type ReportSubmissionPolicy struct {
+	Identity                                    string   `json:"Identity"`
 	ReportJunkToCustomizedAddress               bool     `json:"ReportJunkToCustomizedAddress"`
 	ReportNotJunkToCustomizedAddress            bool     `json:"ReportNotJunkToCustomizedAddress"`
 	ReportPhishToCustomizedAddress              bool     `json:"ReportPhishToCustomizedAddress"`
@@ -278,15 +280,31 @@ func (r *mqlMs365Exchangeonline) getOrg() (string, error) {
 	return org, nil
 }
 
+// exchangeEntryID builds the cache key for one row of an Exchange cmdlet
+// result. Exchange objects carry an Identity, which is what every other policy
+// resource in this package keys on, but a cmdlet shape that omits it must still
+// produce a distinct key per row: CreateResource is first-wins on
+// resourceName+"\x00"+__id, so rows sharing a key collapse into the first one
+// and the rest of the collection is silently discarded. Fall back to the row's
+// position so that can never happen. Both forms are synthetic and stay hidden --
+// none of these resources declares a public `id` field.
+func exchangeEntryID(prefix, identity string, index int) string {
+	if identity != "" {
+		return prefix + "-" + identity
+	}
+	return fmt.Sprintf("%s-#%d", prefix, index)
+}
+
 // Related to TeamsProtectionPolicy as a separate function
 func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtectionPolicy) ([]any, error) {
 	var result []any
-	for _, t := range data {
+	for i, t := range data {
 		if t == nil {
 			continue
 		}
 		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.teamsProtectionPolicy",
 			map[string]*llx.RawData{
+				"__id":       llx.StringData(exchangeEntryID("teamsProtectionPolicy", t.Identity, i)),
 				"zapEnabled": llx.BoolData(t.ZapEnabled),
 				"isValid":    llx.BoolData(t.IsValid),
 			})
@@ -301,12 +319,13 @@ func convertTeamsProtectionPolicy(r *mqlMs365Exchangeonline, data []*TeamsProtec
 // Related to ReportSubmissionPolicy as a separate function
 func convertReportSubmissionPolicy(r *mqlMs365Exchangeonline, data []*ReportSubmissionPolicy) ([]any, error) {
 	var result []any
-	for _, t := range data {
+	for i, t := range data {
 		if t == nil {
 			continue
 		}
 		policy, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.reportSubmissionPolicy",
 			map[string]*llx.RawData{
+				"__id":                                        llx.StringData(exchangeEntryID("reportSubmissionPolicy", t.Identity, i)),
 				"reportJunkToCustomizedAddress":               llx.BoolData(t.ReportJunkToCustomizedAddress),
 				"reportNotJunkToCustomizedAddress":            llx.BoolData(t.ReportNotJunkToCustomizedAddress),
 				"reportPhishToCustomizedAddress":              llx.BoolData(t.ReportPhishToCustomizedAddress),
@@ -566,12 +585,13 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	externalInOutlook := []any{}
 	var externalInOutlookErr error
-	for _, e := range report.ExternalInOutlook {
+	for i, e := range report.ExternalInOutlook {
 		if e == nil {
 			continue
 		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.externalSender",
 			map[string]*llx.RawData{
+				"__id":      llx.StringData(exchangeEntryID("externalSender", e.Identity, i)),
 				"identity":  llx.StringData(e.Identity),
 				"enabled":   llx.BoolData(e.Enabled),
 				"allowList": llx.ArrayData(llx.TArr2Raw(e.AllowList), types.Any),
@@ -587,12 +607,13 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	sharedMailboxes := []any{}
 	var sharedMailboxesErr error
-	for _, m := range report.ExoMailbox {
+	for i, m := range report.ExoMailbox {
 		if m == nil {
 			continue
 		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.exoMailbox",
 			map[string]*llx.RawData{
+				"__id":                      llx.StringData(exchangeEntryID("exoMailbox", m.Identity, i)),
 				"identity":                  llx.StringData(m.Identity),
 				"externalDirectoryObjectId": llx.StringData(m.ExternalDirectoryObjectId),
 			})
@@ -650,9 +671,10 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	mailboxAuditBypassAssociations := []any{}
 	var mailboxAuditBypassAssociationErr error
-	for _, assoc := range report.MailboxAuditBypassAssociation {
+	for i, assoc := range report.MailboxAuditBypassAssociation {
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonlineMailboxAuditBypassAssociation",
 			map[string]*llx.RawData{
+				"__id":               llx.StringData(exchangeEntryID("mailboxAuditBypassAssociation", assoc.Name, i)),
 				"name":               llx.StringData(assoc.Name),
 				"auditBypassEnabled": llx.BoolData(assoc.AuditBypassEnabled),
 			})

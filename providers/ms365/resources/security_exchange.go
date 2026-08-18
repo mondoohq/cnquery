@@ -106,6 +106,9 @@ func (r *mqlMicrosoftSecurityExchangeAntispam) hostedConnectionFilterPolicy() (*
 
 	resource, err := CreateResource(r.MqlRuntime, ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy,
 		map[string]*llx.RawData{
+			// Singular resource: always fetched with -Identity Default, so the
+			// index fallback can never fire and 0 is a constant.
+			"__id":             llx.StringData(exchangeEntryID("hostedConnectionFilterPolicy", policy.Identity, 0)),
 			"identity":         llx.StringData(policy.Identity),
 			"adminDisplayName": llx.StringData(policy.AdminDisplayName),
 			"ipAllowList":      llx.ArrayData(convert.SliceAnyToInterface(policy.IPAllowList), types.String),
