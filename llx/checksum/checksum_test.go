@@ -378,3 +378,52 @@ func TestCanonDepthLimit(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, CanonPrimitive(NewHasher("t"), &llx.Primitive{Type: string(types.Dict), Value: b}))
 }
+
+// TestCanonResultNilIsZeroResult pins the nil/zero fold: proto3 maps cannot
+// hold a nil message value, so a nil Result inside an in-memory result map
+// round-trips through marshal/unmarshal as a non-nil empty Result. Nil and
+// zero are one value on the wire, and must be one value in the hash —
+// otherwise a row hashed at write time (in memory, nil present) can never
+// match the same row recomputed from storage (decoded, nil gone), and the
+// unchanged-scan comparison reads it as permanently changed.
+func TestCanonResultNilIsZeroResult(t *testing.T) {
+	withNil := &llx.ResourceRecording{
+		Resource: "user", Id: "root",
+		Fields: map[string]*llx.Result{"gone": nil},
+	}
+	withZero := &llx.ResourceRecording{
+		Resource: "user", Id: "root",
+		Fields: map[string]*llx.Result{"gone": {}},
+	}
+
+	dNil, err := HashResourceRow(withNil)
+	require.NoError(t, err)
+	dZero, err := HashResourceRow(withZero)
+	require.NoError(t, err)
+	assert.Equal(t, dNil, dZero, "nil and the zero Result are one value on the wire, so they must be one value in the hash")
+
+	// The motivating property, end to end: the in-memory hash equals the
+	// hash of the same recording after a storage round trip.
+	blob, err := proto.Marshal(withNil)
+	require.NoError(t, err)
+	decoded := &llx.ResourceRecording{}
+	require.NoError(t, proto.Unmarshal(blob, decoded))
+	dDecoded, err := HashResourceRow(decoded)
+	require.NoError(t, err)
+	assert.Equal(t, dNil, dDecoded, "write-time hash must equal the recompute from the stored row")
+
+	// Golden for the shared encoding, and the fold direction is the zero
+	// Result's encoding: hashes of decoded rows (which can never contain a
+	// nil) are unchanged by the fold, so AlgoVersion stays at "1".
+	assert.Equal(t, "2d282e44733823be", hex(dZero))
+
+	// The row-level nil sentinel is untouched by the fold — HashDataRow's
+	// golden above pins it separately.
+	present := &llx.Result{Data: llx.StringPrimitive("v")}
+	dPresent, err := HashResourceRow(&llx.ResourceRecording{
+		Resource: "user", Id: "root",
+		Fields: map[string]*llx.Result{"gone": present},
+	})
+	require.NoError(t, err)
+	assert.NotEqual(t, dNil, dPresent, "a present value still differs from an absent one")
+}
