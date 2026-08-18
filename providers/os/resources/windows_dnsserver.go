@@ -64,9 +64,12 @@ func (w *mqlWindowsDnsServer) runDnsCollection(script string) (io.Reader, error)
 }
 
 func (w *mqlWindowsDnsServer) config() (*windows.WindowsDnsServerConfig, error) {
-	if w.configFetched {
-		return w.configData, nil
-	}
+	// The guard is read under the lock, never before it. A fast path that
+	// tests the flag first is a data race: the goroutine that publishes the
+	// result writes the flag and the pointer with no happens-before edge to
+	// the reader, so a racing accessor can see the flag set and the data still
+	// nil. The lock is uncontended in the common case and the work it guards
+	// is a remote command, so there is nothing to win by skipping it.
 	w.configLock.Lock()
 	defer w.configLock.Unlock()
 	if w.configFetched {
@@ -88,9 +91,6 @@ func (w *mqlWindowsDnsServer) config() (*windows.WindowsDnsServerConfig, error) 
 }
 
 func (w *mqlWindowsDnsServer) zoneData() ([]windows.WindowsDnsServerZone, error) {
-	if w.zonesFetched {
-		return w.zonesData, nil
-	}
 	w.zonesLock.Lock()
 	defer w.zonesLock.Unlock()
 	if w.zonesFetched {
