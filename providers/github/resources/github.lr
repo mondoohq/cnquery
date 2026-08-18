@@ -974,7 +974,17 @@ github.repository @defaults("fullName") {
   // Teams granted access to the repository, with the permission each one holds
   teams() []github.repository.team
   // List of files in the repository
+  //
+  // Only the root of the default branch. Use `allFiles` to walk the whole tree.
   files() []github.file
+  // Every entry in the repository's default branch, listed recursively
+  //
+  // Directory entries appear alongside files, each carrying its full path from
+  // the repository root. The list comes from a single Git Trees API call, so it
+  // reaches arbitrary depth rather than the one level `files` returns. Empty
+  // when the repository has no commits. Git records a submodule as a commit
+  // entry, which is reported with type "submodule".
+  allFiles() []github.file
   // List of releases for the repository
   releases() []github.release
   // Repository owner

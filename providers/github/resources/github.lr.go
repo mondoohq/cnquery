@@ -1370,6 +1370,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.repository.files": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetFiles()).ToDataRes(types.Array(types.Resource("github.file")))
 	},
+	"github.repository.allFiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubRepository).GetAllFiles()).ToDataRes(types.Array(types.Resource("github.file")))
+	},
 	"github.repository.releases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubRepository).GetReleases()).ToDataRes(types.Array(types.Resource("github.release")))
 	},
@@ -4094,6 +4097,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"github.repository.files": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubRepository).Files, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"github.repository.allFiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubRepository).AllFiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"github.repository.releases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9158,6 +9165,7 @@ type mqlGithubRepository struct {
 	AdminCollaborators                   plugin.TValue[[]any]
 	Teams                                plugin.TValue[[]any]
 	Files                                plugin.TValue[[]any]
+	AllFiles                             plugin.TValue[[]any]
 	Releases                             plugin.TValue[[]any]
 	Owner                                plugin.TValue[*mqlGithubUser]
 	Webhooks                             plugin.TValue[[]any]
@@ -9556,6 +9564,22 @@ func (c *mqlGithubRepository) GetFiles() *plugin.TValue[[]any] {
 		}
 
 		return c.files()
+	})
+}
+
+func (c *mqlGithubRepository) GetAllFiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllFiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("github.repository", c.__id, "allFiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allFiles()
 	})
 }
 
