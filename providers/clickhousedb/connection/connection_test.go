@@ -74,3 +74,27 @@ func TestIsPermissionError(t *testing.T) {
 		}
 	}
 }
+
+func TestIsUnknownPortError(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{
+			"tls disabled, the case this exists for",
+			errors.New("code: 701, message: There is no port named tcp_port_secure: In scope SELECT getServerPort('tcp_port_secure')"),
+			true,
+		},
+		// Code 701 is shared with cluster lookups, so the code alone must not
+		// be enough to read a real failure as "not configured".
+		{"a genuine cluster failure", errors.New("code: 701, message: Requested cluster 'x' not found"), false},
+		{"unrelated failure", errors.New("code: 497, message: ACCESS_DENIED"), false},
+		{"nil", nil, false},
+	}
+	for _, c := range cases {
+		if got := IsUnknownPortError(c.err); got != c.want {
+			t.Errorf("%s: IsUnknownPortError(%v) = %v, want %v", c.name, c.err, got, c.want)
+		}
+	}
+}

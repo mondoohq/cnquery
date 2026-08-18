@@ -153,6 +153,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"clickhousedb.instance.serverSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClickhousedbInstance).GetServerSettings()).ToDataRes(types.Array(types.Resource("clickhousedb.serverSetting")))
 	},
+	"clickhousedb.instance.tcpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClickhousedbInstance).GetTcpPort()).ToDataRes(types.Int)
+	},
+	"clickhousedb.instance.tcpPortSecure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClickhousedbInstance).GetTcpPortSecure()).ToDataRes(types.Int)
+	},
+	"clickhousedb.instance.httpPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClickhousedbInstance).GetHttpPort()).ToDataRes(types.Int)
+	},
+	"clickhousedb.instance.httpsPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClickhousedbInstance).GetHttpsPort()).ToDataRes(types.Int)
+	},
+	"clickhousedb.instance.tlsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClickhousedbInstance).GetTlsEnabled()).ToDataRes(types.Bool)
+	},
 	"clickhousedb.user.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClickhousedbUser).GetName()).ToDataRes(types.String)
 	},
@@ -289,6 +304,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"clickhousedb.instance.serverSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClickhousedbInstance).ServerSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"clickhousedb.instance.tcpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClickhousedbInstance).TcpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"clickhousedb.instance.tcpPortSecure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClickhousedbInstance).TcpPortSecure, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"clickhousedb.instance.httpPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClickhousedbInstance).HttpPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"clickhousedb.instance.httpsPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClickhousedbInstance).HttpsPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"clickhousedb.instance.tlsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClickhousedbInstance).TlsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"clickhousedb.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -515,6 +550,11 @@ type mqlClickhousedbInstance struct {
 	Quotas           plugin.TValue[[]any]
 	Clusters         plugin.TValue[[]any]
 	ServerSettings   plugin.TValue[[]any]
+	TcpPort          plugin.TValue[int64]
+	TcpPortSecure    plugin.TValue[int64]
+	HttpPort         plugin.TValue[int64]
+	HttpsPort        plugin.TValue[int64]
+	TlsEnabled       plugin.TValue[bool]
 }
 
 // createClickhousedbInstance creates a new instance of this resource
@@ -646,6 +686,36 @@ func (c *mqlClickhousedbInstance) GetServerSettings() *plugin.TValue[[]any] {
 		}
 
 		return c.serverSettings()
+	})
+}
+
+func (c *mqlClickhousedbInstance) GetTcpPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TcpPort, func() (int64, error) {
+		return c.tcpPort()
+	})
+}
+
+func (c *mqlClickhousedbInstance) GetTcpPortSecure() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.TcpPortSecure, func() (int64, error) {
+		return c.tcpPortSecure()
+	})
+}
+
+func (c *mqlClickhousedbInstance) GetHttpPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.HttpPort, func() (int64, error) {
+		return c.httpPort()
+	})
+}
+
+func (c *mqlClickhousedbInstance) GetHttpsPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.HttpsPort, func() (int64, error) {
+		return c.httpsPort()
+	})
+}
+
+func (c *mqlClickhousedbInstance) GetTlsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TlsEnabled, func() (bool, error) {
+		return c.tlsEnabled()
 	})
 }
 

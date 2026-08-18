@@ -34,6 +34,69 @@ func initClickhousedbInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 	return args, nil, nil
 }
 
+// serverPort resolves one listener port through the getServerPort() function.
+//
+// ClickHouse does not expose its listeners in system.server_settings: that
+// table covers the settings declared in the server's settings struct, and ports
+// are read straight from the config XML. getServerPort() is the only route to
+// the resolved value, and it throws rather than returning zero when the port is
+// not configured -- "There is no port named tcp_port_secure" -- which is the
+// normal state for a server with TLS switched off. That is reported as 0 here,
+// since "not configured" is exactly what a caller asking for the port wants to
+// be told.
+func serverPort(db *sql.DB, ctx context.Context, name string) (int64, error) {
+	var port uint16
+	err := db.QueryRowContext(ctx, `SELECT getServerPort(?)`, name).Scan(&port)
+	if err != nil {
+		if connection.IsUnknownPortError(err) || connection.IsPermissionError(err) {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("clickhousedb: cannot read port %s: %w", name, err)
+	}
+	return int64(port), nil
+}
+
+func (r *mqlClickhousedbInstance) instancePort(name string) (int64, error) {
+	conn := clickhousedbConnection(r.MqlRuntime)
+	db, err := conn.Client()
+	if err != nil {
+		return 0, err
+	}
+	return serverPort(db, conn.Context(), name)
+}
+
+func (r *mqlClickhousedbInstance) tcpPort() (int64, error) {
+	return r.instancePort("tcp_port")
+}
+
+func (r *mqlClickhousedbInstance) tcpPortSecure() (int64, error) {
+	return r.instancePort("tcp_port_secure")
+}
+
+func (r *mqlClickhousedbInstance) httpPort() (int64, error) {
+	return r.instancePort("http_port")
+}
+
+func (r *mqlClickhousedbInstance) httpsPort() (int64, error) {
+	return r.instancePort("https_port")
+}
+
+// tlsEnabled reports whether either interface has a secure listener bound.
+// Both are checked because a deployment may expose only one of them, and a
+// server reachable in the clear on the interface its clients actually use is
+// not made safe by the other one being encrypted.
+func (r *mqlClickhousedbInstance) tlsEnabled() (bool, error) {
+	native, err := r.instancePort("tcp_port_secure")
+	if err != nil {
+		return false, err
+	}
+	https, err := r.instancePort("https_port")
+	if err != nil {
+		return false, err
+	}
+	return native != 0 || https != 0, nil
+}
+
 func (r *mqlClickhousedbInstance) roles() ([]any, error) {
 	conn := clickhousedbConnection(r.MqlRuntime)
 	db, err := conn.Client()

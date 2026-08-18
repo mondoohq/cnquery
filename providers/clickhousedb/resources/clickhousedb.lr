@@ -32,7 +32,26 @@ clickhousedb.instance @defaults("version") {
   // Clusters the server is a member of
   clusters() []clickhousedb.cluster
   // Server-level configuration settings
+  //
+  // Read from system.server_settings, which covers the settings declared in the
+  // server's own settings struct. Listeners are not among them: ports and
+  // listen addresses are read straight from the config XML and never appear
+  // there, which is why they are exposed as the fields below rather than
+  // through this list.
   serverSettings() []clickhousedb.serverSetting
+  // Native protocol port, or 0 when the plaintext listener is disabled
+  tcpPort() int
+  // Native protocol port with TLS, or 0 when the secure listener is disabled
+  tcpPortSecure() int
+  // HTTP interface port, or 0 when the plaintext listener is disabled
+  httpPort() int
+  // HTTPS interface port, or 0 when the secure listener is disabled
+  httpsPort() int
+  // Whether a TLS listener is bound, on either the native or the HTTP interface
+  //
+  // False means every interface the server exposes is cleartext, so credentials
+  // and query results cross the network in the clear.
+  tlsEnabled() bool
 }
 
 // ClickHouse user
