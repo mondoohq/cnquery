@@ -333,3 +333,33 @@ func TestValidateDnssecWithoutAResolverIsInspectable(t *testing.T) {
 	assert.Empty(t, res.Signatures)
 	assert.NotEmpty(t, res.Error, "a resolution that could not happen must say so")
 }
+
+// TestSigningZone pins where the chain walk starts when an answer carries
+// signatures from more than one zone, which is what a CNAME into another
+// zone produces. Taking whichever the resolver happened to list first would
+// make the reported chain depend on response ordering.
+func TestSigningZone(t *testing.T) {
+	queried := "www.example.com."
+
+	sigForName := &dns.RRSIG{
+		Hdr:        dns.RR_Header{Name: "www.example.com."},
+		SignerName: "example.com.",
+	}
+	sigForTarget := &dns.RRSIG{
+		Hdr:        dns.RR_Header{Name: "cdn.provider.net."},
+		SignerName: "provider.net.",
+	}
+
+	t.Run("the signature over the queried name wins, whatever the order", func(t *testing.T) {
+		assert.Equal(t, "example.com.", signingZone(queried, []*dns.RRSIG{sigForTarget, sigForName}))
+		assert.Equal(t, "example.com.", signingZone(queried, []*dns.RRSIG{sigForName, sigForTarget}))
+	})
+
+	t.Run("name matching is case insensitive", func(t *testing.T) {
+		assert.Equal(t, "example.com.", signingZone("WWW.Example.COM.", []*dns.RRSIG{sigForTarget, sigForName}))
+	})
+
+	t.Run("falls back to the first signature when none covers the queried name", func(t *testing.T) {
+		assert.Equal(t, "provider.net.", signingZone(queried, []*dns.RRSIG{sigForTarget}))
+	})
+}

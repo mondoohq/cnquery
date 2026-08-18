@@ -180,16 +180,16 @@ func (d *DnsClient) ValidateDnssec(recordTypes ...string) (*DnssecValidation, er
 	res.AuthenticatedData = msg.AuthenticatedData
 	res.DnssecOk = responseHasDnssecOk(msg)
 
-	// A validating resolver withholds an answer it could not validate, so the
-	// records that would explain why are exactly the ones it refused to send.
-	// Re-ask with checking disabled to see them. Without this step a bogus zone
-	// and an unreachable authoritative server are the same SERVFAIL.
 	// Reasons accumulate rather than overwrite. The resolver's refusal is
 	// context, the walk's finding is the diagnosis, and reporting only the
 	// first one leaves an operator knowing that a zone failed without knowing
 	// which link failed.
 	reasons := []string{}
 
+	// A validating resolver withholds an answer it could not validate, so the
+	// records that would explain why are exactly the ones it refused to send.
+	// Re-ask with checking disabled to see them. Without this step a bogus zone
+	// and an unreachable authoritative server are the same SERVFAIL.
 	answer := msg
 	if msg.Rcode != dns.RcodeSuccess {
 		if cd, cdErr := d.exchangeDnssec(server, res.Name, qtype, true); cdErr == nil && cd.Rcode == dns.RcodeSuccess {
@@ -219,7 +219,7 @@ func (d *DnsClient) ValidateDnssec(recordTypes ...string) (*DnssecValidation, er
 	// not the queried name: a name deep inside a zone is signed by the zone
 	// apex, and walking up from the name would look for a DS at every
 	// intermediate label that is not a zone cut.
-	chain, brokenAt, failure := d.walkChain(server, rrsigs[0].SignerName)
+	chain, brokenAt, failure := d.walkChain(server, signingZone(res.Name, rrsigs))
 	res.Chain = chain
 	res.BrokenAtZone = brokenAt
 	res.ChainOfTrustValidated = failure == "" && res.SignaturesVerified
@@ -230,6 +230,22 @@ func (d *DnsClient) ValidateDnssec(recordTypes ...string) (*DnssecValidation, er
 
 	res.Error = strings.Join(reasons, "; ")
 	return res, nil
+}
+
+// signingZone picks the zone the chain walk starts from.
+//
+// A name that resolves through a CNAME into another zone comes back with
+// signatures from more than one zone, and which of them the resolver puts
+// first is not something to depend on. The signature over the queried name is
+// the one whose chain the caller asked about, so it wins; anything else falls
+// back to the first signature present.
+func signingZone(name string, rrsigs []*dns.RRSIG) string {
+	for _, sig := range rrsigs {
+		if strings.EqualFold(sig.Hdr.Name, name) {
+			return sig.SignerName
+		}
+	}
+	return rrsigs[0].SignerName
 }
 
 // newDnssecSignature converts a wire RRSIG into the reported shape.
