@@ -137,9 +137,6 @@ func NewState(state string) State {
 }
 
 var AssetCategory_schemevalue = map[string]AssetCategory{
-	// FIXME: DEPRECATED, remove in v11.0 vv
-	"fleet": AssetCategory_CATEGORY_INVENTORY,
-	// ^^
 	"inventory": AssetCategory_CATEGORY_INVENTORY,
 	"cicd":      AssetCategory_CATEGORY_CICD,
 }
