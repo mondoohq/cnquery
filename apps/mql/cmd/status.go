@@ -248,14 +248,9 @@ func checkStatus(ctx context.Context) (Status, error) {
 	}
 
 	// Determine the providers URL:
-	// 1. If providers_url is explicitly set, use it (deprecated)
-	// 2. Otherwise, if updates_url is set, use updates_url + "/providers"
-	// 3. Otherwise, use the default
-	if opts.ProvidersURL != "" {
-		updatesURL := strings.TrimSuffix(opts.ProvidersURL, "/providers")
-		log.Warn().Msgf("providers_url is deprecated, please use updates_url: %s", updatesURL)
-		s.Client.ProvidersURL = opts.ProvidersURL
-	} else if opts.UpdatesURL != "" {
+	// 1. If updates_url is set, use updates_url + "/providers"
+	// 2. Otherwise, use the default
+	if opts.UpdatesURL != "" {
 		s.Client.ProvidersURL = opts.UpdatesURL + "/providers"
 	} else {
 		s.Client.ProvidersURL = providers.DefaultProviderRegistryURL
