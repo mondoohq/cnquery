@@ -29,6 +29,9 @@ func (r *mqlRoo) skills() ([]interface{}, error) {
 
 func (r *mqlRooSkill) id() (string, error)     { return "roo.skill/" + r.Source.Data, nil }
 func (r *mqlRooSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlRooSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Cline ---
 
@@ -52,6 +55,9 @@ func (r *mqlCline) skills() ([]interface{}, error) {
 
 func (r *mqlClineSkill) id() (string, error)     { return "cline.skill/" + r.Source.Data, nil }
 func (r *mqlClineSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlClineSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Kiro CLI ---
 
@@ -72,6 +78,9 @@ func (r *mqlKiro) skills() ([]interface{}, error) {
 
 func (r *mqlKiroSkill) id() (string, error)     { return "kiro.skill/" + r.Source.Data, nil }
 func (r *mqlKiroSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlKiroSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Continue ---
 
@@ -92,6 +101,9 @@ func (r *mqlContinuedev) skills() ([]interface{}, error) {
 
 func (r *mqlContinuedevSkill) id() (string, error)     { return "continuedev.skill/" + r.Source.Data, nil }
 func (r *mqlContinuedevSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlContinuedevSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Trae ---
 
@@ -112,6 +124,9 @@ func (r *mqlTrae) skills() ([]interface{}, error) {
 
 func (r *mqlTraeSkill) id() (string, error)     { return "trae.skill/" + r.Source.Data, nil }
 func (r *mqlTraeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlTraeSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- OpenCode ---
 
@@ -132,6 +147,9 @@ func (r *mqlOpencode) skills() ([]interface{}, error) {
 
 func (r *mqlOpencodeSkill) id() (string, error)     { return "opencode.skill/" + r.Source.Data, nil }
 func (r *mqlOpencodeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlOpencodeSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Pi ---
 
@@ -152,6 +170,9 @@ func (r *mqlPi) skills() ([]interface{}, error) {
 
 func (r *mqlPiSkill) id() (string, error)     { return "pi.skill/" + r.Source.Data, nil }
 func (r *mqlPiSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlPiSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Mistral Vibe ---
 
@@ -172,6 +193,9 @@ func (r *mqlMistralVibe) skills() ([]interface{}, error) {
 
 func (r *mqlMistralVibeSkill) id() (string, error)     { return "mistral.vibe.skill/" + r.Source.Data, nil }
 func (r *mqlMistralVibeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlMistralVibeSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Antigravity (Google) ---
 
@@ -192,6 +216,9 @@ func (r *mqlAntigravity) skills() ([]interface{}, error) {
 
 func (r *mqlAntigravitySkill) id() (string, error)     { return "antigravity.skill/" + r.Source.Data, nil }
 func (r *mqlAntigravitySkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlAntigravitySkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- IBM Bob ---
 
@@ -212,6 +239,9 @@ func (r *mqlIbmBob) skills() ([]interface{}, error) {
 
 func (r *mqlIbmBobSkill) id() (string, error)     { return "ibm.bob.skill/" + r.Source.Data, nil }
 func (r *mqlIbmBobSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlIbmBobSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- OpenClaw ---
 
@@ -232,6 +262,9 @@ func (r *mqlOpenclaw) skills() ([]interface{}, error) {
 
 func (r *mqlOpenclawSkill) id() (string, error)     { return "openclaw.skill/" + r.Source.Data, nil }
 func (r *mqlOpenclawSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlOpenclawSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Snowflake Cortex Code ---
 
@@ -254,6 +287,9 @@ func (r *mqlSnowflakeCortexSkill) id() (string, error) {
 	return "snowflake.cortex.skill/" + r.Source.Data, nil
 }
 func (r *mqlSnowflakeCortexSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlSnowflakeCortexSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Junie (JetBrains) ---
 
@@ -274,6 +310,9 @@ func (r *mqlJunie) skills() ([]interface{}, error) {
 
 func (r *mqlJunieSkill) id() (string, error)     { return "junie.skill/" + r.Source.Data, nil }
 func (r *mqlJunieSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlJunieSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Augment ---
 
@@ -294,6 +333,9 @@ func (r *mqlAugment) skills() ([]interface{}, error) {
 
 func (r *mqlAugmentSkill) id() (string, error)     { return "augment.skill/" + r.Source.Data, nil }
 func (r *mqlAugmentSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlAugmentSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Warp ---
 
@@ -316,6 +358,9 @@ func (r *mqlWarp) skills() ([]interface{}, error) {
 
 func (r *mqlWarpSkill) id() (string, error)     { return "warp.skill/" + r.Source.Data, nil }
 func (r *mqlWarpSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlWarpSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Kilo Code ---
 
@@ -336,6 +381,9 @@ func (r *mqlKilocode) skills() ([]interface{}, error) {
 
 func (r *mqlKilocodeSkill) id() (string, error)     { return "kilocode.skill/" + r.Source.Data, nil }
 func (r *mqlKilocodeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlKilocodeSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- OpenHands ---
 
@@ -356,6 +404,9 @@ func (r *mqlOpenhands) skills() ([]interface{}, error) {
 
 func (r *mqlOpenhandsSkill) id() (string, error)     { return "openhands.skill/" + r.Source.Data, nil }
 func (r *mqlOpenhandsSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlOpenhandsSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
 
 // --- Qwen Code ---
 
@@ -376,3 +427,6 @@ func (r *mqlQwenCode) skills() ([]interface{}, error) {
 
 func (r *mqlQwenCodeSkill) id() (string, error)     { return "qwen.code.skill/" + r.Source.Data, nil }
 func (r *mqlQwenCodeSkill) sha256() (string, error) { return contentSHA256(r.Content.Data), nil }
+func (r *mqlQwenCodeSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}

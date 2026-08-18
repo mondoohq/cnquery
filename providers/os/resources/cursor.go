@@ -141,6 +141,10 @@ func (r *mqlCursorSkill) sha256() (string, error) {
 	return contentSHA256(r.Content.Data), nil
 }
 
+func (r *mqlCursorSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
+
 // Helper types
 
 type cursorMCPConfig struct {

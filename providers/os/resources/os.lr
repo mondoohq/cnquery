@@ -13706,6 +13706,8 @@ private claude.code.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Claude Code project
@@ -13938,6 +13940,8 @@ private openai.codex.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // OpenAI Codex MCP server
@@ -14164,6 +14168,8 @@ private cursor.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // GitHub Copilot CLI instance
@@ -14267,6 +14273,8 @@ private github.copilot.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Goose AI agent (Block) instance
@@ -14356,6 +14364,8 @@ private goose.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Gemini CLI (Google) instance
@@ -14454,6 +14464,8 @@ private gemini.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Windsurf editor (Codeium) instance
@@ -14595,6 +14607,8 @@ private windsurf.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Zed editor instance
@@ -14739,6 +14753,8 @@ private roo.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Cline AI agent instance
@@ -14797,6 +14813,8 @@ private cline.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Kiro CLI (AWS) instance
@@ -14854,6 +14872,8 @@ private kiro.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Continue (open-source AI coding assistant) instance
@@ -14935,6 +14955,8 @@ private continuedev.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Trae AI assistant (ByteDance) instance
@@ -15016,6 +15038,8 @@ private trae.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // OpenCode AI coding assistant instance
@@ -15098,6 +15122,8 @@ private opencode.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Pi AI agent instance
@@ -15179,6 +15205,8 @@ private pi.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Mistral Vibe (Mistral AI) instance
@@ -15261,6 +15289,8 @@ private mistral.vibe.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Antigravity (Google) instance
@@ -15344,6 +15374,8 @@ private antigravity.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // IBM Bob instance
@@ -15425,6 +15457,8 @@ private ibm.bob.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // OpenClaw AI agent instance
@@ -15506,6 +15540,8 @@ private openclaw.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Snowflake Cortex Code instance
@@ -15589,6 +15625,8 @@ private snowflake.cortex.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Junie (JetBrains AI agent) instance
@@ -15670,6 +15708,8 @@ private junie.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Augment Code instance
@@ -15751,6 +15791,8 @@ private augment.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Warp AI terminal instance
@@ -15833,6 +15875,8 @@ private warp.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Kilo Code AI agent instance
@@ -15914,6 +15958,8 @@ private kilocode.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // OpenHands AI agent instance (formerly OpenDevin)
@@ -15996,6 +16042,8 @@ private openhands.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // Qwen Code (Alibaba) instance
@@ -16077,6 +16125,8 @@ private qwen.code.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
+  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  purl() string
 }
 
 // SR-IOV network devices

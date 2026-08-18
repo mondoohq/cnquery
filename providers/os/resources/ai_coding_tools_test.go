@@ -106,6 +106,133 @@ func TestCollectSkillFilesDedupsSourcePaths(t *testing.T) {
 	require.Len(t, skills, 1)
 }
 
+// writeGitCheckout writes a minimal .git directory with an origin remote and
+// a HEAD ref pointing at sha via a loose ref file.
+func writeGitCheckout(t *testing.T, fs afero.Fs, root, originURL, sha string) {
+	t.Helper()
+	gitDir := root + "/.git"
+	require.NoError(t, fs.MkdirAll(gitDir+"/refs/heads", 0o755))
+	config := "[core]\n\trepositoryformatversion = 0\n[remote \"origin\"]\n\turl = " + originURL + "\n\tfetch = +refs/heads/*:refs/remotes/origin/*\n"
+	require.NoError(t, afero.WriteFile(fs, gitDir+"/config", []byte(config), 0o644))
+	require.NoError(t, afero.WriteFile(fs, gitDir+"/HEAD", []byte("ref: refs/heads/main\n"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, gitDir+"/refs/heads/main", []byte(sha+"\n"), 0o644))
+}
+
+func TestSkillPURL(t *testing.T) {
+	const sha = "0123456789abcdef0123456789abcdef01234567"
+
+	t.Run("github origin with loose ref", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "git@github.com:acme/skills.git", sha)
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "pkg:github/acme/skills@0123456789ab?skill=deploy",
+			skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("https origin URL", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "https://github.com/acme/skills.git", sha)
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "pkg:github/acme/skills@0123456789ab?skill=deploy",
+			skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("packed refs", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "git@github.com:acme/skills.git", sha)
+		require.NoError(t, mem.Remove("/repo/.git/refs/heads/main"))
+		packed := "# pack-refs with: peeled fully-peeled sorted\n" +
+			sha + " refs/heads/main\n" +
+			"^deadbeefdeadbeefdeadbeefdeadbeefdeadbeef\n"
+		require.NoError(t, afero.WriteFile(mem, "/repo/.git/packed-refs", []byte(packed), 0o644))
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "pkg:github/acme/skills@0123456789ab?skill=deploy",
+			skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("detached HEAD resolves", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "git@github.com:acme/skills.git", sha)
+		require.NoError(t, afero.WriteFile(mem, "/repo/.git/HEAD", []byte(sha+"\n"), 0o644))
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "pkg:github/acme/skills@0123456789ab?skill=deploy",
+			skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("linked worktree", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		// main checkout holds the shared config and refs
+		writeGitCheckout(t, mem, "/repo", "git@github.com:acme/skills.git", sha)
+		// linked worktree: .git file pointing at the per-worktree git dir
+		wtGitDir := "/repo/.git/worktrees/wt"
+		require.NoError(t, mem.MkdirAll(wtGitDir, 0o755))
+		require.NoError(t, afero.WriteFile(mem, "/wt/.git", []byte("gitdir: "+wtGitDir+"\n"), 0o644))
+		require.NoError(t, afero.WriteFile(mem, wtGitDir+"/commondir", []byte("../..\n"), 0o644))
+		require.NoError(t, afero.WriteFile(mem, wtGitDir+"/HEAD", []byte("ref: refs/heads/main\n"), 0o644))
+		writeSkill(t, mem, "/wt/skills", "deploy")
+
+		assert.Equal(t, "pkg:github/acme/skills@0123456789ab?skill=deploy",
+			skillPURL(afs, "/wt/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("no git checkout", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeSkill(t, mem, "/plain/skills", "deploy")
+
+		assert.Equal(t, "", skillPURL(afs, "/plain/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("non-github origin", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "git@gitlab.com:acme/skills.git", sha)
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "", skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("no origin remote", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "git@github.com:acme/skills.git", sha)
+		config := "[remote \"upstream\"]\n\turl = git@github.com:other/skills.git\n"
+		require.NoError(t, afero.WriteFile(mem, "/repo/.git/config", []byte(config), 0o644))
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "", skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("unresolvable HEAD ref", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "git@github.com:acme/skills.git", sha)
+		require.NoError(t, mem.Remove("/repo/.git/refs/heads/main"))
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "", skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+
+	t.Run("malformed sha in ref file", func(t *testing.T) {
+		mem := afero.NewMemMapFs()
+		afs := &afero.Afero{Fs: mem}
+		writeGitCheckout(t, mem, "/repo", "git@github.com:acme/skills.git", sha)
+		require.NoError(t, afero.WriteFile(mem, "/repo/.git/refs/heads/main", []byte("not-a-sha\n"), 0o644))
+		writeSkill(t, mem, "/repo/skills", "deploy")
+
+		assert.Equal(t, "", skillPURL(afs, "/repo/skills/deploy/SKILL.md"))
+	})
+}
+
 func TestFileURIToPath(t *testing.T) {
 	cases := []struct {
 		uri  string

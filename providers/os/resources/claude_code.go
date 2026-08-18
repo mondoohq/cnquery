@@ -552,6 +552,10 @@ func (r *mqlClaudeCodeSkill) sha256() (string, error) {
 	return contentSHA256(r.Content.Data), nil
 }
 
+func (r *mqlClaudeCodeSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
+
 func (r *mqlClaudeCodeProject) id() (string, error) {
 	return "claude.code.project/" + r.Path.Data, nil
 }
