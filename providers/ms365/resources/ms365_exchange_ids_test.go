@@ -65,6 +65,17 @@ func TestExchangeEntryIDIsUniquePerRow(t *testing.T) {
 			exchangeEntryID("reportSubmissionPolicy", "Default", 0),
 			"two resource types sharing an Identity must not share a key")
 	})
+
+	// externalSender and exoMailbox are both keyed on an Exchange Identity and
+	// are built from the same report, so a mailbox and a sender that share one
+	// must still land on different keys.
+	t.Run("externalSender and exoMailbox do not collide", func(t *testing.T) {
+		const identity = "shared@example.com"
+		assert.NotEqual(t,
+			exchangeEntryID("externalSender", identity, 0),
+			exchangeEntryID("exoMailbox", identity, 0),
+			"a sender and a mailbox sharing an Identity must not share a key")
+	})
 }
 
 // Identity is what the id builder keys on, so the struct tag that feeds it has

@@ -585,12 +585,13 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	externalInOutlook := []any{}
 	var externalInOutlookErr error
-	for _, e := range report.ExternalInOutlook {
+	for i, e := range report.ExternalInOutlook {
 		if e == nil {
 			continue
 		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.externalSender",
 			map[string]*llx.RawData{
+				"__id":      llx.StringData(exchangeEntryID("externalSender", e.Identity, i)),
 				"identity":  llx.StringData(e.Identity),
 				"enabled":   llx.BoolData(e.Enabled),
 				"allowList": llx.ArrayData(llx.TArr2Raw(e.AllowList), types.Any),
@@ -606,12 +607,13 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 
 	sharedMailboxes := []any{}
 	var sharedMailboxesErr error
-	for _, m := range report.ExoMailbox {
+	for i, m := range report.ExoMailbox {
 		if m == nil {
 			continue
 		}
 		mql, err := CreateResource(r.MqlRuntime, "ms365.exchangeonline.exoMailbox",
 			map[string]*llx.RawData{
+				"__id":                      llx.StringData(exchangeEntryID("exoMailbox", m.Identity, i)),
 				"identity":                  llx.StringData(m.Identity),
 				"externalDirectoryObjectId": llx.StringData(m.ExternalDirectoryObjectId),
 			})
