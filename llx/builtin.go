@@ -583,9 +583,6 @@ func init() {
 			"in":           {f: dictIn, Label: "in"},
 			"notIn":        {f: dictNotIn, Label: "notIn"},
 			string("find"): {f: dictFindV2, Label: "find"},
-			// NOTE: the following functions are internal ONLY!
-			// We have not yet decided if and how these may be exposed to users
-			"notEmpty": {f: dictNotEmptyV2},
 		},
 		types.Version: {
 			string("==" + types.Nil):     {f: stringCmpNilV2, Label: "=="},
