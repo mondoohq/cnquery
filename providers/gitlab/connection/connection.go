@@ -6,10 +6,12 @@ package connection
 import (
 	"errors"
 	"fmt"
+	nethttp "net/http"
 	"net/url"
 	"os"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
@@ -69,7 +71,17 @@ func NewGitLabConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		opts = gitlab.WithBaseURL(url)
 	}
 
-	client, err := gitlab.NewClient(token, opts)
+	// Log every call at debug, the way the azure and gcp providers do. Without
+	// it a slow GitLab scan cannot be attributed to anything: GitLab paginates
+	// heavily and fans out per project, so "which call, how many times" is the
+	// only question worth asking and there was previously no way to ask it.
+	traced := &nethttp.Client{Transport: &apiTraceTransport{}}
+	clientOpts := []gitlab.ClientOptionFunc{gitlab.WithHTTPClient(traced)}
+	if opts != nil {
+		clientOpts = append(clientOpts, opts)
+	}
+
+	client, err := gitlab.NewClient(token, clientOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -275,4 +287,30 @@ func groupSubgroups(conn *GitLabConnection, gid any) ([]*gitlab.Group, error) {
 	}
 
 	return groups, nil
+}
+
+// apiTraceTransport logs every GitLab API request with its method, path, status
+// and duration at debug level. The query string is dropped deliberately: it
+// carries pagination cursors and, on some endpoints, tokens.
+type apiTraceTransport struct{ base nethttp.RoundTripper }
+
+func (t *apiTraceTransport) RoundTrip(r *nethttp.Request) (*nethttp.Response, error) {
+	b := t.base
+	if b == nil {
+		b = nethttp.DefaultTransport
+	}
+	start := time.Now()
+	resp, err := b.RoundTrip(r)
+	status := 0
+	if resp != nil {
+		status = resp.StatusCode
+	}
+	log.Debug().
+		Str("method", r.Method).
+		Str("url", r.URL.Host+r.URL.Path).
+		Int("status", status).
+		Dur("duration", time.Since(start)).
+		Err(err).
+		Msg("gitlab api call")
+	return resp, err
 }
