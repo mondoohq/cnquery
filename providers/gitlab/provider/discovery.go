@@ -35,7 +35,17 @@ var iacTargets = []string{
 }
 
 func (s *Service) discover(root *inventory.Asset, conn *connection.GitLabConnection) (*inventory.Inventory, error) {
-	if conn.Conf.Discover == nil {
+	// Targets, not just the pointer. inventory.WithoutDiscovery() clones a
+	// config with Discover set to an empty &Discovery{} rather than nil, and
+	// every asset this discovery emits is cloned that way -- so a nil check
+	// alone let discovery run again for each of them. discoverGroups is called
+	// before anything reads Targets, so each re-run cost a GetGroup, a
+	// ListSubGroups and a ListDescendantGroups for a group already resolved.
+	//
+	// Measured on a 36-project group: 149 API calls for 37 assets, of which 110
+	// were those three group URLs fetched once per asset. The azure provider
+	// already guards on Targets this way.
+	if conn.Conf.Discover == nil || len(conn.Conf.Discover.Targets) == 0 {
 		return nil, nil
 	}
 
@@ -267,6 +277,10 @@ func discoverGroupProjects(conn *connection.GitLabConnection, gid any) ([]*gitla
 		}
 		page = resp.NextPage
 	}
+
+	// Hand these to the connection package so the per-asset connections this
+	// discovery is about to spawn do not each re-fetch their own project.
+	connection.CacheDiscoveredProjects(conn.Conf.Options["url"], projects)
 
 	return projects, nil
 }
