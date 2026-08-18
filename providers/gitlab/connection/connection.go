@@ -192,6 +192,21 @@ func (c *GitLabConnection) Project() (*gitlab.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Discovery listed this project already, and that listing returns the full
+	// object. Reuse it rather than spending a GetProject per asset. Falls
+	// through when the project was not discovered -- scanned directly, or
+	// addressed by path rather than id -- so nothing depends on the cache.
+	if idStr, ok := pid.(string); ok {
+		if id, cerr := strconv.Atoi(idStr); cerr == nil {
+			if p := cachedDiscoveredProject(c.url, id); p != nil {
+				log.Debug().Int("id", id).Msg("using project from discovery")
+				c.project = p
+				return c.project, nil
+			}
+		}
+	}
+
 	log.Debug().Interface("id", pid).Msgf("finding project")
 
 	c.project, _, err = c.Client().Projects.GetProject(pid, nil)

@@ -278,6 +278,10 @@ func discoverGroupProjects(conn *connection.GitLabConnection, gid any) ([]*gitla
 		page = resp.NextPage
 	}
 
+	// Hand these to the connection package so the per-asset connections this
+	// discovery is about to spawn do not each re-fetch their own project.
+	connection.CacheDiscoveredProjects(conn.Conf.Options["url"], projects)
+
 	return projects, nil
 }
 
