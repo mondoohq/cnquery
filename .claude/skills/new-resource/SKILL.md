@@ -152,7 +152,41 @@ Build the baseline from the **current** `origin/main`. A stale baseline attribut
 
 ## 5. Verify against a real target, field by field
 
-Automated tests do not prove a resource; they prove the parser. Run every new field against the real thing and read the values, then check these four, which are where resources actually fail:
+**A resource that has never run against a live instance of the thing it models does not ship.** That is the standard, not a preference: the PR stays open until somebody has run it. Automated tests do not prove a resource, they prove the parser — and when the fixture and the implementation were both written from the same vendor documentation, they agree with each other by construction. The suite is green and the resource cannot work.
+
+What that costs when it is skipped is measurable. One live Windows Server run, behind #10064 and #10071, contradicted the documented object model in **five** places. Every one of them was a silent failure — an empty answer or a plausible wrong value, never an error naming its cause:
+
+| what the documentation implied | what the server actually did |
+|---|---|
+| a collection script is just a script | `Encode` widens it to UTF-16 and base64s it, roughly tripling it, against a command-line cap that **depends on the transport** — 8,191 characters over `cmd.exe` and WinRM, 32,767 (`CreateProcess`) over SSH to Windows `sshd`. Over the limit it is rejected before PowerShell runs, and the non-zero exit reads as *the role is not installed*. Budget ~3,000 source characters to be safe on every transport, and measure rather than assume |
+| a list serializes as a JSON array | one payload carried **both** `[…]` and `{"value":[…],"Count":n}`; a plain `[]string` tag decodes the second to empty, reporting "no forwarders" on a server that has two |
+| an empty value serializes as `null` | a calculated property yielding nothing serializes as `{}`, which failed the decode of the entire settings payload |
+| a rights mask is a `uint32` | `FileSystemRights` is a **signed** 32-bit enum: `[uint32]` on a real ACE throws *"Value was either too large or too small"*, and a real mask arrives as a bare negative decimal |
+| a plain schema field gets populated | on a resource created from a path alone they never were — every one returned `null` with *provider returned no data and no error*, while the build and the parser tests stayed green |
+
+The same run also corrected a test expectation that was simply wrong — a fourth principal on a stock system directory that the assertion did not allow for. That test had never executed under the `-run` filter in use at the time, which is exactly how a wrong expectation survives review.
+
+None of these is reachable by reading the code, and four of the five are invisible to a fixture, because a fixture built from the documentation reproduces the documentation.
+
+### The two reasons people skip it, and why neither holds
+
+**"There is no host available."** Usually there is, for a few cents. A cloud fixture — one VM, created for the run and destroyed after it — is the cheap version of this: an Azure Windows Server test host reaches a ready state in about 8 minutes, and a full create-scan-destroy round trip costs roughly $0.01 on spot capacity. That is less than the reviewer time an unverified PR consumes. Build the fixture so that teardown is verified rather than assumed — `az group delete --no-wait` exits 0 the moment the request is *accepted*, which says nothing about whether anything was deleted.
+
+**"The provider is not released yet, and CI installs from the registry."** True, and irrelevant. CI installs from the registry; you do not. Build the provider from your branch and point it at the host:
+
+```bash
+make providers/build/<provider>
+mkdir -p /tmp/pd/<provider> && cp providers/<provider>/dist/<provider>* /tmp/pd/<provider>/
+PROVIDERS_PATH=/tmp/pd mql run ssh <user>@<host> -i <key> -c "<resource>.<field>"
+```
+
+The release gate governs what CI can run. It does not govern what you can run before asking for review.
+
+Where a live target genuinely cannot be obtained — hardware nobody has, a licence nobody will buy, a service that cannot be provisioned — the PR **says so in those words**, names precisely which fields are therefore unverified, and stays unmerged. "No live host was available" belongs in the body as a blocker, not as a disclaimer to merge past.
+
+Two states beat one. A field that reads the same before and after you change the setting is either a resource bug or a fixture that never moved the setting, and one state cannot tell those apart. Drive each field to a meaningfully different value and read it in both directions.
+
+Once you have a target, run every new field against it and read the values, then check these four, which are where resources actually fail:
 
 - **The absent case.** On a host without the software, the check must **fail**, never pass vacuously. `mql run docker container <plain-ubuntu> -c '<resource>.<field> == false'` should error or report false. A resource that returns null and a check that reads null as satisfied is worse than no resource.
 - **Null over invented values.** A field with no value in the file reports null or a documented zero — not a default you made up. If you *do* report an effective default (BIND recursion is on when unset), say so in the field's doc comment and pick the direction that fails safe.
