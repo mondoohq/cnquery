@@ -44,7 +44,7 @@ func initClickhousedbInstance(runtime *plugin.Runtime, args map[string]*llx.RawD
 // normal state for a server with TLS switched off. That is reported as 0 here,
 // since "not configured" is exactly what a caller asking for the port wants to
 // be told.
-func serverPort(db *sql.DB, ctx context.Context, name string) (int64, error) {
+func serverPort(ctx context.Context, db *sql.DB, name string) (int64, error) {
 	var port uint16
 	err := db.QueryRowContext(ctx, `SELECT getServerPort(?)`, name).Scan(&port)
 	if err != nil {
@@ -62,7 +62,7 @@ func (r *mqlClickhousedbInstance) instancePort(name string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return serverPort(db, conn.Context(), name)
+	return serverPort(conn.Context(), db, name)
 }
 
 func (r *mqlClickhousedbInstance) tcpPort() (int64, error) {
@@ -85,16 +85,20 @@ func (r *mqlClickhousedbInstance) httpsPort() (int64, error) {
 // Both are checked because a deployment may expose only one of them, and a
 // server reachable in the clear on the interface its clients actually use is
 // not made safe by the other one being encrypted.
+//
+// It reads the two port fields rather than querying for them again, so a policy
+// that looks at tlsEnabled and at tcpPortSecure costs one round trip per port
+// rather than one per read.
 func (r *mqlClickhousedbInstance) tlsEnabled() (bool, error) {
-	native, err := r.instancePort("tcp_port_secure")
-	if err != nil {
-		return false, err
+	native := r.GetTcpPortSecure()
+	if native.Error != nil {
+		return false, native.Error
 	}
-	https, err := r.instancePort("https_port")
-	if err != nil {
-		return false, err
+	https := r.GetHttpsPort()
+	if https.Error != nil {
+		return false, https.Error
 	}
-	return native != 0 || https != 0, nil
+	return native.Data != 0 || https.Data != 0, nil
 }
 
 func (r *mqlClickhousedbInstance) roles() ([]any, error) {
@@ -304,7 +308,7 @@ func (r *mqlClickhousedbInstance) serverSettings() ([]any, error) {
 // into readable "<privilege> ON <scope>" strings. The grantee `name` is bound as
 // a query parameter; `column` is concatenated into the SQL, so it must be a
 // trusted literal column name ("user_name" or "role_name") and never user input.
-func grantsFor(db *sql.DB, ctx context.Context, column, name string) ([]any, error) {
+func grantsFor(ctx context.Context, db *sql.DB, column, name string) ([]any, error) {
 	rows, err := db.QueryContext(ctx,
 		`SELECT access_type, database, table, column, is_partial_revoke, grant_option
 		 FROM system.grants WHERE `+column+` = ? ORDER BY access_type`, name)

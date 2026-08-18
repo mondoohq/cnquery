@@ -68,7 +68,7 @@ func (r *mqlClickhousedbUser) grants() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return grantsFor(db, conn.Context(), "user_name", r.Name.Data)
+	return grantsFor(conn.Context(), db, "user_name", r.Name.Data)
 }
 
 // grants renders the privileges granted to the role.
@@ -78,7 +78,7 @@ func (r *mqlClickhousedbRole) grants() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return grantsFor(db, conn.Context(), "role_name", r.Name.Data)
+	return grantsFor(conn.Context(), db, "role_name", r.Name.Data)
 }
 
 // requiresCredential reports whether a user needs a credential to authenticate.
