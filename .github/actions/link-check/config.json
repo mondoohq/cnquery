@@ -1,5 +1,13 @@
 {
-  "aliveStatusCodes": [429, 200, 406],
+  "aliveStatusCodes": [
+    429,
+    200,
+    406
+  ],
+  "timeout": "30s",
+  "retryOn429": true,
+  "retryCount": 3,
+  "fallbackRetryDelay": "10s",
   "ignorePatterns": [
     {
       "pattern": "^https:\\/\\/wiki\\.jenkins\\.io\\/display\\/JENKINS\\/Building\\+a\\+software\\+project"
