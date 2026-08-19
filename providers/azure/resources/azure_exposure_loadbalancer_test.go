@@ -19,7 +19,7 @@ const (
 	backendPool       = lbID + "/backendAddressPools/pool"
 	otherPool         = lbID + "/backendAddressPools/other"
 	vmIPConfig        = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/vm-nic/ipConfigurations/internal"
-	otherIPConfg      = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/other-nic/ipConfigurations/internal"
+	otherIPConfig     = "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/other-nic/ipConfigurations/internal"
 )
 
 func sub(id string) *network.SubResource { return &network.SubResource{ID: &id} }
@@ -70,9 +70,9 @@ func TestInternetForwardedIPConfigIDs(t *testing.T) {
 			props: &network.LoadBalancerPropertiesFormat{
 				FrontendIPConfigurations: []*network.FrontendIPConfiguration{frontend(publicFrontendID, true)},
 				LoadBalancingRules:       []*network.LoadBalancingRule{lbRule(publicFrontendID, backendPool)},
-				BackendAddressPools:      []*network.BackendAddressPool{pool(backendPool, vmIPConfig, otherIPConfg)},
+				BackendAddressPools:      []*network.BackendAddressPool{pool(backendPool, vmIPConfig, otherIPConfig)},
 			},
-			want: []string{vmIPConfig, otherIPConfg},
+			want: []string{vmIPConfig, otherIPConfig},
 		},
 		{
 			// An internal load balancer. Traffic through it did not come from the
@@ -111,7 +111,7 @@ func TestInternetForwardedIPConfigIDs(t *testing.T) {
 				FrontendIPConfigurations: []*network.FrontendIPConfiguration{frontend(publicFrontendID, true)},
 				LoadBalancingRules:       []*network.LoadBalancingRule{lbRule(publicFrontendID, backendPool)},
 				BackendAddressPools: []*network.BackendAddressPool{
-					pool(backendPool, vmIPConfig), pool(otherPool, otherIPConfg),
+					pool(backendPool, vmIPConfig), pool(otherPool, otherIPConfig),
 				},
 			},
 			want: []string{vmIPConfig},
@@ -210,7 +210,7 @@ func TestAnyIPConfigForwarded(t *testing.T) {
 	all := []*network.LoadBalancerPropertiesFormat{internal, exposed}
 	assert.True(t, anyIPConfigForwarded(all, []string{vmIPConfig}),
 		"one public load balancer among several is enough")
-	assert.False(t, anyIPConfigForwarded(all, []string{otherIPConfg}),
+	assert.False(t, anyIPConfigForwarded(all, []string{otherIPConfig}),
 		"a machine in no forwarded pool is not exposed by these")
 	assert.False(t, anyIPConfigForwarded([]*network.LoadBalancerPropertiesFormat{internal}, []string{vmIPConfig}))
 
