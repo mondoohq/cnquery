@@ -1,0 +1,807 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/rancher"
+option go_package = "go.mondoo.com/mql/v13/providers/rancher/resources"
+
+// Rancher Manager
+//
+// Multi-cluster management plane and the governance it applies across the
+// clusters it manages: the clusters themselves and how each one was built,
+// the global roles and role templates that decide who may administer the
+// fleet, the projects that divide a cluster and the bindings that grant
+// access to them, the cluster templates and pod security admission templates
+// that constrain how clusters may be configured, the authentication
+// providers that let people in, and the API tokens and registry credentials
+// in circulation. Workloads running inside a managed cluster are not covered
+// here; point the Kubernetes provider at a downstream cluster for those.
+rancher {
+  // Rancher server version, for example "v2.11.2"
+  //
+  // Read from the server-version setting. A development build reports "dev".
+  version() string
+  // URL the server tells agents and browsers to reach it on
+  //
+  // Read from the server-url setting. Empty until an administrator completes
+  // the initial setup, at which point every cluster agent is pinned to it.
+  serverUrl() string
+  // Telemetry participation choice
+  //
+  // Read from the telemetry-opt setting, which is "in", "out", or empty when
+  // nobody has chosen. The setting was removed in Rancher 2.10, so this field
+  // is null on newer servers rather than reporting a choice that no longer
+  // exists.
+  telemetryOptIn() string
+  // Whether new clusters must be created from a cluster template
+  //
+  // Read from the cluster-template-enforcement setting. When on, a
+  // non-administrator cannot create a cluster with an ad-hoc configuration and
+  // must pick a revision of a cluster template instead. Cluster templates were
+  // removed in Rancher 2.12 while the setting itself was kept, so the field is
+  // null on any server that no longer serves cluster templates: reporting
+  // "not enforced" there would describe a control that does not exist, and
+  // reporting "enforced" would describe one that governs nothing.
+  clusterTemplateEnforcement() bool
+  // Longest lifetime, in minutes, the server allows a derived token to have
+  //
+  // Read from the auth-token-max-ttl-minutes setting. A value of 0 means
+  // tokens issued through the API may live forever.
+  authTokenMaxTtlMinutes() int
+  // Lifetime, in minutes, given to kubeconfig tokens by default
+  //
+  // Read from the kubeconfig-default-token-ttl-minutes setting. A value of 0
+  // means a kubeconfig downloaded from the console carries a token that never
+  // expires.
+  kubeconfigDefaultTokenTtlMinutes() int
+  // Shortest password the local authentication provider accepts
+  //
+  // Read from the password-min-length setting.
+  passwordMinLength() int
+  // Whether the local username and password provider is enabled
+  //
+  // Local accounts remain a way in even after an external provider is
+  // configured, so this is what distinguishes "we moved to single sign-on"
+  // from "we added single sign-on".
+  localAuthEnabled() bool
+  // Whether an authentication provider other than local is enabled
+  externalAuthEnabled() bool
+  // Server settings and whether each was customized
+  settings() []rancher.setting
+  // Clusters this server manages
+  clusters() []rancher.cluster
+  // Projects across every managed cluster
+  projects() []rancher.project
+  // Global roles that grant permissions across the whole fleet
+  globalRoles() []rancher.globalRole
+  // Bindings of a user or group to a global role
+  globalRoleBindings() []rancher.globalRoleBinding
+  // Role templates that back cluster and project access
+  roleTemplates() []rancher.roleTemplate
+  // Bindings of a user or group to a role template in a cluster
+  clusterRoleTemplateBindings() []rancher.clusterRoleTemplateBinding
+  // Bindings of a user or group to a role template in a project
+  projectRoleTemplateBindings() []rancher.projectRoleTemplateBinding
+  // Cluster templates that constrain how a cluster may be configured
+  //
+  // Empty on Rancher 2.12 and newer, where cluster templates were removed
+  // along with RKE1.
+  clusterTemplates() []rancher.clusterTemplate
+  // Pod security admission configuration templates defined on the server
+  podSecurityAdmissionConfigurationTemplates() []rancher.podSecurityAdmissionConfigurationTemplate
+  // Authentication providers configured on the server
+  authProviders() []rancher.authProvider
+  // API tokens issued by the server
+  //
+  // A token that is not an administrator sees only its own tokens, so an
+  // empty or short list is a statement about the caller as much as about the
+  // server.
+  tokens() []rancher.token
+  // User accounts known to the server
+  users() []rancher.user
+  // Registry credentials distributed to projects and namespaces
+  registryCredentials() []rancher.registryCredential
+}
+
+// Rancher server setting
+//
+// One entry of the server-wide configuration, carrying both the value in
+// force and the value Rancher ships, so a customized setting is visible as
+// such. The `name` field selects the setting, for example
+// `rancher.settings.where(name == "cluster-template-enforcement")`. Settings
+// come and go between releases: a name that no longer exists is simply
+// absent from the list rather than reported with its old default.
+rancher.setting @defaults("name value customized") {
+  // Setting name, for example "server-url"
+  name string
+  // Value currently in force
+  value string
+  // Value Rancher ships when nobody has set one
+  defaultValue string
+  // Whether an administrator changed the setting away from its shipped value
+  customized bool
+  // Where the value came from
+  //
+  // One of db (set through the API), env (pinned by an environment variable
+  // on the server), or empty when the shipped default is in force.
+  source string
+}
+
+// Cluster managed by Rancher
+//
+// A downstream Kubernetes cluster under Rancher's management, together with
+// how it was created and what fleet-level policy applies to it. The `id`
+// field selects the cluster and is the identifier used everywhere else in the
+// API, for example `rancher.clusters.where(id == "local")`, while `name` is
+// the display name shown in the console. `driver` and `provider` record how
+// the cluster came to exist, `isLocalCluster` marks the cluster Rancher runs
+// on itself, and `podSecurityAdmissionTemplate` and
+// `defaultClusterRoleForProjectMembers` reach the fleet policy applied to it.
+rancher.cluster @defaults("name id state provider kubernetesVersion") {
+  // Cluster identifier, for example "local" or "c-m-8xz2nvqp"
+  id string
+  // Display name shown in the console
+  name string
+  // Operator-supplied description
+  description string
+  // Lifecycle state, for example "active", "provisioning", or "unavailable"
+  state string
+  // Whether the cluster is moving between states
+  //
+  // One of no, yes, or error.
+  transitioning string
+  // Message explaining the current transition, empty when there is none
+  transitioningMessage string
+  // Mechanism that provisions the cluster
+  //
+  // For example imported, rke2, k3s, EKS, AKS, GKE, or rancherKubernetesEngine.
+  // Empty until Rancher has worked out how the cluster is managed.
+  driver string
+  // Infrastructure the cluster runs on, as Rancher classifies it
+  //
+  // A narrower reading than `driver`, for example rke2, k3s, imported, aks,
+  // eks, gke, or harvester.
+  provider string
+  // Kubernetes version the cluster reports, for example "v1.31.4+rke2r1"
+  //
+  // Taken from the version the cluster's API server advertises. Null while
+  // the cluster is still provisioning or is unreachable, rather than an empty
+  // string, so an unread version cannot pass a version-floor check.
+  kubernetesVersion string
+  // Whether this is the cluster Rancher itself runs on
+  //
+  // The local cluster hosts the management plane, so a compromise of it is a
+  // compromise of the whole fleet. It is also the cluster whose workloads are
+  // least likely to be in scope for a downstream policy.
+  isLocalCluster bool
+  // Whether Rancher marks the cluster as internal
+  internal bool
+  // When the cluster was registered with Rancher
+  created time
+  // Number of nodes Rancher counts in the cluster
+  nodeCount int
+  // Whether project network isolation was requested
+  //
+  // Null when the cluster does not carry the setting at all, which is the
+  // case for imported and hosted clusters where Rancher does not manage the
+  // network plugin.
+  enableNetworkPolicy bool
+  // Whether project network isolation is actually in force
+  //
+  // Reflects what Rancher last applied, which lags `enableNetworkPolicy`
+  // while a change is rolling out.
+  appliedEnableNetworkPolicy bool
+  // Whether the authorized cluster endpoint is enabled
+  //
+  // The authorized cluster endpoint lets a kubeconfig reach the downstream
+  // API server directly instead of proxying through Rancher, which takes the
+  // management plane out of the audit path for those requests.
+  localClusterAuthEndpointEnabled bool
+  // Host name the authorized cluster endpoint is published on, empty when unset
+  localClusterAuthEndpointFqdn string
+  // Fleet workspace the cluster belongs to
+  fleetWorkspaceName string
+  // Address of the downstream Kubernetes API server, empty when not published
+  apiEndpoint string
+  // Labels attached to the cluster
+  labels map[string]string
+  // Annotations attached to the cluster
+  annotations map[string]string
+  // Pod security admission template applied to the cluster by default
+  //
+  // Null when no template is set, which means the cluster admits pods at
+  // whatever level its own admission configuration allows.
+  podSecurityAdmissionTemplate() rancher.podSecurityAdmissionConfigurationTemplate
+  // Role template granted to project members in this cluster by default
+  defaultClusterRoleForProjectMembers() rancher.roleTemplate
+  // Projects defined in this cluster
+  projects() []rancher.project
+  // Bindings that grant access to this cluster
+  roleTemplateBindings() []rancher.clusterRoleTemplateBinding
+}
+
+// Project inside a managed cluster
+//
+// A group of namespaces that Rancher manages as one unit, which is the level
+// where most day-to-day access is granted. The `id` field selects the project
+// and carries its cluster, for example "c-m-8xz2nvqp:p-4xktw". `cluster`
+// reaches the cluster the project divides and `roleTemplateBindings` lists
+// who was granted access to it.
+rancher.project @defaults("name id state") {
+  // Project identifier, in the form "<clusterId>:<projectId>"
+  id string
+  // Display name shown in the console
+  name string
+  // Operator-supplied description
+  description string
+  // Lifecycle state, for example "active"
+  state string
+  // When the project was created
+  created time
+  // Namespace in the local cluster that holds the project's own objects
+  backingNamespace string
+  // Labels attached to the project
+  labels map[string]string
+  // Annotations attached to the project
+  annotations map[string]string
+  // Total quota shared by every namespace in the project
+  //
+  // Carries a `limit` key whose value maps a resource name to its cap, for
+  // example `{"limit": {"limitsCpu": "2000m", "pods": "20"}}`. Null when the
+  // project sets no quota, in which case its namespaces are bounded only by
+  // whatever the cluster imposes.
+  resourceQuota dict
+  // Default LimitRange applied to a namespace created in the project
+  //
+  // Maps a limit name to its value, for example
+  // `{"limitsCpu": "500m", "requestsMemory": "128Mi"}`. Null when none is set.
+  containerDefaultResourceLimit dict
+  // Cluster the project divides
+  cluster() rancher.cluster
+  // Bindings that grant access to this project
+  roleTemplateBindings() []rancher.projectRoleTemplateBinding
+}
+
+// Rancher global role
+//
+// A set of permissions that applies to the Rancher management plane itself
+// and, through inherited cluster roles, to every downstream cluster. This is
+// the level at which fleet-wide administration is granted, so a binding to a
+// global role with wildcard rules is effectively a binding to everything.
+// The `id` field selects the role, for example
+// `rancher.globalRoles.where(id == "admin")`. `grantsFullAdmin` answers the
+// wildcard question without reading the rules by hand, and `bindings` lists
+// who holds the role.
+rancher.globalRole @defaults("name id builtin newUserDefault grantsFullAdmin") {
+  // Global role identifier, for example "admin" or "user"
+  id string
+  // Display name shown in the console
+  name string
+  // Operator-supplied description
+  description string
+  // Whether Rancher ships the role and it cannot be edited
+  builtin bool
+  // Whether every newly created user is bound to this role
+  //
+  // Rancher assigns the roles marked this way at account creation. A role
+  // that grants more than sign-in rights and is marked as a new-user default
+  // hands those rights to everyone who ever logs in.
+  newUserDefault bool
+  // When the role was created
+  created time
+  // Permissions the role grants in the management plane
+  //
+  // Each entry is a Kubernetes policy rule with the keys apiGroups,
+  // resources, resourceNames, nonResourceURLs, and verbs.
+  rules []dict
+  // Permissions the role grants inside named namespaces of the local cluster
+  //
+  // Maps a namespace name to a list of policy rules with the same shape as
+  // `rules`. The key is matched literally, so "*" names a namespace called
+  // "*" rather than every namespace.
+  namespacedRules dict
+  // Permissions the role grants inside named namespaces of every other cluster
+  //
+  // Same shape as `namespacedRules`, applied to downstream clusters instead
+  // of the local one.
+  inheritedNamespacedRules dict
+  // Whether the role grants every verb on every resource in every API group
+  //
+  // Computed from `rules`. A role that matches is a fleet administrator
+  // whatever it is called, which is what makes this worth asking rather than
+  // comparing the role's name against "admin".
+  grantsFullAdmin() bool
+  // Whether the role can raise its own or another principal's permissions
+  //
+  // Computed from `rules`, true when a rule grants escalate, bind, or
+  // impersonate, or grants every verb on roles or role bindings. Such a role
+  // is equivalent to full administration one step removed.
+  grantsPrivilegeEscalation() bool
+  // Role templates this role grants in every cluster besides the local one
+  inheritedClusterRoleTemplates() []rancher.roleTemplate
+  // Bindings that grant this role to a user or group
+  bindings() []rancher.globalRoleBinding
+}
+
+// Binding of a subject to a Rancher global role
+//
+// One grant of a global role to a user or to a group from an external
+// authentication provider. Taken together these answer who can administer the
+// fleet. `globalRole` reaches the permissions granted, `user` reaches the
+// account when the subject is a local user, and `subjectKind` distinguishes
+// the two cases without inspecting which identity field is populated.
+rancher.globalRoleBinding @defaults("id subjectKind subjectName") {
+  // Binding identifier
+  id string
+  // When the binding was created
+  created time
+  // What kind of subject holds the role
+  //
+  // One of user or group. A group binding grants the role to everyone the
+  // external provider places in that group, which is a set Rancher cannot
+  // enumerate.
+  subjectKind string
+  // Identifier of the subject the role is granted to
+  //
+  // The user identifier for a user binding, or the group principal for a
+  // group binding, for example
+  // "activedirectory_group://CN=Cluster Admins,OU=Groups,DC=example,DC=com".
+  subjectName string
+  // Principal the subject was matched by in the authentication provider
+  //
+  // Empty for a binding made against a local user rather than an external
+  // identity.
+  userPrincipalId string
+  // Global role the binding grants
+  globalRole() rancher.globalRole
+  // User the role is granted to
+  //
+  // Null when the binding names a group rather than a user.
+  user() rancher.user
+}
+
+// Rancher role template
+//
+// A reusable set of permissions that Rancher instantiates as Kubernetes roles
+// and cluster roles when it is bound in a cluster or a project. Role
+// templates are where custom access is defined, so a template with wildcard
+// or escalating rules widens every binding that uses it. The `id` field
+// selects the template, for example
+// `rancher.roleTemplates.where(id == "cluster-owner")`. `context` says
+// whether the template applies to a cluster or a project,
+// `clusterCreatorDefault` and `projectCreatorDefault` mark the templates
+// handed out automatically, and `inheritedRoleTemplates` walks the templates
+// this one pulls rules from.
+rancher.roleTemplate @defaults("name id context builtin grantsFullAdmin") {
+  // Role template identifier, for example "cluster-owner"
+  id string
+  // Display name shown in the console
+  name string
+  // Operator-supplied description
+  description string
+  // Scope the template applies to
+  //
+  // One of cluster, project, or empty when the template is only ever
+  // inherited by another template rather than bound directly.
+  context string
+  // Whether Rancher ships the template and it cannot be edited
+  builtin bool
+  // Whether the rules come from a cluster role in the local cluster instead
+  //
+  // When true, `rules` is not evaluated and the permissions are whatever the
+  // matching Kubernetes cluster role grants, which Rancher does not manage.
+  external bool
+  // Whether the console hides the template from the role picker
+  hidden bool
+  // Whether new bindings are prevented from using the template
+  locked bool
+  // Whether the creator of a cluster is bound to this template automatically
+  clusterCreatorDefault bool
+  // Whether the creator of a project is bound to this template automatically
+  projectCreatorDefault bool
+  // When the template was created
+  created time
+  // Permissions the template grants
+  //
+  // Each entry is a Kubernetes policy rule with the keys apiGroups,
+  // resources, resourceNames, nonResourceURLs, and verbs.
+  rules []dict
+  // Permissions gathered from a cluster role when `external` is set
+  //
+  // Same shape as `rules`. Only consulted on servers where the external-rules
+  // feature is turned on.
+  externalRules []dict
+  // Administrative marker
+  //
+  // Deprecated in favor of grantsFullAdmin and grantsPrivilegeEscalation,
+  // which are computed from the rules. Rancher stopped acting on this field,
+  // so a template whose rules grant everything can still report false here.
+  administrative @maturity("deprecated") bool
+  // Whether the template grants every verb on every resource in every API group
+  //
+  // Computed from `rules`, and from `externalRules` when the template is
+  // external.
+  grantsFullAdmin() bool
+  // Whether the template can raise its own or another principal's permissions
+  //
+  // Computed from the same rules, true when a rule grants escalate, bind, or
+  // impersonate, or grants every verb on roles or role bindings.
+  grantsPrivilegeEscalation() bool
+  // Role templates this template inherits rules from
+  inheritedRoleTemplates() []rancher.roleTemplate
+}
+
+// Binding of a subject to a role template in a cluster
+//
+// One grant of cluster-level access to a user or to a group from an external
+// authentication provider. `cluster` reaches the cluster the access applies
+// to, `roleTemplate` reaches the permissions granted, and `subjectKind`
+// distinguishes a user grant from a group grant.
+rancher.clusterRoleTemplateBinding @defaults("id subjectKind subjectName") {
+  // Binding identifier, in the form "<clusterId>:<bindingName>"
+  id string
+  // When the binding was created
+  created time
+  // What kind of subject holds the role
+  //
+  // One of user or group.
+  subjectKind string
+  // Identifier of the subject the role is granted to
+  //
+  // The user identifier for a user binding, or the group principal for a
+  // group binding.
+  subjectName string
+  // Principal the subject was matched by in the authentication provider
+  userPrincipalId string
+  // Cluster the access applies to
+  cluster() rancher.cluster
+  // Role template the binding grants
+  roleTemplate() rancher.roleTemplate
+  // User the role is granted to
+  //
+  // Null when the binding names a group rather than a user.
+  user() rancher.user
+}
+
+// Binding of a subject to a role template in a project
+//
+// One grant of project-level access to a user or to a group from an external
+// authentication provider. `project` reaches the project the access applies
+// to, `roleTemplate` reaches the permissions granted, and `subjectKind`
+// distinguishes a user grant from a group grant.
+rancher.projectRoleTemplateBinding @defaults("id subjectKind subjectName") {
+  // Binding identifier, in the form "<projectId>:<bindingName>"
+  id string
+  // When the binding was created
+  created time
+  // What kind of subject holds the role
+  //
+  // One of user or group.
+  subjectKind string
+  // Identifier of the subject the role is granted to
+  //
+  // The user identifier for a user binding, or the group principal for a
+  // group binding.
+  subjectName string
+  // Principal the subject was matched by in the authentication provider
+  userPrincipalId string
+  // Project the access applies to
+  project() rancher.project
+  // Role template the binding grants
+  roleTemplate() rancher.roleTemplate
+  // User the role is granted to
+  //
+  // Null when the binding names a group rather than a user.
+  user() rancher.user
+}
+
+// Rancher cluster template
+//
+// A named cluster configuration that an administrator publishes so that
+// clusters are created from a reviewed shape rather than from whatever the
+// person clicking Create chose. Paired with the
+// clusterTemplateEnforcement setting, it is what stops ad-hoc clusters. The
+// `id` field selects the template. Cluster templates were removed in Rancher
+// 2.12 along with RKE1, so this resource yields nothing on a newer server.
+rancher.clusterTemplate @defaults("name id") {
+  // Cluster template identifier
+  id string
+  // Display name shown in the console
+  name string
+  // Operator-supplied description
+  description string
+  // When the template was created
+  created time
+  // Subjects granted access to the template
+  //
+  // Each entry carries userId, userPrincipalId, groupPrincipalId,
+  // displayName, and accessType, where accessType is one of owner, member, or
+  // read-only. A template shared with everyone is one that anyone may build a
+  // cluster from.
+  members []dict
+  // Revisions published for this template
+  revisions() []rancher.clusterTemplate.revision
+  // Revision offered when nobody picks one
+  //
+  // Null when the template has no default, in which case the person creating
+  // a cluster chooses the revision themselves.
+  defaultRevision() rancher.clusterTemplate.revision
+}
+
+// Revision of a Rancher cluster template
+//
+// One published version of a cluster template. A revision is what a cluster
+// is actually created from, and its questions decide which parts of the
+// configuration the creator is allowed to override. A revision that is no
+// longer enabled cannot be used for new clusters but stays attached to the
+// ones already built from it.
+rancher.clusterTemplate.revision @defaults("name id enabled") {
+  // Revision identifier
+  id string
+  // Display name shown in the console
+  name string
+  // When the revision was created
+  created time
+  // Lifecycle state, for example "active"
+  state string
+  // Whether new clusters may be created from this revision
+  //
+  // Null when the server does not report the flag, which reads as enabled;
+  // Rancher only writes the field when a revision is explicitly disabled.
+  enabled bool
+  // Configuration values the creator of a cluster may override
+  //
+  // Each entry carries variable, type, default, and required. Every question
+  // is a hole in the template: a revision that asks about the parts of the
+  // configuration a policy cares about does not pin them.
+  questions []dict
+  // Cluster template this revision belongs to
+  clusterTemplate() rancher.clusterTemplate
+}
+
+// Pod security admission configuration template
+//
+// A named pod security admission configuration that Rancher applies to a
+// managed cluster, setting the enforce, audit, and warn levels the cluster's
+// API server admits pods at. The `name` field selects the template, for
+// example
+// `rancher.podSecurityAdmissionConfigurationTemplates.where(name == "rancher-restricted")`.
+// `clusters` lists the clusters the template is actually applied to, which is
+// what separates a template that governs the fleet from one that was written
+// and never used.
+rancher.podSecurityAdmissionConfigurationTemplate @defaults("name enforce audit warn") {
+  // Template name
+  name string
+  // Operator-supplied description
+  description string
+  // When the template was created
+  created time
+  // Level pods are rejected below
+  //
+  // One of privileged, baseline, or restricted. Null when the template sets
+  // no enforce level, in which case nothing is rejected on its account.
+  enforce string
+  // Policy version the enforce level is pinned to
+  //
+  // A Kubernetes minor version such as "v1.31", or "latest". Null when
+  // unpinned, which means the level tracks whatever the cluster's API server
+  // ships and can tighten across an upgrade.
+  enforceVersion string
+  // Level violations are recorded in the audit log at
+  //
+  // One of privileged, baseline, or restricted. Null when unset.
+  audit string
+  // Policy version the audit level is pinned to
+  auditVersion string
+  // Level violations produce a warning to the caller at
+  //
+  // One of privileged, baseline, or restricted. Null when unset.
+  warn string
+  // Policy version the warn level is pinned to
+  warnVersion string
+  // Namespaces the levels are not applied in
+  //
+  // A namespace listed here admits any pod regardless of the enforce level,
+  // so a template with the right levels and a wide exemption list constrains
+  // very little.
+  exemptNamespaces []string
+  // Users whose requests the levels are not applied to
+  exemptUsernames []string
+  // Runtime classes the levels are not applied to
+  exemptRuntimeClasses []string
+  // Clusters this template is applied to
+  clusters() []rancher.cluster
+}
+
+// Rancher authentication provider
+//
+// One configured way into the server, whether that is the built-in local
+// account store or an external identity provider. The `id` field selects the
+// provider, for example
+// `rancher.authProviders.where(id == "activedirectory")`. `enabled` says
+// whether the provider currently accepts logins, `accessMode` says who among
+// the identities it knows is allowed in, and `isLocalProvider` marks the
+// built-in store, which stays a way in unless it is turned off.
+rancher.authProvider @defaults("id type enabled accessMode") {
+  // Provider identifier, for example "local", "activedirectory", or "oidc"
+  id string
+  // Configuration type the server reports
+  //
+  // For example localConfig, activeDirectoryConfig, githubConfig,
+  // oidcConfig, azureADConfig, openLdapConfig, freeIpaConfig, keycloakConfig,
+  // oktaConfig, pingConfig, adfsConfig, shibbolethConfig, googleOauthConfig,
+  // genericOIDCConfig, or cognitoConfig.
+  type string
+  // Whether the provider currently accepts logins
+  enabled bool
+  // Who among the identities the provider knows may sign in
+  //
+  // One of unrestricted (anyone the provider authenticates), restricted (only
+  // the listed principals and existing users), or required (only the listed
+  // principals). An enabled provider set to unrestricted admits every account
+  // in the directory it is pointed at.
+  accessMode string
+  // Users and groups named by a restricted or required access mode
+  //
+  // Empty when the access mode is unrestricted, where the list has no effect.
+  allowedPrincipalIds []string
+  // Whether this is the built-in local username and password store
+  isLocalProvider bool
+  // Whether the provider supports signing every session out at once
+  logoutAllSupported bool
+}
+
+// Rancher API token
+//
+// One credential issued by the server, either created deliberately as an API
+// key or derived by the console when somebody signed in. Tokens are the
+// long-lived way into the management plane, so their lifetime and last use
+// are what an audit reads. `neverExpires` answers the lifetime question
+// directly, `user` reaches the account the token acts as, and `cluster` is
+// set only for a token scoped to one cluster's endpoint. The token value
+// itself is never exposed by this resource.
+//
+// A caller that is not an administrator sees only its own tokens, so a short
+// list may describe the caller rather than the server.
+rancher.token @defaults("id userId neverExpires lastUsedAt") {
+  // Token identifier, for example "token-abcde"
+  id string
+  // Identifier of the account the token acts as
+  //
+  // Kept alongside `user` rather than replaced by it, because listing tokens
+  // and listing users need different permissions: a caller that can see its
+  // own tokens but not the user directory reads this while `user` is null.
+  userId string
+  // Operator-supplied description, empty for a token the console derived
+  description string
+  // Authentication provider the session behind the token came from
+  //
+  // For example local, activedirectory, or github.
+  authProvider string
+  // Whether the token was derived from a login session
+  //
+  // A derived token is what the console and a downloaded kubeconfig use. A
+  // token that is not derived was created deliberately as an API key.
+  isDerived bool
+  // Whether the token may currently be used
+  enabled bool
+  // Whether the server considers the token past its lifetime
+  //
+  // A token that is expired is refused but is not removed, so it stays in the
+  // list until something deletes it.
+  expired bool
+  // Whether the token is the one this connection authenticated with
+  current bool
+  // Lifetime the token was issued with, in milliseconds
+  //
+  // Zero means the token never expires.
+  ttlMillis int
+  // When the token stops being accepted
+  //
+  // Null for a token that never expires, rather than a zero date, so a
+  // comparison against a deadline cannot quietly succeed on it.
+  expiresAt time
+  // When the token was last presented to the server
+  //
+  // Null for a token that has never been used, which on a long-lived API key
+  // is the case worth finding.
+  lastUsedAt time
+  // When activity on the token was last recorded
+  //
+  // Tracked separately from `lastUsedAt` and only on servers where token
+  // activity tracking is enabled. Null when nothing was recorded.
+  activityLastSeenAt time
+  // When the token was issued
+  created time
+  // Whether the token has no expiry at all
+  //
+  // Computed from `ttlMillis`. A non-expiring API key stays valid until
+  // somebody deletes it, whatever happens to the account behind it.
+  neverExpires() bool
+  // Account the token acts as
+  user() rancher.user
+  // Cluster the token is scoped to
+  //
+  // Null for a token that reaches the whole management API, which is the
+  // common case. A scoped token reaches one cluster's endpoint only.
+  cluster() rancher.cluster
+}
+
+// Rancher user account
+//
+// One account the server knows, whether created locally or mirrored from an
+// external authentication provider on first sign-in. `principalIds` records
+// the identities the account is matched by, and `isSystemUser` separates the
+// service accounts Rancher creates for itself from the people who log in.
+// `globalRoleBindings` reaches what the account may do across the fleet. No
+// password material is exposed by this resource.
+rancher.user @defaults("username name id enabled") {
+  // User identifier, for example "u-b4qkhsnliz"
+  id string
+  // Login name, empty for an account that only signs in through a provider
+  username string
+  // Display name shown in the console
+  name string
+  // Operator-supplied description
+  description string
+  // Whether the account may sign in
+  //
+  // Null when the server does not report the flag, which reads as enabled.
+  enabled bool
+  // Whether the account must set a new password at next sign-in
+  mustChangePassword bool
+  // When the account was created
+  created time
+  // Identities the account is matched by
+  //
+  // Each entry names a provider and a subject, for example
+  // "local://u-b4qkhsnliz" or "activedirectory_user://CN=Ada,OU=Staff,DC=example,DC=com".
+  // An account with more than one entry can sign in through either.
+  principalIds []string
+  // Whether the account is one Rancher created for its own components
+  //
+  // Computed from `principalIds`. System accounts hold broad permissions by
+  // design and are not people, so an audit of who can administer the fleet
+  // usually wants them separated out rather than counted.
+  isSystemUser bool
+  // Global role bindings held by this account
+  globalRoleBindings() []rancher.globalRoleBinding
+}
+
+// Registry credential distributed by Rancher
+//
+// A container registry login that Rancher pushes into namespaces so that
+// workloads can pull private images. What matters is reach: a credential
+// bound to a project lands in every namespace of that project, while a
+// namespaced one lands in exactly one. `registries` lists the registry hosts
+// the credential covers and `scope` says how far it travels. The password is
+// never exposed by this resource.
+rancher.registryCredential @defaults("name scope registries") {
+  // Credential identifier
+  id string
+  // Credential name
+  name string
+  // Operator-supplied description
+  description string
+  // When the credential was created
+  created time
+  // How far the credential is distributed
+  //
+  // One of project, meaning it is copied into every namespace of the project,
+  // or namespace, meaning it exists in one namespace only.
+  scope string
+  // Namespace the credential is confined to, empty for a project-wide credential
+  namespaceName string
+  // Registry hosts the credential covers
+  //
+  // For example ["index.docker.io", "registry.example.com"]. A credential
+  // covering a public registry host is distributing a login that did not need
+  // to be distributed.
+  registries []string
+  // Username used at each registry host
+  //
+  // Maps a registry host to the account the credential pulls as. The matching
+  // password is not exposed.
+  registryUsernames map[string]string
+  // Project the credential belongs to
+  project() rancher.project
+}

@@ -1,0 +1,50 @@
+{
+  "type": "collection",
+  "resourceType": "podSecurityAdmissionConfigurationTemplate",
+  "links": {},
+  "actions": {},
+  "pagination": { "limit": 1000, "total": 2 },
+  "data": [
+    {
+      "id": "rancher-restricted",
+      "type": "podSecurityAdmissionConfigurationTemplate",
+      "baseType": "podSecurityAdmissionConfigurationTemplate",
+      "name": "rancher-restricted",
+      "description": "Restricted pod security admission",
+      "created": "2025-04-01T00:00:00Z",
+      "configuration": {
+        "defaults": {
+          "enforce": "restricted",
+          "enforce-version": "v1.31",
+          "audit": "restricted",
+          "audit-version": "latest",
+          "warn": "restricted",
+          "warn-version": "latest"
+        },
+        "exemptions": {
+          "usernames": [],
+          "runtimeClasses": [],
+          "namespaces": ["kube-system", "cattle-system"]
+        }
+      },
+      "links": {}
+    },
+    {
+      "id": "rancher-privileged",
+      "type": "podSecurityAdmissionConfigurationTemplate",
+      "baseType": "podSecurityAdmissionConfigurationTemplate",
+      "name": "rancher-privileged",
+      "description": "Privileged pod security admission",
+      "created": "2025-04-01T00:00:00Z",
+      "configuration": {
+        "defaults": {
+          "enforce": "privileged",
+          "audit": "privileged",
+          "warn": "privileged"
+        },
+        "exemptions": {}
+      },
+      "links": {}
+    }
+  ]
+}

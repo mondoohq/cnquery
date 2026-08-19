@@ -1,0 +1,93 @@
+{
+  "type": "collection",
+  "resourceType": "cluster",
+  "links": { "self": "https://rancher.example.com/v3/clusters" },
+  "actions": {},
+  "pagination": { "limit": 1000, "total": 3 },
+  "data": [
+    {
+      "id": "local",
+      "type": "cluster",
+      "baseType": "cluster",
+      "name": "local",
+      "description": "",
+      "state": "active",
+      "transitioning": "no",
+      "transitioningMessage": "",
+      "driver": "imported",
+      "provider": "k3s",
+      "internal": true,
+      "created": "2026-01-14T09:12:44Z",
+      "uuid": "f0a5a1f3-2f7b-4a2b-9f0e-9c1f1a2b3c4d",
+      "nodeCount": 1,
+      "appliedEnableNetworkPolicy": false,
+      "fleetWorkspaceName": "fleet-local",
+      "apiEndpoint": "https://rancher.example.com/k8s/clusters/local",
+      "labels": { "provider.cattle.io": "k3s" },
+      "annotations": {},
+      "version": {
+        "major": "1",
+        "minor": "31",
+        "gitVersion": "v1.31.4+k3s1",
+        "platform": "linux/amd64"
+      },
+      "localClusterAuthEndpoint": { "enabled": false, "fqdn": "", "caCerts": "" },
+      "links": { "self": "https://rancher.example.com/v3/clusters/local" }
+    },
+    {
+      "id": "c-m-8xz2nvqp",
+      "type": "cluster",
+      "baseType": "cluster",
+      "name": "prod-eu",
+      "description": "Production, Frankfurt",
+      "state": "active",
+      "transitioning": "no",
+      "transitioningMessage": "",
+      "driver": "rke2",
+      "provider": "rke2",
+      "internal": false,
+      "created": "2026-02-03T17:41:02Z",
+      "uuid": "6b1f4a55-11a2-4f42-8c2b-77a91d2f3e01",
+      "nodeCount": 6,
+      "enableNetworkPolicy": true,
+      "appliedEnableNetworkPolicy": true,
+      "fleetWorkspaceName": "fleet-default",
+      "apiEndpoint": "https://rancher.example.com/k8s/clusters/c-m-8xz2nvqp",
+      "labels": {},
+      "annotations": { "field.cattle.io/description": "Production, Frankfurt" },
+      "version": {
+        "major": "1",
+        "minor": "31",
+        "gitVersion": "v1.31.4+rke2r1",
+        "platform": "linux/amd64"
+      },
+      "localClusterAuthEndpoint": {
+        "enabled": true,
+        "fqdn": "prod-eu.k8s.example.com",
+        "caCerts": ""
+      },
+      "defaultPodSecurityAdmissionConfigurationTemplateName": "rancher-restricted",
+      "defaultClusterRoleForProjectMembers": "cluster-member",
+      "links": { "self": "https://rancher.example.com/v3/clusters/c-m-8xz2nvqp" }
+    },
+    {
+      "id": "c-m-provisioning",
+      "type": "cluster",
+      "baseType": "cluster",
+      "name": "staging-us",
+      "state": "provisioning",
+      "transitioning": "yes",
+      "transitioningMessage": "waiting for cluster agent to connect",
+      "driver": "",
+      "provider": "",
+      "internal": false,
+      "created": "2026-08-18T11:02:19Z",
+      "nodeCount": 0,
+      "appliedEnableNetworkPolicy": false,
+      "fleetWorkspaceName": "fleet-default",
+      "labels": {},
+      "annotations": {},
+      "links": { "self": "https://rancher.example.com/v3/clusters/c-m-provisioning" }
+    }
+  ]
+}

@@ -264,6 +264,7 @@ PROVIDERS := \
 	portainer \
 	postgresdb \
 	proxmox \
+	rancher \
 	redfish \
 	redisdb \
 	shodan \

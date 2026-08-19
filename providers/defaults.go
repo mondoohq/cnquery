@@ -1113,6 +1113,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"rancher": {
+		Provider: &plugin.Provider{
+			Name:            "rancher",
+			ID:              "go.mondoo.com/mql/providers/rancher",
+			ConnectionTypes: []string{"rancher"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "rancher",
+					Use:   "rancher",
+					Short: "a Rancher Manager fleet",
+				},
+			},
+		},
+	},
+
 	"redfish": {
 		Provider: &plugin.Provider{
 			Name:            "redfish",

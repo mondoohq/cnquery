@@ -1,0 +1,270 @@
+{
+  "globalRoles": {
+    "type": "collection",
+    "resourceType": "globalRole",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 2 },
+    "data": [
+      {
+        "id": "admin",
+        "type": "globalRole",
+        "baseType": "globalRole",
+        "name": "Administrator",
+        "description": "Administrator of the entire installation",
+        "builtin": true,
+        "newUserDefault": false,
+        "created": "2025-04-01T00:00:00Z",
+        "rules": [{ "apiGroups": ["*"], "resources": ["*"], "verbs": ["*"] }],
+        "links": {}
+      },
+      {
+        "id": "user",
+        "type": "globalRole",
+        "baseType": "globalRole",
+        "name": "Standard User",
+        "builtin": true,
+        "newUserDefault": true,
+        "created": "2025-04-01T00:00:00Z",
+        "rules": [
+          {
+            "apiGroups": ["management.cattle.io"],
+            "resources": ["preferences"],
+            "verbs": ["*"]
+          }
+        ],
+        "inheritedClusterRoles": ["cluster-member"],
+        "namespacedRules": {
+          "cattle-system": [
+            { "apiGroups": [""], "resources": ["configmaps"], "verbs": ["get"] }
+          ]
+        },
+        "links": {}
+      }
+    ]
+  },
+  "globalRoleBindings": {
+    "type": "collection",
+    "resourceType": "globalRoleBinding",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 2 },
+    "data": [
+      {
+        "id": "grb-4xk2p",
+        "type": "globalRoleBinding",
+        "baseType": "globalRoleBinding",
+        "name": "grb-4xk2p",
+        "created": "2025-04-01T00:00:00Z",
+        "userId": "u-b4qkhsnliz",
+        "userPrincipalId": "local://u-b4qkhsnliz",
+        "globalRoleId": "admin",
+        "links": {}
+      },
+      {
+        "id": "grb-group1",
+        "type": "globalRoleBinding",
+        "baseType": "globalRoleBinding",
+        "name": "grb-group1",
+        "created": "2026-02-19T15:03:00Z",
+        "groupPrincipalId": "activedirectory_group://CN=Platform Admins,OU=Groups,DC=example,DC=com",
+        "globalRoleId": "admin",
+        "links": {}
+      }
+    ]
+  },
+  "clusterRoleTemplateBindings": {
+    "type": "collection",
+    "resourceType": "clusterRoleTemplateBinding",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 1 },
+    "data": [
+      {
+        "id": "c-m-8xz2nvqp:crtb-p6t2z",
+        "type": "clusterRoleTemplateBinding",
+        "baseType": "clusterRoleTemplateBinding",
+        "name": "crtb-p6t2z",
+        "namespaceId": "c-m-8xz2nvqp",
+        "created": "2026-02-04T09:15:00Z",
+        "clusterId": "c-m-8xz2nvqp",
+        "roleTemplateId": "cluster-owner",
+        "userId": "u-b4qkhsnliz",
+        "userPrincipalId": "local://u-b4qkhsnliz",
+        "links": {}
+      }
+    ]
+  },
+  "projectRoleTemplateBindings": {
+    "type": "collection",
+    "resourceType": "projectRoleTemplateBinding",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 1 },
+    "data": [
+      {
+        "id": "p-4xktw:prtb-w9m4d",
+        "type": "projectRoleTemplateBinding",
+        "baseType": "projectRoleTemplateBinding",
+        "name": "prtb-w9m4d",
+        "namespaceId": "p-4xktw",
+        "created": "2026-02-05T10:00:00Z",
+        "projectId": "c-m-8xz2nvqp:p-4xktw",
+        "roleTemplateId": "rt-escalate",
+        "groupPrincipalId": "activedirectory_group://CN=Support,OU=Groups,DC=example,DC=com",
+        "links": {}
+      }
+    ]
+  },
+  "projects": {
+    "type": "collection",
+    "resourceType": "project",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 1 },
+    "data": [
+      {
+        "id": "c-m-8xz2nvqp:p-4xktw",
+        "type": "project",
+        "baseType": "project",
+        "name": "Default",
+        "description": "Default project created for the cluster",
+        "state": "active",
+        "created": "2026-02-03T17:45:00Z",
+        "clusterId": "c-m-8xz2nvqp",
+        "namespaceId": "c-m-8xz2nvqp",
+        "backingNamespace": "c-m-8xz2nvqp-p-4xktw",
+        "labels": {},
+        "annotations": {},
+        "resourceQuota": {
+          "limit": { "limitsCpu": "2000m", "pods": "20" },
+          "usedLimit": { "pods": "3" }
+        },
+        "links": {}
+      }
+    ]
+  },
+  "users": {
+    "type": "collection",
+    "resourceType": "user",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 2 },
+    "data": [
+      {
+        "id": "u-b4qkhsnliz",
+        "type": "user",
+        "baseType": "user",
+        "name": "Ada Lovelace",
+        "username": "admin",
+        "enabled": true,
+        "mustChangePassword": false,
+        "created": "2025-04-01T00:00:00Z",
+        "principalIds": ["local://u-b4qkhsnliz"],
+        "links": {}
+      },
+      {
+        "id": "u-system-agent",
+        "type": "user",
+        "baseType": "user",
+        "name": "",
+        "username": "",
+        "created": "2025-04-01T00:00:00Z",
+        "principalIds": ["system://provisioning"],
+        "links": {}
+      }
+    ]
+  },
+  "settings": {
+    "type": "collection",
+    "resourceType": "setting",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 4 },
+    "data": [
+      {
+        "id": "server-url",
+        "type": "setting",
+        "baseType": "setting",
+        "name": "server-url",
+        "value": "https://rancher.example.com",
+        "default": "",
+        "customized": true,
+        "source": "db",
+        "links": {}
+      },
+      {
+        "id": "server-version",
+        "type": "setting",
+        "baseType": "setting",
+        "name": "server-version",
+        "value": "v2.11.2",
+        "default": "dev",
+        "customized": false,
+        "source": "",
+        "links": {}
+      },
+      {
+        "id": "cluster-template-enforcement",
+        "type": "setting",
+        "baseType": "setting",
+        "name": "cluster-template-enforcement",
+        "value": "true",
+        "default": "false",
+        "customized": true,
+        "source": "db",
+        "links": {}
+      },
+      {
+        "id": "password-min-length",
+        "type": "setting",
+        "baseType": "setting",
+        "name": "password-min-length",
+        "value": "",
+        "default": "12",
+        "customized": false,
+        "source": "",
+        "links": {}
+      }
+    ]
+  },
+  "authConfigs": {
+    "type": "collection",
+    "resourceType": "authConfig",
+    "links": {},
+    "actions": {},
+    "pagination": { "limit": 1000, "total": 3 },
+    "data": [
+      {
+        "id": "local",
+        "type": "localConfig",
+        "baseType": "authConfig",
+        "name": "local",
+        "enabled": true,
+        "accessMode": "unrestricted",
+        "links": {}
+      },
+      {
+        "id": "activedirectory",
+        "type": "activeDirectoryConfig",
+        "baseType": "authConfig",
+        "name": "activedirectory",
+        "enabled": true,
+        "accessMode": "restricted",
+        "allowedPrincipalIds": [
+          "activedirectory_group://CN=Platform Admins,OU=Groups,DC=example,DC=com"
+        ],
+        "links": {}
+      },
+      {
+        "id": "github",
+        "type": "githubConfig",
+        "baseType": "authConfig",
+        "name": "github",
+        "enabled": false,
+        "accessMode": "unrestricted",
+        "links": {}
+      }
+    ]
+  }
+}

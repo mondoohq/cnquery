@@ -1,0 +1,84 @@
+{
+  "type": "collection",
+  "resourceType": "roleTemplate",
+  "links": { "self": "https://rancher.example.com/v3/roleTemplates" },
+  "actions": {},
+  "pagination": { "limit": 1000, "total": 4 },
+  "data": [
+    {
+      "id": "cluster-owner",
+      "type": "roleTemplate",
+      "baseType": "roleTemplate",
+      "name": "Cluster Owner",
+      "description": "Owner of the cluster",
+      "context": "cluster",
+      "builtin": true,
+      "external": false,
+      "hidden": false,
+      "locked": false,
+      "clusterCreatorDefault": true,
+      "projectCreatorDefault": false,
+      "administrative": true,
+      "created": "2025-04-01T00:00:00Z",
+      "rules": [
+        { "apiGroups": ["*"], "resources": ["*"], "verbs": ["*"] },
+        { "nonResourceURLs": ["*"], "verbs": ["*"] }
+      ],
+      "links": {}
+    },
+    {
+      "id": "cluster-member",
+      "type": "roleTemplate",
+      "baseType": "roleTemplate",
+      "name": "Cluster Member",
+      "context": "cluster",
+      "builtin": true,
+      "administrative": false,
+      "created": "2025-04-01T00:00:00Z",
+      "rules": [
+        {
+          "apiGroups": ["management.cattle.io"],
+          "resources": ["clusters"],
+          "verbs": ["get", "list", "watch"]
+        }
+      ],
+      "roleTemplateIds": ["create-ns"],
+      "links": {}
+    },
+    {
+      "id": "rt-escalate",
+      "type": "roleTemplate",
+      "baseType": "roleTemplate",
+      "name": "Support Engineer",
+      "context": "project",
+      "builtin": false,
+      "administrative": false,
+      "created": "2026-03-11T14:22:07Z",
+      "rules": [
+        {
+          "apiGroups": ["rbac.authorization.k8s.io"],
+          "resources": ["roles"],
+          "verbs": ["escalate", "get", "list"]
+        }
+      ],
+      "roleTemplateIds": ["cluster-member"],
+      "links": {}
+    },
+    {
+      "id": "rt-external",
+      "type": "roleTemplate",
+      "baseType": "roleTemplate",
+      "name": "External Admin",
+      "context": "cluster",
+      "builtin": false,
+      "external": true,
+      "administrative": false,
+      "created": "2026-03-12T09:00:00Z",
+      "rules": [],
+      "externalRules": [
+        { "apiGroups": ["*"], "resources": ["*"], "verbs": ["*"] }
+      ],
+      "links": {}
+    }
+  ]
+}

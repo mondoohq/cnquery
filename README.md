@@ -179,6 +179,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Proxmox VE                    | `proxmox`                  | `mql shell proxmox --host HOST --token TOKEN`                                                                                                   |
 | Palo Alto Networks PAN-OS     | `panos`                    | `mql shell panos --hostname DEVICE_IP --username admin --password PASSWORD`                                                                     |
 | Running containers            | `docker`                   | `mql shell docker CONTAINER_ID`                                                                                                                 |
+| Rancher Manager fleet         | `rancher`                  | `mql shell rancher --url https://rancher.contoso.com --token TOKEN`                                                                             |
 | Redfish controller (BMC)      | `redfish`                  | `mql shell redfish USER@HOST --ask-pass --insecure`                                                                                            |
 | Redis or Valkey server        | `redisdb`                  | `mql shell redisdb localhost --ask-pass`                                                                                                        |
 | Shodan organization           | `shodan`                   | `mql shell shodan`                                                                                                                              |

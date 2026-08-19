@@ -283,6 +283,7 @@ use (
    ./mql/providers/portainer
    ./mql/providers/postgresdb
    ./mql/providers/proxmox
+   ./mql/providers/rancher
    ./mql/providers/redfish
    ./mql/providers/redisdb
    ./mql/providers/shodan
