@@ -274,19 +274,17 @@ func initAwsBedrockCustomModel(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 
 	res, err := CreateResource(runtime, "aws.bedrock.customModel",
-		map[string]*llx.RawData{
-			"__id":              llx.StringDataPtr(resp.ModelArn),
-			"modelArn":          llx.StringDataPtr(resp.ModelArn),
-			"modelName":         llx.StringDataPtr(resp.ModelName),
-			"region":            llx.StringData(region),
-			"baseModelArn":      llx.StringDataPtr(resp.BaseModelArn),
-			"customizationType": llx.StringData(string(resp.CustomizationType)),
-		})
+		bedrockCustomModelArgs(resp.ModelArn, resp.ModelName, region, resp.CustomizationType))
 	if err != nil {
 		return nil, nil, err
 	}
 	mqlCM := res.(*mqlAwsBedrockCustomModel)
 	mqlCM.cacheRegion = region
+	// The base model is not an argument: the schema exposes it as the typed
+	// baseModel accessor, which reads the ARN back off the internal cache.
+	// Seeding it here is what makes that accessor resolve on this path as well
+	// as on the listing path.
+	mqlCM.cacheBaseModelArn = convert.ToValue(resp.BaseModelArn)
 	// Seed the detail this init already fetched so the computed fields do not
 	// repeat the GetCustomModel call. CreateResource may have returned an instance
 	// already cached (and already in use) from the custom-models lister, so take
@@ -299,6 +297,21 @@ func initAwsBedrockCustomModel(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 	mqlCM.lock.Unlock()
 	return nil, mqlCM, nil
+}
+
+// bedrockCustomModelArgs maps a custom model onto the fields
+// aws.bedrock.customModel declares. Every key has to be a settable field:
+// SetAllData fails the whole resource on an unknown one, so the base model,
+// which the schema exposes through the typed baseModel accessor, is seeded on
+// the internal cache instead of passed here.
+func bedrockCustomModelArgs(modelArn, modelName *string, region string, customizationType bedrocktypes.CustomizationType) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":              llx.StringDataPtr(modelArn),
+		"modelArn":          llx.StringDataPtr(modelArn),
+		"modelName":         llx.StringDataPtr(modelName),
+		"region":            llx.StringData(region),
+		"customizationType": llx.StringData(string(customizationType)),
+	}
 }
 
 func (a *mqlAwsBedrockCustomModel) id() (string, error) {

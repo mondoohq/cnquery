@@ -6,8 +6,10 @@ package resources
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	bedrocktypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEnumSliceToAny(t *testing.T) {
@@ -33,4 +35,32 @@ func TestEnumSliceToAny(t *testing.T) {
 		result := enumSliceToAny(s)
 		assert.Empty(t, result)
 	})
+}
+
+// TestBedrockCustomModelArgsAreSettableFields pins every argument the custom
+// model init passes to a field the generated schema can actually set.
+// SetAllData rejects an unknown key outright, so a stale argument left behind
+// by a schema change does not degrade a field - it fails the whole resource on
+// every typed reference, because this init runs on every NewResource for the
+// type.
+func TestBedrockCustomModelArgsAreSettableFields(t *testing.T) {
+	args := bedrockCustomModelArgs(
+		aws.String("arn:aws:bedrock:us-east-1:123456789012:custom-model/anthropic.claude/abc"),
+		aws.String("tuned-claude"),
+		"us-east-1",
+		bedrocktypes.CustomizationTypeFineTuning,
+	)
+
+	require.NotEmpty(t, args)
+	for key := range args {
+		if key == "__id" {
+			continue
+		}
+		_, ok := setDataFields["aws.bedrock.customModel."+key]
+		assert.True(t, ok, "aws.bedrock.customModel has no settable field %q", key)
+	}
+
+	// The base model reaches the resource through the typed baseModel
+	// accessor, never as a raw ARN argument.
+	assert.NotContains(t, args, "baseModelArn")
 }
