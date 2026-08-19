@@ -2383,31 +2383,31 @@ func init() {
 			Create: createWindowsDnsServer,
 		},
 		"windows.dnsServer.settings": {
-			// to override args, implement: initWindowsDnsServerSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerSettings,
 			Create: createWindowsDnsServerSettings,
 		},
 		"windows.dnsServer.recursion": {
-			// to override args, implement: initWindowsDnsServerRecursion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerRecursion,
 			Create: createWindowsDnsServerRecursion,
 		},
 		"windows.dnsServer.cache": {
-			// to override args, implement: initWindowsDnsServerCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerCache,
 			Create: createWindowsDnsServerCache,
 		},
 		"windows.dnsServer.diagnostics": {
-			// to override args, implement: initWindowsDnsServerDiagnostics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerDiagnostics,
 			Create: createWindowsDnsServerDiagnostics,
 		},
 		"windows.dnsServer.scavenging": {
-			// to override args, implement: initWindowsDnsServerScavenging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerScavenging,
 			Create: createWindowsDnsServerScavenging,
 		},
 		"windows.dnsServer.responseRateLimiting": {
-			// to override args, implement: initWindowsDnsServerResponseRateLimiting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerResponseRateLimiting,
 			Create: createWindowsDnsServerResponseRateLimiting,
 		},
 		"windows.dnsServer.forwarderConfiguration": {
-			// to override args, implement: initWindowsDnsServerForwarderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerForwarderConfiguration,
 			Create: createWindowsDnsServerForwarderConfiguration,
 		},
 		"windows.dnsServer.rootHint": {
@@ -2419,7 +2419,7 @@ func init() {
 			Create: createWindowsDnsServerZone,
 		},
 		"windows.dnsServer.zone.dnssec": {
-			// to override args, implement: initWindowsDnsServerZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDnsServerZoneDnssec,
 			Create: createWindowsDnsServerZoneDnssec,
 		},
 		"windows.dnsServer.zone.signingKey": {

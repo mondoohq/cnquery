@@ -111,6 +111,85 @@ func (w *mqlWindowsDnsServer) zoneData() ([]windows.WindowsDnsServerZone, error)
 	return w.zonesData, nil
 }
 
+// Each singleton sub-resource below is reachable by a dotted path that is also
+// its own registered resource name: the field `settings` on `windows.dnsServer`
+// and the resource `windows.dnsServer.settings` occupy the same path. The
+// compiler resolves the longest matching resource name before it considers a
+// field (compileResource extends the identifier while Schema.Lookup keeps
+// matching), so `windows.dnsServer.settings` instantiates the sub-resource
+// directly and the parent's settings() accessor never runs. Its fields are
+// plain schema fields that only the parent populates, so every one stays unset
+// and reports "provider returned no data and no error", then converts as a
+// primitive carrying no type information.
+//
+// Delegating to the parent's accessor fills the resource in. The block form
+// `windows.dnsServer { settings { ... } }` binds the field instead of resolving
+// a resource name and was never affected, which is why the list fields
+// (`zones`, `rootHints`) also work: their element resources are singular
+// (`windows.dnsServer.zone`), so the plural field path matches no resource.
+//
+// When the resource is created normally by the parent, it carries an __id and
+// each of these is a no-op.
+func initWindowsDnsServerChild[T plugin.Resource](
+	runtime *plugin.Runtime,
+	args map[string]*llx.RawData,
+	get func(*mqlWindowsDnsServer) *plugin.TValue[T],
+) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	parent, err := CreateResource(runtime, "windows.dnsServer", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := get(parent.(*mqlWindowsDnsServer))
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	return args, v.Data, nil
+}
+
+func initWindowsDnsServerSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDnsServerChild(runtime, args, (*mqlWindowsDnsServer).GetSettings)
+}
+
+func initWindowsDnsServerRecursion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDnsServerChild(runtime, args, (*mqlWindowsDnsServer).GetRecursion)
+}
+
+func initWindowsDnsServerCache(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDnsServerChild(runtime, args, (*mqlWindowsDnsServer).GetCache)
+}
+
+func initWindowsDnsServerDiagnostics(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDnsServerChild(runtime, args, (*mqlWindowsDnsServer).GetDiagnostics)
+}
+
+func initWindowsDnsServerScavenging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDnsServerChild(runtime, args, (*mqlWindowsDnsServer).GetScavenging)
+}
+
+func initWindowsDnsServerResponseRateLimiting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDnsServerChild(runtime, args, (*mqlWindowsDnsServer).GetResponseRateLimiting)
+}
+
+func initWindowsDnsServerForwarderConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDnsServerChild(runtime, args, (*mqlWindowsDnsServer).GetForwarderConfiguration)
+}
+
+// windows.dnsServer.zone.dnssec collides the same way, but it cannot be filled
+// in from the root: the DNSSEC settings belong to one zone and there is no
+// single zone to delegate to. Returning an error keeps the dotted form from
+// reporting a whole set of nulls, which would let a check that reads "not
+// signed" pass on a server whose zones are signed. The signing state is
+// available per zone through windows.dnsServer.zones.
+func initWindowsDnsServerZoneDnssec(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	return nil, nil, errors.New("windows.dnsServer.zone.dnssec belongs to a zone and cannot be queried on its own, iterate windows.dnsServer.zones and read its dnssec field instead")
+}
+
 func (w *mqlWindowsDnsServer) settings() (*mqlWindowsDnsServerSettings, error) {
 	cfg, err := w.config()
 	if err != nil {
