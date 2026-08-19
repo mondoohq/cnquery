@@ -5277,6 +5277,167 @@ alicloud.sas {
   baselineChecks() []alicloud.sas.baselineCheck
   // Alerts raised by threat detection
   alarmEvents() []alicloud.sas.alarmEvent
+  // Account-level Security Center settings
+  config() alicloud.sas.config
+}
+
+// Security Center settings
+//
+// The account-level Security Center configuration behind the detections:
+// the antivirus scan schedule, the configuration assessment schedule, the
+// directories webshell detection covers, where alerts are routed, the
+// vulnerability scan settings per vulnerability type, and how often asset
+// fingerprints are collected. A machine can sit in the inventory reporting no
+// findings because a scan it needed was never scheduled, which the machine
+// inventory alone does not show.
+alicloud.sas.config {
+  // Whether the scheduled antivirus scan is switched on
+  //
+  // This is the scheduled scan, not real-time protection. Reports false when
+  // the account has never configured one.
+  virusScanEnabled bool
+  // How often the scheduled antivirus scan runs
+  //
+  // Read together with virusScanPeriodUnit, which gives the unit. Zero when no
+  // scan is scheduled.
+  virusScanInterval int
+  // Unit of the antivirus scan interval, for example day
+  //
+  // Empty when no scan is scheduled.
+  virusScanPeriodUnit string
+  // Directories the scheduled antivirus scan covers
+  //
+  // Empty when the scan covers the default scope rather than named paths.
+  virusScanPaths []string
+  // Scope of the scheduled antivirus scan
+  //
+  // Empty when no scan is scheduled.
+  virusScanType string
+  // Whether configuration assessment runs automatically on a schedule
+  //
+  // False when assessment only runs when somebody starts it by hand, which
+  // means the reported baseline results can be arbitrarily stale.
+  configAssessmentEnabled bool
+  // Whether newly added assets are automatically brought into configuration assessment
+  //
+  // False when a machine added after the schedule was set is assessed only
+  // once somebody adds it, so fleet growth quietly reduces coverage.
+  configAssessmentAutoAddEnabled bool
+  // Days of the week the automatic configuration assessment runs
+  //
+  // Empty when no automatic assessment is scheduled.
+  configAssessmentCycleDays []int
+  // Baseline standards the configuration assessment applies
+  //
+  // Empty when no standard is selected, in which case the assessment has
+  // nothing to check against.
+  configAssessmentStandards []string
+  // Directories webshell detection covers
+  //
+  // Webshell detection only inspects the directories listed here, so a web
+  // server whose document root is absent is not being checked at all.
+  webPaths() []alicloud.sas.webPath
+  // Where Security Center sends each kind of notification
+  noticeConfigs() []alicloud.sas.noticeConfig
+  // Vulnerability scan settings, one entry per vulnerability type
+  vulnerabilityConfigs() []alicloud.sas.vulnerabilityConfig
+  // Asset fingerprint collection schedules, one entry per fingerprint kind
+  propertySchedules() []alicloud.sas.propertySchedule
+}
+
+// Webshell detection path
+//
+// A single directory webshell detection covers, keyed by the path. Exposes the
+// path, how it was configured, and the machines or groups it applies to.
+alicloud.sas.webPath @defaults("webPath webPathType") {
+  // Directory webshell detection covers, used as the lookup key
+  webPath string
+  // How the path was configured, for example a manually added or a detected path
+  webPathType string
+  // Machines and groups the path applies to, keyed by target
+  //
+  // The value gives the kind of target, for example a single machine or a
+  // machine group.
+  targets map[string]string
+}
+
+// Security Center notification setting
+//
+// The notification routing for one kind of Security Center event, keyed by
+// project (the event type, for example sas_suspicious or health). Exposes which
+// channels the notification goes to and during which hours, so an event type
+// routed nowhere is visible as an empty channels list.
+alicloud.sas.noticeConfig @defaults("project channels") {
+  // Event type the setting covers, used as the lookup key
+  //
+  // For example sas_suspicious (suspicious events), remotelogin (remote
+  // logons), or health (security checks).
+  project string
+  // Severity or grouping the event type belongs to
+  category string
+  // Channels the notification is sent through
+  //
+  // Any of sms, email, and internal. An empty list means the event type raises
+  // no notification at all.
+  channels []string
+  // Raw channel code the API reports
+  //
+  // A bit field where 1 is text message, 2 is email, and 4 is internal
+  // message, so 7 is all three. Zero means no channel.
+  route int
+  // Hours during which notifications are sent
+  //
+  // 0 for any time, or 1 for 08:00 to 22:00 only, in which case an event
+  // raised overnight is not notified until the morning.
+  timeLimit int
+}
+
+// Security Center vulnerability scan setting
+//
+// The scan setting for one vulnerability type, keyed by type. Exposes whether
+// scanning for that type is switched on and the type-specific value behind it,
+// so a type left off is visible even though the others are scanned.
+alicloud.sas.vulnerabilityConfig @defaults("type enabled") {
+  // Vulnerability type the setting covers, used as the lookup key
+  //
+  // One of cve (system vulnerabilities), sca (application vulnerabilities
+  // found by version fingerprint), app (web scanner findings), emg (emergency
+  // vulnerabilities), scanMode (whether only real-risk vulnerabilities are
+  // shown), imageVulClean (the retention period for image vulnerabilities), or
+  // yum (whether Alibaba Cloud sources are preferred when fixing).
+  type string
+  // Whether scanning for the type is switched on
+  enabled bool
+  // Type-specific setting value
+  //
+  // The meaning depends on type: a scan scope for the scan types, or a
+  // retention period in days when type is imageVulClean.
+  config string
+}
+
+// Security Center asset fingerprint schedule
+//
+// The collection schedule for one kind of asset fingerprint, keyed by type.
+// Exposes how often the fingerprint is collected and when the next collection
+// is due, so a fingerprint kind that is never collected is visible rather than
+// simply reporting no data.
+alicloud.sas.propertySchedule @defaults("type scheduleHours") {
+  // Fingerprint kind the schedule covers, used as the lookup key
+  //
+  // One of scheduler_software_period (software), scheduler_cron_period
+  // (scheduled tasks), scheduler_sca_period (middleware),
+  // scheduler_autorun_period (startup items), scheduler_lkm_period (kernel
+  // modules), or scheduler_sca_proxy_period (websites).
+  type string
+  // Hours between collections
+  //
+  // For example 12 for twice a day, 24 for daily, or 168 for weekly. Zero when
+  // no schedule is configured for the kind.
+  scheduleHours int
+  // Time the next collection is due
+  //
+  // Null when no schedule is configured for the kind.
+  nextScheduleTime time
 }
 
 // Machine protected by Security Center
