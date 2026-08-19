@@ -229,16 +229,34 @@ func initAwsBackupVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, err
 	}
 
-	args["arn"] = llx.StringDataPtr(vault.BackupVaultArn)
-	args["name"] = llx.StringDataPtr(vault.BackupVaultName)
-	args["region"] = llx.StringData(region)
-	args["createdAt"] = llx.TimeDataPtr(vault.CreationDate)
-	args["encryptionKeyArn"] = llx.StringDataPtr(vault.EncryptionKeyArn)
-	args["locked"] = llx.BoolDataPtr(vault.Locked)
-	args["lockedAt"] = llx.TimeDataPtr(vault.LockDate)
-	args["maxRetentionDays"] = llx.IntDataPtr(vault.MaxRetentionDays)
-	args["minRetentionDays"] = llx.IntDataPtr(vault.MinRetentionDays)
-	return args, nil, nil
+	res, err := CreateResource(runtime, "aws.backup.vault", backupVaultArgs(vault, region))
+	if err != nil {
+		return nil, nil, err
+	}
+	// The encryption key is not an argument: the schema exposes it as the typed
+	// encryptionKey accessor, which reads the ARN back off the internal cache.
+	// Seeding it here is what makes that accessor resolve on this path as well
+	// as on the listing path.
+	res.(*mqlAwsBackupVault).cacheEncryptionKeyArn = convert.ToValue(vault.EncryptionKeyArn)
+	return nil, res, nil
+}
+
+// backupVaultArgs maps a described vault onto the fields aws.backup.vault
+// declares. Every key here has to be a settable field: SetAllData fails the
+// whole resource on an unknown one, so a field that the schema exposes through
+// a typed accessor - encryptionKey - must be seeded on the internal cache
+// instead of passed as an argument.
+func backupVaultArgs(vault *backup.DescribeBackupVaultOutput, region string) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"arn":              llx.StringDataPtr(vault.BackupVaultArn),
+		"name":             llx.StringDataPtr(vault.BackupVaultName),
+		"region":           llx.StringData(region),
+		"createdAt":        llx.TimeDataPtr(vault.CreationDate),
+		"locked":           llx.BoolDataPtr(vault.Locked),
+		"lockedAt":         llx.TimeDataPtr(vault.LockDate),
+		"maxRetentionDays": llx.IntDataPtr(vault.MaxRetentionDays),
+		"minRetentionDays": llx.IntDataPtr(vault.MinRetentionDays),
+	}
 }
 
 // newMqlBackupRecoveryPoint builds a recovery point resource. Both the vault
