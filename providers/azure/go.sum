@@ -198,6 +198,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.6.0 
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.6.0/go.mod h1:oDrbWx4ewMylP7xHivfgixbfGBT6APAwsSoHRKotnIc=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4 v4.1.0 h1:LbdgZl0olU2QZ6oPuFRfjq6oSAE+Y3afpAMTtH1O9gY=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4 v4.1.0/go.mod h1:U1yQRidgRofesJpSYiJWogdsrj24Xa0J4lR1HYb9Bd8=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storagecache/armstoragecache/v4 v4.2.0 h1:KMMxFEV0gBWf8mvBXAuNN2uTmpEP1DfnTdwKGH5VK5k=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storagecache/armstoragecache/v4 v4.2.0/go.mod h1:ukeJZVPXd/DKDorWJdakWXzAzRd2GfxltQbJH48+Qdw=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse v0.8.0 h1:IKCilT2DdxjeCXhiCIZb5hywpA1KDGKwpdA1WL20wT0=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse v0.8.0/go.mod h1:IzuvA34YNVnlifc1+KhCouAKEf1VYzV439FOpyfTHzA=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/trafficmanager/armtrafficmanager v1.3.0 h1:e3kTG23M5ps+DjvPolK4dcgohDY8sHsXU7zrdHj1WzY=

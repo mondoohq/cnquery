@@ -545,6 +545,8 @@ const (
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule                     string = "azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule"
 	ResourceAzureSubscriptionFileSharesServiceFileShareSnapshot                                         string = "azure.subscription.fileSharesService.fileShare.snapshot"
 	ResourceAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule                   string = "azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule"
+	ResourceAzureSubscriptionStorageCacheService                                                        string = "azure.subscription.storageCacheService"
+	ResourceAzureSubscriptionStorageCacheServiceAmlFilesystem                                           string = "azure.subscription.storageCacheService.amlFilesystem"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2667,6 +2669,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule,
 		},
+		"azure.subscription.storageCacheService": {
+			Init:   initAzureSubscriptionStorageCacheService,
+			Create: createAzureSubscriptionStorageCacheService,
+		},
+		"azure.subscription.storageCacheService.amlFilesystem": {
+			Init:   initAzureSubscriptionStorageCacheServiceAmlFilesystem,
+			Create: createAzureSubscriptionStorageCacheServiceAmlFilesystem,
+		},
 	}
 }
 
@@ -2926,6 +2936,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.elasticSan": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetElasticSan()).ToDataRes(types.Resource("azure.subscription.elasticSanService"))
+	},
+	"azure.subscription.storageCache": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetStorageCache()).ToDataRes(types.Resource("azure.subscription.storageCacheService"))
 	},
 	"azure.subscription.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetFunctions()).ToDataRes(types.Resource("azure.subscription.functionsService"))
@@ -21833,6 +21846,120 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule.subnet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
 	},
+	"azure.subscription.storageCacheService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystems": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheService).GetAmlFilesystems()).ToDataRes(types.Array(types.Resource("azure.subscription.storageCacheService.amlFilesystem")))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.zones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.storageCapacityTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetStorageCapacityTiB()).ToDataRes(types.Float)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.currentStorageCapacityTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetCurrentStorageCapacityTiB()).ToDataRes(types.Float)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.throughputProvisionedMbps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetThroughputProvisionedMbps()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.clusterUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetClusterUuid()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.healthState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetHealthState()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.healthStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetHealthStatusCode()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.healthStatusDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetHealthStatusDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.keyEncryptionKeyUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetKeyEncryptionKeyUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.keyEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetKeyEncryptionKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.keyEncryptionKeyVault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetKeyEncryptionKeyVault()).ToDataRes(types.Resource("azure.subscription.keyVaultService.vault"))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetRootSquashMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashNoSquashNidLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetRootSquashNoSquashNidLists()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetRootSquashUid()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashGid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetRootSquashGid()).ToDataRes(types.Int)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetRootSquashStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetHsmContainer()).ToDataRes(types.Resource("azure.subscription.storageService.account.container"))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmLoggingContainer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetHsmLoggingContainer()).ToDataRes(types.Resource("azure.subscription.storageService.account.container"))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmImportPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetHsmImportPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmImportPrefixesInitial": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetHsmImportPrefixesInitial()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.maintenanceWindowDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetMaintenanceWindowDayOfWeek()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.maintenanceWindowTimeOfDayUtc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetMaintenanceWindowTimeOfDayUtc()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.lustreVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetLustreVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.mgsAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetMgsAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.mountCommand": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetMountCommand()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -22111,6 +22238,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.elasticSan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).ElasticSan, ok = plugin.RawToTValue[*mqlAzureSubscriptionElasticSanService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCache": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).StorageCache, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageCacheService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49421,6 +49552,166 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageCacheService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageCacheService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystems": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheService).AmlFilesystems, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.zones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Zones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.storageCapacityTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).StorageCapacityTiB, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.currentStorageCapacityTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).CurrentStorageCapacityTiB, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.throughputProvisionedMbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).ThroughputProvisionedMbps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.clusterUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).ClusterUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.healthState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).HealthState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.healthStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).HealthStatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.healthStatusDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).HealthStatusDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.keyEncryptionKeyUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).KeyEncryptionKeyUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.keyEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).KeyEncryptionKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.keyEncryptionKeyVault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).KeyEncryptionKeyVault, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceVault](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).RootSquashMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashNoSquashNidLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).RootSquashNoSquashNidLists, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).RootSquashUid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashGid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).RootSquashGid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.rootSquashStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).RootSquashStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).HsmContainer, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountContainer](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmLoggingContainer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).HsmLoggingContainer, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageServiceAccountContainer](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmImportPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).HsmImportPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.hsmImportPrefixesInitial": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).HsmImportPrefixesInitial, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.maintenanceWindowDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).MaintenanceWindowDayOfWeek, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.maintenanceWindowTimeOfDayUtc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).MaintenanceWindowTimeOfDayUtc, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.lustreVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).LustreVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.mgsAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).MgsAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.mountCommand": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).MountCommand, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageCacheService.amlFilesystem.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -49774,6 +50065,7 @@ type mqlAzureSubscription struct {
 	DataBox               plugin.TValue[*mqlAzureSubscriptionDataBoxService]
 	NetApp                plugin.TValue[*mqlAzureSubscriptionNetAppService]
 	ElasticSan            plugin.TValue[*mqlAzureSubscriptionElasticSanService]
+	StorageCache          plugin.TValue[*mqlAzureSubscriptionStorageCacheService]
 	Functions             plugin.TValue[*mqlAzureSubscriptionFunctionsService]
 	ServiceBus            plugin.TValue[*mqlAzureSubscriptionServiceBusService]
 	EventHub              plugin.TValue[*mqlAzureSubscriptionEventHubService]
@@ -50396,6 +50688,22 @@ func (c *mqlAzureSubscription) GetElasticSan() *plugin.TValue[*mqlAzureSubscript
 		}
 
 		return c.elasticSan()
+	})
+}
+
+func (c *mqlAzureSubscription) GetStorageCache() *plugin.TValue[*mqlAzureSubscriptionStorageCacheService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageCacheService](&c.StorageCache, func() (*mqlAzureSubscriptionStorageCacheService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "storageCache")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageCacheService), nil
+			}
+		}
+
+		return c.storageCache()
 	})
 }
 
@@ -116234,5 +116542,379 @@ func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetwor
 		}
 
 		return c.subnet()
+	})
+}
+
+// mqlAzureSubscriptionStorageCacheService for the azure.subscription.storageCacheService resource
+type mqlAzureSubscriptionStorageCacheService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageCacheServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	AmlFilesystems plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionStorageCacheService creates a new instance of this resource
+func createAzureSubscriptionStorageCacheService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageCacheService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageCacheService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageCacheService) MqlName() string {
+	return "azure.subscription.storageCacheService"
+}
+
+func (c *mqlAzureSubscriptionStorageCacheService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageCacheService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionStorageCacheService) GetAmlFilesystems() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AmlFilesystems, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService", c.__id, "amlFilesystems")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.amlFilesystems()
+	})
+}
+
+// mqlAzureSubscriptionStorageCacheServiceAmlFilesystem for the azure.subscription.storageCacheService.amlFilesystem resource
+type mqlAzureSubscriptionStorageCacheServiceAmlFilesystem struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionStorageCacheServiceAmlFilesystemInternal
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Location                      plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	Tags                          plugin.TValue[map[string]any]
+	Zones                         plugin.TValue[[]any]
+	SkuName                       plugin.TValue[string]
+	ProvisioningState             plugin.TValue[string]
+	Identity                      plugin.TValue[any]
+	UserAssignedIdentities        plugin.TValue[[]any]
+	StorageCapacityTiB            plugin.TValue[float64]
+	CurrentStorageCapacityTiB     plugin.TValue[float64]
+	ThroughputProvisionedMbps     plugin.TValue[int64]
+	ClusterUuid                   plugin.TValue[string]
+	HealthState                   plugin.TValue[string]
+	HealthStatusCode              plugin.TValue[string]
+	HealthStatusDescription       plugin.TValue[string]
+	KeyEncryptionKeyUrl           plugin.TValue[string]
+	KeyEncryptionKey              plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	KeyEncryptionKeyVault         plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVault]
+	Subnet                        plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	RootSquashMode                plugin.TValue[string]
+	RootSquashNoSquashNidLists    plugin.TValue[string]
+	RootSquashUid                 plugin.TValue[int64]
+	RootSquashGid                 plugin.TValue[int64]
+	RootSquashStatus              plugin.TValue[string]
+	HsmContainer                  plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountContainer]
+	HsmLoggingContainer           plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountContainer]
+	HsmImportPrefix               plugin.TValue[string]
+	HsmImportPrefixesInitial      plugin.TValue[[]any]
+	MaintenanceWindowDayOfWeek    plugin.TValue[string]
+	MaintenanceWindowTimeOfDayUtc plugin.TValue[string]
+	LustreVersion                 plugin.TValue[string]
+	MgsAddress                    plugin.TValue[string]
+	MountCommand                  plugin.TValue[string]
+	SystemMetadata                plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionStorageCacheServiceAmlFilesystem creates a new instance of this resource
+func createAzureSubscriptionStorageCacheServiceAmlFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageCacheServiceAmlFilesystem{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) MqlName() string {
+	return "azure.subscription.storageCacheService.amlFilesystem"
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetZones() *plugin.TValue[[]any] {
+	return &c.Zones
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetStorageCapacityTiB() *plugin.TValue[float64] {
+	return &c.StorageCapacityTiB
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetCurrentStorageCapacityTiB() *plugin.TValue[float64] {
+	return &c.CurrentStorageCapacityTiB
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetThroughputProvisionedMbps() *plugin.TValue[int64] {
+	return &c.ThroughputProvisionedMbps
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetClusterUuid() *plugin.TValue[string] {
+	return &c.ClusterUuid
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetHealthState() *plugin.TValue[string] {
+	return &c.HealthState
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetHealthStatusCode() *plugin.TValue[string] {
+	return &c.HealthStatusCode
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetHealthStatusDescription() *plugin.TValue[string] {
+	return &c.HealthStatusDescription
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetKeyEncryptionKeyUrl() *plugin.TValue[string] {
+	return &c.KeyEncryptionKeyUrl
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetKeyEncryptionKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.KeyEncryptionKey, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", c.__id, "keyEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.keyEncryptionKey()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetKeyEncryptionKeyVault() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVault] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceVault](&c.KeyEncryptionKeyVault, func() (*mqlAzureSubscriptionKeyVaultServiceVault, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", c.__id, "keyEncryptionKeyVault")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceVault), nil
+			}
+		}
+
+		return c.keyEncryptionKeyVault()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetRootSquashMode() *plugin.TValue[string] {
+	return &c.RootSquashMode
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetRootSquashNoSquashNidLists() *plugin.TValue[string] {
+	return &c.RootSquashNoSquashNidLists
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetRootSquashUid() *plugin.TValue[int64] {
+	return &c.RootSquashUid
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetRootSquashGid() *plugin.TValue[int64] {
+	return &c.RootSquashGid
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetRootSquashStatus() *plugin.TValue[string] {
+	return &c.RootSquashStatus
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetHsmContainer() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountContainer] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountContainer](&c.HsmContainer, func() (*mqlAzureSubscriptionStorageServiceAccountContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", c.__id, "hsmContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountContainer), nil
+			}
+		}
+
+		return c.hsmContainer()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetHsmLoggingContainer() *plugin.TValue[*mqlAzureSubscriptionStorageServiceAccountContainer] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionStorageServiceAccountContainer](&c.HsmLoggingContainer, func() (*mqlAzureSubscriptionStorageServiceAccountContainer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", c.__id, "hsmLoggingContainer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionStorageServiceAccountContainer), nil
+			}
+		}
+
+		return c.hsmLoggingContainer()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetHsmImportPrefix() *plugin.TValue[string] {
+	return &c.HsmImportPrefix
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetHsmImportPrefixesInitial() *plugin.TValue[[]any] {
+	return &c.HsmImportPrefixesInitial
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetMaintenanceWindowDayOfWeek() *plugin.TValue[string] {
+	return &c.MaintenanceWindowDayOfWeek
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetMaintenanceWindowTimeOfDayUtc() *plugin.TValue[string] {
+	return &c.MaintenanceWindowTimeOfDayUtc
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetLustreVersion() *plugin.TValue[string] {
+	return &c.LustreVersion
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetMgsAddress() *plugin.TValue[string] {
+	return &c.MgsAddress
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetMountCommand() *plugin.TValue[string] {
+	return &c.MountCommand
+}
+
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageCacheService.amlFilesystem", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
 	})
 }
