@@ -8960,6 +8960,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.container.remainingRetentionDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetRemainingRetentionDays()).ToDataRes(types.Int)
 	},
+	"azure.subscription.storageService.account.container.signedIdentifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetSignedIdentifiers()).ToDataRes(types.Array(types.Dict))
+	},
 	"azure.subscription.storageService.account.container.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -30217,6 +30220,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.container.remainingRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).RemainingRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.container.signedIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).SignedIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.container.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69276,6 +69283,7 @@ type mqlAzureSubscriptionStorageServiceAccountContainer struct {
 	Deleted                                         plugin.TValue[bool]
 	DeletedTime                                     plugin.TValue[*time.Time]
 	RemainingRetentionDays                          plugin.TValue[int64]
+	SignedIdentifiers                               plugin.TValue[[]any]
 	SystemMetadata                                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -69410,6 +69418,12 @@ func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetDeletedTime() *p
 
 func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetRemainingRetentionDays() *plugin.TValue[int64] {
 	return &c.RemainingRetentionDays
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetSignedIdentifiers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SignedIdentifiers, func() ([]any, error) {
+		return c.signedIdentifiers()
+	})
 }
 
 func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {

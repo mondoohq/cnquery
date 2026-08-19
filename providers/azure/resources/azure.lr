@@ -6405,6 +6405,15 @@ private azure.subscription.storageService.account.container @defaults("id name")
   deletedTime time
   // Number of remaining days in the soft delete retention period
   remainingRetentionDays int
+  // Stored access policies on the container
+  //
+  // Each entry has `id`, `permission`, `startTime`, and `expiryTime`. A
+  // shared access signature bound to one of these policies can be revoked
+  // server-side by deleting or expiring the policy; a signature issued
+  // without one cannot be withdrawn before it expires. Empty when the
+  // container carries no policies. Read from the blob service rather than
+  // Azure Resource Manager, so it needs data access to the container.
+  signedIdentifiers() []dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

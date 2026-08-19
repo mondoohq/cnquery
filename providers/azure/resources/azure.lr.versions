@@ -6045,6 +6045,7 @@ azure.subscription.storageService.account.container.objectLevelImmutabilityEnabl
 azure.subscription.storageService.account.container.properties 9.0.1
 azure.subscription.storageService.account.container.publicAccess 11.6.1
 azure.subscription.storageService.account.container.remainingRetentionDays 11.6.2
+azure.subscription.storageService.account.container.signedIdentifiers 13.36.1
 azure.subscription.storageService.account.container.systemMetadata 13.28.1
 azure.subscription.storageService.account.container.type 9.0.1
 azure.subscription.storageService.account.containers 9.0.1
