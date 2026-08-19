@@ -10,6 +10,15 @@ nothing about whether these fields read correctly from a real organization.
 
 This document is the handoff. Work top to bottom. Everything is unchecked.
 
+**The record types now carry Confluent's own generated models for the nested
+blocks** (see §8). That narrows what a live run has to check: the field names and
+nesting of the adopted blocks are the vendor's rather than ours, so a live run no
+longer has to prove them by hand. **It does not move the verification bar.** No
+field in this provider has still ever been read from a real organization, and a
+vendor-maintained struct tag says nothing about whether the endpoint is reachable
+with the credentials we send, whether the value means what we think, or whether
+the listing is complete. Everything below stays required.
+
 ---
 
 ## 1. Credentials and fixtures needed
@@ -523,7 +532,14 @@ Confluent's published OpenAPI specifications or from the Confluent CLI source,
 not observed against a live organization. They are ordered by how likely they
 are to be wrong and how badly a wrong answer would mislead.
 
-### 6.1 The audit log endpoint is a guess (highest risk)
+### 6.1 The audit log endpoint is a guess (highest risk) — STILL OPEN
+
+**The SDK observes nothing here, and confirms there is nothing to observe.** All
+~45 module directories of `ccloud-sdk-go-v2` were enumerated and **none of them
+models audit log configuration**: there is no audit-log API, versioned or
+otherwise, and no model for the `/api/me` payload. That is corroboration for the
+decision to hand-roll this read, and it is not evidence that the read works. The
+whole of this risk stands exactly as written.
 
 `confluent.auditLog` reads `GET https://api.confluent.cloud/api/me` and expects
 an `organization.audit_log` block with `cluster_id`, `account_id`,
@@ -583,6 +599,17 @@ by side.
 
 ### 6.2 Topics and ACLs use the per-cluster REST API, not the management API
 
+**Half struck.** The *record shape* half is retired: `topicRecord` and
+`topicConfigRecord` are now aliases of `kafkarest/v3`'s own `TopicData` and
+`TopicConfigData`, so the field names, the nesting and the null-vs-empty
+handling of `value` are Confluent's rather than ours and need no hand
+verification. `aclRecord` deliberately stays local (see N2 in §8), but its
+fields are eight flat strings with nothing to mistype.
+
+**Still open, and unchanged:** the pagination question and the principal-format
+question below. Both are server behaviours that no struct can settle, and the
+pagination one is still the check most likely to find a real bug.
+
 `topics`, `topic.configs` and `acls` are read from
 `<restEndpoint>/kafka/v3/clusters/<id>/{topics,acls}` with a cluster-scoped
 Kafka API key. This is the v3 Kafka REST shape from `kafkarest/v3`, which is
@@ -612,7 +639,15 @@ may differ:
   `acl.serviceAccount` will be null everywhere and `principalAccountID` needs a
   numeric-to-`sa-` mapping. **Record which form your organization returns.**
 
-### 6.3 Role binding listing scope
+### 6.3 Role binding listing scope — STILL OPEN
+
+**The SDK corroborates our reading of the spec and observes nothing.**
+`mds/v2`'s generated client takes `crn_pattern` as a plain query string with the
+same "partial search" description we read it from, and its `IamV2RoleBinding`
+model is now what this provider decodes. Neither says how the server treats the
+pattern. Whether a partial match really returns bindings *below* the
+organization is a server behaviour, and it is the one that decides whether an
+access review sees every grant or only the organization-wide ones.
 
 `confluent.roleBindings` calls `/iam/v2/role-bindings` with
 `crn_pattern=crn://confluent.cloud/organization=<orgId>`. The spec describes
@@ -625,7 +660,15 @@ cares about.
 
 **Verify by count** against the CLI, per §4.
 
-### 6.4 The `spec.endpoints` map may not be universally present
+### 6.4 The `spec.endpoints` map may not be universally present — STILL OPEN
+
+**The SDK corroborates our reading of the spec and observes nothing.**
+`CmkV2ClusterSpec` types `Endpoints` as an optional `*ModelMap` and marks
+`kafka_bootstrap_endpoint`, `http_endpoint` and `api_endpoint` as `Deprecated`
+in favour of it. That confirms the map is the current shape and the pair is the
+legacy one, which is exactly how this provider reads them. It says nothing about
+how many live clusters still answer without the map, which is the only thing
+that decides whether `isPublic` is usable in a policy.
 
 The endpoints map is a newer addition to `cmk/v2`. Where it is absent this
 provider falls back to the deprecated `spec.kafka_bootstrap_endpoint` /
@@ -638,17 +681,21 @@ do not, decide whether a hostname heuristic is acceptable (it is not, in this
 author's view, because `*.glb.confluent.cloud` is used for both public and
 private-link endpoints) or whether the fallback should be dropped.
 
-### 6.5 Schema Registry field names
+### 6.5 Schema Registry field names ~~(struck)~~
 
-`srcm/v3` is the current Schema Registry management API, but Confluent also ran
-`srcm/v2`. `catalog_http_endpoint`, `private_http_endpoint` and
-`private_networking_config.regional_endpoints` are read from the v3 spec and
-have not been seen on a live response. `catalogHttpEndpoint` in particular may
-simply always be empty. **Confirm each against a real payload** (run the raw
-call with `curl` and compare).
+**Struck.** `schemaRegistryRecord` now carries `srcmv3.SrcmV3ClusterSpec` and
+`srcmv3.SrcmV3ClusterStatus` directly, so `catalog_http_endpoint`,
+`private_http_endpoint` and `private_networking_config.regional_endpoints` are
+spelled by Confluent's own generated model rather than transcribed by us. There
+is no longer a field name here that we could have got wrong.
 
-Also unverified: what `srcm/v3` answers for an environment that has no Schema
-Registry. An empty list and a 404 are both handled (the 404 skips that
+Note the narrower thing this does *not* settle: whether `catalogHttpEndpoint` is
+ever populated on a live response. A correct tag on an always-empty field still
+reads empty. That is a question for the live run, not a schema risk.
+
+**The 403 question below is NOT struck**, because it is transport rather than
+shape. What `srcm/v3` answers for an environment that has no Schema Registry
+remains unverified. An empty list and a 404 are both handled (the 404 skips that
 environment and the walk continues), but a **403** is not, and would fail the
 whole listing. If a bare environment answers 403 rather than 404, that branch
 needs adding, and only after confirming the 403 really means "there is nothing
@@ -657,12 +704,16 @@ here" rather than "you may not look".
 **Test it with an environment that has no Kafka cluster at all**, which is the
 cheapest way to produce an environment without a registry.
 
-### 6.6 The `/byok/v1/keys` listing is organization-wide and unfiltered
+### 6.6 The `/byok/v1/keys` listing is organization-wide and unfiltered ~~(struck)~~
 
-BYOK keys are not environment-scoped in this implementation. If the endpoint
-requires an environment filter or returns keys the caller may not read, the
-listing errors. Unverified against a live organization; likely fine, but it has
-never run.
+**Struck.** `byok/v1`'s own generated client exposes the keys listing as a
+single organization-wide call taking no environment parameter, which is the
+shape this provider already uses. The vendor's model agrees that BYOK keys are
+not environment-scoped, so there is no missing filter to add.
+
+What that leaves is only whether the caller's key may read them at all, which is
+a permissions question covered by the `OrganizationAdmin` note in §1 rather than
+a modelling risk.
 
 ### 6.7 `cku` prefers the status over the spec
 
@@ -672,22 +723,31 @@ provisioned count rather than the requested one. That is the intended reading
 but it has not been observed. Confirm on a cluster that is not resizing that
 both agree.
 
-### 6.8 Pagination on the management API
+### 6.8 Pagination on the management API ~~(struck as a modelling risk)~~
 
-The management API walk follows `metadata.next` as an absolute URL and refuses
-a cursor pointing at another host. The `page_size=100` it sends is the
-documented maximum. Unverified: whether `metadata.next` is present on the
-`org/v2`, `iam/v2` and `byok/v1` listings at all, and whether the returned URL
-preserves the `environment=` filter for `cmk/v2`, `srcm/v3` and
-`networking/v1`. **If it does not preserve the filter, page two of a
-per-environment listing would return clusters from every environment**, and the
-`environment` accessor would then attribute them to the wrong environment via
-the fallback. Create more than 100 clusters (or lower `pageSize` in
-`connection/client.go` to 1 for one run) and confirm page two stays scoped.
+**Struck as a modelling risk.** Every `*List` model in the nine adopted modules
+carries the same `ListMeta` with a nullable `next`, and every list endpoint
+returns exactly one page: the generated clients expose `PageSize` and
+`PageToken` as request parameters and hand back a single response, with no walk
+of their own. There is therefore no vendor-supplied pagination we could have
+diverged from, and nothing to inherit. The envelope this provider decodes is the
+one the vendor documents.
 
-Lowering `pageSize` to 1 temporarily is the cheapest way to exercise every
-paginated walk in this provider against a small organization, and is strongly
-recommended.
+**The guards stay ours and stay necessary** (see §8). The seen-set, the page cap,
+the cursor-cycle check and the foreign-host check have no counterpart in the SDK.
+
+The live checks below are **still required**, because they are about what the
+server sends rather than how it is typed:
+
+- whether `metadata.next` is populated at all on `org/v2`, `iam/v2` and `byok/v1`
+- whether the returned URL preserves the `environment=` filter for `cmk/v2`,
+  `srcm/v3` and `networking/v1`. **If it does not, page two of a per-environment
+  listing would return clusters from every environment**, and the `environment`
+  accessor would attribute them to the wrong environment via the fallback.
+
+Lowering `pageSize` in `connection/client.go` to 1 temporarily is still the
+cheapest way to exercise every paginated walk against a small organization, and
+is still strongly recommended.
 
 ### 6.9 Organization identification
 
@@ -713,3 +773,113 @@ place in the schema.
 - [ ] Any field that could not be verified is named explicitly in the PR body as
       unverified. "No live organization was available" is a blocker, not a
       disclaimer to merge past.
+- [ ] Nothing in §8's "why these stay local" table has been quietly adopted on
+      the grounds that the SDK "has one too".
+
+---
+
+## 8. SDK model adoption: hazards and what stays local
+
+The record types carry Confluent's generated models for the nested blocks, from
+nine modules pinned at `org` v0.14.0, `cmk` v0.27.0, `iam` v0.17.0, `apikeys`
+v0.4.0, `mds` v0.4.0, `srcm` v0.7.3, `networking` v0.14.0, `byok` v0.0.9 and
+`kafkarest` v0.25.0. All nine are `v0.x` and Confluent publishes no compatibility
+guarantee for them, so they are pinned exactly and a bump is a review, not a
+routine dependency update.
+
+**What was bought:** vendor-maintained struct tags on the deep, easily-mistyped
+blocks. Nothing else. The transport, the pagination guards, the error
+classifier, the timestamp decoder and the `/api/me` read are all still ours, on
+purpose, and the rest of this section says why so that nobody later "completes"
+the swap and reintroduces what it deliberately avoided.
+
+### The three hazards, and the mitigation each one has
+
+**N1 — a discriminated union that blanks a cluster instead of failing.**
+`cmk@v0.27.0/v2/model_cmk_v2_cluster_spec_config_one_of.go` switches
+`UnmarshalJSON` on the `kind` discriminator across ten cases (five tier names,
+each also in `cmk.v2.`-prefixed form) and, matching none of them, falls off the
+end with a bare `return nil` — every variant nil, no error. A tier Confluent
+adds after this SDK release would silently blank `clusterType`, `cku`,
+`maxEcku` and `zones` on every cluster of that tier.
+
+*Mitigation:* `kafkaClusterRecord.UnmarshalJSON` keeps a sidecar decode of the
+same `spec.config` bytes (`clusterConfigRaw`). `clusterConfigOf` reads the shape
+from the matched variant and falls back **wholly to the sidecar** when nothing
+matched, logging a warning naming the unrecognized kind. Pinned by
+`TestDecodeKafkaClusterUnknownTier`, which fabricates a `"Quantum"` tier and
+asserts the union matched nothing *and* that all four values still read.
+
+**N1b — the same defect in `byok`, found by reading rather than briefed.**
+`byok@v0.0.9/v1/model_byok_v1_key_key_one_of.go:138` is the identical bare
+`return nil` across AwsKey / AzureKey / GcpKey. Adopting it unguarded would
+blank `keyReference` on a self-managed key from a fourth cloud, and would have
+regressed behaviour this provider already promised in a comment and a test.
+
+*Mitigation:* identical. `encryptionKeyRecord.UnmarshalJSON` keeps a
+`keySidecar`, `encryptionKeyDetailOf` falls back to it with a warning. Pinned by
+`TestDecodeEncryptionKeys/an unrecognized kind still reports its reference`.
+
+**N2 — an enum that fails a whole cluster's ACL listing.**
+`kafkarest@v0.25.0/v3/model_acl_resource_type.go` admits exactly seven values
+(`UNKNOWN`, `ANY`, `TOPIC`, `GROUP`, `CLUSTER`, `TRANSACTIONAL_ID`,
+`DELEGATION_TOKEN`) and returns an error for anything else. **Kafka's own `USER`
+resource type is not among them.** A single such entry would fail the decode of
+the page it sits on, and the listing would report a cluster as having no access
+control entries at all.
+
+*Mitigation:* `AclData` and `AclResourceType` are **not adopted**. `aclRecord`
+stays local and `ResourceType` stays a `string`. Pinned by
+`TestDecodeAclUserResourceType`, which decodes a two-entry page containing a
+`USER` ACL and asserts both survive — and which also asserts that the SDK enum
+*does* reject `"USER"`, so the day that stops being true the test says so.
+
+**N3 — every SDK scalar is `*T` with `omitempty`.** A naive port would read the
+pointers directly and turn today's `""` into `null` across roughly forty fields,
+which is a behaviour change dressed as a type change. Every adopted scalar is
+therefore read through its `GetX()` accessor, which yields the zero value for an
+absent field. The `GetXOk()` / pointer form is used only where null-when-absent
+is the deliberate reading: `cku`, `maxEcku`, `status.cku`, `jitEnabled`, a
+topic configuration's sensitive `value`, and the three endpoint-derived exposure
+fields.
+
+`cku` deserves its own note. `CmkV2Dedicated` types it as a **value**
+`int32`, so the union genuinely cannot distinguish a cluster that reported no
+cku from one that reported zero. That is why `clusterConfigOf` takes `cku` from
+the sidecar on any decoded record, and from the variant only for a record built
+in code. Pinned by `TestClusterCku/a decoded cluster with no cku reports none`.
+
+### A fourth hazard, found while testing: the SDK's own secret scrub panics
+
+`IamV2ApiKeySpec.Redact()` is the vendor's answer to the `secret` field, and it
+**cannot be used**. It calls `recurseRedact(o.Resource)` with no nil check; a
+typed-nil `*ObjectReference` satisfies the redactor interface, and
+`ObjectReference.Redact()` then dereferences a nil receiver. A Cloud API key
+carries `"resource": null` by definition, so `Redact()` panics on the most
+common key in any organization — and a panic in a decode takes the whole scan
+down, not one field.
+
+`apiKeyRecord.UnmarshalJSON` clears `Spec.Secret` directly instead, which is
+everything `Redact()` does that matters (every other value it walks is a
+`*string` implementing nothing). `TestSdkRedactPanicsOnACloudApiKey` pins the
+panic so that a future SDK release fixing it is visible rather than assumed.
+
+### Why these stay local
+
+| kept | instead of | because |
+|---|---|---|
+| the `/api/me` read and `auditLogRecord` | nothing | **no module in the SDK models audit log configuration.** All ~45 directories were enumerated. The null-when-undetermined behaviour from `e93b17e` is untouched: an absent block reports `enabled` as null, never `false`, because `enabled: false` on an audited organization is a clean pass on something nobody checked |
+| the four pagination guards in `GetPaged` | nothing | the generated clients return **one page** and expose `PageSize`/`PageToken` as request parameters. There is no walk to inherit, so the seen-set, the page cap, the cursor-cycle check and the foreign-host check (which stops credentials being sent to a host the walk did not start on) have no vendor counterpart |
+| `APIError`, `IsForbidden`, `IsNotFound`, `StatusCode` | the SDK's `GenericOpenAPIError` | classification is on the status the server returned, never on error text, so a transport failure is never mistaken for a definitive answer about absence or permission. A 403 says the caller may not look; only a 404 says the object is not there |
+| `objectMeta` + `confluentTime` | `ObjectMeta` in every module | the generated metadata types time all three timestamps as `*time.Time`, which **fails the decode of the entire object** on a value Go cannot parse — one timestamp taking every other field of the record with it. `confluentTime` warns and reports null. Pinned by `TestSdkObjectMetaFailsWhereConfluentTimeDoesNot`, which asserts four SDK metadata types error on `"yesterday"` where the local one survives |
+| `encryptionKeyValidationRecord` | `ByokV1KeyValidation` | its `Since` is a **bare `time.Time`**, not even a pointer, so an absent validation timestamp decodes to the zero time and reports 1 January year 1 as the moment the key was last checked. That is an invented value where the schema promises null |
+| `networkStatusRecord` | `NetworkingV1NetworkStatus` | it carries `idle_since` as `*time.Time`. This provider exposes no such field, and adopting the block would still let a timestamp it never reads fail the decode of every network in the listing |
+| `aclRecord` | `AclData` | N2 above |
+| `OrganizationRecord`, `serviceAccountRecord`, `userRecord`, `roleBindingRecord` | the matching SDK models | these are flat scalars plus a metadata block. The only thing adoption would change is the metadata, which is the one part being kept, so it would buy nothing and cost the timestamp guarantee |
+
+### If you are here to "finish" the adoption
+
+Every row above is a deliberate exclusion with a test behind it. Before removing
+one, make the corresponding test fail on purpose and read what it says. The
+adoption is finished; what remains local is the part that adopting would have
+broken.

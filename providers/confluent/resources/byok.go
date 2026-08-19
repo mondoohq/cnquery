@@ -5,8 +5,11 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
+	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/confluent/connection"
@@ -16,6 +19,9 @@ import (
 // encryptionKeyDetailRecord is the cloud-specific half of a self-managed key.
 // The API discriminates it by `kind`, and the three shapes share no field of
 // conflicting type, so one struct decodes all of them.
+//
+// It is also the sidecar for the SDK's discriminated union, which is why it
+// survives a kind the union does not recognize. See encryptionKeyDetailOf.
 type encryptionKeyDetailRecord struct {
 	Kind string `json:"kind"`
 
@@ -35,6 +41,12 @@ type encryptionKeyDetailRecord struct {
 	SecurityGroup string `json:"security_group"`
 }
 
+// encryptionKeyValidationRecord is the validation block of a self-managed key.
+//
+// It stays local rather than adopting ByokV1KeyValidation, which types `since`
+// as a bare time.Time. An absent validation timestamp would then decode to the
+// zero time and report 1 January year 1 as the moment the key was last checked,
+// which is an invented value where the schema promises null.
 type encryptionKeyValidationRecord struct {
 	Phase   string        `json:"phase"`
 	Message string        `json:"message"`
@@ -45,11 +57,98 @@ type encryptionKeyValidationRecord struct {
 type encryptionKeyRecord struct {
 	ID          string                         `json:"id"`
 	Metadata    objectMeta                     `json:"metadata"`
-	Key         *encryptionKeyDetailRecord     `json:"key"`
+	Key         *byokv1.ByokV1KeyKeyOneOf      `json:"key"`
 	DisplayName string                         `json:"display_name"`
 	Provider    string                         `json:"provider"`
 	State       string                         `json:"state"`
 	Validation  *encryptionKeyValidationRecord `json:"validation"`
+
+	// keySidecar holds the key block as it arrived, for the same reason the
+	// Kafka cluster keeps one: the union reports no error when it recognizes
+	// nothing.
+	keySidecar *encryptionKeyDetailRecord
+}
+
+// UnmarshalJSON decodes a self-managed key and keeps a second, untyped reading
+// of the cloud-specific key block.
+func (r *encryptionKeyRecord) UnmarshalJSON(data []byte) error {
+	type alias encryptionKeyRecord
+	var decoded alias
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	*r = encryptionKeyRecord(decoded)
+
+	var probe struct {
+		Key json.RawMessage `json:"key"`
+	}
+	if err := json.Unmarshal(data, &probe); err != nil {
+		return err
+	}
+	if len(probe.Key) == 0 {
+		return nil
+	}
+
+	var raw encryptionKeyDetailRecord
+	if err := json.Unmarshal(probe.Key, &raw); err != nil {
+		log.Warn().Err(err).Msg("confluent> could not read the encryption key block")
+		return nil
+	}
+	r.keySidecar = &raw
+	return nil
+}
+
+// encryptionKeyDetailOf resolves the cloud-specific key block.
+//
+// ByokV1KeyKeyOneOf.UnmarshalJSON carries the same shape as the Kafka cluster's
+// config union: it switches on `kind` and, matching none of AwsKey, AzureKey or
+// GcpKey, returns nil with every variant nil and no error. A fourth cloud would
+// blank the key reference on every key it holds, so the sidecar answers instead
+// and says so.
+func encryptionKeyDetailOf(record *encryptionKeyRecord) *encryptionKeyDetailRecord {
+	if record == nil {
+		return &encryptionKeyDetailRecord{}
+	}
+
+	if record.Key != nil {
+		switch {
+		case record.Key.ByokV1AwsKey != nil:
+			key := record.Key.ByokV1AwsKey
+			return &encryptionKeyDetailRecord{
+				Kind:   key.Kind,
+				KeyArn: key.KeyArn,
+				Roles:  key.GetRoles(),
+			}
+		case record.Key.ByokV1AzureKey != nil:
+			key := record.Key.ByokV1AzureKey
+			return &encryptionKeyDetailRecord{
+				Kind:          key.Kind,
+				KeyID:         key.KeyId,
+				KeyVaultID:    key.KeyVaultId,
+				TenantID:      key.TenantId,
+				ApplicationID: key.GetApplicationId(),
+			}
+		case record.Key.ByokV1GcpKey != nil:
+			key := record.Key.ByokV1GcpKey
+			return &encryptionKeyDetailRecord{
+				Kind:          key.Kind,
+				KeyID:         key.KeyId,
+				SecurityGroup: key.GetSecurityGroup(),
+			}
+		}
+
+		kind := ""
+		if record.keySidecar != nil {
+			kind = record.keySidecar.Kind
+		}
+		log.Warn().Str("kind", kind).
+			Msg("confluent> unrecognized encryption key type; reading the key block as it arrived")
+	}
+
+	if record.keySidecar != nil {
+		return record.keySidecar
+	}
+	return &encryptionKeyDetailRecord{}
 }
 
 // keyReferenceOf renders the cloud provider's own name for the key. AWS names a
@@ -85,10 +184,7 @@ func (r *mqlConfluent) encryptionKeys() ([]any, error) {
 	res := make([]any, 0, len(records))
 	for i := range records {
 		record := records[i]
-		detail := record.Key
-		if detail == nil {
-			detail = &encryptionKeyDetailRecord{}
-		}
+		detail := encryptionKeyDetailOf(&record)
 		validation := record.Validation
 		if validation == nil {
 			validation = &encryptionKeyValidationRecord{}

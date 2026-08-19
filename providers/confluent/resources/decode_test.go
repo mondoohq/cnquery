@@ -8,14 +8,21 @@ import (
 	"testing"
 	"time"
 
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // The payloads below are shaped like the documented responses of the Confluent
-// Cloud management API and the per-cluster Kafka REST API. A mistyped struct tag
-// yields a zero value rather than an error, so every security-relevant field is
-// pinned against a payload rather than trusted to the compiler.
+// Cloud management API and the per-cluster Kafka REST API. The record types now
+// carry Confluent's own generated models for the nested blocks, but a struct tag
+// is still what stands between a security-relevant field and a zero value, so
+// every one of them stays pinned against a payload rather than trusted to the
+// vendor.
 
 func TestDecodeOrganization(t *testing.T) {
 	const payload = `{
@@ -69,7 +76,7 @@ func TestDecodeEnvironment(t *testing.T) {
 	assert.Equal(t, "env-abc123", record.ID)
 	assert.Equal(t, "production", record.DisplayName)
 	require.NotNil(t, record.StreamGovernanceConfig)
-	assert.Equal(t, "ADVANCED", record.StreamGovernanceConfig.Package)
+	assert.Equal(t, "ADVANCED", record.StreamGovernanceConfig.GetPackage())
 	assert.Equal(t, "crn://confluent.cloud/organization=o-1/environment=env-abc123", record.Metadata.ResourceName)
 	require.NotNil(t, record.Metadata.UpdatedAt.Time())
 	assert.Equal(t, 2023, record.Metadata.UpdatedAt.Time().Year())
@@ -120,16 +127,18 @@ func TestDecodeKafkaClusterDedicatedWithByok(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
 	require.NotNil(t, record.Spec)
 	assert.Equal(t, "lkc-abc123", record.ID)
-	assert.Equal(t, "prod-kafka", record.Spec.DisplayName)
-	assert.Equal(t, "MULTI_ZONE", record.Spec.Availability)
-	assert.Equal(t, "AWS", record.Spec.Cloud)
-	assert.Equal(t, "us-east-1", record.Spec.Region)
-	require.NotNil(t, record.Spec.Config)
-	assert.Equal(t, "Dedicated", record.Spec.Config.Kind)
-	require.NotNil(t, record.Spec.Config.Cku)
-	assert.EqualValues(t, 2, *record.Spec.Config.Cku)
-	assert.Nil(t, record.Spec.Config.MaxEcku)
-	assert.Equal(t, []string{"use1-az1", "use1-az2", "use1-az4"}, record.Spec.Config.Zones)
+	assert.Equal(t, "prod-kafka", record.Spec.GetDisplayName())
+	assert.Equal(t, "MULTI_ZONE", record.Spec.GetAvailability())
+	assert.Equal(t, "AWS", record.Spec.GetCloud())
+	assert.Equal(t, "us-east-1", record.Spec.GetRegion())
+
+	config := clusterConfigOf(&record)
+	assert.Equal(t, "Dedicated", config.Kind)
+	require.NotNil(t, config.Cku)
+	assert.EqualValues(t, 2, *config.Cku)
+	assert.Nil(t, config.MaxEcku)
+	assert.Equal(t, []string{"use1-az1", "use1-az2", "use1-az4"}, config.Zones)
+
 	require.NotNil(t, record.Spec.DeletionProtection)
 	assert.True(t, *record.Spec.DeletionProtection)
 	assert.Equal(t, "env-1", refID(record.Spec.Environment))
@@ -138,7 +147,7 @@ func TestDecodeKafkaClusterDedicatedWithByok(t *testing.T) {
 	require.NotNil(t, record.Status)
 	assert.Equal(t, "PROVISIONED", record.Status.Phase)
 
-	views := endpointViews(record.Spec.Endpoints)
+	views := endpointViews(record.Spec.GetEndpoints())
 	require.Len(t, views, 2)
 	assert.True(t, hasPublicEndpoint(views))
 	assert.True(t, hasPrivateEndpoint(views))
@@ -167,16 +176,49 @@ func TestDecodeKafkaClusterPrivateLinkOnly(t *testing.T) {
 
 	var record kafkaClusterRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
-	require.NotNil(t, record.Spec.Config)
-	assert.Equal(t, "Enterprise", record.Spec.Config.Kind)
-	require.NotNil(t, record.Spec.Config.MaxEcku)
-	assert.EqualValues(t, 4, *record.Spec.Config.MaxEcku)
-	assert.Nil(t, record.Spec.Config.Cku)
+	config := clusterConfigOf(&record)
+	assert.Equal(t, "Enterprise", config.Kind)
+	require.NotNil(t, config.MaxEcku)
+	assert.EqualValues(t, 4, *config.MaxEcku)
+	assert.Nil(t, config.Cku)
 
-	views := endpointViews(record.Spec.Endpoints)
+	views := endpointViews(record.Spec.GetEndpoints())
 	assert.False(t, hasPublicEndpoint(views))
 	assert.True(t, hasPrivateEndpoint(views))
 	assert.Empty(t, refID(record.Spec.Byok), "a cluster without a self-managed key reports none")
+}
+
+// A cluster tier Confluent adds after this SDK release leaves every variant of
+// the generated union nil, and the union reports no error when that happens.
+// The cluster type, the sizing and the zones must still be read, because
+// reporting them as empty would describe a cluster that has none of the three.
+func TestDecodeKafkaClusterUnknownTier(t *testing.T) {
+	const payload = `{
+      "id": "lkc-future",
+      "spec": {
+        "display_name": "quantum-kafka",
+        "config": {"kind": "Quantum", "cku": 9, "max_ecku": 3, "zones": ["qz-1", "qz-2"]}
+      },
+      "status": {"phase": "PROVISIONED"}
+    }`
+
+	var record kafkaClusterRecord
+	require.NoError(t, json.Unmarshal([]byte(payload), &record))
+	require.NotNil(t, record.Spec.Config, "the union allocates even when it matches nothing")
+	require.Nil(t, configVariant(record.Spec.Config), "no variant may match an unknown tier")
+
+	config := clusterConfigOf(&record)
+	assert.Equal(t, "Quantum", config.Kind)
+	require.NotNil(t, config.Cku)
+	assert.EqualValues(t, 9, *config.Cku)
+	require.NotNil(t, config.MaxEcku)
+	assert.EqualValues(t, 3, *config.MaxEcku)
+	assert.Equal(t, []string{"qz-1", "qz-2"}, config.Zones)
+
+	// The status still wins over the spec, exactly as it does for a known tier.
+	assert.Nil(t, record.Status.Cku)
+	require.NotNil(t, clusterCku(&record))
+	assert.EqualValues(t, 9, *clusterCku(&record))
 }
 
 // A response that predates the endpoints map still carries a single endpoint
@@ -194,9 +236,9 @@ func TestDecodeKafkaClusterLegacyEndpoints(t *testing.T) {
 
 	var record kafkaClusterRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
-	assert.Empty(t, record.Spec.Endpoints)
-	assert.Equal(t, "SASL_SSL://pkc-1.us-east-1.aws.confluent.cloud:9092", record.Spec.LegacyBootstrapEndpoint)
-	assert.Equal(t, "https://pkc-1.us-east-1.aws.confluent.cloud:443", record.Spec.LegacyHTTPEndpoint)
+	assert.Empty(t, record.Spec.GetEndpoints())
+	assert.Equal(t, "SASL_SSL://pkc-1.us-east-1.aws.confluent.cloud:9092", record.Spec.GetKafkaBootstrapEndpoint())
+	assert.Equal(t, "https://pkc-1.us-east-1.aws.confluent.cloud:443", record.Spec.GetHttpEndpoint())
 }
 
 func TestDecodeTopic(t *testing.T) {
@@ -212,7 +254,7 @@ func TestDecodeTopic(t *testing.T) {
 
 	var record topicRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
-	assert.Equal(t, "lkc-abc123", record.ClusterID)
+	assert.Equal(t, "lkc-abc123", record.ClusterId)
 	assert.Equal(t, "payments", record.TopicName)
 	assert.False(t, record.IsInternal)
 	assert.EqualValues(t, 3, record.ReplicationFactor)
@@ -238,8 +280,8 @@ func TestDecodeTopicConfig(t *testing.T) {
 	var record topicConfigRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
 	assert.Equal(t, "min.insync.replicas", record.Name)
-	require.NotNil(t, record.Value)
-	assert.Equal(t, "2", *record.Value)
+	require.NotNil(t, record.Value.Get())
+	assert.Equal(t, "2", *record.Value.Get())
 	assert.False(t, record.IsSensitive)
 	assert.Equal(t, "DYNAMIC_TOPIC_CONFIG", record.Source)
 
@@ -247,7 +289,7 @@ func TestDecodeTopicConfig(t *testing.T) {
 	// distinguishable from a configuration set to the empty string.
 	var sensitive topicConfigRecord
 	require.NoError(t, json.Unmarshal([]byte(`{"name":"ssl.key.password","value":null,"is_sensitive":true}`), &sensitive))
-	assert.Nil(t, sensitive.Value)
+	assert.Nil(t, sensitive.Value.Get())
 	assert.True(t, sensitive.IsSensitive)
 }
 
@@ -275,6 +317,29 @@ func TestDecodeAcl(t *testing.T) {
 	assert.Equal(t, "*", record.Host)
 	assert.Equal(t, "READ", record.Operation)
 	assert.Equal(t, "ALLOW", record.Permission)
+}
+
+// Kafka's USER resource type is not one of the seven values the generated
+// AclResourceType enum admits, and that enum errors rather than passing an
+// unknown value through. One such entry would therefore fail the decode of the
+// page it sits on and report a cluster as having no access control entries at
+// all, so the listing keeps its own string-typed resource type.
+func TestDecodeAclUserResourceType(t *testing.T) {
+	const page = `[
+      {"cluster_id":"lkc-1","resource_type":"USER","resource_name":"sa-1","pattern_type":"LITERAL","principal":"User:sa-1","host":"*","operation":"DESCRIBE","permission":"ALLOW"},
+      {"cluster_id":"lkc-1","resource_type":"TOPIC","resource_name":"payments","pattern_type":"LITERAL","principal":"User:sa-2","host":"*","operation":"READ","permission":"ALLOW"}
+    ]`
+
+	var records []aclRecord
+	require.NoError(t, json.Unmarshal([]byte(page), &records))
+	require.Len(t, records, 2, "one unrecognized resource type must not blind the listing")
+	assert.Equal(t, "USER", records[0].ResourceType)
+	assert.Equal(t, "TOPIC", records[1].ResourceType)
+
+	// The reason the enum is not adopted, pinned against the SDK itself.
+	var resourceType kafkarestv3.AclResourceType
+	require.Error(t, json.Unmarshal([]byte(`"USER"`), &resourceType),
+		"if this ever succeeds, the enum has grown USER and adopting AclData becomes safe")
 }
 
 func TestDecodeApiKey(t *testing.T) {
@@ -312,12 +377,17 @@ func TestDecodeApiKey(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
 	require.NotNil(t, record.Spec)
 	assert.Equal(t, "ABCDEFGHIJKLMNOP", record.ID)
-	assert.Equal(t, "ci-producer", record.Spec.DisplayName)
-	assert.Equal(t, "used by CI", record.Spec.Description)
+	assert.Equal(t, "ci-producer", record.Spec.GetDisplayName())
+	assert.Equal(t, "used by CI", record.Spec.GetDescription())
 	assert.Equal(t, "sa-abc123", refID(record.Spec.Owner))
 	assert.Equal(t, "ServiceAccount", ownerKindOf(record.Spec.Owner))
-	assert.Equal(t, "lkc-abc123", refID(record.Spec.scopedResource()))
-	assert.Equal(t, "cmk.v2.Cluster", referenceKind(record.Spec.scopedResource()))
+	assert.Equal(t, "lkc-abc123", refID(scopedResource(record.Spec)))
+	assert.Equal(t, "cmk.v2.Cluster", referenceKind(scopedResource(record.Spec)))
+
+	// The generated spec carries a `secret` field because the create response
+	// does, so the decode drops it at the boundary. Nothing downstream can read
+	// what is no longer there.
+	assert.Nil(t, record.Spec.Secret, "the secret must not survive the decode")
 
 	// The key secret must never reach any field this provider exposes. Nothing
 	// in the decoded record may carry it, so re-encoding the record is a
@@ -325,6 +395,26 @@ func TestDecodeApiKey(t *testing.T) {
 	encoded, err := json.Marshal(record)
 	require.NoError(t, err)
 	assert.NotContains(t, string(encoded), "SUPER-SECRET-VALUE")
+
+	// Dropping the secret must not take anything else with it.
+	assert.Equal(t, "ci-producer", record.Spec.GetDisplayName())
+	assert.Equal(t, "iam/v2", record.Spec.Owner.GetApiVersion())
+	assert.Equal(t, "crn://confluent.cloud/service-account=sa-abc123", record.Spec.Owner.ResourceName)
+}
+
+// The SDK's own Redact method is the obvious way to drop the secret, and it
+// panics on a spec whose `resource` is null. That is every Cloud API key, so it
+// is not usable here. If a later SDK release nil-checks the recursion this can
+// be reconsidered; until then the decode clears the field itself.
+func TestSdkRedactPanicsOnACloudApiKey(t *testing.T) {
+	secret := "SUPER-SECRET-VALUE"
+	spec := &apikeysv2.IamV2ApiKeySpec{
+		Secret: &secret,
+		Owner:  &apikeysv2.ObjectReference{Id: "u-abc123"},
+		// A Cloud API key is scoped to no resource, which is what makes it one.
+		Resource: nil,
+	}
+	assert.Panics(t, func() { spec.Redact() })
 }
 
 // A Cloud API key carries no scoped resource at all, which is what separates an
@@ -341,9 +431,9 @@ func TestDecodeCloudApiKey(t *testing.T) {
 
 	var record apiKeyRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
-	assert.Nil(t, record.Spec.scopedResource())
+	assert.Nil(t, scopedResource(record.Spec))
 	assert.Equal(t, "User", ownerKindOf(record.Spec.Owner))
-	assert.Empty(t, referenceKind(record.Spec.scopedResource()))
+	assert.Empty(t, referenceKind(scopedResource(record.Spec)))
 }
 
 // Newer responses carry a `resources` list alongside the singular reference,
@@ -361,8 +451,8 @@ func TestDecodeApiKeyWithResourcesList(t *testing.T) {
 
 	var record apiKeyRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
-	assert.Equal(t, "lsrc-1", refID(record.Spec.scopedResource()))
-	assert.Equal(t, "srcm.v3.Cluster", referenceKind(record.Spec.scopedResource()))
+	assert.Equal(t, "lsrc-1", refID(scopedResource(record.Spec)))
+	assert.Equal(t, "srcm.v3.Cluster", referenceKind(scopedResource(record.Spec)))
 }
 
 func TestDecodeRoleBinding(t *testing.T) {
@@ -436,13 +526,13 @@ func TestDecodeSchemaRegistryCluster(t *testing.T) {
 	var record schemaRegistryRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
 	require.NotNil(t, record.Spec)
-	assert.Equal(t, "ADVANCED", record.Spec.Package)
-	assert.Equal(t, "https://psrc-1.us-east-2.aws.confluent.cloud", record.Spec.HTTPEndpoint)
-	assert.Equal(t, "https://psrc-1.us-east-2.aws.confluent.cloud/catalog", record.Spec.CatalogHTTPEndpoint)
-	assert.Equal(t, "https://lsrc-abc123.us-east-2.aws.private.confluent.cloud", record.Spec.PrivateHTTPEndpoint)
+	assert.Equal(t, "ADVANCED", record.Spec.GetPackage())
+	assert.Equal(t, "https://psrc-1.us-east-2.aws.confluent.cloud", record.Spec.GetHttpEndpoint())
+	assert.Equal(t, "https://psrc-1.us-east-2.aws.confluent.cloud/catalog", record.Spec.GetCatalogHttpEndpoint())
+	assert.Equal(t, "https://lsrc-abc123.us-east-2.aws.private.confluent.cloud", record.Spec.GetPrivateHttpEndpoint())
 	require.NotNil(t, record.Spec.PrivateNetworkingConfig)
 	assert.Equal(t, map[string]string{"us-east-2": "https://lsrc-abc123.us-east-2.aws.private.confluent.cloud"},
-		record.Spec.PrivateNetworkingConfig.RegionalEndpoints)
+		record.Spec.PrivateNetworkingConfig.GetRegionalEndpoints())
 	assert.Equal(t, "env-abc123", refID(record.Spec.Environment))
 	require.NotNil(t, record.Status)
 	assert.Equal(t, "PROVISIONED", record.Status.Phase)
@@ -475,10 +565,10 @@ func TestDecodeNetwork(t *testing.T) {
 	var record networkRecord
 	require.NoError(t, json.Unmarshal([]byte(payload), &record))
 	require.NotNil(t, record.Spec)
-	assert.Equal(t, "prod-aws-us-east1", record.Spec.DisplayName)
-	assert.Equal(t, "10.200.0.0/16", record.Spec.Cidr)
-	assert.Equal(t, []string{"PRIVATELINK"}, record.Spec.ConnectionTypes)
-	assert.Equal(t, []string{"use1-az1", "use1-az2", "use1-az3"}, record.Spec.Zones)
+	assert.Equal(t, "prod-aws-us-east1", record.Spec.GetDisplayName())
+	assert.Equal(t, "10.200.0.0/16", record.Spec.GetCidr())
+	assert.Equal(t, []string{"PRIVATELINK"}, record.Spec.GetConnectionTypes())
+	assert.Equal(t, []string{"use1-az1", "use1-az2", "use1-az3"}, record.Spec.GetZones())
 	require.NotNil(t, record.Spec.DnsConfig)
 	assert.Equal(t, "PRIVATE", record.Spec.DnsConfig.Resolution)
 	assert.Equal(t, "env-abc123", refID(record.Spec.Environment))
@@ -506,10 +596,11 @@ func TestDecodeEncryptionKeys(t *testing.T) {
 
 		var record encryptionKeyRecord
 		require.NoError(t, json.Unmarshal([]byte(payload), &record))
-		require.NotNil(t, record.Key)
-		assert.Equal(t, "AwsKey", record.Key.Kind)
-		assert.Equal(t, "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", keyReferenceOf(record.Key))
-		assert.Equal(t, []string{"arn:aws:iam::123456789876:role/block_storage_manager"}, record.Key.Roles)
+		detail := encryptionKeyDetailOf(&record)
+		require.NotNil(t, detail)
+		assert.Equal(t, "AwsKey", detail.Kind)
+		assert.Equal(t, "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab", keyReferenceOf(detail))
+		assert.Equal(t, []string{"arn:aws:iam::123456789876:role/block_storage_manager"}, detail.Roles)
 		assert.Equal(t, "AWS", record.Provider)
 		assert.Equal(t, "IN_USE", record.State)
 		require.NotNil(t, record.Validation)
@@ -534,10 +625,11 @@ func TestDecodeEncryptionKeys(t *testing.T) {
 
 		var record encryptionKeyRecord
 		require.NoError(t, json.Unmarshal([]byte(payload), &record))
-		assert.Equal(t, "https://vault-name.vault.azure.net/keys/key-name", keyReferenceOf(record.Key))
-		assert.Equal(t, "/subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/vault-name", record.Key.KeyVaultID)
-		assert.Equal(t, "00000000-0000-0000-0000-000000000000", record.Key.TenantID)
-		assert.Equal(t, "app-1", record.Key.ApplicationID)
+		detail := encryptionKeyDetailOf(&record)
+		assert.Equal(t, "https://vault-name.vault.azure.net/keys/key-name", keyReferenceOf(detail))
+		assert.Equal(t, "/subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/vault-name", detail.KeyVaultID)
+		assert.Equal(t, "00000000-0000-0000-0000-000000000000", detail.TenantID)
+		assert.Equal(t, "app-1", detail.ApplicationID)
 		assert.Equal(t, "INVALID", record.Validation.Phase)
 		assert.Equal(t, "Access to key denied.", record.Validation.Message)
 	})
@@ -556,9 +648,33 @@ func TestDecodeEncryptionKeys(t *testing.T) {
 
 		var record encryptionKeyRecord
 		require.NoError(t, json.Unmarshal([]byte(payload), &record))
-		assert.Equal(t, "projects/p/locations/us-central1/keyRings/kr/cryptoKeys/k/cryptoKeyVersions/3", keyReferenceOf(record.Key))
-		assert.Equal(t, "testgroupid@domain.com", record.Key.SecurityGroup)
+		detail := encryptionKeyDetailOf(&record)
+		assert.Equal(t, "projects/p/locations/us-central1/keyRings/kr/cryptoKeys/k/cryptoKeyVersions/3", keyReferenceOf(detail))
+		assert.Equal(t, "testgroupid@domain.com", detail.SecurityGroup)
 		assert.Nil(t, record.Validation, "a key with no validation block must not report one")
+	})
+
+	// The key union carries the same shape as the cluster config union: a kind
+	// it does not recognize leaves every variant nil and reports no error. A
+	// fourth cloud provider must not blank the key reference on every key.
+	t.Run("an unrecognized kind still reports its reference", func(t *testing.T) {
+		const payload = `{
+          "id": "cck-future",
+          "key": {"kind": "QuantumKey", "key_id": "quantum://vault/keys/k1"},
+          "provider": "Quantum",
+          "state": "AVAILABLE"
+        }`
+
+		var record encryptionKeyRecord
+		require.NoError(t, json.Unmarshal([]byte(payload), &record))
+		require.NotNil(t, record.Key, "the union allocates even when it matches nothing")
+		assert.Nil(t, record.Key.ByokV1AwsKey)
+		assert.Nil(t, record.Key.ByokV1AzureKey)
+		assert.Nil(t, record.Key.ByokV1GcpKey)
+
+		detail := encryptionKeyDetailOf(&record)
+		assert.Equal(t, "QuantumKey", detail.Kind)
+		assert.Equal(t, "quantum://vault/keys/k1", keyReferenceOf(detail))
 	})
 }
 
@@ -690,5 +806,33 @@ func TestConfluentTimeDecoding(t *testing.T) {
 	t.Run("a non-string timestamp is an error", func(t *testing.T) {
 		var h holder
 		require.Error(t, json.Unmarshal([]byte(`{"at":12345}`), &h))
+	})
+}
+
+// The metadata block keeps a local type on every record, and this is why: the
+// generated ObjectMeta types time their three timestamps as *time.Time, which
+// fails the decode of the entire object when a value arrives in a shape Go
+// cannot parse. One timestamp would take every other field of the record with
+// it. If any of these ever stops erroring, the corresponding metadata block
+// becomes safe to adopt.
+func TestSdkObjectMetaFailsWhereConfluentTimeDoesNot(t *testing.T) {
+	const malformed = `{"created_at": "yesterday"}`
+
+	sdkMetadata := map[string]any{
+		"cmk/v2":     &cmkv2.ObjectMeta{},
+		"iam/v2":     &iamv2.ObjectMeta{},
+		"mds/v2":     &mdsv2.ObjectMeta{},
+		"apikeys/v2": &apikeysv2.ObjectMeta{},
+	}
+	for name, target := range sdkMetadata {
+		t.Run(name, func(t *testing.T) {
+			assert.Error(t, json.Unmarshal([]byte(malformed), target))
+		})
+	}
+
+	t.Run("local", func(t *testing.T) {
+		var local objectMeta
+		require.NoError(t, json.Unmarshal([]byte(malformed), &local))
+		assert.Nil(t, local.CreatedAt.Time(), "the record survives; the one field reports null")
 	})
 }

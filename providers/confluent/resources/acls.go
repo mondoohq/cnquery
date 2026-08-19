@@ -22,6 +22,14 @@ type mqlConfluentAclInternal struct {
 }
 
 // aclRecord is one entry of a cluster's access control listing.
+//
+// This stays local, and `ResourceType` deliberately stays a string, rather than
+// adopting kafkarest's AclData and its AclResourceType. That enum admits seven
+// values (UNKNOWN, ANY, TOPIC, GROUP, CLUSTER, TRANSACTIONAL_ID and
+// DELEGATION_TOKEN) and returns an error for anything else. Kafka's own USER
+// resource type is not among them, so a single such entry would fail the decode
+// of the page it sits on and take an entire cluster's ACL listing with it,
+// reporting no access control entries at all on a cluster that has them.
 type aclRecord struct {
 	ClusterID    string `json:"cluster_id"`
 	ResourceType string `json:"resource_type"`

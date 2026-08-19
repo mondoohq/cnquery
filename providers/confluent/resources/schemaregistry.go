@@ -7,6 +7,7 @@ import (
 	"context"
 	"net/url"
 
+	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/confluent/connection"
@@ -19,27 +20,11 @@ type mqlConfluentSchemaRegistryClusterInternal struct {
 	cachedEnvironmentID string
 }
 
-type schemaRegistrySpecRecord struct {
-	DisplayName             string           `json:"display_name"`
-	Package                 string           `json:"package"`
-	HTTPEndpoint            string           `json:"http_endpoint"`
-	CatalogHTTPEndpoint     string           `json:"catalog_http_endpoint"`
-	PrivateHTTPEndpoint     string           `json:"private_http_endpoint"`
-	Cloud                   string           `json:"cloud"`
-	Region                  string           `json:"region"`
-	Environment             *objectReference `json:"environment"`
-	PrivateNetworkingConfig *struct {
-		RegionalEndpoints map[string]string `json:"regional_endpoints"`
-	} `json:"private_networking_config"`
-}
-
 type schemaRegistryRecord struct {
-	ID       string                    `json:"id"`
-	Metadata objectMeta                `json:"metadata"`
-	Spec     *schemaRegistrySpecRecord `json:"spec"`
-	Status   *struct {
-		Phase string `json:"phase"`
-	} `json:"status"`
+	ID       string                      `json:"id"`
+	Metadata objectMeta                  `json:"metadata"`
+	Spec     *srcmv3.SrcmV3ClusterSpec   `json:"spec"`
+	Status   *srcmv3.SrcmV3ClusterStatus `json:"status"`
 }
 
 func (r *mqlConfluent) schemaRegistryClusters() ([]any, error) {
@@ -76,12 +61,12 @@ func (r *mqlConfluent) schemaRegistryClusters() ([]any, error) {
 			record := records[i]
 			spec := record.Spec
 			if spec == nil {
-				spec = &schemaRegistrySpecRecord{}
+				spec = &srcmv3.SrcmV3ClusterSpec{}
 			}
 
 			regional := map[string]string{}
-			if spec.PrivateNetworkingConfig != nil {
-				regional = spec.PrivateNetworkingConfig.RegionalEndpoints
+			if config := spec.PrivateNetworkingConfig; config != nil {
+				regional = config.GetRegionalEndpoints()
 			}
 
 			phase := ""
@@ -92,16 +77,16 @@ func (r *mqlConfluent) schemaRegistryClusters() ([]any, error) {
 			mqlCluster, err := CreateResource(r.MqlRuntime, "confluent.schemaRegistryCluster", map[string]*llx.RawData{
 				"__id":                     llx.StringData(record.ID),
 				"id":                       llx.StringData(record.ID),
-				"displayName":              llx.StringData(spec.DisplayName),
+				"displayName":              llx.StringData(spec.GetDisplayName()),
 				"resourceName":             llx.StringData(record.Metadata.ResourceName),
-				"streamGovernancePackage":  llx.StringData(spec.Package),
-				"cloud":                    llx.StringData(spec.Cloud),
-				"region":                   llx.StringData(spec.Region),
-				"httpEndpoint":             llx.StringData(spec.HTTPEndpoint),
-				"catalogHttpEndpoint":      llx.StringData(spec.CatalogHTTPEndpoint),
-				"privateHttpEndpoint":      llx.StringData(spec.PrivateHTTPEndpoint),
+				"streamGovernancePackage":  llx.StringData(spec.GetPackage()),
+				"cloud":                    llx.StringData(spec.GetCloud()),
+				"region":                   llx.StringData(spec.GetRegion()),
+				"httpEndpoint":             llx.StringData(spec.GetHttpEndpoint()),
+				"catalogHttpEndpoint":      llx.StringData(spec.GetCatalogHttpEndpoint()),
+				"privateHttpEndpoint":      llx.StringData(spec.GetPrivateHttpEndpoint()),
 				"privateRegionalEndpoints": llx.MapData(strMapToAny(regional), types.String),
-				"isPublic":                 llx.BoolData(spec.HTTPEndpoint != ""),
+				"isPublic":                 llx.BoolData(spec.GetHttpEndpoint() != ""),
 				"phase":                    llx.StringData(phase),
 				"createdAt":                llx.TimeDataPtr(record.Metadata.CreatedAt.Time()),
 				"updatedAt":                llx.TimeDataPtr(record.Metadata.UpdatedAt.Time()),

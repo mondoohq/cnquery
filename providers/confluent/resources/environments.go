@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/confluent/connection"
@@ -13,12 +14,10 @@ import (
 
 // environmentRecord is one entry of the environments listing.
 type environmentRecord struct {
-	ID                     string     `json:"id"`
-	DisplayName            string     `json:"display_name"`
-	Metadata               objectMeta `json:"metadata"`
-	StreamGovernanceConfig *struct {
-		Package string `json:"package"`
-	} `json:"stream_governance_config"`
+	ID                     string                             `json:"id"`
+	DisplayName            string                             `json:"display_name"`
+	Metadata               objectMeta                         `json:"metadata"`
+	StreamGovernanceConfig *orgv2.OrgV2StreamGovernanceConfig `json:"stream_governance_config"`
 }
 
 func (r *mqlConfluent) environments() ([]any, error) {
@@ -38,8 +37,8 @@ func (r *mqlConfluent) environments() ([]any, error) {
 		record := records[i]
 
 		governance := llx.NilData
-		if record.StreamGovernanceConfig != nil && record.StreamGovernanceConfig.Package != "" {
-			governance = llx.StringData(record.StreamGovernanceConfig.Package)
+		if pkg := record.StreamGovernanceConfig.GetPackage(); pkg != "" {
+			governance = llx.StringData(pkg)
 		}
 
 		mqlEnv, err := CreateResource(r.MqlRuntime, "confluent.environment", map[string]*llx.RawData{

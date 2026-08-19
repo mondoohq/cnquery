@@ -5,10 +5,12 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"strings"
 	"time"
 
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/confluent/connection"
@@ -174,33 +176,52 @@ type mqlConfluentApiKeyInternal struct {
 	cachedResourceID string
 }
 
-type apiKeySpecRecord struct {
-	DisplayName string            `json:"display_name"`
-	Description string            `json:"description"`
-	Owner       *objectReference  `json:"owner"`
-	Resource    *objectReference  `json:"resource"`
-	Resources   []objectReference `json:"resources"`
+type apiKeyRecord struct {
+	ID       string                     `json:"id"`
+	Metadata objectMeta                 `json:"metadata"`
+	Spec     *apikeysv2.IamV2ApiKeySpec `json:"spec"`
 }
 
-type apiKeyRecord struct {
-	ID       string            `json:"id"`
-	Metadata objectMeta        `json:"metadata"`
-	Spec     *apiKeySpecRecord `json:"spec"`
+// UnmarshalJSON decodes an API key and drops its secret at the boundary.
+//
+// The listing does not return one, but IamV2ApiKeySpec carries a `secret` field
+// because the create response does, and this provider must never hold key
+// material it could then publish. Clearing it here means no later reader can
+// reach it, whatever the endpoint sent.
+//
+// The SDK ships a Redact method for this, and it cannot be used: it recurses
+// into the spec's object references without a nil check, and a Cloud API key
+// carries `"resource": null` by definition, so Redact panics on the most common
+// key in any organization. Clearing the one field is what Redact does anyway,
+// since every other value it walks is a *string that implements nothing.
+func (r *apiKeyRecord) UnmarshalJSON(data []byte) error {
+	// The alias sheds the methods, which is what stops this recursing.
+	type alias apiKeyRecord
+	var decoded alias
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	*r = apiKeyRecord(decoded)
+	if r.Spec != nil {
+		r.Spec.Secret = nil
+	}
+	return nil
 }
 
 // scopedResource returns the resource an API key opens. Newer responses carry a
 // `resources` list alongside the single `resource`, so both are read and the
 // singular one wins where present.
-func (s *apiKeySpecRecord) scopedResource() *objectReference {
-	if s == nil {
+func scopedResource(spec *apikeysv2.IamV2ApiKeySpec) *apikeysv2.ObjectReference {
+	if spec == nil {
 		return nil
 	}
-	if s.Resource != nil && s.Resource.ID != "" {
-		return s.Resource
+	if spec.Resource != nil && spec.Resource.Id != "" {
+		return spec.Resource
 	}
-	for i := range s.Resources {
-		if s.Resources[i].ID != "" {
-			return &s.Resources[i]
+	resources := spec.GetResources()
+	for i := range resources {
+		if resources[i].Id != "" {
+			return &resources[i]
 		}
 	}
 	return nil
@@ -209,26 +230,26 @@ func (s *apiKeySpecRecord) scopedResource() *objectReference {
 // referenceKind renders an object reference as the fully qualified kind the
 // management API uses, for example "cmk.v2.Cluster". A reference missing either
 // half yields the empty string rather than a half-formed kind.
-func referenceKind(ref *objectReference) string {
-	if ref == nil || ref.APIVersion == "" || ref.Kind == "" {
+func referenceKind(ref *apikeysv2.ObjectReference) string {
+	if ref == nil || ref.GetApiVersion() == "" || ref.GetKind() == "" {
 		return ""
 	}
-	return strings.ReplaceAll(ref.APIVersion, "/", ".") + "." + ref.Kind
+	return strings.ReplaceAll(ref.GetApiVersion(), "/", ".") + "." + ref.GetKind()
 }
 
 // ownerKindOf names the kind of principal that owns a key. The reference
 // usually carries it, and the identifier prefix answers it when it does not.
-func ownerKindOf(ref *objectReference) string {
+func ownerKindOf(ref *apikeysv2.ObjectReference) string {
 	if ref == nil {
 		return ""
 	}
-	if ref.Kind != "" {
-		return ref.Kind
+	if kind := ref.GetKind(); kind != "" {
+		return kind
 	}
 	switch {
-	case strings.HasPrefix(ref.ID, "sa-"):
+	case strings.HasPrefix(ref.GetId(), "sa-"):
 		return "ServiceAccount"
-	case strings.HasPrefix(ref.ID, "u-"):
+	case strings.HasPrefix(ref.GetId(), "u-"):
 		return "User"
 	default:
 		return ""
@@ -253,15 +274,15 @@ func (r *mqlConfluent) apiKeys() ([]any, error) {
 		record := records[i]
 		spec := record.Spec
 		if spec == nil {
-			spec = &apiKeySpecRecord{}
+			spec = &apikeysv2.IamV2ApiKeySpec{}
 		}
-		resource := spec.scopedResource()
+		resource := scopedResource(spec)
 
 		mqlKey, err := CreateResource(r.MqlRuntime, "confluent.apiKey", map[string]*llx.RawData{
 			"__id":         llx.StringData(record.ID),
 			"id":           llx.StringData(record.ID),
-			"displayName":  llx.StringData(spec.DisplayName),
-			"description":  llx.StringData(spec.Description),
+			"displayName":  llx.StringData(spec.GetDisplayName()),
+			"description":  llx.StringData(spec.GetDescription()),
 			"resourceName": llx.StringData(record.Metadata.ResourceName),
 			"createdAt":    llx.TimeDataPtr(record.Metadata.CreatedAt.Time()),
 			"updatedAt":    llx.TimeDataPtr(record.Metadata.UpdatedAt.Time()),

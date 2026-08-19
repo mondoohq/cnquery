@@ -63,6 +63,12 @@ func getConfluent(runtime *plugin.Runtime) (*mqlConfluent, error) {
 // --- shared record shapes -------------------------------------------------
 
 // objectMeta is the metadata block every management API object carries.
+//
+// This stays local rather than adopting the SDK's ObjectMeta, which types its
+// three timestamps as *time.Time. A value the API renders in a shape Go cannot
+// parse then fails the whole record, taking every other field of a resource
+// down with one timestamp. confluentTime warns and reports null instead, so a
+// changed timestamp costs one field rather than an entire listing.
 type objectMeta struct {
 	Self         string        `json:"self"`
 	ResourceName string        `json:"resource_name"`
@@ -71,24 +77,14 @@ type objectMeta struct {
 	DeletedAt    confluentTime `json:"deleted_at"`
 }
 
-// objectReference is how one management API object points at another. Only the
-// identifier is used here; the related URL and the CRN restate it.
-type objectReference struct {
-	ID           string `json:"id"`
-	Environment  string `json:"environment"`
-	Related      string `json:"related"`
-	ResourceName string `json:"resource_name"`
-	APIVersion   string `json:"api_version"`
-	Kind         string `json:"kind"`
-}
-
 // refID returns the identifier of an optional reference, or the empty string
 // when the object carries no reference at all.
-func refID(ref *objectReference) string {
-	if ref == nil {
-		return ""
-	}
-	return ref.ID
+//
+// Every management API module ships its own reference type, and a Kafka cluster
+// alone points at three of them. They agree on one thing: a GetId that answers
+// safely on a nil pointer, which is what lets one helper serve all of them.
+func refID[T interface{ GetId() string }](ref T) string {
+	return ref.GetId()
 }
 
 // confluentTime decodes a management API timestamp, which arrives as an RFC

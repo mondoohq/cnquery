@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/confluent/connection"
@@ -26,24 +27,12 @@ type mqlConfluentTopicInternal struct {
 }
 
 // topicRecord is one entry of a cluster's topic listing.
-type topicRecord struct {
-	ClusterID         string `json:"cluster_id"`
-	TopicName         string `json:"topic_name"`
-	IsInternal        bool   `json:"is_internal"`
-	ReplicationFactor int32  `json:"replication_factor"`
-	PartitionsCount   int32  `json:"partitions_count"`
-}
+type topicRecord = kafkarestv3.TopicData
 
 // topicConfigRecord is one entry of a topic's configuration listing. A
-// configuration the broker marks as sensitive carries a null value.
-type topicConfigRecord struct {
-	Name        string  `json:"name"`
-	Value       *string `json:"value"`
-	IsDefault   bool    `json:"is_default"`
-	IsReadOnly  bool    `json:"is_read_only"`
-	IsSensitive bool    `json:"is_sensitive"`
-	Source      string  `json:"source"`
-}
+// configuration the broker marks as sensitive carries a null value, which the
+// SDK's NullableString keeps distinguishable from one set to the empty string.
+type topicConfigRecord = kafkarestv3.TopicConfigData
 
 // topicID builds the cache key of a topic. The topic name alone is not unique
 // across an organization, since two clusters may both hold a topic of the same
@@ -139,11 +128,12 @@ func (r *mqlConfluentTopic) fetchConfigs() (map[string]string, error) {
 		// A sensitive configuration comes back with a null value. Recording the
 		// name with an empty value keeps the configuration visible without
 		// claiming it is set to nothing.
-		if record.Value == nil {
+		value := record.Value.Get()
+		if value == nil {
 			out[record.Name] = ""
 			continue
 		}
-		out[record.Name] = *record.Value
+		out[record.Name] = *value
 	}
 	return out, nil
 }

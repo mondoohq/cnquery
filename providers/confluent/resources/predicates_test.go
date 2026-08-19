@@ -4,9 +4,12 @@
 package resources
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"
@@ -15,10 +18,10 @@ import (
 // --- cluster endpoints ----------------------------------------------------
 
 func TestEndpointViewsAreStableAndCarryTheAccessPoint(t *testing.T) {
-	views := endpointViews(map[string]clusterEndpointRecord{
-		"zzz":    {ConnectionType: "PRIVATE_LINK", KafkaBootstrapEndpoint: "z:9092", HTTPEndpoint: "https://z"},
-		"PUBLIC": {ConnectionType: "PUBLIC", KafkaBootstrapEndpoint: "p:9092", HTTPEndpoint: "https://p"},
-		"aaa":    {ConnectionType: "PRIVATE_NETWORK_INTERFACE", KafkaBootstrapEndpoint: "a:9092", HTTPEndpoint: "https://a"},
+	views := endpointViews(map[string]cmkv2.CmkV2Endpoints{
+		"zzz":    {ConnectionType: "PRIVATE_LINK", KafkaBootstrapEndpoint: "z:9092", HttpEndpoint: "https://z"},
+		"PUBLIC": {ConnectionType: "PUBLIC", KafkaBootstrapEndpoint: "p:9092", HttpEndpoint: "https://p"},
+		"aaa":    {ConnectionType: "PRIVATE_NETWORK_INTERFACE", KafkaBootstrapEndpoint: "a:9092", HttpEndpoint: "https://a"},
 	})
 
 	// Map iteration order is random, so the flattening has to impose one or the
@@ -28,7 +31,7 @@ func TestEndpointViewsAreStableAndCarryTheAccessPoint(t *testing.T) {
 	assert.Equal(t, "https://p", views[0].HTTPEndpoint)
 
 	assert.Nil(t, endpointViews(nil))
-	assert.Nil(t, endpointViews(map[string]clusterEndpointRecord{}))
+	assert.Nil(t, endpointViews(map[string]cmkv2.CmkV2Endpoints{}))
 }
 
 func TestPreferredEndpoint(t *testing.T) {
@@ -85,10 +88,18 @@ func TestClusterCku(t *testing.T) {
 	two := int32(2)
 	four := int32(4)
 
+	dedicated := func(cku int32) *cmkv2.CmkV2ClusterSpec {
+		return &cmkv2.CmkV2ClusterSpec{
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
+			},
+		}
+	}
+
 	t.Run("the provisioned count wins over the requested one", func(t *testing.T) {
 		record := &kafkaClusterRecord{
-			Spec:   &clusterSpecRecord{Config: &clusterConfigRecord{Cku: &four}},
-			Status: &clusterStatusRecord{Cku: &two},
+			Spec:   dedicated(four),
+			Status: &cmkv2.CmkV2ClusterStatus{Cku: &two},
 		}
 		require.NotNil(t, clusterCku(record))
 		assert.EqualValues(t, 2, *clusterCku(record))
@@ -96,18 +107,34 @@ func TestClusterCku(t *testing.T) {
 
 	t.Run("the spec answers when the status carries no count", func(t *testing.T) {
 		record := &kafkaClusterRecord{
-			Spec:   &clusterSpecRecord{Config: &clusterConfigRecord{Cku: &four}},
-			Status: &clusterStatusRecord{},
+			Spec:   dedicated(four),
+			Status: &cmkv2.CmkV2ClusterStatus{},
 		}
 		require.NotNil(t, clusterCku(record))
 		assert.EqualValues(t, 4, *clusterCku(record))
 	})
 
 	t.Run("a cluster type without units reports none", func(t *testing.T) {
-		record := &kafkaClusterRecord{Spec: &clusterSpecRecord{Config: &clusterConfigRecord{Kind: "Basic"}}}
+		record := &kafkaClusterRecord{Spec: &cmkv2.CmkV2ClusterSpec{
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+			},
+		}}
 		assert.Nil(t, clusterCku(record))
 		assert.Nil(t, clusterCku(nil))
 		assert.Nil(t, clusterCku(&kafkaClusterRecord{}))
+	})
+
+	// A Dedicated cluster that reports no cku at all must stay null rather than
+	// reading as a cluster sized at zero. The generated variant types cku as a
+	// value and cannot carry that distinction, which is why the decode keeps a
+	// second reading of the block.
+	t.Run("a decoded cluster with no cku reports none", func(t *testing.T) {
+		var record kafkaClusterRecord
+		require.NoError(t, json.Unmarshal(
+			[]byte(`{"id":"lkc-1","spec":{"config":{"kind":"Dedicated","zones":["z1"]}}}`), &record))
+		assert.Nil(t, clusterCku(&record))
+		assert.Equal(t, "Dedicated", clusterConfigOf(&record).Kind)
 	})
 }
 
@@ -397,29 +424,48 @@ func TestCRNScopeShapes(t *testing.T) {
 
 // --- object references ----------------------------------------------------
 
+// apiKeyRef builds the reference shape the API key spec carries, whose optional
+// halves the SDK types as pointers.
+func apiKeyRef(id, apiVersion, kind string) *apikeysv2.ObjectReference {
+	ref := &apikeysv2.ObjectReference{Id: id}
+	if apiVersion != "" {
+		ref.ApiVersion = &apiVersion
+	}
+	if kind != "" {
+		ref.Kind = &kind
+	}
+	return ref
+}
+
 func TestReferenceKind(t *testing.T) {
-	assert.Equal(t, "cmk.v2.Cluster", referenceKind(&objectReference{APIVersion: "cmk/v2", Kind: "Cluster"}))
-	assert.Equal(t, "srcm.v3.Cluster", referenceKind(&objectReference{APIVersion: "srcm/v3", Kind: "Cluster"}))
+	assert.Equal(t, "cmk.v2.Cluster", referenceKind(apiKeyRef("", "cmk/v2", "Cluster")))
+	assert.Equal(t, "srcm.v3.Cluster", referenceKind(apiKeyRef("", "srcm/v3", "Cluster")))
 	// a half-formed reference must not produce a half-formed kind
-	assert.Empty(t, referenceKind(&objectReference{APIVersion: "cmk/v2"}))
-	assert.Empty(t, referenceKind(&objectReference{Kind: "Cluster"}))
+	assert.Empty(t, referenceKind(apiKeyRef("", "cmk/v2", "")))
+	assert.Empty(t, referenceKind(apiKeyRef("", "", "Cluster")))
 	assert.Empty(t, referenceKind(nil))
 }
 
 func TestOwnerKindOf(t *testing.T) {
-	assert.Equal(t, "ServiceAccount", ownerKindOf(&objectReference{ID: "sa-1", Kind: "ServiceAccount"}))
-	assert.Equal(t, "User", ownerKindOf(&objectReference{ID: "u-1", Kind: "User"}))
+	assert.Equal(t, "ServiceAccount", ownerKindOf(apiKeyRef("sa-1", "", "ServiceAccount")))
+	assert.Equal(t, "User", ownerKindOf(apiKeyRef("u-1", "", "User")))
 	// the identifier prefix answers when the reference carries no kind
-	assert.Equal(t, "ServiceAccount", ownerKindOf(&objectReference{ID: "sa-1"}))
-	assert.Equal(t, "User", ownerKindOf(&objectReference{ID: "u-1"}))
-	assert.Empty(t, ownerKindOf(&objectReference{ID: "x-1"}))
+	assert.Equal(t, "ServiceAccount", ownerKindOf(apiKeyRef("sa-1", "", "")))
+	assert.Equal(t, "User", ownerKindOf(apiKeyRef("u-1", "", "")))
+	assert.Empty(t, ownerKindOf(apiKeyRef("x-1", "", "")))
 	assert.Empty(t, ownerKindOf(nil))
 }
 
+// Every management API module ships its own reference type, and one Kafka
+// cluster points at three of them. All of them must answer, and a nil one must
+// answer with the empty string rather than panicking.
 func TestRefID(t *testing.T) {
-	assert.Equal(t, "env-1", refID(&objectReference{ID: "env-1"}))
-	assert.Empty(t, refID(&objectReference{}))
-	assert.Empty(t, refID(nil))
+	assert.Equal(t, "env-1", refID(&cmkv2.EnvScopedObjectReference{Id: "env-1"}))
+	assert.Equal(t, "cck-1", refID(&cmkv2.GlobalObjectReference{Id: "cck-1"}))
+	assert.Equal(t, "lkc-1", refID(apiKeyRef("lkc-1", "", "")))
+	assert.Empty(t, refID(&cmkv2.EnvScopedObjectReference{}))
+	assert.Empty(t, refID((*cmkv2.EnvScopedObjectReference)(nil)))
+	assert.Empty(t, refID((*apikeysv2.ObjectReference)(nil)))
 }
 
 func TestKeyReferenceOf(t *testing.T) {

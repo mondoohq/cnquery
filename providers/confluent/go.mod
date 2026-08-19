@@ -5,6 +5,15 @@ replace go.mondoo.com/mql/v13 => ../..
 go 1.26.6
 
 require (
+	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9
+	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.27.0
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.17.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.25.0
+	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
+	github.com/confluentinc/ccloud-sdk-go-v2/org v0.14.0
+	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.0
 	go.mondoo.com/mql/v13 v13.0.0-00010101000000-000000000000
@@ -89,6 +98,7 @@ require (
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect

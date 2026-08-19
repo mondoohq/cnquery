@@ -7,6 +7,7 @@ import (
 	"context"
 	"net/url"
 
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/confluent/connection"
@@ -19,19 +20,12 @@ type mqlConfluentNetworkInternal struct {
 	cachedEnvironmentID string
 }
 
-type networkSpecRecord struct {
-	DisplayName     string           `json:"display_name"`
-	Cloud           string           `json:"cloud"`
-	Region          string           `json:"region"`
-	ConnectionTypes []string         `json:"connection_types"`
-	Cidr            string           `json:"cidr"`
-	Zones           []string         `json:"zones"`
-	Environment     *objectReference `json:"environment"`
-	DnsConfig       *struct {
-		Resolution string `json:"resolution"`
-	} `json:"dns_config"`
-}
-
+// networkStatusRecord is the status block of a network.
+//
+// It stays local rather than adopting NetworkingV1NetworkStatus, which carries
+// an `idle_since` typed as *time.Time. This provider exposes no such field, but
+// adopting the block would still let a timestamp it never reads fail the decode
+// of every network in the listing.
 type networkStatusRecord struct {
 	Phase                    string   `json:"phase"`
 	SupportedConnectionTypes []string `json:"supported_connection_types"`
@@ -40,10 +34,10 @@ type networkStatusRecord struct {
 }
 
 type networkRecord struct {
-	ID       string               `json:"id"`
-	Metadata objectMeta           `json:"metadata"`
-	Spec     *networkSpecRecord   `json:"spec"`
-	Status   *networkStatusRecord `json:"status"`
+	ID       string                                `json:"id"`
+	Metadata objectMeta                            `json:"metadata"`
+	Spec     *networkingv1.NetworkingV1NetworkSpec `json:"spec"`
+	Status   *networkStatusRecord                  `json:"status"`
 }
 
 func (r *mqlConfluent) networks() ([]any, error) {
@@ -72,28 +66,26 @@ func (r *mqlConfluent) networks() ([]any, error) {
 			record := records[i]
 			spec := record.Spec
 			if spec == nil {
-				spec = &networkSpecRecord{}
+				spec = &networkingv1.NetworkingV1NetworkSpec{}
 			}
 			status := record.Status
 			if status == nil {
 				status = &networkStatusRecord{}
 			}
 
-			resolution := ""
-			if spec.DnsConfig != nil {
-				resolution = spec.DnsConfig.Resolution
-			}
+			dnsConfig := spec.GetDnsConfig()
+			resolution := dnsConfig.Resolution
 
 			mqlNetwork, err := CreateResource(r.MqlRuntime, "confluent.network", map[string]*llx.RawData{
 				"__id":                     llx.StringData(record.ID),
 				"id":                       llx.StringData(record.ID),
-				"displayName":              llx.StringData(spec.DisplayName),
+				"displayName":              llx.StringData(spec.GetDisplayName()),
 				"resourceName":             llx.StringData(record.Metadata.ResourceName),
-				"cloud":                    llx.StringData(spec.Cloud),
-				"region":                   llx.StringData(spec.Region),
-				"cidr":                     llx.StringData(spec.Cidr),
-				"zones":                    llx.ArrayData(strSliceToAny(spec.Zones), types.String),
-				"connectionTypes":          llx.ArrayData(strSliceToAny(spec.ConnectionTypes), types.String),
+				"cloud":                    llx.StringData(spec.GetCloud()),
+				"region":                   llx.StringData(spec.GetRegion()),
+				"cidr":                     llx.StringData(spec.GetCidr()),
+				"zones":                    llx.ArrayData(strSliceToAny(spec.GetZones()), types.String),
+				"connectionTypes":          llx.ArrayData(strSliceToAny(spec.GetConnectionTypes()), types.String),
 				"activeConnectionTypes":    llx.ArrayData(strSliceToAny(status.ActiveConnectionTypes), types.String),
 				"supportedConnectionTypes": llx.ArrayData(strSliceToAny(status.SupportedConnectionTypes), types.String),
 				"dnsDomain":                llx.StringData(status.DnsDomain),
