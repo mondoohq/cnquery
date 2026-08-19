@@ -2180,15 +2180,58 @@ type mqlGithubRepositoryInternal struct {
 	findSpecialFilesOnceFunc func() error
 }
 
-func (g *mqlGithubRepository) findSpecialFiles() error {
-	conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+// claimSpecialFiles assigns any of the wanted files present in a directory
+// listing, recording what it matched in found so a later directory cannot
+// override an earlier one.
+//
+// Entries are the same github.file resources the files field hands out, so a
+// special file and its entry in that listing are one resource rather than two
+// views of it.
+func claimSpecialFiles(entries []any, wanted map[string]*plugin.TValue[*mqlGithubFile], found map[string]struct{}) {
+	for i := range entries {
+		file, ok := entries[i].(*mqlGithubFile)
+		if !ok || file == nil || file.Type.Error != nil || file.Name.Error != nil {
+			continue
+		}
+		if file.Type.Data != "file" {
+			continue
+		}
 
+		// found is keyed lowercase; probe it the same way, otherwise which copy
+		// of a file wins depends on how the second one happens to be
+		// capitalized.
+		name := strings.ToLower(file.Name.Data)
+		if _, ok := found[name]; ok {
+			continue
+		}
+		if v, ok := wanted[name]; ok && v != nil {
+			(*v) = plugin.TValue[*mqlGithubFile]{Data: file, State: plugin.StateIsSet, Error: nil}
+			found[name] = struct{}{}
+		}
+	}
+}
+
+// githubDirEntry returns the named subdirectory of a listing, or nil when the
+// listing has no such directory. Looking before descending is what keeps a
+// repository without a .github directory from paying for a 404.
+func githubDirEntry(entries []any, name string) *mqlGithubFile {
+	for i := range entries {
+		dir, ok := entries[i].(*mqlGithubFile)
+		if !ok || dir == nil || dir.Type.Error != nil || dir.Name.Error != nil {
+			continue
+		}
+		if dir.Type.Data == "dir" && dir.Name.Data == name {
+			return dir
+		}
+	}
+	return nil
+}
+
+func (g *mqlGithubRepository) findSpecialFiles() error {
 	ownerLogin, repoName, err := repoOwnerAndName(g)
 	if err != nil {
 		return err
 	}
-
-	specialDirectories := []string{".", ".github"}
 
 	specialFilesCaseInsensitive := map[string]*plugin.TValue[*mqlGithubFile]{
 		"code_of_conduct.md": &g.CodeOfConductFile,
@@ -2197,41 +2240,28 @@ func (g *mqlGithubRepository) findSpecialFiles() error {
 	}
 	foundFiles := map[string]struct{}{}
 
-	for _, dir := range specialDirectories {
-		if len(foundFiles) == len(specialFilesCaseInsensitive) {
-			break
-		}
-		_, dirContent, _, err := conn.Client().Repositories.GetContents(conn.Context(), ownerLogin, repoName, dir, &github.RepositoryContentGetOptions{})
-		if err != nil {
-			if strings.Contains(err.Error(), "404") {
-				continue
-			}
-			return err
-		}
+	// The repository root, read through the files field rather than fetched
+	// here, so the listing is resolved once per repository however it is
+	// reached: asking for securityFile and asking for files are the same
+	// request, and whichever arrives second reuses the cached field. That holds
+	// across assets too, because a repository scanned as its own asset shares
+	// the organization's resource cache and so the same resource.
+	root := g.GetFiles()
+	if root.Error != nil {
+		return root.Error
+	}
+	claimSpecialFiles(root.Data, specialFilesCaseInsensitive, foundFiles)
 
-		for i := range dirContent {
-			if dirContent[i].GetType() != "file" {
-				continue
+	// .github, only when the root did not already answer everything. Descending
+	// through the entry means the listing comes from that directory's own files
+	// field, shared with any policy that walks into .github itself.
+	if len(foundFiles) < len(specialFilesCaseInsensitive) {
+		if dir := githubDirEntry(root.Data, ".github"); dir != nil {
+			sub := dir.GetFiles()
+			if sub.Error != nil {
+				return sub.Error
 			}
-
-			// foundFiles is keyed lowercase; probe it the same way, otherwise
-			// which copy of a file wins depends on how the second one happens
-			// to be capitalized.
-			name := strings.ToLower(dirContent[i].GetName())
-			if _, ok := foundFiles[name]; ok {
-				continue
-			}
-			if _, ok := specialFilesCaseInsensitive[name]; ok {
-				v := specialFilesCaseInsensitive[name]
-				if v != nil {
-					file, err := newMqlGithubFile(g.MqlRuntime, ownerLogin, repoName, dirContent[i])
-					if err != nil {
-						return err
-					}
-					(*v) = plugin.TValue[*mqlGithubFile]{Data: file, State: plugin.StateIsSet, Error: nil}
-				}
-				foundFiles[name] = struct{}{}
-			}
+			claimSpecialFiles(sub.Data, specialFilesCaseInsensitive, foundFiles)
 		}
 	}
 
