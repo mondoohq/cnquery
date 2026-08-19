@@ -6,7 +6,7 @@ go 1.26.6
 
 require (
 	github.com/gocql/gocql v1.7.0
-	go.mondoo.com/mql/v13 v13.34.1
+	go.mondoo.com/mql/v13 v13.35.0
 	go.mondoo.com/ranger-rpc v0.8.1
 )
 
@@ -95,8 +95,8 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260817212433-ac3dfec99bb1 // indirect
-	google.golang.org/grpc v1.83.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260818201246-1b0934165a6f // indirect
+	google.golang.org/grpc v1.83.1 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
