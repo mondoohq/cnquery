@@ -385,6 +385,64 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) effectiveSecurityRules() (
 	return res, nil
 }
 
+// azureAsyncPollInterval is how long to wait between polls of a long-running
+// ARM operation. A variable so tests do not have to sleep through it.
+var azureAsyncPollInterval = 2 * time.Second
+
+// drainAndClose reads a response body to EOF and closes it, which is what
+// returns the connection to the pool. Closing without draining makes net/http
+// discard the connection instead of reusing it.
+func drainAndClose(body io.ReadCloser) {
+	if body == nil {
+		return
+	}
+	_, _ = io.Copy(io.Discard, body)
+	_ = body.Close()
+}
+
+// pollAzureAsyncOperation follows the Location header of a 202 Accepted response
+// until the operation reports its result, and returns that final response with
+// its body still open for the caller to read and close.
+//
+// Every response the loop moves past is drained and closed here, on the success
+// path and on every error path. That used to be a leak: the caller's
+// `defer httpResp.Body.Close()` evaluates httpResp.Body when the defer statement
+// runs rather than when the function returns, so it bound the very first
+// response, which the loop had already closed on its way past, and the final
+// response -- the one actually decoded -- was never closed at all. Azure answers
+// 202 for any NIC attached to a running VM, so this fired on the success path,
+// once per interface.
+func pollAzureAsyncOperation(ctx context.Context, client *http.Client, resp *http.Response, bearer string) (*http.Response, error) {
+	for resp.StatusCode == http.StatusAccepted {
+		loc := resp.Header.Get("Location")
+		if loc == "" {
+			drainAndClose(resp.Body)
+			return nil, errors.New("azure long-running operation returned 202 without a Location header")
+		}
+		select {
+		case <-ctx.Done():
+			drainAndClose(resp.Body)
+			return nil, ctx.Err()
+		case <-time.After(azureAsyncPollInterval):
+		}
+		pollReq, err := http.NewRequestWithContext(ctx, http.MethodGet, loc, nil)
+		if err != nil {
+			drainAndClose(resp.Body)
+			return nil, err
+		}
+		pollReq.Header.Set("Authorization", "Bearer "+bearer)
+		pollReq.Header.Set("Accept", "application/json")
+		next, err := client.Do(pollReq)
+		if err != nil {
+			drainAndClose(resp.Body)
+			return nil, err
+		}
+		drainAndClose(resp.Body)
+		resp = next
+	}
+	return resp, nil
+}
+
 // fetchEffectiveNsgGroups computes the effective NSGs on this NIC, one group per
 // NSG in the effective chain. Azure only computes effective rules for NICs
 // attached to a running VM; for detached or stopped NICs the API returns
@@ -434,37 +492,17 @@ func (a *mqlAzureSubscriptionNetworkServiceInterface) fetchEffectiveNsgGroups() 
 	if err != nil {
 		return nil, false, err
 	}
-	defer httpResp.Body.Close()
 
 	// 202 Accepted → poll the Location header until the result is ready. We don't
 	// fall back to Azure-AsyncOperation: that endpoint returns a status envelope
 	// (`{"status": "InProgress"|"Succeeded"|"Failed"}`), not the effective-rules
 	// payload, so a 200 from it would just be the loop exiting onto the wrong body.
-	for httpResp.StatusCode == http.StatusAccepted {
-		loc := httpResp.Header.Get("Location")
-		if loc == "" {
-			io.Copy(io.Discard, httpResp.Body)
-			return nil, false, fmt.Errorf("effective NSG list returned 202 without a Location header")
-		}
-		// Sleep a beat then poll.
-		select {
-		case <-ctx.Done():
-			return nil, false, ctx.Err()
-		case <-time.After(2 * time.Second):
-		}
-		pollReq, perr := http.NewRequestWithContext(ctx, http.MethodGet, loc, nil)
-		if perr != nil {
-			return nil, false, perr
-		}
-		pollReq.Header.Set("Authorization", "Bearer "+tok.Token)
-		pollReq.Header.Set("Accept", "application/json")
-		newResp, perr := httpClient.Do(pollReq)
-		if perr != nil {
-			return nil, false, perr
-		}
-		httpResp.Body.Close()
-		httpResp = newResp
+	httpResp, err = pollAzureAsyncOperation(ctx, httpClient, httpResp, tok.Token)
+	if err != nil {
+		return nil, false, err
 	}
+	// Deferred after the poll, so it binds the body actually being read below.
+	defer drainAndClose(httpResp.Body)
 
 	if httpResp.StatusCode == http.StatusBadRequest ||
 		httpResp.StatusCode == http.StatusNotFound ||
