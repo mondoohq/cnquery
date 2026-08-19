@@ -218,7 +218,13 @@ func (a *mqlAwsCloudtrailTrail) snsTopic() (*mqlAwsSnsTopic, error) {
 		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.SnsTopicARN)},
 	)
 	if err != nil {
-		return nil, err
+		// A trail keeps naming a topic after the topic is deleted. Report the
+		// reference as null rather than failing the field, which would render as
+		// the value of the whole trails collection.
+		log.Warn().Err(err).Str("topic", convert.ToValue(a.trailCache.SnsTopicARN)).
+			Msg("cannot resolve the trail's sns topic")
+		a.SnsTopic.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 	return mqlTopic.(*mqlAwsSnsTopic), nil
 }
@@ -232,7 +238,11 @@ func (a *mqlAwsCloudtrailTrail) cloudWatchLogsRole() (*mqlAwsIamRole, error) {
 		map[string]*llx.RawData{"arn": llx.StringDataPtr(a.trailCache.CloudWatchLogsRoleArn)},
 	)
 	if err != nil {
-		return nil, err
+		// A trail keeps naming its delivery role after the role is deleted.
+		log.Warn().Err(err).Str("role", convert.ToValue(a.trailCache.CloudWatchLogsRoleArn)).
+			Msg("cannot resolve the trail's cloudwatch logs role")
+		a.CloudWatchLogsRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 	return mqlRole.(*mqlAwsIamRole), nil
 }
@@ -905,7 +915,12 @@ func (a *mqlAwsCloudtrailEventDataStore) federationRole() (*mqlAwsIamRole, error
 			"arn": llx.StringDataPtr(detail.FederationRoleArn),
 		})
 	if err != nil {
-		return nil, err
+		// An event data store keeps naming its federation role after the role is
+		// deleted.
+		log.Warn().Err(err).Str("role", convert.ToValue(detail.FederationRoleArn)).
+			Msg("cannot resolve the event data store's federation role")
+		a.FederationRole.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
 	}
 	return mqlRole.(*mqlAwsIamRole), nil
 }
