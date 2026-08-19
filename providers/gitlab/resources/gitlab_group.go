@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	gitlab "gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -509,7 +509,7 @@ func (g *mqlGitlabGroup) labels() ([]any, error) {
 			"closedIssuesCount":      llx.IntData(label.ClosedIssuesCount),
 			"openMergeRequestsCount": llx.IntData(label.OpenMergeRequestsCount),
 			"subscribed":             llx.BoolData(label.Subscribed),
-			"priority":               llx.IntData(label.Priority),
+			"priority":               llx.IntData(labelPriority(label.Priority)),
 			"isProjectLabel":         llx.BoolData(label.IsProjectLabel),
 		}
 
@@ -1173,15 +1173,19 @@ func (g *mqlGitlabGroup) webhooks() ([]any, error) {
 			"featureFlagEvents":         llx.BoolData(hook.FeatureFlagEvents),
 			"milestoneEvents":           llx.BoolData(hook.MilestoneEvents),
 			"emojiEvents":               llx.BoolData(hook.EmojiEvents),
-			"repositoryUpdateEvents":    llx.BoolData(hook.RepositoryUpdateEvents),
-			"subGroupEvents":            llx.BoolData(hook.SubGroupEvents),
-			"memberEvents":              llx.BoolData(hook.MemberEvents),
-			"projectEvents":             llx.BoolData(hook.ProjectEvents),
-			"branchFilterStrategy":      llx.StringData(hook.BranchFilterStrategy),
-			"customWebhookTemplate":     llx.StringData(hook.CustomWebhookTemplate),
-			"customHeaders":             llx.MapData(customHeaders, types.String),
-			"createdAt":                 llx.TimeDataPtr(hook.CreatedAt),
-			"alertStatus":               llx.StringData(hook.AlertStatus),
+			// Group webhooks have no repository_update_events attribute: the
+			// GitLab API never returned one, and client-go dropped the field
+			// from GroupHook accordingly. Null says we cannot see it; the
+			// false this used to report claimed the trigger was switched off.
+			"repositoryUpdateEvents": llx.BoolDataPtr(nil),
+			"subGroupEvents":         llx.BoolData(hook.SubGroupEvents),
+			"memberEvents":           llx.BoolData(hook.MemberEvents),
+			"projectEvents":          llx.BoolData(hook.ProjectEvents),
+			"branchFilterStrategy":   llx.StringData(hook.BranchFilterStrategy),
+			"customWebhookTemplate":  llx.StringData(hook.CustomWebhookTemplate),
+			"customHeaders":          llx.MapData(customHeaders, types.String),
+			"createdAt":              llx.TimeDataPtr(hook.CreatedAt),
+			"alertStatus":            llx.StringData(hook.AlertStatus),
 		}
 
 		mqlWebhook, err := CreateResource(g.MqlRuntime, "gitlab.group.webhook", hookInfo)

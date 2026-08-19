@@ -13,7 +13,7 @@ import (
 	"go.mondoo.com/mql/v13/providers/gitlab/connection"
 	"go.mondoo.com/mql/v13/types"
 
-	gitlab "gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 // This file models identity at group scope: the credentials individual members

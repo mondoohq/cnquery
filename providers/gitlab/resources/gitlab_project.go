@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	gitlab "gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -1834,7 +1834,7 @@ func (p *mqlGitlabProject) labels() ([]any, error) {
 			"closedIssuesCount":      llx.IntData(label.ClosedIssuesCount),
 			"openMergeRequestsCount": llx.IntData(label.OpenMergeRequestsCount),
 			"subscribed":             llx.BoolData(label.Subscribed),
-			"priority":               llx.IntData(label.Priority),
+			"priority":               llx.IntData(labelPriority(label.Priority)),
 			"isProjectLabel":         llx.BoolData(label.IsProjectLabel),
 		}
 

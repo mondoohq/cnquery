@@ -1641,7 +1641,11 @@ private gitlab.group.webhook @defaults("url sslVerification") {
   // Whether emoji events trigger the webhook
   emojiEvents bool
   // Whether repository update events trigger the webhook
-  repositoryUpdateEvents bool
+  //
+  // Always null. Group webhooks have no repository update trigger, and
+  // the GitLab API does not return this attribute for them. Read the
+  // same field on gitlab.project.webhook, where the trigger exists.
+  repositoryUpdateEvents @maturity("deprecated") bool
   // Whether subgroup events trigger the webhook
   subGroupEvents bool
   // Whether member events trigger the webhook

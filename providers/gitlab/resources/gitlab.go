@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	gitlab "gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 // isoTimePtr converts the SDK's date-only ISOTime into a *time.Time, keeping
@@ -78,4 +78,16 @@ func scopedID(resource string, ownerID int64, parts ...string) string {
 	segments = append(segments, resource, strconv.FormatInt(ownerID, 10))
 	segments = append(segments, parts...)
 	return strings.Join(segments, "/")
+}
+
+// labelPriority flattens the SDK's Nullable priority back to the plain int64
+// the shipped `priority` field has always carried. client-go v2 can tell "no
+// priority set" apart from priority 0; v1 could not and reported 0 for both,
+// so collapsing to 0 keeps existing policies returning the same answers.
+func labelPriority(priority gitlab.Nullable[int64]) int64 {
+	value, err := priority.Get()
+	if err != nil {
+		return 0
+	}
+	return value
 }
