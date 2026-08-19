@@ -4,7 +4,9 @@
 package providers
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -128,4 +130,50 @@ func TestOsRetry_RetryableError(t *testing.T) {
 	}
 	assert.NoError(t, osRetry(testFunc, 2))
 	assert.Equal(t, 2, funcCounter)
+}
+
+func TestInstallIO(t *testing.T) {
+	confJSON := []byte(`{"Name":"testp","Version":"1.2.3"}`)
+	schemaJSON := []byte(`{"resources":{}}`)
+
+	t.Run("schema-only archive", func(t *testing.T) {
+		archive, err := buildTarXz(map[string][]byte{
+			"testp.json":           confJSON,
+			"testp.resources.json": schemaJSON,
+		})
+		require.NoError(t, err)
+
+		installed, err := InstallIO(io.NopCloser(bytes.NewReader(archive)), InstallConf{Dst: t.TempDir()})
+		require.NoError(t, err)
+		require.Len(t, installed, 1)
+		assert.Equal(t, "testp", installed[0].Name)
+		assert.Equal(t, "1.2.3", installed[0].Version)
+		assert.False(t, installed[0].HasBinary)
+	})
+
+	t.Run("archive with binary", func(t *testing.T) {
+		archive, err := buildTarXz(map[string][]byte{
+			"testp":                []byte(`fake-binary`),
+			"testp.json":           confJSON,
+			"testp.resources.json": schemaJSON,
+		})
+		require.NoError(t, err)
+
+		installed, err := InstallIO(io.NopCloser(bytes.NewReader(archive)), InstallConf{Dst: t.TempDir()})
+		require.NoError(t, err)
+		require.Len(t, installed, 1)
+		assert.Equal(t, "testp", installed[0].Name)
+		assert.True(t, installed[0].HasBinary)
+	})
+
+	t.Run("archive without config errors", func(t *testing.T) {
+		archive, err := buildTarXz(map[string][]byte{
+			"testp.resources.json": schemaJSON,
+		})
+		require.NoError(t, err)
+
+		_, err = InstallIO(io.NopCloser(bytes.NewReader(archive)), InstallConf{Dst: t.TempDir()})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "cannot find testp.json")
+	})
 }
