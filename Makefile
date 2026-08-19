@@ -216,6 +216,7 @@ PROVIDERS := \
 	clickhousedb \
 	cloudflare \
 	cloudformation \
+	consul \
 	databricks \
 	datadog \
 	depsdev \

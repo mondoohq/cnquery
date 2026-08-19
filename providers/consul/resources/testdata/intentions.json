@@ -1,0 +1,43 @@
+[
+ {
+  "SourceNS": "default",
+  "SourceName": "web",
+  "DestinationNS": "default",
+  "DestinationName": "api",
+  "SourceType": "consul",
+  "Permissions": [
+   {
+    "Action": "allow",
+    "HTTP": {
+     "PathPrefix": "/public"
+    }
+   }
+  ],
+  "Precedence": 9,
+  "CreateIndex": 32,
+  "ModifyIndex": 32
+ },
+ {
+  "Description": "web to db",
+  "SourceNS": "default",
+  "SourceName": "web",
+  "DestinationNS": "default",
+  "DestinationName": "db",
+  "SourceType": "consul",
+  "Action": "allow",
+  "Precedence": 9,
+  "CreateIndex": 29,
+  "ModifyIndex": 29
+ },
+ {
+  "SourceNS": "default",
+  "SourceName": "*",
+  "DestinationNS": "default",
+  "DestinationName": "db",
+  "SourceType": "consul",
+  "Action": "deny",
+  "Precedence": 8,
+  "CreateIndex": 29,
+  "ModifyIndex": 29
+ }
+]

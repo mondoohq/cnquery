@@ -1,0 +1,388 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/consul"
+option go_package = "go.mondoo.com/mql/v13/providers/consul/resources"
+
+// HashiCorp Consul
+//
+// Service networking agent, covering the runtime security configuration of the
+// agent this connection reaches: which datacenter it belongs to, whether it
+// runs as a server or a client, whether the gossip pool between agents is
+// encrypted, how the agent-to-agent TLS layer verifies its peers, whether the
+// ACL system is switched on and what it does with an unmatched request, and
+// which service mesh intentions decide who may talk to whom.
+consul @defaults("datacenter version server gossipEncrypted") {
+  // Datacenter the agent belongs to, for example "dc1"
+  datacenter() string
+  // Primary datacenter of the federation, which holds the ACL authority
+  //
+  // ACL tokens and policies are written in the primary datacenter and
+  // replicated outwards. On a single datacenter deployment this equals
+  // datacenter.
+  primaryDatacenter() string
+  // Name the agent registers itself under in the catalog
+  nodeName() string
+  // Identifier the agent generated for itself, stable across restarts
+  nodeId() string
+  // Agent version, for example "1.20.1"
+  version() string
+  // Source revision the agent was built from
+  revision() string
+  // Time the agent binary was built, null when the build reports none
+  buildDate() time
+  // Whether the agent runs in server mode
+  //
+  // A server participates in Raft consensus and holds the datacenter state. A
+  // client only forwards requests and runs health checks. Server agents carry
+  // the data an attacker wants, so several checks apply only to them.
+  server() bool
+  // Whether the LAN gossip pool is encrypted
+  //
+  // Read from the agent's serf LAN statistics rather than from the configured
+  // key, because the key is redacted in the agent's own configuration output
+  // whether or not one is set. False means every membership and health message
+  // between agents in this datacenter crosses the network in the clear.
+  gossipEncrypted() bool
+  // Whether the WAN gossip pool is encrypted
+  //
+  // The WAN pool carries federation traffic between datacenters. On a single
+  // datacenter deployment it still runs, and it is keyed by the same gossip
+  // key as the LAN pool.
+  wanGossipEncrypted() bool
+  // Whether the agent requires a client certificate on incoming RPC connections
+  //
+  // The effective `verify_incoming` setting for the internal RPC layer, which
+  // is the agent-to-agent channel. False means any process that can reach the
+  // RPC port may open a connection to this agent.
+  verifyIncoming() bool
+  // Whether the agent verifies the certificate of RPC servers it dials
+  //
+  // The effective `verify_outgoing` setting for the internal RPC layer. False
+  // means the agent will accept an unauthenticated server on the other end.
+  verifyOutgoing() bool
+  // Whether the agent checks the hostname on the certificate an RPC server presents
+  //
+  // The effective `verify_server_hostname` setting for the internal RPC layer.
+  // Without it, any certificate signed by the configured authority is accepted,
+  // so a client certificate issued for one agent can impersonate a server.
+  verifyServerHostname() bool
+  // Whether the agent obtains its TLS certificate from the servers automatically
+  //
+  // Reflects `auto_encrypt.tls`, set on client agents.
+  autoEncryptTls() bool
+  // Whether server agents issue TLS certificates to clients that ask
+  //
+  // Reflects `auto_encrypt.allow_tls`, set on server agents.
+  autoEncryptAllowTls() bool
+  // TLS settings per traffic layer
+  //
+  // Consul configures TLS separately for the internal RPC layer, the HTTPS
+  // API, and the gRPC and xDS endpoints, and the three can disagree. The
+  // `scope` field selects one, for example
+  // `consul.tlsProfiles.where(scope == "internalRpc")`.
+  tlsProfiles() []consul.tlsProfile
+  // ACL system configuration and inventory
+  acl() consul.aclSystem
+  // Service mesh configuration and intentions
+  mesh() consul.serviceMesh
+}
+
+// Consul TLS settings for one traffic layer
+//
+// The certificate material and peer verification rules Consul applies to one
+// of its listeners. Three layers exist: `internalRpc` carries agent-to-agent
+// RPC and is the one classic `verify_incoming` and `verify_outgoing` settings
+// govern, `https` serves the HTTP API, and `grpc` serves the xDS stream that
+// service mesh proxies subscribe to. The `scope` field selects a layer, for
+// example `consul.tlsProfiles.where(scope == "grpc")`.
+consul.tlsProfile @defaults("scope verifyIncoming verifyOutgoing verifyServerHostname") {
+  // Traffic layer these settings apply to
+  //
+  // One of internalRpc, https, or grpc.
+  scope string
+  // Whether a client certificate is required on incoming connections
+  verifyIncoming bool
+  // Whether the certificate of the remote end is verified on outgoing connections
+  verifyOutgoing bool
+  // Whether the hostname on the remote certificate is checked against the expected name
+  verifyServerHostname bool
+  // Lowest TLS version the listener accepts
+  //
+  // One of TLSv1_0, TLSv1_1, TLSv1_2, or TLSv1_3. Empty when the agent reports
+  // no explicit floor.
+  tlsMinVersion string
+  // Cipher suites the listener is restricted to, empty when the Go defaults apply
+  cipherSuites []string
+  // Path to the certificate authority bundle the listener trusts
+  caFile string
+  // Path to a directory of certificate authority files the listener trusts
+  caPath string
+  // Path to the certificate the listener presents
+  certFile string
+  // Whether the listener uses a self-signed certificate generated by the agent
+  useAutoCert bool
+}
+
+// Consul ACL system
+//
+// The authorization layer of a Consul datacenter: whether it is switched on,
+// what it does with a request no rule matches, and the tokens, policies and
+// roles defined in it. With ACLs off, every caller that can reach the HTTP or
+// RPC port has full read and write access to the catalog, the key/value store
+// and the service mesh configuration. The token, policy and role inventories
+// are empty when ACLs are off, because the endpoints serving them do not exist
+// on such an agent.
+consul.aclSystem @defaults("enabled defaultPolicy defaultDeny") {
+  // Whether the ACL system is switched on
+  enabled bool
+  // What the agent does with a request no rule matches
+  //
+  // Either "allow" or "deny". Only meaningful when `enabled` is true. On a
+  // datacenter running "allow", a token needs an explicit deny rule to be
+  // stopped, so a forgotten resource is readable and writable by anyone.
+  defaultPolicy string
+  // What the agent does when it cannot reach the ACL authority
+  //
+  // One of deny, extend-cache, async-cache, or allow. "extend-cache" and
+  // "async-cache" keep serving decisions from an expired cache, which lets a
+  // revoked token keep working while the primary datacenter is unreachable.
+  downPolicy string
+  // Whether an unmatched request is denied
+  //
+  // True only when the ACL system is enabled and its default policy is "deny".
+  // This is the pairing a check wants, because a default policy of "deny" on
+  // an agent with ACLs switched off denies nothing.
+  defaultDeny bool
+  // Whether ACL tokens are replicated from the primary datacenter
+  tokenReplication bool
+  // Whether listing keys in the key/value store needs a separate list grant
+  //
+  // Reflects `acl.enable_key_list_policy`. Without it, a token holding read on
+  // a key prefix can enumerate every key under that prefix.
+  enableKeyListPolicy bool
+  // Token used for requests that carry no token of their own
+  //
+  // Every unauthenticated request to this datacenter resolves to this token,
+  // so any grant attached to it is a grant to the whole network. Null when the
+  // ACL system is off, or when the reserved token has been deleted. A token
+  // that may not read it is an error rather than a null, because a missing
+  // permission is not the same answer as a token granting nothing.
+  anonymousToken() consul.acl.token
+  // ACL tokens defined in the datacenter
+  tokens() []consul.acl.token
+  // ACL policies defined in the datacenter
+  policies() []consul.acl.policy
+  // ACL roles defined in the datacenter
+  roles() []consul.acl.role
+}
+
+// Consul ACL token
+//
+// A credential a caller presents to Consul, carrying the policies, roles and
+// identities that decide what the caller may do. The `accessorId` field
+// selects a token, for example
+// `consul.acl.tokens.where(accessorId == "00000000-0000-0000-0000-000000000002")`.
+// The secret half of a token is deliberately not exposed by this resource,
+// even though the Consul API returns it to a caller holding a management
+// token.
+consul.acl.token @defaults("accessorId description isGlobalManagement") {
+  // Accessor identifier, the non-secret handle for the token
+  accessorId string
+  // Operator-supplied description of the token
+  description string
+  // Whether the token is confined to the datacenter that created it
+  //
+  // A local token is not replicated to other datacenters and cannot be used
+  // outside the one that issued it.
+  local bool
+  // Name of the auth method that minted the token, empty when created directly
+  authMethod string
+  // Time the token stops working, null when it never expires
+  //
+  // A token with no expiry stays valid until somebody deletes it, which is why
+  // long-lived tokens are worth finding.
+  expirationTime time
+  // Time the token was created
+  createTime time
+  // Whether the token grants anything at all
+  //
+  // True when the token carries at least one policy, role, service identity,
+  // node identity, or templated policy. A token that grants nothing still
+  // authenticates, but authorizes no request.
+  hasGrants bool
+  // Whether the token carries the built-in unrestricted policy
+  //
+  // True when one of the attached policies is `global-management`, which
+  // grants read and write on every Consul feature. Matched on the policy's
+  // reserved identifier as well as its name, so renaming the policy does not
+  // hide it.
+  isGlobalManagement bool
+  // Policies attached directly to the token
+  policies() []consul.acl.policy
+  // Roles attached to the token
+  roles() []consul.acl.role
+  // Service identities the token assumes
+  //
+  // Shape: `[{serviceName: "web", datacenters: ["dc1"]}, ...]`. A service
+  // identity is shorthand for the policy a service mesh sidecar needs, and an
+  // empty datacenter list means every datacenter.
+  serviceIdentities []dict
+  // Node identities the token assumes
+  //
+  // Shape: `[{nodeName: "node-1", datacenter: "dc1"}, ...]`.
+  nodeIdentities []dict
+  // Templated policies attached to the token
+  //
+  // Shape: `[{templateName: "builtin/service", templateVariables: {name: "web"}, datacenters: []}, ...]`.
+  templatedPolicies []dict
+}
+
+// Consul ACL policy
+//
+// A named set of rules granting capabilities on Consul resources: services,
+// nodes, key/value prefixes, sessions, intentions, and the operator and ACL
+// subsystems themselves. The `name` field selects a policy, for example
+// `consul.acl.policies.where(name == "global-management")`. The `rules` field
+// returns the policy document as written, in Consul's HCL rule language.
+consul.acl.policy @defaults("name description isGlobalManagement") {
+  // Policy identifier
+  id string
+  // Policy name
+  name string
+  // Operator-supplied description of the policy
+  description string
+  // Datacenters the policy is valid in, empty when it is valid everywhere
+  datacenters []string
+  // Whether this is the built-in unrestricted policy
+  //
+  // True for `global-management`, which grants read and write on every Consul
+  // feature. Matched on the policy's reserved identifier as well as its name.
+  isGlobalManagement bool
+  // Policy document as written, in Consul's HCL rule language
+  //
+  // The built-in policies carry rules too, so `global-management` returns the
+  // document granting write on every subsystem rather than an empty string.
+  rules() string
+}
+
+// Consul ACL role
+//
+// A named bundle of policies and identities that tokens attach to instead of
+// repeating the same grants on every token. The `name` field selects a role,
+// for example `consul.acl.roles.where(name == "web-role")`. Deleting a role
+// removes the grants from every token that carried it, which is what makes a
+// role worth auditing separately from the tokens using it.
+consul.acl.role @defaults("name description") {
+  // Role identifier
+  id string
+  // Role name
+  name string
+  // Operator-supplied description of the role
+  description string
+  // Policies attached to the role
+  policies() []consul.acl.policy
+  // Service identities the role grants
+  //
+  // Shape: `[{serviceName: "web", datacenters: ["dc1"]}, ...]`.
+  serviceIdentities []dict
+  // Node identities the role grants
+  //
+  // Shape: `[{nodeName: "node-1", datacenter: "dc1"}, ...]`.
+  nodeIdentities []dict
+  // Templated policies attached to the role
+  //
+  // Shape: `[{templateName: "builtin/service", templateVariables: {name: "web"}, datacenters: []}, ...]`.
+  templatedPolicies []dict
+}
+
+// Consul service mesh
+//
+// The mesh side of a Consul datacenter: whether it is switched on, what
+// happens to a connection no intention matches, and the intentions themselves.
+// An intention names a source service and a destination service and says
+// whether traffic between them is allowed. What Consul does with a pair no
+// intention covers is decided by the ACL default policy rather than by the
+// mesh configuration, so a datacenter running ACLs in "allow" mode lets every
+// service in the mesh reach every other one.
+consul.serviceMesh @defaults("enabled defaultIntentionPolicy defaultDeny") {
+  // Whether the service mesh is switched on for this agent
+  enabled bool
+  // What happens to a connection no intention matches
+  //
+  // Either "allow" or "deny". Follows the ACL default policy: with ACLs
+  // switched off, or switched on with a default policy of "allow", unmatched
+  // mesh traffic is allowed.
+  defaultIntentionPolicy string
+  // Whether a connection no intention matches is denied
+  //
+  // True only when `defaultIntentionPolicy` is "deny". This is the pairing a
+  // check wants, because it is the setting that makes intentions an allowlist
+  // rather than a blocklist.
+  defaultDeny bool
+  // Intentions defined in the datacenter
+  intentions() []consul.mesh.intention
+}
+
+// Consul service mesh intention
+//
+// One rule deciding whether a source service may open a connection to a
+// destination service inside the mesh. Sources and destinations are service
+// names, and either side may be the wildcard "*", which is what makes a broad
+// intention worth finding. An intention carrying L7 permissions has no
+// `action` of its own: the decision is made per request against the paths,
+// methods and headers in `permissions`, and anything not matched is denied.
+consul.mesh.intention @defaults("sourceName destinationName action precedence") {
+  // Name of the source service, or "*" for every service
+  sourceName string
+  // Namespace of the source service
+  sourceNamespace string
+  // Admin partition of the source service, empty outside Consul Enterprise
+  sourcePartition string
+  // Cluster peer the source service lives in, empty for a local source
+  sourcePeer string
+  // Where the source identity comes from
+  //
+  // Currently always "consul", meaning a service registered in the catalog.
+  sourceType string
+  // Name of the destination service, or "*" for every service
+  destinationName string
+  // Namespace of the destination service
+  destinationNamespace string
+  // Admin partition of the destination service, empty outside Consul Enterprise
+  destinationPartition string
+  // Whether traffic is allowed or denied
+  //
+  // Either "allow" or "deny", and empty when the intention carries L7
+  // permissions instead, because the decision is then made per request.
+  action string
+  // Operator-supplied description of the intention
+  description string
+  // Order the intention is evaluated in, higher first
+  //
+  // Consul computes this from how specific the source and destination are, so
+  // an intention naming both services beats one using a wildcard.
+  precedence int
+  // Whether either side of the intention is the wildcard "*"
+  //
+  // A wildcard source on an "allow" intention opens the destination to every
+  // service in the mesh, which defeats a default deny policy.
+  hasWildcard bool
+  // Whether the decision is made per request rather than per connection
+  //
+  // True when the intention carries L7 permissions. Such an intention has an
+  // empty `action`, and a request matching none of the permissions is denied.
+  hasL7Permissions bool
+  // Request-level permissions, empty for a connection-level intention
+  //
+  // Shape: `[{action: "allow", http: {pathPrefix: "/public", methods: ["GET"], header: [...]}}, ...]`.
+  // Each entry names an action and the HTTP attributes a request must carry
+  // for that action to apply.
+  permissions []dict
+  // Metadata attached to the intention
+  meta map[string]string
+  // Time the intention was created, null when the datacenter reports none
+  createdAt time
+  // Time the intention was last changed, null when the datacenter reports none
+  updatedAt time
+}

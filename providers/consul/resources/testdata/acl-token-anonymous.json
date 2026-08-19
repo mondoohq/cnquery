@@ -1,0 +1,16 @@
+{
+ "AccessorID": "00000000-0000-0000-0000-000000000002",
+ "SecretID": "anonymous",
+ "Description": "Anonymous Token",
+ "Policies": [
+  {
+   "ID": "00000000-0000-0000-0000-000000000002",
+   "Name": "builtin/global-read-only"
+  }
+ ],
+ "Local": false,
+ "CreateTime": "2026-08-19T13:03:25.291037261Z",
+ "Hash": "+RCgk9Vh7+SCgYdoHxY+9c3Up+gpg1cYXz9Dv0si3hE=",
+ "CreateIndex": 7,
+ "ModifyIndex": 27
+}

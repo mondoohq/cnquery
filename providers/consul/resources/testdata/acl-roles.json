@@ -1,0 +1,21 @@
+[
+ {
+  "ID": "41050fc2-e48d-69d5-9e96-ef4fed338e11",
+  "Name": "web-role",
+  "Description": "web role",
+  "Policies": [
+   {
+    "ID": "72254575-6bc1-2961-89a2-7ab53a21c3b7",
+    "Name": "web-read"
+   }
+  ],
+  "ServiceIdentities": [
+   {
+    "ServiceName": "web"
+   }
+  ],
+  "Hash": "D56pbpjxmG3xrKEV7EtFHjxVCvVzpvlcKJN0+dAMuOQ=",
+  "CreateIndex": 25,
+  "ModifyIndex": 25
+ }
+]

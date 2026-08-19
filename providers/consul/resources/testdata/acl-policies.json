@@ -1,0 +1,20 @@
+[
+ {
+  "ID": "00000000-0000-0000-0000-000000000002",
+  "Name": "builtin/global-read-only",
+  "Description": "A built-in policy that grants read-only access to all Consul features",
+  "Datacenters": null,
+  "Hash": "4jtyawyzzig+Ys5HfPI91O3UHLHiXtPlNG7aHEmlesk=",
+  "CreateIndex": 5,
+  "ModifyIndex": 5
+ },
+ {
+  "ID": "00000000-0000-0000-0000-000000000001",
+  "Name": "global-management",
+  "Description": "A built-in policy that grants read and write access to all Consul features",
+  "Datacenters": null,
+  "Hash": "+TzVGrd3uSVx3Bl8FV5O0BsKc1idAee6ZpEw9WDfaW8=",
+  "CreateIndex": 4,
+  "ModifyIndex": 4
+ }
+]

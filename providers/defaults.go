@@ -312,6 +312,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"consul": {
+		Provider: &plugin.Provider{
+			Name:            "consul",
+			ID:              "go.mondoo.com/mql/providers/consul",
+			ConnectionTypes: []string{"consul"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "consul",
+					Use:   "consul",
+					Short: "a HashiCorp Consul agent",
+				},
+			},
+		},
+	},
+
 	"core": {
 		Provider: &plugin.Provider{
 			Name:            "core",

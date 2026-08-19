@@ -1,0 +1,57 @@
+[
+ {
+  "AccessorID": "70606984-d544-3def-9dd2-c9fa325a0b74",
+  "SecretID": "ffffffff-0000-0000-0000-00000000mgmt",
+  "Description": "Initial Management Token",
+  "Policies": [
+   {
+    "ID": "00000000-0000-0000-0000-000000000001",
+    "Name": "global-management"
+   }
+  ],
+  "Local": false,
+  "CreateTime": "2026-08-19T13:03:25.290122407Z",
+  "Hash": "tqqwFU6g05D0TFVusPUxoli6BJKS+EV1CCZnyxmjZpQ=",
+  "CreateIndex": 6,
+  "ModifyIndex": 6
+ },
+ {
+  "AccessorID": "00000000-0000-0000-0000-000000000002",
+  "SecretID": "anonymous",
+  "Description": "Anonymous Token",
+  "Policies": [
+   {
+    "ID": "00000000-0000-0000-0000-000000000002",
+    "Name": "builtin/global-read-only"
+   }
+  ],
+  "Local": false,
+  "CreateTime": "2026-08-19T13:03:25.291037261Z",
+  "Hash": "+RCgk9Vh7+SCgYdoHxY+9c3Up+gpg1cYXz9Dv0si3hE=",
+  "CreateIndex": 7,
+  "ModifyIndex": 27
+ },
+ {
+  "AccessorID": "d9d99b22-86f5-6df6-9f5f-25aeca37404b",
+  "SecretID": "ffffffff-0000-0000-0000-000000000app",
+  "Description": "app token",
+  "Policies": [
+   {
+    "ID": "72254575-6bc1-2961-89a2-7ab53a21c3b7",
+    "Name": "web-read"
+   }
+  ],
+  "Roles": [
+   {
+    "ID": "41050fc2-e48d-69d5-9e96-ef4fed338e11",
+    "Name": "web-role"
+   }
+  ],
+  "Local": false,
+  "ExpirationTime": "2026-08-20T13:04:00.339442886Z",
+  "CreateTime": "2026-08-19T13:04:00.339442886Z",
+  "Hash": "XSwktsRxEoVos1gaFWcOtCwafiJEYJkL4F6emQzOvDY=",
+  "CreateIndex": 26,
+  "ModifyIndex": 26
+ }
+]
