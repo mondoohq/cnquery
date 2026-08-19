@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.36.0",
-  "generated_at": "2026-08-18T22:23:51-07:00",
+  "generated_at": "2026-08-19T05:02:24-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -265,6 +265,7 @@
     "Microsoft.Security/apiCollections/read",
     "Microsoft.Security/assessments/read",
     "Microsoft.Security/autoProvisioningSettings/read",
+    "Microsoft.Security/automations/read",
     "Microsoft.Security/contacts/read",
     "Microsoft.Security/defenderForStorageSettings/read",
     "Microsoft.Security/jitNetworkAccessPolicies/read",
@@ -1987,6 +1988,12 @@
       "permission": "Microsoft.Security/autoProvisioningSettings/read",
       "service": "Microsoft.Security",
       "action": "Get",
+      "source_file": "cloud_defender.go"
+    },
+    {
+      "permission": "Microsoft.Security/automations/read",
+      "service": "Microsoft.Security",
+      "action": "NewListPager",
       "source_file": "cloud_defender.go"
     },
     {
