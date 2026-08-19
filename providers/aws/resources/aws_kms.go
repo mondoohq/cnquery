@@ -197,19 +197,24 @@ func (a *mqlAwsKms) keys() ([]any, error) {
 
 // kmsKeyTags reads one key's tags for filter evaluation.
 //
-// AWS-managed keys reject ListResourceTags with AccessDenied. For filtering that
-// is "no tags to match on" rather than a failure, so it returns an empty set and
-// lets the key be judged on it; the tags field itself still reports the denial as
-// null through markTagsUnreadable.
+// Every error is returned, including AccessDenied. Some AWS-managed keys grant
+// kms:ListResourceTags and answer with an empty tag set, others refuse it, and
+// only the first is "this key has no tags". fetchTagsConcurrently leaves a key
+// whose read failed out of its result, so nothing is seeded onto the resource
+// and the lazy tags accessor still reports the refusal as null via
+// markTagsUnreadable. Returning an empty set here would publish "no tags" as fact
+// for a key whose tags could not be read, and would make the same key report {}
+// under a tag filter and null without one.
+//
+// Filtering is unaffected: an absent entry yields a nil map, and both
+// MatchesIncludeTags and MatchesExcludeTags read a nil map exactly as they read
+// an empty one.
 func kmsKeyTags(ctx context.Context, svc *kms.Client, keyArn string) (map[string]string, error) {
 	tags := map[string]string{}
 	paginator := kms.NewListResourceTagsPaginator(svc, &kms.ListResourceTagsInput{KeyId: &keyArn})
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			if Is400AccessDeniedError(err) {
-				return tags, nil
-			}
 			return nil, err
 		}
 		for i := range page.Tags {
