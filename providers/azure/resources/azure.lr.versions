@@ -4417,6 +4417,7 @@ azure.subscription.networkService.privateEndpoint.serviceconnection.groupIds 11.
 azure.subscription.networkService.privateEndpoint.serviceconnection.id 11.4.28
 azure.subscription.networkService.privateEndpoint.serviceconnection.name 11.4.28
 azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkService 13.9.3
+azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkServiceId 13.36.1
 azure.subscription.networkService.privateEndpoint.serviceconnection.requestMessage 11.4.28
 azure.subscription.networkService.privateEndpoint.subnet 13.26.1
 azure.subscription.networkService.privateEndpoint.tags 11.4.28

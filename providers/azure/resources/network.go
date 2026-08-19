@@ -2363,33 +2363,30 @@ func privateLinkServiceConnectionToMql(runtime *plugin.Runtime, c *network.Priva
 
 	res, err := CreateResource(runtime, "azure.subscription.networkService.privateEndpoint.serviceconnection",
 		map[string]*llx.RawData{
-			"__id":             llx.StringData(subResourceCacheID(c.ID, parentID, collection, convert.ToValue(c.Name))),
-			"id":               llx.StringDataPtr(c.ID),
-			"name":             llx.StringDataPtr(c.Name),
-			"groupIds":         llx.ArrayData(groupIds, types.String),
-			"connectionStatus": llx.StringData(connectionStatus),
-			"requestMessage":   llx.StringData(requestMessage),
+			"__id":                 llx.StringData(subResourceCacheID(c.ID, parentID, collection, convert.ToValue(c.Name))),
+			"id":                   llx.StringDataPtr(c.ID),
+			"name":                 llx.StringDataPtr(c.Name),
+			"privateLinkServiceId": llx.StringData(plsId),
+			"groupIds":             llx.ArrayData(groupIds, types.String),
+			"connectionStatus":     llx.StringData(connectionStatus),
+			"requestMessage":       llx.StringData(requestMessage),
 		})
 	if err != nil {
 		return nil, err
 	}
-	mqlConn := res.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection)
-	mqlConn.cachePrivateLinkServiceId = plsId
-	return mqlConn, nil
-}
-
-type mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnectionInternal struct {
-	cachePrivateLinkServiceId string
+	return res.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection), nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) privateLinkService() (*mqlAzureSubscriptionNetworkServicePrivateLinkService, error) {
-	plsId := a.cachePrivateLinkServiceId
-	if plsId == "" {
+	// A connection to a first-party PaaS resource puts that resource's own ARM
+	// id in privateLinkServiceId, so there is no private link service to
+	// resolve. privateLinkServiceId still reports the target.
+	if _, ok := parsePrivateLinkServiceID(a.PrivateLinkServiceId.Data); !ok {
 		a.PrivateLinkService.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.privateLinkService", map[string]*llx.RawData{
-		"id": llx.StringData(plsId),
+		"id": llx.StringData(a.PrivateLinkServiceId.Data),
 	})
 	if err != nil {
 		return nil, err
@@ -2552,6 +2549,49 @@ func privateLinkServiceToMql(runtime *plugin.Runtime, pls *network.PrivateLinkSe
 	return res.(*mqlAzureSubscriptionNetworkServicePrivateLinkService), nil
 }
 
+// privateLinkServiceTarget names the private link service an ARM resource id
+// refers to, split into the parts the private-link-services API needs.
+type privateLinkServiceTarget struct {
+	SubscriptionID string
+	ResourceGroup  string
+	Name           string
+}
+
+// parsePrivateLinkServiceID reports whether an ARM resource id names a
+// Microsoft.Network/privateLinkServices resource, and returns its parts when it
+// does.
+//
+// A private endpoint's properties.privateLinkServiceId carries either shape the
+// endpoint can take: a private link service somebody built to expose their own
+// service, or, far more commonly, the first-party PaaS resource the endpoint
+// connects to, whose own ARM id goes in that same field. Callers have to
+// discriminate before asking the private-link-services API for it, because a
+// storage account id has no privateLinkServices component to read a name from.
+func parsePrivateLinkServiceID(id string) (privateLinkServiceTarget, bool) {
+	resourceID, err := ParseResourceID(id)
+	if err != nil {
+		return privateLinkServiceTarget{}, false
+	}
+	if !strings.EqualFold(resourceID.Provider, "Microsoft.Network") || resourceID.ResourceGroup == "" {
+		return privateLinkServiceTarget{}, false
+	}
+	name, err := resourceID.Component("privateLinkServices")
+	if err != nil {
+		return privateLinkServiceTarget{}, false
+	}
+	// A child of a private link service is not the service: an ip
+	// configuration's id also carries a privateLinkServices component, and
+	// reading the name out of it would silently return the parent instead.
+	if len(resourceID.Path) != 1 {
+		return privateLinkServiceTarget{}, false
+	}
+	return privateLinkServiceTarget{
+		SubscriptionID: resourceID.SubscriptionID,
+		ResourceGroup:  resourceID.ResourceGroup,
+		Name:           name,
+	}, true
+}
+
 func initAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 {
 		return args, nil, nil
@@ -2567,13 +2607,9 @@ func initAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runti
 	if !ok {
 		return nil, nil, errors.New("id must be a non-nil string value")
 	}
-	resourceID, err := ParseResourceID(id)
-	if err != nil {
-		return nil, nil, err
-	}
-	name, err := resourceID.Component("privateLinkServices")
-	if err != nil {
-		return nil, nil, err
+	target, ok := parsePrivateLinkServiceID(id)
+	if !ok {
+		return nil, nil, fmt.Errorf("%q is not a private link service id", id)
 	}
 	// Already fetched by an earlier reference: NewResource consults the
 	// cache only after this init returns, so without this the same target is
@@ -2582,13 +2618,13 @@ func initAzureSubscriptionNetworkServicePrivateLinkService(runtime *plugin.Runti
 		return args, cached, nil
 	}
 
-	client, err := network.NewPrivateLinkServicesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+	client, err := network.NewPrivateLinkServicesClient(target.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := client.Get(context.Background(), resourceID.ResourceGroup, name, nil)
+	resp, err := client.Get(context.Background(), target.ResourceGroup, target.Name, nil)
 	if err != nil {
 		return nil, nil, err
 	}

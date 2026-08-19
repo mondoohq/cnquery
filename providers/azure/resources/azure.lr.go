@@ -7062,6 +7062,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GetName()).ToDataRes(types.String)
 	},
+	"azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkServiceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GetPrivateLinkServiceId()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).GetPrivateLinkService()).ToDataRes(types.Resource("azure.subscription.networkService.privateLinkService"))
 	},
@@ -27278,6 +27281,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkServiceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection).PrivateLinkServiceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.privateEndpoint.serviceconnection.privateLinkService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62724,13 +62731,14 @@ func (c *mqlAzureSubscriptionNetworkServicePrivateEndpoint) GetPrivateDnsZoneGro
 type mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnectionInternal
-	Id                 plugin.TValue[string]
-	Name               plugin.TValue[string]
-	PrivateLinkService plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService]
-	GroupIds           plugin.TValue[[]any]
-	ConnectionStatus   plugin.TValue[string]
-	RequestMessage     plugin.TValue[string]
+	// optional: if you define mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnectionInternal it will be used here
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	PrivateLinkServiceId plugin.TValue[string]
+	PrivateLinkService   plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService]
+	GroupIds             plugin.TValue[[]any]
+	ConnectionStatus     plugin.TValue[string]
+	RequestMessage       plugin.TValue[string]
 }
 
 // createAzureSubscriptionNetworkServicePrivateEndpointServiceconnection creates a new instance of this resource
@@ -62771,6 +62779,10 @@ func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) Get
 
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) GetPrivateLinkServiceId() *plugin.TValue[string] {
+	return &c.PrivateLinkServiceId
 }
 
 func (c *mqlAzureSubscriptionNetworkServicePrivateEndpointServiceconnection) GetPrivateLinkService() *plugin.TValue[*mqlAzureSubscriptionNetworkServicePrivateLinkService] {
