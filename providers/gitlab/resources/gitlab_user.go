@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	gitlab "gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -60,7 +60,7 @@ func initGitlabUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	}
 
 	conn := runtime.Connection.(*connection.GitLabConnection)
-	user, resp, err := conn.Client().Users.GetUser(idArg.Value.(int64), gitlab.GetUsersOptions{})
+	user, resp, err := conn.Client().Users.GetUser(idArg.Value.(int64), &gitlab.GetUserOptions{})
 	if err != nil {
 		// Non-admin tokens get 403/404 from /users/:id. Let the resource exist
 		// with whatever id was passed in so typed back-refs (sshKey.user, etc.)
@@ -116,7 +116,7 @@ func (u *mqlGitlabUser) fetchUser() (*gitlab.User, error) {
 		return u.user, nil
 	}
 	conn := u.MqlRuntime.Connection.(*connection.GitLabConnection)
-	user, resp, err := conn.Client().Users.GetUser(u.Id.Data, gitlab.GetUsersOptions{})
+	user, resp, err := conn.Client().Users.GetUser(u.Id.Data, &gitlab.GetUserOptions{})
 	if err != nil {
 		if resp != nil && (resp.StatusCode == 403 || resp.StatusCode == 404) {
 			gitlabUserScopeWarn.Do(func() {
