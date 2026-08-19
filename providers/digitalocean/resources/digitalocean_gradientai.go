@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -283,6 +284,13 @@ func initDigitaloceanGradientaiAgent(runtime *plugin.Runtime, args map[string]*l
 	agent, _, err := conn.Client().GradientAI.GetAgent(context.Background(), uuid)
 	if err != nil {
 		return nil, nil, err
+	}
+	// GetAgent returns the decoded root's field, so a 200 carrying no agent
+	// yields a nil agent and a nil error. Passing it on hands the runtime a
+	// typed nil, which is not == nil once widened to plugin.Resource: the
+	// runtime accepts it and panics reading its id.
+	if agent == nil {
+		return nil, nil, fmt.Errorf("digitalocean.gradientai.agent with uuid %q not found", uuid)
 	}
 	res, err := newMqlGradientaiAgent(runtime, agent)
 	if err != nil {
