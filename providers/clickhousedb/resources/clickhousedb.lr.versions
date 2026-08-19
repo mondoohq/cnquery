@@ -8,10 +8,15 @@ clickhousedb.cluster.name 13.0.0
 clickhousedb.cluster.shardCount 13.0.0
 clickhousedb.instance 13.0.0
 clickhousedb.instance.clusters 13.0.0
+clickhousedb.instance.httpPort 13.0.2
+clickhousedb.instance.httpsPort 13.0.2
 clickhousedb.instance.quotas 13.0.0
 clickhousedb.instance.roles 13.0.0
 clickhousedb.instance.serverSettings 13.0.0
 clickhousedb.instance.settingsProfiles 13.0.0
+clickhousedb.instance.tcpPort 13.0.2
+clickhousedb.instance.tcpPortSecure 13.0.2
+clickhousedb.instance.tlsEnabled 13.0.2
 clickhousedb.instance.users 13.0.0
 clickhousedb.instance.version 13.0.0
 clickhousedb.quota 13.0.0

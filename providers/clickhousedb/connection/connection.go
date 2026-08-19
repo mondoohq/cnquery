@@ -165,3 +165,18 @@ func IsPermissionError(err error) bool {
 		strings.Contains(msg, "code: 497") ||
 		strings.Contains(msg, "code: 492")
 }
+
+// IsUnknownPortError reports whether an error is getServerPort() refusing a
+// listener the server has not configured.
+//
+// ClickHouse raises this rather than returning zero, and it reuses code 701
+// (CLUSTER_DOESNT_EXIST) for it, so the message is what distinguishes a port
+// that is switched off from a genuine cluster lookup failure. A server with TLS
+// disabled produces it on every call for tcp_port_secure, which is an answer
+// rather than a fault.
+func IsUnknownPortError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "There is no port named")
+}

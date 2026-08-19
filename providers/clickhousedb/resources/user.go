@@ -31,8 +31,15 @@ func (r *mqlClickhousedbInstance) users() ([]any, error) {
 	list := []any{}
 	for rows.Next() {
 		var name, storage string
-		var authTypes, hostIps, hostNames, defaultRoles []string
-		if err := rows.Scan(&name, &authTypes, &storage, &hostIps, &hostNames, &defaultRoles); err != nil {
+		var hostIps, hostNames, defaultRoles []string
+		// auth_type is taken as-is because its arity changed between releases;
+		// see stringList.
+		var authType any
+		if err := rows.Scan(&name, &authType, &storage, &hostIps, &hostNames, &defaultRoles); err != nil {
+			return nil, err
+		}
+		authTypes, err := stringList("auth_type", authType)
+		if err != nil {
 			return nil, err
 		}
 		res, err := CreateResource(r.MqlRuntime, "clickhousedb.user", map[string]*llx.RawData{
@@ -61,7 +68,7 @@ func (r *mqlClickhousedbUser) grants() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return grantsFor(db, conn.Context(), "user_name", r.Name.Data)
+	return grantsFor(conn.Context(), db, "user_name", r.Name.Data)
 }
 
 // grants renders the privileges granted to the role.
@@ -71,7 +78,7 @@ func (r *mqlClickhousedbRole) grants() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return grantsFor(db, conn.Context(), "role_name", r.Name.Data)
+	return grantsFor(conn.Context(), db, "role_name", r.Name.Data)
 }
 
 // requiresCredential reports whether a user needs a credential to authenticate.
