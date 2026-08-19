@@ -250,7 +250,66 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forServers() (*mqlAzureSubscr
 	if err != nil {
 		return nil, err
 	}
-	return resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers), nil
+	mqlServers := resource.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers)
+	// The pricing response already carries the extensions, so prime the cache
+	// rather than making extensions() fetch the same thing again.
+	var rawExtensions []*security.Extension
+	if vmPricing.Properties != nil {
+		rawExtensions = vmPricing.Properties.Extensions
+	}
+	mqlServers.rawExtensionsOnce.Do(func() {
+		mqlServers.rawExtensions = rawExtensions
+	})
+	return mqlServers, nil
+}
+
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForServersInternal struct {
+	rawExtensionsOnce sync.Once
+	rawExtensions     []*security.Extension
+	rawExtensionsErr  error
+}
+
+// fetchRawExtensions returns the extension list from the VirtualMachines
+// pricing endpoint, resolved once. The parent forServers() primes it from the
+// response it already has; reaching the resource by its own type name falls
+// back to the API.
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) fetchRawExtensions() ([]*security.Extension, error) {
+	a.rawExtensionsOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+		subId := a.SubscriptionId.Data
+		clientFactory, err := armsecurity.NewClientFactory(subId, conn.Token(), &arm.ClientOptions{
+			ClientOptions: conn.ClientOptions(),
+		})
+		if err != nil {
+			a.rawExtensionsErr = err
+			return
+		}
+		resp, err := clientFactory.NewPricingsClient().Get(context.Background(),
+			fmt.Sprintf("subscriptions/%s", subId), "VirtualMachines",
+			&security.PricingsClientGetOptions{})
+		if err != nil {
+			a.rawExtensionsErr = err
+			return
+		}
+		if resp.Properties != nil {
+			a.rawExtensions = resp.Properties.Extensions
+		}
+	})
+	return a.rawExtensions, a.rawExtensionsErr
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) extensions() ([]any, error) {
+	exts, err := a.fetchRawExtensions()
+	if err != nil {
+		return nil, err
+	}
+	return buildExtensionResources(a.MqlRuntime, exts,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderForServersExtension,
+		ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers+"/"+a.SubscriptionId.Data)
+}
+
+func (a *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) id() (string, error) {
+	return a.__id, nil
 }
 
 // simpleDefenderDict serializes a typed Defender pricing resource's `enabled`
