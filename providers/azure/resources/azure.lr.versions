@@ -814,6 +814,13 @@ azure.subscription.cloudDefenderService.defenderForServers.deprecated 11.6.1
 azure.subscription.cloudDefenderService.defenderForServers.enabled 11.6.1
 azure.subscription.cloudDefenderService.defenderForServers.enablementTime 11.6.1
 azure.subscription.cloudDefenderService.defenderForServers.enforce 11.6.1
+azure.subscription.cloudDefenderService.defenderForServers.extension 13.36.1
+azure.subscription.cloudDefenderService.defenderForServers.extension.additionalProperties 13.36.1
+azure.subscription.cloudDefenderService.defenderForServers.extension.isEnabled 13.36.1
+azure.subscription.cloudDefenderService.defenderForServers.extension.name 13.36.1
+azure.subscription.cloudDefenderService.defenderForServers.extension.operationStatusCode 13.36.1
+azure.subscription.cloudDefenderService.defenderForServers.extension.operationStatusMessage 13.36.1
+azure.subscription.cloudDefenderService.defenderForServers.extensions 13.36.1
 azure.subscription.cloudDefenderService.defenderForServers.freeTrialRemainingTime 11.6.1
 azure.subscription.cloudDefenderService.defenderForServers.inherited 11.6.1
 azure.subscription.cloudDefenderService.defenderForServers.inheritedFrom 11.6.1

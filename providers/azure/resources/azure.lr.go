@@ -301,6 +301,7 @@ const (
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPM                                           string = "azure.subscription.cloudDefenderService.defenderCSPM"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension                                  string = "azure.subscription.cloudDefenderService.defenderCSPM.extension"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForServers                                     string = "azure.subscription.cloudDefenderService.defenderForServers"
+	ResourceAzureSubscriptionCloudDefenderServiceDefenderForServersExtension                            string = "azure.subscription.cloudDefenderService.defenderForServers.extension"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForAppServices                                 string = "azure.subscription.cloudDefenderService.defenderForAppServices"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlServersOnMachines                        string = "azure.subscription.cloudDefenderService.defenderForSqlServersOnMachines"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForSqlDatabases                                string = "azure.subscription.cloudDefenderService.defenderForSqlDatabases"
@@ -1685,6 +1686,10 @@ func init() {
 		"azure.subscription.cloudDefenderService.defenderForServers": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForServers(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCloudDefenderServiceDefenderForServers,
+		},
+		"azure.subscription.cloudDefenderService.defenderForServers.extension": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForServersExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceDefenderForServersExtension,
 		},
 		"azure.subscription.cloudDefenderService.defenderForAppServices": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForAppServices(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -13419,6 +13424,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.defenderForServers.vulnerabilityManagementToolName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetVulnerabilityManagementToolName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).GetExtensions()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.defenderForServers.extension")))
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.additionalProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).GetAdditionalProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.operationStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).GetOperationStatusCode()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.operationStatusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).GetOperationStatusMessage()).ToDataRes(types.String)
 	},
 	"azure.subscription.cloudDefenderService.defenderForAppServices.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices).GetSubscriptionId()).ToDataRes(types.String)
@@ -37069,6 +37092,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.defenderForServers.vulnerabilityManagementToolName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).VulnerabilityManagementToolName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServers).Extensions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.additionalProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).AdditionalProperties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.operationStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).OperationStatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.defenderForServers.extension.operationStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension).OperationStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.defenderForAppServices.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -86093,7 +86144,7 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderCSPMExtension) GetOpera
 type mqlAzureSubscriptionCloudDefenderServiceDefenderForServers struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForServersInternal it will be used here
+	mqlAzureSubscriptionCloudDefenderServiceDefenderForServersInternal
 	SubscriptionId                  plugin.TValue[string]
 	Enabled                         plugin.TValue[bool]
 	PricingTier                     plugin.TValue[string]
@@ -86107,6 +86158,7 @@ type mqlAzureSubscriptionCloudDefenderServiceDefenderForServers struct {
 	ReplacedBy                      plugin.TValue[[]any]
 	ResourcesCoverageStatus         plugin.TValue[string]
 	VulnerabilityManagementToolName plugin.TValue[string]
+	Extensions                      plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderServiceDefenderForServers creates a new instance of this resource
@@ -86196,6 +86248,91 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetResource
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetVulnerabilityManagementToolName() *plugin.TValue[string] {
 	return &c.VulnerabilityManagementToolName
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServers) GetExtensions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Extensions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService.defenderForServers", c.__id, "extensions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.extensions()
+	})
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension for the azure.subscription.cloudDefenderService.defenderForServers.extension resource
+type mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtensionInternal it will be used here
+	Name                   plugin.TValue[string]
+	IsEnabled              plugin.TValue[bool]
+	AdditionalProperties   plugin.TValue[any]
+	OperationStatusCode    plugin.TValue[string]
+	OperationStatusMessage plugin.TValue[string]
+}
+
+// createAzureSubscriptionCloudDefenderServiceDefenderForServersExtension creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceDefenderForServersExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.defenderForServers.extension", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) MqlName() string {
+	return "azure.subscription.cloudDefenderService.defenderForServers.extension"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) GetAdditionalProperties() *plugin.TValue[any] {
+	return &c.AdditionalProperties
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) GetOperationStatusCode() *plugin.TValue[string] {
+	return &c.OperationStatusCode
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForServersExtension) GetOperationStatusMessage() *plugin.TValue[string] {
+	return &c.OperationStatusMessage
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceDefenderForAppServices for the azure.subscription.cloudDefenderService.defenderForAppServices resource

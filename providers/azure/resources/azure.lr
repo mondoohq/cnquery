@@ -10482,6 +10482,28 @@ private azure.subscription.cloudDefenderService.defenderForServers @defaults("en
   resourcesCoverageStatus string
   // Name of the vulnerability management tool in use
   vulnerabilityManagementToolName string
+  // Components offered under the plan and whether each is turned on
+  //
+  // The plan is billed as a whole but its capabilities are switched
+  // individually, so a subscription on the Standard tier can still have File
+  // Integrity Monitoring or agentless scanning turned off. Select a component
+  // by name, for example
+  // `extensions.where(name == "FileIntegrityMonitoring")`.
+  extensions() []azure.subscription.cloudDefenderService.defenderForServers.extension
+}
+
+// Microsoft Defender for Servers extension
+private azure.subscription.cloudDefenderService.defenderForServers.extension {
+  // Extension name
+  name string
+  // Whether the extension is enabled
+  isEnabled bool
+  // Additional extension properties
+  additionalProperties dict
+  // Status code of the enablement/disablement operation (Succeeded or Failed)
+  operationStatusCode string
+  // Status message of the enablement/disablement operation
+  operationStatusMessage string
 }
 
 // Microsoft Defender for App Service
