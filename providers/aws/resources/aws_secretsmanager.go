@@ -224,6 +224,14 @@ func (a *mqlAwsSecretsmanager) getSecrets(conn *connection.AwsConnection) []*job
 					return nil, err
 				}
 				for _, secret := range secrets.SecretList {
+					// ListSecrets already carries the tags, so the discovery tag
+					// filter costs nothing extra here.
+					if conn.Filters.General.HasTags() &&
+						conn.Filters.General.IsFilteredOutByTags(secretTagsToStringMap(secret.Tags)) {
+						log.Debug().Str("secret", convert.ToValue(secret.ARN)).
+							Msg("excluding secret due to filters")
+						continue
+					}
 					args := map[string]*llx.RawData{
 						"arn":              llx.StringDataPtr(secret.ARN),
 						"region":           llx.StringData(region),
@@ -483,6 +491,12 @@ func (a *mqlAwsSecretsmanagerSecretReplicaRegion) kmsKey() (*mqlAwsKmsKey, error
 
 func secretTagsToMap(tags []secretstypes.Tag) map[string]any {
 	return tagsToMap(tags, func(t secretstypes.Tag) *string { return t.Key }, func(t secretstypes.Tag) *string { return t.Value })
+}
+
+// secretTagsToStringMap is secretTagsToMap in the shape the discovery filters
+// evaluate against.
+func secretTagsToStringMap(tags []secretstypes.Tag) map[string]string {
+	return tagsToStringMap(tags, func(t secretstypes.Tag) *string { return t.Key }, func(t secretstypes.Tag) *string { return t.Value })
 }
 
 type mqlAwsSecretsmanagerSecretReplicaRegionInternal struct {
