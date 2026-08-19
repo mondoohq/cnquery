@@ -61,6 +61,7 @@ const (
 	ResourceDigitaloceanAlertPolicy                                     string = "digitalocean.alertPolicy"
 	ResourceDigitaloceanUptimeCheck                                     string = "digitalocean.uptimeCheck"
 	ResourceDigitaloceanCdn                                             string = "digitalocean.cdn"
+	ResourceDigitaloceanTeam                                            string = "digitalocean.team"
 	ResourceDigitaloceanTag                                             string = "digitalocean.tag"
 	ResourceDigitaloceanSpacesKey                                       string = "digitalocean.spacesKey"
 	ResourceDigitaloceanSpacesBucket                                    string = "digitalocean.spacesBucket"
@@ -286,6 +287,10 @@ func init() {
 		"digitalocean.cdn": {
 			// to override args, implement: initDigitaloceanCdn(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanCdn,
+		},
+		"digitalocean.team": {
+			// to override args, implement: initDigitaloceanTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanTeam,
 		},
 		"digitalocean.tag": {
 			// to override args, implement: initDigitaloceanTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -634,6 +639,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.billing": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitalocean).GetBilling()).ToDataRes(types.Resource("digitalocean.billing"))
+	},
+	"digitalocean.teams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitalocean).GetTeams()).ToDataRes(types.Array(types.Resource("digitalocean.team")))
 	},
 	"digitalocean.account.email": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanAccount).GetEmail()).ToDataRes(types.String)
@@ -2164,6 +2172,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.cdn.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanCdn).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.team.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanTeam).GetId()).ToDataRes(types.Int)
+	},
+	"digitalocean.team.uuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanTeam).GetUuid()).ToDataRes(types.String)
+	},
+	"digitalocean.team.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanTeam).GetName()).ToDataRes(types.String)
+	},
+	"digitalocean.team.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanTeam).GetEmail()).ToDataRes(types.String)
+	},
+	"digitalocean.team.memberCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanTeam).GetMemberCount()).ToDataRes(types.Int)
+	},
+	"digitalocean.team.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanTeam).GetStatus()).ToDataRes(types.String)
+	},
+	"digitalocean.team.joinedOrganizationAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanTeam).GetJoinedOrganizationAt()).ToDataRes(types.Time)
 	},
 	"digitalocean.tag.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanTag).GetName()).ToDataRes(types.String)
@@ -3712,6 +3741,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.billing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitalocean).Billing, ok = plugin.RawToTValue[*mqlDigitaloceanBilling](v.Value, v.Error)
+		return
+	},
+	"digitalocean.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitalocean).Teams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"digitalocean.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5930,6 +5963,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanCdn).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"digitalocean.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.team.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.team.uuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).Uuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.team.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.team.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.team.memberCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).MemberCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"digitalocean.team.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.team.joinedOrganizationAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanTeam).JoinedOrganizationAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"digitalocean.tag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanTag).__id, ok = v.Value.(string)
 		return
@@ -7994,6 +8059,7 @@ type mqlDigitalocean struct {
 	PartnerAttachments    plugin.TValue[[]any]
 	Secrets               plugin.TValue[[]any]
 	Billing               plugin.TValue[*mqlDigitaloceanBilling]
+	Teams                 plugin.TValue[[]any]
 }
 
 // createDigitalocean creates a new instance of this resource
@@ -8654,6 +8720,22 @@ func (c *mqlDigitalocean) GetBilling() *plugin.TValue[*mqlDigitaloceanBilling] {
 		}
 
 		return c.billing()
+	})
+}
+
+func (c *mqlDigitalocean) GetTeams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Teams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean", c.__id, "teams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.teams()
 	})
 }
 
@@ -14003,6 +14085,85 @@ func (c *mqlDigitaloceanCdn) GetCustomDomain() *plugin.TValue[string] {
 
 func (c *mqlDigitaloceanCdn) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+// mqlDigitaloceanTeam for the digitalocean.team resource
+type mqlDigitaloceanTeam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanTeamInternal it will be used here
+	Id                   plugin.TValue[int64]
+	Uuid                 plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Email                plugin.TValue[string]
+	MemberCount          plugin.TValue[int64]
+	Status               plugin.TValue[string]
+	JoinedOrganizationAt plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanTeam creates a new instance of this resource
+func createDigitaloceanTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanTeam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.team", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanTeam) MqlName() string {
+	return "digitalocean.team"
+}
+
+func (c *mqlDigitaloceanTeam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanTeam) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanTeam) GetUuid() *plugin.TValue[string] {
+	return &c.Uuid
+}
+
+func (c *mqlDigitaloceanTeam) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDigitaloceanTeam) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlDigitaloceanTeam) GetMemberCount() *plugin.TValue[int64] {
+	return &c.MemberCount
+}
+
+func (c *mqlDigitaloceanTeam) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlDigitaloceanTeam) GetJoinedOrganizationAt() *plugin.TValue[*time.Time] {
+	return &c.JoinedOrganizationAt
 }
 
 // mqlDigitaloceanTag for the digitalocean.tag resource

@@ -1010,6 +1010,15 @@ digitalocean.tag 13.0.1
 digitalocean.tag.name 13.0.1
 digitalocean.tag.resourceCount 13.0.1
 digitalocean.tags 13.0.1
+digitalocean.team 13.15.3
+digitalocean.team.email 13.15.3
+digitalocean.team.id 13.15.3
+digitalocean.team.joinedOrganizationAt 13.15.3
+digitalocean.team.memberCount 13.15.3
+digitalocean.team.name 13.15.3
+digitalocean.team.status 13.15.3
+digitalocean.team.uuid 13.15.3
+digitalocean.teams 13.15.3
 digitalocean.uptimeCheck 13.0.1
 digitalocean.uptimeCheck.enabled 13.0.1
 digitalocean.uptimeCheck.id 13.0.1
