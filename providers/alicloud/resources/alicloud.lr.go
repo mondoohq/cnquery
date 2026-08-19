@@ -25063,7 +25063,7 @@ func (c *mqlAlicloudCsCluster) GetChecks() *plugin.TValue[[]any] {
 type mqlAlicloudCsClusterCheck struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudCsClusterCheckInternal it will be used here
+	mqlAlicloudCsClusterCheckInternal
 	CheckId    plugin.TValue[string]
 	Type       plugin.TValue[string]
 	Status     plugin.TValue[string]

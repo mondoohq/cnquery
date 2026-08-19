@@ -78,6 +78,51 @@ func TestCsGrantID(t *testing.T) {
 		b := csGrantID("281", "namespace", "c1a2b3/default", "admin", "")
 		assert.NotEqual(t, a, b)
 	})
+
+	// resourceID legitimately contains slashes, so a slash-joined key could in
+	// principle be read two ways. The components that would have to absorb the
+	// slash are closed enums today, so the collision is not reachable in
+	// practice, but the key is joined on a separator no component can contain,
+	// which makes it structurally impossible rather than accidentally safe.
+	// Pin that: a slash moving between adjacent components must not collide.
+	t.Run("a slash inside a component cannot be read as a separator", func(t *testing.T) {
+		a := csGrantID("281", "cluster", "c1a2b3/kube-system", "admin", "reader")
+		b := csGrantID("281", "cluster", "c1a2b3", "kube-system/admin", "reader")
+		assert.NotEqual(t, a, b)
+	})
+
+	t.Run("an empty component does not let its neighbours merge", func(t *testing.T) {
+		a := csGrantID("281", "cluster", "c1a2b3", "", "admin")
+		b := csGrantID("281", "cluster", "c1a2b3", "admin", "")
+		assert.NotEqual(t, a, b)
+	})
+}
+
+// TestCsClusterCheckID covers the inspection-run cache key. The API gives no
+// guarantee that run ids are unique across clusters, so the key is qualified
+// with the cluster: an id that repeated would otherwise collide in the resource
+// cache and report the first cluster's run as the second cluster's.
+func TestCsClusterCheckID(t *testing.T) {
+	const check = "1697100584236600453-ce0da5a1-clustercheck-lboto"
+
+	t.Run("differs by cluster", func(t *testing.T) {
+		assert.NotEqual(t,
+			csClusterCheckID("c1a2b3", check),
+			csClusterCheckID("c9z8y7", check))
+	})
+	t.Run("differs by run", func(t *testing.T) {
+		assert.NotEqual(t,
+			csClusterCheckID("c1a2b3", check),
+			csClusterCheckID("c1a2b3", "1697100584236600453-ce0da5a1-clustercheck-other"))
+	})
+	t.Run("same run on the same cluster is stable", func(t *testing.T) {
+		assert.Equal(t,
+			csClusterCheckID("c1a2b3", check),
+			csClusterCheckID("c1a2b3", check))
+	})
+	t.Run("the run id stays readable in the key", func(t *testing.T) {
+		assert.Equal(t, "c1a2b3/"+check, csClusterCheckID("c1a2b3", check))
+	})
 }
 
 // TestCsParseTime covers the cluster-check timestamp parser. An unparseable

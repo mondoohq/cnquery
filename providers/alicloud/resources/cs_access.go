@@ -43,8 +43,12 @@ func csParseTime(s *string) *time.Time {
 // it applies at, and the role it confers. Dropping any one of them would make
 // two real grants share a key, and the second would be reported with the
 // first one's values.
+//
+// The separator is NUL rather than a slash because resourceID legitimately
+// contains slashes ("<clusterId>/<namespace>"). No component can contain a NUL,
+// so the joined key cannot be read two ways whatever the components hold.
 func csGrantID(uid, resourceType, resourceID, roleType, roleName string) string {
-	return strings.Join([]string{uid, resourceType, resourceID, roleType, roleName}, "/")
+	return strings.Join([]string{uid, resourceType, resourceID, roleType, roleName}, "\x00")
 }
 
 // csGrantCoversCluster reports whether a grant reaches the given cluster. A
@@ -64,6 +68,21 @@ func csGrantCoversCluster(resourceID, clusterID string) bool {
 	}
 	// namespace scope: "<clusterId>/<namespace>"
 	return strings.HasPrefix(resourceID, clusterID+"/")
+}
+
+// mqlAlicloudCsClusterCheckInternal holds the id of the cluster the run belongs
+// to, so the resource can rebuild its own cluster-qualified cache key.
+type mqlAlicloudCsClusterCheckInternal struct {
+	cacheClusterID string
+}
+
+// csClusterCheckID builds the cache key for an inspection run. The run id is
+// qualified with the cluster because the API gives no guarantee that run ids are
+// unique across clusters, and an id that repeated would make the second
+// cluster's runs collide with the first's in the resource cache and report the
+// first cluster's results.
+func csClusterCheckID(clusterID, checkID string) string {
+	return clusterID + "/" + checkID
 }
 
 // mqlAlicloudCsGrantInternal holds the principal and cluster id the grant was
@@ -365,7 +384,7 @@ func (r *mqlAlicloudCsCluster) checks() ([]any, error) {
 			continue
 		}
 		resource, err := CreateResource(r.MqlRuntime, "alicloud.cs.cluster.check", map[string]*llx.RawData{
-			"__id":       llx.StringData(checkID),
+			"__id":       llx.StringData(csClusterCheckID(r.clusterId, checkID)),
 			"checkId":    llx.StringData(checkID),
 			"type":       llx.StringDataPtr(check.Type),
 			"status":     llx.StringDataPtr(check.Status),
@@ -376,13 +395,15 @@ func (r *mqlAlicloudCsCluster) checks() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, resource)
+		mqlCheck := resource.(*mqlAlicloudCsClusterCheck)
+		mqlCheck.cacheClusterID = r.clusterId
+		res = append(res, mqlCheck)
 	}
 	return res, nil
 }
 
 func (r *mqlAlicloudCsClusterCheck) id() (string, error) {
-	return r.CheckId.Data, nil
+	return csClusterCheckID(r.cacheClusterID, r.CheckId.Data), nil
 }
 
 // mqlAlicloudCsInternal memoizes the account-wide grant sweep so every cluster
