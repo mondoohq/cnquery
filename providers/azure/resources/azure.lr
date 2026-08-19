@@ -8632,7 +8632,10 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   defaultConsistencyLevel string
   // Network ACL bypass setting ("None" or "AzureServices")
   networkAclBypass string
-  // Allowed origins from the account's CORS policies (empty when CORS is not configured)
+  // Allowed origins from the account's CORS policies
+  //
+  // One entry per origin, gathered across every CORS policy on the account.
+  // Empty when CORS is not configured. An entry of "*" allows any origin.
   corsAllowedOrigins []string
   // Names of the regions the account is deployed to (more than one indicates multi-region)
   locations []string

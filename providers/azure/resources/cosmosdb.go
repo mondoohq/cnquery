@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -303,6 +304,33 @@ func cosmosEnumStrPtr[T ~string](v *T) *string {
 	return &s
 }
 
+// cosmosCorsOrigins flattens a Cosmos DB account's CORS policies into one origin
+// per element.
+//
+// ARM models allowedOrigins as a single string holding a comma-separated list
+// rather than an array, so reporting it whole produced one element such as
+// "https://app.example.com,*". An origin inside that element matches nothing a
+// query would compare against: corsAllowedOrigins.none(_ == "*") passed on an
+// account that allows every origin, and any(_ == "https://app.example.com")
+// failed on an account that allows it.
+//
+// Duplicates are kept. An account can carry several CORS policies, and repeating
+// an origin across them is what the account is actually configured with.
+func cosmosCorsOrigins(policies []*cosmosdb.CorsPolicy) []any {
+	origins := []any{}
+	for _, cors := range policies {
+		if cors == nil || cors.AllowedOrigins == nil {
+			continue
+		}
+		for _, origin := range strings.Split(*cors.AllowedOrigins, ",") {
+			if origin = strings.TrimSpace(origin); origin != "" {
+				origins = append(origins, origin)
+			}
+		}
+	}
+	return origins
+}
+
 // cosmosNetworkConsistency extracts the default consistency level, network ACL
 // bypass setting, CORS allowed origins, and deployed region names from a Cosmos
 // DB account's properties. Consistency level and ACL bypass stay nil (null in
@@ -318,11 +346,7 @@ func cosmosNetworkConsistency(props *cosmosdb.DatabaseAccountGetProperties) (def
 		defaultConsistencyLevel = cosmosEnumStrPtr(props.ConsistencyPolicy.DefaultConsistencyLevel)
 	}
 	networkAclBypass = cosmosEnumStrPtr(props.NetworkACLBypass)
-	for _, cors := range props.Cors {
-		if cors != nil && cors.AllowedOrigins != nil {
-			corsAllowedOrigins = append(corsAllowedOrigins, *cors.AllowedOrigins)
-		}
-	}
+	corsAllowedOrigins = cosmosCorsOrigins(props.Cors)
 	for _, loc := range props.Locations {
 		if loc != nil && loc.LocationName != nil {
 			locations = append(locations, *loc.LocationName)
