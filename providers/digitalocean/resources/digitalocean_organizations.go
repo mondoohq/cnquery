@@ -18,6 +18,16 @@ import (
 // the client's own NewRequest/Do. That keeps the token, the rate limiter and
 // the error decoding the rest of the provider relies on, rather than standing
 // up a second HTTP client beside them.
+//
+// This endpoint is not paginated, so there is deliberately no paginate() call
+// here. DigitalOcean's published spec declares no page or per_page parameter on
+// it, and its response body is a bare {"teams": [...]} with none of the
+// pagination and meta members every paginated endpoint carries. A loop would
+// also be dead code rather than a safety net: godo fills Response.Links from
+// the body's links key, so a body that never has one always reports the first
+// page as the last. That is how the scan-findings loop in #9366 silently
+// truncated. If DigitalOcean ever paginates this, it has to be driven off the
+// returned slice length instead.
 const organizationTeamsPath = "v2/organizations/teams"
 
 type organizationTeam struct {
