@@ -6,12 +6,14 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	tea "github.com/alibabacloud-go/tea/tea"
 	wafclient "github.com/alibabacloud-go/waf-openapi-20211001/v7/client"
+	"github.com/rs/zerolog/log"
 
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -68,6 +70,14 @@ func (r *mqlAlicloudWaf) instances() ([]any, error) {
 type mqlAlicloudWafInstanceInternal struct {
 	region     string
 	instanceId string
+
+	logLock sync.Mutex
+	logDone bool
+	log     *wafclient.DescribeUserWafLogStatusResponseBody
+
+	resourceLogLock sync.Mutex
+	resourceLogDone bool
+	resourceLog     map[string]bool
 }
 
 func newWafInstance(runtime *plugin.Runtime, region string, body *wafclient.DescribeInstanceResponseBody) (*mqlAlicloudWafInstance, error) {
@@ -184,7 +194,9 @@ func (r *mqlAlicloudWafInstance) defenseResources() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, resource)
+			mqlResource := resource.(*mqlAlicloudWafDefenseResource)
+			mqlResource.parentInstance = r
+			res = append(res, mqlResource)
 		}
 		if len(items) < int(pageSize) {
 			break
@@ -192,6 +204,166 @@ func (r *mqlAlicloudWafInstance) defenseResources() ([]any, error) {
 		pageNumber++
 	}
 	return res, nil
+}
+
+// wafResourceLogBatch is the number of protected objects asked about per
+// DescribeResourceLogStatus call. The API takes a comma-separated list, so the
+// per-object status for a whole instance costs a handful of calls rather than
+// one per object.
+const wafResourceLogBatch = 50
+
+// mqlAlicloudWafDefenseResourceInternal carries a pointer to the instance the
+// protected object was listed from. The per-object log status is a batch call
+// keyed on the instance, so every object on one instance shares a single read
+// instead of making one call each.
+type mqlAlicloudWafDefenseResourceInternal struct {
+	parentInstance *mqlAlicloudWafInstance
+}
+
+// logDeliveryEnabled reports whether this protected object's logs reach Log
+// Service. It reads the instance-wide batch, which is fetched once. False when
+// the object was reached without its parent instance or the batch could not be
+// read: claiming delivery is on would assert an audit trail that may not exist.
+func (r *mqlAlicloudWafDefenseResource) logDeliveryEnabled() (bool, error) {
+	if r.parentInstance == nil {
+		log.Debug().Str("resource", r.Resource.Data).
+			Msg("alicloud> WAF protected object reached without its instance, reporting log delivery off")
+		return false, nil
+	}
+	statuses, err := r.parentInstance.resourceLogStatuses()
+	if err != nil || statuses == nil {
+		// The false is deliberate (an unread status must not read as an audit
+		// trail nobody confirmed), but it is indistinguishable from a genuine
+		// "delivery is off", so the cause is logged rather than dropped.
+		log.Debug().Err(err).Str("resource", r.Resource.Data).
+			Msg("alicloud> could not read WAF per-resource log status, reporting log delivery off")
+		return false, nil
+	}
+	return statuses[r.Resource.Data], nil
+}
+
+// resourceLogStatuses reads the per-object log-delivery status for every
+// protected object on the instance and memoizes it, so N objects cost
+// ceil(N/wafResourceLogBatch) calls rather than N.
+func (r *mqlAlicloudWafInstance) resourceLogStatuses() (map[string]bool, error) {
+	r.resourceLogLock.Lock()
+	defer r.resourceLogLock.Unlock()
+	if r.resourceLogDone {
+		return r.resourceLog, nil
+	}
+	r.resourceLogDone = true
+
+	resources := r.GetDefenseResources()
+	if resources.Error != nil {
+		return nil, resources.Error
+	}
+	names := []string{}
+	for _, entry := range resources.Data {
+		dr, ok := entry.(*mqlAlicloudWafDefenseResource)
+		if !ok || dr.Resource.Data == "" {
+			continue
+		}
+		names = append(names, dr.Resource.Data)
+	}
+	if len(names) == 0 {
+		r.resourceLog = map[string]bool{}
+		return r.resourceLog, nil
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.WafClient(r.region)
+	if err != nil {
+		return nil, err
+	}
+
+	statuses := map[string]bool{}
+	for start := 0; start < len(names); start += wafResourceLogBatch {
+		end := start + wafResourceLogBatch
+		if end > len(names) {
+			end = len(names)
+		}
+		resp, err := client.DescribeResourceLogStatus(&wafclient.DescribeResourceLogStatusRequest{
+			InstanceId: tea.String(r.instanceId),
+			RegionId:   tea.String(r.region),
+			Resources:  tea.String(strings.Join(names[start:end], ",")),
+		})
+		if err != nil {
+			// A batch that fails leaves its objects absent from the map, which
+			// reads as delivery off. Recording them as on would be worse: it
+			// would report an audit trail nobody confirmed.
+			log.Debug().Err(err).Str("instance", r.instanceId).
+				Msg("alicloud> could not read WAF per-resource log status")
+			continue
+		}
+		if resp == nil || resp.Body == nil {
+			continue
+		}
+		for _, entry := range resp.Body.Result {
+			if entry == nil || entry.Resource == nil {
+				continue
+			}
+			statuses[*entry.Resource] = tea.BoolValue(entry.Status)
+		}
+	}
+	r.resourceLog = statuses
+	return r.resourceLog, nil
+}
+
+// fetchLogStatus lazily reads the instance-wide Log Service delivery state and
+// memoizes it, so the three log fields share one call.
+func (r *mqlAlicloudWafInstance) fetchLogStatus() *wafclient.DescribeUserWafLogStatusResponseBody {
+	r.logLock.Lock()
+	defer r.logLock.Unlock()
+	if r.logDone {
+		return r.log
+	}
+	r.logDone = true
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.WafClient(r.region)
+	if err != nil {
+		return nil
+	}
+	resp, err := client.DescribeUserWafLogStatus(&wafclient.DescribeUserWafLogStatusRequest{
+		InstanceId: tea.String(r.instanceId),
+		RegionId:   tea.String(r.region),
+	})
+	if err != nil || resp == nil || resp.Body == nil {
+		return nil
+	}
+	r.log = resp.Body
+	return r.log
+}
+
+// wafLogDelivering reports whether a WAF log status means logs are actually
+// reaching Log Service. Only normal counts: initializing and releasing are
+// transitional, and both failure states mean nothing is being delivered.
+func wafLogDelivering(status *string) bool {
+	return strings.EqualFold(strings.TrimSpace(tea.StringValue(status)), "normal")
+}
+
+func (r *mqlAlicloudWafInstance) logDeliveryEnabled() (bool, error) {
+	status := r.fetchLogStatus()
+	if status == nil {
+		return false, nil
+	}
+	return wafLogDelivering(status.LogStatus), nil
+}
+
+func (r *mqlAlicloudWafInstance) logStatus() (string, error) {
+	status := r.fetchLogStatus()
+	if status == nil {
+		return "", nil
+	}
+	return tea.StringValue(status.LogStatus), nil
+}
+
+func (r *mqlAlicloudWafInstance) logRegionId() (string, error) {
+	status := r.fetchLogStatus()
+	if status == nil {
+		return "", nil
+	}
+	return tea.StringValue(status.LogRegionId), nil
 }
 
 func (r *mqlAlicloudWafInstance) domains() ([]any, error) {

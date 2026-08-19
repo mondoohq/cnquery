@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -163,6 +164,89 @@ func (r *mqlAlicloudSas) expireTime() (*time.Time, error) {
 		return nil, err
 	}
 	return configEpochMillis(cfg.ReleaseTime), nil
+}
+
+// ---------------------------------------------------------------------------
+// alicloud.sas.logDelivery
+// ---------------------------------------------------------------------------
+
+// sasLogEnabled reports whether a Security Center log-analysis entry is
+// switched on. The API spells the states enabled/disabled; anything else,
+// including an absent status, reads as off so a category nobody could read
+// fails a "log analysis is on" check rather than passing it.
+func sasLogEnabled(status *string) bool {
+	return strings.EqualFold(strings.TrimSpace(tea.StringValue(status)), "enabled")
+}
+
+// logDeliveries enumerates the per-log-type analysis configuration. Security
+// Center switches host, network and security logs on separately, so this is a
+// list rather than a single boolean.
+func (r *mqlAlicloudSas) logDeliveries() ([]any, error) {
+	client, ok, err := r.sasClient()
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return []any{}, nil
+	}
+
+	resp, err := client.DescribeLogMeta(&sasclient.DescribeLogMetaRequest{})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.Body == nil {
+		return []any{}, nil
+	}
+
+	res := []any{}
+	for _, meta := range resp.Body.LogMetaList {
+		if meta == nil {
+			continue
+		}
+		topic := tea.StringValue(meta.Topic)
+		if topic == "" {
+			// the topic is the cache key; an entry without one would collide
+			// with every other unnamed entry and report the first one's values
+			log.Debug().Msg("alicloud> skipping Security Center log meta entry with no topic")
+			continue
+		}
+		resource, err := CreateResource(r.MqlRuntime, "alicloud.sas.logDelivery", map[string]*llx.RawData{
+			"__id":         llx.StringData(topic),
+			"topic":        llx.StringData(topic),
+			"category":     llx.StringDataPtr(meta.Category),
+			"description":  llx.StringDataPtr(meta.LogDesc),
+			"enabled":      llx.BoolData(sasLogEnabled(meta.Status)),
+			"ttlDays":      llx.IntData(int64(tea.Int32Value(meta.Ttl))),
+			"projectName":  llx.StringDataPtr(meta.UserProject),
+			"logstoreName": llx.StringDataPtr(meta.UserLogStore),
+			"regionId":     llx.StringDataPtr(meta.UserRegion),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, resource)
+	}
+	return res, nil
+}
+
+func (r *mqlAlicloudSasLogDelivery) id() (string, error) {
+	return r.Topic.Data, nil
+}
+
+// logProject resolves the project the logs are delivered to. A project that
+// cannot be resolved degrades to null rather than failing the query, and
+// projectName still carries the name it reported.
+func (r *mqlAlicloudSasLogDelivery) logProject() (*mqlAlicloudLogProject, error) {
+	if r.ProjectName.Data == "" || r.RegionId.Data == "" {
+		r.LogProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	project, err := resolveLogProject(r.MqlRuntime, r.RegionId.Data, r.ProjectName.Data)
+	if err != nil || project == nil {
+		r.LogProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return project, nil
 }
 
 // ---------------------------------------------------------------------------

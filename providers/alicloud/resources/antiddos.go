@@ -5,6 +5,7 @@ package resources
 
 import (
 	"strconv"
+	"sync"
 
 	ddoscooclient "github.com/alibabacloud-go/ddoscoo-20200101/v5/client"
 	tea "github.com/alibabacloud-go/tea/tea"
@@ -207,6 +208,92 @@ func newAntiddosWebRule(runtime *plugin.Runtime, region, instanceID string, wr *
 
 func (r *mqlAlicloudAntiddosWebRule) id() (string, error) {
 	return r.RegionId.Data + "/" + r.InstanceId.Data + "/" + r.Domain.Data, nil
+}
+
+// mqlAlicloudAntiddosWebRuleInternal memoizes the per-domain log-delivery
+// status. DescribeWebAccessLogStatus is scoped to one domain, so the four log
+// fields share a single call rather than making one each.
+type mqlAlicloudAntiddosWebRuleInternal struct {
+	logLock sync.Mutex
+	logDone bool
+	log     *ddoscooclient.DescribeWebAccessLogStatusResponseBody
+}
+
+// fetchLogStatus lazily reads the domain's Log Service delivery status. A
+// failed call returns nil, so delivery reads as off: reporting it as on would
+// claim an audit trail exists for traffic that may not be recorded anywhere.
+func (r *mqlAlicloudAntiddosWebRule) fetchLogStatus() *ddoscooclient.DescribeWebAccessLogStatusResponseBody {
+	r.logLock.Lock()
+	defer r.logLock.Unlock()
+	if r.logDone {
+		return r.log
+	}
+	r.logDone = true
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.DdoscooClient(r.RegionId.Data)
+	if err != nil {
+		return nil
+	}
+	resp, err := client.DescribeWebAccessLogStatus(&ddoscooclient.DescribeWebAccessLogStatusRequest{
+		Domain: tea.String(r.Domain.Data),
+	})
+	if err != nil || resp == nil || resp.Body == nil {
+		return nil
+	}
+	r.log = resp.Body
+	return r.log
+}
+
+func (r *mqlAlicloudAntiddosWebRule) logDeliveryEnabled() (bool, error) {
+	status := r.fetchLogStatus()
+	if status == nil {
+		return false, nil
+	}
+	return tea.BoolValue(status.SlsStatus), nil
+}
+
+func (r *mqlAlicloudAntiddosWebRule) logProjectName() (string, error) {
+	status := r.fetchLogStatus()
+	if status == nil {
+		return "", nil
+	}
+	return tea.StringValue(status.SlsProject), nil
+}
+
+func (r *mqlAlicloudAntiddosWebRule) logLogstoreName() (string, error) {
+	status := r.fetchLogStatus()
+	if status == nil {
+		return "", nil
+	}
+	return tea.StringValue(status.SlsLogstore), nil
+}
+
+// logProject resolves the destination project.
+//
+// DescribeWebAccessLogStatus carries no region for the destination: its whole
+// response is SlsStatus, SlsProject and SlsLogstore. So unlike Cloud Firewall,
+// which reads the destination region straight off DescribeLogStoreInfo, the
+// region here has to be assumed, and the assumption is the instance's own
+// center region, which is where Anti-DDoS provisions the project (its name has
+// the region in it: ddoscoo-project-<uid>-cn-hangzhou).
+//
+// If that ever fails to hold, the reference degrades to null rather than
+// failing the query, and logProjectName still carries the name the API
+// reported. Should a future SDK version add a region to this response, prefer
+// it over the assumption.
+func (r *mqlAlicloudAntiddosWebRule) logProject() (*mqlAlicloudLogProject, error) {
+	status := r.fetchLogStatus()
+	if status == nil || tea.StringValue(status.SlsProject) == "" {
+		r.LogProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	project, err := resolveLogProject(r.MqlRuntime, r.RegionId.Data, tea.StringValue(status.SlsProject))
+	if err != nil || project == nil {
+		r.LogProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return project, nil
 }
 
 func (r *mqlAlicloudAntiddosInstance) networkRules() ([]any, error) {
