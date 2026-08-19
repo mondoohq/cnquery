@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"testing"
 
@@ -108,9 +109,77 @@ func TestZonalLocationSuffix(t *testing.T) {
 		{"northamerica-northeast1", false},
 		{"global", false},
 		{"me-central2", false},
+
+		// The digit in the pattern is what keeps these out. A region whose last
+		// segment is a single letter is not a zone, and treating one as a zone
+		// would drop the whole region from the walk without saying so.
+		{"europe-west", false},
+		{"some-region-x", false},
 	} {
 		t.Run(tc.loc, func(t *testing.T) {
 			assert.Equal(t, tc.zonal, zonalLocationSuffix.MatchString(tc.loc))
 		})
 	}
+}
+
+// A location that refuses the read says nothing about the others, and the
+// policies already collected are real. Abandoning the walk on the first failure
+// reported a field populated in most regions as empty because one region
+// refused, which is what this pins.
+func TestClientTlsPoliciesKeepWhatOtherLocationsReturned(t *testing.T) {
+	env := setupTestEnv(t, []string{networksecurity.CloudPlatformScope})
+
+	env.Mux.HandleFunc("/v1/projects/"+testProjectId+"/locations",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"locations":[
+				{"locationId":"europe-west1"},
+				{"locationId":"global"},
+				{"locationId":"us-central1"}
+			]}`)
+		})
+
+	env.Mux.HandleFunc("/v1/projects/"+testProjectId+"/locations/",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			switch {
+			case strings.Contains(r.URL.Path, "/locations/europe-west1/"):
+				// The kind of per-region gap that used to zero the field.
+				w.WriteHeader(http.StatusForbidden)
+				fmt.Fprint(w, `{"error":{"code":403,"message":"permission denied","status":"PERMISSION_DENIED"}}`)
+			case strings.Contains(r.URL.Path, "/locations/us-central1/"):
+				fmt.Fprint(w, `{"clientTlsPolicies":[{"name":"projects/p/locations/us-central1/clientTlsPolicies/one","sni":"example.com"}]}`)
+			default:
+				fmt.Fprint(w, `{}`)
+			}
+		})
+
+	svc := newTestNetworkSecurityService(t, env)
+	policies, err := svc.clientTlsPolicies()
+	require.NoError(t, err, "one unreadable location must not fail the field")
+	require.Len(t, policies, 1, "the policy from the readable location must survive")
+	assert.Equal(t, "example.com",
+		policies[0].(*mqlGcpProjectNetworkSecurityServiceClientTlsPolicy).Sni.Data)
+}
+
+// A failure that is not skippable is a real failure and still has to propagate,
+// or a broken walk would read as a short list.
+func TestClientTlsPoliciesPropagateNonSkippableFailure(t *testing.T) {
+	env := setupTestEnv(t, []string{networksecurity.CloudPlatformScope})
+
+	env.Mux.HandleFunc("/v1/projects/"+testProjectId+"/locations",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"locations":[{"locationId":"us-central1"}]}`)
+		})
+	env.Mux.HandleFunc("/v1/projects/"+testProjectId+"/locations/",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, `{"error":{"code":500,"message":"backend error","status":"INTERNAL"}}`)
+		})
+
+	svc := newTestNetworkSecurityService(t, env)
+	_, err := svc.clientTlsPolicies()
+	require.Error(t, err)
 }

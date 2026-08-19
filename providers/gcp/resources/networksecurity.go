@@ -244,7 +244,12 @@ func (g *mqlGcpProjectNetworkSecurityService) serverTlsPolicies() ([]any, error)
 // zonalLocationSuffix matches a zone id, which is a region followed by a single
 // letter (us-central1-a). The locations endpoint lists zones alongside regions,
 // but a zonal parent is rejected as a malformed name, so they are dropped.
-var zonalLocationSuffix = regexp.MustCompile(`-[a-z]$`)
+//
+// The digit is required so the pattern cannot claim a region whose last segment
+// happens to be one letter. Every GCP region ends in a number, so a zone always
+// reads <region><digit>-<letter>; matching a bare trailing "-x" would drop a
+// whole region silently, which is the failure this filter exists to avoid.
+var zonalLocationSuffix = regexp.MustCompile(`\d-[a-z]$`)
 
 // listNetworkSecurityLocations returns the non-zonal locations the Network
 // Security API reports for the project, which are the parents its regional
@@ -334,17 +339,18 @@ func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error)
 
 	for _, location := range locations {
 		locParent := fmt.Sprintf("projects/%s/locations/%s", g.ProjectId.Data, location)
-		err = nsSvc.Projects.Locations.ClientTlsPolicies.List(locParent).Pages(ctx, listPage)
-		if err != nil {
-			break
+		if err := nsSvc.Projects.Locations.ClientTlsPolicies.List(locParent).Pages(ctx, listPage); err != nil {
+			// One unreadable location establishes nothing about the others, and
+			// the policies already collected are real. Keep them and carry on:
+			// abandoning the walk here would report a field that is populated
+			// in most regions as empty because one region refused.
+			if isSkippable(err) {
+				log.Warn().Err(err).Str("location", location).
+					Msg("could not list client TLS policies")
+				continue
+			}
+			return nil, err
 		}
-	}
-	if err != nil {
-		if isSkippable(err) {
-			log.Warn().Err(err).Msg("could not list client TLS policies")
-			return nil, nil
-		}
-		return nil, err
 	}
 	return res, nil
 }
