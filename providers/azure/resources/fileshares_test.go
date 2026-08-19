@@ -5,6 +5,7 @@ package resources
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/fileshares/armfileshares"
 	"github.com/stretchr/testify/assert"
@@ -88,5 +89,52 @@ func TestFileShareNfsProtocol(t *testing.T) {
 		})
 		require.Equal(t, "", encryption)
 		assert.Equal(t, "RootSquash", rootSquash)
+	})
+}
+
+// The regression this guards: this resource provider reports the snapshot time
+// as a string where the classic share reports a time, so it has to be parsed to
+// stay comparable. Azure writes seven fractional digits, which is not the shape
+// most RFC3339 examples show — getting that wrong would null out every real
+// snapshot time while looking like it worked on a hand-written fixture.
+func TestFileShareSnapshotTime(t *testing.T) {
+	str := func(s string) *string { return &s }
+
+	t.Run("no timestamp is null", func(t *testing.T) {
+		assert.Nil(t, fileShareSnapshotTime(nil))
+		assert.Nil(t, fileShareSnapshotTime(str("")))
+	})
+
+	t.Run("the seven-digit fractional form Azure emits", func(t *testing.T) {
+		got := fileShareSnapshotTime(str("2026-03-15T08:12:34.0000000Z"))
+		require.NotNil(t, got)
+		assert.Equal(t, time.Date(2026, 3, 15, 8, 12, 34, 0, time.UTC), got.UTC())
+	})
+
+	t.Run("fractional digits are preserved, not truncated", func(t *testing.T) {
+		got := fileShareSnapshotTime(str("2026-03-15T08:12:34.1234567Z"))
+		require.NotNil(t, got)
+		assert.Equal(t, 123456700, got.Nanosecond())
+	})
+
+	t.Run("plain RFC3339 with no fraction", func(t *testing.T) {
+		got := fileShareSnapshotTime(str("2026-03-15T08:12:34Z"))
+		require.NotNil(t, got)
+		assert.Equal(t, time.Date(2026, 3, 15, 8, 12, 34, 0, time.UTC), got.UTC())
+	})
+
+	t.Run("an offset is normalized to UTC", func(t *testing.T) {
+		got := fileShareSnapshotTime(str("2026-03-15T10:12:34+02:00"))
+		require.NotNil(t, got)
+		assert.Equal(t, time.Date(2026, 3, 15, 8, 12, 34, 0, time.UTC), got.UTC())
+	})
+
+	// Null says "no readable timestamp", which is true. The zero time would say
+	// the snapshot was taken in January of year 1, which a retention check
+	// would read as older than any threshold and quietly flag.
+	t.Run("an unreadable timestamp is null, not the zero time", func(t *testing.T) {
+		for _, raw := range []string{"not a time", "15/03/2026", "0", "2026-03-15"} {
+			assert.Nil(t, fileShareSnapshotTime(str(raw)), "raw %q", raw)
+		}
 	})
 }

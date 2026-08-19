@@ -21632,7 +21632,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetType()).ToDataRes(types.String)
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.snapshotTime": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSnapshotTime()).ToDataRes(types.String)
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSnapshotTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.initiatorId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetInitiatorId()).ToDataRes(types.String)
@@ -48976,7 +48976,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.snapshotTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).SnapshotTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).SnapshotTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.initiatorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -115078,7 +115078,7 @@ type mqlAzureSubscriptionFileSharesServiceFileShareSnapshot struct {
 	Id             plugin.TValue[string]
 	Name           plugin.TValue[string]
 	Type           plugin.TValue[string]
-	SnapshotTime   plugin.TValue[string]
+	SnapshotTime   plugin.TValue[*time.Time]
 	InitiatorId    plugin.TValue[string]
 	Metadata       plugin.TValue[map[string]any]
 	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -115133,7 +115133,7 @@ func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetType() *plug
 	return &c.Type
 }
 
-func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSnapshotTime() *plugin.TValue[string] {
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSnapshotTime() *plugin.TValue[*time.Time] {
 	return &c.SnapshotTime
 }
 

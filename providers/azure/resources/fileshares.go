@@ -6,9 +6,11 @@ package resources
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/fileshares/armfileshares"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -134,6 +136,28 @@ func fileShareNfsProtocol(props *armfileshares.NfsProtocolProperties) (encryptio
 	return enumString(props.EncryptionInTransitRequired), enumString(props.RootSquash)
 }
 
+// fileShareSnapshotTime parses the snapshot timestamp.
+//
+// This resource provider reports it as a string where the classic share
+// reports a time. Parsing it here keeps a retention query readable the same way
+// across both kinds of share, instead of making one of them compare text.
+//
+// A value that will not parse reports as null rather than failing the listing:
+// the resource provider is new and its timestamp format is not pinned by the
+// SDK, and one unreadable timestamp should not take the share's other fields
+// with it. The raw value is logged so the format can be chased if it happens.
+func fileShareSnapshotTime(raw *string) *time.Time {
+	if raw == nil || *raw == "" {
+		return nil
+	}
+	parsed, err := time.Parse(time.RFC3339, *raw)
+	if err != nil {
+		log.Warn().Str("snapshotTime", *raw).Msg("could not parse file share snapshot time, reporting it as null")
+		return nil
+	}
+	return &parsed
+}
+
 func createFileShareResource(runtime *plugin.Runtime, share *armfileshares.FileShare) (*mqlAzureSubscriptionFileSharesServiceFileShare, error) {
 	props := share.Properties
 	if props == nil {
@@ -144,24 +168,27 @@ func createFileShareResource(runtime *plugin.Runtime, share *armfileshares.FileS
 
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionFileSharesServiceFileShare,
 		map[string]*llx.RawData{
-			"id":                             llx.StringDataPtr(share.ID),
-			"name":                           llx.StringDataPtr(share.Name),
-			"location":                       llx.StringDataPtr(share.Location),
-			"type":                           llx.StringDataPtr(share.Type),
-			"tags":                           llx.MapData(convert.PtrMapStrToInterface(share.Tags), types.String),
-			"provisioningState":              llx.StringData(enumString(props.ProvisioningState)),
-			"protocol":                       llx.StringData(enumString(props.Protocol)),
-			"mountName":                      llx.StringDataPtr(props.MountName),
-			"hostName":                       llx.StringDataPtr(props.HostName),
-			"mediaTier":                      llx.StringData(enumString(props.MediaTier)),
-			"redundancy":                     llx.StringData(enumString(props.Redundancy)),
-			"publicNetworkAccess":            llx.StringData(enumString(props.PublicNetworkAccess)),
-			"encryptionInTransitRequired":    llx.StringData(encryptionInTransitRequired),
-			"rootSquash":                     llx.StringData(rootSquash),
-			"provisionedStorageGiB":          llx.IntData(int64(convert.ToValue(props.ProvisionedStorageGiB))),
-			"provisionedIoPerSec":            llx.IntData(int64(convert.ToValue(props.ProvisionedIOPerSec))),
-			"provisionedThroughputMibPerSec": llx.IntData(int64(convert.ToValue(props.ProvisionedThroughputMiBPerSec))),
-			"includedBurstIoPerSec":          llx.IntData(int64(convert.ToValue(props.IncludedBurstIOPerSec))),
+			"id":                          llx.StringDataPtr(share.ID),
+			"name":                        llx.StringDataPtr(share.Name),
+			"location":                    llx.StringDataPtr(share.Location),
+			"type":                        llx.StringDataPtr(share.Type),
+			"tags":                        llx.MapData(convert.PtrMapStrToInterface(share.Tags), types.String),
+			"provisioningState":           llx.StringData(enumString(props.ProvisioningState)),
+			"protocol":                    llx.StringData(enumString(props.Protocol)),
+			"mountName":                   llx.StringDataPtr(props.MountName),
+			"hostName":                    llx.StringDataPtr(props.HostName),
+			"mediaTier":                   llx.StringData(enumString(props.MediaTier)),
+			"redundancy":                  llx.StringData(enumString(props.Redundancy)),
+			"publicNetworkAccess":         llx.StringData(enumString(props.PublicNetworkAccess)),
+			"encryptionInTransitRequired": llx.StringData(encryptionInTransitRequired),
+			"rootSquash":                  llx.StringData(rootSquash),
+			// Carried through as pointers rather than dereferenced: a share
+			// that reports no provisioning is not a share provisioned at
+			// zero, and llx.IntDataPtr turns the nil into null.
+			"provisionedStorageGiB":          llx.IntDataPtr(props.ProvisionedStorageGiB),
+			"provisionedIoPerSec":            llx.IntDataPtr(props.ProvisionedIOPerSec),
+			"provisionedThroughputMibPerSec": llx.IntDataPtr(props.ProvisionedThroughputMiBPerSec),
+			"includedBurstIoPerSec":          llx.IntDataPtr(props.IncludedBurstIOPerSec),
 			"maxBurstIoPerSecCredits":        llx.IntDataPtr(props.MaxBurstIOPerSecCredits),
 		})
 	if err != nil {
@@ -235,7 +262,7 @@ func (a *mqlAzureSubscriptionFileSharesServiceFileShare) snapshots() ([]any, err
 					"id":           llx.StringDataPtr(snapshot.ID),
 					"name":         llx.StringDataPtr(snapshot.Name),
 					"type":         llx.StringDataPtr(snapshot.Type),
-					"snapshotTime": llx.StringDataPtr(snapProps.SnapshotTime),
+					"snapshotTime": llx.TimeDataPtr(fileShareSnapshotTime(snapProps.SnapshotTime)),
 					"initiatorId":  llx.StringDataPtr(snapProps.InitiatorID),
 					"metadata":     llx.MapData(convert.PtrMapStrToInterface(snapProps.Metadata), types.String),
 				})

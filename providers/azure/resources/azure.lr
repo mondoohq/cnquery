@@ -18769,14 +18769,25 @@ azure.subscription.fileSharesService.fileShare @defaults("id name location publi
   // user.
   rootSquash string
   // Provisioned storage size of the share in GiB
+  //
+  // Null when the API does not report a provisioned size, which is not the
+  // same as a share provisioned at zero.
   provisionedStorageGiB int
   // Provisioned IO per second
+  //
+  // Null when the API does not report it.
   provisionedIoPerSec int
   // Provisioned throughput in MiB/s
+  //
+  // Null when the API does not report it.
   provisionedThroughputMibPerSec int
   // Burst IO per second included on top of the provisioned IOPS
+  //
+  // Null when the API does not report it.
   includedBurstIoPerSec int
   // Maximum burst IOPS credits the share can accumulate
+  //
+  // Null when the API does not report it.
   maxBurstIoPerSecCredits int
   // Private endpoint connections to the share
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
@@ -19163,8 +19174,12 @@ private azure.subscription.fileSharesService.fileShare.snapshot @defaults("id na
   name string
   // Resource type
   type string
-  // Time the snapshot was taken, in UTC, as reported by Azure
-  snapshotTime string
+  // Time the snapshot was taken, in UTC
+  //
+  // Null when Azure reports no snapshot time, or reports one in a format
+  // that could not be read. Matches the type of snapshotTime on the classic
+  // share so a retention query reads the same across both kinds.
+  snapshotTime time
   // Caller-supplied identifier of whoever took the snapshot
   initiatorId string
   // Application-defined name/value pairs stored on the snapshot
