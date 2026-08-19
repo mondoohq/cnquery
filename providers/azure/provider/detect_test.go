@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	testSubID     = "00000000-0000-0000-0000-000000000000"
-	testTenantID  = "11111111-1111-1111-1111-111111111111"
-	testPlatformI = "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + testSubID
+	testSubID      = "00000000-0000-0000-0000-000000000000"
+	testTenantID   = "11111111-1111-1111-1111-111111111111"
+	testPlatformID = "//platformid.api.mondoo.app/runtime/azure/subscriptions/" + testSubID
 )
 
 // detect used to be a bare `return nil`, so the root asset -- the one the caller
@@ -24,15 +24,15 @@ const (
 // `--discover none` produced nothing but the blank entry.
 func TestApplyAzureSubscriptionIdentity(t *testing.T) {
 	asset := &inventory.Asset{}
-	applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformI, "Production")
+	applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformID, "Production")
 
 	require.NotNil(t, asset.Platform, "a blank platform is the defect")
 	assert.Equal(t, "azure", asset.Platform.Name)
 	assert.Equal(t, []string{"azure", testTenantID, testSubID, "account"},
 		asset.Platform.TechnologyUrlSegments)
 
-	assert.Equal(t, []string{testPlatformI}, asset.PlatformIds)
-	assert.Equal(t, testPlatformI, asset.Id)
+	assert.Equal(t, []string{testPlatformID}, asset.PlatformIds)
+	assert.Equal(t, testPlatformID, asset.Id)
 	assert.Equal(t, "Azure subscription Production", asset.Name)
 	assert.Equal(t, testSubID, asset.Labels[resources.SubscriptionLabel])
 }
@@ -42,7 +42,7 @@ func TestApplyAzureSubscriptionIdentity(t *testing.T) {
 // subToAsset's: the same platform id, the same name prefix, the same label.
 func TestApplyAzureSubscriptionIdentityMatchesDiscoveryShape(t *testing.T) {
 	asset := &inventory.Asset{}
-	applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformI, "Production")
+	applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformID, "Production")
 
 	assert.Equal(t, "//platformid.api.mondoo.app/runtime/azure/subscriptions/"+testSubID, asset.Id,
 		"the platform id format discovery uses")
@@ -57,14 +57,14 @@ func TestApplyAzureSubscriptionIdentityFallbacks(t *testing.T) {
 		// displayName -- which it does for deleted, disabled, and cross-tenant
 		// subscriptions. A scan must not fail over a display name.
 		asset := &inventory.Asset{}
-		applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformI, "")
+		applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformID, "")
 		assert.Equal(t, "Azure subscription "+testSubID, asset.Name)
 	})
 
 	t.Run("no tenant id is reported as unknown", func(t *testing.T) {
 		// The tenant is only known when the caller passed --tenant-id.
 		asset := &inventory.Asset{}
-		applyAzureSubscriptionIdentity(asset, testSubID, "", testPlatformI, "Production")
+		applyAzureSubscriptionIdentity(asset, testSubID, "", testPlatformID, "Production")
 		assert.Equal(t, []string{"azure", "unknown", testSubID, "account"},
 			asset.Platform.TechnologyUrlSegments)
 	})
@@ -77,14 +77,14 @@ func TestApplyAzureSubscriptionIdentityDoesNotOverwriteExistingIdentity(t *testi
 		Id:     "//some/other/id",
 		Labels: map[string]string{resources.SubscriptionLabel: "someone-elses-sub", "env": "prod"},
 	}
-	applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformI, "Production")
+	applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformID, "Production")
 
 	assert.Equal(t, "//some/other/id", asset.Id, "an id already set is left alone")
 	assert.Equal(t, "someone-elses-sub", asset.Labels[resources.SubscriptionLabel])
 	assert.Equal(t, "prod", asset.Labels["env"], "unrelated labels survive")
 
 	// The platform ids still report what this connection actually is.
-	assert.Equal(t, []string{testPlatformI}, asset.PlatformIds)
+	assert.Equal(t, []string{testPlatformID}, asset.PlatformIds)
 }
 
 // detect returns without touching the asset when there is no single subscription
