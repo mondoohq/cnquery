@@ -3014,7 +3014,20 @@ azure.subscription.networkService.subnet @defaults("id name addressPrefix") {
   privateEndpoints() []azure.subscription.networkService.privateEndpoint
   // IP allocations reserving address space in the subnet
   ipAllocations() []azure.subscription.networkService.ipAllocation
-  // List of IP configurations for the subnet
+  // Network interface IP configurations allocated in the subnet
+  //
+  // The interface IP configurations holding an address from this subnet, which
+  // is what occupies a subnet's address space in practice: virtual machine
+  // interfaces, private endpoint interfaces, and load balancer backend members.
+  // Each one resolves its public IP address and application security groups, so
+  // a path from the subnet to what is actually reachable in it can be followed.
+  // Empty on a subnet no interface has an address in, such as a gateway subnet.
+  interfaceIpConfigurations() []azure.subscription.networkService.interface.ipConfiguration
+  // Virtual network gateway IP configurations in the subnet
+  //
+  // Only the gateway IP configurations, which is what a gateway subnet holds.
+  // Empty on an ordinary workload subnet: the addresses there belong to network
+  // interfaces, and interfaceIpConfigurations reports those.
   ipConfigurations() []azure.subscription.networkService.virtualNetworkGateway.ipConfig
 }
 

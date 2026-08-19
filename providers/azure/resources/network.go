@@ -5022,6 +5022,11 @@ func azureSubnetToMql(runtime *plugin.Runtime, subnet network.Subnet) (*mqlAzure
 			}
 		}
 		mqlSubnet.cacheIPAllocationIDs = azureNetworkSubResourceIDs(subnet.Properties.IPAllocations)
+		for _, ipConfig := range subnet.Properties.IPConfigurations {
+			if ipConfig != nil && ipConfig.ID != nil {
+				mqlSubnet.cacheIPConfigurationIDs = append(mqlSubnet.cacheIPConfigurationIDs, *ipConfig.ID)
+			}
+		}
 	}
 	return mqlSubnet, nil
 }
@@ -5031,6 +5036,85 @@ type mqlAzureSubscriptionNetworkServiceSubnetInternal struct {
 	cacheRouteTableID           string
 	cachePrivateEndpointIDs     []string
 	cacheIPAllocationIDs        []string
+	cacheIPConfigurationIDs     []string
+}
+
+// subnetIPConfigIDSet lowercases a subnet's ipConfigurations ids so they can be
+// matched against the same ids as the owning resource reports them.
+//
+// ARM upper-cases these inside the subnet --
+// .../networkInterfaces/MY-NIC/ipConfigurations/INTERNAL -- while the interface
+// itself reports the identical id in the casing it was created with, so a direct
+// comparison finds nothing. ARM resource ids are case-insensitive, so folding both
+// sides is the correct comparison rather than a workaround.
+func subnetIPConfigIDSet(ids []string) map[string]struct{} {
+	if len(ids) == 0 {
+		return nil
+	}
+	set := make(map[string]struct{}, len(ids))
+	for _, id := range ids {
+		if id = strings.ToLower(strings.TrimSpace(id)); id != "" {
+			set[id] = struct{}{}
+		}
+	}
+	return set
+}
+
+// interfaceIpConfigurations resolves the network interface IP configurations that
+// hold an address from this subnet.
+//
+// A subnet's properties.ipConfigurations is where ARM reports them, and in
+// practice it is almost entirely interface configurations: virtual machine
+// interfaces, private endpoint interfaces, load balancer backend members. Nothing
+// exposed them, because the only accessor over that list matched virtual network
+// gateway configurations, which exist on a gateway subnet and nowhere else.
+//
+// Resolved by walking the interface list rather than fetching per id: there is no
+// API for an IP configuration on its own, and the interfaces are fetched once for
+// the whole scan.
+func (a *mqlAzureSubscriptionNetworkServiceSubnet) interfaceIpConfigurations() ([]any, error) {
+	wanted := subnetIPConfigIDSet(a.cacheIPConfigurationIDs)
+	res := []any{}
+	if len(wanted) == 0 {
+		return res, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	svc, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService", map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(conn.SubId()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	interfaces := svc.(*mqlAzureSubscriptionNetworkService).GetInterfaces()
+	if interfaces.Error != nil {
+		return nil, interfaces.Error
+	}
+
+	for _, iface := range interfaces.Data {
+		mqlIface, ok := iface.(*mqlAzureSubscriptionNetworkServiceInterface)
+		if !ok {
+			continue
+		}
+		ipConfigs := mqlIface.GetIpConfigs()
+		if ipConfigs.Error != nil {
+			// One unreadable interface should not hide every address in the
+			// subnet; the rest are still reported.
+			log.Warn().Err(ipConfigs.Error).Str("interface", mqlIface.Id.Data).
+				Msg("could not read ip configurations while resolving a subnet's")
+			continue
+		}
+		for _, ipConfig := range ipConfigs.Data {
+			mqlIPConfig, ok := ipConfig.(*mqlAzureSubscriptionNetworkServiceInterfaceIpConfiguration)
+			if !ok {
+				continue
+			}
+			if _, ok := wanted[strings.ToLower(mqlIPConfig.Id.Data)]; ok {
+				res = append(res, mqlIPConfig)
+			}
+		}
+	}
+	return res, nil
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceSubnet) privateEndpoints() ([]any, error) {

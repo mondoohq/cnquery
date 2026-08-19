@@ -4629,6 +4629,7 @@ azure.subscription.networkService.subnet.delegation.serviceName 13.12.2
 azure.subscription.networkService.subnet.delegations 13.12.2
 azure.subscription.networkService.subnet.etag 9.0.8
 azure.subscription.networkService.subnet.id 9.0.8
+azure.subscription.networkService.subnet.interfaceIpConfigurations 13.36.1
 azure.subscription.networkService.subnet.ipAllocations 13.25.1
 azure.subscription.networkService.subnet.ipConfigurations 9.0.10
 azure.subscription.networkService.subnet.name 9.0.8
