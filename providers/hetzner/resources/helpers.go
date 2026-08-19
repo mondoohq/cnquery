@@ -43,6 +43,26 @@ func translateHcloudError(err error) error {
 	return err
 }
 
+// isRemovedAPIEndpoint reports the answer Hetzner gives once an endpoint has
+// been withdrawn: HTTP 410 with the deprecated_api_endpoint code.
+//
+// This is deliberately not folded into translateHcloudError, which answers a
+// different question. A collection that 404s is genuinely empty, because the
+// product is not provisioned for the project. A withdrawn endpoint establishes
+// nothing at all: there may well be resources, there is simply no longer any
+// way to ask. Reporting those as an empty list would be the same false claim
+// as reporting a denial that way.
+func isRemovedAPIEndpoint(err error) bool {
+	if err == nil {
+		return false
+	}
+	var hErr hcloud.Error
+	if errors.As(err, &hErr) {
+		return hErr.Code == hcloud.ErrorDeprecatedAPIEndpoint
+	}
+	return false
+}
+
 func conn(runtime *plugin.Runtime) *connection.HetznerConnection {
 	return runtime.Connection.(*connection.HetznerConnection)
 }
