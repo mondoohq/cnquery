@@ -591,7 +591,13 @@ func buildTarXz(files map[string][]byte) ([]byte, error) {
 		return nil, err
 	}
 	tarWriter := tar.NewWriter(xzWriter)
-	for name, data := range files {
+	names := make([]string, 0, len(files))
+	for name := range files {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		data := files[name]
 		header := &tar.Header{
 			Name: name,
 			Mode: 0o644,
