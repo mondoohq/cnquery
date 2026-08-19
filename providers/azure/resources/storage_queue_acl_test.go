@@ -15,18 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStorageQueueURL(t *testing.T) {
-	assert.Equal(t,
-		"https://contoso.queue.core.windows.net/orders",
-		storageQueueURL("contoso", "orders"))
-
-	t.Run("a queue name is escaped, not pasted into the path", func(t *testing.T) {
-		assert.Equal(t,
-			"https://contoso.queue.core.windows.net/orders%2F..%2Fsecrets",
-			storageQueueURL("contoso", "orders/../secrets"))
-	})
-}
-
 func TestQueueSignedIdentifiersToDicts(t *testing.T) {
 	str := func(s string) *string { return &s }
 	ts := func(s string) *time.Time {

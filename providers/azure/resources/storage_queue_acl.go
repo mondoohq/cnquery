@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -15,14 +14,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 )
-
-// storageQueueURL builds the queue service URL of a queue. Both segments are
-// escaped: a storage account name cannot contain anything that needs it, but a
-// queue name reaches this from ARM rather than from a literal, so it is not
-// treated as trusted path text.
-func storageQueueURL(account, queueName string) string {
-	return "https://" + url.PathEscape(account) + ".queue.core.windows.net/" + url.PathEscape(queueName)
-}
 
 // queueSignedIdentifiersToDicts converts queue stored access policies into the
 // same dict shape the table resource already reports, so a query that spans
@@ -88,7 +79,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccountQueue) signedIdentifiers() ([]
 		return nil, err
 	}
 
-	client, err := azqueue.NewQueueClient(storageQueueURL(accountName, a.Name.Data), conn.Token(), &azqueue.ClientOptions{
+	queueURL, err := azureStorageDataPlaneURL(accountName, "queue", a.Name.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := azqueue.NewQueueClient(queueURL, conn.Token(), &azqueue.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
