@@ -171,47 +171,6 @@ func TestResolveEnumStringBranch(t *testing.T) {
 	}
 }
 
-func TestOrganizationSubscriptionDecode(t *testing.T) {
-	payload := `{
-		"seats": 25,
-		"occupiedSeats": 10,
-		"maxCollections": 100,
-		"maxStorageGb": null,
-		"enabled": true,
-		"useSso": true,
-		"useTotp": false,
-		"useDirectory": true,
-		"useEvents": true,
-		"useGroups": true,
-		"usePolicies": true,
-		"useSend": false,
-		"useApi": true,
-		"useResetPassword": false,
-		"planName": "Enterprise (Annually)",
-		"planType": 11,
-		"businessName": "Acme Inc"
-	}`
-	var sub OrganizationSubscription
-	if err := json.Unmarshal([]byte(payload), &sub); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if sub.Seats == nil || *sub.Seats != 25 {
-		t.Fatalf("Seats = %v, want 25", sub.Seats)
-	}
-	if sub.MaxStorageGb != nil {
-		t.Fatalf("MaxStorageGb = %v, want nil (null decodes to nil, not zero)", sub.MaxStorageGb)
-	}
-	if !sub.UseSso {
-		t.Fatal("UseSso = false, want true")
-	}
-	if sub.UseTotp {
-		t.Fatal("UseTotp = true, want false")
-	}
-	if sub.BusinessName != "Acme Inc" {
-		t.Fatalf("BusinessName = %q, want Acme Inc", sub.BusinessName)
-	}
-}
-
 func TestMemberDecode(t *testing.T) {
 	payload := `{
 		"id": "member-1",
@@ -222,7 +181,6 @@ func TestMemberDecode(t *testing.T) {
 		"status": 2,
 		"twoFactorEnabled": true,
 		"resetPasswordEnrolled": false,
-		"accessAll": false,
 		"externalId": null,
 		"collections": [
 			{"id": "col-1", "readOnly": true, "hidePasswords": false, "manage": false}
@@ -281,7 +239,6 @@ func TestGroupAndCollectionDecode(t *testing.T) {
 	groupPayload := `{
 		"id": "group-1",
 		"name": "Engineering",
-		"accessAll": false,
 		"externalId": "ext-1",
 		"collections": [{"id": "col-1", "readOnly": false, "hidePasswords": true, "manage": true}]
 	}`

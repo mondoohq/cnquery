@@ -24,52 +24,6 @@ bitwarden @maturity("experimental") {
   groups() []bitwarden.group
 }
 
-// Bitwarden organization
-//
-// Account-level settings for the organization the connection
-// authenticates as: its name, seat allocation, and whether single
-// sign-on or two-step login are available to it. The `id` field is
-// the organization's UUID, the same value embedded in the
-// `organization.<uuid>` client ID used to authenticate.
-bitwarden.organization @defaults("name seats useSso use2fa") @maturity("experimental") {
-  // Organization UUID
-  id string
-  // Organization name
-  name string
-  // Number of seats purchased for the organization
-  seats int
-  // Number of seats currently occupied by confirmed or invited members
-  occupiedSeats int
-  // Maximum number of collections allowed, or null if unlimited
-  maxCollections int
-  // Maximum storage in gigabytes allowed, or null if unlimited
-  maxStorageGb int
-  // Whether the organization is enabled (not suspended or disabled)
-  enabled bool
-  // Whether the organization has single sign-on available
-  useSso bool
-  // Whether the organization has two-step login (2FA) available
-  use2fa bool
-  // Whether the organization has directory sync (SCIM) available
-  useDirectory bool
-  // Whether the organization has event logging available
-  useEvents bool
-  // Whether the organization has group-based access management available
-  useGroups bool
-  // Whether the organization has policy enforcement available
-  usePolicies bool
-  // Whether the organization has Bitwarden Send available
-  useSend bool
-  // Whether the organization has API access available
-  useApi bool
-  // Whether reset password enrollment is available for members
-  useResetPassword bool
-  // Subscription plan name (e.g. "Teams (Annually)", "Enterprise (Annually)")
-  planName string
-  // Business name shown on the subscription
-  businessName string
-}
-
 // Bitwarden organization security policy
 //
 // A single organization-wide security policy as exposed by the
@@ -135,8 +89,6 @@ bitwarden.member @defaults("email role status") @maturity("experimental") {
   twoFactorEnabled bool
   // Whether the member is enrolled in admin password reset
   resetPasswordEnrolled bool
-  // Whether the member has access to all collections
-  accessAllCollections bool
   // External identifier from a directory sync (SCIM) integration
   externalId string
   // Collections the member has explicit access to
@@ -181,8 +133,6 @@ bitwarden.group @defaults("name") @maturity("experimental") {
   id string
   // Group name
   name string
-  // Whether members of this group have access to all collections
-  accessAll bool
   // External identifier from a directory sync (SCIM) integration
   externalId string
   // Members belonging to this group

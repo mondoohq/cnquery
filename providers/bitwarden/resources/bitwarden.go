@@ -6,8 +6,6 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/bitwarden/connection"
 )
 
@@ -18,47 +16,6 @@ func (r *mqlBitwarden) id() (string, error) {
 // conn returns the Bitwarden connection backing this runtime.
 func (r *mqlBitwarden) conn() *connection.BitwardenConnection {
 	return r.MqlRuntime.Connection.(*connection.BitwardenConnection)
-}
-
-// initBitwardenOrganization reads the organization's account-level settings.
-// Its cache key is the organization UUID extracted from the connection's
-// client ID, since there is exactly one organization per connection, so the
-// resource is queried directly without a parent field.
-func initBitwardenOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	conn := runtime.Connection.(*connection.BitwardenConnection)
-
-	sub, err := conn.Client().GetOrganizationSubscription(context.Background())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	args["__id"] = llx.StringData(conn.OrgID())
-	args["id"] = llx.StringData(conn.OrgID())
-	args["seats"] = llx.IntDataPtr(sub.Seats)
-	args["occupiedSeats"] = llx.IntDataPtr(sub.OccupiedSeats)
-	args["maxCollections"] = llx.IntDataPtr(sub.MaxCollections)
-	args["maxStorageGb"] = llx.IntDataPtr(sub.MaxStorageGb)
-	args["enabled"] = llx.BoolData(sub.Enabled)
-	args["useSso"] = llx.BoolData(sub.UseSso)
-	args["use2fa"] = llx.BoolData(sub.UseTotp)
-	args["useDirectory"] = llx.BoolData(sub.UseDirectory)
-	args["useEvents"] = llx.BoolData(sub.UseEvents)
-	args["useGroups"] = llx.BoolData(sub.UseGroups)
-	args["usePolicies"] = llx.BoolData(sub.UsePolicies)
-	args["useSend"] = llx.BoolData(sub.UseSend)
-	args["useApi"] = llx.BoolData(sub.UseApi)
-	args["useResetPassword"] = llx.BoolData(sub.UseResetPassword)
-	args["planName"] = llx.StringData(sub.PlanName)
-	args["businessName"] = llx.StringData(sub.BusinessName)
-	// The Public API's subscription endpoint has no dedicated "name"
-	// field; the organization's business name is its display name.
-	args["name"] = llx.StringData(sub.BusinessName)
-
-	return args, nil, nil
 }
 
 // policies lists every security policy configured for the organization.

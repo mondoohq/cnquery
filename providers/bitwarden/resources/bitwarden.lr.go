@@ -16,7 +16,6 @@ import (
 // The MQL type names exposed as public consts for ease of reference.
 const (
 	ResourceBitwarden                       string = "bitwarden"
-	ResourceBitwardenOrganization           string = "bitwarden.organization"
 	ResourceBitwardenPolicy                 string = "bitwarden.policy"
 	ResourceBitwardenMember                 string = "bitwarden.member"
 	ResourceBitwardenCollection             string = "bitwarden.collection"
@@ -32,10 +31,6 @@ func init() {
 		"bitwarden": {
 			// to override args, implement: initBitwarden(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createBitwarden,
-		},
-		"bitwarden.organization": {
-			Init:   initBitwardenOrganization,
-			Create: createBitwardenOrganization,
 		},
 		"bitwarden.policy": {
 			// to override args, implement: initBitwardenPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -144,60 +139,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"bitwarden.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwarden).GetGroups()).ToDataRes(types.Array(types.Resource("bitwarden.group")))
 	},
-	"bitwarden.organization.id": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetId()).ToDataRes(types.String)
-	},
-	"bitwarden.organization.name": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetName()).ToDataRes(types.String)
-	},
-	"bitwarden.organization.seats": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetSeats()).ToDataRes(types.Int)
-	},
-	"bitwarden.organization.occupiedSeats": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetOccupiedSeats()).ToDataRes(types.Int)
-	},
-	"bitwarden.organization.maxCollections": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetMaxCollections()).ToDataRes(types.Int)
-	},
-	"bitwarden.organization.maxStorageGb": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetMaxStorageGb()).ToDataRes(types.Int)
-	},
-	"bitwarden.organization.enabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetEnabled()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.useSso": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseSso()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.use2fa": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUse2fa()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.useDirectory": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseDirectory()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.useEvents": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseEvents()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.useGroups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseGroups()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.usePolicies": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUsePolicies()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.useSend": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseSend()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.useApi": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseApi()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.useResetPassword": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetUseResetPassword()).ToDataRes(types.Bool)
-	},
-	"bitwarden.organization.planName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetPlanName()).ToDataRes(types.String)
-	},
-	"bitwarden.organization.businessName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenOrganization).GetBusinessName()).ToDataRes(types.String)
-	},
 	"bitwarden.policy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwardenPolicy).GetId()).ToDataRes(types.String)
 	},
@@ -233,9 +174,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bitwarden.member.resetPasswordEnrolled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwardenMember).GetResetPasswordEnrolled()).ToDataRes(types.Bool)
-	},
-	"bitwarden.member.accessAllCollections": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenMember).GetAccessAllCollections()).ToDataRes(types.Bool)
 	},
 	"bitwarden.member.externalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwardenMember).GetExternalId()).ToDataRes(types.String)
@@ -275,9 +213,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"bitwarden.group.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwardenGroup).GetName()).ToDataRes(types.String)
-	},
-	"bitwarden.group.accessAll": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlBitwardenGroup).GetAccessAll()).ToDataRes(types.Bool)
 	},
 	"bitwarden.group.externalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlBitwardenGroup).GetExternalId()).ToDataRes(types.String)
@@ -353,82 +288,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlBitwarden).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"bitwarden.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).__id, ok = v.Value.(string)
-		return
-	},
-	"bitwarden.organization.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.seats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).Seats, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.occupiedSeats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).OccupiedSeats, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.maxCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).MaxCollections, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.maxStorageGb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).MaxStorageGb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.useSso": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseSso, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.use2fa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).Use2fa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.useDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseDirectory, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.useEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseEvents, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.useGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseGroups, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.usePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UsePolicies, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.useSend": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseSend, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.useApi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseApi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.useResetPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).UseResetPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.planName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).PlanName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"bitwarden.organization.businessName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenOrganization).BusinessName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"bitwarden.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBitwardenPolicy).__id, ok = v.Value.(string)
 		return
@@ -483,10 +342,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bitwarden.member.resetPasswordEnrolled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBitwardenMember).ResetPasswordEnrolled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"bitwarden.member.accessAllCollections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenMember).AccessAllCollections, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"bitwarden.member.externalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -547,10 +402,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"bitwarden.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlBitwardenGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"bitwarden.group.accessAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlBitwardenGroup).AccessAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"bitwarden.group.externalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -753,135 +604,6 @@ func (c *mqlBitwarden) GetGroups() *plugin.TValue[[]any] {
 	})
 }
 
-// mqlBitwardenOrganization for the bitwarden.organization resource
-type mqlBitwardenOrganization struct {
-	MqlRuntime *plugin.Runtime
-	__id       string
-	// optional: if you define mqlBitwardenOrganizationInternal it will be used here
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	Seats            plugin.TValue[int64]
-	OccupiedSeats    plugin.TValue[int64]
-	MaxCollections   plugin.TValue[int64]
-	MaxStorageGb     plugin.TValue[int64]
-	Enabled          plugin.TValue[bool]
-	UseSso           plugin.TValue[bool]
-	Use2fa           plugin.TValue[bool]
-	UseDirectory     plugin.TValue[bool]
-	UseEvents        plugin.TValue[bool]
-	UseGroups        plugin.TValue[bool]
-	UsePolicies      plugin.TValue[bool]
-	UseSend          plugin.TValue[bool]
-	UseApi           plugin.TValue[bool]
-	UseResetPassword plugin.TValue[bool]
-	PlanName         plugin.TValue[string]
-	BusinessName     plugin.TValue[string]
-}
-
-// createBitwardenOrganization creates a new instance of this resource
-func createBitwardenOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
-	res := &mqlBitwardenOrganization{
-		MqlRuntime: runtime,
-	}
-
-	err := SetAllData(res, args)
-	if err != nil {
-		return res, err
-	}
-
-	// to override __id implement: id() (string, error)
-
-	if runtime.HasRecording {
-		args, err = runtime.ResourceFromRecording("bitwarden.organization", res.__id)
-		if err != nil || args == nil {
-			return res, err
-		}
-		return res, SetAllData(res, args)
-	}
-
-	return res, nil
-}
-
-func (c *mqlBitwardenOrganization) MqlName() string {
-	return "bitwarden.organization"
-}
-
-func (c *mqlBitwardenOrganization) MqlID() string {
-	return c.__id
-}
-
-func (c *mqlBitwardenOrganization) GetId() *plugin.TValue[string] {
-	return &c.Id
-}
-
-func (c *mqlBitwardenOrganization) GetName() *plugin.TValue[string] {
-	return &c.Name
-}
-
-func (c *mqlBitwardenOrganization) GetSeats() *plugin.TValue[int64] {
-	return &c.Seats
-}
-
-func (c *mqlBitwardenOrganization) GetOccupiedSeats() *plugin.TValue[int64] {
-	return &c.OccupiedSeats
-}
-
-func (c *mqlBitwardenOrganization) GetMaxCollections() *plugin.TValue[int64] {
-	return &c.MaxCollections
-}
-
-func (c *mqlBitwardenOrganization) GetMaxStorageGb() *plugin.TValue[int64] {
-	return &c.MaxStorageGb
-}
-
-func (c *mqlBitwardenOrganization) GetEnabled() *plugin.TValue[bool] {
-	return &c.Enabled
-}
-
-func (c *mqlBitwardenOrganization) GetUseSso() *plugin.TValue[bool] {
-	return &c.UseSso
-}
-
-func (c *mqlBitwardenOrganization) GetUse2fa() *plugin.TValue[bool] {
-	return &c.Use2fa
-}
-
-func (c *mqlBitwardenOrganization) GetUseDirectory() *plugin.TValue[bool] {
-	return &c.UseDirectory
-}
-
-func (c *mqlBitwardenOrganization) GetUseEvents() *plugin.TValue[bool] {
-	return &c.UseEvents
-}
-
-func (c *mqlBitwardenOrganization) GetUseGroups() *plugin.TValue[bool] {
-	return &c.UseGroups
-}
-
-func (c *mqlBitwardenOrganization) GetUsePolicies() *plugin.TValue[bool] {
-	return &c.UsePolicies
-}
-
-func (c *mqlBitwardenOrganization) GetUseSend() *plugin.TValue[bool] {
-	return &c.UseSend
-}
-
-func (c *mqlBitwardenOrganization) GetUseApi() *plugin.TValue[bool] {
-	return &c.UseApi
-}
-
-func (c *mqlBitwardenOrganization) GetUseResetPassword() *plugin.TValue[bool] {
-	return &c.UseResetPassword
-}
-
-func (c *mqlBitwardenOrganization) GetPlanName() *plugin.TValue[string] {
-	return &c.PlanName
-}
-
-func (c *mqlBitwardenOrganization) GetBusinessName() *plugin.TValue[string] {
-	return &c.BusinessName
-}
-
 // mqlBitwardenPolicy for the bitwarden.policy resource
 type mqlBitwardenPolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -954,7 +676,6 @@ type mqlBitwardenMember struct {
 	Status                plugin.TValue[string]
 	TwoFactorEnabled      plugin.TValue[bool]
 	ResetPasswordEnrolled plugin.TValue[bool]
-	AccessAllCollections  plugin.TValue[bool]
 	ExternalId            plugin.TValue[string]
 	Collections           plugin.TValue[[]any]
 	Groups                plugin.TValue[[]any]
@@ -1023,10 +744,6 @@ func (c *mqlBitwardenMember) GetTwoFactorEnabled() *plugin.TValue[bool] {
 
 func (c *mqlBitwardenMember) GetResetPasswordEnrolled() *plugin.TValue[bool] {
 	return &c.ResetPasswordEnrolled
-}
-
-func (c *mqlBitwardenMember) GetAccessAllCollections() *plugin.TValue[bool] {
-	return &c.AccessAllCollections
 }
 
 func (c *mqlBitwardenMember) GetExternalId() *plugin.TValue[string] {
@@ -1210,7 +927,6 @@ type mqlBitwardenGroup struct {
 	mqlBitwardenGroupInternal
 	Id               plugin.TValue[string]
 	Name             plugin.TValue[string]
-	AccessAll        plugin.TValue[bool]
 	ExternalId       plugin.TValue[string]
 	Members          plugin.TValue[[]any]
 	Collections      plugin.TValue[[]any]
@@ -1255,10 +971,6 @@ func (c *mqlBitwardenGroup) GetId() *plugin.TValue[string] {
 
 func (c *mqlBitwardenGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
-}
-
-func (c *mqlBitwardenGroup) GetAccessAll() *plugin.TValue[bool] {
-	return &c.AccessAll
 }
 
 func (c *mqlBitwardenGroup) GetExternalId() *plugin.TValue[string] {

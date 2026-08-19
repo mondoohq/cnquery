@@ -89,30 +89,6 @@ type listResponse[T any] struct {
 	ContinuationToken *string `json:"continuationToken"`
 }
 
-// OrganizationSubscription is the subset of GET /organization/subscription
-// this provider reads: the organization's own account-level settings.
-// There is no dedicated "get organization" endpoint on the Public API, so
-// this is the closest read for organization-wide fields.
-type OrganizationSubscription struct {
-	Seats            *int   `json:"seats"`
-	OccupiedSeats    *int   `json:"occupiedSeats"`
-	MaxCollections   *int   `json:"maxCollections"`
-	MaxStorageGb     *int   `json:"maxStorageGb"`
-	Enabled          bool   `json:"enabled"`
-	UseSso           bool   `json:"useSso"`
-	UseTotp          bool   `json:"useTotp"`
-	UseDirectory     bool   `json:"useDirectory"`
-	UseEvents        bool   `json:"useEvents"`
-	UseGroups        bool   `json:"useGroups"`
-	UsePolicies      bool   `json:"usePolicies"`
-	UseSend          bool   `json:"useSend"`
-	UseApi           bool   `json:"useApi"`
-	UseResetPassword bool   `json:"useResetPassword"`
-	PlanName         string `json:"planName"`
-	PlanType         int    `json:"planType"`
-	BusinessName     string `json:"businessName"`
-}
-
 // Policy is a single organization-wide security policy, GET /policies.
 type Policy struct {
 	Id      string         `json:"id"`
@@ -131,7 +107,6 @@ type Member struct {
 	Status                flexEnum            `json:"status"`
 	TwoFactorEnabled      bool                `json:"twoFactorEnabled"`
 	ResetPasswordEnrolled bool                `json:"resetPasswordEnrolled"`
-	AccessAll             bool                `json:"accessAll"`
 	ExternalId            *string             `json:"externalId"`
 	Collections           []SelectionReadOnly `json:"collections"`
 }
@@ -140,7 +115,6 @@ type Member struct {
 type Group struct {
 	Id          string              `json:"id"`
 	Name        string              `json:"name"`
-	AccessAll   bool                `json:"accessAll"`
 	ExternalId  *string             `json:"externalId"`
 	Collections []SelectionReadOnly `json:"collections"`
 }
@@ -186,16 +160,6 @@ func (c *Client) get(ctx context.Context, path string, out any) error {
 		return errors.Wrapf(err, "bitwarden: failed to decode response for %s", path)
 	}
 	return nil
-}
-
-// GetOrganizationSubscription reads the organization's account-level
-// settings and seat allocation.
-func (c *Client) GetOrganizationSubscription(ctx context.Context) (*OrganizationSubscription, error) {
-	var out OrganizationSubscription
-	if err := c.get(ctx, "/organization/subscription", &out); err != nil {
-		return nil, err
-	}
-	return &out, nil
 }
 
 // ListPolicies lists every security policy configured for the organization.
