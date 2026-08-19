@@ -50,17 +50,21 @@ or a client for another asset. In three of five providers audited this was the
 single largest source of waste, and in every one of those the static passes came
 back clean. See *The class the classifiers cannot see*.
 
-**Worked examples, with numbers.** Seven providers have been through this work.
+**Worked examples, with numbers.** Eight providers have been through this work.
 What each one's defect turned out to be, what the fix measured, and what the
 test environment could *not* exercise are recorded per provider in
 [`docs/provider-scan-performance.md`](../../../docs/provider-scan-performance.md).
-Read it before starting a new provider: the third and fourth classes above were
-both discovered there rather than reasoned out, the per-provider notes say which
-class bit which provider, and the *What is not covered* sections are the honest
-record of where each audit stopped. It is also the precedent for how to report
-this work — every claim tied to a measurement, and the one change that reduced
-calls without improving wall-clock (vSphere) filed as a draft rather than sold
-as a win.
+
+Read it before starting a new provider. The third and fourth classes above were
+discovered there rather than reasoned out, as was a fifth that no classifier
+finds: **two different fields issuing one identical request**. No amount of cache
+sharing fixes that one, because each field is computed correctly and exactly
+once -- the duplication is below the resource layer, where only the URL is
+visible. The per-provider notes say which class bit which provider, and the
+*What is not covered* sections are the honest record of where each audit
+stopped. It is also the precedent for how to report this work: every claim tied
+to a measurement, and the one change that reduced calls without improving
+wall-clock (vSphere) filed as a draft rather than sold as a win.
 
 ## The parent-child cache model
 
