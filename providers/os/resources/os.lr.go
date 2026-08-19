@@ -116,6 +116,13 @@ const (
 	ResourceTomcatWebxml                                  string = "tomcat.webxml"
 	ResourceTomcatUser                                    string = "tomcat.user"
 	ResourceTomcatWebapp                                  string = "tomcat.webapp"
+	ResourceIis                                           string = "iis"
+	ResourceIisSite                                       string = "iis.site"
+	ResourceIisApplication                                string = "iis.application"
+	ResourceIisVirtualDirectory                           string = "iis.virtualDirectory"
+	ResourceIisBinding                                    string = "iis.binding"
+	ResourceIisAppPool                                    string = "iis.appPool"
+	ResourceIisConfiguration                              string = "iis.configuration"
 	ResourceJboss                                         string = "jboss"
 	ResourceJbossConfig                                   string = "jboss.config"
 	ResourceJbossManagement                               string = "jboss.management"
@@ -1005,6 +1012,34 @@ func init() {
 		"tomcat.webapp": {
 			// to override args, implement: initTomcatWebapp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createTomcatWebapp,
+		},
+		"iis": {
+			// to override args, implement: initIis(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIis,
+		},
+		"iis.site": {
+			// to override args, implement: initIisSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIisSite,
+		},
+		"iis.application": {
+			// to override args, implement: initIisApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIisApplication,
+		},
+		"iis.virtualDirectory": {
+			// to override args, implement: initIisVirtualDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIisVirtualDirectory,
+		},
+		"iis.binding": {
+			// to override args, implement: initIisBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIisBinding,
+		},
+		"iis.appPool": {
+			// to override args, implement: initIisAppPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIisAppPool,
+		},
+		"iis.configuration": {
+			// to override args, implement: initIisConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createIisConfiguration,
 		},
 		"jboss": {
 			Init:   initJboss,
@@ -4743,6 +4778,333 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"tomcat.webapp.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTomcatWebapp).GetLogging()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"iis.installed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIis).GetInstalled()).ToDataRes(types.Bool)
+	},
+	"iis.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIis).GetVersion()).ToDataRes(types.String)
+	},
+	"iis.applicationHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIis).GetApplicationHost()).ToDataRes(types.Resource("file"))
+	},
+	"iis.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIis).GetConfig()).ToDataRes(types.Resource("iis.configuration"))
+	},
+	"iis.sites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIis).GetSites()).ToDataRes(types.Array(types.Resource("iis.site")))
+	},
+	"iis.appPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIis).GetAppPools()).ToDataRes(types.Array(types.Resource("iis.appPool")))
+	},
+	"iis.site.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetName()).ToDataRes(types.String)
+	},
+	"iis.site.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetId()).ToDataRes(types.Int)
+	},
+	"iis.site.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetState()).ToDataRes(types.String)
+	},
+	"iis.site.physicalPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetPhysicalPath()).ToDataRes(types.String)
+	},
+	"iis.site.serverAutoStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetServerAutoStart()).ToDataRes(types.Bool)
+	},
+	"iis.site.appPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetAppPool()).ToDataRes(types.Resource("iis.appPool"))
+	},
+	"iis.site.bindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetBindings()).ToDataRes(types.Array(types.Resource("iis.binding")))
+	},
+	"iis.site.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetApplications()).ToDataRes(types.Array(types.Resource("iis.application")))
+	},
+	"iis.site.logEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.site.logDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogDirectory()).ToDataRes(types.String)
+	},
+	"iis.site.logFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogFormat()).ToDataRes(types.String)
+	},
+	"iis.site.logPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogPeriod()).ToDataRes(types.String)
+	},
+	"iis.site.logTruncateSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogTruncateSize()).ToDataRes(types.Int)
+	},
+	"iis.site.logFields": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogFields()).ToDataRes(types.String)
+	},
+	"iis.site.logTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogTarget()).ToDataRes(types.String)
+	},
+	"iis.site.logLocalTimeRollover": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetLogLocalTimeRollover()).ToDataRes(types.Bool)
+	},
+	"iis.site.hsts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetHsts()).ToDataRes(types.Dict)
+	},
+	"iis.site.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisSite).GetConfig()).ToDataRes(types.Resource("iis.configuration"))
+	},
+	"iis.application.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisApplication).GetPath()).ToDataRes(types.String)
+	},
+	"iis.application.physicalPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisApplication).GetPhysicalPath()).ToDataRes(types.String)
+	},
+	"iis.application.enabledProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisApplication).GetEnabledProtocols()).ToDataRes(types.String)
+	},
+	"iis.application.appPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisApplication).GetAppPool()).ToDataRes(types.Resource("iis.appPool"))
+	},
+	"iis.application.virtualDirectories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisApplication).GetVirtualDirectories()).ToDataRes(types.Array(types.Resource("iis.virtualDirectory")))
+	},
+	"iis.application.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisApplication).GetConfig()).ToDataRes(types.Resource("iis.configuration"))
+	},
+	"iis.virtualDirectory.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisVirtualDirectory).GetPath()).ToDataRes(types.String)
+	},
+	"iis.virtualDirectory.physicalPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisVirtualDirectory).GetPhysicalPath()).ToDataRes(types.String)
+	},
+	"iis.virtualDirectory.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisVirtualDirectory).GetUserName()).ToDataRes(types.String)
+	},
+	"iis.virtualDirectory.logonMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisVirtualDirectory).GetLogonMethod()).ToDataRes(types.String)
+	},
+	"iis.binding.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetProtocol()).ToDataRes(types.String)
+	},
+	"iis.binding.bindingInformation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetBindingInformation()).ToDataRes(types.String)
+	},
+	"iis.binding.hostName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetHostName()).ToDataRes(types.String)
+	},
+	"iis.binding.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetPort()).ToDataRes(types.Int)
+	},
+	"iis.binding.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetIpAddress()).ToDataRes(types.String)
+	},
+	"iis.binding.certificateHash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetCertificateHash()).ToDataRes(types.String)
+	},
+	"iis.binding.certificateStoreName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetCertificateStoreName()).ToDataRes(types.String)
+	},
+	"iis.binding.sslFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisBinding).GetSslFlags()).ToDataRes(types.Int)
+	},
+	"iis.appPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetName()).ToDataRes(types.String)
+	},
+	"iis.appPool.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetState()).ToDataRes(types.String)
+	},
+	"iis.appPool.autoStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetAutoStart()).ToDataRes(types.Bool)
+	},
+	"iis.appPool.startMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetStartMode()).ToDataRes(types.String)
+	},
+	"iis.appPool.managedRuntimeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetManagedRuntimeVersion()).ToDataRes(types.String)
+	},
+	"iis.appPool.managedPipelineMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetManagedPipelineMode()).ToDataRes(types.String)
+	},
+	"iis.appPool.enable32BitAppOnWin64": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetEnable32BitAppOnWin64()).ToDataRes(types.Bool)
+	},
+	"iis.appPool.queueLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetQueueLength()).ToDataRes(types.Int)
+	},
+	"iis.appPool.identityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetIdentityType()).ToDataRes(types.String)
+	},
+	"iis.appPool.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetUserName()).ToDataRes(types.String)
+	},
+	"iis.appPool.idleTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetIdleTimeout()).ToDataRes(types.Int)
+	},
+	"iis.appPool.maxProcesses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetMaxProcesses()).ToDataRes(types.Int)
+	},
+	"iis.appPool.pingingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetPingingEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.appPool.loadUserProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetLoadUserProfile()).ToDataRes(types.Bool)
+	},
+	"iis.appPool.periodicRestartTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetPeriodicRestartTime()).ToDataRes(types.Int)
+	},
+	"iis.appPool.periodicRestartRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetPeriodicRestartRequests()).ToDataRes(types.Int)
+	},
+	"iis.appPool.periodicRestartPrivateMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetPeriodicRestartPrivateMemory()).ToDataRes(types.Int)
+	},
+	"iis.appPool.periodicRestartMemory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetPeriodicRestartMemory()).ToDataRes(types.Int)
+	},
+	"iis.appPool.periodicRestartSchedule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetPeriodicRestartSchedule()).ToDataRes(types.Array(types.Int))
+	},
+	"iis.appPool.logEventOnRecycle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetLogEventOnRecycle()).ToDataRes(types.String)
+	},
+	"iis.appPool.disallowRotationOnConfigChange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetDisallowRotationOnConfigChange()).ToDataRes(types.Bool)
+	},
+	"iis.appPool.disallowOverlappingRotation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetDisallowOverlappingRotation()).ToDataRes(types.Bool)
+	},
+	"iis.appPool.rapidFailProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetRapidFailProtection()).ToDataRes(types.Bool)
+	},
+	"iis.appPool.rapidFailProtectionInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetRapidFailProtectionInterval()).ToDataRes(types.Int)
+	},
+	"iis.appPool.rapidFailProtectionMaxCrashes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisAppPool).GetRapidFailProtectionMaxCrashes()).ToDataRes(types.Int)
+	},
+	"iis.configuration.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetPath()).ToDataRes(types.String)
+	},
+	"iis.configuration.directoryBrowsingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetDirectoryBrowsingEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.anonymousAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetAnonymousAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.anonymousAuthenticationUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetAnonymousAuthenticationUser()).ToDataRes(types.String)
+	},
+	"iis.configuration.basicAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetBasicAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.digestAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetDigestAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.windowsAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetWindowsAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.iisClientCertificateMappingAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetIisClientCertificateMappingAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.clientCertificateMappingAuthenticationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetClientCertificateMappingAuthenticationEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetAuthenticationMode()).ToDataRes(types.String)
+	},
+	"iis.configuration.formsRequireSsl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetFormsRequireSsl()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.formsCookieless": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetFormsCookieless()).ToDataRes(types.String)
+	},
+	"iis.configuration.formsProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetFormsProtection()).ToDataRes(types.String)
+	},
+	"iis.configuration.formsTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetFormsTimeout()).ToDataRes(types.Int)
+	},
+	"iis.configuration.formsCredentialsPasswordFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetFormsCredentialsPasswordFormat()).ToDataRes(types.String)
+	},
+	"iis.configuration.formsCredentialsDeclared": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetFormsCredentialsDeclared()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.sslFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetSslFlags()).ToDataRes(types.Array(types.String))
+	},
+	"iis.configuration.maxAllowedContentLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetMaxAllowedContentLength()).ToDataRes(types.Int)
+	},
+	"iis.configuration.maxUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetMaxUrl()).ToDataRes(types.Int)
+	},
+	"iis.configuration.maxQueryString": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetMaxQueryString()).ToDataRes(types.Int)
+	},
+	"iis.configuration.allowHighBitCharacters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetAllowHighBitCharacters()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.allowDoubleEscaping": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetAllowDoubleEscaping()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.allowUnlistedFileExtensions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetAllowUnlistedFileExtensions()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.removeServerHeader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetRemoveServerHeader()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.handlerAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetHandlerAccessPolicy()).ToDataRes(types.String)
+	},
+	"iis.configuration.notListedIsapisAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetNotListedIsapisAllowed()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.notListedCgisAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetNotListedCgisAllowed()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.compilationDebug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetCompilationDebug()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.customErrorsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetCustomErrorsMode()).ToDataRes(types.String)
+	},
+	"iis.configuration.httpErrorsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetHttpErrorsMode()).ToDataRes(types.String)
+	},
+	"iis.configuration.traceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetTraceEnabled()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.deploymentRetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetDeploymentRetail()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.trustLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetTrustLevel()).ToDataRes(types.String)
+	},
+	"iis.configuration.machineKeyValidation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetMachineKeyValidation()).ToDataRes(types.String)
+	},
+	"iis.configuration.sessionStateMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetSessionStateMode()).ToDataRes(types.String)
+	},
+	"iis.configuration.sessionStateCookieless": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetSessionStateCookieless()).ToDataRes(types.String)
+	},
+	"iis.configuration.sessionStateTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetSessionStateTimeout()).ToDataRes(types.Int)
+	},
+	"iis.configuration.httpCookiesHttpOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetHttpCookiesHttpOnly()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.httpCookiesRequireSsl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetHttpCookiesRequireSsl()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.aspKeepSessionIdSecure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetAspKeepSessionIdSecure()).ToDataRes(types.Bool)
+	},
+	"iis.configuration.customHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetCustomHeaders()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"iis.configuration.sections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIisConfiguration).GetSections()).ToDataRes(types.Dict)
 	},
 	"jboss.home": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJboss).GetHome()).ToDataRes(types.String)
@@ -18424,6 +18786,470 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tomcat.webapp.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTomcatWebapp).Logging, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"iis.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIis).__id, ok = v.Value.(string)
+		return
+	},
+	"iis.installed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIis).Installed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIis).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.applicationHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIis).ApplicationHost, ok = plugin.RawToTValue[*mqlFile](v.Value, v.Error)
+		return
+	},
+	"iis.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIis).Config, ok = plugin.RawToTValue[*mqlIisConfiguration](v.Value, v.Error)
+		return
+	},
+	"iis.sites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIis).Sites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iis.appPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIis).AppPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iis.site.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).__id, ok = v.Value.(string)
+		return
+	},
+	"iis.site.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.site.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.physicalPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).PhysicalPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.serverAutoStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).ServerAutoStart, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.site.appPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).AppPool, ok = plugin.RawToTValue[*mqlIisAppPool](v.Value, v.Error)
+		return
+	},
+	"iis.site.bindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).Bindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iis.site.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iis.site.logEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.site.logDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.logFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.logPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogPeriod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.logTruncateSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogTruncateSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.site.logFields": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogFields, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.logTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogTarget, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.site.logLocalTimeRollover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).LogLocalTimeRollover, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.site.hsts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).Hsts, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"iis.site.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisSite).Config, ok = plugin.RawToTValue[*mqlIisConfiguration](v.Value, v.Error)
+		return
+	},
+	"iis.application.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisApplication).__id, ok = v.Value.(string)
+		return
+	},
+	"iis.application.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisApplication).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.application.physicalPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisApplication).PhysicalPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.application.enabledProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisApplication).EnabledProtocols, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.application.appPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisApplication).AppPool, ok = plugin.RawToTValue[*mqlIisAppPool](v.Value, v.Error)
+		return
+	},
+	"iis.application.virtualDirectories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisApplication).VirtualDirectories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iis.application.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisApplication).Config, ok = plugin.RawToTValue[*mqlIisConfiguration](v.Value, v.Error)
+		return
+	},
+	"iis.virtualDirectory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisVirtualDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"iis.virtualDirectory.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisVirtualDirectory).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.virtualDirectory.physicalPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisVirtualDirectory).PhysicalPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.virtualDirectory.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisVirtualDirectory).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.virtualDirectory.logonMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisVirtualDirectory).LogonMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.binding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"iis.binding.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.binding.bindingInformation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).BindingInformation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.binding.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).HostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.binding.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.binding.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.binding.certificateHash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).CertificateHash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.binding.certificateStoreName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).CertificateStoreName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.binding.sslFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisBinding).SslFlags, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).__id, ok = v.Value.(string)
+		return
+	},
+	"iis.appPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.autoStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).AutoStart, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.startMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).StartMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.managedRuntimeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).ManagedRuntimeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.managedPipelineMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).ManagedPipelineMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.enable32BitAppOnWin64": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).Enable32BitAppOnWin64, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.queueLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).QueueLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.idleTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).IdleTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.maxProcesses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).MaxProcesses, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.pingingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).PingingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.loadUserProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).LoadUserProfile, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.periodicRestartTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).PeriodicRestartTime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.periodicRestartRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).PeriodicRestartRequests, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.periodicRestartPrivateMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).PeriodicRestartPrivateMemory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.periodicRestartMemory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).PeriodicRestartMemory, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.periodicRestartSchedule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).PeriodicRestartSchedule, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.logEventOnRecycle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).LogEventOnRecycle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.disallowRotationOnConfigChange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).DisallowRotationOnConfigChange, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.disallowOverlappingRotation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).DisallowOverlappingRotation, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.rapidFailProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).RapidFailProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.rapidFailProtectionInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).RapidFailProtectionInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.appPool.rapidFailProtectionMaxCrashes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisAppPool).RapidFailProtectionMaxCrashes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"iis.configuration.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.directoryBrowsingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).DirectoryBrowsingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.anonymousAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).AnonymousAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.anonymousAuthenticationUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).AnonymousAuthenticationUser, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.basicAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).BasicAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.digestAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).DigestAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.windowsAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).WindowsAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.iisClientCertificateMappingAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).IisClientCertificateMappingAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.clientCertificateMappingAuthenticationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).ClientCertificateMappingAuthenticationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).AuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.formsRequireSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).FormsRequireSsl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.formsCookieless": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).FormsCookieless, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.formsProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).FormsProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.formsTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).FormsTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.formsCredentialsPasswordFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).FormsCredentialsPasswordFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.formsCredentialsDeclared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).FormsCredentialsDeclared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.sslFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).SslFlags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.maxAllowedContentLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).MaxAllowedContentLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.maxUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).MaxUrl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.maxQueryString": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).MaxQueryString, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.allowHighBitCharacters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).AllowHighBitCharacters, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.allowDoubleEscaping": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).AllowDoubleEscaping, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.allowUnlistedFileExtensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).AllowUnlistedFileExtensions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.removeServerHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).RemoveServerHeader, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.handlerAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).HandlerAccessPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.notListedIsapisAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).NotListedIsapisAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.notListedCgisAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).NotListedCgisAllowed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.compilationDebug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).CompilationDebug, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.customErrorsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).CustomErrorsMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.httpErrorsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).HttpErrorsMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.traceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).TraceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.deploymentRetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).DeploymentRetail, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.trustLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).TrustLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.machineKeyValidation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).MachineKeyValidation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.sessionStateMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).SessionStateMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.sessionStateCookieless": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).SessionStateCookieless, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.sessionStateTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).SessionStateTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.httpCookiesHttpOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).HttpCookiesHttpOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.httpCookiesRequireSsl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).HttpCookiesRequireSsl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.aspKeepSessionIdSecure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).AspKeepSessionIdSecure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.customHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).CustomHeaders, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"iis.configuration.sections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIisConfiguration).Sections, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"jboss.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43939,6 +44765,905 @@ func (c *mqlTomcatWebapp) GetLogging() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Logging, func() (map[string]any, error) {
 		return c.logging()
 	})
+}
+
+// mqlIis for the iis resource
+type mqlIis struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlIisInternal
+	Installed       plugin.TValue[bool]
+	Version         plugin.TValue[string]
+	ApplicationHost plugin.TValue[*mqlFile]
+	Config          plugin.TValue[*mqlIisConfiguration]
+	Sites           plugin.TValue[[]any]
+	AppPools        plugin.TValue[[]any]
+}
+
+// createIis creates a new instance of this resource
+func createIis(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIis{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iis", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIis) MqlName() string {
+	return "iis"
+}
+
+func (c *mqlIis) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIis) GetInstalled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Installed, func() (bool, error) {
+		return c.installed()
+	})
+}
+
+func (c *mqlIis) GetVersion() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Version, func() (string, error) {
+		return c.version()
+	})
+}
+
+func (c *mqlIis) GetApplicationHost() *plugin.TValue[*mqlFile] {
+	return plugin.GetOrCompute[*mqlFile](&c.ApplicationHost, func() (*mqlFile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iis", c.__id, "applicationHost")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlFile), nil
+			}
+		}
+
+		return c.applicationHost()
+	})
+}
+
+func (c *mqlIis) GetConfig() *plugin.TValue[*mqlIisConfiguration] {
+	return plugin.GetOrCompute[*mqlIisConfiguration](&c.Config, func() (*mqlIisConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iis", c.__id, "config")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIisConfiguration), nil
+			}
+		}
+
+		return c.config()
+	})
+}
+
+func (c *mqlIis) GetSites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Sites, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iis", c.__id, "sites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sites()
+	})
+}
+
+func (c *mqlIis) GetAppPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AppPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iis", c.__id, "appPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.appPools()
+	})
+}
+
+// mqlIisSite for the iis.site resource
+type mqlIisSite struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlIisSiteInternal
+	Name                 plugin.TValue[string]
+	Id                   plugin.TValue[int64]
+	State                plugin.TValue[string]
+	PhysicalPath         plugin.TValue[string]
+	ServerAutoStart      plugin.TValue[bool]
+	AppPool              plugin.TValue[*mqlIisAppPool]
+	Bindings             plugin.TValue[[]any]
+	Applications         plugin.TValue[[]any]
+	LogEnabled           plugin.TValue[bool]
+	LogDirectory         plugin.TValue[string]
+	LogFormat            plugin.TValue[string]
+	LogPeriod            plugin.TValue[string]
+	LogTruncateSize      plugin.TValue[int64]
+	LogFields            plugin.TValue[string]
+	LogTarget            plugin.TValue[string]
+	LogLocalTimeRollover plugin.TValue[bool]
+	Hsts                 plugin.TValue[any]
+	Config               plugin.TValue[*mqlIisConfiguration]
+}
+
+// createIisSite creates a new instance of this resource
+func createIisSite(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIisSite{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iis.site", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIisSite) MqlName() string {
+	return "iis.site"
+}
+
+func (c *mqlIisSite) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIisSite) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlIisSite) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlIisSite) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlIisSite) GetPhysicalPath() *plugin.TValue[string] {
+	return &c.PhysicalPath
+}
+
+func (c *mqlIisSite) GetServerAutoStart() *plugin.TValue[bool] {
+	return &c.ServerAutoStart
+}
+
+func (c *mqlIisSite) GetAppPool() *plugin.TValue[*mqlIisAppPool] {
+	return plugin.GetOrCompute[*mqlIisAppPool](&c.AppPool, func() (*mqlIisAppPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iis.site", c.__id, "appPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIisAppPool), nil
+			}
+		}
+
+		return c.appPool()
+	})
+}
+
+func (c *mqlIisSite) GetBindings() *plugin.TValue[[]any] {
+	return &c.Bindings
+}
+
+func (c *mqlIisSite) GetApplications() *plugin.TValue[[]any] {
+	return &c.Applications
+}
+
+func (c *mqlIisSite) GetLogEnabled() *plugin.TValue[bool] {
+	return &c.LogEnabled
+}
+
+func (c *mqlIisSite) GetLogDirectory() *plugin.TValue[string] {
+	return &c.LogDirectory
+}
+
+func (c *mqlIisSite) GetLogFormat() *plugin.TValue[string] {
+	return &c.LogFormat
+}
+
+func (c *mqlIisSite) GetLogPeriod() *plugin.TValue[string] {
+	return &c.LogPeriod
+}
+
+func (c *mqlIisSite) GetLogTruncateSize() *plugin.TValue[int64] {
+	return &c.LogTruncateSize
+}
+
+func (c *mqlIisSite) GetLogFields() *plugin.TValue[string] {
+	return &c.LogFields
+}
+
+func (c *mqlIisSite) GetLogTarget() *plugin.TValue[string] {
+	return &c.LogTarget
+}
+
+func (c *mqlIisSite) GetLogLocalTimeRollover() *plugin.TValue[bool] {
+	return &c.LogLocalTimeRollover
+}
+
+func (c *mqlIisSite) GetHsts() *plugin.TValue[any] {
+	return &c.Hsts
+}
+
+func (c *mqlIisSite) GetConfig() *plugin.TValue[*mqlIisConfiguration] {
+	return &c.Config
+}
+
+// mqlIisApplication for the iis.application resource
+type mqlIisApplication struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlIisApplicationInternal
+	Path               plugin.TValue[string]
+	PhysicalPath       plugin.TValue[string]
+	EnabledProtocols   plugin.TValue[string]
+	AppPool            plugin.TValue[*mqlIisAppPool]
+	VirtualDirectories plugin.TValue[[]any]
+	Config             plugin.TValue[*mqlIisConfiguration]
+}
+
+// createIisApplication creates a new instance of this resource
+func createIisApplication(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIisApplication{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iis.application", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIisApplication) MqlName() string {
+	return "iis.application"
+}
+
+func (c *mqlIisApplication) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIisApplication) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlIisApplication) GetPhysicalPath() *plugin.TValue[string] {
+	return &c.PhysicalPath
+}
+
+func (c *mqlIisApplication) GetEnabledProtocols() *plugin.TValue[string] {
+	return &c.EnabledProtocols
+}
+
+func (c *mqlIisApplication) GetAppPool() *plugin.TValue[*mqlIisAppPool] {
+	return plugin.GetOrCompute[*mqlIisAppPool](&c.AppPool, func() (*mqlIisAppPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("iis.application", c.__id, "appPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlIisAppPool), nil
+			}
+		}
+
+		return c.appPool()
+	})
+}
+
+func (c *mqlIisApplication) GetVirtualDirectories() *plugin.TValue[[]any] {
+	return &c.VirtualDirectories
+}
+
+func (c *mqlIisApplication) GetConfig() *plugin.TValue[*mqlIisConfiguration] {
+	return &c.Config
+}
+
+// mqlIisVirtualDirectory for the iis.virtualDirectory resource
+type mqlIisVirtualDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlIisVirtualDirectoryInternal it will be used here
+	Path         plugin.TValue[string]
+	PhysicalPath plugin.TValue[string]
+	UserName     plugin.TValue[string]
+	LogonMethod  plugin.TValue[string]
+}
+
+// createIisVirtualDirectory creates a new instance of this resource
+func createIisVirtualDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIisVirtualDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iis.virtualDirectory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIisVirtualDirectory) MqlName() string {
+	return "iis.virtualDirectory"
+}
+
+func (c *mqlIisVirtualDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIisVirtualDirectory) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlIisVirtualDirectory) GetPhysicalPath() *plugin.TValue[string] {
+	return &c.PhysicalPath
+}
+
+func (c *mqlIisVirtualDirectory) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlIisVirtualDirectory) GetLogonMethod() *plugin.TValue[string] {
+	return &c.LogonMethod
+}
+
+// mqlIisBinding for the iis.binding resource
+type mqlIisBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlIisBindingInternal it will be used here
+	Protocol             plugin.TValue[string]
+	BindingInformation   plugin.TValue[string]
+	HostName             plugin.TValue[string]
+	Port                 plugin.TValue[int64]
+	IpAddress            plugin.TValue[string]
+	CertificateHash      plugin.TValue[string]
+	CertificateStoreName plugin.TValue[string]
+	SslFlags             plugin.TValue[int64]
+}
+
+// createIisBinding creates a new instance of this resource
+func createIisBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIisBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iis.binding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIisBinding) MqlName() string {
+	return "iis.binding"
+}
+
+func (c *mqlIisBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIisBinding) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlIisBinding) GetBindingInformation() *plugin.TValue[string] {
+	return &c.BindingInformation
+}
+
+func (c *mqlIisBinding) GetHostName() *plugin.TValue[string] {
+	return &c.HostName
+}
+
+func (c *mqlIisBinding) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlIisBinding) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlIisBinding) GetCertificateHash() *plugin.TValue[string] {
+	return &c.CertificateHash
+}
+
+func (c *mqlIisBinding) GetCertificateStoreName() *plugin.TValue[string] {
+	return &c.CertificateStoreName
+}
+
+func (c *mqlIisBinding) GetSslFlags() *plugin.TValue[int64] {
+	return &c.SslFlags
+}
+
+// mqlIisAppPool for the iis.appPool resource
+type mqlIisAppPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlIisAppPoolInternal it will be used here
+	Name                           plugin.TValue[string]
+	State                          plugin.TValue[string]
+	AutoStart                      plugin.TValue[bool]
+	StartMode                      plugin.TValue[string]
+	ManagedRuntimeVersion          plugin.TValue[string]
+	ManagedPipelineMode            plugin.TValue[string]
+	Enable32BitAppOnWin64          plugin.TValue[bool]
+	QueueLength                    plugin.TValue[int64]
+	IdentityType                   plugin.TValue[string]
+	UserName                       plugin.TValue[string]
+	IdleTimeout                    plugin.TValue[int64]
+	MaxProcesses                   plugin.TValue[int64]
+	PingingEnabled                 plugin.TValue[bool]
+	LoadUserProfile                plugin.TValue[bool]
+	PeriodicRestartTime            plugin.TValue[int64]
+	PeriodicRestartRequests        plugin.TValue[int64]
+	PeriodicRestartPrivateMemory   plugin.TValue[int64]
+	PeriodicRestartMemory          plugin.TValue[int64]
+	PeriodicRestartSchedule        plugin.TValue[[]any]
+	LogEventOnRecycle              plugin.TValue[string]
+	DisallowRotationOnConfigChange plugin.TValue[bool]
+	DisallowOverlappingRotation    plugin.TValue[bool]
+	RapidFailProtection            plugin.TValue[bool]
+	RapidFailProtectionInterval    plugin.TValue[int64]
+	RapidFailProtectionMaxCrashes  plugin.TValue[int64]
+}
+
+// createIisAppPool creates a new instance of this resource
+func createIisAppPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIisAppPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iis.appPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIisAppPool) MqlName() string {
+	return "iis.appPool"
+}
+
+func (c *mqlIisAppPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIisAppPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlIisAppPool) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlIisAppPool) GetAutoStart() *plugin.TValue[bool] {
+	return &c.AutoStart
+}
+
+func (c *mqlIisAppPool) GetStartMode() *plugin.TValue[string] {
+	return &c.StartMode
+}
+
+func (c *mqlIisAppPool) GetManagedRuntimeVersion() *plugin.TValue[string] {
+	return &c.ManagedRuntimeVersion
+}
+
+func (c *mqlIisAppPool) GetManagedPipelineMode() *plugin.TValue[string] {
+	return &c.ManagedPipelineMode
+}
+
+func (c *mqlIisAppPool) GetEnable32BitAppOnWin64() *plugin.TValue[bool] {
+	return &c.Enable32BitAppOnWin64
+}
+
+func (c *mqlIisAppPool) GetQueueLength() *plugin.TValue[int64] {
+	return &c.QueueLength
+}
+
+func (c *mqlIisAppPool) GetIdentityType() *plugin.TValue[string] {
+	return &c.IdentityType
+}
+
+func (c *mqlIisAppPool) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlIisAppPool) GetIdleTimeout() *plugin.TValue[int64] {
+	return &c.IdleTimeout
+}
+
+func (c *mqlIisAppPool) GetMaxProcesses() *plugin.TValue[int64] {
+	return &c.MaxProcesses
+}
+
+func (c *mqlIisAppPool) GetPingingEnabled() *plugin.TValue[bool] {
+	return &c.PingingEnabled
+}
+
+func (c *mqlIisAppPool) GetLoadUserProfile() *plugin.TValue[bool] {
+	return &c.LoadUserProfile
+}
+
+func (c *mqlIisAppPool) GetPeriodicRestartTime() *plugin.TValue[int64] {
+	return &c.PeriodicRestartTime
+}
+
+func (c *mqlIisAppPool) GetPeriodicRestartRequests() *plugin.TValue[int64] {
+	return &c.PeriodicRestartRequests
+}
+
+func (c *mqlIisAppPool) GetPeriodicRestartPrivateMemory() *plugin.TValue[int64] {
+	return &c.PeriodicRestartPrivateMemory
+}
+
+func (c *mqlIisAppPool) GetPeriodicRestartMemory() *plugin.TValue[int64] {
+	return &c.PeriodicRestartMemory
+}
+
+func (c *mqlIisAppPool) GetPeriodicRestartSchedule() *plugin.TValue[[]any] {
+	return &c.PeriodicRestartSchedule
+}
+
+func (c *mqlIisAppPool) GetLogEventOnRecycle() *plugin.TValue[string] {
+	return &c.LogEventOnRecycle
+}
+
+func (c *mqlIisAppPool) GetDisallowRotationOnConfigChange() *plugin.TValue[bool] {
+	return &c.DisallowRotationOnConfigChange
+}
+
+func (c *mqlIisAppPool) GetDisallowOverlappingRotation() *plugin.TValue[bool] {
+	return &c.DisallowOverlappingRotation
+}
+
+func (c *mqlIisAppPool) GetRapidFailProtection() *plugin.TValue[bool] {
+	return &c.RapidFailProtection
+}
+
+func (c *mqlIisAppPool) GetRapidFailProtectionInterval() *plugin.TValue[int64] {
+	return &c.RapidFailProtectionInterval
+}
+
+func (c *mqlIisAppPool) GetRapidFailProtectionMaxCrashes() *plugin.TValue[int64] {
+	return &c.RapidFailProtectionMaxCrashes
+}
+
+// mqlIisConfiguration for the iis.configuration resource
+type mqlIisConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlIisConfigurationInternal it will be used here
+	Path                                             plugin.TValue[string]
+	DirectoryBrowsingEnabled                         plugin.TValue[bool]
+	AnonymousAuthenticationEnabled                   plugin.TValue[bool]
+	AnonymousAuthenticationUser                      plugin.TValue[string]
+	BasicAuthenticationEnabled                       plugin.TValue[bool]
+	DigestAuthenticationEnabled                      plugin.TValue[bool]
+	WindowsAuthenticationEnabled                     plugin.TValue[bool]
+	IisClientCertificateMappingAuthenticationEnabled plugin.TValue[bool]
+	ClientCertificateMappingAuthenticationEnabled    plugin.TValue[bool]
+	AuthenticationMode                               plugin.TValue[string]
+	FormsRequireSsl                                  plugin.TValue[bool]
+	FormsCookieless                                  plugin.TValue[string]
+	FormsProtection                                  plugin.TValue[string]
+	FormsTimeout                                     plugin.TValue[int64]
+	FormsCredentialsPasswordFormat                   plugin.TValue[string]
+	FormsCredentialsDeclared                         plugin.TValue[bool]
+	SslFlags                                         plugin.TValue[[]any]
+	MaxAllowedContentLength                          plugin.TValue[int64]
+	MaxUrl                                           plugin.TValue[int64]
+	MaxQueryString                                   plugin.TValue[int64]
+	AllowHighBitCharacters                           plugin.TValue[bool]
+	AllowDoubleEscaping                              plugin.TValue[bool]
+	AllowUnlistedFileExtensions                      plugin.TValue[bool]
+	RemoveServerHeader                               plugin.TValue[bool]
+	HandlerAccessPolicy                              plugin.TValue[string]
+	NotListedIsapisAllowed                           plugin.TValue[bool]
+	NotListedCgisAllowed                             plugin.TValue[bool]
+	CompilationDebug                                 plugin.TValue[bool]
+	CustomErrorsMode                                 plugin.TValue[string]
+	HttpErrorsMode                                   plugin.TValue[string]
+	TraceEnabled                                     plugin.TValue[bool]
+	DeploymentRetail                                 plugin.TValue[bool]
+	TrustLevel                                       plugin.TValue[string]
+	MachineKeyValidation                             plugin.TValue[string]
+	SessionStateMode                                 plugin.TValue[string]
+	SessionStateCookieless                           plugin.TValue[string]
+	SessionStateTimeout                              plugin.TValue[int64]
+	HttpCookiesHttpOnly                              plugin.TValue[bool]
+	HttpCookiesRequireSsl                            plugin.TValue[bool]
+	AspKeepSessionIdSecure                           plugin.TValue[bool]
+	CustomHeaders                                    plugin.TValue[map[string]any]
+	Sections                                         plugin.TValue[any]
+}
+
+// createIisConfiguration creates a new instance of this resource
+func createIisConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlIisConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("iis.configuration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlIisConfiguration) MqlName() string {
+	return "iis.configuration"
+}
+
+func (c *mqlIisConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlIisConfiguration) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlIisConfiguration) GetDirectoryBrowsingEnabled() *plugin.TValue[bool] {
+	return &c.DirectoryBrowsingEnabled
+}
+
+func (c *mqlIisConfiguration) GetAnonymousAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.AnonymousAuthenticationEnabled
+}
+
+func (c *mqlIisConfiguration) GetAnonymousAuthenticationUser() *plugin.TValue[string] {
+	return &c.AnonymousAuthenticationUser
+}
+
+func (c *mqlIisConfiguration) GetBasicAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.BasicAuthenticationEnabled
+}
+
+func (c *mqlIisConfiguration) GetDigestAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.DigestAuthenticationEnabled
+}
+
+func (c *mqlIisConfiguration) GetWindowsAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.WindowsAuthenticationEnabled
+}
+
+func (c *mqlIisConfiguration) GetIisClientCertificateMappingAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.IisClientCertificateMappingAuthenticationEnabled
+}
+
+func (c *mqlIisConfiguration) GetClientCertificateMappingAuthenticationEnabled() *plugin.TValue[bool] {
+	return &c.ClientCertificateMappingAuthenticationEnabled
+}
+
+func (c *mqlIisConfiguration) GetAuthenticationMode() *plugin.TValue[string] {
+	return &c.AuthenticationMode
+}
+
+func (c *mqlIisConfiguration) GetFormsRequireSsl() *plugin.TValue[bool] {
+	return &c.FormsRequireSsl
+}
+
+func (c *mqlIisConfiguration) GetFormsCookieless() *plugin.TValue[string] {
+	return &c.FormsCookieless
+}
+
+func (c *mqlIisConfiguration) GetFormsProtection() *plugin.TValue[string] {
+	return &c.FormsProtection
+}
+
+func (c *mqlIisConfiguration) GetFormsTimeout() *plugin.TValue[int64] {
+	return &c.FormsTimeout
+}
+
+func (c *mqlIisConfiguration) GetFormsCredentialsPasswordFormat() *plugin.TValue[string] {
+	return &c.FormsCredentialsPasswordFormat
+}
+
+func (c *mqlIisConfiguration) GetFormsCredentialsDeclared() *plugin.TValue[bool] {
+	return &c.FormsCredentialsDeclared
+}
+
+func (c *mqlIisConfiguration) GetSslFlags() *plugin.TValue[[]any] {
+	return &c.SslFlags
+}
+
+func (c *mqlIisConfiguration) GetMaxAllowedContentLength() *plugin.TValue[int64] {
+	return &c.MaxAllowedContentLength
+}
+
+func (c *mqlIisConfiguration) GetMaxUrl() *plugin.TValue[int64] {
+	return &c.MaxUrl
+}
+
+func (c *mqlIisConfiguration) GetMaxQueryString() *plugin.TValue[int64] {
+	return &c.MaxQueryString
+}
+
+func (c *mqlIisConfiguration) GetAllowHighBitCharacters() *plugin.TValue[bool] {
+	return &c.AllowHighBitCharacters
+}
+
+func (c *mqlIisConfiguration) GetAllowDoubleEscaping() *plugin.TValue[bool] {
+	return &c.AllowDoubleEscaping
+}
+
+func (c *mqlIisConfiguration) GetAllowUnlistedFileExtensions() *plugin.TValue[bool] {
+	return &c.AllowUnlistedFileExtensions
+}
+
+func (c *mqlIisConfiguration) GetRemoveServerHeader() *plugin.TValue[bool] {
+	return &c.RemoveServerHeader
+}
+
+func (c *mqlIisConfiguration) GetHandlerAccessPolicy() *plugin.TValue[string] {
+	return &c.HandlerAccessPolicy
+}
+
+func (c *mqlIisConfiguration) GetNotListedIsapisAllowed() *plugin.TValue[bool] {
+	return &c.NotListedIsapisAllowed
+}
+
+func (c *mqlIisConfiguration) GetNotListedCgisAllowed() *plugin.TValue[bool] {
+	return &c.NotListedCgisAllowed
+}
+
+func (c *mqlIisConfiguration) GetCompilationDebug() *plugin.TValue[bool] {
+	return &c.CompilationDebug
+}
+
+func (c *mqlIisConfiguration) GetCustomErrorsMode() *plugin.TValue[string] {
+	return &c.CustomErrorsMode
+}
+
+func (c *mqlIisConfiguration) GetHttpErrorsMode() *plugin.TValue[string] {
+	return &c.HttpErrorsMode
+}
+
+func (c *mqlIisConfiguration) GetTraceEnabled() *plugin.TValue[bool] {
+	return &c.TraceEnabled
+}
+
+func (c *mqlIisConfiguration) GetDeploymentRetail() *plugin.TValue[bool] {
+	return &c.DeploymentRetail
+}
+
+func (c *mqlIisConfiguration) GetTrustLevel() *plugin.TValue[string] {
+	return &c.TrustLevel
+}
+
+func (c *mqlIisConfiguration) GetMachineKeyValidation() *plugin.TValue[string] {
+	return &c.MachineKeyValidation
+}
+
+func (c *mqlIisConfiguration) GetSessionStateMode() *plugin.TValue[string] {
+	return &c.SessionStateMode
+}
+
+func (c *mqlIisConfiguration) GetSessionStateCookieless() *plugin.TValue[string] {
+	return &c.SessionStateCookieless
+}
+
+func (c *mqlIisConfiguration) GetSessionStateTimeout() *plugin.TValue[int64] {
+	return &c.SessionStateTimeout
+}
+
+func (c *mqlIisConfiguration) GetHttpCookiesHttpOnly() *plugin.TValue[bool] {
+	return &c.HttpCookiesHttpOnly
+}
+
+func (c *mqlIisConfiguration) GetHttpCookiesRequireSsl() *plugin.TValue[bool] {
+	return &c.HttpCookiesRequireSsl
+}
+
+func (c *mqlIisConfiguration) GetAspKeepSessionIdSecure() *plugin.TValue[bool] {
+	return &c.AspKeepSessionIdSecure
+}
+
+func (c *mqlIisConfiguration) GetCustomHeaders() *plugin.TValue[map[string]any] {
+	return &c.CustomHeaders
+}
+
+func (c *mqlIisConfiguration) GetSections() *plugin.TValue[any] {
+	return &c.Sections
 }
 
 // mqlJboss for the jboss resource
