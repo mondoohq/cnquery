@@ -8,6 +8,9 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -300,8 +303,96 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(shared.AzureConnection), nil
 }
 
+// detect gives the root asset -- the one the caller connected as, before any
+// discovery -- the identity a discovered subscription gets from subToAsset.
+//
+// It used to be a bare `return nil`, so that asset reached the client with no
+// platform, no name, and no platform id: every Azure scan carried one blank
+// entry, and `--discover none` produced nothing but the blank entry. The
+// resources were queryable the whole time, because the connection knows which
+// subscription it is on; only the asset's own identity was missing.
+//
+// A connection with no subscription is left alone deliberately. That is the
+// caller who named several subscriptions or none, where discovery enumerates
+// them and there is no single subscription for the root asset to be.
 func (s *Service) detect(asset *inventory.Asset, conn shared.AzureConnection) error {
+	azureConn, ok := conn.(*connection.AzureConnection)
+	if !ok {
+		// A snapshot connection is handed to the os provider, which detects it.
+		return nil
+	}
+
+	subID := azureConn.SubId()
+	if subID == "" {
+		return nil
+	}
+
+	var tenantID string
+	if conf := azureConn.Config(); conf != nil {
+		tenantID = conf.Options[connection.OptionTenantID]
+	}
+
+	applyAzureSubscriptionIdentity(asset, subID, tenantID, azureConn.PlatformId(),
+		azureSubscriptionDisplayName(azureConn))
 	return nil
+}
+
+// applyAzureSubscriptionIdentity stamps a subscription's identity onto an asset,
+// in the shape subToAsset gives a discovered subscription, so the same
+// subscription reads the same whichever way it arrived.
+//
+// displayName may be empty, in which case the id names the asset. That is also
+// what subToAsset does for a subscription whose displayName ARM omits, and it is
+// the right outcome here too: a scan should not fail because the asset could only
+// be named by its id.
+func applyAzureSubscriptionIdentity(asset *inventory.Asset, subID, tenantID, platformID, displayName string) {
+	if tenantID == "" {
+		tenantID = "unknown"
+	}
+
+	platform := &inventory.Platform{
+		TechnologyUrlSegments: []string{"azure", tenantID, subID, "account"},
+	}
+	resources.PlatformByName("azure").Apply(platform)
+
+	asset.Platform = platform
+	asset.PlatformIds = []string{platformID}
+	if asset.Id == "" {
+		asset.Id = platformID
+	}
+	if asset.Labels == nil {
+		asset.Labels = map[string]string{}
+	}
+	if _, ok := asset.Labels[resources.SubscriptionLabel]; !ok {
+		asset.Labels[resources.SubscriptionLabel] = subID
+	}
+
+	if displayName == "" {
+		displayName = subID
+	}
+	asset.Name = "Azure subscription " + displayName
+}
+
+// azureSubscriptionDisplayName reads the connected subscription's display name,
+// and returns "" when it cannot be read. Logged rather than returned: a scan
+// should not fail because the asset could only be named by its id.
+func azureSubscriptionDisplayName(conn *connection.AzureConnection) string {
+	client, err := subscriptions.NewClient(conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		log.Debug().Err(err).Msg("could not build the subscriptions client to name the asset")
+		return ""
+	}
+	resp, err := client.Get(context.Background(), conn.SubId(), nil)
+	if err != nil {
+		log.Debug().Err(err).Msg("could not read the subscription to name the asset")
+		return ""
+	}
+	if resp.DisplayName == nil {
+		return ""
+	}
+	return *resp.DisplayName
 }
 
 func (s *Service) discover(conn shared.AzureConnection) (*inventory.Inventory, error) {
