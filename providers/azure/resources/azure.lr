@@ -9967,6 +9967,12 @@ private azure.subscription.cloudDefenderService @defaults("forServers.enabled fo
   forContainers() azure.subscription.cloudDefenderService.defenderForContainers
   // List of configured security contacts
   securityContacts() []azure.subscription.cloudDefenderService.securityContact
+  // Continuous export rules configured on the subscription
+  //
+  // Each rule pairs the events it listens for with the destinations it
+  // forwards them to, so this is what says whether alerts leave Defender
+  // for Cloud at all and where they land.
+  securityAutomations() []azure.subscription.cloudDefenderService.securityAutomation
   // Settings for MCAS
   settingsMCAS() azure.subscription.cloudDefenderService.settings
   // Settings for WDATP
@@ -10788,6 +10794,57 @@ private azure.subscription.cloudDefenderService.defenderForContainers.extension 
   operationStatusCode string
   // Status message of the enablement/disablement operation
   operationStatusMessage string
+}
+
+// Microsoft Defender for Cloud continuous export rule
+//
+// One security automation, which is what the portal calls a continuous
+// export. It listens for a class of events, filters them, and forwards what
+// matches to a destination such as an Event Hub or a Log Analytics
+// workspace. `isEnabled` reports whether the rule is actually running, which
+// is separate from whether it exists.
+
+private azure.subscription.cloudDefenderService.securityAutomation @defaults("name isEnabled") {
+  // Automation resource ID
+  id string
+  // Automation name
+  name string
+  // Automation resource type
+  type string
+  // Azure region the automation resource lives in
+  location string
+  // Resource tags
+  tags map[string]string
+  // Description recorded on the automation
+  description string
+  // Whether the rule is running
+  //
+  // False for a rule that exists but is switched off, which forwards
+  // nothing. An export that is configured but disabled is the case a
+  // presence check alone would miss.
+  isEnabled bool
+  // Scopes the rule applies to
+  //
+  // Each entry: `scopePath` (the subscription or a resource group under it,
+  // as a fully qualified resource ID) and `description`.
+  scopes []dict
+  // Event sources the rule listens to, with the filters applied to each
+  //
+  // Each entry: `eventSource` (Alerts, Assessments, SecureScores and the
+  // other supported event models) and `ruleSets`, a list of
+  // `{"rules": [...]}`. Rule sets are combined with a logical or, and the
+  // rules within one with a logical and. Each rule carries `propertyJPath`,
+  // `propertyType`, `operator` and `expectedValue`, so a severity filter
+  // reads as propertyJPath "Severity" equals "High".
+  sources []dict
+  // Destinations matching events are forwarded to
+  //
+  // Each entry carries `actionType` and the fields for that type:
+  // `eventHubResourceId` and `isTrustedServiceEnabled` for EventHub,
+  // `workspaceResourceId` for Workspace, `logicAppResourceId` and `uri` for
+  // LogicApp. The Event Hub connection string is a credential and Azure
+  // never returns it, so it is not reported here.
+  actions []dict
 }
 
 // Microsoft Defender for Cloud security contact

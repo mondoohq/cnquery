@@ -687,6 +687,113 @@ func (s *mqlAzureSubscriptionCloudDefenderServiceSettings) id() (string, error) 
 	return s.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) id() (string, error) {
+	return a.__id, nil
+}
+
+// securityAutomations lists the subscription's continuous export rules.
+//
+// The scopes, sources and actions are carried as dicts rather than as typed
+// sub-resources. Sources nest rule sets inside rules, and actions are a union
+// whose fields differ per actionType, so a typed shape would either flatten
+// away the nesting or invent a sub-resource per action kind; the dict keeps
+// what Azure returns and the schema documents the keys for each discriminator.
+//
+// The Event Hub connection string is deliberately absent: it is a credential,
+// and Azure does not return it in any response.
+func (a *mqlAzureSubscriptionCloudDefenderService) securityAutomations() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+	subId := a.SubscriptionId.Data
+
+	clientFactory, err := armsecurity.NewClientFactory(subId, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := clientFactory.NewAutomationsClient().NewListPager(nil)
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, automation := range page.Value {
+			if automation == nil {
+				continue
+			}
+			mqlAutomation, err := securityAutomationToMql(a.MqlRuntime, automation)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlAutomation)
+		}
+	}
+	return res, nil
+}
+
+// securityAutomationToMql maps one automation onto its MQL resource.
+//
+// Every nested block goes through convert.JsonToDict rather than being walked
+// field by field, so a source or action kind Azure adds later still arrives
+// intact instead of being silently dropped by a type switch that has not heard
+// of it.
+func securityAutomationToMql(runtime *plugin.Runtime, automation *armsecurity.Automation) (plugin.Resource, error) {
+	scopes := []any{}
+	sources := []any{}
+	actions := []any{}
+	description := ""
+	isEnabled := false
+
+	if props := automation.Properties; props != nil {
+		if props.Description != nil {
+			description = *props.Description
+		}
+		if props.IsEnabled != nil {
+			isEnabled = *props.IsEnabled
+		}
+		if len(props.Scopes) > 0 {
+			dicts, err := convert.JsonToDictSlice(props.Scopes)
+			if err != nil {
+				return nil, err
+			}
+			scopes = dicts
+		}
+		if len(props.Sources) > 0 {
+			dicts, err := convert.JsonToDictSlice(props.Sources)
+			if err != nil {
+				return nil, err
+			}
+			sources = dicts
+		}
+		if len(props.Actions) > 0 {
+			dicts, err := convert.JsonToDictSlice(props.Actions)
+			if err != nil {
+				return nil, err
+			}
+			actions = dicts
+		}
+	}
+
+	return CreateResource(runtime,
+		ResourceAzureSubscriptionCloudDefenderServiceSecurityAutomation,
+		map[string]*llx.RawData{
+			"__id":        llx.StringDataPtr(automation.ID),
+			"id":          llx.StringDataPtr(automation.ID),
+			"name":        llx.StringDataPtr(automation.Name),
+			"type":        llx.StringDataPtr(automation.Type),
+			"location":    llx.StringDataPtr(automation.Location),
+			"tags":        llx.MapData(convert.PtrMapStrToInterface(automation.Tags), types.String),
+			"description": llx.StringData(description),
+			"isEnabled":   llx.BoolData(isEnabled),
+			"scopes":      llx.ArrayData(scopes, types.Dict),
+			"sources":     llx.ArrayData(sources, types.Dict),
+			"actions":     llx.ArrayData(actions, types.Dict),
+		})
+}
+
 func (a *mqlAzureSubscriptionCloudDefenderService) securityContacts() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

@@ -312,6 +312,7 @@ const (
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForResourceManager                             string = "azure.subscription.cloudDefenderService.defenderForResourceManager"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers                                  string = "azure.subscription.cloudDefenderService.defenderForContainers"
 	ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension                         string = "azure.subscription.cloudDefenderService.defenderForContainers.extension"
+	ResourceAzureSubscriptionCloudDefenderServiceSecurityAutomation                                     string = "azure.subscription.cloudDefenderService.securityAutomation"
 	ResourceAzureSubscriptionCloudDefenderServiceSecurityContact                                        string = "azure.subscription.cloudDefenderService.securityContact"
 	ResourceAzureSubscriptionAuthorizationService                                                       string = "azure.subscription.authorizationService"
 	ResourceAzureSubscriptionAuthorizationServiceRoleManagementPolicy                                   string = "azure.subscription.authorizationService.roleManagementPolicy"
@@ -1736,6 +1737,10 @@ func init() {
 		"azure.subscription.cloudDefenderService.defenderForContainers.extension": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension,
+		},
+		"azure.subscription.cloudDefenderService.securityAutomation": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecurityAutomation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceSecurityAutomation,
 		},
 		"azure.subscription.cloudDefenderService.securityContact": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecurityContact(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12903,6 +12908,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cloudDefenderService.securityContacts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSecurityContacts()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.securityContact")))
 	},
+	"azure.subscription.cloudDefenderService.securityAutomations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSecurityAutomations()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.securityAutomation")))
+	},
 	"azure.subscription.cloudDefenderService.settingsMCAS": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderService).GetSettingsMCAS()).ToDataRes(types.Resource("azure.subscription.cloudDefenderService.settings"))
 	},
@@ -13829,6 +13837,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.defenderForContainers.extension.operationStatusMessage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).GetOperationStatusMessage()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.isEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetIsEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetScopes()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.sources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetSources()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).GetActions()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.cloudDefenderService.securityContact.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityContact).GetId()).ToDataRes(types.String)
@@ -36593,6 +36631,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCloudDefenderService).SecurityContacts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cloudDefenderService.securityAutomations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderService).SecurityAutomations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cloudDefenderService.settingsMCAS": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderService).SettingsMCAS, ok = plugin.RawToTValue[*mqlAzureSubscriptionCloudDefenderServiceSettings](v.Value, v.Error)
 		return
@@ -37939,6 +37981,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.defenderForContainers.extension.operationStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension).OperationStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.isEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).IsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.sources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Sources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.securityAutomation.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.securityContact.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -84780,6 +84866,7 @@ type mqlAzureSubscriptionCloudDefenderService struct {
 	DefenderCSPM                  plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderCSPM]
 	ForContainers                 plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceDefenderForContainers]
 	SecurityContacts              plugin.TValue[[]any]
+	SecurityAutomations           plugin.TValue[[]any]
 	SettingsMCAS                  plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
 	SettingsWDATP                 plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
 	SettingsSentinel              plugin.TValue[*mqlAzureSubscriptionCloudDefenderServiceSettings]
@@ -85046,6 +85133,22 @@ func (c *mqlAzureSubscriptionCloudDefenderService) GetSecurityContacts() *plugin
 		}
 
 		return c.securityContacts()
+	})
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderService) GetSecurityAutomations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityAutomations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.cloudDefenderService", c.__id, "securityAutomations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityAutomations()
 	})
 }
 
@@ -88107,6 +88210,100 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension)
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceDefenderForContainersExtension) GetOperationStatusMessage() *plugin.TValue[string] {
 	return &c.OperationStatusMessage
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation for the azure.subscription.cloudDefenderService.securityAutomation resource
+type mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceSecurityAutomationInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Type        plugin.TValue[string]
+	Location    plugin.TValue[string]
+	Tags        plugin.TValue[map[string]any]
+	Description plugin.TValue[string]
+	IsEnabled   plugin.TValue[bool]
+	Scopes      plugin.TValue[[]any]
+	Sources     plugin.TValue[[]any]
+	Actions     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceSecurityAutomation creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceSecurityAutomation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.securityAutomation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) MqlName() string {
+	return "azure.subscription.cloudDefenderService.securityAutomation"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetIsEnabled() *plugin.TValue[bool] {
+	return &c.IsEnabled
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetSources() *plugin.TValue[[]any] {
+	return &c.Sources
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceSecurityAutomation) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSecurityContact for the azure.subscription.cloudDefenderService.securityContact resource
