@@ -241,6 +241,7 @@ use (
    ./mql/providers/clickhousedb
    ./mql/providers/cloudflare
    ./mql/providers/cloudformation
+   ./mql/providers/confluent
    ./mql/providers/databricks
    ./mql/providers/datadog
    ./mql/providers/depsdev

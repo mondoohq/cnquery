@@ -312,6 +312,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"confluent": {
+		Provider: &plugin.Provider{
+			Name:            "confluent",
+			ID:              "go.mondoo.com/mql/providers/confluent",
+			ConnectionTypes: []string{"confluent"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "confluent",
+					Use:   "confluent",
+					Short: "a Confluent Cloud organization",
+				},
+			},
+		},
+	},
+
 	"core": {
 		Provider: &plugin.Provider{
 			Name:            "core",

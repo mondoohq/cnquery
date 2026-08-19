@@ -119,6 +119,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | ClickHouse Cloud organization | `clickhousecloud`          | `mql shell clickhousecloud --organization-id ORG_ID --api-key KEY_ID --ask-secret`                                                              |
 | ClickHouse server             | `clickhousedb`             | `mql shell clickhousedb db.contoso.com --user default --ask-pass`                                                                               |
 | Cloudflare accounts           | `cloudflare`               | `mql shell cloudflare --token ACCESS_TOKEN`                                                                                                     |
+| Confluent Cloud organization  | `confluent`                | `mql shell confluent --api-key API_KEY --api-secret API_SECRET`                                                                                 |
 | Confluence users              | `atlassian`                | `mql shell atlassian --host YOUR_HOST_URL --admin-token YOUR_TOKEN`                                                                             |
 | Container images              | `container`, `docker`      | `mql shell container ubuntu:latest`                                                                                                             |
 | Container registries          | `container registry`       | `mql shell container registry index.docker.io/library/rockylinux:8`                                                                             |

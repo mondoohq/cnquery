@@ -1,0 +1,706 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/confluent"
+option go_package = "go.mondoo.com/mql/v13/providers/confluent/resources"
+
+// Confluent Cloud
+//
+// Confluent Cloud organization posture across every environment the API key can
+// reach. The `environments` field enumerates those environments,
+// `kafkaClusters` flattens every Apache Kafka cluster across them with its
+// cloud, region, cluster type and network exposure, and
+// `schemaRegistryClusters` covers the Stream Governance side. Who may reach any
+// of it is described by `serviceAccounts`, `users`, `apiKeys` and
+// `roleBindings`. `encryptionKeys` lists the self-managed keys protecting data
+// at rest, `networks` the dedicated networks clusters are placed in, and
+// `auditLog` reports where audit records are delivered.
+confluent {
+  // Organization identifier
+  organizationId() string
+  // Organization display name
+  organizationName() string
+  // Whether just-in-time user provisioning is enabled
+  //
+  // Applies to organizations using single sign-on. When enabled, a user who
+  // authenticates through the identity provider gets an account on first login
+  // without an invitation, so the identity provider alone decides who holds an
+  // account. Null when the organization does not report the setting.
+  jitEnabled() bool
+  // Environments in the organization
+  environments() []confluent.environment
+  // Kafka clusters across every environment
+  kafkaClusters() []confluent.kafkaCluster
+  // Schema Registry clusters across every environment
+  schemaRegistryClusters() []confluent.schemaRegistryCluster
+  // Dedicated networks across every environment
+  networks() []confluent.network
+  // Service accounts in the organization
+  serviceAccounts() []confluent.serviceAccount
+  // Human user accounts in the organization
+  users() []confluent.user
+  // API keys in the organization
+  apiKeys() []confluent.apiKey
+  // Role bindings granting access anywhere in the organization
+  roleBindings() []confluent.roleBinding
+  // Self-managed encryption keys registered with the organization
+  encryptionKeys() []confluent.encryptionKey
+  // Audit log destination configured for the organization
+  auditLog() confluent.auditLogConfig
+}
+
+// Confluent Cloud environment
+//
+// An isolated namespace holding its own Kafka clusters, Schema Registry
+// cluster, and networks. Select an environment with
+// `confluent.environments.where(displayName == "production")`. The
+// `streamGovernancePackage` field reports which Stream Governance tier applies
+// to everything inside it, and `kafkaClusters`, `schemaRegistryClusters` and
+// `networks` reach the resources it contains.
+private confluent.environment @defaults("id displayName") {
+  // Environment identifier, for example "env-abc123"
+  id string
+  // Human-readable name of the environment
+  displayName string
+  // Confluent Resource Name of the environment
+  //
+  // The globally unique CRN, for example
+  // "crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-abc123".
+  resourceName string
+  // Stream Governance tier applied to the environment
+  //
+  // One of ESSENTIALS or ADVANCED. Null on an environment that has no Stream
+  // Governance package attached.
+  streamGovernancePackage string
+  // When the environment was created
+  createdAt time
+  // When the environment was last updated
+  updatedAt time
+  // Kafka clusters in the environment
+  kafkaClusters() []confluent.kafkaCluster
+  // Schema Registry clusters in the environment
+  schemaRegistryClusters() []confluent.schemaRegistryCluster
+  // Dedicated networks in the environment
+  networks() []confluent.network
+}
+
+// Confluent Cloud Kafka cluster
+//
+// An Apache Kafka cluster and the controls that decide who reaches it and how.
+// `cloud`, `region`, `availability` and `clusterType` describe where and how it
+// runs, `endpoints` and `connectionTypes` describe how it is reachable, and
+// `isPublic` reports whether any of those endpoints is served from the public
+// internet. `acls` lists the topic and group grants held on it and `topics` the
+// data those grants cover, both of which are served by the cluster's own REST
+// endpoint and need a cluster-scoped Kafka API key. `encryptionKey` names the
+// self-managed key protecting data at rest, and `apiKeys` and `roleBindings`
+// enumerate the credentials and grants scoped to this cluster. Select a cluster
+// with `confluent.kafkaClusters.where(id == "lkc-abc123")`.
+private confluent.kafkaCluster @defaults("id displayName cloud region clusterType") {
+  // Cluster identifier, for example "lkc-abc123"
+  id string
+  // Human-readable name of the cluster
+  displayName string
+  // Confluent Resource Name of the cluster
+  resourceName string
+  // Cloud service provider the cluster runs on
+  //
+  // One of AWS, GCP, or AZURE.
+  cloud string
+  // Cloud service provider region the cluster runs in, for example "us-east-1"
+  region string
+  // Availability zone configuration
+  //
+  // One of SINGLE_ZONE, MULTI_ZONE, LOW, or HIGH. A single-zone cluster loses
+  // availability with the zone it sits in.
+  availability string
+  // Cluster type
+  //
+  // One of Basic, Standard, Dedicated, Enterprise, or Freight. Only a
+  // Dedicated cluster can be placed in a customer network or protected by a
+  // self-managed encryption key.
+  clusterType string
+  // Number of Confluent Kafka Units provisioned
+  //
+  // Reported for Dedicated clusters. Null on cluster types that scale
+  // elastically rather than by a fixed unit count.
+  cku int
+  // Maximum number of elastic Confluent Kafka Units the cluster scales to
+  //
+  // Reported for the cluster types that auto-scale. Null on Dedicated
+  // clusters, which are sized by `cku` instead.
+  maxEcku int
+  // Zones the cluster is placed in
+  zones []string
+  // Whether deletion protection is switched on
+  deletionProtection bool
+  // Lifecycle phase of the cluster
+  //
+  // One of PROVISIONING, PROVISIONED, or FAILED.
+  phase string
+  // When the cluster was created
+  createdAt time
+  // When the cluster was last updated
+  updatedAt time
+  // Bootstrap endpoint Kafka clients connect to
+  //
+  // Taken from the public endpoint when the cluster has one, otherwise from the
+  // first endpoint it reports. Use `endpoints` to see every endpoint.
+  bootstrapEndpoint string
+  // REST endpoint serving the cluster's own API
+  //
+  // The base URL the topic and ACL listings are read from. Taken from the same
+  // endpoint as `bootstrapEndpoint`.
+  restEndpoint string
+  // Every endpoint the cluster is reachable on
+  //
+  // Shape: `[{accessPointId: "PUBLIC", connectionType: "PUBLIC",
+  // bootstrapEndpoint: "...:9092", httpEndpoint: "https://..."}, ...]`. The
+  // connection type is one of PUBLIC, PRIVATE_LINK, or
+  // PRIVATE_NETWORK_INTERFACE.
+  endpoints []dict
+  // Distinct connection types across the cluster's endpoints
+  connectionTypes []string
+  // Whether the cluster is reachable from the internet
+  //
+  // True when the cluster carries an endpoint whose connection type is PUBLIC.
+  // A cluster reached only over private link or a private network interface is
+  // not reachable from the internet and reports false.
+  isPublic bool
+  // Whether the cluster carries a private endpoint
+  //
+  // True when any endpoint uses PRIVATE_LINK or PRIVATE_NETWORK_INTERFACE. A
+  // cluster can carry both a public and a private endpoint, so this is not the
+  // negation of `isPublic`.
+  hasPrivateEndpoint bool
+  // Whether data at rest is protected by a self-managed key
+  //
+  // False means Confluent manages the encryption key. Confluent encrypts data
+  // at rest either way, so this reports who holds the key rather than whether
+  // encryption is on.
+  customerManagedEncryption bool
+  // Environment the cluster belongs to
+  environment() confluent.environment
+  // Dedicated network the cluster is placed in
+  //
+  // Null on a cluster that is not placed in a customer network.
+  network() confluent.network
+  // Self-managed key protecting data at rest
+  //
+  // Null on a cluster using a Confluent-managed key.
+  encryptionKey() confluent.encryptionKey
+  // Topics on the cluster
+  //
+  // Served by the cluster's own REST endpoint, which requires a cluster-scoped
+  // Kafka API key.
+  topics() []confluent.topic
+  // Access control entries on the cluster
+  //
+  // Served by the cluster's own REST endpoint, which requires a cluster-scoped
+  // Kafka API key.
+  acls() []confluent.acl
+  // API keys scoped to this cluster
+  apiKeys() []confluent.apiKey
+  // Role bindings whose scope covers this cluster
+  roleBindings() []confluent.roleBinding
+}
+
+// Kafka topic
+//
+// A topic on a Confluent Cloud Kafka cluster, with the durability it is
+// configured for and the access control entries that reach it. Select a topic
+// with `confluent.kafkaClusters.first.topics.where(name == "payments")`.
+// `replicationFactor` and the `min.insync.replicas` entry of `configs` decide
+// how many broker failures the topic survives, and `acls` lists every entry
+// whose resource pattern matches this topic by name, so a topic that nothing
+// grants access to is visible as an empty list.
+private confluent.topic @defaults("name partitionsCount replicationFactor") {
+  // Topic name
+  name string
+  // Whether the topic is internal to Kafka rather than created by a client
+  isInternal bool
+  // Number of partitions
+  partitionsCount int
+  // Number of replicas kept for each partition
+  replicationFactor int
+  // Topic configuration entries
+  //
+  // Every configuration the cluster reports for the topic, including entries
+  // left at their default, keyed by the Kafka configuration name. Entries the
+  // broker marks as sensitive carry no value and are reported as an empty
+  // string.
+  configs() map[string]string
+  // Cluster the topic lives on
+  cluster() confluent.kafkaCluster
+  // Access control entries that match this topic
+  //
+  // Every entry with resource type TOPIC whose pattern matches this topic's
+  // name: a LITERAL pattern equal to the name, a LITERAL pattern of "*", or a
+  // PREFIXED pattern the name starts with.
+  acls() []confluent.acl
+}
+
+// Kafka access control entry
+//
+// One entry of a Kafka cluster's access control list, granting or denying a
+// principal an operation on a resource pattern. `principal`, `resourceType`,
+// `resourceName`, `patternType`, `operation` and `permission` are the entry as
+// Kafka holds it. The derived fields flag the entries that grant more than a
+// named resource to a named principal: `grantsWildcardResource` for an entry
+// covering every resource of its type, `grantsAnyPrincipal` for one open to
+// every principal, and `grantsAllOperations` for one carrying the ALL
+// operation.
+private confluent.acl @defaults("principal permission operation resourceType resourceName") {
+  // Principal the entry applies to
+  //
+  // A service account or user in the form "User:sa-abc123" or "User:u-abc123".
+  // Confluent also renders service accounts as "UserV2:sa-abc123" on some
+  // endpoints, and "User:*" stands for every principal.
+  principal string
+  // Host the entry applies to
+  //
+  // Confluent Cloud does not support host restrictions, so this is "*" on every
+  // entry it returns.
+  host string
+  // Kafka resource type the entry covers
+  //
+  // One of TOPIC, GROUP, CLUSTER, TRANSACTIONAL_ID, DELEGATION_TOKEN, ANY, or
+  // UNKNOWN.
+  resourceType string
+  // Resource pattern the entry covers
+  //
+  // A Kafka resource name, not a Confluent Resource Name: the topic, consumer
+  // group, or transactional ID the entry applies to, read together with
+  // `patternType`. It may be a pattern rather than a concrete object, which is
+  // why it stays a name here. The topics an entry actually reaches are visible
+  // from the other direction, through the `acls` field of a topic.
+  resourceName string
+  // How the resource pattern is matched
+  //
+  // One of LITERAL, PREFIXED, MATCH, ANY, or UNKNOWN.
+  patternType string
+  // Operation the entry covers
+  //
+  // One of ALL, READ, WRITE, CREATE, DELETE, ALTER, DESCRIBE, CLUSTER_ACTION,
+  // DESCRIBE_CONFIGS, ALTER_CONFIGS, IDEMPOTENT_WRITE, ANY, or UNKNOWN.
+  operation string
+  // Whether the entry allows or denies
+  //
+  // One of ALLOW, DENY, ANY, or UNKNOWN.
+  permission string
+  // Whether the entry covers every resource of its type
+  //
+  // True for a LITERAL pattern of "*", for an empty PREFIXED pattern, and for
+  // an ANY or MATCH pattern of "*", each of which reaches every topic, group,
+  // or transactional ID rather than a named one. Reported for a DENY entry as
+  // well, where it restricts rather than grants.
+  grantsWildcardResource bool
+  // Whether the entry applies to every principal
+  //
+  // True when the principal is "User:*" or "UserV2:*", which reaches every
+  // service account and user rather than a named one.
+  grantsAnyPrincipal bool
+  // Whether the entry carries the ALL operation
+  //
+  // The ALL operation covers every Kafka operation on the matched resource,
+  // including delete and configuration changes.
+  grantsAllOperations bool
+  // Cluster the entry is held on
+  cluster() confluent.kafkaCluster
+  // Service account the principal names
+  //
+  // Null when the principal names a human user, names every principal, or names
+  // a service account this API key cannot read.
+  serviceAccount() confluent.serviceAccount
+}
+
+// Confluent Cloud service account
+//
+// A non-human principal used by applications to reach Confluent resources.
+// `apiKeys` lists the credentials issued to it, with the age of each, and
+// `roleBindings` the roles it holds. Select a service account with
+// `confluent.serviceAccounts.where(displayName == "payments-producer")`.
+private confluent.serviceAccount @defaults("id displayName") {
+  // Service account identifier, for example "sa-abc123"
+  id string
+  // Human-readable name of the service account
+  displayName string
+  // Free-form description
+  description string
+  // Confluent Resource Name of the service account
+  resourceName string
+  // When the service account was created
+  createdAt time
+  // When the service account was last updated
+  updatedAt time
+  // API keys owned by the service account
+  apiKeys() []confluent.apiKey
+  // Role bindings held by the service account
+  roleBindings() []confluent.roleBinding
+}
+
+// Confluent Cloud user
+//
+// A human account in the organization. `authType` reports whether the account
+// signs in through the organization's identity provider or with a local
+// password, `apiKeys` lists the credentials issued to the person, and
+// `roleBindings` the roles they hold. Select a user with
+// `confluent.users.where(email == "someone@example.com")`.
+private confluent.user @defaults("id email authType") {
+  // User identifier, for example "u-abc123"
+  id string
+  // Email address of the account
+  email string
+  // Full name of the account holder
+  fullName string
+  // How the account authenticates
+  //
+  // One of AUTH_TYPE_SSO or AUTH_TYPE_LOCAL. A local account signs in with a
+  // password held by Confluent rather than through the organization's identity
+  // provider, so it is outside whatever controls that provider enforces.
+  authType string
+  // Confluent Resource Name of the user
+  resourceName string
+  // When the account was created
+  createdAt time
+  // When the account was last updated
+  updatedAt time
+  // API keys owned by the user
+  apiKeys() []confluent.apiKey
+  // Role bindings held by the user
+  roleBindings() []confluent.roleBinding
+}
+
+// Confluent Cloud API key
+//
+// A credential granting programmatic access, either to the whole organization
+// or to a single cluster. `ageDays` reports how long the key has existed, which
+// is what a rotation policy is written against, and `isCloudKey` separates the
+// organization-wide keys from the cluster-scoped ones. `serviceAccount` and
+// `user` name the owner, and `cluster` or `schemaRegistryCluster` name what the
+// key opens. The key secret is never returned by the API and is not exposed by
+// any field here. Select a key with
+// `confluent.apiKeys.where(displayName == "ci-producer")`.
+private confluent.apiKey @defaults("id displayName ownerKind ageDays") {
+  // API key identifier
+  //
+  // The public half of the credential, which is also the key as a client
+  // presents it. The secret half is only returned when a key is created and is
+  // not readable afterwards.
+  id string
+  // Human-readable name of the key
+  displayName string
+  // Free-form description
+  description string
+  // Confluent Resource Name of the key
+  resourceName string
+  // When the key was created
+  createdAt time
+  // When the key was last updated
+  updatedAt time
+  // Days since the key was created
+  //
+  // Null when the API reports no creation time, so a key of unknown age is
+  // distinguishable from a key created today.
+  ageDays int
+  // Kind of principal that owns the key
+  //
+  // One of ServiceAccount or User. A key owned by a person keeps working for as
+  // long as the account exists, which is why an application credential belongs
+  // to a service account instead.
+  ownerKind string
+  // Whether the key reaches the whole organization
+  //
+  // True for a Cloud API key, which is not tied to a cluster and opens the
+  // management APIs, including the ability to create further keys. False for a
+  // key scoped to a single cluster.
+  isCloudKey bool
+  // Kind of resource the key is scoped to
+  //
+  // The API group and kind of the scoped resource, for example "cmk.v2.Cluster"
+  // for a Kafka cluster or "srcm.v3.Cluster" for a Schema Registry cluster.
+  // Empty on a Cloud API key.
+  resourceKind string
+  // Service account that owns the key
+  //
+  // Null when the key is owned by a human user.
+  serviceAccount() confluent.serviceAccount
+  // User that owns the key
+  //
+  // Null when the key is owned by a service account.
+  user() confluent.user
+  // Kafka cluster the key is scoped to
+  //
+  // Null on a Cloud API key and on a key scoped to something other than a Kafka
+  // cluster.
+  cluster() confluent.kafkaCluster
+  // Schema Registry cluster the key is scoped to
+  //
+  // Null unless the key is scoped to a Schema Registry cluster.
+  schemaRegistryCluster() confluent.schemaRegistryCluster
+}
+
+// Confluent Cloud role binding
+//
+// A grant of one RBAC role to one principal over a scope. `roleName` is the
+// role, `principal` the account it is granted to, and `crnPattern` the scope it
+// applies over. `scopeKind` reduces that pattern to what it targets, and
+// `isOrganizationScoped` flags a binding that reaches every environment and
+// cluster in the organization. `serviceAccount`, `user`, `environment` and
+// `cluster` resolve the two ends of the grant.
+private confluent.roleBinding @defaults("principal roleName scopeKind") {
+  // Role binding identifier, for example "rb-abc123"
+  id string
+  // Principal the role is granted to
+  //
+  // A user, service account, or group in the form "User:u-abc123",
+  // "User:sa-abc123", or "Group:<name>".
+  principal string
+  // Name of the role granted
+  //
+  // For example OrganizationAdmin, EnvironmentAdmin, CloudClusterAdmin,
+  // DeveloperRead, DeveloperWrite, DeveloperManage, ResourceOwner, or
+  // Operator. The set grows as Confluent adds roles.
+  roleName string
+  // Scope the role applies over
+  //
+  // A Confluent Resource Name pattern, for example
+  // "crn://confluent.cloud/organization=<uuid>/environment=env-abc123/cloud-cluster=lkc-abc123".
+  // A pattern that stops at the organization reaches everything below it.
+  crnPattern string
+  // What the scope targets
+  //
+  // The deepest segment of `crnPattern`, one of organization, environment,
+  // cloud-cluster, schema-registry, ksql-cluster, flink-region, or another
+  // segment name Confluent introduces. Empty when the pattern carries no
+  // recognizable segment.
+  scopeKind string
+  // Whether the binding covers the whole organization
+  //
+  // True when the scope stops at the organization, which reaches every
+  // environment and every cluster in it, including ones created after the
+  // binding was made.
+  isOrganizationScoped bool
+  // Service account the role is granted to
+  //
+  // Null when the principal is a human user or a group.
+  serviceAccount() confluent.serviceAccount
+  // User the role is granted to
+  //
+  // Null when the principal is a service account or a group.
+  user() confluent.user
+  // Environment the scope targets
+  //
+  // Null on an organization-scoped binding.
+  environment() confluent.environment
+  // Kafka cluster the scope targets
+  //
+  // Null unless the scope names a Kafka cluster.
+  cluster() confluent.kafkaCluster
+}
+
+// Confluent Cloud Schema Registry cluster
+//
+// The Stream Governance cluster of one environment, holding the schemas
+// producers and consumers agree on. `streamGovernancePackage` reports the tier,
+// which decides whether schema linking and data catalog controls are available,
+// `httpEndpoint` is the public REST endpoint, and `privateRegionalEndpoints`
+// lists the private ones. `isPublic` reports whether the registry answers on the
+// public internet.
+private confluent.schemaRegistryCluster @defaults("id displayName streamGovernancePackage region") {
+  // Schema Registry cluster identifier, for example "lsrc-abc123"
+  id string
+  // Human-readable name of the cluster
+  displayName string
+  // Confluent Resource Name of the cluster
+  resourceName string
+  // Stream Governance tier of the cluster
+  //
+  // One of ESSENTIALS or ADVANCED.
+  streamGovernancePackage string
+  // Cloud service provider the cluster runs on
+  //
+  // One of AWS, GCP, or AZURE.
+  cloud string
+  // Cloud service provider region the cluster runs in
+  region string
+  // Public REST endpoint of the registry
+  //
+  // Empty on a registry reachable only over private networking.
+  httpEndpoint string
+  // REST endpoint of the data catalog
+  catalogHttpEndpoint string
+  // Private REST endpoint of the registry
+  privateHttpEndpoint string
+  // Private REST endpoints keyed by region
+  privateRegionalEndpoints map[string]string
+  // Whether the registry is reachable from the internet
+  //
+  // True when the cluster reports a public REST endpoint.
+  isPublic bool
+  // Lifecycle phase of the cluster
+  //
+  // One of PROVISIONING, PROVISIONED, or FAILED.
+  phase string
+  // When the cluster was created
+  createdAt time
+  // When the cluster was last updated
+  updatedAt time
+  // Environment the cluster belongs to
+  environment() confluent.environment
+}
+
+// Confluent Cloud network
+//
+// A dedicated network that Kafka clusters are placed in, replacing public
+// internet access with peering, transit gateway, or private link. `cidr` and
+// `zones` describe the address space it occupies, `connectionTypes` the
+// mechanisms it was created for, and `activeConnectionTypes` the ones actually
+// in use. `kafkaClusters` lists the clusters placed in it, so a network nothing
+// uses is visible as an empty list.
+private confluent.network @defaults("id displayName cloud region") {
+  // Network identifier, for example "n-abc123"
+  id string
+  // Human-readable name of the network
+  displayName string
+  // Confluent Resource Name of the network
+  resourceName string
+  // Cloud service provider the network exists in
+  //
+  // One of AWS, GCP, or AZURE.
+  cloud string
+  // Cloud service provider region the network exists in
+  region string
+  // IPv4 CIDR block the network occupies
+  //
+  // Present on networks created for peering or transit gateway, empty
+  // otherwise.
+  cidr string
+  // Availability zones the network spans
+  zones []string
+  // Connection mechanisms the network was created for
+  //
+  // Each entry is one of PEERING, TRANSITGATEWAY, or PRIVATELINK.
+  connectionTypes []string
+  // Connection mechanisms currently in use
+  activeConnectionTypes []string
+  // Connection mechanisms the network is able to support
+  supportedConnectionTypes []string
+  // Root DNS domain of the network
+  //
+  // Present on networks supporting private link.
+  dnsDomain string
+  // How cluster endpoints in the network are resolved
+  //
+  // One of PRIVATE, where only private DNS is needed, or CHASED_PRIVATE, where
+  // clients need public DNS as well. Empty on networks that carry no DNS
+  // configuration.
+  dnsResolution string
+  // Lifecycle phase of the network
+  //
+  // One of PROVISIONING, READY, FAILED, or DEPROVISIONING.
+  phase string
+  // When the network was created
+  createdAt time
+  // Environment the network belongs to
+  environment() confluent.environment
+  // Kafka clusters placed in the network
+  kafkaClusters() []confluent.kafkaCluster
+}
+
+// Confluent Cloud self-managed encryption key
+//
+// A customer-managed key registered with the organization and used to protect
+// data at rest on Dedicated Kafka clusters. `provider` and `keyReference` name
+// the key in the cloud provider's key management service, `state` reports
+// whether a cluster is using it, and `validationPhase` reports whether
+// Confluent can still reach it. `kafkaClusters` lists the clusters protected by
+// the key, so a key nothing uses is visible as an empty list.
+private confluent.encryptionKey @defaults("id provider state validationPhase") {
+  // Key identifier, for example "cck-abc123"
+  id string
+  // Human-readable name of the key
+  displayName string
+  // Confluent Resource Name of the key
+  resourceName string
+  // Cloud provider holding the key
+  //
+  // One of AWS, Azure, or GCP.
+  provider string
+  // Whether the key is in use
+  //
+  // One of AVAILABLE, meaning no cluster uses it yet, or IN_USE.
+  state string
+  // Reference to the key in the cloud provider
+  //
+  // The ARN of the AWS KMS key, the Azure Key Vault key object identifier, or
+  // the Google Cloud KMS key ID. It names a key in another cloud account rather
+  // than a Confluent object, which is why it stays a plain reference here.
+  keyReference string
+  // Key Vault holding the key
+  //
+  // Reported for Azure keys, empty otherwise.
+  keyVaultId string
+  // Tenant hosting the Key Vault
+  //
+  // Reported for Azure keys, empty otherwise.
+  tenantId string
+  // Application identity Confluent uses to reach the key
+  //
+  // Reported for Azure keys, empty otherwise.
+  applicationId string
+  // Google security group created for the key
+  //
+  // Reported for Google Cloud keys, empty otherwise.
+  securityGroup string
+  // IAM roles created for the key
+  //
+  // Reported for AWS keys as role ARNs, empty otherwise.
+  roles []string
+  // Whether Confluent can currently use the key
+  //
+  // One of INITIALIZING, VALID, or INVALID. An INVALID key means Confluent's
+  // last attempt to use it failed, which stops the clusters relying on it from
+  // reading their data.
+  validationPhase string
+  // Message describing the last validation attempt
+  validationMessage string
+  // When the key entered its current validation phase
+  validationSince time
+  // When the key was registered
+  createdAt time
+  // Kafka clusters protected by the key
+  kafkaClusters() []confluent.kafkaCluster
+}
+
+// Confluent Cloud audit log destination
+//
+// Where the organization's audit records are delivered. `enabled` reports
+// whether audit logging is switched on at all, `topicName` names the topic the
+// records land in, and `cluster`, `environment` and `serviceAccount` identify
+// the Kafka cluster holding that topic and the principal that writes to it. An
+// organization with no audit log keeps no record of who created a key, changed
+// an ACL, or read a topic.
+private confluent.auditLogConfig @defaults("enabled topicName") {
+  // Whether audit logging is enabled for the organization
+  enabled bool
+  // Topic the audit records are delivered to
+  //
+  // Empty when audit logging is not enabled.
+  topicName string
+  // Kafka cluster holding the audit log topic
+  //
+  // Null when audit logging is not enabled, and on organizations whose audit
+  // log cluster this API key cannot read.
+  cluster() confluent.kafkaCluster
+  // Environment holding the audit log cluster
+  //
+  // Null when audit logging is not enabled, and on organizations whose audit
+  // log environment this API key cannot read.
+  environment() confluent.environment
+  // Service account writing the audit records
+  //
+  // Null when audit logging is not enabled, and on organizations whose audit
+  // log service account this API key cannot read.
+  serviceAccount() confluent.serviceAccount
+}
