@@ -423,14 +423,20 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 	return res, nil
 }
 
+// id returns the full key identifier, which is the vault URI plus the key name
+// and so already unique.
+//
+// It used to parse the identifier and return the bare key name. That is not a
+// cache key: two vaults holding a key of the same name -- the same "cmk" in a
+// production and a staging vault, say -- produced one key, and every rotation
+// row after the first reported the first vault's answer. A vault with rotation
+// switched off inherited "enabled: true" from a vault that had it on.
+//
+// Parsing also meant an identifier the regex did not recognize failed the whole
+// resource rather than one field. Every other Key Vault resource returns its own
+// identifier here; this one was the outlier.
 func (a *mqlAzureSubscriptionKeyVaultServiceKeyAutorotation) id() (string, error) {
-	id := a.Kid.Data
-	kvid, err := parseKeyVaultId(id)
-	if err != nil {
-		return "", err
-	}
-
-	return kvid.Name, nil
+	return a.Kid.Data, nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error) {
@@ -451,6 +457,14 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			// The same data-plane listing keys() walks, so it degrades the same
+			// way: a caller holding the vault's control-plane read but not the
+			// keys data action gets 403 here, and that should not fail the whole
+			// vault list.
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list azure keys for rotation policies, returning partial results")
+				return res, nil
+			}
 			return nil, err
 		}
 
