@@ -1,0 +1,4 @@
+audit_webhook endpoint=http://127.0.0.1:18099/default auth_token= client_cert= client_key= batch_size=1 queue_size=100000 queue_dir= max_retry=0 retry_interval=3s http_timeout=5s 
+audit_webhook:noauth endpoint=http://127.0.0.1:18080/audit2 auth_token= client_cert= client_key= batch_size=1 queue_size=100000 queue_dir= max_retry=0 retry_interval=3s http_timeout=5s 
+audit_webhook:offtarget enable=off endpoint=http://127.0.0.1:18098/off auth_token= client_cert= client_key= batch_size=1 queue_size=100000 queue_dir= max_retry=0 retry_interval=3s http_timeout=5s 
+audit_webhook:primary endpoint=http://127.0.0.1:18080/audit client_cert= client_key= batch_size=1 queue_size=100000 queue_dir= max_retry=0 retry_interval=3s http_timeout=5s 

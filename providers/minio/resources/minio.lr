@@ -1,0 +1,474 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/minio"
+option go_package = "go.mondoo.com/mql/v13/providers/minio/resources"
+
+// MinIO object storage deployment
+//
+// S3-compatible object storage server, covering the posture of the running
+// deployment: which buckets exist and how each one is exposed, encrypted,
+// versioned and retained, which users, groups, service accounts and policies
+// can reach them, and where the server ships its audit and server logs.
+// The deployment fields describe the server itself: `version`,
+// `deploymentMode` (standalone or distributed), `region`, `backendType`,
+// and whether the API endpoint is reached over TLS.
+minio {
+  // Server version reported by the deployment, for example "RELEASE.2025-04-22T22-12-26Z"
+  version() string
+  // Deployment mode
+  //
+  // Either standalone, when every drive is served by a single MinIO process,
+  // or distributed, when the deployment spans more than one server. A
+  // standalone deployment loses availability whenever its one server does.
+  deploymentMode() string
+  // Region the deployment reports for its buckets, empty when unset
+  region() string
+  // Unique identifier the deployment assigned itself on first start
+  deploymentId() string
+  // API endpoint this connection reads, as host and port
+  endpoint() string
+  // Whether the API endpoint is reached over HTTPS
+  //
+  // Reflects the scheme of the endpoint this connection used. A deployment
+  // serving its S3 and admin API over plain HTTP exposes access keys and
+  // object data to anyone on the path. The web console listens on a separate
+  // port that the admin API does not report, so it is not covered here.
+  tlsEnabled() bool
+  // Storage backend of the deployment
+  //
+  // Either Erasure, when objects are split across drives with parity, or FS,
+  // for a single-drive deployment. Versioning, object locking and replication
+  // require the Erasure backend.
+  backendType() string
+  // Number of drives currently online across the deployment
+  onlineDrives() int
+  // Number of drives currently offline across the deployment
+  offlineDrives() int
+  // Whether a key management service is reachable for server-side encryption
+  //
+  // MinIO refuses to configure any bucket encryption, SSE-S3 included, until a
+  // KMS is attached, so a deployment reporting false cannot encrypt objects at
+  // rest with server-managed keys.
+  kmsConfigured() bool
+  // Servers taking part in the deployment
+  servers() []minio.server
+  // Buckets in the deployment
+  buckets() []minio.bucket
+  // Users defined in the deployment's built-in identity store
+  users() []minio.user
+  // Groups defined in the deployment's built-in identity store
+  groups() []minio.group
+  // Service accounts issued against the deployment's users
+  serviceAccounts() []minio.serviceAccount
+  // Named access policies defined on the deployment
+  policies() []minio.policy
+  // Webhook targets receiving the S3 audit trail
+  auditWebhooks() []minio.webhook
+  // Webhook targets receiving server logs
+  loggerWebhooks() []minio.webhook
+  // Seconds the web console asks browsers to enforce HTTPS through HSTS
+  //
+  // Zero when the console sends no Strict-Transport-Security header, which
+  // leaves a browser willing to fall back to plain HTTP.
+  consoleHstsSeconds() int
+  // Whether the console's HSTS header covers subdomains
+  consoleHstsIncludeSubdomains() bool
+  // Whether the console's HSTS header requests browser preloading
+  consoleHstsPreload() bool
+  // Origins the S3 API accepts cross-origin browser requests from
+  //
+  // A single entry of "*" accepts every origin, which lets any web page a
+  // user visits issue authenticated requests against the API.
+  corsAllowOrigin() []string
+}
+
+// MinIO server
+//
+// One server process taking part in the deployment, keyed by `endpoint`. The
+// `state` field reports whether the deployment can currently reach it, and the
+// drive counts show how much of its storage is usable. A server running a
+// different `version` from its peers is a partially completed upgrade.
+private minio.server @defaults("endpoint state version") {
+  // Endpoint of the server, as host and port
+  endpoint string
+  // Reachability of the server, for example online or offline
+  state string
+  // Server version running on this host
+  version string
+  // Commit the server binary was built from
+  commitId string
+  // Seconds the server process has been running
+  uptime int
+  // Storage pool the server belongs to, numbered from 1
+  poolNumber int
+  // Number of drives attached to the server
+  totalDrives int
+  // Number of the server's drives currently reporting a healthy state
+  onlineDrives int
+}
+
+// MinIO bucket
+//
+// Object storage bucket keyed by `name`, for example
+// `minio.bucket(name: "my-bucket")`. This is the primary handle for auditing
+// exposure and data protection on a MinIO deployment: whether an anonymous
+// caller can reach the bucket through its access policy, how its contents are
+// encrypted, and whether versioning, object locking and replication guard
+// against loss or tampering. MinIO has no ACLs, so the access policy is the
+// only way a bucket becomes anonymously readable, and `hasAnonymousAccess`
+// reports that directly.
+private minio.bucket @defaults("name hasAnonymousAccess encrypted") {
+  // Name of the bucket
+  name string
+  // Date and time the bucket was created
+  createdAt time
+  // Region the bucket reports
+  location() string
+  // Tags set on the bucket
+  tags() map[string]string
+  // Versioning state of the bucket
+  //
+  // Keys `Status` (Enabled, Suspended, or empty when versioning was never
+  // configured) and `MFADelete` (Enabled or Disabled). See
+  // `versioningEnabled` for the same state as a boolean.
+  versioning() map[string]string
+  // Whether object versioning is currently enabled on the bucket
+  versioningEnabled() bool
+  // Whether object locking is enabled on the bucket
+  //
+  // Object locking can only be turned on when the bucket is created and
+  // prevents an object version from being overwritten or deleted for the
+  // duration of its retention, which is what stops ransomware and rogue
+  // operators from destroying data.
+  objectLockEnabled() bool
+  // Retention mode applied to new objects by default
+  //
+  // Either GOVERNANCE, which privileged users may bypass, or COMPLIANCE,
+  // which nobody may bypass. Empty when the bucket sets no default retention.
+  defaultRetentionMode() string
+  // Length of the default retention period, counted in defaultRetentionUnit
+  defaultRetentionValidity() int
+  // Unit of the default retention period, either DAYS or YEARS
+  defaultRetentionUnit() string
+  // Whether default server-side encryption is configured on the bucket
+  encrypted() bool
+  // Default server-side encryption rules applied to new objects
+  encryptionRules() []minio.bucket.encryptionRule
+  // Key management service key used for default SSE-KMS encryption
+  //
+  // Null when the bucket is unencrypted or uses SSE-S3, which encrypts with a
+  // server-managed key rather than a named one.
+  kmsKey() minio.kmsKey
+  // Maximum number of bytes the bucket may hold, zero when no quota is set
+  quotaBytes() int
+  // Quota enforcement type, for example hard, empty when no quota is set
+  quotaType() string
+  // Lifecycle rules governing how objects in the bucket age out
+  lifecycleRules() []minio.bucket.lifecycleRule
+  // Replication rules copying objects out of the bucket
+  replicationRules() []minio.bucket.replicationRule
+  // Raw JSON access policy attached to the bucket, empty when none is set
+  policyDocument() string
+  // Statements of the bucket's access policy
+  policyStatements() []minio.policyStatement
+  // Whether the bucket's policy lets an unauthenticated caller reach it
+  //
+  // True when an Allow statement names the wildcard principal `*`, which in
+  // MinIO grants the listed actions to anonymous requests. False when the
+  // bucket has no policy or every wildcard-principal statement denies rather
+  // than allows. Null when the policy could not be read, so an under-scoped
+  // access key is distinguishable from a bucket verified to be private.
+  hasAnonymousAccess() bool
+  // Whether any statement of the bucket's policy names the wildcard principal
+  //
+  // Unlike hasAnonymousAccess this counts Deny statements too, which is what
+  // a policy uses to forbid something for everyone rather than to expose it.
+  hasWildcardPrincipal() bool
+  // Whether an Allow statement of the bucket's policy grants a wildcard action
+  //
+  // True when an Allow statement lists an action containing `*`, for example
+  // `s3:*`, which grants far more than the read access a published bucket
+  // usually intends.
+  hasWildcardAction() bool
+  // Whether the bucket's policy rejects requests made without TLS
+  //
+  // True when the policy contains a Deny statement conditioned on
+  // `aws:SecureTransport` being false, which rejects any request that does
+  // not use HTTPS. False when the bucket has no policy.
+  enforceSslOnly() bool
+}
+
+// MinIO bucket server-side encryption rule
+//
+// A single default-encryption rule applied to new objects written to the
+// bucket. `sseAlgorithm` distinguishes SSE-S3, which encrypts with a
+// server-managed key, from SSE-KMS, which encrypts with the named key that
+// `kmsKey` resolves to.
+private minio.bucket.encryptionRule @defaults("sseAlgorithm") {
+  // Server-side encryption algorithm, either AES256 for SSE-S3 or aws:kms for SSE-KMS
+  sseAlgorithm string
+  // Key management service key this rule encrypts with, null for SSE-S3
+  kmsKey() minio.kmsKey
+}
+
+// MinIO bucket lifecycle rule
+//
+// A single rule from the bucket's lifecycle configuration governing how
+// objects age out: transitioning to a different storage tier, expiring
+// current and prior versions, and cleaning up incomplete multipart uploads.
+// The `id` field names the rule as it was written.
+private minio.bucket.lifecycleRule @defaults("id status") {
+  // Rule identifier
+  id string
+  // Whether the rule is applied, either Enabled or Disabled
+  status string
+  // Object key prefix the rule applies to, empty when it applies to the whole bucket
+  prefix string
+  // Days after creation an object expires, zero when the rule sets no day-based expiry
+  expirationDays int
+  // Whether the rule expires objects whose only remaining version is a delete marker
+  expiredObjectDeleteMarker bool
+  // Days a version stays retrievable after being superseded, zero when unset
+  noncurrentVersionExpirationDays int
+  // Days after which an incomplete multipart upload is abandoned, zero when unset
+  abortIncompleteMultipartUploadDays int
+  // Days after creation an object moves to transitionStorageClass, zero when unset
+  transitionDays int
+  // Storage tier the rule transitions objects to, empty when it does not transition
+  transitionStorageClass string
+}
+
+// MinIO bucket replication rule
+//
+// A single rule from the bucket's replication configuration, describing which
+// objects are copied and to which destination bucket. The `id` field names the
+// rule as it was written, and `priority` orders overlapping rules.
+private minio.bucket.replicationRule @defaults("id status destinationBucket") {
+  // Rule identifier
+  id string
+  // Whether the rule is applied, either Enabled or Disabled
+  status string
+  // Order this rule takes against overlapping rules, higher wins
+  priority int
+  // ARN of the destination the rule replicates to
+  destinationBucket string
+  // Storage tier objects are written to at the destination, empty when unset
+  destinationStorageClass string
+  // Object key prefix the rule applies to, empty when it applies to the whole bucket
+  prefix string
+  // Whether delete markers are replicated to the destination
+  deleteMarkerReplicationEnabled bool
+  // Whether objects that predate the rule are replicated
+  existingObjectReplicationEnabled bool
+}
+
+// MinIO access policy statement
+//
+// One statement of an access policy, whether the policy is attached to a
+// bucket or defined by name in the identity store. `effect` is Allow or Deny,
+// `actions` lists the S3 and admin operations the statement covers,
+// `resources` lists what they may be performed on, and `principals` lists who
+// they apply to. A bucket policy names its principals, while a named identity
+// policy leaves `principals` empty because the attachment supplies them.
+private minio.policyStatement @defaults("effect actions resources") {
+  // Statement identifier, empty when the statement is unnamed
+  sid string
+  // Whether the statement grants or refuses, either Allow or Deny
+  effect string
+  // Operations the statement covers, for example s3:GetObject or admin:*
+  actions []string
+  // Operations the statement covers everything except
+  notActions []string
+  // Resources the statement applies to, for example arn:aws:s3:::my-bucket/*
+  resources []string
+  // Resources the statement applies to everything except
+  notResources []string
+  // Principals the statement applies to
+  //
+  // A single entry of "*" is the wildcard principal, which on a bucket policy
+  // covers unauthenticated callers. Empty on a named identity policy, where
+  // the principal comes from whoever the policy is attached to.
+  principals []string
+  // Conditions that must hold for the statement to take effect
+  //
+  // Keyed by condition operator, for example `Bool` or `StringEquals`, and
+  // then by condition key, for example `aws:SecureTransport`. Values are
+  // returned as lists even when the policy was written with a single value.
+  conditions dict
+}
+
+// MinIO user
+//
+// A member of the deployment's built-in identity store, keyed by `name`, for
+// example `minio.user(name: "alice")`. The user name doubles as the access
+// key the user authenticates with. `policies` resolves the named policies
+// attached directly to the user, `groups` the groups whose policies they also
+// inherit, and `serviceAccounts` the long-lived keys issued in their name.
+// A disabled user keeps every attachment but cannot authenticate.
+private minio.user @defaults("name status") {
+  // User name, which is also the access key the user authenticates with
+  name string
+  // Whether the user may authenticate, either enabled or disabled
+  status string
+  // Whether the user may authenticate
+  enabled bool
+  // Date and time the user record last changed, null when the deployment reports none
+  updatedAt time
+  // Policies attached directly to the user
+  policies() []minio.policy
+  // Groups the user belongs to
+  groups() []minio.group
+  // Service accounts issued in the user's name
+  serviceAccounts() []minio.serviceAccount
+}
+
+// MinIO group
+//
+// A named set of users in the built-in identity store, keyed by `name`, for
+// example `minio.group(name: "developers")`. Policies attached to the group
+// apply to every member, so `members` paired with `policies` answers which
+// users a given grant actually reaches.
+private minio.group @defaults("name status") {
+  // Group name
+  name string
+  // Whether the group's policies apply, either enabled or disabled
+  status string
+  // Whether the group's policies apply
+  enabled bool
+  // Date and time the group record last changed, null when the deployment reports none
+  updatedAt time
+  // Users belonging to the group
+  members() []minio.user
+  // Policies attached to the group
+  policies() []minio.policy
+}
+
+// MinIO service account
+//
+// A long-lived access key issued against a user, keyed by `accessKey`, for
+// example `minio.serviceAccount(accessKey: "AKIAEXAMPLE")`. A service account
+// inherits its parent user's permissions unless it was issued with a policy of
+// its own, which `impliedPolicy` distinguishes and `policyStatements` spells
+// out. `expiresAt` is null on an account that never expires, which is the
+// state most worth reviewing. The secret half of the key pair is never
+// reported.
+private minio.serviceAccount @defaults("accessKey parentUser status") {
+  // Access key identifying the service account
+  accessKey string
+  // Operator-supplied name for the account, empty when unnamed
+  name string
+  // Operator-supplied description of the account, empty when undescribed
+  description string
+  // Whether the account may authenticate, either on or off
+  status string
+  // Whether the account inherits its parent user's permissions unchanged
+  //
+  // False when the account was issued with a policy of its own, which narrows
+  // what the key can do below what its parent user may do.
+  impliedPolicy bool
+  // Date and time the account stops working, null when it never expires
+  expiresAt time
+  // User the account was issued against
+  //
+  // Null when the parent is not a member of the built-in identity store, which
+  // is the case for accounts issued through LDAP or OpenID.
+  parentUser() minio.user
+  // Raw JSON of the policy in force for the account
+  policyDocument() string
+  // Statements of the policy in force for the account
+  policyStatements() []minio.policyStatement
+}
+
+// MinIO named access policy
+//
+// A policy defined in the identity store and attached to users and groups by
+// name, keyed by `name`, for example `minio.policy(name: "readwrite")`.
+// `statements` resolves the policy document, and `users` and `groups` resolve
+// the other direction, naming everyone the policy currently reaches. The
+// derived predicates report the shapes worth flagging: an action wildcard, a
+// resource wildcard, and any grant of the admin API.
+private minio.policy @defaults("name grantsAdminAccess hasWildcardAction") {
+  // Policy name
+  name string
+  // Raw JSON policy document
+  document string
+  // Date and time the policy was created, null when the deployment reports none
+  createdAt time
+  // Date and time the policy last changed, null when the deployment reports none
+  updatedAt time
+  // Statements of the policy
+  statements() []minio.policyStatement
+  // Whether an Allow statement grants a wildcard action, for example s3:*
+  hasWildcardAction() bool
+  // Whether an Allow statement applies to a wildcard resource, for example arn:aws:s3:::*
+  hasWildcardResource() bool
+  // Whether an Allow statement grants an operation on the admin API
+  //
+  // True when a statement allows any action in the `admin:` namespace, which
+  // covers reconfiguring the deployment, reading its configuration, and
+  // creating further identities.
+  grantsAdminAccess() bool
+  // Users the policy is attached to directly
+  users() []minio.user
+  // Groups the policy is attached to
+  groups() []minio.group
+}
+
+// MinIO log destination
+//
+// A webhook the deployment posts its audit trail or server logs to, keyed by
+// `type` and `name`. `enabled` reports whether the deployment is configured to
+// use the target and `status` whether it can currently reach it, so a target
+// that is enabled but offline is losing records. A deployment with no enabled
+// audit webhook keeps no record of who read which object. The authentication
+// token configured on a target is not reported, because the deployment
+// withholds it.
+private minio.webhook @defaults("type name endpoint enabled status") {
+  // Kind of record the target receives, either audit or logger
+  type string
+  // Target name, or "_" for the deployment's unnamed default target
+  name string
+  // URL the deployment posts records to
+  endpoint string
+  // Whether the deployment is configured to send to the target
+  enabled bool
+  // Whether the deployment can currently reach the target
+  //
+  // One of online or offline. Empty when the deployment reports no status for
+  // the target, which happens while it is disabled.
+  status string
+  // Number of records the deployment buffers when the target is unreachable
+  queueSize int
+  // Directory the deployment spools undelivered records to, empty when it buffers in memory only
+  queueDir string
+  // Whether the target is authenticated with a client certificate
+  clientCertConfigured bool
+  // Number of delivery attempts before a record is dropped, zero for the deployment default
+  maxRetry int
+  // How long the deployment waits for the target to accept a batch, for example "5s"
+  httpTimeout string
+}
+
+// MinIO key management service key
+//
+// A named key the deployment's key management service holds, keyed by `name`,
+// for example `minio.kmsKey(name: "my-key")`. `healthy` reports whether the
+// service could exercise the key for both encryption and decryption, so a
+// bucket configured for SSE-KMS against an unhealthy key cannot accept writes.
+// A key that does not exist reports an encryption error rather than failing to
+// resolve, because the key management service answers for a name it does not
+// hold.
+private minio.kmsKey @defaults("name healthy") {
+  init(name string)
+  // Key name as the key management service holds it
+  name string
+  // Version of the key the service currently holds, empty when it reports none
+  version string
+  // Whether the key management service could exercise the key both ways
+  healthy bool
+  // Why the key could not be used to encrypt, empty when it could
+  encryptionError string
+  // Why the key could not be used to decrypt, empty when it could
+  decryptionError string
+}

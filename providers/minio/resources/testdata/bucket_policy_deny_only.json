@@ -1,0 +1,1 @@
+{"Version":"2012-10-17","Statement":[{"Sid":"DenyInsecure","Effect":"Deny","Principal":{"AWS":["*"]},"Action":["s3:*"],"Resource":["arn:aws:s3:::deny-only/*"],"Condition":{"Bool":{"aws:SecureTransport":["false"]}}}]}

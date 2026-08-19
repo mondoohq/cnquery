@@ -240,6 +240,7 @@ PROVIDERS := \
 	keycloak \
 	kustomize \
 	mikrotik \
+	minio \
 	mistral \
 	mondoo \
 	mongo \

@@ -726,6 +726,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"minio": {
+		Provider: &plugin.Provider{
+			Name:            "minio",
+			ID:              "go.mondoo.com/mql/providers/minio",
+			ConnectionTypes: []string{"minio"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "minio",
+					Use:   "minio",
+					Short: "a MinIO object storage deployment",
+				},
+			},
+		},
+	},
+
 	"mistral": {
 		Provider: &plugin.Provider{
 			Name:            "mistral",

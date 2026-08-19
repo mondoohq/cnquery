@@ -1,0 +1,1 @@
+{"Version":"2012-10-17","Statement":[{"Sid":"AnonEverything","Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:*"],"Resource":["arn:aws:s3:::wildcard-action","arn:aws:s3:::wildcard-action/*"]}]}

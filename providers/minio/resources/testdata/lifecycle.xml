@@ -1,0 +1,1 @@
+<LifecycleConfiguration><Rule><ID>expire-old</ID><Status>Enabled</Status><Filter><Prefix>logs/</Prefix></Filter><Expiration><Days>90</Days></Expiration><NoncurrentVersionExpiration><NoncurrentDays>30</NoncurrentDays></NoncurrentVersionExpiration></Rule></LifecycleConfiguration>

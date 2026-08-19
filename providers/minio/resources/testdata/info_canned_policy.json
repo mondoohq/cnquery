@@ -1,0 +1,19 @@
+{
+ "PolicyName": "custom-wildcard",
+ "Policy": {
+  "Version": "2012-10-17",
+  "Statement": [
+   {
+    "Effect": "Allow",
+    "Action": [
+     "s3:*"
+    ],
+    "Resource": [
+     "arn:aws:s3:::*"
+    ]
+   }
+  ]
+ },
+ "CreateDate": "2026-08-19T13:44:50.406Z",
+ "UpdateDate": "2026-08-19T13:44:50.406Z"
+}

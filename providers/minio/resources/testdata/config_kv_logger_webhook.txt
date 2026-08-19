@@ -1,0 +1,2 @@
+logger_webhook enable=off endpoint= auth_token= client_cert= client_key= proxy= batch_size=1 queue_size=100000 queue_dir= max_retry=0 retry_interval=3s http_timeout=5s 
+logger_webhook:primary endpoint=http://127.0.0.1:18081/logs client_cert= client_key= proxy= batch_size=1 queue_size=100000 queue_dir= max_retry=0 retry_interval=3s http_timeout=5s 
