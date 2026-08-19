@@ -526,6 +526,8 @@ const (
 	ResourceAzureSubscriptionAutomationServiceAccountCertificate                                        string = "azure.subscription.automationService.account.certificate"
 	ResourceAzureSubscriptionDesktopVirtualizationService                                               string = "azure.subscription.desktopVirtualizationService"
 	ResourceAzureSubscriptionDesktopVirtualizationServiceHostPool                                       string = "azure.subscription.desktopVirtualizationService.hostPool"
+	ResourceAzureSubscriptionDataProtectionService                                                      string = "azure.subscription.dataProtectionService"
+	ResourceAzureSubscriptionDataProtectionServiceBackupVault                                           string = "azure.subscription.dataProtectionService.backupVault"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2572,6 +2574,14 @@ func init() {
 			// to override args, implement: initAzureSubscriptionDesktopVirtualizationServiceHostPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionDesktopVirtualizationServiceHostPool,
 		},
+		"azure.subscription.dataProtectionService": {
+			Init:   initAzureSubscriptionDataProtectionService,
+			Create: createAzureSubscriptionDataProtectionService,
+		},
+		"azure.subscription.dataProtectionService.backupVault": {
+			Init:   initAzureSubscriptionDataProtectionServiceBackupVault,
+			Create: createAzureSubscriptionDataProtectionServiceBackupVault,
+		},
 	}
 }
 
@@ -2816,6 +2826,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.recoveryServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetRecoveryServices()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService"))
+	},
+	"azure.subscription.dataProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetDataProtection()).ToDataRes(types.Resource("azure.subscription.dataProtectionService"))
 	},
 	"azure.subscription.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetFunctions()).ToDataRes(types.Resource("azure.subscription.functionsService"))
@@ -20949,6 +20962,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.desktopVirtualizationService.hostPool.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.dataProtectionService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVaults": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionService).GetBackupVaults()).ToDataRes(types.Array(types.Resource("azure.subscription.dataProtectionService.backupVault")))
+	},
+	"azure.subscription.dataProtectionService.backupVault.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.dataProtectionService.backupVault.etag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetEtag()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.dataProtectionService.backupVault.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
+	"azure.subscription.dataProtectionService.backupVault.softDeleteState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetSoftDeleteState()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.softDeleteRetentionPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetSoftDeleteRetentionPeriodInDays()).ToDataRes(types.Float)
+	},
+	"azure.subscription.dataProtectionService.backupVault.immutabilityState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetImmutabilityState()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetEncryptionState()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.infrastructureEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetInfrastructureEncryption()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKeyUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetEncryptionKeyUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetEncryptionKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKeyIdentityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetEncryptionKeyIdentityType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKeyIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetEncryptionKeyIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
+	"azure.subscription.dataProtectionService.backupVault.crossRegionRestoreState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetCrossRegionRestoreState()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.crossSubscriptionRestoreState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetCrossSubscriptionRestoreState()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.replicatedRegions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetReplicatedRegions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.dataProtectionService.backupVault.storageRedundancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetStorageRedundancy()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.dataProtectionService.backupVault.bcdrSecurityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetBcdrSecurityLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.secureScore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetSecureScore()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.isVaultProtectedByResourceGuard": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetIsVaultProtectedByResourceGuard()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.dataProtectionService.backupVault.resourceGuardOperationRequests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetResourceGuardOperationRequests()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.dataProtectionService.backupVault.alertsForAllJobFailures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetAlertsForAllJobFailures()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataProtectionService.backupVault.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -21207,6 +21310,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.recoveryServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).RecoveryServices, ok = plugin.RawToTValue[*mqlAzureSubscriptionRecoveryServicesService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).DataProtection, ok = plugin.RawToTValue[*mqlAzureSubscriptionDataProtectionService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47409,6 +47516,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.dataProtectionService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataProtectionService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVaults": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionService).BackupVaults, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Etag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.softDeleteState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).SoftDeleteState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.softDeleteRetentionPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).SoftDeleteRetentionPeriodInDays, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.immutabilityState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).ImmutabilityState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).EncryptionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.infrastructureEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).InfrastructureEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKeyUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).EncryptionKeyUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).EncryptionKey, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKeyIdentityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).EncryptionKeyIdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.encryptionKeyIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).EncryptionKeyIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.crossRegionRestoreState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).CrossRegionRestoreState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.crossSubscriptionRestoreState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).CrossSubscriptionRestoreState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.replicatedRegions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).ReplicatedRegions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.storageRedundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).StorageRedundancy, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.bcdrSecurityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).BcdrSecurityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.secureScore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).SecureScore, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.isVaultProtectedByResourceGuard": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).IsVaultProtectedByResourceGuard, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.resourceGuardOperationRequests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).ResourceGuardOperationRequests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.alertsForAllJobFailures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).AlertsForAllJobFailures, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataProtectionService.backupVault.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -47757,6 +47992,7 @@ type mqlAzureSubscription struct {
 	Synapse               plugin.TValue[*mqlAzureSubscriptionSynapseService]
 	ContainerRegistry     plugin.TValue[*mqlAzureSubscriptionContainerRegistryService]
 	RecoveryServices      plugin.TValue[*mqlAzureSubscriptionRecoveryServicesService]
+	DataProtection        plugin.TValue[*mqlAzureSubscriptionDataProtectionService]
 	Functions             plugin.TValue[*mqlAzureSubscriptionFunctionsService]
 	ServiceBus            plugin.TValue[*mqlAzureSubscriptionServiceBusService]
 	EventHub              plugin.TValue[*mqlAzureSubscriptionEventHubService]
@@ -48299,6 +48535,22 @@ func (c *mqlAzureSubscription) GetRecoveryServices() *plugin.TValue[*mqlAzureSub
 		}
 
 		return c.recoveryServices()
+	})
+}
+
+func (c *mqlAzureSubscription) GetDataProtection() *plugin.TValue[*mqlAzureSubscriptionDataProtectionService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionDataProtectionService](&c.DataProtection, func() (*mqlAzureSubscriptionDataProtectionService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "dataProtection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionDataProtectionService), nil
+			}
+		}
+
+		return c.dataProtection()
 	})
 }
 
@@ -111498,6 +111750,304 @@ func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetSystemMeta
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.desktopVirtualizationService.hostPool", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionDataProtectionService for the azure.subscription.dataProtectionService resource
+type mqlAzureSubscriptionDataProtectionService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDataProtectionServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	BackupVaults   plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionDataProtectionService creates a new instance of this resource
+func createAzureSubscriptionDataProtectionService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataProtectionService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataProtectionService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataProtectionService) MqlName() string {
+	return "azure.subscription.dataProtectionService"
+}
+
+func (c *mqlAzureSubscriptionDataProtectionService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataProtectionService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionDataProtectionService) GetBackupVaults() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackupVaults, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataProtectionService", c.__id, "backupVaults")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backupVaults()
+	})
+}
+
+// mqlAzureSubscriptionDataProtectionServiceBackupVault for the azure.subscription.dataProtectionService.backupVault resource
+type mqlAzureSubscriptionDataProtectionServiceBackupVault struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionDataProtectionServiceBackupVaultInternal
+	Id                              plugin.TValue[string]
+	Name                            plugin.TValue[string]
+	Location                        plugin.TValue[string]
+	Type                            plugin.TValue[string]
+	Tags                            plugin.TValue[map[string]any]
+	Etag                            plugin.TValue[string]
+	ProvisioningState               plugin.TValue[string]
+	Identity                        plugin.TValue[any]
+	UserAssignedIdentities          plugin.TValue[[]any]
+	SoftDeleteState                 plugin.TValue[string]
+	SoftDeleteRetentionPeriodInDays plugin.TValue[float64]
+	ImmutabilityState               plugin.TValue[string]
+	EncryptionState                 plugin.TValue[string]
+	InfrastructureEncryption        plugin.TValue[string]
+	EncryptionKeyUri                plugin.TValue[string]
+	EncryptionKey                   plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	EncryptionKeyIdentityType       plugin.TValue[string]
+	EncryptionKeyIdentity           plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
+	CrossRegionRestoreState         plugin.TValue[string]
+	CrossSubscriptionRestoreState   plugin.TValue[string]
+	ReplicatedRegions               plugin.TValue[[]any]
+	StorageRedundancy               plugin.TValue[map[string]any]
+	BcdrSecurityLevel               plugin.TValue[string]
+	SecureScore                     plugin.TValue[string]
+	IsVaultProtectedByResourceGuard plugin.TValue[bool]
+	ResourceGuardOperationRequests  plugin.TValue[[]any]
+	AlertsForAllJobFailures         plugin.TValue[string]
+	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionDataProtectionServiceBackupVault creates a new instance of this resource
+func createAzureSubscriptionDataProtectionServiceBackupVault(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataProtectionServiceBackupVault{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataProtectionService.backupVault", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) MqlName() string {
+	return "azure.subscription.dataProtectionService.backupVault"
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetEtag() *plugin.TValue[string] {
+	return &c.Etag
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataProtectionService.backupVault", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetSoftDeleteState() *plugin.TValue[string] {
+	return &c.SoftDeleteState
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetSoftDeleteRetentionPeriodInDays() *plugin.TValue[float64] {
+	return &c.SoftDeleteRetentionPeriodInDays
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetImmutabilityState() *plugin.TValue[string] {
+	return &c.ImmutabilityState
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetEncryptionState() *plugin.TValue[string] {
+	return &c.EncryptionState
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetInfrastructureEncryption() *plugin.TValue[string] {
+	return &c.InfrastructureEncryption
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetEncryptionKeyUri() *plugin.TValue[string] {
+	return &c.EncryptionKeyUri
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetEncryptionKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.EncryptionKey, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataProtectionService.backupVault", c.__id, "encryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.encryptionKey()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetEncryptionKeyIdentityType() *plugin.TValue[string] {
+	return &c.EncryptionKeyIdentityType
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetEncryptionKeyIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.EncryptionKeyIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataProtectionService.backupVault", c.__id, "encryptionKeyIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.encryptionKeyIdentity()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetCrossRegionRestoreState() *plugin.TValue[string] {
+	return &c.CrossRegionRestoreState
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetCrossSubscriptionRestoreState() *plugin.TValue[string] {
+	return &c.CrossSubscriptionRestoreState
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetReplicatedRegions() *plugin.TValue[[]any] {
+	return &c.ReplicatedRegions
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetStorageRedundancy() *plugin.TValue[map[string]any] {
+	return &c.StorageRedundancy
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetBcdrSecurityLevel() *plugin.TValue[string] {
+	return &c.BcdrSecurityLevel
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetSecureScore() *plugin.TValue[string] {
+	return &c.SecureScore
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetIsVaultProtectedByResourceGuard() *plugin.TValue[bool] {
+	return &c.IsVaultProtectedByResourceGuard
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetResourceGuardOperationRequests() *plugin.TValue[[]any] {
+	return &c.ResourceGuardOperationRequests
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetAlertsForAllJobFailures() *plugin.TValue[string] {
+	return &c.AlertsForAllJobFailures
+}
+
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataProtectionService.backupVault", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}
