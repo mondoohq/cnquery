@@ -528,6 +528,8 @@ const (
 	ResourceAzureSubscriptionDesktopVirtualizationServiceHostPool                                       string = "azure.subscription.desktopVirtualizationService.hostPool"
 	ResourceAzureSubscriptionDataProtectionService                                                      string = "azure.subscription.dataProtectionService"
 	ResourceAzureSubscriptionDataProtectionServiceBackupVault                                           string = "azure.subscription.dataProtectionService.backupVault"
+	ResourceAzureSubscriptionDataBoxService                                                             string = "azure.subscription.dataBoxService"
+	ResourceAzureSubscriptionDataBoxServiceJob                                                          string = "azure.subscription.dataBoxService.job"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2582,6 +2584,14 @@ func init() {
 			Init:   initAzureSubscriptionDataProtectionServiceBackupVault,
 			Create: createAzureSubscriptionDataProtectionServiceBackupVault,
 		},
+		"azure.subscription.dataBoxService": {
+			Init:   initAzureSubscriptionDataBoxService,
+			Create: createAzureSubscriptionDataBoxService,
+		},
+		"azure.subscription.dataBoxService.job": {
+			Init:   initAzureSubscriptionDataBoxServiceJob,
+			Create: createAzureSubscriptionDataBoxServiceJob,
+		},
 	}
 }
 
@@ -2829,6 +2839,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.dataProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetDataProtection()).ToDataRes(types.Resource("azure.subscription.dataProtectionService"))
+	},
+	"azure.subscription.dataBox": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetDataBox()).ToDataRes(types.Resource("azure.subscription.dataBoxService"))
 	},
 	"azure.subscription.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetFunctions()).ToDataRes(types.Resource("azure.subscription.functionsService"))
@@ -21055,6 +21068,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.dataProtectionService.backupVault.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.dataBoxService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.jobs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxService).GetJobs()).ToDataRes(types.Array(types.Resource("azure.subscription.dataBoxService.job")))
+	},
+	"azure.subscription.dataBoxService.job.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.dataBoxService.job.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.transferType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetTransferType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.deliveryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetDeliveryType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetStartTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.dataBoxService.job.isCancellable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetIsCancellable()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.dataBoxService.job.isDeletable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetIsDeletable()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.dataBoxService.job.allDevicesLost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetAllDevicesLost()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.dataBoxService.job.cancellationReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetCancellationReason()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.skuDisplayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetSkuDisplayName()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.skuFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetSkuFamily()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.skuModel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetSkuModel()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.dataBoxService.job.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
+	"azure.subscription.dataBoxService.job.jobDetailsType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetJobDetailsType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.expectedDataSizeInTeraBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetExpectedDataSizeInTeraBytes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.dataBoxService.job.doubleEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetDoubleEncryption()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.hardwareEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetHardwareEncryption()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.kekType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetKekType()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.kekUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetKekUrl()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.kek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetKek()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	},
+	"azure.subscription.dataBoxService.job.kekVault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetKekVault()).ToDataRes(types.Resource("azure.subscription.keyVaultService.vault"))
+	},
+	"azure.subscription.dataBoxService.job.dataCenterCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetDataCenterCode()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.deviceErasureStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetDeviceErasureStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.dataBoxService.job.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -21317,6 +21426,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.dataProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).DataProtection, ok = plugin.RawToTValue[*mqlAzureSubscriptionDataProtectionService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).DataBox, ok = plugin.RawToTValue[*mqlAzureSubscriptionDataBoxService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47651,6 +47764,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.dataBoxService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataBoxService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.jobs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxService).Jobs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.dataBoxService.job.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.transferType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).TransferType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.deliveryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).DeliveryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.isCancellable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).IsCancellable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.isDeletable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).IsDeletable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.allDevicesLost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).AllDevicesLost, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.cancellationReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).CancellationReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.skuDisplayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).SkuDisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.skuFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).SkuFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.skuModel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).SkuModel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.jobDetailsType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).JobDetailsType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.expectedDataSizeInTeraBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).ExpectedDataSizeInTeraBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.doubleEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).DoubleEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.hardwareEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).HardwareEncryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.kekType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).KekType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.kekUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).KekUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.kek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).Kek, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.kekVault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).KekVault, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceVault](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.dataCenterCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).DataCenterCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.deviceErasureStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).DeviceErasureStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.dataBoxService.job.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -48000,6 +48249,7 @@ type mqlAzureSubscription struct {
 	ContainerRegistry     plugin.TValue[*mqlAzureSubscriptionContainerRegistryService]
 	RecoveryServices      plugin.TValue[*mqlAzureSubscriptionRecoveryServicesService]
 	DataProtection        plugin.TValue[*mqlAzureSubscriptionDataProtectionService]
+	DataBox               plugin.TValue[*mqlAzureSubscriptionDataBoxService]
 	Functions             plugin.TValue[*mqlAzureSubscriptionFunctionsService]
 	ServiceBus            plugin.TValue[*mqlAzureSubscriptionServiceBusService]
 	EventHub              plugin.TValue[*mqlAzureSubscriptionEventHubService]
@@ -48558,6 +48808,22 @@ func (c *mqlAzureSubscription) GetDataProtection() *plugin.TValue[*mqlAzureSubsc
 		}
 
 		return c.dataProtection()
+	})
+}
+
+func (c *mqlAzureSubscription) GetDataBox() *plugin.TValue[*mqlAzureSubscriptionDataBoxService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionDataBoxService](&c.DataBox, func() (*mqlAzureSubscriptionDataBoxService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "dataBox")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionDataBoxService), nil
+			}
+		}
+
+		return c.dataBox()
 	})
 }
 
@@ -112060,6 +112326,330 @@ func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetSystemMetadata
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
 			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataProtectionService.backupVault", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionDataBoxService for the azure.subscription.dataBoxService resource
+type mqlAzureSubscriptionDataBoxService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionDataBoxServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Jobs           plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionDataBoxService creates a new instance of this resource
+func createAzureSubscriptionDataBoxService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataBoxService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataBoxService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataBoxService) MqlName() string {
+	return "azure.subscription.dataBoxService"
+}
+
+func (c *mqlAzureSubscriptionDataBoxService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataBoxService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionDataBoxService) GetJobs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Jobs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataBoxService", c.__id, "jobs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.jobs()
+	})
+}
+
+// mqlAzureSubscriptionDataBoxServiceJob for the azure.subscription.dataBoxService.job resource
+type mqlAzureSubscriptionDataBoxServiceJob struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionDataBoxServiceJobInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Location                    plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Status                      plugin.TValue[string]
+	TransferType                plugin.TValue[string]
+	DeliveryType                plugin.TValue[string]
+	StartTime                   plugin.TValue[*time.Time]
+	IsCancellable               plugin.TValue[bool]
+	IsDeletable                 plugin.TValue[bool]
+	AllDevicesLost              plugin.TValue[bool]
+	CancellationReason          plugin.TValue[string]
+	SkuName                     plugin.TValue[string]
+	SkuDisplayName              plugin.TValue[string]
+	SkuFamily                   plugin.TValue[string]
+	SkuModel                    plugin.TValue[string]
+	Identity                    plugin.TValue[any]
+	UserAssignedIdentities      plugin.TValue[[]any]
+	JobDetailsType              plugin.TValue[string]
+	ExpectedDataSizeInTeraBytes plugin.TValue[int64]
+	DoubleEncryption            plugin.TValue[string]
+	HardwareEncryption          plugin.TValue[string]
+	KekType                     plugin.TValue[string]
+	KekUrl                      plugin.TValue[string]
+	Kek                         plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	KekVault                    plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVault]
+	DataCenterCode              plugin.TValue[string]
+	DeviceErasureStatus         plugin.TValue[string]
+	SystemMetadata              plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionDataBoxServiceJob creates a new instance of this resource
+func createAzureSubscriptionDataBoxServiceJob(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionDataBoxServiceJob{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.dataBoxService.job", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) MqlName() string {
+	return "azure.subscription.dataBoxService.job"
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetTransferType() *plugin.TValue[string] {
+	return &c.TransferType
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetDeliveryType() *plugin.TValue[string] {
+	return &c.DeliveryType
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetIsCancellable() *plugin.TValue[bool] {
+	return &c.IsCancellable
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetIsDeletable() *plugin.TValue[bool] {
+	return &c.IsDeletable
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetAllDevicesLost() *plugin.TValue[bool] {
+	return &c.AllDevicesLost
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetCancellationReason() *plugin.TValue[string] {
+	return &c.CancellationReason
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetSkuDisplayName() *plugin.TValue[string] {
+	return &c.SkuDisplayName
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetSkuFamily() *plugin.TValue[string] {
+	return &c.SkuFamily
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetSkuModel() *plugin.TValue[string] {
+	return &c.SkuModel
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataBoxService.job", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetJobDetailsType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.JobDetailsType, func() (string, error) {
+		return c.jobDetailsType()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetExpectedDataSizeInTeraBytes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ExpectedDataSizeInTeraBytes, func() (int64, error) {
+		return c.expectedDataSizeInTeraBytes()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetDoubleEncryption() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DoubleEncryption, func() (string, error) {
+		return c.doubleEncryption()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetHardwareEncryption() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HardwareEncryption, func() (string, error) {
+		return c.hardwareEncryption()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetKekType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KekType, func() (string, error) {
+		return c.kekType()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetKekUrl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KekUrl, func() (string, error) {
+		return c.kekUrl()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetKek() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.Kek, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataBoxService.job", c.__id, "kek")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.kek()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetKekVault() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVault] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceVault](&c.KekVault, func() (*mqlAzureSubscriptionKeyVaultServiceVault, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataBoxService.job", c.__id, "kekVault")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceVault), nil
+			}
+		}
+
+		return c.kekVault()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetDataCenterCode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DataCenterCode, func() (string, error) {
+		return c.dataCenterCode()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetDeviceErasureStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DeviceErasureStatus, func() (string, error) {
+		return c.deviceErasureStatus()
+	})
+}
+
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.dataBoxService.job", c.__id, "systemMetadata")
 			if err != nil {
 				return nil, err
 			}

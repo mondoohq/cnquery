@@ -92,6 +92,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v4 v4.0.0
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v4 v4.0.0/go.mod h1:QrLT4jHN38ZKphjiVZfdl3iTadWextUIzPvMOj68hz4=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmosforpostgresql/armcosmosforpostgresql v1.1.0 h1:TyXI0pf9V67/vn7Vo2BebOz4B/fLj9Kt3UcrQBXMrvE=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmosforpostgresql/armcosmosforpostgresql v1.1.0/go.mod h1:s//ycXE53yRslaDdkNrCEANgvrdSOaUuqcBCJg5VEX0=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databox/armdatabox/v2 v2.2.0 h1:UYnfznsBR5zQZcj7QjYhuoqVNdzvLj4xwyXimNjg7Zc=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databox/armdatabox/v2 v2.2.0/go.mod h1:43k3J0/fwM75Sq3MIDvuEY9EheWGxH3UluFlbHSPhr4=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databricks/armdatabricks/v2 v2.0.0 h1:J3gSx4u8omFTQpyDq3kGtsG7CNlncgy2PLhTuWU9bQY=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databricks/armdatabricks/v2 v2.0.0/go.mod h1:hx0RwY7C44dopoYYtqUKyhkuA7gi896+7akIDCPun0o=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v11 v11.0.0 h1:wuYlQlKT1Glo4u27svDqNnJvvYcsgCRDfbUzwFB1S8A=

@@ -100,6 +100,7 @@
     "Microsoft.DBforPostgreSQL/flexibleServers/privateEndpointConnections/read",
     "Microsoft.DBforPostgreSQL/flexibleServers/read",
     "Microsoft.DBforPostgreSQL/serverGroupsv2/read",
+    "Microsoft.DataBox/jobs/read",
     "Microsoft.DataFactory/factories/integrationruntimes/read",
     "Microsoft.DataFactory/factories/linkedservices/read",
     "Microsoft.DataFactory/factories/managedvirtualnetworks/managedprivateendpoints/read",
@@ -935,6 +936,12 @@
       "service": "Microsoft.DBforPostgreSQL",
       "action": "NewListPager",
       "source_file": "cosmosdb.go"
+    },
+    {
+      "permission": "Microsoft.DataBox/jobs/read",
+      "service": "Microsoft.DataBox",
+      "action": "Get",
+      "source_file": "databox.go"
     },
     {
       "permission": "Microsoft.DataFactory/factories/integrationruntimes/read",

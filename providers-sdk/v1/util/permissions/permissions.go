@@ -1897,9 +1897,10 @@ var azureServiceToARMMap = map[string]string{
 	// "Microsoft.Eventgrid" and "Microsoft.Apimanagement" for these two.
 	"eventgrid":     "Microsoft.EventGrid",
 	"apimanagement": "Microsoft.ApiManagement",
-	// Same again: the default branch would emit "Microsoft.Dataprotection",
-	// which is not a real provider namespace.
+	// Same again: the default branch would emit "Microsoft.Dataprotection" and
+	// "Microsoft.Databox", neither of which is a real provider namespace.
 	"dataprotection": "Microsoft.DataProtection",
+	"databox":        "Microsoft.DataBox",
 }
 
 func azureServiceToARM(service string) string {
