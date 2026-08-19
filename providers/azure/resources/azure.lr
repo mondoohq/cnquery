@@ -18900,6 +18900,7 @@ azure.subscription.dataBoxService.job @defaults("id name status transferType") {
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
+
 // Encryption settings of an Azure NetApp Files account
 //
 // Which key protects the account's data at rest, and which identity is used
@@ -19161,6 +19162,7 @@ private azure.subscription.netAppService.account.capacityPool.volume.exportPolic
   // Whether matching clients get read-write access under Kerberos krb5p
   kerberos5pReadWrite bool
 }
+
 // Snapshot of an Azure file share
 //
 // Point-in-time copy of a file share's contents, taken under the
