@@ -462,8 +462,12 @@ func (h *AwsConnection) Regions() ([]string, error) {
 		// has already told us which regions it wants.
 		enabled, err := h.discoverEnabledRegions(ctx, false)
 		if err != nil {
+			// Degrading to a no-op is the safe direction - refusing to scan
+			// because we could not read the region list would be worse. Say
+			// plainly that the filter was taken as given, so this is not mistaken
+			// for a filter that passed the check.
 			log.Warn().Err(err).Strs("regions", regionLimits).
-				Msg("cannot check the regions filter against the account's enabled regions")
+				Msg("could not list the account's enabled regions, accepting the regions filter unchecked; a misspelled region will report no resources")
 		} else if unknown := unknownRegions(regionLimits, enabled); len(unknown) > 0 {
 			return nil, fmt.Errorf("regions filter names %d region(s) this account does not have enabled: %s",
 				len(unknown), strings.Join(unknown, ", "))
