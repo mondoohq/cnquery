@@ -95,14 +95,16 @@ aws.account @defaults("id aliases.first organization.id") {
 
   // Friendly name of the account, as shown in AWS Organizations
   //
-  // Available only when the calling identity is the organization's management
-  // account or a delegated administrator. Otherwise empty.
+  // Null when there is no description to read: the account belongs to no
+  // organization, or the calling identity is neither the organization's
+  // management account nor a delegated administrator.
   name() string
 
   // Root user email address associated with the account, as shown in AWS Organizations
   //
-  // Available only when the calling identity is the organization's management
-  // account or a delegated administrator. Otherwise empty.
+  // Null when there is no description to read: the account belongs to no
+  // organization, or the calling identity is neither the organization's
+  // management account nor a delegated administrator.
   email() string
 
   // Lifecycle state of the account in the organization

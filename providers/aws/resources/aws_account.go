@@ -740,16 +740,27 @@ func (a *mqlAwsAccount) regionOptInStatus() (map[string]any, error) {
 
 func (a *mqlAwsAccount) name() (string, error) {
 	acc, err := a.fetchOrgAccountDescription()
-	if err != nil || acc == nil {
+	if err != nil {
 		return "", err
+	}
+	if acc == nil {
+		// No description to read. Empty would be a name the account has, and
+		// an account with a blank name is a different finding from one whose
+		// name could not be read.
+		a.Name.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
 	}
 	return aws.ToString(acc.Name), nil
 }
 
 func (a *mqlAwsAccount) email() (string, error) {
 	acc, err := a.fetchOrgAccountDescription()
-	if err != nil || acc == nil {
+	if err != nil {
 		return "", err
+	}
+	if acc == nil {
+		a.Email.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
 	}
 	return aws.ToString(acc.Email), nil
 }
