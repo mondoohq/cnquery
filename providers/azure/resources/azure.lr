@@ -255,7 +255,6 @@ azure.subscription @defaults ("name") {
   dataBox() azure.subscription.dataBoxService
   // Azure NetApp Files resources in the subscription
   netApp() azure.subscription.netAppService
-
   // Azure Elastic SAN resources in the subscription
   elasticSan() azure.subscription.elasticSanService
   // Azure Functions resources in the subscription
