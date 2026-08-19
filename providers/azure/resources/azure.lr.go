@@ -16155,6 +16155,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.recoveryServicesService.vault.regionOfChoiceStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetRegionOfChoiceStatus()).ToDataRes(types.String)
 	},
+	"azure.subscription.recoveryServicesService.vault.crossSubscriptionRestoreState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetCrossSubscriptionRestoreState()).ToDataRes(types.String)
+	},
 	"azure.subscription.recoveryServicesService.vault.securitySettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetSecuritySettings()).ToDataRes(types.Resource("azure.subscription.recoveryServicesService.vault.securitySettings"))
 	},
@@ -40451,6 +40454,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.recoveryServicesService.vault.regionOfChoiceStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).RegionOfChoiceStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.recoveryServicesService.vault.crossSubscriptionRestoreState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).CrossSubscriptionRestoreState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.recoveryServicesService.vault.securitySettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -94364,6 +94371,7 @@ type mqlAzureSubscriptionRecoveryServicesServiceVault struct {
 	SecureScore                         plugin.TValue[string]
 	CostManagementGranularityLevel      plugin.TValue[string]
 	RegionOfChoiceStatus                plugin.TValue[string]
+	CrossSubscriptionRestoreState       plugin.TValue[string]
 	SecuritySettings                    plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings]
 	Encryption                          plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultEncryption]
 	MonitoringSettings                  plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultMonitoringSettings]
@@ -94486,6 +94494,10 @@ func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetCostManagementGran
 
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetRegionOfChoiceStatus() *plugin.TValue[string] {
 	return &c.RegionOfChoiceStatus
+}
+
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetCrossSubscriptionRestoreState() *plugin.TValue[string] {
+	return &c.CrossSubscriptionRestoreState
 }
 
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetSecuritySettings() *plugin.TValue[*mqlAzureSubscriptionRecoveryServicesServiceVaultSecuritySettings] {

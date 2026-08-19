@@ -296,6 +296,20 @@ func (a *mqlAzureSubscriptionRecoveryServicesServiceDeletedVault) systemMetadata
 	return systemMetadataFromRaw(a.MqlRuntime, a.Id.Data, a.cacheSystemData, &a.SystemMetadata)
 }
 
+// vaultCrossSubscriptionRestoreState reads the vault's cross-subscription
+// restore state out of the nested restore settings. Every level of the nesting
+// is optional in the ARM payload, and an absent setting is not the same as a
+// disabled one: Azure treats the absence as enabled, so it reports as empty
+// rather than being folded into "Disabled".
+func vaultCrossSubscriptionRestoreState(props *armrecoveryservices.VaultProperties) string {
+	if props == nil || props.RestoreSettings == nil ||
+		props.RestoreSettings.CrossSubscriptionRestoreSettings == nil ||
+		props.RestoreSettings.CrossSubscriptionRestoreSettings.CrossSubscriptionRestoreState == nil {
+		return ""
+	}
+	return string(*props.RestoreSettings.CrossSubscriptionRestoreSettings.CrossSubscriptionRestoreState)
+}
+
 func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vault) (*mqlAzureSubscriptionRecoveryServicesServiceVault, error) {
 	props := vault.Properties
 	if props == nil {
@@ -374,6 +388,7 @@ func createVaultResource(runtime *plugin.Runtime, vault *armrecoveryservices.Vau
 			"secureScore":                         llx.StringData(secureScore),
 			"costManagementGranularityLevel":      llx.StringData(costManagementGranularityLevel),
 			"regionOfChoiceStatus":                llx.StringData(regionOfChoiceStatus),
+			"crossSubscriptionRestoreState":       llx.StringData(vaultCrossSubscriptionRestoreState(props)),
 		})
 	if err != nil {
 		return nil, err

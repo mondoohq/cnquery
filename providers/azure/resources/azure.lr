@@ -13273,6 +13273,15 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   // rather than the default paired region, which is what a data residency
   // audit needs to read.
   regionOfChoiceStatus string
+  // Cross-subscription restore state for the vault
+  //
+  // One of "Enabled", "Disabled", or "PermanentlyDisabled"; empty when the
+  // vault carries no explicit setting, which Azure treats as enabled. When
+  // restores are allowed across subscriptions, backup data held here can be
+  // recovered into a subscription that does not own the vault, so a data
+  // boundary audit reads this to confirm the restore target stays inside
+  // the owning subscription. "PermanentlyDisabled" cannot be reversed.
+  crossSubscriptionRestoreState string
   // Security settings (soft delete, immutability, enhanced security)
   securitySettings() azure.subscription.recoveryServicesService.vault.securitySettings
   // Encryption settings

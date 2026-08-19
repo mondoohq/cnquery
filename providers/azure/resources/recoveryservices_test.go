@@ -7,6 +7,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/llx"
@@ -85,4 +86,56 @@ func TestVaultChildTagsAreNullNotEmpty(t *testing.T) {
 		require.NotSame(t, llx.NilData, tags)
 		assert.Equal(t, map[string]any{"owner": "platform"}, tags.Value)
 	})
+}
+
+// The regression this guards: Azure nests the cross-subscription restore state
+// three levels deep and omits every level on a vault that was never configured
+// for it. Reading it without those guards panics; folding the absence into
+// "Disabled" would report a vault that permits cross-subscription restores as
+// one that forbids them.
+func TestVaultCrossSubscriptionRestoreState(t *testing.T) {
+	state := func(s armrecoveryservices.CrossSubscriptionRestoreState) *armrecoveryservices.CrossSubscriptionRestoreState {
+		return &s
+	}
+
+	t.Run("nil properties", func(t *testing.T) {
+		assert.Equal(t, "", vaultCrossSubscriptionRestoreState(nil))
+	})
+
+	t.Run("no restore settings", func(t *testing.T) {
+		assert.Equal(t, "", vaultCrossSubscriptionRestoreState(&armrecoveryservices.VaultProperties{}))
+	})
+
+	t.Run("no cross-subscription settings", func(t *testing.T) {
+		props := &armrecoveryservices.VaultProperties{
+			RestoreSettings: &armrecoveryservices.RestoreSettings{},
+		}
+		assert.Equal(t, "", vaultCrossSubscriptionRestoreState(props))
+	})
+
+	t.Run("settings present but state unset", func(t *testing.T) {
+		props := &armrecoveryservices.VaultProperties{
+			RestoreSettings: &armrecoveryservices.RestoreSettings{
+				CrossSubscriptionRestoreSettings: &armrecoveryservices.CrossSubscriptionRestoreSettings{},
+			},
+		}
+		assert.Equal(t, "", vaultCrossSubscriptionRestoreState(props))
+	})
+
+	for _, want := range []armrecoveryservices.CrossSubscriptionRestoreState{
+		armrecoveryservices.CrossSubscriptionRestoreStateEnabled,
+		armrecoveryservices.CrossSubscriptionRestoreStateDisabled,
+		armrecoveryservices.CrossSubscriptionRestoreStatePermanentlyDisabled,
+	} {
+		t.Run(string(want), func(t *testing.T) {
+			props := &armrecoveryservices.VaultProperties{
+				RestoreSettings: &armrecoveryservices.RestoreSettings{
+					CrossSubscriptionRestoreSettings: &armrecoveryservices.CrossSubscriptionRestoreSettings{
+						CrossSubscriptionRestoreState: state(want),
+					},
+				},
+			}
+			assert.Equal(t, string(want), vaultCrossSubscriptionRestoreState(props))
+		})
+	}
 }
