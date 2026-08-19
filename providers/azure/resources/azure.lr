@@ -249,6 +249,8 @@ azure.subscription @defaults ("name") {
   recoveryServices() azure.subscription.recoveryServicesService
   // Data Protection resources in the subscription
   dataProtection() azure.subscription.dataProtectionService
+  // Azure Data Box resources in the subscription
+  dataBox() azure.subscription.dataBoxService
   // Azure Functions resources in the subscription
   functions() azure.subscription.functionsService
   // Service Bus resources in the subscription
@@ -18606,6 +18608,110 @@ azure.subscription.dataProtectionService.backupVault @defaults("id name location
   resourceGuardOperationRequests []string
   // Whether an alert is raised for every backup job failure ("Enabled" or "Disabled")
   alertsForAllJobFailures string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Data Box
+private azure.subscription.dataBoxService {
+  // Subscription identifier
+  subscriptionId string
+  // Data Box jobs in the subscription
+  jobs() []azure.subscription.dataBoxService.job
+}
+
+// Azure Data Box job
+//
+// One physical data transfer between the subscription and Azure, carried on a
+// device Microsoft ships. Fields cover how the data on that device is
+// protected in transit: whether software double encryption is applied on top
+// of the device's hardware encryption, and whether the passkey protecting it
+// is Microsoft-managed or held in the customer's own Key Vault.
+//
+// Jobs exist only while a transfer is in flight and are removed afterwards,
+// so this list is empty in most subscriptions most of the time. A check over
+// it should say what an empty list means rather than passing by default.
+//
+// Contact details, shipping addresses, and the SAS keys the job carries for
+// chain-of-custody and shipment labels are deliberately not reported.
+azure.subscription.dataBoxService.job @defaults("id name status transferType") {
+  // Job resource ID
+  id string
+  // Job name
+  name string
+  // Azure region the job lives in
+  location string
+  // Resource type
+  type string
+  // Job tags
+  tags map[string]string
+  // Stage the job has reached
+  //
+  // For example "DeviceOrdered", "DevicePrepared", "Dispatched", "Delivered",
+  // "PickedUp", "AtAzureDC", "DataCopy", "Completed", "Cancelled", or
+  // "Failed_IssueReportedAtCustomer".
+  status string
+  // Direction of the transfer ("ImportToAzure" or "ExportFromAzure")
+  transferType string
+  // How the device is delivered ("NonScheduled" or "Scheduled")
+  deliveryType string
+  // When the job was started
+  startTime time
+  // Whether the job can still be cancelled
+  isCancellable bool
+  // Whether the job can be deleted
+  isDeletable bool
+  // Whether every device in the job has been reported lost
+  allDevicesLost bool
+  // Reason the job was cancelled; empty when it was not
+  cancellationReason string
+  // SKU name of the device ("DataBox", "DataBoxDisk", "DataBoxHeavy", or "DataBoxCustomerDisk")
+  skuName string
+  // Display name of the device SKU
+  skuDisplayName string
+  // Family of the device SKU
+  skuFamily string
+  // Model of the device
+  skuModel string
+  // Managed identity configuration
+  //
+  // Managed identity block of the job, with keys `type` (one of
+  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
+  // `tenantId` for the system-assigned identity, and
+  // `userAssignedIdentities` mapping each assigned identity resource ID to
+  // its client and principal IDs. A user-assigned identity is what reaches a
+  // customer-managed passkey. See userAssignedIdentities for the resolved
+  // identity resources.
+  identity dict
+  // User-assigned managed identities associated with the job
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Kind of job details Azure returned ("DataBox", "DataBoxDisk", "DataBoxHeavy", or "DataBoxCustomerDisk")
+  jobDetailsType() string
+  // Expected size of the transfer in TB
+  expectedDataSizeInTeraBytes() int
+  // Software double encryption state ("Enabled" or "Disabled")
+  //
+  // Double encryption applies a software encryption pass on top of the
+  // device's hardware encryption. Empty when the job carries no explicit
+  // preference, which Azure treats as disabled.
+  doubleEncryption() string
+  // Hardware encryption state on the device ("Enabled" or "Disabled")
+  hardwareEncryption() string
+  // Type of key protecting the device passkey ("MicrosoftManaged" or "CustomerManaged")
+  kekType() string
+  // URL of the Key Vault key protecting the device passkey
+  //
+  // Empty when the passkey is Microsoft-managed rather than held in the
+  // customer's own Key Vault.
+  kekUrl() string
+  // Key Vault key protecting the device passkey
+  kek() azure.subscription.keyVaultService.key
+  // Key Vault holding the key that protects the device passkey
+  kekVault() azure.subscription.keyVaultService.vault
+  // Code of the datacenter the device is shipped to or from
+  dataCenterCode() string
+  // Status of the device erasure performed after the transfer
+  deviceErasureStatus() string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
