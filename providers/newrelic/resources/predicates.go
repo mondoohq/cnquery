@@ -58,7 +58,7 @@ func isScimProvisioning(provisioningType string) bool {
 // grant of unknown scope as the broadest possible one would raise a finding on
 // every account that has one.
 func isOrganizationWideGrant(grant apiGrantedRole) bool {
-	return grant.AccountID <= 0 && grant.OrganizationID != ""
+	return grant.AccountID <= 0 && grant.OrganizationId != ""
 }
 
 // isRetentionRuleActive reports whether a retention rule is in force. New Relic
@@ -70,9 +70,12 @@ func isRetentionRuleActive(rule apiRetentionRule) bool {
 
 // hasPendingUpgrade reports whether a user has an open request to be moved to a
 // higher tier. New Relic returns an empty object rather than null for a user
-// with no request, so the presence of the field is not enough.
+// with no request, so the presence of the field is not enough. The SDK models
+// the request as a value rather than a pointer, which makes that doubly true:
+// an absent request and an empty one are the same zero-valued struct, and only
+// the ID separates either from a real request.
 func hasPendingUpgrade(user apiUser) bool {
-	return user.PendingUpgradeRequest != nil && user.PendingUpgradeRequest.ID != ""
+	return user.PendingUpgradeRequest.ID != ""
 }
 
 // requestedUserType names the tier a user has asked to be moved to, empty when

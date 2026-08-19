@@ -9,6 +9,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/newrelic/newrelic-client-go/v2/pkg/accounts"
+	"github.com/newrelic/newrelic-client-go/v2/pkg/alerts"
+	"github.com/newrelic/newrelic-client-go/v2/pkg/authorizationmanagement"
+	"github.com/newrelic/newrelic-client-go/v2/pkg/customeradministration"
+	"github.com/newrelic/newrelic-client-go/v2/pkg/nrqldroprules"
+	"github.com/newrelic/newrelic-client-go/v2/pkg/usermanagement"
 	"go.mondoo.com/mql/v13/providers/newrelic/connection"
 )
 
@@ -67,54 +73,58 @@ func cursorVars(cursor string, extra map[string]any) map[string]any {
 // -----------------------------------------------------------------------------
 // wire types
 // -----------------------------------------------------------------------------
+//
+// Most records below decode straight into the types the official
+// `newrelic/newrelic-client-go` client generates from the NerdGraph schema, so
+// the struct tags are vendor-maintained and continuously exercised by
+// terraform-provider-newrelic rather than hand-written here.
+//
+// Three groups deliberately keep local types. The reasons are recorded in
+// TESTING-TODO.md under "Why three collections keep local types", and each is
+// pinned by a test, because every one of them is the kind of thing a later
+// reader would "fix" back:
+//
+//   - API keys. The SDK's key structs carry a `Key` field and its only read
+//     query selects the keystring four times (pkg/apiaccess/keys.go:220). This
+//     provider's schema states that the keystring is never requested, and that
+//     guarantee is only worth anything while it is true of the query.
+//   - Notification destinations and channels. The SDK's destination struct
+//     carries `Auth`, `Properties` and `SecureURL`, and its query selects all
+//     three. `AiNotificationsProperty.Value` is not masked and routinely holds a
+//     webhook URL path.
+//   - Event retention rules. The SDK does not model them at all: neither
+//     `RetentionInDays` nor `eventRetentionRule` appears anywhere in it, and
+//     pkg/datamanagement covers account limits only. There is nothing to adopt.
+//
+// Where a record needs a timestamp, the SDK type is embedded and the timestamp
+// field is shadowed by nrTime. The SDK's `nrtime.DateTime` is a bare unparsed
+// string and its epoch fields are plain int64s that cannot express "absent", so
+// adopting them would report a key with no creation time as 1970-01-01. Go's
+// encoding/json gives the shallower field precedence, so the outer nrTime wins
+// for both directions and null stays null.
 
-type apiNamed struct {
-	ID          string `json:"id"`
-	DisplayName string `json:"displayName"`
-}
+type apiAccount = accounts.AccountOutline
 
-type apiAccount struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
+// apiOrganization stays local: the SDK's organization.Organization is a
+// stitched-fields root carrying every namespace hung off an organization, and
+// this provider reads two scalars from it.
 type apiOrganization struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type apiPendingUpgradeRequest struct {
-	ID                string   `json:"id"`
-	Message           string   `json:"message"`
-	RequestedUserType apiNamed `json:"requestedUserType"`
-}
-
-type apiUserGroupRef struct {
-	ID          string `json:"id"`
-	DisplayName string `json:"displayName"`
-}
-
-type apiUserGroupsPage struct {
-	NextCursor string            `json:"nextCursor"`
-	TotalCount int               `json:"totalCount"`
-	Groups     []apiUserGroupRef `json:"groups"`
-}
-
+// apiUser is the SDK's user record with the last-active timestamp decoded and
+// the enclosing domain carried down. New Relic returns users nested under their
+// authentication domain and never repeats the domain on the user, but the user
+// resource has to carry it to resolve the reference back.
 type apiUser struct {
-	ID                     string                    `json:"id"`
-	Name                   string                    `json:"name"`
-	Email                  string                    `json:"email"`
-	TimeZone               string                    `json:"timeZone"`
-	LastActive             nrTime                    `json:"lastActive"`
-	EmailVerificationState string                    `json:"emailVerificationState"`
-	Type                   apiNamed                  `json:"type"`
-	PendingUpgradeRequest  *apiPendingUpgradeRequest `json:"pendingUpgradeRequest"`
-	Groups                 apiUserGroupsPage         `json:"groups"`
+	usermanagement.UserManagementUser
 
-	// domainID is filled in from the enclosing authentication domain. New Relic
-	// returns users nested under their domain and never repeats the domain on
-	// the user, but the user resource has to carry it to resolve the reference
-	// back.
+	// LastActive shadows the embedded nrtime.DateTime, which is an unparsed
+	// string. A user who has never signed in must report no time at all rather
+	// than a zero date a dormancy check would read as real.
+	LastActive nrTime `json:"lastActive"`
+
 	domainID string `json:"-"`
 }
 
@@ -140,38 +150,20 @@ type apiAuthDomainsPage struct {
 // apiAdminAuthDomain is the authentication domain as customerAdministration
 // reports it. It is the only place the login method is exposed, which is why it
 // is read separately from the user-management view.
-type apiAdminAuthDomain struct {
-	ID                 string `json:"id"`
-	Name               string `json:"name"`
-	AuthenticationType string `json:"authenticationType"`
-	ProvisioningType   string `json:"provisioningType"`
-	OrganizationID     string `json:"organizationId"`
-}
+type apiAdminAuthDomain = customeradministration.OrganizationAuthenticationDomain
 
-type apiAdminAuthDomainsPage struct {
-	NextCursor string               `json:"nextCursor"`
-	Items      []apiAdminAuthDomain `json:"items"`
-}
+type apiAdminAuthDomainsPage = customeradministration.OrganizationAuthenticationDomainCollection
 
 // apiGrantedRole is one access grant: a role bound to a group over an account
 // or over the organization.
-type apiGrantedRole struct {
-	ID             string `json:"id"`
-	Name           string `json:"name"`
-	DisplayName    string `json:"displayName"`
-	Type           string `json:"type"`
-	RoleID         int    `json:"roleId"`
-	AccountID      int    `json:"accountId"`
-	OrganizationID string `json:"organizationId"`
-	GroupID        string `json:"groupId"`
-}
+type apiGrantedRole = authorizationmanagement.AuthorizationManagementGrantedRole
 
-type apiGrantedRolesPage struct {
-	NextCursor string           `json:"nextCursor"`
-	TotalCount int              `json:"totalCount"`
-	Roles      []apiGrantedRole `json:"roles"`
-}
+type apiGrantedRolesPage = authorizationmanagement.AuthorizationManagementGrantedRoleSearch
 
+// apiGroup carries the authentication domain the group was listed under, which
+// the group record itself does not repeat. The SDK models no read type for the
+// domain/group/grant nesting, so the containers around the adopted grant type
+// stay local.
 type apiGroup struct {
 	ID          string              `json:"id"`
 	DisplayName string              `json:"displayName"`
@@ -198,23 +190,18 @@ type apiGrantAuthDomainsPage struct {
 	AuthenticationDomains []apiGrantAuthDomain `json:"authenticationDomains"`
 }
 
-type apiRole struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName"`
-	Type        string `json:"type"`
-	Scope       string `json:"scope"`
-}
+type apiRole = authorizationmanagement.AuthorizationManagementRole
 
-type apiRolesPage struct {
-	NextCursor string    `json:"nextCursor"`
-	TotalCount int       `json:"totalCount"`
-	Roles      []apiRole `json:"roles"`
-}
+type apiRolesPage = authorizationmanagement.AuthorizationManagementRoleSearch
 
-// apiKey is a user key or an ingest key. The keystring is deliberately absent
-// from this struct and from the query that fills it, so the secret never
-// crosses the wire in the first place.
+// apiKey is a user key or an ingest key.
+//
+// This is deliberately NOT apiaccess.APIAccessKey / APIAccessIngestKey /
+// APIAccessUserKey: all three carry a `Key` field holding the keystring, and
+// the SDK's only read query selects it. The keystring is the one secret a New
+// Relic key carries, and not asking for it is the only guarantee that cannot be
+// undone by a later change to the mapping code. The SDK's search is also
+// unpaginated, so adopting it would silently truncate the list.
 type apiKey struct {
 	ID         string `json:"id"`
 	Name       string `json:"name"`
@@ -232,43 +219,15 @@ type apiKeySearchPage struct {
 	Keys       []apiKey `json:"keys"`
 }
 
-type apiAlertPolicy struct {
-	ID                 string `json:"id"`
-	Name               string `json:"name"`
-	IncidentPreference string `json:"incidentPreference"`
-	AccountID          int    `json:"accountId"`
-}
+// apiAlertPolicy is the SDK's policy record. The account ID is not part of it,
+// so it is carried alongside where the mapping needs it.
+type apiAlertPolicy = alerts.AlertsPolicy
 
-type apiAlertPoliciesPage struct {
-	NextCursor string           `json:"nextCursor"`
-	TotalCount int              `json:"totalCount"`
-	Policies   []apiAlertPolicy `json:"policies"`
-}
+type apiAlertPoliciesPage = alerts.AlertsPoliciesSearchResultSet
 
-type apiAlertTerm struct {
-	Operator             string  `json:"operator"`
-	Priority             string  `json:"priority"`
-	Threshold            float64 `json:"threshold"`
-	ThresholdDuration    int     `json:"thresholdDuration"`
-	ThresholdOccurrences string  `json:"thresholdOccurrences"`
-}
+type apiAlertTerm = alerts.NrqlConditionTerm
 
-type apiNrqlBody struct {
-	Query string `json:"query"`
-}
-
-type apiAlertCondition struct {
-	ID                        string         `json:"id"`
-	Name                      string         `json:"name"`
-	Description               string         `json:"description"`
-	Enabled                   bool           `json:"enabled"`
-	Type                      string         `json:"type"`
-	PolicyID                  string         `json:"policyId"`
-	RunbookURL                string         `json:"runbookUrl"`
-	ViolationTimeLimitSeconds int            `json:"violationTimeLimitSeconds"`
-	Nrql                      apiNrqlBody    `json:"nrql"`
-	Terms                     []apiAlertTerm `json:"terms"`
-}
+type apiAlertCondition = alerts.NrqlAlertCondition
 
 type apiAlertConditionsPage struct {
 	NextCursor     string              `json:"nextCursor"`
@@ -304,6 +263,13 @@ func (e *apiNotificationsError) asError(what string) error {
 	return fmt.Errorf("the New Relic API could not list %s: %s", what, strings.Join(parts, ": "))
 }
 
+// apiNotificationDestination is deliberately NOT
+// notifications.AiNotificationsDestination. That struct carries Auth,
+// Properties and SecureURL, and the SDK's destinations query selects all three.
+// A destination's auth block holds the token a webhook URL is signed with, and
+// AiNotificationsProperty.Value is not masked, so a webhook URL carrying a
+// token in its path would arrive in full. None of the three is modelled here
+// and none is requested.
 type apiNotificationDestination struct {
 	ID                  string `json:"id"`
 	Name                string `json:"name"`
@@ -324,6 +290,10 @@ type apiNotificationDestinationsPage struct {
 	Entities   []apiNotificationDestination `json:"entities"`
 }
 
+// apiNotificationChannel is deliberately NOT
+// notifications.AiNotificationsChannel, which carries Properties. A channel's
+// properties hold its payload template, which is where a token pasted into a
+// custom payload would sit.
 type apiNotificationChannel struct {
 	ID            string `json:"id"`
 	Name          string `json:"name"`
@@ -344,34 +314,26 @@ type apiNotificationChannelsPage struct {
 	Entities   []apiNotificationChannel `json:"entities"`
 }
 
-type apiUserRef struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
+type apiUserRef = nrqldroprules.UserReference
 
+// apiDropRule is the SDK's drop rule with the creation timestamp decoded. The
+// SDK's CreatedAt is an unparsed nrtime.DateTime string.
 type apiDropRule struct {
-	ID          string      `json:"id"`
-	Action      string      `json:"action"`
-	Nrql        string      `json:"nrql"`
-	Description string      `json:"description"`
-	Source      string      `json:"source"`
-	CreatedAt   nrTime      `json:"createdAt"`
-	AccountID   int         `json:"accountId"`
-	CreatedBy   int         `json:"createdBy"`
-	Creator     *apiUserRef `json:"creator"`
+	nrqldroprules.NRQLDropRulesDropRule
+
+	CreatedAt nrTime `json:"createdAt"`
 }
 
 // apiDropRulesError is the in-band error the drop rule list returns instead of
 // a GraphQL error, with the same consequence: a page carrying one reports
 // nothing, and reporting nothing as "no drop rules" would pass an audit on data
 // that was never read.
-type apiDropRulesError struct {
-	Description string `json:"description"`
-	Reason      string `json:"reason"`
-}
+type apiDropRulesError = nrqldroprules.NRQLDropRulesError
 
-func (e *apiDropRulesError) isSet() bool {
+// dropRulesErrorIsSet reports whether the in-band error carries anything. The
+// SDK models the error as a value rather than a pointer, so its presence in the
+// response cannot stand in for it being set.
+func dropRulesErrorIsSet(e *apiDropRulesError) bool {
 	if e == nil {
 		return false
 	}
@@ -383,6 +345,9 @@ type apiDropRulesList struct {
 	Rules []apiDropRule      `json:"rules"`
 }
 
+// apiRetentionRule stays local because the SDK does not model event retention
+// rules at all. Neither RetentionInDays nor eventRetentionRule appears anywhere
+// in newrelic-client-go, and pkg/datamanagement covers account limits only.
 type apiRetentionRule struct {
 	ID              string `json:"id"`
 	Namespace       string `json:"namespace"`
@@ -1069,11 +1034,11 @@ func fetchDropRules(ctx context.Context, client *connection.Client, accountID in
 	}
 
 	list := resp.Actor.Account.NrqlDropRules.List
-	if list.Error.isSet() {
+	if dropRulesErrorIsSet(list.Error) {
 		// The list came back empty because the API refused it, not because the
 		// account has no drop rules. Reporting an empty list would say that
 		// nothing is being discarded, which is the opposite of unknown.
-		reason := list.Error.Reason
+		reason := string(list.Error.Reason)
 		if reason == "" {
 			reason = list.Error.Description
 		} else if list.Error.Description != "" {

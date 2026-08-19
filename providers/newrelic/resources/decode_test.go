@@ -5,9 +5,12 @@ package resources
 
 import (
 	"encoding/json"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/newrelic/newrelic-client-go/v2/pkg/nrqldroprules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -246,11 +249,11 @@ func TestAdminAuthDomainDecode(t *testing.T) {
 	require.Len(t, page.Items, 2)
 	// A mistyped tag here makes ssoEnabled read false on a domain that enforces
 	// single sign-on, which is the exact reading an audit is meant to catch.
-	assert.Equal(t, "SAML_SSO", page.Items[0].AuthenticationType)
-	assert.True(t, isSSOAuthentication(page.Items[0].AuthenticationType))
-	assert.Equal(t, "PASSWORD", page.Items[1].AuthenticationType)
-	assert.False(t, isSSOAuthentication(page.Items[1].AuthenticationType))
-	assert.True(t, isPasswordAuthentication(page.Items[1].AuthenticationType))
+	assert.Equal(t, "SAML_SSO", string(page.Items[0].AuthenticationType))
+	assert.True(t, isSSOAuthentication(string(page.Items[0].AuthenticationType)))
+	assert.Equal(t, "PASSWORD", string(page.Items[1].AuthenticationType))
+	assert.False(t, isSSOAuthentication(string(page.Items[1].AuthenticationType)))
+	assert.True(t, isPasswordAuthentication(string(page.Items[1].AuthenticationType)))
 }
 
 func TestAPIKeyDecode(t *testing.T) {
@@ -312,15 +315,17 @@ func TestAlertConditionDecode(t *testing.T) {
 	assert.Equal(t, "SELECT count(*) FROM TransactionError", condition.Nrql.Query)
 	assert.Equal(t, 86400, condition.ViolationTimeLimitSeconds)
 	require.Len(t, condition.Terms, 1)
-	assert.Equal(t, 5.5, condition.Terms[0].Threshold)
-	assert.Equal(t, "CRITICAL", condition.Terms[0].Priority)
+	require.NotNil(t, condition.Terms[0].Threshold)
+	assert.Equal(t, 5.5, *condition.Terms[0].Threshold)
+	assert.Equal(t, "CRITICAL", string(condition.Terms[0].Priority))
 }
 
 func TestAlertTermsDict(t *testing.T) {
+	threshold := 1.25
 	terms := alertTermsDict([]apiAlertTerm{{
 		Operator:             "BELOW",
 		Priority:             "WARNING",
-		Threshold:            1.25,
+		Threshold:            &threshold,
 		ThresholdDuration:    300,
 		ThresholdOccurrences: "AT_LEAST_ONCE",
 	}})
@@ -391,18 +396,47 @@ func TestDropRuleDecode(t *testing.T) {
 
 	require.Len(t, list.Rules, 1)
 	rule := list.Rules[0]
-	assert.Equal(t, "DROP_DATA", rule.Action)
-	assert.Equal(t, "SELECT * FROM Log WHERE service = 'auth'", rule.Nrql)
+	assert.Equal(t, "DROP_DATA", string(rule.Action))
+	assert.Equal(t, "SELECT * FROM Log WHERE service = 'auth'", rule.NRQL)
 	assert.Equal(t, "1001", dropRuleCreatorID(rule))
-	assert.False(t, list.Error.isSet())
+	assert.False(t, dropRulesErrorIsSet(list.Error))
+
+	// The embedded SDK record types CreatedAt as an unparsed nrtime.DateTime
+	// string. This asserts the shadowing nrTime field is the one that decoded,
+	// because only it yields a real time.
+	require.NotNil(t, rule.CreatedAt.Time())
+	assert.Equal(t, 2024, rule.CreatedAt.Time().Year())
+}
+
+// The shadowed timestamp has to keep null null. If the embedded SDK field ever
+// won instead, an absent creation time would stop being expressible and a rule
+// with none would read as a real date.
+func TestDropRuleAbsentCreatedAtStaysNull(t *testing.T) {
+	var list apiDropRulesList
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"rules": [{"id": "r1", "action": "DROP_DATA", "nrql": "SELECT *", "createdAt": null}]
+	}`), &list))
+
+	require.Len(t, list.Rules, 1)
+	assert.Nil(t, list.Rules[0].CreatedAt.Time())
+	assert.True(t, list.Rules[0].CreatedAt.IsZero())
+}
+
+// dropRuleWith builds a drop rule around the SDK's embedded record. The SDK
+// models Creator as a value rather than a pointer, so "no creator object" is a
+// zero-valued struct rather than nil.
+func dropRuleWith(creatorID, createdBy int) apiDropRule {
+	return apiDropRule{NRQLDropRulesDropRule: nrqldroprules.NRQLDropRulesDropRule{
+		Creator:   apiUserRef{ID: creatorID},
+		CreatedBy: createdBy,
+	}}
 }
 
 func TestDropRuleCreatorID(t *testing.T) {
-	assert.Equal(t, "1001", dropRuleCreatorID(apiDropRule{Creator: &apiUserRef{ID: 1001}, CreatedBy: 1001}))
+	assert.Equal(t, "1001", dropRuleCreatorID(dropRuleWith(1001, 1001)))
 	// A rule registered by a system carries no creator object but still reports
 	// the numeric id, so the fallback keeps the attribution.
-	assert.Equal(t, "1001", dropRuleCreatorID(apiDropRule{CreatedBy: 1001}))
-	assert.Equal(t, "1001", dropRuleCreatorID(apiDropRule{Creator: &apiUserRef{ID: 0}, CreatedBy: 1001}))
+	assert.Equal(t, "1001", dropRuleCreatorID(dropRuleWith(0, 1001)))
 	assert.Equal(t, "", dropRuleCreatorID(apiDropRule{}))
 }
 
@@ -445,7 +479,7 @@ func TestGrantedRoleDecode(t *testing.T) {
 	require.Len(t, page.Roles, 2)
 	assert.False(t, isOrganizationWideGrant(page.Roles[0]))
 	assert.True(t, isOrganizationWideGrant(page.Roles[1]))
-	assert.Equal(t, 99999, page.Roles[0].RoleID)
+	assert.Equal(t, 99999, page.Roles[0].RoleId)
 }
 
 // -----------------------------------------------------------------------------
@@ -491,8 +525,8 @@ func TestIsScimProvisioning(t *testing.T) {
 }
 
 func TestIsOrganizationWideGrant(t *testing.T) {
-	assert.True(t, isOrganizationWideGrant(apiGrantedRole{OrganizationID: "org-1"}))
-	assert.False(t, isOrganizationWideGrant(apiGrantedRole{AccountID: 1234567, OrganizationID: "org-1"}))
+	assert.True(t, isOrganizationWideGrant(apiGrantedRole{OrganizationId: "org-1"}))
+	assert.False(t, isOrganizationWideGrant(apiGrantedRole{AccountID: 1234567, OrganizationId: "org-1"}))
 	assert.False(t, isOrganizationWideGrant(apiGrantedRole{AccountID: 1234567}))
 	// Neither piece of evidence is present, so the broadest possible reading is
 	// not asserted. Claiming it would raise a finding on every such grant.
@@ -515,7 +549,7 @@ func TestIsRetentionRuleActive(t *testing.T) {
 // the first one's data, which reports fewer records than exist and attributes
 // the survivor's values to all of them.
 func TestAccessGrantIDCarriesEveryDimension(t *testing.T) {
-	admin := apiGrantedRole{ID: "1", Name: "admin", RoleID: 99999, AccountID: 1234567}
+	admin := apiGrantedRole{ID: "1", Name: "admin", RoleId: 99999, AccountID: 1234567}
 	groupA := apiGroup{ID: "gA"}
 	groupB := apiGroup{ID: "gB"}
 
@@ -528,11 +562,11 @@ func TestAccessGrantIDCarriesEveryDimension(t *testing.T) {
 		"the same role granted over two accounts is two grants")
 
 	otherRole := admin
-	otherRole.RoleID = 88888
+	otherRole.RoleId = 88888
 	assert.NotEqual(t, accessGrantID(groupA, admin), accessGrantID(groupA, otherRole),
 		"two roles granted to one group are two grants")
 
-	orgWide := apiGrantedRole{ID: "1", Name: "admin", RoleID: 99999, OrganizationID: "org-1"}
+	orgWide := apiGrantedRole{ID: "1", Name: "admin", RoleId: 99999, OrganizationId: "org-1"}
 	assert.NotEqual(t, accessGrantID(groupA, admin), accessGrantID(groupA, orgWide),
 		"an account grant and an organization grant are two grants")
 	assert.Contains(t, accessGrantID(groupA, orgWide), "organization/org-1")
@@ -574,6 +608,127 @@ func TestNotificationQueriesNeverAskForCredentials(t *testing.T) {
 	for _, forbidden := range []string{"auth ", "auth{", "auth {", "properties", "secureUrl"} {
 		assert.NotContains(t, notificationDestinationsQuery, forbidden)
 		assert.NotContains(t, notificationChannelsQuery, forbidden)
+	}
+}
+
+// allQueries is every query this provider sends. Listing them here rather than
+// naming three by hand means a query added later is swept by construction.
+func allQueries() map[string]string {
+	return map[string]string{
+		"accounts":                 accountsQuery,
+		"organization":             organizationQuery,
+		"authDomainsWithUsers":     authDomainsWithUsersQuery,
+		"domainUsersPage":          domainUsersPageQuery,
+		"adminAuthDomains":         adminAuthDomainsQuery,
+		"groupsWithGrants":         groupsWithGrantsQuery,
+		"domainGroupsPage":         domainGroupsPageQuery,
+		"roles":                    rolesQuery,
+		"apiKeys":                  apiKeysQuery,
+		"alertPolicies":            alertPoliciesQuery,
+		"alertConditions":          alertConditionsQuery,
+		"notificationDestinations": notificationDestinationsQuery,
+		"notificationChannels":     notificationChannelsQuery,
+		"dropRules":                dropRulesQuery,
+		"retentionRules":           retentionRulesQuery,
+	}
+}
+
+// No query anywhere in this provider may select credential-bearing fields. The
+// official client's own queries select every one of these, which is exactly why
+// this provider keeps its own query text for keys and notifications, so the
+// sweep covers all queries rather than only the three that are tempting.
+func TestNoQueryAsksForCredentialMaterial(t *testing.T) {
+	forbidden := []string{"keyString", "secureUrl", "properties", "auth {", "auth{", "auth "}
+
+	for name, query := range allQueries() {
+		for _, term := range forbidden {
+			assert.NotContains(t, query, term,
+				"the %s query must not select credential material (%q)", name, term)
+		}
+		// `key` needs word-boundary care: `keySearch` and `apiKeys` are fine,
+		// a bare `key` selection is not.
+		for _, term := range []string{"\nkey\n", " key\n", "\tkey\n"} {
+			assert.NotContains(t, query, term,
+				"the %s query must not select a bare keystring", name)
+		}
+	}
+}
+
+// secretBearingJSONTags are the wire names New Relic returns credential
+// material under. A decode target carrying any of them would capture the secret
+// into memory even if the mapping never emitted it.
+var secretBearingJSONTags = map[string]string{
+	"key":         "the keystring of an API or ingest key",
+	"keystring":   "the keystring of an API or ingest key",
+	"auth":        "a notification destination's credentials",
+	"properties":  "a notification property value, which carries webhook URL paths unmasked",
+	"secureurl":   "a notification destination's signed URL",
+	"password":    "a password",
+	"token":       "a bearer or webhook token",
+	"secret":      "a secret",
+	"credentials": "credentials",
+}
+
+// jsonTagsOf walks a struct type, following embedded structs, slices and
+// pointers, and collects every json tag name it would decode.
+func jsonTagsOf(t reflect.Type, seen map[reflect.Type]bool, out map[string]string) {
+	for t.Kind() == reflect.Ptr || t.Kind() == reflect.Slice || t.Kind() == reflect.Array {
+		t = t.Elem()
+	}
+	if t.Kind() != reflect.Struct || seen[t] {
+		return
+	}
+	seen[t] = true
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		name := strings.Split(field.Tag.Get("json"), ",")[0]
+		if name != "" && name != "-" {
+			out[strings.ToLower(name)] = t.String() + "." + field.Name
+		}
+		jsonTagsOf(field.Type, seen, out)
+	}
+}
+
+// Every type this provider decodes into is walked for credential-bearing
+// fields. This is what stops the three local record types being "completed"
+// back to the SDK's: swapping apiKey for apiaccess.APIAccessKey, or
+// apiNotificationDestination for notifications.AiNotificationsDestination,
+// reintroduces a `key` / `auth` / `properties` / `secureUrl` field and fails
+// here with the field named.
+func TestNoDecodeTargetCarriesCredentialFields(t *testing.T) {
+	targets := map[string]any{
+		"apiAccount":                 apiAccount{},
+		"apiOrganization":            apiOrganization{},
+		"apiUser":                    apiUser{},
+		"apiUsersPage":               apiUsersPage{},
+		"apiAuthDomainsPage":         apiAuthDomainsPage{},
+		"apiAdminAuthDomainsPage":    apiAdminAuthDomainsPage{},
+		"apiGrantedRolesPage":        apiGrantedRolesPage{},
+		"apiGroupsPage":              apiGroupsPage{},
+		"apiGrantAuthDomainsPage":    apiGrantAuthDomainsPage{},
+		"apiRolesPage":               apiRolesPage{},
+		"apiKeySearchPage":           apiKeySearchPage{},
+		"apiAlertPoliciesPage":       apiAlertPoliciesPage{},
+		"apiAlertConditionsPage":     apiAlertConditionsPage{},
+		"apiNotificationDestination": apiNotificationDestination{},
+		"apiNotificationChannel":     apiNotificationChannel{},
+		"apiDropRulesList":           apiDropRulesList{},
+		"apiRetentionRule":           apiRetentionRule{},
+	}
+
+	for name, target := range targets {
+		t.Run(name, func(t *testing.T) {
+			tags := map[string]string{}
+			jsonTagsOf(reflect.TypeOf(target), map[reflect.Type]bool{}, tags)
+
+			for tag, why := range secretBearingJSONTags {
+				if where, found := tags[tag]; found {
+					t.Errorf("%s decodes a credential-bearing field %q (%s) at %s;"+
+						" this provider must not model %s", name, tag, where, tag, why)
+				}
+			}
+		})
 	}
 }
 
@@ -620,6 +775,70 @@ func TestNoSecretMaterialSurvivesDecoding(t *testing.T) {
 			payload: `{"id":"1","email":"ada@example.com","password":"` + secret + `",
 				"apiKey":"` + secret + `"}`,
 			target: func() any { return &apiUser{} },
+		},
+
+		// The remaining record types carry no credential in New Relic's schema,
+		// but they are swept anyway: each now decodes into a vendor-maintained
+		// struct, so a field added upstream lands here without this repository
+		// changing a line. That is the case this sweep exists to catch.
+		{
+			name: "auth domains with users",
+			payload: `{"authenticationDomains":[{"id":"d1","name":"d","provisioningType":"SCIM",
+				"users":{"users":[{"id":"1","password":"` + secret + `","key":"` + secret + `"}]}}]}`,
+			target: func() any { return &apiAuthDomainsPage{} },
+		},
+		{
+			name: "admin auth domains",
+			payload: `{"items":[{"id":"d1","name":"d","authenticationType":"SAML_SSO",
+				"provisioningType":"SCIM","organizationId":"o1","secret":"` + secret + `"}]}`,
+			target: func() any { return &apiAdminAuthDomainsPage{} },
+		},
+		{
+			name: "granted roles",
+			payload: `{"roles":[{"id":"a1","name":"admin","roleId":1,"accountId":2,
+				"groupId":"g1","credentials":"` + secret + `"}]}`,
+			target: func() any { return &apiGrantedRolesPage{} },
+		},
+		{
+			name: "roles",
+			payload: `{"roles":[{"id":"r1","name":"admin","type":"STANDARD","scope":"ACCOUNT",
+				"key":"` + secret + `"}]}`,
+			target: func() any { return &apiRolesPage{} },
+		},
+		{
+			name: "groups with grants",
+			payload: `{"authenticationDomains":[{"id":"d1","groups":{"groups":[
+				{"id":"g1","displayName":"Admins","token":"` + secret + `"}]}}]}`,
+			target: func() any { return &apiGrantAuthDomainsPage{} },
+		},
+		{
+			name: "alert policies",
+			payload: `{"policies":[{"id":"p1","name":"p","incidentPreference":"PER_POLICY",
+				"secret":"` + secret + `"}]}`,
+			target: func() any { return &apiAlertPoliciesPage{} },
+		},
+		{
+			name: "alert conditions",
+			payload: `{"nrqlConditions":[{"id":"c1","name":"c","policyId":"p1",
+				"nrql":{"query":"SELECT 1"},"token":"` + secret + `"}]}`,
+			target: func() any { return &apiAlertConditionsPage{} },
+		},
+		{
+			name: "drop rules",
+			payload: `{"rules":[{"id":"r1","action":"DROP_DATA","nrql":"SELECT *",
+				"creator":{"id":1,"email":"a@example.com"},"key":"` + secret + `"}]}`,
+			target: func() any { return &apiDropRulesList{} },
+		},
+		{
+			name: "retention rules",
+			payload: `{"id":"r1","namespace":"Log","retentionInDays":30,
+				"secret":"` + secret + `"}`,
+			target: func() any { return &apiRetentionRule{} },
+		},
+		{
+			name:    "accounts",
+			payload: `{"id":1,"name":"acct","key":"` + secret + `"}`,
+			target:  func() any { return &apiAccount{} },
 		},
 	}
 

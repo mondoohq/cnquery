@@ -26,8 +26,11 @@ type mqlNewrelicDropRuleInternal struct {
 // reports it. The creator object is the richer one but is absent for a rule
 // registered by a system rather than a person, in which case the numeric
 // createdBy is still there.
+//
+// The SDK models Creator as a value rather than a pointer, so an absent creator
+// arrives as a zero-valued struct. Testing the ID covers both shapes.
 func dropRuleCreatorID(rule apiDropRule) string {
-	if rule.Creator != nil && rule.Creator.ID > 0 {
+	if rule.Creator.ID > 0 {
 		return strconv.Itoa(rule.Creator.ID)
 	}
 	if rule.CreatedBy > 0 {
@@ -40,8 +43,8 @@ func newDropRuleResource(runtime *plugin.Runtime, rule apiDropRule) (*mqlNewreli
 	res, err := CreateResource(runtime, "newrelic.dropRule", map[string]*llx.RawData{
 		"__id":        llx.StringData("dropRule/" + strconv.Itoa(rule.AccountID) + "/" + rule.ID),
 		"id":          llx.StringData(rule.ID),
-		"action":      llx.StringData(rule.Action),
-		"nrql":        llx.StringData(rule.Nrql),
+		"action":      llx.StringData(string(rule.Action)),
+		"nrql":        llx.StringData(rule.NRQL),
 		"description": llx.StringData(rule.Description),
 		"source":      llx.StringData(rule.Source),
 		"createdAt":   llx.TimeDataPtr(rule.CreatedAt.Time()),

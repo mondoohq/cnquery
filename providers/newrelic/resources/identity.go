@@ -124,7 +124,7 @@ func authenticationTypeFor(runtime *plugin.Runtime, domainID string) (string, er
 	if !ok {
 		return "", fmt.Errorf("the New Relic API did not report a login method for authentication domain %q, so it cannot be checked", domainID)
 	}
-	return domain.AuthenticationType, nil
+	return string(domain.AuthenticationType), nil
 }
 
 func (r *mqlNewrelicAuthenticationDomain) authenticationType() (string, error) {
@@ -484,9 +484,9 @@ type mqlNewrelicAccessGrantInternal struct {
 func accessGrantID(group apiGroup, grant apiGrantedRole) string {
 	scope := "account/" + strconv.Itoa(grant.AccountID)
 	if isOrganizationWideGrant(grant) {
-		scope = "organization/" + grant.OrganizationID
+		scope = "organization/" + grant.OrganizationId
 	}
-	return "accessGrant/" + group.ID + "/" + scope + "/" + strconv.Itoa(grant.RoleID) + "/" + grant.ID
+	return "accessGrant/" + group.ID + "/" + scope + "/" + strconv.Itoa(grant.RoleId) + "/" + grant.ID
 }
 
 func newAccessGrantResource(runtime *plugin.Runtime, group apiGroup, grant apiGrantedRole) (*mqlNewrelicAccessGrant, error) {
@@ -495,7 +495,7 @@ func newAccessGrantResource(runtime *plugin.Runtime, group apiGroup, grant apiGr
 	// either way.
 	groupID := group.ID
 	if groupID == "" {
-		groupID = grant.GroupID
+		groupID = grant.GroupId
 	}
 
 	res, err := CreateResource(runtime, "newrelic.accessGrant", map[string]*llx.RawData{
@@ -513,7 +513,7 @@ func newAccessGrantResource(runtime *plugin.Runtime, group apiGroup, grant apiGr
 	}
 
 	mqlGrant := res.(*mqlNewrelicAccessGrant)
-	mqlGrant.cachedRoleID = strconv.Itoa(grant.RoleID)
+	mqlGrant.cachedRoleID = strconv.Itoa(grant.RoleId)
 	mqlGrant.cachedGroupID = groupID
 	mqlGrant.cachedAccountID = grant.AccountID
 	return mqlGrant, nil

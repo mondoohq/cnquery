@@ -318,8 +318,8 @@ func TestFetchAdminAuthDomains(t *testing.T) {
 	items, err := fetchAdminAuthDomains(context.Background(), client)
 	require.NoError(t, err)
 	require.Len(t, items, 2)
-	assert.Equal(t, "SAML_SSO", items[0].AuthenticationType)
-	assert.Equal(t, "PASSWORD", items[1].AuthenticationType)
+	assert.Equal(t, "SAML_SSO", string(items[0].AuthenticationType))
+	assert.Equal(t, "PASSWORD", string(items[1].AuthenticationType))
 }
 
 // -----------------------------------------------------------------------------
@@ -356,7 +356,7 @@ func TestFetchGroupsWithGrants(t *testing.T) {
 	assert.Equal(t, "gA", groups[0].ID)
 	assert.Equal(t, "d1", groups[0].domainID, "each group carries the domain it was listed under")
 	require.Len(t, groups[0].Roles.Roles, 1)
-	assert.Equal(t, 99999, groups[0].Roles.Roles[0].RoleID)
+	assert.Equal(t, 99999, groups[0].Roles.Roles[0].RoleId)
 
 	assert.Equal(t, "gB", groups[1].ID)
 	assert.Equal(t, "d1", groups[1].domainID)
@@ -419,7 +419,7 @@ func TestFetchDropRulesSuccess(t *testing.T) {
 	rules, err := fetchDropRules(context.Background(), client, 1234567)
 	require.NoError(t, err)
 	require.Len(t, rules, 1)
-	assert.Equal(t, "DROP_DATA", rules[0].Action)
+	assert.Equal(t, "DROP_DATA", string(rules[0].Action))
 }
 
 func TestFetchNotificationDestinationsInBandErrorIsNotAnEmptyList(t *testing.T) {
@@ -465,10 +465,10 @@ func TestNotificationsErrorIsSet(t *testing.T) {
 
 func TestDropRulesErrorIsSet(t *testing.T) {
 	var absent *apiDropRulesError
-	assert.False(t, absent.isSet())
-	assert.False(t, (&apiDropRulesError{}).isSet())
-	assert.True(t, (&apiDropRulesError{Reason: "FEATURE_FLAG_DISABLED"}).isSet())
-	assert.True(t, (&apiDropRulesError{Description: "nope"}).isSet())
+	assert.False(t, dropRulesErrorIsSet(absent))
+	assert.False(t, dropRulesErrorIsSet(&apiDropRulesError{}))
+	assert.True(t, dropRulesErrorIsSet(&apiDropRulesError{Reason: "FEATURE_FLAG_DISABLED"}))
+	assert.True(t, dropRulesErrorIsSet(&apiDropRulesError{Description: "nope"}))
 }
 
 // -----------------------------------------------------------------------------
@@ -485,7 +485,7 @@ func TestFetchAlertPoliciesAndConditions(t *testing.T) {
 	policies, err := fetchAlertPolicies(context.Background(), client, 1234567)
 	require.NoError(t, err)
 	require.Len(t, policies, 1)
-	assert.Equal(t, "PER_CONDITION", policies[0].IncidentPreference)
+	assert.Equal(t, "PER_CONDITION", string(policies[0].IncidentPreference))
 
 	client2, _ := newScriptedClient(t,
 		`{"data":{"actor":{"account":{"alerts":{"nrqlConditionsSearch":{

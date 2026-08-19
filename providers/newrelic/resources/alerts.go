@@ -25,7 +25,7 @@ func newAlertPolicyResource(runtime *plugin.Runtime, policy apiAlertPolicy) (*mq
 		"__id":               llx.StringData("alertPolicy/" + strconv.Itoa(policy.AccountID) + "/" + policy.ID),
 		"id":                 llx.StringData(policy.ID),
 		"name":               llx.StringData(policy.Name),
-		"incidentPreference": llx.StringData(policy.IncidentPreference),
+		"incidentPreference": llx.StringData(string(policy.IncidentPreference)),
 	})
 	if err != nil {
 		return nil, err
@@ -108,15 +108,24 @@ type mqlNewrelicAlertConditionInternal struct {
 // alertTermsDict renders a condition's thresholds as dicts. The shape is fixed
 // across every condition type, and none of the five values is worth a resource
 // of its own.
+// The SDK types Threshold as *float64, which reveals that New Relic can return
+// a term with no threshold at all. This keeps the existing behaviour of
+// reporting an absent threshold as 0 rather than changing an observable value
+// inside a type-only change. Whether an absent threshold should instead be null
+// is a schema decision, recorded in TESTING-TODO.md.
 func alertTermsDict(terms []apiAlertTerm) []any {
 	out := make([]any, 0, len(terms))
 	for _, term := range terms {
+		threshold := 0.0
+		if term.Threshold != nil {
+			threshold = *term.Threshold
+		}
 		out = append(out, map[string]any{
-			"operator":             term.Operator,
-			"priority":             term.Priority,
-			"threshold":            term.Threshold,
+			"operator":             string(term.Operator),
+			"priority":             string(term.Priority),
+			"threshold":            threshold,
 			"thresholdDuration":    int64(term.ThresholdDuration),
-			"thresholdOccurrences": term.ThresholdOccurrences,
+			"thresholdOccurrences": string(term.ThresholdOccurrences),
 		})
 	}
 	return out
@@ -129,7 +138,7 @@ func newAlertConditionResource(runtime *plugin.Runtime, condition apiAlertCondit
 		"name":                      llx.StringData(condition.Name),
 		"description":               llx.StringData(condition.Description),
 		"enabled":                   llx.BoolData(condition.Enabled),
-		"type":                      llx.StringData(condition.Type),
+		"type":                      llx.StringData(string(condition.Type)),
 		"nrql":                      llx.StringData(condition.Nrql.Query),
 		"runbookUrl":                llx.StringData(condition.RunbookURL),
 		"violationTimeLimitSeconds": llx.IntData(int64(condition.ViolationTimeLimitSeconds)),
