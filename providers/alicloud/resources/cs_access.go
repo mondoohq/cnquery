@@ -275,13 +275,25 @@ func (r *mqlAlicloudCsGrant) id() (string, error) {
 // list rather than through NewResource. The grant carries a cluster id but not
 // its region, which the by-id init needs, and a per-grant init would cost one
 // listing per grant because init runs before the resource cache is consulted.
+//
+// "No such cluster" and "could not read the clusters" are kept apart. A grant
+// that names nothing (it covers every cluster) or names a cluster that has been
+// deleted resolves to null, because neither should fail an account-wide query.
+// A failure to read the listing propagates: reporting null there would state
+// that the grant reaches no cluster, which is a claim nobody verified, and it
+// would silently drop the grant from a filter on the cluster it does reach.
+// The listing already tolerates a single unreachable region on its own, so an
+// error reaching here is a hard failure rather than one bad region.
 func (r *mqlAlicloudCsGrant) cluster() (*mqlAlicloudCsCluster, error) {
 	if r.cacheClusterID == "" {
 		r.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	cluster, err := resolveCsClusterByID(r.MqlRuntime, r.cacheClusterID)
-	if err != nil || cluster == nil {
+	if err != nil {
+		return nil, err
+	}
+	if cluster == nil {
 		r.Cluster.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
