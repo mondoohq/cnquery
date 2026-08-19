@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/digitalocean/godo"
@@ -241,6 +242,13 @@ func initDigitaloceanFirewall(runtime *plugin.Runtime, args map[string]*llx.RawD
 	if err != nil {
 		return nil, nil, err
 	}
+	// godo returns the decoded root's field directly, so a 200 whose body
+	// carries no firewall yields a nil object with a nil error. Building the
+	// resource from it dereferences nil and panics the provider, which takes
+	// down the whole scan rather than this one resource.
+	if fw == nil {
+		return nil, nil, fmt.Errorf("digitalocean.firewall with id %q not found", id)
+	}
 	res, err := newMqlFirewall(runtime, fw)
 	if err != nil {
 		return nil, nil, err
@@ -357,6 +365,11 @@ func initDigitaloceanLoadBalancer(runtime *plugin.Runtime, args map[string]*llx.
 	lb, _, err := conn.Client().LoadBalancers.Get(context.Background(), id)
 	if err != nil {
 		return nil, nil, err
+	}
+	// A nil object alongside a nil error, as above: report it as not found
+	// rather than dereferencing it in the arg builder.
+	if lb == nil {
+		return nil, nil, fmt.Errorf("digitalocean.loadBalancer with id %q not found", id)
 	}
 	res, err := newMqlLoadBalancer(runtime, lb)
 	if err != nil {
@@ -530,6 +543,10 @@ func initDigitaloceanKubernetesCluster(runtime *plugin.Runtime, args map[string]
 	c, _, err := conn.Client().Kubernetes.Get(context.Background(), id)
 	if err != nil {
 		return nil, nil, err
+	}
+	// A nil object alongside a nil error, as above.
+	if c == nil {
+		return nil, nil, fmt.Errorf("digitalocean.kubernetes.cluster with id %q not found", id)
 	}
 	res, err := newMqlKubernetesCluster(runtime, c)
 	if err != nil {
