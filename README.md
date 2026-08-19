@@ -137,6 +137,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Google Workspace              | `google-workspace`         | `mql shell google-workspace --customer-id CUSTOMER_ID --impersonated-user-email EMAIL --credentials-path JSON_FILE`                             |
 | Grafana organizations         | `grafana`                  | `mql shell grafana --url https://myorg.grafana.net --token TOKEN`                                                                               |
 | HashiCorp Cloud Platform      | `hcp`                      | `mql shell hcp --client-id CLIENT_ID --client-secret CLIENT_SECRET`                                                                             |
+| HashiCorp Vault servers       | `vault`                    | `mql shell vault --address https://vault.example.com:8200`                                                                                      |
 | Hetzner Cloud projects        | `hetzner`                  | `mql shell hetzner --token API_TOKEN`                                                                                                           |
 | Hugging Face                  | `huggingface`              | `mql shell huggingface --token HF_TOKEN`                                                                                                        |
 | IBM Db2 database              | `db2`                      | `mql shell db2 db.contoso.com --database TESTDB --user auditor --ask-pass`                                                                      |

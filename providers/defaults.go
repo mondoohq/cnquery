@@ -1263,6 +1263,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"vault": {
+		Provider: &plugin.Provider{
+			Name:            "vault",
+			ID:              "go.mondoo.com/mql/providers/vault",
+			ConnectionTypes: []string{"vault"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "vault",
+					Use:   "vault",
+					Short: "a HashiCorp Vault server",
+				},
+			},
+		},
+	},
+
 	"vcd": {
 		Provider: &plugin.Provider{
 			Name:            "vcd",

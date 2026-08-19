@@ -273,6 +273,7 @@ PROVIDERS := \
 	tailscale \
 	terraform \
 	together \
+	vault \
 	vcd \
 	vercel \
 	vllm \

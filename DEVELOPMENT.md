@@ -291,6 +291,7 @@ use (
    ./mql/providers/stackit
    ./mql/providers/tailscale
    ./mql/providers/terraform
+   ./mql/providers/vault
    ./mql/providers/vcd
    ./mql/providers/vercel
    ./mql/providers/vllm

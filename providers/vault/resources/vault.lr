@@ -1,0 +1,237 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/vault"
+option go_package = "go.mondoo.com/mql/v13/providers/vault/resources"
+
+// HashiCorp Vault
+//
+// Secrets management server, covering the posture of the running instance:
+// whether it is sealed and how it is unsealed, which audit devices record
+// access, which authentication methods let callers in, which ACL policies
+// grant them capabilities, which secret engines are mounted, and which
+// Enterprise namespaces divide the server.
+vault {
+  // Server version, for example "1.20.4"
+  version() string
+  // Cluster name assigned to the server
+  clusterName() string
+  // Cluster identifier assigned to the server
+  clusterId() string
+  // Whether the server has been initialized
+  initialized() bool
+  // Path of the Enterprise namespace this connection reads, empty for root
+  namespacePath() string
+  // Seal state of the server, including how it is unsealed
+  seal() vault.sealStatus
+  // Audit devices recording requests and responses
+  auditDevices() []vault.auditDevice
+  // Authentication methods enabled on the server
+  authMethods() []vault.authMethod
+  // ACL policies defined on the server
+  policies() []vault.policy
+  // Secret engines mounted on the server
+  secretEngines() []vault.secretEngine
+  // Enterprise namespaces defined below the connected namespace
+  namespaces() []vault.namespace
+}
+
+// Seal state of a Vault server
+//
+// Whether the server is currently sealed, how many key shares its unseal
+// process requires, and which seal mechanism protects the root key. A Shamir
+// seal requires operators to supply key shares on every restart, while an
+// auto-unseal seal delegates that to a cloud key management service. The
+// `autoUnseal` field distinguishes the two without matching on `type`.
+vault.sealStatus @defaults("type sealed autoUnseal") {
+  // Seal mechanism protecting the root key
+  //
+  // One of shamir, awskms, azurekeyvault, gcpckms, ocikms, transit, pkcs11,
+  // or alicloudkms. Anything other than shamir is an auto-unseal seal.
+  type string
+  // Whether the server is currently sealed and rejecting requests
+  sealed bool
+  // Whether the server has been initialized
+  initialized bool
+  // Whether the root key is protected by an auto-unseal seal rather than Shamir
+  autoUnseal bool
+  // Number of key shares the unseal process requires
+  threshold int
+  // Total number of key shares the root key was split into
+  shares int
+  // Number of key shares supplied so far in an in-progress unseal
+  progress int
+  // Whether a seal migration is in progress
+  migration bool
+  // Whether the seal uses recovery keys, which auto-unseal seals do
+  recoverySeal bool
+  // Storage backend the server persists to, for example "raft" or "consul"
+  storageType string
+  // Server version reported alongside the seal state
+  version string
+}
+
+// Vault audit device
+//
+// A destination Vault writes an audit record to for every request and
+// response. A server with no audit device enabled keeps no record of who read
+// which secret. When every enabled device fails to write, Vault stops serving
+// requests, which is why more than one device is usually configured.
+// The `path` field selects the device, for example
+// `vault.auditDevices.where(path == "file/")`.
+vault.auditDevice @defaults("path type local") {
+  // Mount path of the audit device, for example "file/"
+  path string
+  // Device type
+  //
+  // One of file, syslog, or socket.
+  type string
+  // Operator-supplied description of the device
+  description string
+  // Whether the device is local to this cluster and excluded from replication
+  local bool
+  // Device configuration as reported by the server
+  //
+  // Shape varies by `type`: a file device carries `file_path`, a syslog device
+  // carries `facility` and `tag`, and a socket device carries `address` and
+  // `socket_type`. All types may carry `log_raw`, which writes secrets to the
+  // audit log in plaintext when enabled, and `hmac_accessor`.
+  options dict
+  // Whether the device writes request and response bodies unhashed
+  //
+  // Reflects the `log_raw` option. When enabled, every secret the server
+  // returns is written to the audit destination in plaintext.
+  logRaw bool
+}
+
+// Vault authentication method
+//
+// An enabled mount that turns some external identity into a Vault token.
+// Token lifetimes configured on the mount bound how long a caller keeps
+// access after the underlying identity is revoked. The `path` field selects
+// the method, for example
+// `vault.authMethods.where(path == "approle/")`.
+vault.authMethod @defaults("path type") {
+  // Mount path of the method, for example "approle/"
+  path string
+  // Method type
+  //
+  // One of token, approle, userpass, ldap, okta, radius, cert, jwt, oidc,
+  // kubernetes, aws, azure, gcp, github, or a plugin name.
+  type string
+  // Operator-supplied description of the method
+  description string
+  // Whether the mount is local to this cluster and excluded from replication
+  local bool
+  // Default lease duration of tokens the method issues, in seconds
+  defaultLeaseTtl int
+  // Maximum lease duration of tokens the method issues, in seconds
+  maxLeaseTtl int
+  // Token type the mount forces
+  //
+  // One of default, default-service, default-batch, service, or batch.
+  // Batch tokens cannot be renewed or revoked individually.
+  tokenType string
+  // Whether the method appears on the unauthenticated login form
+  //
+  // Reflects `listing_visibility`. True when set to "unauth".
+  listedInLoginForm bool
+  // Version of the plugin backing the mount, empty for a built-in method
+  pluginVersion string
+  // Deprecation state the server reports for the method, empty when supported
+  //
+  // One of supported, deprecated, pending-removal, or removed.
+  deprecationStatus string
+}
+
+// Vault ACL policy
+//
+// A named set of path rules granting capabilities to whoever holds a token
+// carrying the policy. The `name` field selects the policy, for example
+// `vault.policies.where(name == "default")`. The `rules` field returns the
+// policy as written, while `paths` returns it parsed so individual grants can
+// be audited without matching on raw text.
+vault.policy @defaults("name grantsSudo grantsRootPath") {
+  // Policy name
+  name string
+  // Policy document as written, in HCL
+  rules() string
+  // Parsed path rules
+  //
+  // Shape: `[{path: "secret/data/*", capabilities: ["read", "list"]}, ...]`.
+  // The path is the glob as written in the policy, including any trailing
+  // wildcard.
+  paths() []dict
+  // Whether the policy grants the sudo capability
+  //
+  // The sudo capability permits access to root-protected API paths, which is
+  // far broader than the path glob alone suggests. Always true for the
+  // built-in root policy, whose document is empty because the server grants it
+  // every capability implicitly.
+  grantsSudo() bool
+  // Whether the policy grants capabilities on the whole secret namespace
+  //
+  // True when a rule's path is "*" or "/*", which grants across every mount,
+  // and always true for the built-in root policy. A rule whose only capability
+  // is deny restricts rather than grants, so it does not count.
+  grantsRootPath() bool
+  // Whether the policy grants a capability on a wildcard path
+  //
+  // True when a rule's path ends in a wildcard or contains a "+" segment
+  // matcher, and always true for the built-in root policy. Broader than
+  // `grantsRootPath`, which covers only the whole namespace.
+  grantsWildcardPath() bool
+}
+
+// Vault secret engine
+//
+// A mounted backend that stores or generates secrets. Lease durations
+// configured on the mount bound how long a generated credential stays valid.
+// The `path` field selects the engine, for example
+// `vault.secretEngines.where(path == "secret/")`.
+vault.secretEngine @defaults("path type") {
+  // Mount path of the engine, for example "secret/"
+  path string
+  // Engine type
+  //
+  // One of kv, cubbyhole, identity, sys, pki, transit, database, aws, azure,
+  // gcp, ssh, totp, consul, nomad, rabbitmq, or a plugin name.
+  type string
+  // Operator-supplied description of the engine
+  description string
+  // Whether the mount is local to this cluster and excluded from replication
+  local bool
+  // Whether the mount is exempt from Enterprise deletion protection
+  sealWrap bool
+  // Default lease duration of secrets the engine issues, in seconds
+  defaultLeaseTtl int
+  // Maximum lease duration of secrets the engine issues, in seconds
+  maxLeaseTtl int
+  // Key/value engine major version, 0 for engines that are not key/value
+  //
+  // Version 2 keeps a version history and supports soft deletes; version 1
+  // overwrites in place. Read from the mount's `options.version`.
+  kvVersion int
+  // Version of the plugin backing the mount, empty for a built-in engine
+  pluginVersion string
+  // Deprecation state the server reports for the engine, empty when supported
+  //
+  // One of supported, deprecated, pending-removal, or removed.
+  deprecationStatus string
+}
+
+// Vault Enterprise namespace
+//
+// An isolated tenant within a Vault Enterprise server, carrying its own
+// policies, auth methods, and secret engines. The `path` field selects the
+// namespace, for example
+// `vault.namespaces.where(path == "team-a/")`. Namespaces are an Enterprise
+// feature, so this list is empty on Community edition.
+vault.namespace @defaults("path") {
+  // Full path of the namespace relative to the connected namespace
+  path string
+  // Identifier the server assigned to the namespace
+  id string
+  // Custom metadata attached to the namespace
+  customMetadata map[string]string
+}
