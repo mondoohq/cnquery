@@ -8624,6 +8624,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.queue.approximateMessageCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetApproximateMessageCount()).ToDataRes(types.Int)
 	},
+	"azure.subscription.storageService.account.queue.signedIdentifiers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetSignedIdentifiers()).ToDataRes(types.Array(types.Dict))
+	},
 	"azure.subscription.storageService.account.queue.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -29698,6 +29701,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.queue.approximateMessageCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).ApproximateMessageCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.queue.signedIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).SignedIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.queue.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68002,6 +68009,7 @@ type mqlAzureSubscriptionStorageServiceAccountQueue struct {
 	Name                    plugin.TValue[string]
 	Metadata                plugin.TValue[map[string]any]
 	ApproximateMessageCount plugin.TValue[int64]
+	SignedIdentifiers       plugin.TValue[[]any]
 	SystemMetadata          plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -68057,6 +68065,12 @@ func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetMetadata() *plugin.T
 func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetApproximateMessageCount() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.ApproximateMessageCount, func() (int64, error) {
 		return c.approximateMessageCount()
+	})
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetSignedIdentifiers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SignedIdentifiers, func() ([]any, error) {
+		return c.signedIdentifiers()
 	})
 }
 

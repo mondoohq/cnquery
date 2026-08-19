@@ -6237,6 +6237,7 @@ azure.subscription.storageService.account.queue.approximateMessageCount 13.10.2
 azure.subscription.storageService.account.queue.id 13.10.2
 azure.subscription.storageService.account.queue.metadata 13.10.2
 azure.subscription.storageService.account.queue.name 13.10.2
+azure.subscription.storageService.account.queue.signedIdentifiers 13.36.1
 azure.subscription.storageService.account.queue.systemMetadata 13.28.1
 azure.subscription.storageService.account.queueProperties 9.0.1
 azure.subscription.storageService.account.queues 13.10.2
