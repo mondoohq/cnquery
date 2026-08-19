@@ -1094,9 +1094,12 @@ func (a *mqlAzureSubscriptionCloudDefenderService) regulatoryComplianceStandards
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			var respErr *azcore.ResponseError
-			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
-				log.Warn().Err(err).Msg("could not list regulatory compliance standards due to access denied")
+			// A subscription with no standard pricing bundle has no regulatory
+			// compliance surface at all, and says so with a 400 rather than an
+			// empty list. That, a 403, and a 404 are all "nothing to report
+			// here", not a reason to fail the whole Defender query.
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list regulatory compliance standards")
 				return res, nil
 			}
 			return nil, err
@@ -1179,9 +1182,8 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard) c
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			var respErr *azcore.ResponseError
-			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
-				log.Warn().Err(err).Msg("could not list regulatory compliance controls due to access denied")
+			if isAzureNotConfigured(err) {
+				log.Warn().Err(err).Msg("could not list regulatory compliance controls")
 				return res, nil
 			}
 			return nil, err
