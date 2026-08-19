@@ -386,6 +386,54 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftExternal
 	return mqlPolicy.(*mqlMicrosoftExternalIdentitiesPolicy), nil
 }
 
+// deviceRegistrationPolicy reports the tenant's Entra device settings.
+//
+// Only the scalars are reported. Graph also models azureADJoin and
+// azureADRegistration here, but both came back empty against a live tenant and
+// the cause was not established, so they are left out rather than shipped as a
+// field that reads "this policy names nobody" whatever the truth is.
+func (a *mqlMicrosoftPolicies) deviceRegistrationPolicy() (*mqlMicrosoftDeviceRegistrationPolicy, error) {
+	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
+	graphClient, err := conn.GraphClient()
+	if err != nil {
+		return nil, err
+	}
+	policy, err := graphClient.Policies().DeviceRegistrationPolicy().Get(context.Background(), nil)
+	if err != nil {
+		return nil, transformError(err)
+	}
+	if policy == nil {
+		return nil, fmt.Errorf("device registration policy not found")
+	}
+
+	var mfaConfiguration *string
+	if v := policy.GetMultiFactorAuthConfiguration(); v != nil {
+		s := v.String()
+		mfaConfiguration = &s
+	}
+
+	var localAdminPasswordEnabled *bool
+	if lap := policy.GetLocalAdminPassword(); lap != nil {
+		localAdminPasswordEnabled = lap.GetIsEnabled()
+	}
+
+	mqlPolicy, err := CreateResource(a.MqlRuntime, ResourceMicrosoftDeviceRegistrationPolicy,
+		map[string]*llx.RawData{
+			"__id":                         llx.StringDataPtr(policy.GetId()),
+			"id":                           llx.StringDataPtr(policy.GetId()),
+			"displayName":                  llx.StringDataPtr(policy.GetDisplayName()),
+			"description":                  llx.StringDataPtr(policy.GetDescription()),
+			"multiFactorAuthConfiguration": llx.StringDataPtr(mfaConfiguration),
+			"userDeviceQuota":              llx.IntDataPtr(policy.GetUserDeviceQuota()),
+			"localAdminPasswordEnabled":    llx.BoolDataPtr(localAdminPasswordEnabled),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return mqlPolicy.(*mqlMicrosoftDeviceRegistrationPolicy), nil
+}
+
 func initMicrosoftExternalIdentitiesPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// Create the parent policies resource and call its method
 	policiesResource, err := CreateResource(runtime, ResourceMicrosoftPolicies, map[string]*llx.RawData{})

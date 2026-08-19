@@ -100,6 +100,7 @@ const (
 	ResourceMicrosoftSecurityInformationProtection                                                       string = "microsoft.security.informationProtection"
 	ResourceMicrosoftSecurityInformationProtectionSensitivityLabel                                       string = "microsoft.security.informationProtection.sensitivityLabel"
 	ResourceMicrosoftPolicies                                                                            string = "microsoft.policies"
+	ResourceMicrosoftDeviceRegistrationPolicy                                                            string = "microsoft.deviceRegistrationPolicy"
 	ResourceMicrosoftDefaultAppManagementPolicy                                                          string = "microsoft.defaultAppManagementPolicy"
 	ResourceMicrosoftDefaultAppManagementPolicyAppManagementConfiguration                                string = "microsoft.defaultAppManagementPolicy.appManagementConfiguration"
 	ResourceMicrosoftExternalIdentitiesPolicy                                                            string = "microsoft.externalIdentitiesPolicy"
@@ -539,6 +540,10 @@ func init() {
 		"microsoft.policies": {
 			// to override args, implement: initMicrosoftPolicies(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftPolicies,
+		},
+		"microsoft.deviceRegistrationPolicy": {
+			// to override args, implement: initMicrosoftDeviceRegistrationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDeviceRegistrationPolicy,
 		},
 		"microsoft.defaultAppManagementPolicy": {
 			Init:   initMicrosoftDefaultAppManagementPolicy,
@@ -2952,6 +2957,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.policies.defaultAppManagementPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftPolicies).GetDefaultAppManagementPolicy()).ToDataRes(types.Resource("microsoft.defaultAppManagementPolicy"))
+	},
+	"microsoft.policies.deviceRegistrationPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftPolicies).GetDeviceRegistrationPolicy()).ToDataRes(types.Resource("microsoft.deviceRegistrationPolicy"))
+	},
+	"microsoft.deviceRegistrationPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.deviceRegistrationPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetDisplayName()).ToDataRes(types.String)
+	},
+	"microsoft.deviceRegistrationPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"microsoft.deviceRegistrationPolicy.multiFactorAuthConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetMultiFactorAuthConfiguration()).ToDataRes(types.String)
+	},
+	"microsoft.deviceRegistrationPolicy.userDeviceQuota": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetUserDeviceQuota()).ToDataRes(types.Int)
+	},
+	"microsoft.deviceRegistrationPolicy.localAdminPasswordEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetLocalAdminPasswordEnabled()).ToDataRes(types.Bool)
 	},
 	"microsoft.defaultAppManagementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetDisplayName()).ToDataRes(types.String)
@@ -8608,6 +8634,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.policies.defaultAppManagementPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftPolicies).DefaultAppManagementPolicy, ok = plugin.RawToTValue[*mqlMicrosoftDefaultAppManagementPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.policies.deviceRegistrationPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftPolicies).DeviceRegistrationPolicy, ok = plugin.RawToTValue[*mqlMicrosoftDeviceRegistrationPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.multiFactorAuthConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).MultiFactorAuthConfiguration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.userDeviceQuota": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).UserDeviceQuota, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.localAdminPasswordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).LocalAdminPasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"microsoft.defaultAppManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20145,6 +20203,7 @@ type mqlMicrosoftPolicies struct {
 	ExternalIdentitiesPolicy                  plugin.TValue[*mqlMicrosoftExternalIdentitiesPolicy]
 	CrossTenantAccessPolicy                   plugin.TValue[*mqlMicrosoftCrossTenantAccessPolicyDefault]
 	DefaultAppManagementPolicy                plugin.TValue[*mqlMicrosoftDefaultAppManagementPolicy]
+	DeviceRegistrationPolicy                  plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicy]
 }
 
 // createMicrosoftPolicies creates a new instance of this resource
@@ -20297,6 +20356,91 @@ func (c *mqlMicrosoftPolicies) GetDefaultAppManagementPolicy() *plugin.TValue[*m
 
 		return c.defaultAppManagementPolicy()
 	})
+}
+
+func (c *mqlMicrosoftPolicies) GetDeviceRegistrationPolicy() *plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicy] {
+	return plugin.GetOrCompute[*mqlMicrosoftDeviceRegistrationPolicy](&c.DeviceRegistrationPolicy, func() (*mqlMicrosoftDeviceRegistrationPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.policies", c.__id, "deviceRegistrationPolicy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftDeviceRegistrationPolicy), nil
+			}
+		}
+
+		return c.deviceRegistrationPolicy()
+	})
+}
+
+// mqlMicrosoftDeviceRegistrationPolicy for the microsoft.deviceRegistrationPolicy resource
+type mqlMicrosoftDeviceRegistrationPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDeviceRegistrationPolicyInternal it will be used here
+	Id                           plugin.TValue[string]
+	DisplayName                  plugin.TValue[string]
+	Description                  plugin.TValue[string]
+	MultiFactorAuthConfiguration plugin.TValue[string]
+	UserDeviceQuota              plugin.TValue[int64]
+	LocalAdminPasswordEnabled    plugin.TValue[bool]
+}
+
+// createMicrosoftDeviceRegistrationPolicy creates a new instance of this resource
+func createMicrosoftDeviceRegistrationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDeviceRegistrationPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.deviceRegistrationPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) MqlName() string {
+	return "microsoft.deviceRegistrationPolicy"
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetMultiFactorAuthConfiguration() *plugin.TValue[string] {
+	return &c.MultiFactorAuthConfiguration
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetUserDeviceQuota() *plugin.TValue[int64] {
+	return &c.UserDeviceQuota
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetLocalAdminPasswordEnabled() *plugin.TValue[bool] {
+	return &c.LocalAdminPasswordEnabled
 }
 
 // mqlMicrosoftDefaultAppManagementPolicy for the microsoft.defaultAppManagementPolicy resource

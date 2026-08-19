@@ -2264,6 +2264,35 @@ microsoft.policies {
   crossTenantAccessPolicy() microsoft.crossTenantAccessPolicyDefault
   // Tenant-wide default app management policy
   defaultAppManagementPolicy() microsoft.defaultAppManagementPolicy
+  // Device registration and join settings for the tenant
+  deviceRegistrationPolicy() microsoft.deviceRegistrationPolicy
+}
+
+// Entra device registration policy
+//
+// The tenant's device settings: who may join or register a device, whether
+// multifactor authentication is required to do so, how many devices a user
+// may hold, and whether the local administrator password solution is on.
+// `multiFactorAuthConfiguration` is the setting behind "Require Multifactor
+// Authentication to register or join devices with Microsoft Entra".
+private microsoft.deviceRegistrationPolicy @defaults("multiFactorAuthConfiguration userDeviceQuota") {
+  // Policy identifier
+  id string
+  // Policy display name
+  displayName string
+  // Policy description
+  description string
+  // Whether multifactor authentication is required to register or join a device
+  //
+  // Either "required" or "notRequired". Null when the tenant reports no
+  // value, which is not the same as not requiring it.
+  multiFactorAuthConfiguration string
+  // Maximum number of devices a single user may register or join
+  //
+  // 0 means the tenant permits none. Null when unreported.
+  userDeviceQuota int
+  // Whether the Windows local administrator password solution is enabled
+  localAdminPasswordEnabled bool
 }
 
 // Tenant Default App Management Policy
