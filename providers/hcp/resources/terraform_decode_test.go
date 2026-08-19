@@ -8,14 +8,30 @@ import (
 	"testing"
 	"time"
 
+	tfe "github.com/hashicorp/go-tfe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13/providers/hcp/connection"
 )
 
-// decodeRecord unmarshals a JSON:API resource object and decodes its
-// attributes, exercising exactly the path the resource code takes.
+// decodeRecord unmarshals a JSON:API resource object and decodes it into a
+// go-tfe record type, exercising exactly the path the resource code takes.
+//
+// The payloads below are unchanged from when this provider decoded them with
+// hand-written struct tags. They now pin go-tfe's tags instead, which is the
+// point: the same fixtures that caught a mistyped tag here would catch a
+// wire-format contradiction in the vendor's types.
 func decodeRecord(t *testing.T, raw string, out any) connection.TfeRecord {
+	t.Helper()
+	var rec connection.TfeRecord
+	require.NoError(t, json.Unmarshal([]byte(raw), &rec))
+	require.NoError(t, decodeTfeRecord(rec, out))
+	return rec
+}
+
+// decodeGaps decodes the attributes go-tfe cannot express (see the tfe*Gaps
+// types) straight off the record.
+func decodeGaps(t *testing.T, raw string, out any) connection.TfeRecord {
 	t.Helper()
 	var rec connection.TfeRecord
 	require.NoError(t, json.Unmarshal([]byte(raw), &rec))
@@ -61,6 +77,43 @@ func TestTfeTimeDecoding(t *testing.T) {
 	}
 }
 
+func TestTimePtrNullsTheZeroInstant(t *testing.T) {
+	// go-tfe types every timestamp as a bare time.Time, so an absent or null
+	// value arrives as the zero instant. Reporting that would put
+	// 1 January year 1 in a `time` field as though it were a real date.
+	assert.Nil(t, timePtr(time.Time{}))
+
+	real := time.Date(2024, 2, 1, 9, 0, 0, 0, time.UTC)
+	got := timePtr(real)
+	require.NotNil(t, got)
+	assert.True(t, got.Equal(real))
+}
+
+func TestSanitizeTimestampsKeepsOneBadValueFromBlindingTheRecord(t *testing.T) {
+	// go-tfe's decoder rejects the entire record when a single timestamp is
+	// malformed, empty, or a number, taking every other field down with it.
+	// The offending value is nulled instead, so the record stays readable and
+	// the timestamp alone reports null.
+	for _, tc := range []struct{ name, raw string }{
+		{"malformed", `{"id":"ws-1","type":"workspaces","attributes":{"name":"prod","updated-at":"not-a-date"}}`},
+		{"empty string", `{"id":"ws-1","type":"workspaces","attributes":{"name":"prod","updated-at":""}}`},
+		{"number", `{"id":"ws-1","type":"workspaces","attributes":{"name":"prod","updated-at":1767322845}}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var ws tfe.Workspace
+			decodeRecord(t, tc.raw, &ws)
+			assert.Equal(t, "prod", ws.Name, "the rest of the record must survive one bad timestamp")
+			assert.Nil(t, timePtr(ws.UpdatedAt), "an unreadable timestamp must report null")
+		})
+	}
+
+	// A good timestamp is left alone.
+	var ws tfe.Workspace
+	decodeRecord(t, `{"id":"ws-1","type":"workspaces","attributes":{"name":"prod","updated-at":"2024-02-01T09:00:00Z"}}`, &ws)
+	require.NotNil(t, timePtr(ws.UpdatedAt))
+	assert.Equal(t, 2024, ws.UpdatedAt.Year())
+}
+
 func TestDerefStr(t *testing.T) {
 	assert.Equal(t, "", derefStr(nil))
 	s := "value"
@@ -99,39 +152,56 @@ const orgPayload = `{
 }`
 
 func TestOrganizationAttributeTags(t *testing.T) {
-	var attrs tfeOrganizationAttrs
-	rec := decodeRecord(t, orgPayload, &attrs)
+	var org tfe.Organization
+	decodeRecord(t, orgPayload, &org)
 
-	assert.Equal(t, "acme", attrs.Name)
-	assert.Equal(t, "org-Hu9WT3XkVQpMWkBb", attrs.ExternalID)
-	assert.Equal(t, "ops@acme.example", attrs.Email)
-	assert.Equal(t, "two_factor_mandatory", attrs.CollaboratorAuthPolicy)
+	var gaps tfeOrganizationGaps
+	decodeGaps(t, orgPayload, &gaps)
+
+	assert.Equal(t, "acme", org.Name)
+	assert.Equal(t, "org-Hu9WT3XkVQpMWkBb", org.ExternalID)
+	assert.Equal(t, "ops@acme.example", org.Email)
+	assert.Equal(t, "two_factor_mandatory", string(org.CollaboratorAuthPolicy))
 	// Every security-relevant tag is pinned: a mistyped tag would decode to
 	// the zero value and report a hardened organization as unhardened.
-	assert.True(t, attrs.TwoFactorConformant)
-	assert.True(t, attrs.SamlEnabled)
-	assert.True(t, attrs.CostEstimationEnabled)
-	assert.True(t, attrs.AssessmentsEnforced)
-	assert.True(t, attrs.AllowForceDeleteWorkspaces)
-	assert.True(t, attrs.PlanExpired)
-	assert.Equal(t, "agent", attrs.DefaultExecutionMode)
-	require.NotNil(t, attrs.OwnersTeamSamlRoleID)
-	assert.Equal(t, "owners-role", *attrs.OwnersTeamSamlRoleID)
-	require.NotNil(t, attrs.SessionTimeout)
-	assert.Equal(t, int64(20160), *attrs.SessionTimeout)
-	require.NotNil(t, attrs.SessionRemember)
-	assert.Equal(t, int64(20161), *attrs.SessionRemember)
-	require.NotNil(t, attrs.CreatedAt.Time)
+	assert.True(t, org.TwoFactorConformant)
+	assert.True(t, org.SAMLEnabled)
+	assert.True(t, org.CostEstimationEnabled)
+	assert.True(t, org.AssessmentsEnforced)
+	assert.True(t, org.AllowForceDeleteWorkspaces)
+	assert.True(t, gaps.PlanExpired)
+	assert.Equal(t, "agent", org.DefaultExecutionMode)
+	require.NotNil(t, gaps.OwnersTeamSamlRoleID)
+	assert.Equal(t, "owners-role", *gaps.OwnersTeamSamlRoleID)
+	require.NotNil(t, gaps.SessionTimeout)
+	assert.Equal(t, int64(20160), *gaps.SessionTimeout)
+	require.NotNil(t, gaps.SessionRemember)
+	assert.Equal(t, int64(20161), *gaps.SessionRemember)
+	require.NotNil(t, timePtr(org.CreatedAt))
+}
 
-	assert.Equal(t, "team-owners", relOneID(rec, "owners-team"))
+func TestOrganizationHasNoOwnersTeamRelationship(t *testing.T) {
+	// The organization record carries no owners-team relationship: it appears
+	// neither in go-tfe's Organization type nor in the vendor's OpenAPI
+	// specification. ownersTeam therefore resolves the team by name, and this
+	// records why the relationship read was removed rather than kept as a
+	// preferred path that never ran.
+	var org tfe.Organization
+	decodeRecord(t, orgPayload, &org)
+
+	assert.Nil(t, org.DefaultAgentPool)
+	assert.Nil(t, org.DefaultProject)
 }
 
 func TestOrganizationOptionalsStayNull(t *testing.T) {
 	// The API reports "use the installation default" as null. Reporting 0
 	// instead would claim a zero-minute session lifetime, which is a real
 	// setting and a wrong one.
-	var attrs tfeOrganizationAttrs
-	rec := decodeRecord(t, `{
+	//
+	// go-tfe types these as plain int and string, so null and zero are
+	// indistinguishable in its struct. That is exactly why they are read from
+	// tfeOrganizationGaps rather than from the vendor type.
+	const raw = `{
       "id":"acme","type":"organizations",
       "attributes":{
         "name":"acme",
@@ -141,14 +211,20 @@ func TestOrganizationOptionalsStayNull(t *testing.T) {
         "created-at":null,
         "collaborator-auth-policy":"password"
       }
-    }`, &attrs)
+    }`
 
-	assert.Nil(t, attrs.SessionTimeout)
-	assert.Nil(t, attrs.SessionRemember)
-	assert.Nil(t, attrs.OwnersTeamSamlRoleID)
-	assert.Nil(t, attrs.CreatedAt.Time)
-	assert.False(t, attrs.TwoFactorConformant)
-	assert.Equal(t, "", relOneID(rec, "owners-team"))
+	var org tfe.Organization
+	decodeRecord(t, raw, &org)
+
+	var gaps tfeOrganizationGaps
+	decodeGaps(t, raw, &gaps)
+
+	assert.Nil(t, gaps.SessionTimeout)
+	assert.Nil(t, gaps.SessionRemember)
+	assert.Nil(t, gaps.OwnersTeamSamlRoleID)
+	assert.Nil(t, timePtr(org.CreatedAt))
+	assert.False(t, org.TwoFactorConformant)
+	assert.False(t, gaps.PlanExpired)
 }
 
 func TestTerraformTwoFactorRequired(t *testing.T) {
@@ -209,34 +285,34 @@ const workspacePayload = `{
 }`
 
 func TestWorkspaceAttributeTags(t *testing.T) {
-	var attrs tfeWorkspaceAttrs
-	rec := decodeRecord(t, workspacePayload, &attrs)
+	var ws tfe.Workspace
+	rec := decodeRecord(t, workspacePayload, &ws)
 
-	assert.Equal(t, "prod-network", attrs.Name)
-	assert.Equal(t, "agent", attrs.ExecutionMode)
-	assert.Equal(t, "1.9.5", attrs.TerraformVersion)
-	assert.True(t, attrs.AutoApply)
-	assert.True(t, attrs.AutoApplyRunTrigger)
-	assert.True(t, attrs.Locked)
-	assert.True(t, attrs.SpeculativeEnabled)
-	assert.True(t, attrs.GlobalRemoteState)
-	assert.True(t, attrs.AllowDestroyPlan)
-	assert.True(t, attrs.FileTriggersEnabled)
-	assert.True(t, attrs.QueueAllRuns)
-	assert.True(t, attrs.StructuredRunOutputEnabled)
-	assert.True(t, attrs.AssessmentsEnabled)
-	assert.Equal(t, int64(42), attrs.ResourceCount)
-	assert.Equal(t, []string{"prod", "network"}, attrs.TagNames)
-	assert.Equal(t, "envs/prod", derefStr(attrs.WorkingDirectory))
-	assert.Equal(t, "production network", derefStr(attrs.Description))
-	require.NotNil(t, attrs.CreatedAt.Time)
-	require.NotNil(t, attrs.UpdatedAt.Time)
+	assert.Equal(t, "prod-network", ws.Name)
+	assert.Equal(t, "agent", ws.ExecutionMode)
+	assert.Equal(t, "1.9.5", ws.TerraformVersion)
+	assert.True(t, ws.AutoApply)
+	assert.True(t, ws.AutoApplyRunTrigger)
+	assert.True(t, ws.Locked)
+	assert.True(t, ws.SpeculativeEnabled)
+	assert.True(t, ws.GlobalRemoteState)
+	assert.True(t, ws.AllowDestroyPlan)
+	assert.True(t, ws.FileTriggersEnabled)
+	assert.True(t, ws.QueueAllRuns)
+	assert.True(t, ws.StructuredRunOutputEnabled)
+	assert.True(t, ws.AssessmentsEnabled)
+	assert.Equal(t, int64(42), int64(ws.ResourceCount))
+	assert.Equal(t, []string{"prod", "network"}, ws.TagNames)
+	assert.Equal(t, "envs/prod", ws.WorkingDirectory)
+	assert.Equal(t, "production network", ws.Description)
+	require.NotNil(t, timePtr(ws.CreatedAt))
+	require.NotNil(t, timePtr(ws.UpdatedAt))
 
-	require.NotNil(t, attrs.VCSRepo)
-	assert.Equal(t, "acme/infrastructure", attrs.VCSRepo.Identifier)
-	assert.Equal(t, "main", attrs.VCSRepo.Branch)
-	assert.Equal(t, "github", attrs.VCSRepo.ServiceProvider)
-	assert.True(t, attrs.VCSRepo.IngressSubmodules)
+	require.NotNil(t, ws.VCSRepo)
+	assert.Equal(t, "acme/infrastructure", ws.VCSRepo.Identifier)
+	assert.Equal(t, "main", ws.VCSRepo.Branch)
+	assert.Equal(t, "github", ws.VCSRepo.ServiceProvider)
+	assert.True(t, ws.VCSRepo.IngressSubmodules)
 
 	assert.Equal(t, "acme", relOneID(rec, "organization"))
 	assert.Equal(t, "apool-1", relOneID(rec, "agent-pool"))
@@ -245,7 +321,7 @@ func TestWorkspaceAttributeTags(t *testing.T) {
 func TestWorkspaceCLIDriven(t *testing.T) {
 	// A CLI-driven workspace carries no VCS repo and null strings where the
 	// VCS-driven one carries values.
-	var attrs tfeWorkspaceAttrs
+	var ws tfe.Workspace
 	rec := decodeRecord(t, `{
       "id":"ws-cli","type":"workspaces",
       "attributes":{
@@ -261,16 +337,18 @@ func TestWorkspaceCLIDriven(t *testing.T) {
         "created-at":"2021-06-03T14:34:40.492Z"
       },
       "relationships":{"organization":{"data":{"id":"acme","type":"organizations"}}}
-    }`, &attrs)
+    }`, &ws)
 
-	assert.Nil(t, attrs.VCSRepo)
-	assert.Nil(t, attrs.Description)
-	assert.Nil(t, attrs.WorkingDirectory)
-	assert.Equal(t, "", derefStr(attrs.Description))
-	assert.False(t, attrs.AutoApply)
-	assert.False(t, attrs.Locked)
-	assert.False(t, attrs.GlobalRemoteState)
-	assert.Nil(t, attrs.UpdatedAt.Time)
+	assert.Nil(t, ws.VCSRepo)
+	// go-tfe types these as plain strings, so a null arrives as "". That is
+	// the value the schema reported before this change too, because the
+	// resource passed derefStr over an optional string.
+	assert.Equal(t, "", ws.Description)
+	assert.Equal(t, "", ws.WorkingDirectory)
+	assert.False(t, ws.AutoApply)
+	assert.False(t, ws.Locked)
+	assert.False(t, ws.GlobalRemoteState)
+	assert.Nil(t, timePtr(ws.UpdatedAt))
 	assert.Equal(t, "", relOneID(rec, "agent-pool"))
 	assert.Empty(t, relManyIDs(rec, "workspaces"))
 }
@@ -278,14 +356,14 @@ func TestWorkspaceCLIDriven(t *testing.T) {
 func TestTerraformVCSDriven(t *testing.T) {
 	tests := []struct {
 		name string
-		repo *tfeVCSRepo
+		repo *tfe.VCSRepo
 		want bool
 	}{
 		{"no repo", nil, false},
-		{"empty repo object", &tfeVCSRepo{}, false},
-		{"identifier", &tfeVCSRepo{Identifier: "acme/infra"}, true},
-		{"display identifier only", &tfeVCSRepo{DisplayIdentifier: "acme/infra"}, true},
-		{"branch without identifier", &tfeVCSRepo{Branch: "main"}, false},
+		{"empty repo object", &tfe.VCSRepo{}, false},
+		{"identifier", &tfe.VCSRepo{Identifier: "acme/infra"}, true},
+		{"display identifier only", &tfe.VCSRepo{DisplayIdentifier: "acme/infra"}, true},
+		{"branch without identifier", &tfe.VCSRepo{Branch: "main"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -296,11 +374,11 @@ func TestTerraformVCSDriven(t *testing.T) {
 
 func TestTerraformVCSIdentifier(t *testing.T) {
 	assert.Equal(t, "", terraformVCSIdentifier(nil))
-	assert.Equal(t, "", terraformVCSIdentifier(&tfeVCSRepo{}))
-	assert.Equal(t, "acme/infra", terraformVCSIdentifier(&tfeVCSRepo{Identifier: "acme/infra"}))
-	assert.Equal(t, "acme/display", terraformVCSIdentifier(&tfeVCSRepo{DisplayIdentifier: "acme/display"}))
+	assert.Equal(t, "", terraformVCSIdentifier(&tfe.VCSRepo{}))
+	assert.Equal(t, "acme/infra", terraformVCSIdentifier(&tfe.VCSRepo{Identifier: "acme/infra"}))
+	assert.Equal(t, "acme/display", terraformVCSIdentifier(&tfe.VCSRepo{DisplayIdentifier: "acme/display"}))
 	// The canonical identifier wins when both are present.
-	assert.Equal(t, "acme/infra", terraformVCSIdentifier(&tfeVCSRepo{
+	assert.Equal(t, "acme/infra", terraformVCSIdentifier(&tfe.VCSRepo{
 		Identifier: "acme/infra", DisplayIdentifier: "acme/display",
 	}))
 }
@@ -310,7 +388,7 @@ func TestTerraformVCSIdentifier(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestTeamAccessAttributeTags(t *testing.T) {
-	var attrs tfeTeamAccessAttrs
+	var grant tfe.TeamAccess
 	rec := decodeRecord(t, `{
       "id":"tws-Hu9WT3XkVQpMWkBb","type":"team-workspaces",
       "attributes":{
@@ -326,18 +404,33 @@ func TestTeamAccessAttributeTags(t *testing.T) {
         "team":{"data":{"id":"team-1","type":"teams"}},
         "workspace":{"data":{"id":"ws-1","type":"workspaces"}}
       }
-    }`, &attrs)
+    }`, &grant)
 
-	assert.Equal(t, "custom", attrs.Access)
-	assert.Equal(t, "apply", attrs.Runs)
-	assert.Equal(t, "write", attrs.Variables)
-	assert.Equal(t, "read-outputs", attrs.StateVersions)
-	assert.Equal(t, "read", attrs.SentinelMocks)
-	assert.True(t, attrs.WorkspaceLocking)
-	assert.True(t, attrs.RunTasks)
+	assert.Equal(t, "custom", string(grant.Access))
+	assert.Equal(t, "apply", string(grant.Runs))
+	assert.Equal(t, "write", string(grant.Variables))
+	assert.Equal(t, "read-outputs", string(grant.StateVersions))
+	assert.Equal(t, "read", string(grant.SentinelMocks))
+	assert.True(t, grant.WorkspaceLocking)
+	assert.True(t, grant.RunTasks)
 
 	assert.Equal(t, "team-1", relOneID(rec, "team"))
 	assert.Equal(t, "ws-1", relOneID(rec, "workspace"))
+}
+
+func TestTeamAccessKeepsUnknownRoleVerbatim(t *testing.T) {
+	// go-tfe types these as named string types, so a role HashiCorp adds later
+	// still arrives verbatim rather than being dropped. That matters because
+	// the schema reports `access` as a plain string, and canApply has to fail
+	// closed on a role it does not recognise rather than on an empty one.
+	var grant tfe.TeamAccess
+	decodeRecord(t, `{
+      "id":"tws-2","type":"team-workspaces",
+      "attributes":{"access":"some-future-role","runs":"apply"}
+    }`, &grant)
+
+	assert.Equal(t, "some-future-role", string(grant.Access))
+	assert.False(t, terraformCanApply(string(grant.Access), string(grant.Runs)))
 }
 
 func TestTerraformCanApply(t *testing.T) {
@@ -375,7 +468,7 @@ func TestVariableAttributeTags(t *testing.T) {
 	// The sensitive flag is the single most consequential tag in this
 	// provider: a mistyped tag reads false on a sensitive variable and an
 	// audit for unmarked secrets passes on a workspace full of them.
-	var sensitive tfeVariableAttrs
+	var sensitive tfe.Variable
 	decodeRecord(t, `{
       "id":"var-1","type":"vars",
       "attributes":{
@@ -391,11 +484,11 @@ func TestVariableAttributeTags(t *testing.T) {
 
 	assert.Equal(t, "AWS_SECRET_ACCESS_KEY", sensitive.Key)
 	assert.True(t, sensitive.Sensitive)
-	assert.Equal(t, "env", sensitive.Category)
+	assert.Equal(t, "env", string(sensitive.Category))
 	assert.False(t, sensitive.HCL)
-	assert.Equal(t, "deploy credential", derefStr(sensitive.Description))
+	assert.Equal(t, "deploy credential", sensitive.Description)
 
-	var plain tfeVariableAttrs
+	var plain tfe.Variable
 	decodeRecord(t, `{
       "id":"var-2","type":"vars",
       "attributes":{
@@ -410,36 +503,40 @@ func TestVariableAttributeTags(t *testing.T) {
 
 	assert.Equal(t, "region", plain.Key)
 	assert.False(t, plain.Sensitive)
-	assert.Equal(t, "terraform", plain.Category)
+	assert.Equal(t, "terraform", string(plain.Category))
 	assert.True(t, plain.HCL)
-	assert.Nil(t, plain.Description)
-	assert.Equal(t, "", derefStr(plain.Description))
+	assert.Equal(t, "", plain.Description)
 }
 
 func TestVariableNeverCarriesItsValue(t *testing.T) {
-	// The record shape deliberately has no field for the variable value, so a
-	// value the API does return cannot reach a report. Re-marshaling what was
-	// decoded is the sweep: the secret must not survive the round trip.
+	// go-tfe's Variable type does have a Value field, unlike the hand-written
+	// record type it replaced. scrubSecrets clears it at the decode
+	// chokepoint, so there is no populated value for a later field addition to
+	// reach. Re-marshaling what was decoded is the sweep: the secret must not
+	// survive the round trip.
 	const secret = "super-secret-token-value"
-	var attrs tfeVariableAttrs
+	var variable tfe.Variable
 	decodeRecord(t, `{
       "id":"var-3","type":"vars",
       "attributes":{"key":"TOKEN","value":"`+secret+`","sensitive":false,"category":"env","hcl":false}
-    }`, &attrs)
+    }`, &variable)
 
-	out, err := json.Marshal(attrs)
+	assert.Equal(t, "", variable.Value, "the decode chokepoint must clear the variable value")
+
+	out, err := json.Marshal(variable)
 	require.NoError(t, err)
 	assert.NotContains(t, string(out), secret,
 		"the variable value must never be retained by the resource")
+	// Negative control: a sweep that passes because nothing was decoded proves
+	// nothing at all.
+	assert.Contains(t, string(out), "TOKEN", "the record must actually have been read")
 }
 
 // ---------------------------------------------------------------------------
 // teams and team tokens
 // ---------------------------------------------------------------------------
 
-func TestTeamAttributeTags(t *testing.T) {
-	var attrs tfeTeamAttrs
-	rec := decodeRecord(t, `{
+const teamPayload = `{
       "id":"team-Hu9WT3XkVQpMWkBb","type":"teams",
       "attributes":{
         "name":"platform",
@@ -466,16 +563,23 @@ func TestTeamAttributeTags(t *testing.T) {
         }
       },
       "relationships":{"organization":{"data":{"id":"acme","type":"organizations"}}}
-    }`, &attrs)
+    }`
 
-	assert.Equal(t, "platform", attrs.Name)
-	assert.Equal(t, int64(7), attrs.UsersCount)
-	assert.Equal(t, "secret", attrs.Visibility)
-	assert.Equal(t, "sso-platform", derefStr(attrs.SSOTeamID))
-	assert.True(t, attrs.AllowMemberTokenManagement)
+func TestTeamAttributeTags(t *testing.T) {
+	var team tfe.Team
+	rec := decodeRecord(t, teamPayload, &team)
 
-	require.NotNil(t, attrs.OrganizationAccess)
-	access := *attrs.OrganizationAccess
+	var gaps tfeTeamGaps
+	decodeGaps(t, teamPayload, &gaps)
+
+	assert.Equal(t, "platform", team.Name)
+	assert.Equal(t, int64(7), int64(team.UserCount))
+	assert.Equal(t, "secret", team.Visibility)
+	assert.Equal(t, "sso-platform", derefStr(gaps.SSOTeamID))
+	assert.True(t, team.AllowMemberTokenManagement)
+
+	require.NotNil(t, team.OrganizationAccess)
+	access := *team.OrganizationAccess
 	// Every permission tag is pinned individually: a single mistyped tag
 	// would report a fully privileged team as holding no privilege at all.
 	assert.True(t, access.ManagePolicies)
@@ -498,20 +602,25 @@ func TestTeamAttributeTags(t *testing.T) {
 }
 
 func TestTeamWithoutOrganizationAccess(t *testing.T) {
-	var attrs tfeTeamAttrs
-	decodeRecord(t, `{
+	const raw = `{
       "id":"team-2","type":"teams",
       "attributes":{"name":"readers","users-count":0,"visibility":"organization","sso-team-id":null}
-    }`, &attrs)
+    }`
 
-	assert.Nil(t, attrs.OrganizationAccess)
-	assert.Nil(t, attrs.SSOTeamID)
-	assert.Equal(t, "", derefStr(attrs.SSOTeamID))
-	assert.Equal(t, int64(0), attrs.UsersCount)
+	var team tfe.Team
+	decodeRecord(t, raw, &team)
+
+	var gaps tfeTeamGaps
+	decodeGaps(t, raw, &gaps)
+
+	assert.Nil(t, team.OrganizationAccess)
+	assert.Nil(t, gaps.SSOTeamID)
+	assert.Equal(t, "", derefStr(gaps.SSOTeamID))
+	assert.Equal(t, int64(0), int64(team.UserCount))
 }
 
 func TestTeamTokenAttributeTags(t *testing.T) {
-	var attrs tfeTeamTokenAttrs
+	var token tfe.TeamToken
 	decodeRecord(t, `{
       "id":"at-Hu9WT3XkVQpMWkBb","type":"authentication-tokens",
       "attributes":{
@@ -521,53 +630,57 @@ func TestTeamTokenAttributeTags(t *testing.T) {
         "description":"ci pipeline",
         "token":null
       }
-    }`, &attrs)
+    }`, &token)
 
-	require.NotNil(t, attrs.CreatedAt.Time)
-	assert.Equal(t, 2023, attrs.CreatedAt.Time.Year())
-	require.NotNil(t, attrs.LastUsedAt.Time)
-	assert.Equal(t, 2024, attrs.LastUsedAt.Time.Year())
-	require.NotNil(t, attrs.ExpiredAt.Time)
-	assert.Equal(t, "ci pipeline", derefStr(attrs.Description))
+	require.NotNil(t, timePtr(token.CreatedAt))
+	assert.Equal(t, 2023, token.CreatedAt.Year())
+	require.NotNil(t, timePtr(token.LastUsedAt))
+	assert.Equal(t, 2024, token.LastUsedAt.Year())
+	require.NotNil(t, timePtr(token.ExpiredAt))
+	assert.Equal(t, "ci pipeline", derefStr(token.Description))
 }
 
 func TestTeamTokenNeverUsedOrExpiring(t *testing.T) {
 	// A never-used, never-expiring token reports null for both times. Reading
 	// them as the zero instant would date a fresh token to year 1 and make a
 	// dormancy audit fire on every token in the estate.
-	var attrs tfeTeamTokenAttrs
+	var token tfe.TeamToken
 	decodeRecord(t, `{
       "id":"at-2","type":"authentication-tokens",
       "attributes":{"created-at":"2023-01-05T10:00:00Z","last-used-at":null,"expired-at":null,"description":null}
-    }`, &attrs)
+    }`, &token)
 
-	require.NotNil(t, attrs.CreatedAt.Time)
-	assert.Nil(t, attrs.LastUsedAt.Time)
-	assert.Nil(t, attrs.ExpiredAt.Time)
-	assert.Equal(t, "", derefStr(attrs.Description))
+	require.NotNil(t, timePtr(token.CreatedAt))
+	assert.Nil(t, timePtr(token.LastUsedAt))
+	assert.Nil(t, timePtr(token.ExpiredAt))
+	assert.Equal(t, "", derefStr(token.Description))
 }
 
 func TestTeamTokenNeverCarriesItsSecret(t *testing.T) {
+	// go-tfe's TeamToken type does have a Token field, unlike the hand-written
+	// record type it replaced.
 	const secret = "atlasv1.SUPERSECRETTOKEN"
-	var attrs tfeTeamTokenAttrs
+	var token tfe.TeamToken
 	decodeRecord(t, `{
       "id":"at-3","type":"authentication-tokens",
-      "attributes":{"created-at":"2023-01-05T10:00:00Z","token":"`+secret+`"}
-    }`, &attrs)
+      "attributes":{"created-at":"2023-01-05T10:00:00Z","token":"`+secret+`","description":"ci"}
+    }`, &token)
 
-	out, err := json.Marshal(attrs)
+	assert.Equal(t, "", token.Token, "the decode chokepoint must clear the token secret")
+
+	out, err := json.Marshal(token)
 	require.NoError(t, err)
 	assert.NotContains(t, string(out), secret,
 		"a team token secret must never be retained by the resource")
+	// Negative control, as above.
+	assert.Contains(t, string(out), "ci", "the record must actually have been read")
 }
 
 // ---------------------------------------------------------------------------
 // policy sets and policies
 // ---------------------------------------------------------------------------
 
-func TestPolicySetAttributeTags(t *testing.T) {
-	var attrs tfePolicySetAttrs
-	rec := decodeRecord(t, `{
+const policySetPayload = `{
       "id":"polset-Hu9WT3XkVQpMWkBb","type":"policy-sets",
       "attributes":{
         "name":"production",
@@ -587,28 +700,34 @@ func TestPolicySetAttributeTags(t *testing.T) {
         "policies":{"data":[{"id":"pol-1","type":"policies"},{"id":"pol-2","type":"policies"}]},
         "workspaces":{"data":[]}
       }
-    }`, &attrs)
+    }`
 
-	assert.Equal(t, "production", attrs.Name)
-	assert.Equal(t, "sentinel", attrs.Kind)
-	assert.True(t, attrs.Global)
-	assert.Equal(t, int64(3), attrs.PolicyCount)
-	assert.Equal(t, int64(0), attrs.WorkspaceCount)
-	assert.True(t, attrs.Versioned)
-	assert.Equal(t, "policies/prod", derefStr(attrs.PoliciesPath))
-	assert.True(t, attrs.AgentEnabled)
-	require.NotNil(t, attrs.Overridable)
-	assert.True(t, *attrs.Overridable)
-	require.NotNil(t, attrs.CreatedAt.Time)
-	require.NotNil(t, attrs.UpdatedAt.Time)
+func TestPolicySetAttributeTags(t *testing.T) {
+	var set tfe.PolicySet
+	rec := decodeRecord(t, policySetPayload, &set)
+
+	var gaps tfePolicySetGaps
+	decodeGaps(t, policySetPayload, &gaps)
+
+	assert.Equal(t, "production", set.Name)
+	assert.Equal(t, "sentinel", string(set.Kind))
+	assert.True(t, set.Global)
+	assert.Equal(t, int64(3), int64(set.PolicyCount))
+	assert.Equal(t, int64(0), int64(set.WorkspaceCount))
+	assert.True(t, gaps.Versioned)
+	assert.Equal(t, "policies/prod", set.PoliciesPath)
+	assert.True(t, set.AgentEnabled)
+	require.NotNil(t, set.Overridable)
+	assert.True(t, *set.Overridable)
+	require.NotNil(t, timePtr(set.CreatedAt))
+	require.NotNil(t, timePtr(set.UpdatedAt))
 
 	assert.Equal(t, []string{"pol-1", "pol-2"}, relManyIDs(rec, "policies"))
 	assert.Empty(t, relManyIDs(rec, "workspaces"))
 }
 
 func TestPolicySetScopedToWorkspaces(t *testing.T) {
-	var attrs tfePolicySetAttrs
-	rec := decodeRecord(t, `{
+	const raw = `{
       "id":"polset-2","type":"policy-sets",
       "attributes":{
         "name":"staging","description":null,"kind":"opa","global":false,
@@ -618,19 +737,26 @@ func TestPolicySetScopedToWorkspaces(t *testing.T) {
       "relationships":{
         "workspaces":{"data":[{"id":"ws-1","type":"workspaces"},{"id":"ws-2","type":"workspaces"}]}
       }
-    }`, &attrs)
+    }`
 
-	assert.False(t, attrs.Global)
-	assert.Equal(t, "opa", attrs.Kind)
-	assert.Nil(t, attrs.Overridable)
-	assert.Nil(t, attrs.PoliciesPath)
-	assert.Nil(t, attrs.CreatedAt.Time)
+	var set tfe.PolicySet
+	rec := decodeRecord(t, raw, &set)
+
+	var gaps tfePolicySetGaps
+	decodeGaps(t, raw, &gaps)
+
+	assert.False(t, set.Global)
+	assert.Equal(t, "opa", string(set.Kind))
+	assert.Nil(t, set.Overridable)
+	assert.Equal(t, "", set.PoliciesPath)
+	assert.False(t, gaps.Versioned)
+	assert.Nil(t, timePtr(set.CreatedAt))
 	assert.Equal(t, []string{"ws-1", "ws-2"}, relManyIDs(rec, "workspaces"))
 	assert.Empty(t, relManyIDs(rec, "policies"))
 }
 
 func TestPolicyAttributeTags(t *testing.T) {
-	var attrs tfePolicyAttrs
+	var policy tfe.Policy
 	rec := decodeRecord(t, `{
       "id":"pol-Hu9WT3XkVQpMWkBb","type":"policies",
       "attributes":{
@@ -643,17 +769,17 @@ func TestPolicyAttributeTags(t *testing.T) {
         "updated-at":"2024-06-01T00:00:00Z"
       },
       "relationships":{"organization":{"data":{"id":"acme","type":"organizations"}}}
-    }`, &attrs)
+    }`, &policy)
 
-	assert.Equal(t, "no-public-buckets", attrs.Name)
-	assert.Equal(t, "blocks public buckets", derefStr(attrs.Description))
-	assert.Equal(t, "sentinel", attrs.Kind)
-	assert.Equal(t, "hard-mandatory", attrs.EnforcementLevel)
-	require.Len(t, attrs.Enforce, 1)
-	assert.Equal(t, "hard-mandatory", attrs.Enforce[0].Mode)
-	assert.Equal(t, "no-public-buckets.sentinel", attrs.Enforce[0].Path)
-	assert.Equal(t, int64(2), attrs.PolicySetCount)
-	require.NotNil(t, attrs.UpdatedAt.Time)
+	assert.Equal(t, "no-public-buckets", policy.Name)
+	assert.Equal(t, "blocks public buckets", policy.Description)
+	assert.Equal(t, "sentinel", string(policy.Kind))
+	assert.Equal(t, "hard-mandatory", string(policy.EnforcementLevel))
+	require.Len(t, policy.Enforce, 1)
+	assert.Equal(t, "hard-mandatory", string(policy.Enforce[0].Mode))
+	assert.Equal(t, "no-public-buckets.sentinel", policy.Enforce[0].Path)
+	assert.Equal(t, int64(2), int64(policy.PolicySetCount))
+	require.NotNil(t, timePtr(policy.UpdatedAt))
 	assert.Equal(t, "acme", relOneID(rec, "organization"))
 }
 
@@ -661,16 +787,19 @@ func TestTerraformEnforcementLevel(t *testing.T) {
 	tests := []struct {
 		name    string
 		level   string
-		enforce []tfePolicyEnforcement
+		enforce []*tfe.Enforcement
 		want    string
 	}{
-		{"top level wins", "advisory", []tfePolicyEnforcement{{Mode: "hard-mandatory"}}, "advisory"},
-		{"legacy fallback", "", []tfePolicyEnforcement{{Path: "p.sentinel", Mode: "soft-mandatory"}}, "soft-mandatory"},
-		{"legacy first non-empty", "", []tfePolicyEnforcement{{Mode: ""}, {Mode: "hard-mandatory"}}, "hard-mandatory"},
+		{"top level wins", "advisory", []*tfe.Enforcement{{Mode: "hard-mandatory"}}, "advisory"},
+		{"legacy fallback", "", []*tfe.Enforcement{{Path: "p.sentinel", Mode: "soft-mandatory"}}, "soft-mandatory"},
+		{"legacy first non-empty", "", []*tfe.Enforcement{{Mode: ""}, {Mode: "hard-mandatory"}}, "hard-mandatory"},
 		{"nothing reported", "", nil, ""},
-		{"empty enforce list", "", []tfePolicyEnforcement{}, ""},
-		{"enforce with no modes", "", []tfePolicyEnforcement{{Path: "p.sentinel"}}, ""},
+		{"empty enforce list", "", []*tfe.Enforcement{}, ""},
+		{"enforce with no modes", "", []*tfe.Enforcement{{Path: "p.sentinel"}}, ""},
 		{"opa mandatory", "mandatory", nil, "mandatory"},
+		// go-tfe's Enforce is a slice of pointers, so a null entry is
+		// representable where the previous value type made it impossible.
+		{"nil entry skipped", "", []*tfe.Enforcement{nil, {Mode: "advisory"}}, "advisory"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -682,8 +811,9 @@ func TestTerraformEnforcementLevel(t *testing.T) {
 func TestPolicyLegacyEnforceOnly(t *testing.T) {
 	// An older Sentinel policy reports no top-level enforcement-level at all;
 	// falling back to the enforce list is what keeps such a policy from
-	// reading as unenforced.
-	var attrs tfePolicyAttrs
+	// reading as unenforced. go-tfe marks Enforce deprecated in favour of
+	// EnforcementLevel, which is exactly this preference order.
+	var policy tfe.Policy
 	decodeRecord(t, `{
       "id":"pol-legacy","type":"policies",
       "attributes":{
@@ -691,10 +821,10 @@ func TestPolicyLegacyEnforceOnly(t *testing.T) {
         "enforce":[{"path":"legacy.sentinel","mode":"hard-mandatory"}],
         "policy-set-count":1
       }
-    }`, &attrs)
+    }`, &policy)
 
-	assert.Equal(t, "", attrs.EnforcementLevel)
-	level := terraformEnforcementLevel(attrs.EnforcementLevel, attrs.Enforce)
+	assert.Equal(t, "", string(policy.EnforcementLevel))
+	level := terraformEnforcementLevel(string(policy.EnforcementLevel), policy.Enforce)
 	assert.Equal(t, "hard-mandatory", level)
 	assert.True(t, terraformPolicyBlocking(level))
 }
@@ -722,7 +852,7 @@ func TestTerraformPolicyBlocking(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAgentPoolAttributeTags(t *testing.T) {
-	var attrs tfeAgentPoolAttrs
+	var pool tfe.AgentPool
 	rec := decodeRecord(t, `{
       "id":"apool-Hu9WT3XkVQpMWkBb","type":"agent-pools",
       "attributes":{
@@ -735,27 +865,27 @@ func TestAgentPoolAttributeTags(t *testing.T) {
         "organization":{"data":{"id":"acme","type":"organizations"}},
         "allowed-workspaces":{"data":[{"id":"ws-1","type":"workspaces"}]}
       }
-    }`, &attrs)
+    }`, &pool)
 
-	assert.Equal(t, "prod-agents", attrs.Name)
-	assert.Equal(t, int64(4), attrs.AgentCount)
-	assert.False(t, attrs.OrganizationScoped)
-	require.NotNil(t, attrs.CreatedAt.Time)
+	assert.Equal(t, "prod-agents", pool.Name)
+	assert.Equal(t, int64(4), int64(pool.AgentCount))
+	assert.False(t, pool.OrganizationScoped)
+	require.NotNil(t, timePtr(pool.CreatedAt))
 	assert.Equal(t, "acme", relOneID(rec, "organization"))
 	assert.Equal(t, []string{"ws-1"}, relManyIDs(rec, "allowed-workspaces"))
 }
 
 func TestAgentPoolOrganizationScoped(t *testing.T) {
-	var attrs tfeAgentPoolAttrs
+	var pool tfe.AgentPool
 	rec := decodeRecord(t, `{
       "id":"apool-2","type":"agent-pools",
       "attributes":{"name":"shared","agent-count":0,"organization-scoped":true},
       "relationships":{"allowed-workspaces":{"data":[]}}
-    }`, &attrs)
+    }`, &pool)
 
-	assert.True(t, attrs.OrganizationScoped)
-	assert.Equal(t, int64(0), attrs.AgentCount)
-	assert.Nil(t, attrs.CreatedAt.Time)
+	assert.True(t, pool.OrganizationScoped)
+	assert.Equal(t, int64(0), int64(pool.AgentCount))
+	assert.Nil(t, timePtr(pool.CreatedAt))
 	assert.Empty(t, relManyIDs(rec, "allowed-workspaces"))
 }
 

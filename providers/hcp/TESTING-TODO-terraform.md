@@ -6,14 +6,76 @@ SPDX-License-Identifier: BUSL-1.1
 # TESTING TODO: `hcp.terraform.*` resources
 
 **Status: NOT VERIFIED AGAINST A LIVE TARGET.** Every `hcp.terraform.*` field on
-branch `claude/hcp-terraform-resources` was written from the HCP Terraform /
-Terraform Enterprise API v2 documentation and is covered only by unit tests
-against synthetic payloads. Per `new-resource` §5, that proves the decoding, not
-the resource: a fixture built from the documentation reproduces the
-documentation. This branch does not ship until somebody works through this file.
+branch `claude/hcp-terraform-resources` is covered only by unit tests against
+synthetic payloads. Per `new-resource` §5, that proves the decoding, not the
+resource. This branch does not ship until somebody works through this file.
+
+The attribute names are no longer guesses, which is a real change in the quality
+of the evidence but not a substitute for a live call. The record types now come
+from **`github.com/hashicorp/go-tfe v1.110.0`**, whose `jsonapi:"attr,…"` tags
+are vendor-maintained and exercised continuously by `terraform-provider-tfe`.
+Adopting them settled six of the twelve risks below outright, and proved two of
+them were **wrong in a way that produced wrong answers** (see R3 and R4). What
+remains unverified is what a live installation actually returns.
 
 This document is written to be executable by someone with zero context on the
 change. Work top to bottom.
+
+---
+
+## 0. What comes from go-tfe, and what deliberately does not
+
+**Adopted: the record types only.** `tfe.Organization`, `tfe.Workspace`,
+`tfe.VCSRepo`, `tfe.TeamAccess`, `tfe.Variable`, `tfe.Team`,
+`tfe.OrganizationAccess`, `tfe.TeamToken`, `tfe.PolicySet`, `tfe.Policy`,
+`tfe.Enforcement` and `tfe.AgentPool`, decoded through
+`github.com/hashicorp/jsonapi` by `TfeRecord.DecodeTyped`. That is where the
+value is: 132 hand-written struct tags became 6 (see below).
+
+**Kept local, on purpose.** Each of these is worse in go-tfe, so "simplifying"
+any of them onto the SDK would be a regression. If you are tempted, read this
+first:
+
+| kept | why go-tfe is worse |
+|---|---|
+| `List` and its page cap + stuck-cursor guards | **go-tfe has no pagination at all.** Every `List` method returns a single page and leaves the walk to the caller. There is no cap and no cursor guard anywhere in the SDK. |
+| `TfeError{StatusCode}` and the three classifiers | go-tfe maps only 401 and 404 onto sentinels. **A 403 becomes a bare `errors.New(<response body>)`** with no status, so classifying it would mean matching on message text, which `TestTfeErrorClassifiersRejectNonAPIErrors` forbids. |
+| `tfeTime` and `sanitizeTimestamps` | go-tfe types every timestamp as a bare `time.Time`, and its decoder **rejects the whole record** when one timestamp is malformed, empty, or numeric (`Only strings can be parsed as dates, ISO8601 timestamps`). One odd value would blind an entire collection. Unparseable timestamps are nulled before the typed decode instead. |
+| `timePtr` | an absent or null timestamp decodes to the zero instant, which would report 1 January year 1 as a real date. |
+| `tfeOrganizationGaps`, `tfeTeamGaps`, `tfePolicySetGaps` | the six attributes go-tfe cannot express, below. |
+| the request layer generally | keeping it is what lets `show_only_configured` and the team-token endpoint be fixed at all. |
+
+**The six fields go-tfe cannot supply**, for two distinct reasons:
+
+1. *Not modelled at all* — `plan-expired` (organization) and `versioned`
+   (policy set). Both are real: the vendor's own OpenAPI specification, which
+   `go-tfe/v2` is generated from, carries `planExpired` and `versioned`.
+2. *Modelled with a non-pointer type, so null collapses onto the zero value* —
+   `session-timeout`, `session-remember`, `owners-team-saml-role-id`
+   (organization) and `sso-team-id` (team). Reporting `0` for a session lifetime
+   nobody set, or `""` for a SAML role that does not exist, would invent a value
+   the API never gave.
+
+**Why v1 and not `go-tfe/v2`.** v1's own header says it is **"NO LONGER TESTED
+and SHOULD NOT BE EXTENDED"**, and new attributes will land in v2 first. It is
+still the right choice here, and the reasoning has to survive or somebody will
+"upgrade" us into a regression:
+
+- **v2's models cannot be decoded without v2's transport.** They are Kiota
+  generated and need a `ParseNode` from `kiota-serialization-json-go`. Using
+  them with our client means building and maintaining a Kiota bridge.
+- **v2's fields are unexported**, behind getters, so the `scrubSecrets`
+  chokepoint in §5.3 would be impossible to write.
+- **v2's enums silently drop unknown values.** Every enum attribute is an
+  int-backed Go enum whose parser returns `nil, nil` on anything unrecognised,
+  discarding the raw string. Eleven of our plain-`string` schema fields would
+  start reading `""` when HashiCorp adds a value, including
+  `teamAccess.access`, which feeds `canApply`. v1 keeps the raw string, which
+  `TestTeamAccessKeepsUnknownRoleVerbatim` pins.
+
+v2 is genuinely better on null semantics (pointers throughout) and on error
+classification (`APIError` carries the status). Revisit it when the Kiota bridge
+is worth building, or when v1 falls far enough behind on attributes.
 
 ---
 
@@ -64,7 +126,8 @@ tier-gated items below). Inside it:
 | a team named `owners` (created automatically) | `ownersTeam` |
 | one extra team, e.g. `platform`, with several organization-access toggles ON | `hcp.terraform.team` permissions |
 | one more team, e.g. `readers`, with all toggles OFF | the negative state |
-| a team token on `platform` | `hcp.terraform.teamToken` |
+| **two or more** team tokens on `platform`, each with a description | `hcp.terraform.teamToken` — more than one is the point: reporting only the first is the bug risk R4 describes |
+| a team with **no** token, e.g. `readers` | the empty case, which must be `[]` and not an error |
 | an agent pool `shared-agents`, organization-scoped | `organizationScoped == true` |
 | an agent pool `prod-agents`, scoped to one workspace | `organizationScoped == false` + `allowedWorkspaces` |
 | a Sentinel policy set with one `advisory` and one `hard-mandatory` policy | `enforcementLevel` / `blocking` |
@@ -225,11 +288,11 @@ Query: `hcp.terraformOrganizations { * }`
 | 19 | `planExpired` | `false` on an active plan | | [ ] |
 | 20 | `ownersTeam` | `{ name }` returns `owners`, not null | | [ ] |
 
-Row 20 has a known fallback worth exercising deliberately (risk R3): the
-`owners-team` relationship is not present on every response shape, in which case
-the code falls back to the team literally named `owners`. Confirm which branch
-ran, e.g. by checking whether `hcp.terraformOrganizations { ownersTeam { id } }`
-issues a `/teams` list call in a debug log (`mql shell hcp --log-level debug`).
+Row 20: the `owners-team` relationship **does not exist** (risk R3, settled),
+so `ownersTeam` resolves the team named `owners` by listing teams. That listing
+is the only path, and it costs one `/teams` call per read: confirm the cost in a
+debug log (`mql shell hcp --log-level debug`), and confirm the installation does
+not permit renaming the owners team, because a rename makes this field null.
 
 ### 4.3 `hcp.terraform.workspace`
 
@@ -261,11 +324,12 @@ Query: `hcp.terraformOrganizations { workspaces { * } }`
 | 42 | `resourceCount` | matches the workspace's resource count | | [ ] |
 | 43 | `tagNames` | the tags, `[]` when none | | [ ] |
 | 44 | `createdAt` | a real date | | [ ] |
-| 45 | `updatedAt` | a real date, **null** if the API omits it (see risk R2) | | [ ] |
+| 45 | `updatedAt` | a real date; **null**, never `0001-01-01`, if the API omits it (risk R2 settled: the attribute exists) | | [ ] |
 | 46 | `organization` | `{ name }` resolves to the owning org, not null | | [ ] |
 | 47 | `agentPool` | `{ name }` on `ws-agent`; **null** on the others | | [ ] |
 | 48 | `remoteStateConsumers` | on `ws-shared-state`: `[ws-cli-manual]` | | [ ] |
 | 49 | `remoteStateConsumers` on a workspace with none | `[]`, and the query does not error | | [ ] |
+| 49a | `remoteStateConsumers` on a `globalRemoteState == true` workspace with no explicit consumers | `[]` — **not** every workspace in the organization (risk NR-1, fixed) | | [ ] |
 | 50 | direct selection | `hcp.terraform.workspace(id: "ws-…") { name autoApply }` returns the right workspace | | [ ] |
 | 51 | bad id | `hcp.terraform.workspace(id: "ws-doesnotexist")` **errors**, does not return a blank resource | | [ ] |
 
@@ -341,8 +405,12 @@ Query: `hcp.terraformOrganizations { teams { * } }`
 | 98 | `tokens { description }` | the description, `""` for the legacy single token | | [ ] |
 | 99 | `tokens { team { name } }` | resolves back to the owning team | | [ ] |
 
-Row 93/94 exercise a fallback that will otherwise ship untested — see risk R4,
-and drive it deliberately.
+Rows 93/94 cover risk R4, which was **wrong and is fixed**: the endpoint the old
+code listed does not exist, so a team reported at most one token. Tokens now come
+from `GET /organizations/:org/team-tokens`, filtered to the team. Drive both
+states deliberately: a team with **several** tokens must report all of them
+(this is the case that used to under-report), and a team with none must report
+`[]` without erroring.
 
 ### 4.7 `hcp.terraform.policySet` and `hcp.terraform.policy`
 
@@ -373,9 +441,11 @@ Query: `hcp.terraformOrganizations { policySets { * } policies { * } }`
 | 120 | `policy.updatedAt` | a real date | | [ ] |
 | 121 | `policy.organization` | resolves | | [ ] |
 
-Row 116 covers risk R5: confirm whether the live API returns a top-level
-`enforcement-level`, the legacy `enforce[].mode`, or both. Capture the raw
-payload (§6) and say which branch actually ran.
+Row 116 covers risk R5, now settled as a schema question: enforcement is
+per-policy, and go-tfe marks the legacy `enforce` list deprecated in favour of
+`enforcement-level`, which is the preference order the code already used. What
+is left is purely observational: capture the raw payload (§6) and say which
+shape the live API returned.
 
 ### 4.8 `hcp.terraform.agentPool`
 
@@ -392,9 +462,11 @@ Query: `hcp.terraformOrganizations { agentPools { * } }`
 | 128 | `allowedWorkspaces` on `shared-agents` | `[]` | | [ ] |
 | 129 | direct selection | `hcp.terraform.agentPool(id: "apool-…") { name }` | | [ ] |
 
-Row 127 covers risk R6: the `allowed-workspaces` relationship name is inferred
-from the docs. If it comes back empty on a pool that visibly has an allow list,
-capture the raw `agent-pools` payload and correct the relationship key.
+Row 127 covers risk R6: `allowed-workspaces` is confirmed against go-tfe's
+`AgentPool.AllowedWorkspaces` relation tag, so the key is right. If it still
+comes back empty on a pool that visibly has an allow list, the cause is that the
+relationship is only served for scoped pools, not a wrong key: capture the raw
+`agent-pools` payload and record which.
 
 ---
 
@@ -468,7 +540,32 @@ and pick the fail-safe direction.
 ### 5.3 Secret sweep must return 0
 
 This provider handles sensitive workspace variables and team tokens. The schema
-deliberately carries **no** variable value and **no** token secret. Prove it:
+deliberately carries **no** variable value and **no** token secret.
+
+**This became more important with go-tfe** (risk NR-3): the vendor types carry
+four credential fields the hand-written record types simply did not have —
+`Variable.Value`, `TeamToken.Token`, `VCSRepo.OAuthTokenID` and
+`VCSRepo.WebhookURL`. The API returned those values before too, so the exposure
+is not new, but a populated `Value` now sits one line away from anybody adding a
+field.
+
+Two guards, in order:
+
+1. **Structural.** `scrubSecrets` clears all four at the single decode
+   chokepoint (`decodeTfeRecord` in `resources/terraform.go`), so nothing
+   downstream has a populated secret to reach for. A field added later reads
+   `""` and fails its own test rather than shipping a workspace credential.
+2. **Behavioural.** `TestTerraformResourcesCarryNoSecrets` builds every
+   SDK-backed record through the production code from payloads whose every
+   credential position holds a distinct canary — including an *undeclared*
+   attribute, to catch a future `dict` passthrough — then renders every field of
+   every resource, including unexported cache fields, and asserts no canary
+   survives. It carries a **negative control** asserting the non-secret values
+   *did* come through, so it cannot pass by decoding nothing.
+   `TestTerraformVariableHasNoValueField` separately asserts the schema refuses
+   to resolve `value`, `token`, `secret`, `password` or `oauthToken`.
+
+Neither guard replaces the live sweep. Run it:
 
 ```bash
 PROVIDERS_PATH=/tmp/pd mql run hcp \
@@ -527,192 +624,322 @@ hcp.terraformOrganizations { workspaces { organization { name workspaces { name 
 - [ ] no `provider returned no data and no error for a field` anywhere
 
 ---
-
 ## 6. Risk areas
 
-**This is the highest-value section.** Everything below is inferred from API
-documentation rather than observed against a live installation. Each item names
-what could be wrong, what the wrong answer would look like, and how to settle
-it. Capture raw payloads while verifying so these can be closed with evidence:
+**This is the highest-value section.** Adopting go-tfe's types settled a lot of
+it: where a risk was "we guessed this attribute name from documentation", the
+vendor's maintained tags now answer it. Two of the guesses turned out to be
+**wrong in a way that produced wrong answers**, and both are fixed on this
+branch (R3, R4). One more wrong answer surfaced that the register never
+contemplated (NR-1).
+
+What the SDK cannot settle is what a live installation actually returns. Capture
+raw payloads while verifying so the remaining items can be closed with evidence:
 
 ```bash
 for p in organizations organizations/$ORG/workspaces organizations/$ORG/teams \
          organizations/$ORG/policies organizations/$ORG/policy-sets \
          organizations/$ORG/agent-pools workspaces/$WS/vars \
          "team-workspaces?filter%5Bworkspace%5D%5Bid%5D=$WS" \
-         workspaces/$WS/relationships/remote-state-consumers \
-         teams/$TEAM/authentication-tokens; do
+         "workspaces/$WS/relationships/remote-state-consumers?show_only_configured=true" \
+         organizations/$ORG/team-tokens \
+         teams/$TEAM/authentication-token; do
   echo "=== $p"
   curl -sS -H "Authorization: Bearer $TFE_TOKEN" \
     "https://app.terraform.io/api/v2/$p" | python3 -m json.tool | head -60
 done
 ```
 
-### R1 — The whole control-plane split is an assumption
+### Summary
 
-`hcp.terraform.*` uses a **separate bearer token** against
-`app.terraform.io/api/v2`, not the HCP service principal that authenticates
-every other resource in this provider. That decision was made because the HCP
-service principal OAuth token is not accepted by the Terraform API — but this
-was never tested against a live account. **Settle this first**: if an HCP
-service-principal-derived token *does* authenticate to the Terraform API, the
-entire `--tfe-token` flag surface is unnecessary ceremony and should be
-reconsidered before it ships and becomes a compatibility obligation. Also check
-whether HCP Terraform organizations are discoverable from an HCP org at all; if
-they are, `hcp.organization` may deserve a link to them.
-
-Impact if wrong: a needless required flag, and a schema shape (`hcp.terraform.*`
-hanging off the root rather than off `hcp.organization`) that would be breaking
-to change later.
-
-### R2 — Workspace `updated-at` may not exist
-
-`updated-at` is not documented on the workspace attributes object in every API
-version; `latest-change-at` is the field the UI uses. If `updated-at` is absent,
-`workspace.updatedAt` reports **null** on every workspace — which is safe but
-useless, and the field should be re-pointed at `latest-change-at` (a schema
-change, so do it before release, not after).
-
-Check: `curl … /workspaces/$WS | python3 -c 'import json,sys; print(sorted(json.load(sys.stdin)["data"]["attributes"]))'`
-
-### R3 — `owners-team` relationship and the "owners" name fallback
-
-`organization.ownersTeam` first reads an `owners-team` relationship from the
-organization record. That relationship is **not documented** on the
-organizations endpoint; the code therefore falls back to the team literally
-named `owners`. Two things can go wrong:
-
-1. If the relationship never exists, the fallback runs on every call, which
-   lists every team in the organization to find one. That is a hidden extra API
-   call per `ownersTeam` read.
-2. If an installation ever allows renaming the owners team, the fallback returns
-   **null** and an audit on "the owners team has 2FA" silently finds nothing.
-
-Determine which branch actually runs (debug log) and record it. If the
-relationship does not exist, consider reading the owners team through
-`/organizations/:org/teams?filter[names]=owners` instead of listing all teams.
-
-### R4 — Team token endpoint shape and the 404 fallback
-
-`team.tokens` calls `GET /teams/:id/authentication-tokens` (multiple team
-tokens) and falls back to `GET /teams/:id/authentication-token` (singular,
-legacy) **only on a 404**. Unverified assumptions:
-
-- that the plural endpoint exists on HCP Terraform at all,
-- that it 404s (rather than 403s or 200-with-empty) when unsupported,
-- that the singular endpoint 404s when no token has been issued.
-
-If the plural endpoint returns 403 on an under-privileged token, the fallback
-does not run and the error propagates — acceptable. If it returns **200 with an
-empty list** where a legacy single token exists, the token is invisible and a
-"no long-lived team tokens" audit passes on an organization that has one. That
-is the dangerous case. **Exercise both branches deliberately**: a team with a
-token, and a team with none.
-
-### R5 — Policy enforcement level: two shapes, one field
-
-`policy.enforcementLevel` prefers the top-level `enforcement-level` attribute
-and falls back to `enforce[0].mode`. Unverified:
-
-- whether current HCP Terraform still returns `enforce` at all,
-- whether a policy in **multiple** policy sets can carry **different** modes per
-  set, in which case `enforce[0].mode` picks an arbitrary one and
-  `blocking` may under-report.
-
-If enforcement is genuinely per-policy-set rather than per-policy, this field is
-modeled at the wrong level and belongs on the policy-set-to-policy edge instead.
-That is a schema decision, so settle it before release. Also confirm the OPA
-level vocabulary: the code treats `mandatory` as blocking and `advisory` as not,
-which assumes OPA has exactly those two.
-
-### R6 — Relationship key names
-
-Every relationship key is a documentation guess. A wrong key silently yields an
-**empty list or a null typed ref** — never an error. The keys in use:
-
-| resource | key | field it feeds |
-|---|---|---|
-| workspace | `organization` | `workspace.organization` |
-| workspace | `agent-pool` | `workspace.agentPool` |
-| organization | `owners-team` | `organization.ownersTeam` |
-| team-workspaces | `team`, `workspace` | `teamAccess.team` / `.workspace` |
-| team | `organization` | `team.organization` |
-| policy-set | `policies`, `workspaces` | `policySet.policies` / `.workspaces` |
-| policy | `organization` | `policy.organization` |
-| agent-pool | `organization`, `allowed-workspaces` | `agentPool.organization` / `.allowedWorkspaces` |
-
-Confirm each against a raw payload. In particular `allowed-workspaces` may be
-named `allowed-workspaces` on some versions and only be present when the pool is
-scoped.
-
-### R7 — `filter[workspace][id]` on `/team-workspaces`
-
-`workspace.teamAccess` lists `GET /team-workspaces?filter[workspace][id]=ws-…`.
-If the filter parameter name is wrong, the API is likely to **ignore it** and
-return every team-workspace grant in the organization — so a workspace would
-report grants belonging to other workspaces, and `canApply` audits would fire
-against the wrong workspace. This is a wrong-answer failure, not an empty one,
-so it is the most damaging item on this list. Verify by comparing the returned
-grant ids against the workspace's Team Access page, and by checking that two
-different workspaces return **different** grant sets.
-
-### R8 — Pagination parameters and the remote-state-consumers endpoint
-
-`List` always sends `page[number]` and `page[size]=100`. Unverified:
-
-- whether `/workspaces/:id/relationships/remote-state-consumers` accepts them
-  (it may ignore them, which the stuck-cursor guard handles, or reject them,
-  which would surface as an error),
-- whether any endpoint caps `page[size]` below 100 and silently returns fewer,
-  which is harmless, versus returning an error, which is not.
-
-Confirm with an organization holding **more than 100 workspaces** if one is
-available — that is the only way to observe a real second page. If no such
-organization exists, say so: pagination is then unverified in production
-conditions and only covered by the httptest unit tests.
-
-### R9 — HCP service principal is required even for Terraform-only queries
-
-`NewHcpConnection` fails without `--client-id`/`--client-secret`, so a user who
-only wants HCP Terraform data must still supply HCP credentials they may not
-have. This is a usability defect inherited from the existing connection, not
-introduced here, but it will be the first thing a user hits. Decide during
-verification whether the connection should accept a Terraform-only
-configuration.
-
-### R10 — N+1 API calls on relationship resolution
-
-`policySet.policies`, `policySet.workspaces`, `agentPool.allowedWorkspaces`,
-`teamAccess.team`, and `teamAccess.workspace` each resolve **one API call per
-referenced record** (`NewResource` runs the target's `init` before the runtime
-cache is consulted). On a large organization, `workspaces { teamAccess { team } }`
-is one `GET /teams/:id` per grant. Measure the request count on the fixture
-organization and, if it is bad, switch these to resolve against a
-once-fetched list (the pattern in CLAUDE.md §1.5) before release.
-
-### R11 — `resource-count` and `agent-count` field types
-
-Both are decoded as `int64` from a JSON number. If the API returns them as
-**strings** (HCP does this elsewhere, e.g. Packer's `version-count`, which this
-provider already has a `parseVersionCount` helper for), the decode fails and the
-whole record errors out. Check the raw payload types before assuming.
-
-### R12 — Pre-existing duplicate field path
-
-`mqlr generate` warns `duplicate field paths detected: ["hcp.organization"]`.
-This predates the change (the `hcp` root has an `organization` field and there is
-an `hcp.organization` resource) and is **not** introduced here — the new
-`terraformOrganizations` field was named specifically to avoid adding a second
-one. It is listed so nobody mistakes it for fallout from this branch, and so
-somebody eventually checks whether `hcp.organization` is affected by the
-empty-husk failure mode described in CLAUDE.md.
+| risk | status |
+|---|---|
+| R2 workspace `updated-at` | **struck** — attribute exists |
+| R5 policy enforcement level | **struck** — per policy, closed vocabulary |
+| R7 `filter[workspace][id]` | **struck** — was correct all along |
+| R11 `resource-count` / `agent-count` types | **struck** — numeric |
+| R3 `owners-team` relationship | **rewritten** — does not exist; was dead code |
+| R4 team token endpoint | **rewritten and fixed** — endpoint did not exist |
+| R6 relationship key names | **mostly closed** — one key was wrong (R3) |
+| R8 pagination | **half closed** — parameters confirmed; >100 records still unproven |
+| R1, R9, R10, R12 | **open**, unchanged by this work |
+| NR-1 remote state consumers | **new, and fixed** |
+| NR-2 go-tfe v1 is frozen | **new**, accepted |
 
 ---
+
+## Struck: settled by the SDK, and our guess was right
+
+### R2 — Workspace `updated-at` (STRUCK)
+
+The attribute exists. go-tfe v1 carries
+`UpdatedAt time.Time \`jsonapi:"attr,updated-at,iso8601"\``, and the vendor's
+OpenAPI specification carries `updatedAt` alongside a *separate* `latestChangeAt`.
+The field was correctly pointed and does not need re-pointing at
+`latest-change-at`.
+
+One thing did change: go-tfe's bare `time.Time` makes an absent value the zero
+instant, so `timePtr` maps the zero instant back to null. `workspace.updatedAt`
+still reports null when the API omits it, and the `0001-01-01` sweep in §5.2 is
+now structurally unfailable rather than merely expected to pass.
+
+### R5 — Policy enforcement level (STRUCK)
+
+Three separate questions, all answered:
+
+- **Is it per policy or per policy set?** Per policy. `EnforcementLevel` sits on
+  go-tfe's `Policy`, not on the policy-set-to-policy edge. The field is modelled
+  at the right level and does not belong somewhere else.
+- **Is the legacy `enforce` list still a thing?** go-tfe marks
+  `Policy.Enforce` **`// Deprecated: Use EnforcementLevel instead.`** — which is
+  exactly the preference order `terraformEnforcementLevel` already used. It is
+  still read deliberately, so a policy on an older Terraform Enterprise that
+  reports only the legacy list does not read as unenforced. That is the
+  documented exception in CLAUDE.md §6 for a deprecated SDK field.
+- **Is the OPA vocabulary really just two values?** The whole `EnforcementLevel`
+  set is closed at four: `advisory`, `hard-mandatory`, `soft-mandatory`,
+  `mandatory`. `terraformPolicyBlocking` treats `hard-mandatory` and `mandatory`
+  as blocking, which is complete against that set.
+
+Still worth observing live which shape the API returns, but nothing here is a
+schema decision any more.
+
+### R7 — `filter[workspace][id]` on `/team-workspaces` (STRUCK)
+
+**This was called the worst risk in the batch, and it does not exist.** The
+parameter name was correct all along.
+
+Two independent confirmations:
+
+- go-tfe v1: `type TeamAccessListOptions struct { ListOptions; WorkspaceID string \`url:"filter[workspace][id]"\` }`
+- the vendor OpenAPI specification:
+  `Filterworkspaceid *string "uriparametername:\"filter%5Bworkspace%5D%5Bid%5D\""`,
+  documented as *"The workspace ID to list team access for."*
+
+No workspace was ever reporting another workspace's `canApply` grants. Because
+the request layer stays local (§0), the filter is still ours to get right rather
+than the SDK's, so it is now pinned by `TestTeamAccessIsScopedToTheWorkspace`,
+which asserts the encoded query string rather than only the decoded answer.
+
+Still worth the live cross-check that two different workspaces return different
+grant sets, but this is no longer a design risk.
+
+### R11 — `resource-count` and `agent-count` field types (STRUCK)
+
+Numeric, not strings. go-tfe v1 types them `ResourceCount int` and
+`AgentCount int`; the vendor OpenAPI specification types them `*int32`. The
+Packer `version-count` string problem does not repeat here, and no
+`parseVersionCount`-style helper is needed.
+
+---
+
+## Rewritten: settled by the SDK, and our guess was wrong
+
+### R3 — `owners-team` relationship (REWRITTEN: it does not exist)
+
+**The relationship is not real.** It appears neither in go-tfe v1's
+`Organization` type nor in the vendor's OpenAPI specification, whose
+organization relationships are exactly: `auditTrailsAuthenticationToken`,
+`authenticationToken`, `dataRetentionPolicy`, `defaultAgentPool`,
+`defaultProject`, `entitlementSet`, `moduleProducers`, `oauthTokens`,
+`primaryHyokConfiguration`, `providerProducers`, `stacksDefaultAgentPool`,
+`subscription`.
+
+So `relOneID(rec, "owners-team")` returned `""` **on every call**, the
+"preferred" branch never executed once, and the name-based fallback was in
+reality the only code path. R3's predicted failure mode #1 was not a
+possibility, it was what always happened.
+
+**Changed on this branch:** the dead relationship read is gone and
+`ownersTeam` resolves the team named `owners` directly, which is documented in
+the function rather than presented as a fallback.
+
+**Still open, and still worth recording:**
+
+1. It costs one team listing per `ownersTeam` read. If that hurts on a large
+   organization, `?filter[names]=owners` is the cheaper call.
+2. If an installation ever permits renaming the owners team, this returns
+   **null** and an audit asserting "the owners team enforces 2FA" finds nothing
+   to assert against. `TestOwnersTeamIsNullWhenNoTeamIsNamedOwners` pins that it
+   is null rather than a blank resource, so the audit errors instead of passing
+   vacuously — but confirm the rename restriction on a live installation.
+
+### R4 — Team token endpoint (REWRITTEN AND FIXED)
+
+**`GET /teams/:id/authentication-tokens` does not exist**, so the old code could
+never have worked as intended:
+
+- go-tfe builds `teams/{id}/authentication-tokens` for a **POST** only, to
+  create a token with a description. Its `TeamTokens.List` takes an
+  *organization* id and hits `organizations/{org}/team-tokens`.
+- The vendor OpenAPI specification gives `teams/{id}/authentication-token`
+  Get/Post/Delete, gives `teams/{id}/authentication-tokens` **no GET at all**,
+  and gives `organizations/{org}/team-tokens` a GET with a `q` team-name filter.
+
+So the list call always 404ed and always fell through to the singular endpoint,
+which returns **at most one token**. A team holding three descriptive tokens
+reported one, and an audit asserting *"this organization issues no long-lived
+team tokens"* could pass on an organization that had several. That is exactly
+the dangerous case R4 named, and it was not hypothetical.
+
+**Behaviour delta, deliberate and reviewed.** `team.tokens` now lists
+`GET /organizations/:org/team-tokens` and filters to the team by its `team`
+relationship. A token whose team relationship is missing is skipped rather than
+attributed, because over-reporting a credential to the wrong team is worse than
+under-reporting it. The singular endpoint is kept as a fallback for
+installations that predate the organization-wide listing, and
+`TestTeamTokensFallBackToTheSingleTokenEndpoint` exercises that path
+deliberately so it does not ship unverified.
+
+**Verify live:** a team with several tokens reports all of them, a team with
+none reports `[]` without erroring, and no request is made to the plural path
+(`TestTeamTokensUseTheOrganizationListing` asserts the last one already).
+
+### R6 — Relationship key names (MOSTLY CLOSED)
+
+Read off go-tfe's `jsonapi:"relation,…"` tags and the vendor specification:
+
+| resource | key | verdict |
+|---|---|---|
+| workspace | `organization`, `agent-pool` | correct, both SDKs |
+| organization | `owners-team` | **wrong, does not exist** (R3) |
+| team-workspaces | `team`, `workspace` | correct |
+| team | `organization` | correct (present in the vendor spec; absent from go-tfe v1's `Team`) |
+| policy-set | `policies`, `workspaces` | correct |
+| policy | `organization` | correct |
+| agent-pool | `organization`, `allowed-workspaces` | correct |
+
+Seven of eight were right. The eighth is R3.
+
+One caveat worth a live check: go-tfe v1 does not model `team.organization`,
+though the vendor specification does. `team.organization` is populated from the
+parent when a team is reached through `organization.teams`, so the common path
+is safe; a team reached by id alone (`teamAccess.team.organization`) depends on
+the relationship actually being served.
+
+---
+
+## Open
+
+### R1 — The control-plane split (OPEN, narrowed)
+
+`hcp.terraform.*` uses a separate bearer token against `app.terraform.io/api/v2`
+rather than the HCP service principal. **No client library can settle this** —
+it is a question about what the API accepts, not about how we call it.
+
+Narrowing: the earlier framing said go-tfe had been rejected because the HCP
+service principal is not accepted. That conflated auth with transport. go-tfe
+takes a TFE/HCP Terraform API token, exactly what `--tfe-token` supplies; its
+`Config` is `Address` + `BasePath` + `Token`. The token model is unchanged and
+correct as far as anyone knows.
+
+Still to settle live: whether an HCP service-principal-derived token
+authenticates to the Terraform API at all, and whether HCP Terraform
+organizations are discoverable from an HCP organization (if so, `hcp.organization`
+may deserve a link to them). Impact if wrong: a needless required flag, and a
+schema shape that would be breaking to change later.
+
+### R8 — Pagination (HALF CLOSED)
+
+**Closed:** `workspaces/:id/relationships/remote-state-consumers` does accept
+`page[number]` and `page[size]` — the vendor specification lists both. It also
+accepts `show_only_configured`, which turned out to matter far more (NR-1).
+
+**Open:** whether any endpoint caps `page[size]` below 100, and what a real
+second page looks like. `workspaces/:id/vars` has *no* pagination parameters in
+the specification at all, so the ones we send are presumably ignored there; the
+stuck-cursor guard covers that, but it is unobserved.
+
+Confirm with an organization holding **more than 100 workspaces**. If no such
+organization exists, say so: pagination is then unverified in production
+conditions and covered only by the httptest unit tests in
+`connection/terraform_test.go`.
+
+### R9 — HCP service principal required for Terraform-only queries (OPEN)
+
+`NewHcpConnection` still fails without `--client-id`/`--client-secret`, so a user
+who only wants HCP Terraform data must supply HCP credentials they may not have.
+Inherited from the existing connection, not introduced here, but it will be the
+first thing a user hits — and it is concrete enough that the secret-sweep test
+has to pass placeholder HCP credentials to build a connection that never calls
+an HCP endpoint. Decide whether the connection should accept a Terraform-only
+configuration.
+
+### R10 — N+1 API calls on relationship resolution (OPEN, unchanged)
+
+`policySet.policies`, `policySet.workspaces`, `agentPool.allowedWorkspaces`,
+`teamAccess.team` and `teamAccess.workspace` each resolve one API call per
+referenced record, because `NewResource` runs the target's `init` before the
+runtime cache is consulted. `workspaces { teamAccess { team } }` is one
+`GET /teams/:id` per grant.
+
+**The type swap does not address this**, and should not be mistaken for having
+done so. Measure the request count on the fixture organization and, if it is
+bad, resolve against a once-fetched list per CLAUDE.md §1.5.
+
+`organization.ownersTeam` adds one team listing per read (R3).
+
+### R12 — Pre-existing duplicate field path (OPEN, unchanged)
+
+`mqlr generate` warns `duplicate field paths detected: ["hcp.organization"]`.
+This predates the change and is not fallout from this branch; `terraformOrganizations`
+was named specifically to avoid adding a second one. Somebody should eventually
+check whether `hcp.organization` is affected by the empty-husk failure mode in
+CLAUDE.md.
+
+---
+
+## New risks
+
+### NR-1 — `remoteStateConsumers` returned the whole organization (NEW, FIXED)
+
+The vendor specification documents a `show_only_configured` parameter on
+`workspaces/:id/relationships/remote-state-consumers`: *"When true, return only
+explicitly configured remote state consumers **even if global-remote-state is
+enabled**."*
+
+We never sent it. So on a workspace with `globalRemoteState == true`, the
+endpoint enumerates **every workspace in the organization** as a consumer — and
+the field's own doc comment claimed the opposite, that the list is empty in that
+case. That is a wrong answer rather than an empty one, it grows as the square of
+the estate, and the register never contemplated it.
+
+**Behaviour delta, deliberate and reviewed.** `show_only_configured=true` is now
+sent, which makes the field mean what its doc comment already said: the
+workspaces somebody explicitly granted. Pinned by
+`TestRemoteStateConsumersAsksOnlyForConfiguredOnes`.
+
+**Verify live:** on a workspace with `globalRemoteState == true` and no explicit
+consumers the list is `[]`, not the whole organization; on `ws-shared-state` it
+is exactly `[ws-cli-manual]`.
+
+### NR-2 — go-tfe v1 is frozen (NEW, accepted)
+
+v1's header: *"the final version of the go-tfe (v1) package … NO LONGER TESTED
+and SHOULD NOT BE EXTENDED."* New HCP Terraform attributes will appear in
+`go-tfe/v2` first, so the six-field gap list in §0 can only grow.
+
+Accepted, because v2 is worse for this provider on three counts that §0 spells
+out (Kiota transport dependency, unexported fields blocking the secret scrub,
+and enums that silently drop unrecognised values). Watch the gap list: if it
+grows past a handful, the Kiota bridge starts paying for itself.
+
+### NR-3 — the SDK types carry secrets ours omitted (NEW, mitigated)
+
+`tfe.Variable.Value`, `tfe.TeamToken.Token`, `tfe.VCSRepo.OAuthTokenID` and
+`tfe.VCSRepo.WebhookURL` exist on the vendor types where the hand-written record
+types had no such field. The API returned these values before too — the exposure
+is not new — but adopting the types puts a populated `Value` one
+`llx.StringData(v.Value)` away from a future contributor.
+
+Mitigated structurally by `scrubSecrets`, which clears all four at the single
+decode chokepoint (`decodeTfeRecord`), so a field added later reads `""` and
+fails its own test rather than shipping a credential. See §5.3.
 
 ## 7. Sign-off
 
 - [ ] every checklist row above ticked, or explicitly marked unverifiable with a reason
-- [ ] every risk R1–R12 either closed with evidence, or restated in the PR body as an open blocker
+- [ ] every remaining open risk (R1, R6 caveat, R8, R9, R10, R12, NR-2) either closed with evidence, or restated in the PR body as an open blocker. R2, R5, R7 and R11 are struck; R3, R4 and NR-1 are fixed on this branch and need live confirmation, not re-investigation
 - [ ] the PR body carries the **observed values table**, not a description of the schema
-- [ ] `go test ./...` green inside `providers/hcp/`
+- [ ] `go test ./...` green inside `providers/hcp/` (includes the automated secret sweep in §5.3)
 - [ ] nothing credential-shaped committed (the secret scanner reads every commit, not the final diff)

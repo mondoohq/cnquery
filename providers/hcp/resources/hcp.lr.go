@@ -2878,7 +2878,7 @@ func (c *mqlHcpIamServicePrincipalKey) GetCreatedAt() *plugin.TValue[*time.Time]
 type mqlHcpTerraformOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlHcpTerraformOrganizationInternal
+	// optional: if you define mqlHcpTerraformOrganizationInternal it will be used here
 	Name                       plugin.TValue[string]
 	ExternalId                 plugin.TValue[string]
 	Email                      plugin.TValue[string]

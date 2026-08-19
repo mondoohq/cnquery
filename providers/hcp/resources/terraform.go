@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	tfe "github.com/hashicorp/go-tfe"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
@@ -64,149 +65,175 @@ func derefStr(s *string) string {
 	return *s
 }
 
+// timePtr turns a go-tfe timestamp into an optional one. go-tfe types every
+// timestamp as a bare time.Time, so an absent or null value arrives as the zero
+// instant. Reporting that would put 1 January year 1 in a `time` field as
+// though it were a real date, so it is reported as no time at all instead.
+//
+// A genuine year-1 timestamp is not a value any of these APIs produce, so
+// nothing real is lost, and the sweep for `0001-01-01` in the verification
+// checklist becomes impossible to fail rather than merely expected to pass.
+func timePtr(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
+// timestampAttrSuffix marks the attribute names carrying an ISO 8601 timestamp.
+// Every one of them in this API ends in "-at": created-at, updated-at,
+// last-used-at, expired-at, trial-expires-at.
+const timestampAttrSuffix = "-at"
+
+// sanitizeTimestamps replaces any timestamp attribute that is not a parseable
+// RFC 3339 string with null, and returns the rewritten attributes.
+//
+// This exists because go-tfe's decoder rejects the whole record when a single
+// timestamp is malformed, an empty string, or a number: the error is
+// "Only strings can be parsed as dates, ISO8601 timestamps", and it takes every
+// other field of that record down with it. One odd timestamp would blind an
+// entire collection, and a shortened list satisfies every assertion made about
+// it. Nulling the offending value keeps the record readable and reports the
+// timestamp itself as null, which is what this provider did before go-tfe.
+//
+// tfeTime is the parser, so the tolerated shapes are exactly the ones its own
+// tests pin.
+func sanitizeTimestamps(attrs json.RawMessage) json.RawMessage {
+	if len(attrs) == 0 {
+		return attrs
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(attrs, &raw); err != nil {
+		// Not an object; leave it for the typed decoder to report.
+		return attrs
+	}
+
+	changed := false
+	for key, val := range raw {
+		if !strings.HasSuffix(key, timestampAttrSuffix) {
+			continue
+		}
+		if string(val) == "null" {
+			continue
+		}
+		var parsed tfeTime
+		// tfeTime never errors; it yields a nil Time for anything it cannot
+		// read, which is precisely the set we need to null out.
+		_ = parsed.UnmarshalJSON(val)
+		if parsed.Time == nil {
+			raw[key] = json.RawMessage("null")
+			changed = true
+		}
+	}
+	if !changed {
+		return attrs
+	}
+
+	rewritten, err := json.Marshal(raw)
+	if err != nil {
+		return attrs
+	}
+	return rewritten
+}
+
+// decodeTfeRecord decodes a record into a go-tfe struct, tolerating an
+// unreadable timestamp, and clears the credential fields go-tfe carries but
+// this provider deliberately does not model (see the scrub functions below).
+//
+// Every record in this file goes through here, so it is the single place where
+// a secret could enter the process and the single place it is removed.
+func decodeTfeRecord(rec connection.TfeRecord, out any) error {
+	rec.Attributes = sanitizeTimestamps(rec.Attributes)
+	if err := rec.DecodeTyped(out); err != nil {
+		return err
+	}
+	scrubSecrets(out)
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// secret scrubbing
+// ---------------------------------------------------------------------------
+
+// scrubSecrets clears the credential-bearing fields go-tfe's types carry and
+// this provider does not model: a workspace variable's value, a team token's
+// secret, and the OAuth token id and webhook URL of a VCS connection.
+//
+// The API returns these whether or not anybody asked for them, so the exposure
+// is not new. What is new is that adopting go-tfe's structs puts a populated
+// Value one `llx.StringData(v.Value)` away from a future contributor, where
+// before there was no such field to reach for. Clearing them at the one decode
+// chokepoint restores that: a field added later reads "" and fails its own
+// test, rather than silently shipping a workspace credential to a scan report.
+func scrubSecrets(out any) {
+	switch v := out.(type) {
+	case *tfe.Variable:
+		v.Value = ""
+	case *tfe.TeamToken:
+		v.Token = ""
+	case *tfe.Workspace:
+		scrubVCSRepo(v.VCSRepo)
+	case *tfe.PolicySet:
+		scrubVCSRepo(v.VCSRepo)
+	}
+}
+
+func scrubVCSRepo(repo *tfe.VCSRepo) {
+	if repo == nil {
+		return
+	}
+	repo.OAuthTokenID = ""
+	repo.WebhookURL = ""
+}
+
 // ---------------------------------------------------------------------------
 // API record shapes
+//
+// The record types come from github.com/hashicorp/go-tfe: tfe.Organization,
+// tfe.Workspace, tfe.VCSRepo, tfe.TeamAccess, tfe.Variable, tfe.Team,
+// tfe.OrganizationAccess, tfe.TeamToken, tfe.PolicySet, tfe.Policy,
+// tfe.Enforcement and tfe.AgentPool. Their `jsonapi:"attr,…"` tags are
+// maintained by the vendor and exercised continuously by
+// terraform-provider-tfe, which makes them a far better source of truth than
+// tags written here from API documentation.
+//
+// The structs below cover only what go-tfe cannot express. There are two
+// distinct reasons a field lands here, and they are not interchangeable:
+//
+//  1. go-tfe does not model the attribute at all. `plan-expired` and
+//     `versioned` appear in neither its Organization nor its PolicySet, though
+//     both are real attributes: the vendor's own OpenAPI specification (the one
+//     go-tfe/v2 is generated from) carries `planExpired` and `versioned`.
+//
+//  2. go-tfe models the attribute with a non-pointer type, so a null from the
+//     API is indistinguishable from a zero value. Reporting 0 for a session
+//     lifetime the organization never set, or "" for a SAML role that does not
+//     exist, would be inventing a value the API did not give.
+//
+// Everything else is read from the vendor types.
 // ---------------------------------------------------------------------------
 
-type tfeOrganizationAttrs struct {
-	Name                       string  `json:"name"`
-	ExternalID                 string  `json:"external-id"`
-	Email                      string  `json:"email"`
-	CreatedAt                  tfeTime `json:"created-at"`
-	CollaboratorAuthPolicy     string  `json:"collaborator-auth-policy"`
-	TwoFactorConformant        bool    `json:"two-factor-conformant"`
-	SamlEnabled                bool    `json:"saml-enabled"`
-	OwnersTeamSamlRoleID       *string `json:"owners-team-saml-role-id"`
-	SessionTimeout             *int64  `json:"session-timeout"`
-	SessionRemember            *int64  `json:"session-remember"`
-	CostEstimationEnabled      bool    `json:"cost-estimation-enabled"`
-	AssessmentsEnforced        bool    `json:"assessments-enforced"`
-	AllowForceDeleteWorkspaces bool    `json:"allow-force-delete-workspaces"`
-	DefaultExecutionMode       string  `json:"default-execution-mode"`
-	PlanExpired                bool    `json:"plan-expired"`
+// tfeOrganizationGaps carries the organization attributes go-tfe cannot supply.
+type tfeOrganizationGaps struct {
+	// go-tfe has no field for this attribute at all.
+	PlanExpired bool `json:"plan-expired"`
+	// go-tfe types these as int/int/string, collapsing null onto 0 and "".
+	SessionTimeout       *int64  `json:"session-timeout"`
+	SessionRemember      *int64  `json:"session-remember"`
+	OwnersTeamSamlRoleID *string `json:"owners-team-saml-role-id"`
 }
 
-type tfeVCSRepo struct {
-	Identifier        string `json:"identifier"`
-	DisplayIdentifier string `json:"display-identifier"`
-	Branch            string `json:"branch"`
-	ServiceProvider   string `json:"service-provider"`
-	IngressSubmodules bool   `json:"ingress-submodules"`
+// tfeTeamGaps carries the team attributes go-tfe cannot supply.
+type tfeTeamGaps struct {
+	// go-tfe types this as string, so an unmapped team reports "" rather than
+	// null and cannot be told apart from one mapped to an empty group.
+	SSOTeamID *string `json:"sso-team-id"`
 }
 
-type tfeWorkspaceAttrs struct {
-	Name                       string      `json:"name"`
-	Description                *string     `json:"description"`
-	ExecutionMode              string      `json:"execution-mode"`
-	AutoApply                  bool        `json:"auto-apply"`
-	AutoApplyRunTrigger        bool        `json:"auto-apply-run-trigger"`
-	TerraformVersion           string      `json:"terraform-version"`
-	WorkingDirectory           *string     `json:"working-directory"`
-	Locked                     bool        `json:"locked"`
-	VCSRepo                    *tfeVCSRepo `json:"vcs-repo"`
-	SpeculativeEnabled         bool        `json:"speculative-enabled"`
-	GlobalRemoteState          bool        `json:"global-remote-state"`
-	AllowDestroyPlan           bool        `json:"allow-destroy-plan"`
-	FileTriggersEnabled        bool        `json:"file-triggers-enabled"`
-	QueueAllRuns               bool        `json:"queue-all-runs"`
-	StructuredRunOutputEnabled bool        `json:"structured-run-output-enabled"`
-	AssessmentsEnabled         bool        `json:"assessments-enabled"`
-	ResourceCount              int64       `json:"resource-count"`
-	TagNames                   []string    `json:"tag-names"`
-	CreatedAt                  tfeTime     `json:"created-at"`
-	UpdatedAt                  tfeTime     `json:"updated-at"`
-}
-
-type tfeTeamAccessAttrs struct {
-	Access           string `json:"access"`
-	Runs             string `json:"runs"`
-	Variables        string `json:"variables"`
-	StateVersions    string `json:"state-versions"`
-	SentinelMocks    string `json:"sentinel-mocks"`
-	WorkspaceLocking bool   `json:"workspace-locking"`
-	RunTasks         bool   `json:"run-tasks"`
-}
-
-type tfeVariableAttrs struct {
-	Key         string  `json:"key"`
-	Category    string  `json:"category"`
-	Sensitive   bool    `json:"sensitive"`
-	HCL         bool    `json:"hcl"`
-	Description *string `json:"description"`
-}
-
-type tfeTeamOrgAccess struct {
-	ManagePolicies           bool `json:"manage-policies"`
-	ManagePolicyOverrides    bool `json:"manage-policy-overrides"`
-	ManageWorkspaces         bool `json:"manage-workspaces"`
-	ManageVCSSettings        bool `json:"manage-vcs-settings"`
-	ManageMembership         bool `json:"manage-membership"`
-	ManageTeams              bool `json:"manage-teams"`
-	ManageOrganizationAccess bool `json:"manage-organization-access"`
-	ManageProjects           bool `json:"manage-projects"`
-	ManageRunTasks           bool `json:"manage-run-tasks"`
-	ManageAgentPools         bool `json:"manage-agent-pools"`
-	ManageProviders          bool `json:"manage-providers"`
-	ManageModules            bool `json:"manage-modules"`
-	ReadWorkspaces           bool `json:"read-workspaces"`
-	ReadProjects             bool `json:"read-projects"`
-	AccessSecretTeams        bool `json:"access-secret-teams"`
-}
-
-type tfeTeamAttrs struct {
-	Name                       string            `json:"name"`
-	UsersCount                 int64             `json:"users-count"`
-	Visibility                 string            `json:"visibility"`
-	SSOTeamID                  *string           `json:"sso-team-id"`
-	AllowMemberTokenManagement bool              `json:"allow-member-token-management"`
-	OrganizationAccess         *tfeTeamOrgAccess `json:"organization-access"`
-}
-
-type tfeTeamTokenAttrs struct {
-	Description *string `json:"description"`
-	CreatedAt   tfeTime `json:"created-at"`
-	LastUsedAt  tfeTime `json:"last-used-at"`
-	ExpiredAt   tfeTime `json:"expired-at"`
-}
-
-type tfePolicySetAttrs struct {
-	Name           string  `json:"name"`
-	Description    *string `json:"description"`
-	Kind           string  `json:"kind"`
-	Global         bool    `json:"global"`
-	PolicyCount    int64   `json:"policy-count"`
-	WorkspaceCount int64   `json:"workspace-count"`
-	Versioned      bool    `json:"versioned"`
-	PoliciesPath   *string `json:"policies-path"`
-	AgentEnabled   bool    `json:"agent-enabled"`
-	Overridable    *bool   `json:"overridable"`
-	CreatedAt      tfeTime `json:"created-at"`
-	UpdatedAt      tfeTime `json:"updated-at"`
-}
-
-// tfePolicyEnforcement is one entry of the legacy per-file enforcement list a
-// Sentinel policy carries when the API does not report a top-level
-// enforcement-level.
-type tfePolicyEnforcement struct {
-	Path string `json:"path"`
-	Mode string `json:"mode"`
-}
-
-type tfePolicyAttrs struct {
-	Name             string                 `json:"name"`
-	Description      *string                `json:"description"`
-	Kind             string                 `json:"kind"`
-	EnforcementLevel string                 `json:"enforcement-level"`
-	Enforce          []tfePolicyEnforcement `json:"enforce"`
-	PolicySetCount   int64                  `json:"policy-set-count"`
-	UpdatedAt        tfeTime                `json:"updated-at"`
-}
-
-type tfeAgentPoolAttrs struct {
-	Name               string  `json:"name"`
-	AgentCount         int64   `json:"agent-count"`
-	OrganizationScoped bool    `json:"organization-scoped"`
-	CreatedAt          tfeTime `json:"created-at"`
+// tfePolicySetGaps carries the policy set attributes go-tfe cannot supply.
+type tfePolicySetGaps struct {
+	// go-tfe has no field for this attribute at all.
+	Versioned bool `json:"versioned"`
 }
 
 // ---------------------------------------------------------------------------
@@ -223,7 +250,7 @@ func terraformTwoFactorRequired(collaboratorAuthPolicy string) bool {
 // terraformVCSDriven reports whether runs enter a workspace from a connected
 // VCS repository. A workspace with no repository is driven by the CLI or the
 // API instead.
-func terraformVCSDriven(repo *tfeVCSRepo) bool {
+func terraformVCSDriven(repo *tfe.VCSRepo) bool {
 	if repo == nil {
 		return false
 	}
@@ -233,7 +260,7 @@ func terraformVCSDriven(repo *tfeVCSRepo) bool {
 // terraformVCSIdentifier returns the repository backing a workspace, preferring
 // the canonical identifier and falling back to the display identifier some
 // VCS providers report instead.
-func terraformVCSIdentifier(repo *tfeVCSRepo) string {
+func terraformVCSIdentifier(repo *tfe.VCSRepo) string {
 	if repo == nil {
 		return ""
 	}
@@ -260,13 +287,21 @@ func terraformCanApply(access, runs string) bool {
 // terraformEnforcementLevel resolves a policy's enforcement level. Newer API
 // versions report it directly; older Sentinel policies report it only as the
 // mode of the first entry in the per-file enforce list.
-func terraformEnforcementLevel(level string, enforce []tfePolicyEnforcement) string {
+//
+// go-tfe marks Policy.Enforce "Deprecated: Use EnforcementLevel instead", which
+// is exactly the preference order below. It is still read, deliberately, so a
+// policy on an older Terraform Enterprise that reports only the legacy list
+// does not read as unenforced.
+func terraformEnforcementLevel(level string, enforce []*tfe.Enforcement) string {
 	if level != "" {
 		return level
 	}
 	for _, e := range enforce {
+		if e == nil {
+			continue
+		}
 		if e.Mode != "" {
-			return e.Mode
+			return string(e.Mode)
 		}
 	}
 	return ""
@@ -320,9 +355,9 @@ type mqlHcpTerraformAgentPoolInternal struct {
 	cacheAllowedWorkspaceIDs []string
 }
 
-type mqlHcpTerraformOrganizationInternal struct {
-	cacheOwnersTeamID string
-}
+// The organization has no internal cache struct: the owners team is resolved by
+// name rather than from a relationship (see ownersTeam), so there is nothing
+// left to carry from the creation context.
 
 // ---------------------------------------------------------------------------
 // shared plumbing
@@ -419,41 +454,45 @@ func (r *mqlHcp) terraformOrganizations() ([]any, error) {
 }
 
 func newMqlHcpTerraformOrganization(runtime *plugin.Runtime, rec connection.TfeRecord) (*mqlHcpTerraformOrganization, error) {
-	var attrs tfeOrganizationAttrs
-	if err := rec.DecodeAttributes(&attrs); err != nil {
+	var org tfe.Organization
+	if err := decodeTfeRecord(rec, &org); err != nil {
 		return nil, err
 	}
-	// The record id is the organization name; the attributes repeat it.
-	name := attrs.Name
+	var gaps tfeOrganizationGaps
+	if err := rec.DecodeAttributes(&gaps); err != nil {
+		return nil, err
+	}
+	// The record id is the organization name; go-tfe maps it onto Name.
+	name := org.Name
 	if name == "" {
 		name = rec.ID
 	}
+	authPolicy := string(org.CollaboratorAuthPolicy)
 
 	res, err := CreateResource(runtime, "hcp.terraform.organization", map[string]*llx.RawData{
 		"__id":                       llx.StringData("hcp.terraform.organization/" + name),
 		"name":                       llx.StringData(name),
-		"externalId":                 llx.StringData(attrs.ExternalID),
-		"email":                      llx.StringData(attrs.Email),
-		"createdAt":                  llx.TimeDataPtr(attrs.CreatedAt.Time),
-		"collaboratorAuthPolicy":     llx.StringData(attrs.CollaboratorAuthPolicy),
-		"twoFactorRequired":          llx.BoolData(terraformTwoFactorRequired(attrs.CollaboratorAuthPolicy)),
-		"twoFactorConformant":        llx.BoolData(attrs.TwoFactorConformant),
-		"samlEnabled":                llx.BoolData(attrs.SamlEnabled),
-		"ownersTeamSamlRoleId":       llx.StringDataPtr(attrs.OwnersTeamSamlRoleID),
-		"sessionTimeoutMinutes":      llx.IntDataPtr(attrs.SessionTimeout),
-		"sessionRememberMinutes":     llx.IntDataPtr(attrs.SessionRemember),
-		"costEstimationEnabled":      llx.BoolData(attrs.CostEstimationEnabled),
-		"assessmentsEnforced":        llx.BoolData(attrs.AssessmentsEnforced),
-		"allowForceDeleteWorkspaces": llx.BoolData(attrs.AllowForceDeleteWorkspaces),
-		"defaultExecutionMode":       llx.StringData(attrs.DefaultExecutionMode),
-		"planExpired":                llx.BoolData(attrs.PlanExpired),
+		"externalId":                 llx.StringData(org.ExternalID),
+		"email":                      llx.StringData(org.Email),
+		"createdAt":                  llx.TimeDataPtr(timePtr(org.CreatedAt)),
+		"collaboratorAuthPolicy":     llx.StringData(authPolicy),
+		"twoFactorRequired":          llx.BoolData(terraformTwoFactorRequired(authPolicy)),
+		"twoFactorConformant":        llx.BoolData(org.TwoFactorConformant),
+		"samlEnabled":                llx.BoolData(org.SAMLEnabled),
+		"ownersTeamSamlRoleId":       llx.StringDataPtr(gaps.OwnersTeamSamlRoleID),
+		"sessionTimeoutMinutes":      llx.IntDataPtr(gaps.SessionTimeout),
+		"sessionRememberMinutes":     llx.IntDataPtr(gaps.SessionRemember),
+		"costEstimationEnabled":      llx.BoolData(org.CostEstimationEnabled),
+		"assessmentsEnforced":        llx.BoolData(org.AssessmentsEnforced),
+		"allowForceDeleteWorkspaces": llx.BoolData(org.AllowForceDeleteWorkspaces),
+		"defaultExecutionMode":       llx.StringData(org.DefaultExecutionMode),
+		"planExpired":                llx.BoolData(gaps.PlanExpired),
 	})
 	if err != nil {
 		return nil, err
 	}
-	org := res.(*mqlHcpTerraformOrganization)
-	org.cacheOwnersTeamID = relOneID(rec, "owners-team")
-	return org, nil
+	mqlOrg := res.(*mqlHcpTerraformOrganization)
+	return mqlOrg, nil
 }
 
 // fetchMqlHcpTerraformOrganization gets a single organization by name.
@@ -496,31 +535,35 @@ func initHcpTerraformOrganization(runtime *plugin.Runtime, args map[string]*llx.
 }
 
 // ownersTeam resolves the team whose members hold full administrative control.
+//
+// This reads the team named "owners", which HCP Terraform creates with every
+// organization and does not allow renaming. An earlier version preferred an
+// "owners-team" relationship on the organization record and used the name only
+// as a fallback, but that relationship does not exist: it appears neither in
+// go-tfe's Organization type nor in the vendor's OpenAPI specification, whose
+// organization relationships are default-project, default-agent-pool,
+// entitlement-set, subscription, data-retention-policy, the two token links,
+// the two producer links and primary-hyok-configuration. The relationship read
+// was therefore dead code and the name lookup ran on every call regardless, so
+// only the name lookup remains.
+//
+// It costs one team listing per read. That is worth recording rather than
+// hiding: if an installation ever permits renaming the owners team, this
+// returns null and an audit asserting "the owners team enforces 2FA" finds
+// nothing to assert against.
 func (r *mqlHcpTerraformOrganization) ownersTeam() (*mqlHcpTerraformTeam, error) {
-	if r.cacheOwnersTeamID == "" {
-		// The organizations list does not always carry the owners-team
-		// linkage; fall back to the team named "owners", which HCP Terraform
-		// creates with every organization and does not allow renaming.
-		teams, err := r.teams()
-		if err != nil {
-			return nil, err
-		}
-		for _, t := range teams {
-			team := t.(*mqlHcpTerraformTeam)
-			if team.Name.Data == "owners" {
-				return team, nil
-			}
-		}
-		r.OwnersTeam.State = plugin.StateIsSet | plugin.StateIsNull
-		return nil, nil
-	}
-	res, err := NewResource(r.MqlRuntime, "hcp.terraform.team", map[string]*llx.RawData{
-		"id": llx.StringData(r.cacheOwnersTeamID),
-	})
+	teams, err := r.teams()
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlHcpTerraformTeam), nil
+	for _, t := range teams {
+		team := t.(*mqlHcpTerraformTeam)
+		if team.Name.Data == "owners" {
+			return team, nil
+		}
+	}
+	r.OwnersTeam.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -550,16 +593,16 @@ func (r *mqlHcpTerraformOrganization) workspaces() ([]any, error) {
 }
 
 func newMqlHcpTerraformWorkspace(runtime *plugin.Runtime, orgName string, rec connection.TfeRecord) (*mqlHcpTerraformWorkspace, error) {
-	var attrs tfeWorkspaceAttrs
-	if err := rec.DecodeAttributes(&attrs); err != nil {
+	var ws tfe.Workspace
+	if err := decodeTfeRecord(rec, &ws); err != nil {
 		return nil, err
 	}
 
 	vcsBranch, vcsProvider, vcsSubmodules := "", "", false
-	if attrs.VCSRepo != nil {
-		vcsBranch = attrs.VCSRepo.Branch
-		vcsProvider = attrs.VCSRepo.ServiceProvider
-		vcsSubmodules = attrs.VCSRepo.IngressSubmodules
+	if ws.VCSRepo != nil {
+		vcsBranch = ws.VCSRepo.Branch
+		vcsProvider = ws.VCSRepo.ServiceProvider
+		vcsSubmodules = ws.VCSRepo.IngressSubmodules
 	}
 
 	if orgName == "" {
@@ -569,38 +612,38 @@ func newMqlHcpTerraformWorkspace(runtime *plugin.Runtime, orgName string, rec co
 	res, err := CreateResource(runtime, "hcp.terraform.workspace", map[string]*llx.RawData{
 		"__id":                       llx.StringData("hcp.terraform.workspace/" + rec.ID),
 		"id":                         llx.StringData(rec.ID),
-		"name":                       llx.StringData(attrs.Name),
-		"description":                llx.StringData(derefStr(attrs.Description)),
-		"executionMode":              llx.StringData(attrs.ExecutionMode),
-		"autoApply":                  llx.BoolData(attrs.AutoApply),
-		"autoApplyRunTrigger":        llx.BoolData(attrs.AutoApplyRunTrigger),
-		"terraformVersion":           llx.StringData(attrs.TerraformVersion),
-		"workingDirectory":           llx.StringData(derefStr(attrs.WorkingDirectory)),
-		"locked":                     llx.BoolData(attrs.Locked),
-		"vcsDriven":                  llx.BoolData(terraformVCSDriven(attrs.VCSRepo)),
-		"vcsRepoIdentifier":          llx.StringData(terraformVCSIdentifier(attrs.VCSRepo)),
+		"name":                       llx.StringData(ws.Name),
+		"description":                llx.StringData(ws.Description),
+		"executionMode":              llx.StringData(ws.ExecutionMode),
+		"autoApply":                  llx.BoolData(ws.AutoApply),
+		"autoApplyRunTrigger":        llx.BoolData(ws.AutoApplyRunTrigger),
+		"terraformVersion":           llx.StringData(ws.TerraformVersion),
+		"workingDirectory":           llx.StringData(ws.WorkingDirectory),
+		"locked":                     llx.BoolData(ws.Locked),
+		"vcsDriven":                  llx.BoolData(terraformVCSDriven(ws.VCSRepo)),
+		"vcsRepoIdentifier":          llx.StringData(terraformVCSIdentifier(ws.VCSRepo)),
 		"vcsRepoBranch":              llx.StringData(vcsBranch),
 		"vcsRepoServiceProvider":     llx.StringData(vcsProvider),
 		"vcsRepoIngressSubmodules":   llx.BoolData(vcsSubmodules),
-		"speculativeEnabled":         llx.BoolData(attrs.SpeculativeEnabled),
-		"globalRemoteState":          llx.BoolData(attrs.GlobalRemoteState),
-		"allowDestroyPlan":           llx.BoolData(attrs.AllowDestroyPlan),
-		"fileTriggersEnabled":        llx.BoolData(attrs.FileTriggersEnabled),
-		"queueAllRuns":               llx.BoolData(attrs.QueueAllRuns),
-		"structuredRunOutputEnabled": llx.BoolData(attrs.StructuredRunOutputEnabled),
-		"assessmentsEnabled":         llx.BoolData(attrs.AssessmentsEnabled),
-		"resourceCount":              llx.IntData(attrs.ResourceCount),
-		"tagNames":                   llx.ArrayData(strSlice(attrs.TagNames), types.String),
-		"createdAt":                  llx.TimeDataPtr(attrs.CreatedAt.Time),
-		"updatedAt":                  llx.TimeDataPtr(attrs.UpdatedAt.Time),
+		"speculativeEnabled":         llx.BoolData(ws.SpeculativeEnabled),
+		"globalRemoteState":          llx.BoolData(ws.GlobalRemoteState),
+		"allowDestroyPlan":           llx.BoolData(ws.AllowDestroyPlan),
+		"fileTriggersEnabled":        llx.BoolData(ws.FileTriggersEnabled),
+		"queueAllRuns":               llx.BoolData(ws.QueueAllRuns),
+		"structuredRunOutputEnabled": llx.BoolData(ws.StructuredRunOutputEnabled),
+		"assessmentsEnabled":         llx.BoolData(ws.AssessmentsEnabled),
+		"resourceCount":              llx.IntData(int64(ws.ResourceCount)),
+		"tagNames":                   llx.ArrayData(strSlice(ws.TagNames), types.String),
+		"createdAt":                  llx.TimeDataPtr(timePtr(ws.CreatedAt)),
+		"updatedAt":                  llx.TimeDataPtr(timePtr(ws.UpdatedAt)),
 	})
 	if err != nil {
 		return nil, err
 	}
-	ws := res.(*mqlHcpTerraformWorkspace)
-	ws.cacheOrgName = orgName
-	ws.cacheAgentPoolID = relOneID(rec, "agent-pool")
-	return ws, nil
+	mqlWs := res.(*mqlHcpTerraformWorkspace)
+	mqlWs.cacheOrgName = orgName
+	mqlWs.cacheAgentPoolID = relOneID(rec, "agent-pool")
+	return mqlWs, nil
 }
 
 // initHcpTerraformWorkspace hydrates a single workspace by id.
@@ -663,16 +706,27 @@ func (r *mqlHcpTerraformWorkspace) agentPool() (*mqlHcpTerraformAgentPool, error
 	return res.(*mqlHcpTerraformAgentPool), nil
 }
 
-// remoteStateConsumers lists the workspaces allowed to read this workspace's
-// state outputs. The list is empty when remote state is shared organization
-// wide, because HCP Terraform does not enumerate consumers in that case.
+// remoteStateConsumers lists the workspaces explicitly allowed to read this
+// workspace's state outputs.
+//
+// show_only_configured is what makes that true. Without it the endpoint returns
+// every workspace in the organization once global-remote-state is enabled,
+// which is not a list of grants anybody made: it would report an organization's
+// entire workspace inventory as deliberate consumers of one workspace's state,
+// and grow as the square of the estate. The parameter is documented in the
+// vendor's OpenAPI specification as "return only explicitly configured remote
+// state consumers even if global-remote-state is enabled", which is exactly the
+// field's stated meaning.
 func (r *mqlHcpTerraformWorkspace) remoteStateConsumers() ([]any, error) {
 	client, err := terraformClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
+	query := url.Values{}
+	query.Set("show_only_configured", "true")
+
 	records, err := client.List(terraformCtx(),
-		"workspaces/"+url.PathEscape(r.Id.Data)+"/relationships/remote-state-consumers", nil)
+		"workspaces/"+url.PathEscape(r.Id.Data)+"/relationships/remote-state-consumers", query)
 	if err != nil {
 		if connection.IsTfeUnavailable(err) {
 			return []any{}, nil
@@ -700,6 +754,12 @@ func (r *mqlHcpTerraformWorkspace) teamAccess() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	// go-tfe issues the same filter for this endpoint: its
+	// TeamAccessListOptions.WorkspaceID carries `url:"filter[workspace][id]"`,
+	// and the vendor's OpenAPI specification documents the same parameter as
+	// "the workspace ID to list team access for". A wrong name here would not
+	// error, it would return every grant in the organization and report other
+	// workspaces' permissions against this one, so it is pinned by a test.
 	query := url.Values{}
 	query.Set("filter[workspace][id]", r.Id.Data)
 
@@ -709,10 +769,12 @@ func (r *mqlHcpTerraformWorkspace) teamAccess() ([]any, error) {
 	}
 	out := []any{}
 	for _, rec := range records {
-		var attrs tfeTeamAccessAttrs
-		if err := rec.DecodeAttributes(&attrs); err != nil {
+		var grant tfe.TeamAccess
+		if err := decodeTfeRecord(rec, &grant); err != nil {
 			return nil, err
 		}
+		access := string(grant.Access)
+		runs := string(grant.Runs)
 		teamID := relOneID(rec, "team")
 		workspaceID := relOneID(rec, "workspace")
 		if workspaceID == "" {
@@ -722,22 +784,22 @@ func (r *mqlHcpTerraformWorkspace) teamAccess() ([]any, error) {
 		res, err := CreateResource(r.MqlRuntime, "hcp.terraform.teamAccess", map[string]*llx.RawData{
 			"__id":             llx.StringData("hcp.terraform.teamAccess/" + rec.ID),
 			"id":               llx.StringData(rec.ID),
-			"access":           llx.StringData(attrs.Access),
-			"canApply":         llx.BoolData(terraformCanApply(attrs.Access, attrs.Runs)),
-			"runs":             llx.StringData(attrs.Runs),
-			"variables":        llx.StringData(attrs.Variables),
-			"stateVersions":    llx.StringData(attrs.StateVersions),
-			"sentinelMocks":    llx.StringData(attrs.SentinelMocks),
-			"workspaceLocking": llx.BoolData(attrs.WorkspaceLocking),
-			"runTasks":         llx.BoolData(attrs.RunTasks),
+			"access":           llx.StringData(access),
+			"canApply":         llx.BoolData(terraformCanApply(access, runs)),
+			"runs":             llx.StringData(runs),
+			"variables":        llx.StringData(string(grant.Variables)),
+			"stateVersions":    llx.StringData(string(grant.StateVersions)),
+			"sentinelMocks":    llx.StringData(string(grant.SentinelMocks)),
+			"workspaceLocking": llx.BoolData(grant.WorkspaceLocking),
+			"runTasks":         llx.BoolData(grant.RunTasks),
 		})
 		if err != nil {
 			return nil, err
 		}
-		access := res.(*mqlHcpTerraformTeamAccess)
-		access.cacheTeamID = teamID
-		access.cacheWorkspaceID = workspaceID
-		out = append(out, access)
+		mqlAccess := res.(*mqlHcpTerraformTeamAccess)
+		mqlAccess.cacheTeamID = teamID
+		mqlAccess.cacheWorkspaceID = workspaceID
+		out = append(out, mqlAccess)
 	}
 	return out, nil
 }
@@ -776,9 +838,13 @@ func (r *mqlHcpTerraformTeamAccess) workspace() (*mqlHcpTerraformWorkspace, erro
 // hcp.terraform.variable
 // ---------------------------------------------------------------------------
 
-// variables lists the variables defined on the workspace. Variable values are
-// deliberately not read, so a scan never carries a workspace credential out of
-// HCP Terraform.
+// variables lists the variables defined on the workspace.
+//
+// Variable values are deliberately not modelled, for sensitive and
+// non-sensitive variables alike, so a scan never carries a workspace credential
+// out of HCP Terraform. go-tfe's Variable type does carry a Value; it is
+// cleared by scrubSecrets at the decode chokepoint before this function sees
+// it, so there is no populated value here to expose by accident.
 func (r *mqlHcpTerraformWorkspace) variables() ([]any, error) {
 	client, err := terraformClient(r.MqlRuntime)
 	if err != nil {
@@ -791,25 +857,25 @@ func (r *mqlHcpTerraformWorkspace) variables() ([]any, error) {
 	}
 	out := []any{}
 	for _, rec := range records {
-		var attrs tfeVariableAttrs
-		if err := rec.DecodeAttributes(&attrs); err != nil {
+		var variable tfe.Variable
+		if err := decodeTfeRecord(rec, &variable); err != nil {
 			return nil, err
 		}
 		res, err := CreateResource(r.MqlRuntime, "hcp.terraform.variable", map[string]*llx.RawData{
 			"__id":        llx.StringData("hcp.terraform.variable/" + r.Id.Data + "/" + rec.ID),
 			"id":          llx.StringData(rec.ID),
-			"key":         llx.StringData(attrs.Key),
-			"category":    llx.StringData(attrs.Category),
-			"sensitive":   llx.BoolData(attrs.Sensitive),
-			"hcl":         llx.BoolData(attrs.HCL),
-			"description": llx.StringData(derefStr(attrs.Description)),
+			"key":         llx.StringData(variable.Key),
+			"category":    llx.StringData(string(variable.Category)),
+			"sensitive":   llx.BoolData(variable.Sensitive),
+			"hcl":         llx.BoolData(variable.HCL),
+			"description": llx.StringData(variable.Description),
 		})
 		if err != nil {
 			return nil, err
 		}
-		variable := res.(*mqlHcpTerraformVariable)
-		variable.cacheWorkspaceID = r.Id.Data
-		out = append(out, variable)
+		mqlVariable := res.(*mqlHcpTerraformVariable)
+		mqlVariable.cacheWorkspaceID = r.Id.Data
+		out = append(out, mqlVariable)
 	}
 	return out, nil
 }
@@ -856,15 +922,19 @@ func (r *mqlHcpTerraformOrganization) teams() ([]any, error) {
 }
 
 func newMqlHcpTerraformTeam(runtime *plugin.Runtime, orgName string, rec connection.TfeRecord) (*mqlHcpTerraformTeam, error) {
-	var attrs tfeTeamAttrs
-	if err := rec.DecodeAttributes(&attrs); err != nil {
+	var team tfe.Team
+	if err := decodeTfeRecord(rec, &team); err != nil {
+		return nil, err
+	}
+	var gaps tfeTeamGaps
+	if err := rec.DecodeAttributes(&gaps); err != nil {
 		return nil, err
 	}
 	// A team with no organization-access object holds none of the
 	// organization-level permissions; the zero value reports exactly that.
-	access := attrs.OrganizationAccess
+	access := team.OrganizationAccess
 	if access == nil {
-		access = &tfeTeamOrgAccess{}
+		access = &tfe.OrganizationAccess{}
 	}
 	if orgName == "" {
 		orgName = relOneID(rec, "organization")
@@ -873,11 +943,11 @@ func newMqlHcpTerraformTeam(runtime *plugin.Runtime, orgName string, rec connect
 	res, err := CreateResource(runtime, "hcp.terraform.team", map[string]*llx.RawData{
 		"__id":                        llx.StringData("hcp.terraform.team/" + rec.ID),
 		"id":                          llx.StringData(rec.ID),
-		"name":                        llx.StringData(attrs.Name),
-		"usersCount":                  llx.IntData(attrs.UsersCount),
-		"visibility":                  llx.StringData(attrs.Visibility),
-		"ssoTeamId":                   llx.StringDataPtr(attrs.SSOTeamID),
-		"allowMemberTokenManagement":  llx.BoolData(attrs.AllowMemberTokenManagement),
+		"name":                        llx.StringData(team.Name),
+		"usersCount":                  llx.IntData(int64(team.UserCount)),
+		"visibility":                  llx.StringData(team.Visibility),
+		"ssoTeamId":                   llx.StringDataPtr(gaps.SSOTeamID),
+		"allowMemberTokenManagement":  llx.BoolData(team.AllowMemberTokenManagement),
 		"canManagePolicies":           llx.BoolData(access.ManagePolicies),
 		"canManagePolicyOverrides":    llx.BoolData(access.ManagePolicyOverrides),
 		"canManageWorkspaces":         llx.BoolData(access.ManageWorkspaces),
@@ -897,9 +967,9 @@ func newMqlHcpTerraformTeam(runtime *plugin.Runtime, orgName string, rec connect
 	if err != nil {
 		return nil, err
 	}
-	team := res.(*mqlHcpTerraformTeam)
-	team.cacheOrgName = orgName
-	return team, nil
+	mqlTeam := res.(*mqlHcpTerraformTeam)
+	mqlTeam.cacheOrgName = orgName
+	return mqlTeam, nil
 }
 
 // initHcpTerraformTeam hydrates a single team by id.
@@ -947,57 +1017,106 @@ func (r *mqlHcpTerraformTeam) organization() (*mqlHcpTerraformOrganization, erro
 	return res.(*mqlHcpTerraformOrganization), nil
 }
 
-// tokens lists the API tokens issued to the team. Installations that predate
-// multiple team tokens serve only the single-token endpoint, so a 404 from the
-// list endpoint falls back to it rather than reporting no tokens.
+// tokens lists the API tokens issued to the team.
+//
+// The listing comes from the organization: `GET /organizations/:org/team-tokens`
+// returns every team token in the organization, each carrying a `team`
+// relationship, and this filters that to the team in hand.
+//
+// An earlier version listed `GET /teams/:id/authentication-tokens`, which does
+// not exist. That path accepts only POST, to create a token with a description;
+// go-tfe builds it for exactly that and no more, and the vendor's OpenAPI
+// specification gives it no GET at all. So the list always 404ed and the code
+// always fell through to the singular `GET /teams/:id/authentication-token` -
+// which returns at most one token. A team holding three descriptive tokens
+// reported one, and an audit asserting "this organization issues no long-lived
+// team tokens" could pass on an organization that had several. The singular
+// endpoint is kept as a fallback for installations that predate the
+// organization-wide listing, where it is the only source there is.
 func (r *mqlHcpTerraformTeam) tokens() ([]any, error) {
 	client, err := terraformClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
-	base := "teams/" + url.PathEscape(r.Id.Data)
 
-	records, err := client.List(terraformCtx(), base+"/authentication-tokens", nil)
+	records, err := r.listTeamTokenRecords(client)
 	if err != nil {
-		if !connection.IsTfeNotFound(err) {
-			return nil, err
-		}
-		rec, singleErr := client.GetOne(terraformCtx(), base+"/authentication-token", nil)
-		if singleErr != nil {
-			if connection.IsTfeUnavailable(singleErr) {
-				// No token has been issued to this team.
-				return []any{}, nil
-			}
-			return nil, singleErr
-		}
-		if rec == nil {
-			return []any{}, nil
-		}
-		records = []connection.TfeRecord{*rec}
+		return nil, err
 	}
 
 	out := []any{}
 	for _, rec := range records {
-		var attrs tfeTeamTokenAttrs
-		if err := rec.DecodeAttributes(&attrs); err != nil {
+		var token tfe.TeamToken
+		if err := decodeTfeRecord(rec, &token); err != nil {
 			return nil, err
 		}
 		res, err := CreateResource(r.MqlRuntime, "hcp.terraform.teamToken", map[string]*llx.RawData{
 			"__id":        llx.StringData("hcp.terraform.teamToken/" + r.Id.Data + "/" + rec.ID),
 			"id":          llx.StringData(rec.ID),
-			"description": llx.StringData(derefStr(attrs.Description)),
-			"createdAt":   llx.TimeDataPtr(attrs.CreatedAt.Time),
-			"lastUsedAt":  llx.TimeDataPtr(attrs.LastUsedAt.Time),
-			"expiredAt":   llx.TimeDataPtr(attrs.ExpiredAt.Time),
+			"description": llx.StringData(derefStr(token.Description)),
+			"createdAt":   llx.TimeDataPtr(timePtr(token.CreatedAt)),
+			"lastUsedAt":  llx.TimeDataPtr(timePtr(token.LastUsedAt)),
+			"expiredAt":   llx.TimeDataPtr(timePtr(token.ExpiredAt)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		token := res.(*mqlHcpTerraformTeamToken)
-		token.cacheTeamID = r.Id.Data
-		out = append(out, token)
+		mqlToken := res.(*mqlHcpTerraformTeamToken)
+		mqlToken.cacheTeamID = r.Id.Data
+		out = append(out, mqlToken)
 	}
 	return out, nil
+}
+
+// listTeamTokenRecords fetches the team's tokens, preferring the
+// organization-wide listing and falling back to the single-token endpoint on an
+// installation that does not serve it.
+func (r *mqlHcpTerraformTeam) listTeamTokenRecords(client *connection.TfeClient) ([]connection.TfeRecord, error) {
+	orgName := r.cacheOrgName
+	if orgName == "" {
+		// Without the organization there is no listing endpoint to call; the
+		// single-token endpoint is all that is reachable.
+		return r.legacyTeamTokenRecords(client)
+	}
+
+	records, err := client.List(terraformCtx(),
+		"organizations/"+url.PathEscape(orgName)+"/team-tokens", nil)
+	if err != nil {
+		if connection.IsTfeNotFound(err) {
+			return r.legacyTeamTokenRecords(client)
+		}
+		return nil, err
+	}
+
+	// The listing spans the organization, so it has to be narrowed to this
+	// team. A record whose team relationship is missing is skipped rather than
+	// attributed here: guessing would report another team's token as this
+	// team's, and over-reporting a credential is worse than under-reporting it.
+	mine := []connection.TfeRecord{}
+	for _, rec := range records {
+		if relOneID(rec, "team") == r.Id.Data {
+			mine = append(mine, rec)
+		}
+	}
+	return mine, nil
+}
+
+// legacyTeamTokenRecords reads the single team token endpoint, which is the
+// only one older Terraform Enterprise installations serve.
+func (r *mqlHcpTerraformTeam) legacyTeamTokenRecords(client *connection.TfeClient) ([]connection.TfeRecord, error) {
+	rec, err := client.GetOne(terraformCtx(),
+		"teams/"+url.PathEscape(r.Id.Data)+"/authentication-token", nil)
+	if err != nil {
+		if connection.IsTfeUnavailable(err) {
+			// No token has been issued to this team.
+			return []connection.TfeRecord{}, nil
+		}
+		return nil, err
+	}
+	if rec == nil {
+		return []connection.TfeRecord{}, nil
+	}
+	return []connection.TfeRecord{*rec}, nil
 }
 
 // team resolves the team the token authenticates as.
@@ -1032,38 +1151,42 @@ func (r *mqlHcpTerraformOrganization) policySets() ([]any, error) {
 	}
 	out := []any{}
 	for _, rec := range records {
-		var attrs tfePolicySetAttrs
-		if err := rec.DecodeAttributes(&attrs); err != nil {
+		var set tfe.PolicySet
+		if err := decodeTfeRecord(rec, &set); err != nil {
+			return nil, err
+		}
+		var gaps tfePolicySetGaps
+		if err := rec.DecodeAttributes(&gaps); err != nil {
 			return nil, err
 		}
 		overridable := false
-		if attrs.Overridable != nil {
-			overridable = *attrs.Overridable
+		if set.Overridable != nil {
+			overridable = *set.Overridable
 		}
 		res, err := CreateResource(r.MqlRuntime, "hcp.terraform.policySet", map[string]*llx.RawData{
 			"__id":           llx.StringData("hcp.terraform.policySet/" + rec.ID),
 			"id":             llx.StringData(rec.ID),
-			"name":           llx.StringData(attrs.Name),
-			"description":    llx.StringData(derefStr(attrs.Description)),
-			"kind":           llx.StringData(attrs.Kind),
-			"global":         llx.BoolData(attrs.Global),
-			"policyCount":    llx.IntData(attrs.PolicyCount),
-			"workspaceCount": llx.IntData(attrs.WorkspaceCount),
-			"versioned":      llx.BoolData(attrs.Versioned),
-			"policiesPath":   llx.StringData(derefStr(attrs.PoliciesPath)),
-			"agentEnabled":   llx.BoolData(attrs.AgentEnabled),
+			"name":           llx.StringData(set.Name),
+			"description":    llx.StringData(set.Description),
+			"kind":           llx.StringData(string(set.Kind)),
+			"global":         llx.BoolData(set.Global),
+			"policyCount":    llx.IntData(int64(set.PolicyCount)),
+			"workspaceCount": llx.IntData(int64(set.WorkspaceCount)),
+			"versioned":      llx.BoolData(gaps.Versioned),
+			"policiesPath":   llx.StringData(set.PoliciesPath),
+			"agentEnabled":   llx.BoolData(set.AgentEnabled),
 			"overridable":    llx.BoolData(overridable),
-			"createdAt":      llx.TimeDataPtr(attrs.CreatedAt.Time),
-			"updatedAt":      llx.TimeDataPtr(attrs.UpdatedAt.Time),
+			"createdAt":      llx.TimeDataPtr(timePtr(set.CreatedAt)),
+			"updatedAt":      llx.TimeDataPtr(timePtr(set.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err
 		}
-		set := res.(*mqlHcpTerraformPolicySet)
-		set.cacheOrgName = r.Name.Data
-		set.cachePolicyIDs = relManyIDs(rec, "policies")
-		set.cacheWorkspaceIDs = relManyIDs(rec, "workspaces")
-		out = append(out, set)
+		mqlSet := res.(*mqlHcpTerraformPolicySet)
+		mqlSet.cacheOrgName = r.Name.Data
+		mqlSet.cachePolicyIDs = relManyIDs(rec, "policies")
+		mqlSet.cacheWorkspaceIDs = relManyIDs(rec, "workspaces")
+		out = append(out, mqlSet)
 	}
 	return out, nil
 }
@@ -1142,11 +1265,11 @@ func (r *mqlHcpTerraformOrganization) policies() ([]any, error) {
 }
 
 func newMqlHcpTerraformPolicy(runtime *plugin.Runtime, orgName string, rec connection.TfeRecord) (*mqlHcpTerraformPolicy, error) {
-	var attrs tfePolicyAttrs
-	if err := rec.DecodeAttributes(&attrs); err != nil {
+	var policy tfe.Policy
+	if err := decodeTfeRecord(rec, &policy); err != nil {
 		return nil, err
 	}
-	level := terraformEnforcementLevel(attrs.EnforcementLevel, attrs.Enforce)
+	level := terraformEnforcementLevel(string(policy.EnforcementLevel), policy.Enforce)
 	if orgName == "" {
 		orgName = relOneID(rec, "organization")
 	}
@@ -1154,20 +1277,20 @@ func newMqlHcpTerraformPolicy(runtime *plugin.Runtime, orgName string, rec conne
 	res, err := CreateResource(runtime, "hcp.terraform.policy", map[string]*llx.RawData{
 		"__id":             llx.StringData("hcp.terraform.policy/" + rec.ID),
 		"id":               llx.StringData(rec.ID),
-		"name":             llx.StringData(attrs.Name),
-		"description":      llx.StringData(derefStr(attrs.Description)),
-		"kind":             llx.StringData(attrs.Kind),
+		"name":             llx.StringData(policy.Name),
+		"description":      llx.StringData(policy.Description),
+		"kind":             llx.StringData(string(policy.Kind)),
 		"enforcementLevel": llx.StringData(level),
 		"blocking":         llx.BoolData(terraformPolicyBlocking(level)),
-		"policySetCount":   llx.IntData(attrs.PolicySetCount),
-		"updatedAt":        llx.TimeDataPtr(attrs.UpdatedAt.Time),
+		"policySetCount":   llx.IntData(int64(policy.PolicySetCount)),
+		"updatedAt":        llx.TimeDataPtr(timePtr(policy.UpdatedAt)),
 	})
 	if err != nil {
 		return nil, err
 	}
-	policy := res.(*mqlHcpTerraformPolicy)
-	policy.cacheOrgName = orgName
-	return policy, nil
+	mqlPolicy := res.(*mqlHcpTerraformPolicy)
+	mqlPolicy.cacheOrgName = orgName
+	return mqlPolicy, nil
 }
 
 // organization resolves the organization the policy belongs to.
@@ -1212,8 +1335,8 @@ func (r *mqlHcpTerraformOrganization) agentPools() ([]any, error) {
 }
 
 func newMqlHcpTerraformAgentPool(runtime *plugin.Runtime, orgName string, rec connection.TfeRecord) (*mqlHcpTerraformAgentPool, error) {
-	var attrs tfeAgentPoolAttrs
-	if err := rec.DecodeAttributes(&attrs); err != nil {
+	var pool tfe.AgentPool
+	if err := decodeTfeRecord(rec, &pool); err != nil {
 		return nil, err
 	}
 	if orgName == "" {
@@ -1223,18 +1346,18 @@ func newMqlHcpTerraformAgentPool(runtime *plugin.Runtime, orgName string, rec co
 	res, err := CreateResource(runtime, "hcp.terraform.agentPool", map[string]*llx.RawData{
 		"__id":               llx.StringData("hcp.terraform.agentPool/" + rec.ID),
 		"id":                 llx.StringData(rec.ID),
-		"name":               llx.StringData(attrs.Name),
-		"agentCount":         llx.IntData(attrs.AgentCount),
-		"organizationScoped": llx.BoolData(attrs.OrganizationScoped),
-		"createdAt":          llx.TimeDataPtr(attrs.CreatedAt.Time),
+		"name":               llx.StringData(pool.Name),
+		"agentCount":         llx.IntData(int64(pool.AgentCount)),
+		"organizationScoped": llx.BoolData(pool.OrganizationScoped),
+		"createdAt":          llx.TimeDataPtr(timePtr(pool.CreatedAt)),
 	})
 	if err != nil {
 		return nil, err
 	}
-	pool := res.(*mqlHcpTerraformAgentPool)
-	pool.cacheOrgName = orgName
-	pool.cacheAllowedWorkspaceIDs = relManyIDs(rec, "allowed-workspaces")
-	return pool, nil
+	mqlPool := res.(*mqlHcpTerraformAgentPool)
+	mqlPool.cacheOrgName = orgName
+	mqlPool.cacheAllowedWorkspaceIDs = relManyIDs(rec, "allowed-workspaces")
+	return mqlPool, nil
 }
 
 // initHcpTerraformAgentPool hydrates a single agent pool by id.

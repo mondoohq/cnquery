@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/jsonapi"
 )
 
 const (
@@ -49,6 +52,18 @@ const (
 // TfeClient talks to the HCP Terraform / Terraform Enterprise JSON:API. The
 // HCP service principal that authenticates the rest of this provider is not
 // accepted by this API, so it carries its own bearer token.
+//
+// Record *types* come from github.com/hashicorp/go-tfe (see
+// TfeRecord.DecodeTyped); the transport stays here deliberately, because on
+// every other axis go-tfe's client is weaker than this one:
+//
+//   - it does not paginate at all. Every List returns a single page and leaves
+//     the walk to the caller, with no page cap and no stuck-cursor guard.
+//   - its error classification discards the status code for anything that is
+//     not a 401 or a 404, so a 403 arrives as a bare errors.New(body) and could
+//     only be recognised by matching on message text.
+//
+// Both of those are load-bearing here: see List below and TfeError above.
 type TfeClient struct {
 	baseURL *url.URL
 	token   string
@@ -149,6 +164,42 @@ type TfeRecord struct {
 	Relationships map[string]TfeRelationship `json:"relationships"`
 }
 
+// DecodeTyped unmarshals the record into a go-tfe struct, which is where the
+// attribute names live now: go-tfe's `jsonapi:"attr,…"` tags are maintained by
+// the vendor and exercised continuously by terraform-provider-tfe, so they are
+// a far better source of truth than tags written here from documentation.
+//
+// The record is re-wrapped as a single-resource JSON:API document because that
+// is the shape jsonapi.UnmarshalPayload expects. Rebuilding it from the parsed
+// fields rather than from the original bytes means a record assembled by hand
+// (in a test, say) decodes exactly like one that came off the wire.
+func (r TfeRecord) DecodeTyped(out any) error {
+	type resourceObject struct {
+		ID            string                     `json:"id"`
+		Type          string                     `json:"type"`
+		Attributes    json.RawMessage            `json:"attributes,omitempty"`
+		Relationships map[string]TfeRelationship `json:"relationships,omitempty"`
+	}
+	doc := struct {
+		Data resourceObject `json:"data"`
+	}{
+		Data: resourceObject{
+			ID:            r.ID,
+			Type:          r.Type,
+			Attributes:    r.Attributes,
+			Relationships: r.Relationships,
+		},
+	}
+	body, err := json.Marshal(doc)
+	if err != nil {
+		return fmt.Errorf("hcp terraform: re-encoding %s record: %w", r.Type, err)
+	}
+	if err := jsonapi.UnmarshalPayload(bytes.NewReader(body), out); err != nil {
+		return fmt.Errorf("hcp terraform: decoding %s record: %w", r.Type, err)
+	}
+	return nil
+}
+
 // Rel returns the named relationship, or the zero relationship when the record
 // does not carry it.
 func (r TfeRecord) Rel(name string) TfeRelationship {
@@ -191,6 +242,12 @@ type tfePagination struct {
 // callers can classify it. Only a response that actually reached the API
 // produces one, which is what keeps a transport failure from being mistaken
 // for a "not found".
+//
+// This is kept rather than adopting go-tfe's errors because go-tfe maps only
+// 401 and 404 onto sentinels and drops every other status: a 403 becomes
+// errors.New(<response body>), with no code to test. Classifying that would
+// mean matching on message text, which is exactly what
+// TestTfeErrorClassifiersRejectNonAPIErrors forbids.
 type TfeError struct {
 	StatusCode int
 	Detail     string
@@ -330,6 +387,9 @@ func (c *TfeClient) GetOne(ctx context.Context, path string, query url.Values) (
 // comes back empty while still advertising a successor: both mean the endpoint
 // is ignoring the cursor, and continuing would return the same records over
 // and over.
+//
+// go-tfe supplies no equivalent: it has no pagination walk at all, so there is
+// nothing to adopt here and nothing that would carry these two guards.
 func (c *TfeClient) List(ctx context.Context, path string, query url.Values) ([]TfeRecord, error) {
 	out := []TfeRecord{}
 	page := 1
