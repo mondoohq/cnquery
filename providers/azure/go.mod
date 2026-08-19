@@ -73,6 +73,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates v1.5.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.5.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets v1.5.0
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azqueue v1.0.1
 	github.com/cockroachdb/errors v1.14.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.35.1

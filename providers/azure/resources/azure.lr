@@ -6066,6 +6066,15 @@ private azure.subscription.storageService.account.queue @defaults("id name") {
   metadata map[string]string
   // Approximate number of messages in the queue
   approximateMessageCount() int
+  // Stored access policies on the queue
+  //
+  // Each entry has `id`, `permission`, `startTime`, and `expiryTime`. A
+  // shared access signature bound to one of these policies can be revoked
+  // server-side by deleting or expiring the policy; a signature issued
+  // without one cannot be withdrawn before it expires. Empty when the
+  // queue carries no policies. Read from the queue service rather than
+  // Azure Resource Manager, so it needs data access to the queue.
+  signedIdentifiers() []dict
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
