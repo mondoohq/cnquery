@@ -143,14 +143,18 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 
 	keyEncryptionKeyUrl, keyVaultId := amlKeyEncryptionKey(props.EncryptionSettings)
 
+	// The squash UID and GID are carried as pointers, not dereferenced. 0 is
+	// the root id, so a file system with no squash mapping configured would
+	// otherwise report that root maps to root -- which reads as "squashing is
+	// in place and does nothing", the opposite of the truth.
 	var squashMode, squashNidLists, squashStatus string
-	var squashUid, squashGid int64
+	var squashUid, squashGid *int64
 	if props.RootSquashSettings != nil {
 		squashMode = enumString(props.RootSquashSettings.Mode)
 		squashNidLists = convert.ToValue(props.RootSquashSettings.NoSquashNidLists)
 		squashStatus = convert.ToValue(props.RootSquashSettings.Status)
-		squashUid = convert.ToValue(props.RootSquashSettings.SquashUID)
-		squashGid = convert.ToValue(props.RootSquashSettings.SquashGID)
+		squashUid = props.RootSquashSettings.SquashUID
+		squashGid = props.RootSquashSettings.SquashGID
 	}
 
 	var hsmContainerId, hsmLoggingContainerId, hsmImportPrefix string
@@ -186,9 +190,9 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 			"skuName":                       llx.StringData(skuName),
 			"provisioningState":             llx.StringData(enumString(props.ProvisioningState)),
 			"identity":                      llx.DictData(identity),
-			"storageCapacityTiB":            llx.FloatData(float64(convert.ToValue(props.StorageCapacityTiB))),
-			"currentStorageCapacityTiB":     llx.FloatData(float64(convert.ToValue(props.CurrentStorageCapacityTiB))),
-			"throughputProvisionedMbps":     llx.IntData(int64(convert.ToValue(props.ThroughputProvisionedMBps))),
+			"storageCapacityTiB":            llx.FloatDataPtr(props.StorageCapacityTiB),
+			"currentStorageCapacityTiB":     llx.FloatDataPtr(props.CurrentStorageCapacityTiB),
+			"throughputProvisionedMbps":     llx.IntDataPtr(props.ThroughputProvisionedMBps),
 			"clusterUuid":                   llx.StringDataPtr(props.ClusterUUID),
 			"healthState":                   llx.StringData(healthState),
 			"healthStatusCode":              llx.StringData(healthStatusCode),
@@ -196,8 +200,8 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 			"keyEncryptionKeyUrl":           llx.StringData(keyEncryptionKeyUrl),
 			"rootSquashMode":                llx.StringData(squashMode),
 			"rootSquashNoSquashNidLists":    llx.StringData(squashNidLists),
-			"rootSquashUid":                 llx.IntData(squashUid),
-			"rootSquashGid":                 llx.IntData(squashGid),
+			"rootSquashUid":                 llx.IntDataPtr(squashUid),
+			"rootSquashGid":                 llx.IntDataPtr(squashGid),
 			"rootSquashStatus":              llx.StringData(squashStatus),
 			"hsmImportPrefix":               llx.StringData(hsmImportPrefix),
 			"hsmImportPrefixesInitial":      llx.ArrayData(hsmImportPrefixesInitial, types.String),

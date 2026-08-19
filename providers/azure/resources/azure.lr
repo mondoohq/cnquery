@@ -255,10 +255,8 @@ azure.subscription @defaults ("name") {
   dataBox() azure.subscription.dataBoxService
   // Azure NetApp Files resources in the subscription
   netApp() azure.subscription.netAppService
-
   // Azure Elastic SAN resources in the subscription
   elasticSan() azure.subscription.elasticSanService
-
   // Azure Managed Lustre resources in the subscription
   storageCache() azure.subscription.storageCacheService
   // Azure Functions resources in the subscription
@@ -19401,10 +19399,16 @@ azure.subscription.storageCacheService.amlFilesystem @defaults("id name location
   // User-assigned managed identities associated with the file system
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Provisioned storage capacity in TiB
+  //
+  // Null when the API does not report it.
   storageCapacityTiB float
   // Storage capacity currently available in TiB
+  //
+  // Null when the API does not report it.
   currentStorageCapacityTiB float
   // Provisioned throughput in MB/s
+  //
+  // Null when the API does not report it.
   throughputProvisionedMbps int
   // Identifier of the underlying Lustre cluster
   clusterUuid string
@@ -19438,8 +19442,15 @@ azure.subscription.storageCacheService.amlFilesystem @defaults("id name location
   // the identity they mount with regardless of rootSquashMode.
   rootSquashNoSquashNidLists string
   // UID that a squashed client's root user is mapped to
+  //
+  // Null when the file system has no squash mapping configured. That is not
+  // the same as 0, which is root's own UID and would mean squashing maps
+  // root to root.
   rootSquashUid int
   // GID that a squashed client's root group is mapped to
+  //
+  // Null when the file system has no squash mapping configured. That is not
+  // the same as 0, which is root's own GID.
   rootSquashGid int
   // Status of the root squash configuration
   rootSquashStatus string
