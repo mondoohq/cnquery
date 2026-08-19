@@ -1904,6 +1904,9 @@ var azureServiceToARMMap = map[string]string{
 	// Same again: the default branch would emit "Microsoft.Netapp", which is
 	// not a real provider namespace.
 	"netapp": "Microsoft.NetApp",
+	// Same again: the default branch would emit "Microsoft.Fileshares", which
+	// is not a real provider namespace.
+	"fileshares": "Microsoft.FileShares",
 }
 
 func azureServiceToARM(service string) string {
@@ -2228,6 +2231,12 @@ var azurePermissionOverrides = map[string]string{
 	"Microsoft.NetApp/accounts/read": "Microsoft.NetApp/netAppAccounts/read",
 	"Microsoft.NetApp/pools/read":    "Microsoft.NetApp/netAppAccounts/capacityPools/read",
 	"Microsoft.NetApp/volumes/read":  "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/read",
+	// File shares: armfileshares exposes a generic NewClient, so the resource
+	// type comes from the package name and loses the camel hump. Snapshots are
+	// nested under the share, which the FileShareSnapshotsClient name does not
+	// carry.
+	"Microsoft.FileShares/fileshares/read":         "Microsoft.FileShares/fileShares/read",
+	"Microsoft.FileShares/fileShareSnapshots/read": "Microsoft.FileShares/fileShares/snapshots/read",
 }
 
 // azurePermission constructs the RBAC permission string.
