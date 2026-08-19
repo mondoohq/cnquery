@@ -278,6 +278,13 @@ microsoft.device.profileType 11.2.1
 microsoft.device.registrationDateTime 11.1.21
 microsoft.device.systemLabels 11.1.21
 microsoft.device.trustType 11.1.21
+microsoft.deviceRegistrationPolicy 13.12.1
+microsoft.deviceRegistrationPolicy.description 13.12.1
+microsoft.deviceRegistrationPolicy.displayName 13.12.1
+microsoft.deviceRegistrationPolicy.id 13.12.1
+microsoft.deviceRegistrationPolicy.localAdminPasswordEnabled 13.12.1
+microsoft.deviceRegistrationPolicy.multiFactorAuthConfiguration 13.12.1
+microsoft.deviceRegistrationPolicy.userDeviceQuota 13.12.1
 microsoft.devicemanagement 9.0.0
 microsoft.devicemanagement.appProtectionPolicies 13.3.1
 microsoft.devicemanagement.appProtectionPolicy 13.3.1
@@ -826,6 +833,7 @@ microsoft.policies.authorizationPolicy 9.0.0
 microsoft.policies.consentPolicySettings 9.0.0
 microsoft.policies.crossTenantAccessPolicy 9.0.0
 microsoft.policies.defaultAppManagementPolicy 13.5.1
+microsoft.policies.deviceRegistrationPolicy 13.12.1
 microsoft.policies.externalIdentitiesPolicy 11.1.43
 microsoft.policies.identitySecurityDefaultsEnforcementPolicy 9.0.0
 microsoft.policies.permissionGrantPolicies 9.0.0
