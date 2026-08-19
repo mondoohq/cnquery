@@ -44,6 +44,27 @@ var knownOverCap = map[string]string{
 	"providers/ms365/resources/ms365_exchange.go:exchangeReport": "scanner-side fallback; only affected on a Windows scanner host",
 }
 
+// stagedScripts records the embedded scripts that exceed the command-line cap
+// and are nonetheless fine, because they never reach a command line: they are
+// written to the target with powershell.Stage and run with `-File`, so the
+// command carries a path rather than a program.
+//
+// This is a *different claim* from knownOverCap, not a softer one. An entry
+// there says "over the cap and broken, tracked elsewhere"; an entry here says
+// "over the cap and correct, because the transport changed". Without this list
+// staging would fix a script and leave it failing this test forever, and the
+// only available response would be to raise the cap — which is the thing this
+// file exists to prevent.
+//
+// The reciprocal assertions below keep it honest. An entry must name a script
+// the sweep actually found, must not also appear in knownOverCap, and must be
+// passed to powershell.Stage somewhere in the tree. The last one is the point:
+// it makes the exemption a statement about code rather than a note.
+var stagedScripts = map[string]string{
+	// (empty on this branch: nothing is staged yet. The iis resource is the
+	// first caller and adds its entry with the call.)
+}
+
 // psMarkers identify a string literal as a PowerShell script.
 var psMarkers = []string{
 	"$ErrorActionPreference", "PSCustomObject", "ConvertTo-Json", "ForEach-Object",
@@ -117,10 +138,22 @@ func (f scriptFinding) key() string { return f.file + ":" + f.name }
 //     path, and filesfind.BuildPowershellCmd with MQL arguments the user wrote.
 //
 // Bounding those needs a check at the point of assembly rather than here.
+//
+// A third class used to be invisible entirely: a script kept in its own `.ps1`
+// file and pulled in with `//go:embed`. There is no string literal to measure,
+// so the sweep walked straight past it — which is how a 13,849-character script
+// reached review inside a resource whose tests all passed. The walk now reads
+// those files too, and the mode it parses with is load-bearing:
+// `//go:embed` is a *comment*, and `parser.ParseFile` with mode 0 discards
+// comments, so a wider AST walk alone finds nothing. It needs
+// `parser.ParseComments` and the `GenDecl.Doc` the directive hangs off.
 func TestEmbeddedPowerShellScriptsFitCommandLine(t *testing.T) {
 	root := "../../../.."
 
 	var found []scriptFinding
+	// staged collects the identifier of every script handed to powershell.Stage,
+	// so the stagedScripts exemption list can be checked against real calls.
+	staged := map[string]bool{}
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
@@ -138,7 +171,9 @@ func TestEmbeddedPowerShellScriptsFitCommandLine(t *testing.T) {
 			return nil
 		}
 		fset := token.NewFileSet()
-		f, perr := parser.ParseFile(fset, path, nil, 0)
+		// ParseComments, not 0. `//go:embed` is a comment; with mode 0 the AST
+		// carries no Doc at all and every embedded .ps1 is invisible.
+		f, perr := parser.ParseFile(fset, path, nil, parser.ParseComments)
 		if perr != nil {
 			return nil
 		}
@@ -158,8 +193,48 @@ func TestEmbeddedPowerShellScriptsFitCommandLine(t *testing.T) {
 			})
 		}
 
+		// recordEmbed measures a script kept in its own file. The pattern is
+		// relative to the directory of the .go file that declares it, exactly as
+		// the embed package resolves it.
+		recordEmbed := func(name, pattern string, pos token.Pos) {
+			body, rerr := os.ReadFile(filepath.Join(filepath.Dir(path), pattern))
+			if rerr != nil {
+				return
+			}
+			s := string(body)
+			if len(s) < 120 || !looksLikePowerShell(s) {
+				return
+			}
+			found = append(found, scriptFinding{
+				file: rel, name: name, line: fset.Position(pos).Line,
+				src: len(s), enc: len(powershell.Encode(s)),
+			})
+		}
+
 		ast.Inspect(f, func(n ast.Node) bool {
 			switch d := n.(type) {
+			case *ast.GenDecl: // `//go:embed x.ps1` hangs off the declaration's Doc
+				if d.Doc == nil {
+					return true
+				}
+				for _, c := range d.Doc.List {
+					pattern, ok := strings.CutPrefix(c.Text, "//go:embed ")
+					if !ok {
+						continue
+					}
+					for _, pat := range strings.Fields(pattern) {
+						if !strings.HasSuffix(pat, ".ps1") {
+							continue
+						}
+						for _, spec := range d.Specs {
+							vs, ok := spec.(*ast.ValueSpec)
+							if !ok || len(vs.Names) == 0 {
+								continue
+							}
+							recordEmbed(vs.Names[0].Name, pat, vs.Names[0].Pos())
+						}
+					}
+				}
 			case *ast.ValueSpec: // const and var declarations, package or function scope
 				for i, nm := range d.Names {
 					if i < len(d.Values) {
@@ -179,7 +254,24 @@ func TestEmbeddedPowerShellScriptsFitCommandLine(t *testing.T) {
 				}
 			case *ast.CallExpr: // powershell.Encode("…inline literal…")
 				sel, ok := d.Fun.(*ast.SelectorExpr)
-				if !ok || len(d.Args) != 1 {
+				if !ok {
+					return true
+				}
+				// powershell.Stage(conn, "name", SOME_SCRIPT): remember which
+				// script identifiers are actually staged, so the exemption list
+				// can be checked against calls rather than taken on trust.
+				if sel.Sel.Name == "Stage" {
+					for _, arg := range d.Args {
+						switch a := arg.(type) {
+						case *ast.Ident:
+							staged[a.Name] = true
+						case *ast.SelectorExpr:
+							staged[a.Sel.Name] = true
+						}
+					}
+					return true
+				}
+				if len(d.Args) != 1 {
 					return true
 				}
 				switch sel.Sel.Name {
@@ -219,14 +311,20 @@ func TestEmbeddedPowerShellScriptsFitCommandLine(t *testing.T) {
 	t.Log(table.String())
 
 	seen := map[string]bool{}
+	names := map[string]string{}
 	for _, f := range found {
 		seen[f.key()] = true
+		names[f.key()] = f.name
 		if f.enc <= powershell.MaxCommandLength {
+			continue
+		}
+		if _, ok := stagedScripts[f.key()]; ok {
 			continue
 		}
 		assert.Contains(t, knownOverCap, f.key(),
 			"%s:%d %s is %d chars (%d encoded), over the %d character cap. "+
-				"Compact it, or split it into two round trips — do not raise the cap.",
+				"Compact it, split it into two round trips, or stage it with "+
+				"powershell.Stage and list it in stagedScripts — do not raise the cap.",
 			f.file, f.line, f.name, f.src, f.enc, powershell.MaxCommandLength)
 	}
 
@@ -240,5 +338,22 @@ func TestEmbeddedPowerShellScriptsFitCommandLine(t *testing.T) {
 	}
 	for key := range knownOverCap {
 		assert.True(t, seen[key], "knownOverCap names %s, which the sweep did not find; remove it", key)
+	}
+
+	// The same reciprocal treatment for stagedScripts, plus the one assertion
+	// that makes the entry mean something: the script it names has to be passed
+	// to powershell.Stage somewhere. Otherwise the list is a way of silencing
+	// this test with a comment.
+	for key := range stagedScripts {
+		if !assert.True(t, seen[key],
+			"stagedScripts names %s, which the sweep did not find; remove it", key) {
+			continue
+		}
+		assert.NotContains(t, knownOverCap, key,
+			"%s is in both stagedScripts and knownOverCap; it is either staged "+
+				"and correct or unstaged and broken, not both", key)
+		assert.True(t, staged[names[key]],
+			"stagedScripts claims %s is staged, but no powershell.Stage call in "+
+				"the tree takes %s as an argument", key, names[key])
 	}
 }
