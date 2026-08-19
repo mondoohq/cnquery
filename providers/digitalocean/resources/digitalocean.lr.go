@@ -14127,7 +14127,7 @@ func (c *mqlDigitaloceanSpacesKey) GetCreatedAt() *plugin.TValue[*time.Time] {
 type mqlDigitaloceanSpacesBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlDigitaloceanSpacesBucketInternal it will be used here
+	mqlDigitaloceanSpacesBucketInternal
 	Name                 plugin.TValue[string]
 	Region               plugin.TValue[string]
 	CreatedAt            plugin.TValue[*time.Time]

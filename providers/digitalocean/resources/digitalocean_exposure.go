@@ -359,6 +359,11 @@ func (b *mqlDigitaloceanSpacesBucket) hasWildcardPolicy() (bool, error) {
 	if policy.Error != nil {
 		return false, policy.Error
 	}
+	// A policy that was never read is not a policy that grants nothing.
+	if !b.policyRead {
+		b.HasWildcardPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
 	return spacesPolicyGrantsWildcard(policy.Data), nil
 }
 
@@ -400,7 +405,27 @@ func (b *mqlDigitaloceanSpacesBucket) isPublic() (bool, error) {
 		return false, wildcardPolicy.Error
 	}
 
-	return publicRead.Data || publicWrite.Data || authenticatedRead.Data || wildcardPolicy.Data, nil
+	// Any grant that was actually read and is public settles it, whatever else
+	// could not be read.
+	signals := []*plugin.TValue[bool]{publicRead, publicWrite, authenticatedRead, wildcardPolicy}
+	unknown := false
+	for _, s := range signals {
+		if s.State&plugin.StateIsNull != 0 {
+			unknown = true
+			continue
+		}
+		if s.Data {
+			return true, nil
+		}
+	}
+
+	// Nothing read said public, but something was not read. Reporting false
+	// here would clear the bucket on the strength of an answer nobody gave.
+	if unknown {
+		b.IsPublic.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return false, nil
 }
 
 // isPublic reports whether anyone on the internet can invoke the action: it is
