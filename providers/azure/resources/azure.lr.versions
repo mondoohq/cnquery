@@ -5635,6 +5635,7 @@ azure.subscription.recoveryServicesService.vaults 13.3.3
 azure.subscription.resource 9.0.0
 azure.subscription.resource.changedTime 9.0.0
 azure.subscription.resource.createdTime 9.0.0
+azure.subscription.resource.diagnosticSettings 13.36.1
 azure.subscription.resource.id 9.0.0
 azure.subscription.resource.identity 9.0.0
 azure.subscription.resource.kind 9.0.0

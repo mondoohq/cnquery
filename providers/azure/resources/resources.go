@@ -5,9 +5,11 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 	"go.mondoo.com/mql/v13/types"
@@ -92,6 +94,38 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// diagnosticSettings lists the Azure Monitor diagnostic settings on this
+// resource.
+//
+// getDiagnosticSettings takes any ARM resource URI; it was simply only ever
+// called with a subscription id, which is why the settings were unreachable
+// per resource. The resource's own id is that URI.
+func (a *mqlAzureSubscriptionResource) diagnosticSettings() ([]any, error) {
+	if a.Id.Error != nil {
+		return nil, a.Id.Error
+	}
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	settings, err := getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+	if err != nil {
+		// Many resource types cannot carry diagnostic settings at all, and ARM
+		// says so with a 400 rather than an empty list. Reported as null, not
+		// as an empty list: empty would claim the resource has none
+		// configured, which reads as a finding, and a type that cannot have
+		// them is not one. Left to propagate it would be worse still, since a
+		// field error renders as the value of the enclosing collection and one
+		// unsupported resource would cost the whole list.
+		if isAzureNotConfigured(err) {
+			a.DiagnosticSettings.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return settings, nil
 }
 
 func (a *mqlAzureSubscriptionResource) id() (string, error) {

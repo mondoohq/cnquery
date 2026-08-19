@@ -59,7 +59,44 @@ func isAzureNotConfigured(err error) bool {
 	if respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden {
 		return true
 	}
-	return azureFeatureNotApplicable(respErr.StatusCode, respErr.ErrorCode, azureErrorSubcode(respErr))
+	return azureFeatureNotApplicable(respErr.StatusCode, azureErrorCode(respErr), azureErrorSubcode(respErr))
+}
+
+// azureErrorCode reads the error code, falling back to the body when azcore did
+// not populate it.
+//
+// azcore fills ResponseError.ErrorCode from the wrapped {"error":{"code":...}}
+// envelope. ARM also sends errors bare - {"code":"ResourceTypeNotSupported",
+// "message":...} - and for those ErrorCode is empty, so an allowlist keyed on
+// it can never match however many codes are added. azureErrorSubcode already
+// reads both shapes; this is the same treatment for the code.
+func azureErrorCode(respErr *azcore.ResponseError) string {
+	if respErr == nil {
+		return ""
+	}
+	if respErr.ErrorCode != "" {
+		return respErr.ErrorCode
+	}
+	if respErr.RawResponse == nil {
+		return ""
+	}
+	body, err := runtime.Payload(respErr.RawResponse)
+	if err != nil || len(body) == 0 {
+		return ""
+	}
+	var envelope struct {
+		Code  string `json:"code"`
+		Error struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}
+	if json.Unmarshal(body, &envelope) != nil {
+		return ""
+	}
+	if envelope.Code != "" {
+		return envelope.Code
+	}
+	return envelope.Error.Code
 }
 
 // azureNotApplicableCodes maps an ARM error code to the subcode that has to
@@ -98,6 +135,12 @@ var azureNotApplicableCodes = map[string]string{
 	// supported for subscription '...' as it has no standard pricing bundle."
 	// ARM puts the whole sentence in the code field for this one.
 	"subscription with no standard pricing bundle": "",
+
+	// Diagnostic settings on a resource type that has none: "The resource type
+	// 'microsoft.network/networkwatchers' does not support diagnostic
+	// settings." Reading them across a subscription reaches many such types,
+	// and no amount of reconfiguration makes the type support them.
+	"resourcetypenotsupported": "",
 }
 
 // azureFeatureNotApplicable reports whether an ARM 400's code and subcode name
