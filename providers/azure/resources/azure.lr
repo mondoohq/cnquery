@@ -407,6 +407,18 @@ private azure.subscription.lock @defaults("name level scope") {
 // are not populated on this record; query the dedicated resource for a given type
 // when you need those.
 private azure.subscription.resource @defaults("id name location") {
+  // Azure Monitor diagnostic settings on the resource
+  //
+  // Which logs and metrics the resource emits, and where they are sent.
+  // Empty when the resource has none configured, which is the state a
+  // "logging is enabled" check is looking for. Reported per resource, so a
+  // sweep can ask the same question of every service that supports
+  // diagnostic settings rather than only the few with a dedicated field.
+  //
+  // This costs one request per resource it is read from, so narrow the set
+  // first, for example
+  // `resources.where(type == "Microsoft.Databricks/workspaces")`.
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Resource ID
   id string
   // Resource name

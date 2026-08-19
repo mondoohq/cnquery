@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"go.mondoo.com/mql/v13/llx"
@@ -92,6 +93,23 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+// diagnosticSettings lists the Azure Monitor diagnostic settings on this
+// resource.
+//
+// getDiagnosticSettings takes any ARM resource URI; it was simply only ever
+// called with a subscription id, which is why the settings were unreachable
+// per resource. The resource's own id is that URI.
+func (a *mqlAzureSubscriptionResource) diagnosticSettings() ([]any, error) {
+	if a.Id.Error != nil {
+		return nil, a.Id.Error
+	}
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
 }
 
 func (a *mqlAzureSubscriptionResource) id() (string, error) {
