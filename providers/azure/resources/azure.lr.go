@@ -532,14 +532,18 @@ const (
 	ResourceAzureSubscriptionNetAppServiceAccount                                                       string = "azure.subscription.netAppService.account"
 	ResourceAzureSubscriptionFileSharesService                                                          string = "azure.subscription.fileSharesService"
 	ResourceAzureSubscriptionFileSharesServiceFileShare                                                 string = "azure.subscription.fileSharesService.fileShare"
+	ResourceAzureSubscriptionElasticSanService                                                          string = "azure.subscription.elasticSanService"
+	ResourceAzureSubscriptionElasticSanServiceElasticSan                                                string = "azure.subscription.elasticSanService.elasticSan"
 	ResourceAzureSubscriptionDataBoxService                                                             string = "azure.subscription.dataBoxService"
 	ResourceAzureSubscriptionDataBoxServiceJob                                                          string = "azure.subscription.dataBoxService.job"
 	ResourceAzureSubscriptionNetAppServiceAccountEncryption                                             string = "azure.subscription.netAppService.account.encryption"
 	ResourceAzureSubscriptionNetAppServiceAccountActiveDirectory                                        string = "azure.subscription.netAppService.account.activeDirectory"
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPool                                           string = "azure.subscription.netAppService.account.capacityPool"
+	ResourceAzureSubscriptionElasticSanServiceElasticSanVolumeGroup                                     string = "azure.subscription.elasticSanService.elasticSan.volumeGroup"
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolume                                     string = "azure.subscription.netAppService.account.capacityPool.volume"
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule                     string = "azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule"
 	ResourceAzureSubscriptionFileSharesServiceFileShareSnapshot                                         string = "azure.subscription.fileSharesService.fileShare.snapshot"
+	ResourceAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule                   string = "azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2610,6 +2614,14 @@ func init() {
 			Init:   initAzureSubscriptionFileSharesServiceFileShare,
 			Create: createAzureSubscriptionFileSharesServiceFileShare,
 		},
+		"azure.subscription.elasticSanService": {
+			Init:   initAzureSubscriptionElasticSanService,
+			Create: createAzureSubscriptionElasticSanService,
+		},
+		"azure.subscription.elasticSanService.elasticSan": {
+			Init:   initAzureSubscriptionElasticSanServiceElasticSan,
+			Create: createAzureSubscriptionElasticSanServiceElasticSan,
+		},
 		"azure.subscription.dataBoxService": {
 			Init:   initAzureSubscriptionDataBoxService,
 			Create: createAzureSubscriptionDataBoxService,
@@ -2630,6 +2642,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetAppServiceAccountCapacityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetAppServiceAccountCapacityPool,
 		},
+		"azure.subscription.elasticSanService.elasticSan.volumeGroup": {
+			// to override args, implement: initAzureSubscriptionElasticSanServiceElasticSanVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionElasticSanServiceElasticSanVolumeGroup,
+		},
 		"azure.subscription.netAppService.account.capacityPool.volume": {
 			// to override args, implement: initAzureSubscriptionNetAppServiceAccountCapacityPoolVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetAppServiceAccountCapacityPoolVolume,
@@ -2641,6 +2657,10 @@ func init() {
 		"azure.subscription.fileSharesService.fileShare.snapshot": {
 			// to override args, implement: initAzureSubscriptionFileSharesServiceFileShareSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionFileSharesServiceFileShareSnapshot,
+		},
+		"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule": {
+			// to override args, implement: initAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule,
 		},
 	}
 }
@@ -2898,6 +2918,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.netApp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetNetApp()).ToDataRes(types.Resource("azure.subscription.netAppService"))
+	},
+	"azure.subscription.elasticSan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetElasticSan()).ToDataRes(types.Resource("azure.subscription.elasticSanService"))
 	},
 	"azure.subscription.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetFunctions()).ToDataRes(types.Resource("azure.subscription.functionsService"))
@@ -21256,6 +21279,84 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.fileSharesService.fileShare.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.elasticSanService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSans": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanService).GetElasticSans()).ToDataRes(types.Array(types.Resource("azure.subscription.elasticSanService.elasticSan")))
+	},
+	"azure.subscription.elasticSanService.elasticSan.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.elasticSanService.elasticSan.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.skuName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetSkuName()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.skuTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetSkuTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.baseSizeTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetBaseSizeTiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.extendedCapacitySizeTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetExtendedCapacitySizeTiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalSizeTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetTotalSizeTiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalVolumeSizeGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetTotalVolumeSizeGiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalIops": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetTotalIops()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalMBps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetTotalMBps()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroupCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetVolumeGroupCount()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.availabilityZones": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetAvailabilityZones()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScalePolicyEnforcement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetAutoScalePolicyEnforcement()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScaleCapacityUnitScaleUpLimitTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetAutoScaleCapacityUnitScaleUpLimitTiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScaleIncreaseCapacityUnitByTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetAutoScaleIncreaseCapacityUnitByTiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScaleUnusedSizeTiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetAutoScaleUnusedSizeTiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.elasticSanService.elasticSan.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetVolumeGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.elasticSanService.elasticSan.volumeGroup")))
+	},
+	"azure.subscription.elasticSanService.elasticSan.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.dataBoxService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataBoxService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -21487,6 +21588,66 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.netAppService.account.capacityPool.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetEncryption()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.protocolType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetProtocolType()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.enforceDataIntegrityCheckForIscsi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetEnforceDataIntegrityCheckForIscsi()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.keyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetKeyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.keyVaultUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetKeyVaultUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.keyVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetKeyVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.currentVersionedKeyIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetCurrentVersionedKeyIdentifier()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.currentVersionedKeyExpirationTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetCurrentVersionedKeyExpirationTimestamp()).ToDataRes(types.Time)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.lastKeyRotationTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetLastKeyRotationTimestamp()).ToDataRes(types.Time)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.encryptionIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetEncryptionIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule")))
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.netAppService.account.capacityPool.volume.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetId()).ToDataRes(types.String)
 	},
@@ -21642,6 +21803,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).GetAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
 	},
 }
 
@@ -21917,6 +22087,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.netApp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).NetApp, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetAppService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).ElasticSan, ok = plugin.RawToTValue[*mqlAzureSubscriptionElasticSanService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48443,6 +48617,118 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.elasticSanService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.elasticSanService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSans": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanService).ElasticSans, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.skuName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).SkuName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.skuTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).SkuTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.baseSizeTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).BaseSizeTiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.extendedCapacitySizeTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).ExtendedCapacitySizeTiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalSizeTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).TotalSizeTiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalVolumeSizeGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).TotalVolumeSizeGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalIops": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).TotalIops, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.totalMBps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).TotalMBps, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroupCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).VolumeGroupCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.availabilityZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).AvailabilityZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScalePolicyEnforcement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).AutoScalePolicyEnforcement, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScaleCapacityUnitScaleUpLimitTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).AutoScaleCapacityUnitScaleUpLimitTiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScaleIncreaseCapacityUnitByTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).AutoScaleIncreaseCapacityUnitByTiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.autoScaleUnusedSizeTiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).AutoScaleUnusedSizeTiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).VolumeGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSan).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.dataBoxService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDataBoxService).__id, ok = v.Value.(string)
 		return
@@ -48771,6 +49057,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).Encryption, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.protocolType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).ProtocolType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.enforceDataIntegrityCheckForIscsi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).EnforceDataIntegrityCheckForIscsi, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.keyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).KeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.keyVaultUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).KeyVaultUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.keyVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).KeyVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).Key, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.currentVersionedKeyIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).CurrentVersionedKeyIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.currentVersionedKeyExpirationTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).CurrentVersionedKeyExpirationTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.lastKeyRotationTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).LastKeyRotationTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.encryptionIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).EncryptionIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.netAppService.account.capacityPool.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).__id, ok = v.Value.(string)
 		return
@@ -48989,6 +49359,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
 		return
 	},
 }
@@ -49343,6 +49729,7 @@ type mqlAzureSubscription struct {
 	DataProtection        plugin.TValue[*mqlAzureSubscriptionDataProtectionService]
 	DataBox               plugin.TValue[*mqlAzureSubscriptionDataBoxService]
 	NetApp                plugin.TValue[*mqlAzureSubscriptionNetAppService]
+	ElasticSan            plugin.TValue[*mqlAzureSubscriptionElasticSanService]
 	Functions             plugin.TValue[*mqlAzureSubscriptionFunctionsService]
 	ServiceBus            plugin.TValue[*mqlAzureSubscriptionServiceBusService]
 	EventHub              plugin.TValue[*mqlAzureSubscriptionEventHubService]
@@ -49949,6 +50336,22 @@ func (c *mqlAzureSubscription) GetNetApp() *plugin.TValue[*mqlAzureSubscriptionN
 		}
 
 		return c.netApp()
+	})
+}
+
+func (c *mqlAzureSubscription) GetElasticSan() *plugin.TValue[*mqlAzureSubscriptionElasticSanService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionElasticSanService](&c.ElasticSan, func() (*mqlAzureSubscriptionElasticSanService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "elasticSan")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionElasticSanService), nil
+			}
+		}
+
+		return c.elasticSan()
 	})
 }
 
@@ -113995,6 +114398,272 @@ func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetSystemMetadata() *pl
 	})
 }
 
+// mqlAzureSubscriptionElasticSanService for the azure.subscription.elasticSanService resource
+type mqlAzureSubscriptionElasticSanService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionElasticSanServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	ElasticSans    plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionElasticSanService creates a new instance of this resource
+func createAzureSubscriptionElasticSanService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionElasticSanService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.elasticSanService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionElasticSanService) MqlName() string {
+	return "azure.subscription.elasticSanService"
+}
+
+func (c *mqlAzureSubscriptionElasticSanService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionElasticSanService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionElasticSanService) GetElasticSans() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ElasticSans, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService", c.__id, "elasticSans")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.elasticSans()
+	})
+}
+
+// mqlAzureSubscriptionElasticSanServiceElasticSan for the azure.subscription.elasticSanService.elasticSan resource
+type mqlAzureSubscriptionElasticSanServiceElasticSan struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionElasticSanServiceElasticSanInternal
+	Id                                   plugin.TValue[string]
+	Name                                 plugin.TValue[string]
+	Location                             plugin.TValue[string]
+	Type                                 plugin.TValue[string]
+	Tags                                 plugin.TValue[map[string]any]
+	ProvisioningState                    plugin.TValue[string]
+	PublicNetworkAccess                  plugin.TValue[string]
+	SkuName                              plugin.TValue[string]
+	SkuTier                              plugin.TValue[string]
+	BaseSizeTiB                          plugin.TValue[int64]
+	ExtendedCapacitySizeTiB              plugin.TValue[int64]
+	TotalSizeTiB                         plugin.TValue[int64]
+	TotalVolumeSizeGiB                   plugin.TValue[int64]
+	TotalIops                            plugin.TValue[int64]
+	TotalMBps                            plugin.TValue[int64]
+	VolumeGroupCount                     plugin.TValue[int64]
+	AvailabilityZones                    plugin.TValue[[]any]
+	AutoScalePolicyEnforcement           plugin.TValue[string]
+	AutoScaleCapacityUnitScaleUpLimitTiB plugin.TValue[int64]
+	AutoScaleIncreaseCapacityUnitByTiB   plugin.TValue[int64]
+	AutoScaleUnusedSizeTiB               plugin.TValue[int64]
+	PrivateEndpointConnections           plugin.TValue[[]any]
+	VolumeGroups                         plugin.TValue[[]any]
+	SystemMetadata                       plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionElasticSanServiceElasticSan creates a new instance of this resource
+func createAzureSubscriptionElasticSanServiceElasticSan(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionElasticSanServiceElasticSan{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.elasticSanService.elasticSan", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) MqlName() string {
+	return "azure.subscription.elasticSanService.elasticSan"
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetSkuName() *plugin.TValue[string] {
+	return &c.SkuName
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetSkuTier() *plugin.TValue[string] {
+	return &c.SkuTier
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetBaseSizeTiB() *plugin.TValue[int64] {
+	return &c.BaseSizeTiB
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetExtendedCapacitySizeTiB() *plugin.TValue[int64] {
+	return &c.ExtendedCapacitySizeTiB
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetTotalSizeTiB() *plugin.TValue[int64] {
+	return &c.TotalSizeTiB
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetTotalVolumeSizeGiB() *plugin.TValue[int64] {
+	return &c.TotalVolumeSizeGiB
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetTotalIops() *plugin.TValue[int64] {
+	return &c.TotalIops
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetTotalMBps() *plugin.TValue[int64] {
+	return &c.TotalMBps
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetVolumeGroupCount() *plugin.TValue[int64] {
+	return &c.VolumeGroupCount
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetAvailabilityZones() *plugin.TValue[[]any] {
+	return &c.AvailabilityZones
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetAutoScalePolicyEnforcement() *plugin.TValue[string] {
+	return &c.AutoScalePolicyEnforcement
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetAutoScaleCapacityUnitScaleUpLimitTiB() *plugin.TValue[int64] {
+	return &c.AutoScaleCapacityUnitScaleUpLimitTiB
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetAutoScaleIncreaseCapacityUnitByTiB() *plugin.TValue[int64] {
+	return &c.AutoScaleIncreaseCapacityUnitByTiB
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetAutoScaleUnusedSizeTiB() *plugin.TValue[int64] {
+	return &c.AutoScaleUnusedSizeTiB
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetVolumeGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VolumeGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan", c.__id, "volumeGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumeGroups()
+	})
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSan) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionDataBoxService for the azure.subscription.dataBoxService resource
 type mqlAzureSubscriptionDataBoxService struct {
 	MqlRuntime *plugin.Runtime
@@ -114726,6 +115395,222 @@ func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetSystemMetadata
 	})
 }
 
+// mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup for the azure.subscription.elasticSanService.elasticSan.volumeGroup resource
+type mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupInternal
+	Id                                     plugin.TValue[string]
+	Name                                   plugin.TValue[string]
+	Type                                   plugin.TValue[string]
+	ProvisioningState                      plugin.TValue[string]
+	Encryption                             plugin.TValue[string]
+	ProtocolType                           plugin.TValue[string]
+	EnforceDataIntegrityCheckForIscsi      plugin.TValue[bool]
+	Identity                               plugin.TValue[any]
+	UserAssignedIdentities                 plugin.TValue[[]any]
+	KeyName                                plugin.TValue[string]
+	KeyVaultUri                            plugin.TValue[string]
+	KeyVersion                             plugin.TValue[string]
+	Key                                    plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	CurrentVersionedKeyIdentifier          plugin.TValue[string]
+	CurrentVersionedKeyExpirationTimestamp plugin.TValue[*time.Time]
+	LastKeyRotationTimestamp               plugin.TValue[*time.Time]
+	EncryptionIdentity                     plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
+	VirtualNetworkRules                    plugin.TValue[[]any]
+	PrivateEndpointConnections             plugin.TValue[[]any]
+	SystemMetadata                         plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionElasticSanServiceElasticSanVolumeGroup creates a new instance of this resource
+func createAzureSubscriptionElasticSanServiceElasticSanVolumeGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) MqlName() string {
+	return "azure.subscription.elasticSanService.elasticSan.volumeGroup"
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetEncryption() *plugin.TValue[string] {
+	return &c.Encryption
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetProtocolType() *plugin.TValue[string] {
+	return &c.ProtocolType
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetEnforceDataIntegrityCheckForIscsi() *plugin.TValue[bool] {
+	return &c.EnforceDataIntegrityCheckForIscsi
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetKeyName() *plugin.TValue[string] {
+	return &c.KeyName
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetKeyVaultUri() *plugin.TValue[string] {
+	return &c.KeyVaultUri
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetKeyVersion() *plugin.TValue[string] {
+	return &c.KeyVersion
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.Key, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup", c.__id, "key")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.key()
+	})
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetCurrentVersionedKeyIdentifier() *plugin.TValue[string] {
+	return &c.CurrentVersionedKeyIdentifier
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetCurrentVersionedKeyExpirationTimestamp() *plugin.TValue[*time.Time] {
+	return &c.CurrentVersionedKeyExpirationTimestamp
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetLastKeyRotationTimestamp() *plugin.TValue[*time.Time] {
+	return &c.LastKeyRotationTimestamp
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetEncryptionIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.EncryptionIdentity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup", c.__id, "encryptionIdentity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.encryptionIdentity()
+	})
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetVirtualNetworkRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualNetworkRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup", c.__id, "virtualNetworkRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualNetworkRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume for the azure.subscription.netAppService.account.capacityPool.volume resource
 type mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume struct {
 	MqlRuntime *plugin.Runtime
@@ -115082,6 +115967,7 @@ type mqlAzureSubscriptionFileSharesServiceFileShareSnapshot struct {
 	InitiatorId    plugin.TValue[string]
 	Metadata       plugin.TValue[map[string]any]
 	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
+	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionFileSharesServiceFileShareSnapshot creates a new instance of this resource
@@ -115158,5 +116044,82 @@ func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSystemMetada
 		}
 
 		return c.systemMetadata()
+	})
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService.fileShare.snapshot", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule for the azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule resource
+type mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRuleInternal
+	Action plugin.TValue[string]
+	Subnet plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+}
+
+// createAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule creates a new instance of this resource
+func createAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule) MqlName() string {
+	return "azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule"
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
 	})
 }

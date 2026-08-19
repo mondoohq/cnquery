@@ -255,6 +255,9 @@ azure.subscription @defaults ("name") {
   dataBox() azure.subscription.dataBoxService
   // Azure NetApp Files resources in the subscription
   netApp() azure.subscription.netAppService
+
+  // Azure Elastic SAN resources in the subscription
+  elasticSan() azure.subscription.elasticSanService
   // Azure Functions resources in the subscription
   functions() azure.subscription.functionsService
   // Service Bus resources in the subscription
@@ -18797,6 +18800,76 @@ azure.subscription.fileSharesService.fileShare @defaults("id name location publi
   systemMetadata() azure.subscription.systemData
 }
 
+// Azure Elastic SAN
+private azure.subscription.elasticSanService {
+  // Subscription identifier
+  subscriptionId string
+  // Elastic SANs in the subscription
+  elasticSans() []azure.subscription.elasticSanService.elasticSan
+}
+
+// Azure Elastic SAN
+//
+// Block storage array presented over iSCSI to compute in the subscription's
+// virtual networks. The SAN itself decides whether it answers on a public
+// endpoint at all; the volume groups inside it decide how their data is
+// encrypted and which networks may reach them, so an exposure or
+// encryption-at-rest review reads both levels.
+azure.subscription.elasticSanService.elasticSan @defaults("id name location publicNetworkAccess") {
+  // Elastic SAN resource ID
+  id string
+  // Elastic SAN name
+  name string
+  // Azure region the SAN lives in
+  location string
+  // Resource type
+  type string
+  // Elastic SAN tags
+  tags map[string]string
+  // Provisioning state ("Invalid", "Succeeded", "Failed", "Canceled", "Pending", "Creating", "Updating", "Deleting", or "Restoring")
+  provisioningState string
+  // Public network access to the SAN ("Enabled" or "Disabled")
+  //
+  // Disabled means the SAN answers only through private endpoints on its
+  // volume groups. Empty when the SAN carries no explicit setting, which
+  // Azure treats as enabled.
+  publicNetworkAccess string
+  // SKU name of the SAN ("Premium_LRS" or "Premium_ZRS")
+  skuName string
+  // SKU tier of the SAN
+  skuTier string
+  // Base provisioned capacity in TiB
+  baseSizeTiB int
+  // Additional provisioned capacity in TiB
+  extendedCapacitySizeTiB int
+  // Total provisioned capacity in TiB
+  totalSizeTiB int
+  // Total capacity allocated to volumes in GiB
+  totalVolumeSizeGiB int
+  // Total provisioned IOPS
+  totalIops int
+  // Total provisioned throughput in MB/s
+  totalMBps int
+  // Number of volume groups in the SAN
+  volumeGroupCount int
+  // Availability zones the SAN is pinned to
+  availabilityZones []string
+  // Whether automatic capacity scale-up is enforced ("None" or "Automatic")
+  autoScalePolicyEnforcement string
+  // Capacity in TiB scale-up will not grow the SAN past
+  autoScaleCapacityUnitScaleUpLimitTiB int
+  // Capacity in TiB each scale-up step adds
+  autoScaleIncreaseCapacityUnitByTiB int
+  // Unused capacity in TiB that triggers a scale-up
+  autoScaleUnusedSizeTiB int
+  // Private endpoint connections to the SAN
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
+  // Volume groups in the SAN
+  volumeGroups() []azure.subscription.elasticSanService.elasticSan.volumeGroup
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
 // Azure Data Box
 private azure.subscription.dataBoxService {
   // Subscription identifier
@@ -18900,6 +18973,7 @@ azure.subscription.dataBoxService.job @defaults("id name status transferType") {
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
+
 // Encryption settings of an Azure NetApp Files account
 //
 // Which key protects the account's data at rest, and which identity is used
@@ -19027,6 +19101,76 @@ azure.subscription.netAppService.account.capacityPool @defaults("id name service
   utilizedThroughputMibps float
   // Volumes in the capacity pool
   volumes() []azure.subscription.netAppService.account.capacityPool.volume
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Volume group of an Azure Elastic SAN
+//
+// Grouping of Elastic SAN volumes that shares one encryption setting, one
+// network rule set, and one set of private endpoint connections. This is
+// where data at rest is decided: encryption is
+// "EncryptionAtRestWithPlatformKey" or
+// "EncryptionAtRestWithCustomerManagedKey", and in the customer-managed case
+// the key and the identity reaching it are reported alongside. The network
+// rules list the virtual networks allowed to reach the group's volumes over
+// iSCSI.
+azure.subscription.elasticSanService.elasticSan.volumeGroup @defaults("id name encryption protocolType") {
+  // Volume group resource ID
+  id string
+  // Volume group name
+  name string
+  // Resource type
+  type string
+  // Provisioning state
+  provisioningState string
+  // Encryption type of the group's data at rest
+  //
+  // "EncryptionAtRestWithPlatformKey" or
+  // "EncryptionAtRestWithCustomerManagedKey". Empty when the group carries
+  // no explicit setting, which Azure treats as the platform key.
+  encryption string
+  // Storage protocol volumes in the group are presented over ("Iscsi" or "None")
+  protocolType string
+  // Whether data integrity checking (CRC-32C) is enforced for iSCSI traffic
+  enforceDataIntegrityCheckForIscsi bool
+  // Managed identity configuration
+  //
+  // Managed identity block of the volume group, with keys `type` (one of
+  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
+  // `tenantId` for the system-assigned identity, and
+  // `userAssignedIdentities` mapping each assigned identity resource ID to
+  // its client and principal IDs. See userAssignedIdentities for the
+  // resolved identity resources.
+  identity dict
+  // User-assigned managed identities associated with the volume group
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Name of the Key Vault key encrypting the group
+  keyName string
+  // URI of the Key Vault holding the encryption key
+  keyVaultUri string
+  // Version of the Key Vault key in use
+  //
+  // Empty when the group follows the key rather than pinning a version, in
+  // which case a rotation takes effect without an update to the group.
+  keyVersion string
+  // Key Vault key encrypting the group
+  key() azure.subscription.keyVaultService.key
+  // Identifier of the key version currently protecting the data
+  currentVersionedKeyIdentifier string
+  // When the key version currently protecting the data expires
+  currentVersionedKeyExpirationTimestamp time
+  // When the encryption key was last rotated
+  lastKeyRotationTimestamp time
+  // User-assigned managed identity used to reach the Key Vault
+  //
+  // Null when the group authenticates to the vault with its system-assigned
+  // identity instead.
+  encryptionIdentity() azure.subscription.managedIdentity
+  // Virtual network rules allowing subnets to reach the group's volumes
+  virtualNetworkRules() []azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule
+  // Private endpoint connections to the volume group
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -19161,6 +19305,7 @@ private azure.subscription.netAppService.account.capacityPool.volume.exportPolic
   // Whether matching clients get read-write access under Kerberos krb5p
   kerberos5pReadWrite bool
 }
+
 // Snapshot of an Azure file share
 //
 // Point-in-time copy of a file share's contents, taken under the
@@ -19186,4 +19331,17 @@ private azure.subscription.fileSharesService.fileShare.snapshot @defaults("id na
   metadata map[string]string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Virtual network rule of an Elastic SAN volume group
+//
+// One entry in a volume group's network rule set, naming a subnet that may
+// reach the group's volumes over iSCSI and the action taken for it.
+private azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule @defaults("action") {
+  // Action taken for traffic from the subnet ("Allow")
+  action string
+  // Subnet the rule admits
+  subnet() azure.subscription.networkService.subnet
 }

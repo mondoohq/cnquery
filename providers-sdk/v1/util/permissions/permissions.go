@@ -1907,6 +1907,9 @@ var azureServiceToARMMap = map[string]string{
 	// Same again: the default branch would emit "Microsoft.Fileshares", which
 	// is not a real provider namespace.
 	"fileshares": "Microsoft.FileShares",
+	// Same again: the default branch would emit "Microsoft.Elasticsan", which
+	// is not a real provider namespace.
+	"elasticsan": "Microsoft.ElasticSan",
 }
 
 func azureServiceToARM(service string) string {
@@ -2237,6 +2240,9 @@ var azurePermissionOverrides = map[string]string{
 	// carry.
 	"Microsoft.FileShares/fileshares/read":         "Microsoft.FileShares/fileShares/read",
 	"Microsoft.FileShares/fileShareSnapshots/read": "Microsoft.FileShares/fileShares/snapshots/read",
+	// Elastic SAN: volume groups are nested under elasticSans/, which the
+	// VolumeGroupsClient name does not carry.
+	"Microsoft.ElasticSan/volumeGroups/read": "Microsoft.ElasticSan/elasticSans/volumeGroups/read",
 }
 
 // azurePermission constructs the RBAC permission string.
