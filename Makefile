@@ -250,6 +250,7 @@ PROVIDERS := \
 	neon \
 	netlify \
 	network \
+	newrelic \
 	nextdns \
 	nmap \
 	nutanix \

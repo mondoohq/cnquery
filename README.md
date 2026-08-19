@@ -166,6 +166,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Neon organization             | `neon`                     | `mql shell neon --token TOKEN`                                                                                                                  |
 | Netlify account               | `netlify`                  | `mql shell netlify --token TOKEN`                                                                                                               |
 | Network scanning              | `nmap`                     | `mql shell nmap --networks 192.168.1.0/24`                                                                                                      |
+| New Relic account             | `newrelic`                 | `mql shell newrelic --api-key API_KEY --account-id ACCOUNT_ID`                                                                                  |
 | NextDNS accounts              | `nextdns`                  | `mql shell nextdns --api-key API_KEY`                                                                                                           |
 | Nutanix cluster               | `nutanix`                  | `mql shell nutanix --endpoint ENDPOINT --user USER --password PASSWORD`                                                                         |
 | Okta org                      | `okta`                     | `mql shell okta --token TOKEN --organization ORGANIZATION`                                                                                      |

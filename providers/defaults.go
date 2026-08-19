@@ -861,6 +861,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"newrelic": {
+		Provider: &plugin.Provider{
+			Name:            "newrelic",
+			ID:              "go.mondoo.com/mql/providers/newrelic",
+			ConnectionTypes: []string{"newrelic"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "newrelic",
+					Use:   "newrelic",
+					Short: "a New Relic account",
+				},
+			},
+		},
+	},
+
 	"nextdns": {
 		Provider: &plugin.Provider{
 			Name:            "nextdns",

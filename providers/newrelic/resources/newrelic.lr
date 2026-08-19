@@ -1,0 +1,585 @@
+// Copyright Mondoo, Inc. 2024, 2026
+// SPDX-License-Identifier: BUSL-1.1
+
+option provider = "go.mondoo.com/mql/providers/newrelic"
+option go_package = "go.mondoo.com/mql/v13/providers/newrelic/resources"
+
+// New Relic
+//
+// Account and organization-wide New Relic configuration and inventory, covering
+// who can reach the platform and what happens to the telemetry once it arrives.
+// The identity side spans users, groups, roles, account access grants and the
+// authentication domains that decide how people log in, including whether
+// single sign-on is enforced and whether accounts are provisioned through SCIM.
+// The credential side covers user keys and ingest keys (license and browser),
+// exposing their type, owner and creation time so unrotated or ownerless
+// credentials can be found. Key material itself is never read. Beyond identity,
+// dropRules and dataRetentionRules describe telemetry that is discarded before
+// it is stored or aged out after it is, alertPolicies and alertConditions
+// describe what is watched, and notificationDestinations and
+// notificationChannels describe where an alert is delivered once it fires.
+newrelic {
+  // Account the connection is scoped to
+  currentAccount() newrelic.account
+  // Accounts the supplied key can read
+  accounts() []newrelic.account
+  // Organization the account belongs to
+  org() newrelic.organization
+  // Authentication domains governing how users log in and are provisioned
+  authenticationDomains() []newrelic.authenticationDomain
+  // Users across every authentication domain in the organization
+  users() []newrelic.user
+  // Groups across every authentication domain in the organization
+  groups() []newrelic.group
+  // Roles defined in the organization
+  roles() []newrelic.role
+  // Access grants binding a role to a group for an account or the organization
+  accessGrants() []newrelic.accessGrant
+  // User keys and ingest keys scoped to the account
+  //
+  // Covers both key types New Relic issues: user keys, which authenticate a
+  // person against the API, and ingest keys, which authenticate an agent
+  // submitting telemetry. The keystring is never requested, so no field on the
+  // returned keys carries usable key material.
+  apiKeys() []newrelic.apiKey
+  // Alert policies defined on the account
+  alertPolicies() []newrelic.alertPolicy
+  // NRQL alert conditions defined on the account
+  alertConditions() []newrelic.alertCondition
+  // Systems notifications are delivered to
+  notificationDestinations() []newrelic.notificationDestination
+  // Channels binding a notification destination to a product and message shape
+  notificationChannels() []newrelic.notificationChannel
+  // Rules discarding matching telemetry before it is stored
+  dropRules() []newrelic.dropRule
+  // Rules setting how long an event namespace is retained
+  dataRetentionRules() []newrelic.dataRetentionRule
+}
+
+// New Relic Account
+//
+// Account telemetry is reported into and billed against, and the unit most
+// New Relic access is granted over. The `id` field is the numeric account ID
+// used throughout the API and in the platform URL, and is the selection key for
+// this resource, for example `newrelic.account(id: 1234567)`. Keys, alert
+// policies, drop rules and retention rules all belong to exactly one account,
+// so an organization holding several accounts is audited one account at a time.
+newrelic.account @defaults("id name") {
+  // Numeric account ID
+  id int
+  // Account name
+  name string
+}
+
+// New Relic Organization
+//
+// Top-level container the accounts, authentication domains and roles belong to.
+// An organization spans every account under one contract, so it is the scope at
+// which single sign-on, group membership and role definitions are decided,
+// while the accounts beneath it are the scope at which telemetry and keys live.
+newrelic.organization @defaults("id name") {
+  // Organization ID
+  id string
+  // Organization name
+  name string
+}
+
+// New Relic Authentication Domain
+//
+// Grouping of users governed by one set of login and provisioning settings, and
+// the place where single sign-on is either enforced or absent. The
+// `authenticationType` field names the login method the domain accepts, and
+// `ssoEnabled` reduces it to whether that method is a single sign-on one, so a
+// domain reporting `ssoEnabled` false accepts a New Relic username and password
+// directly. The `provisioningType` field names how accounts reach the domain,
+// and `scimEnabled` reduces it to whether an external directory drives account
+// creation and removal, which is what makes a departure in the directory take
+// effect in New Relic. An organization commonly runs more than one domain, so a
+// single domain enforcing single sign-on says nothing about the others, and
+// every domain has to be checked.
+newrelic.authenticationDomain @defaults("id name provisioningType") {
+  // Authentication domain ID
+  id string
+  // Authentication domain name
+  name string
+  // Login method the domain accepts
+  //
+  // One of DISABLED, when no authentication method is configured; PASSWORD, for
+  // a New Relic username and password; SAML_SSO; OIDC_SSO; or HEROKU_SSO. Any
+  // other value is reported as New Relic returned it. Reading it needs a key
+  // with organization administration access, and the field reports an error
+  // rather than a value when the key does not have it, so a missing permission
+  // can never be mistaken for a domain without single sign-on.
+  authenticationType() string
+  // Whether the domain authenticates through single sign-on
+  //
+  // True when authenticationType is SAML_SSO, OIDC_SSO or HEROKU_SSO. False for
+  // PASSWORD and DISABLED, and for any login method this provider does not
+  // recognize, so an unrecognized method fails an assertion rather than passing
+  // it.
+  ssoEnabled() bool
+  // Whether the domain accepts a New Relic username and password
+  //
+  // True only when authenticationType is PASSWORD. A domain with single sign-on
+  // configured reports false, because the password login path is closed once a
+  // single sign-on method is the domain's authentication type.
+  passwordLoginEnabled() bool
+  // How accounts are provisioned into the domain
+  //
+  // One of DISABLED, when no provisioning method is configured; MANUAL, when
+  // accounts are created by hand in New Relic; or SCIM, when an external
+  // identity provider creates and removes them. Any other value is reported as
+  // New Relic returned it.
+  provisioningType string
+  // Whether accounts are provisioned from an external directory over SCIM
+  //
+  // True only when provisioningType is SCIM. A domain reporting false keeps its
+  // membership by hand, so a person removed from the corporate directory keeps
+  // New Relic access until somebody deletes the account.
+  scimEnabled bool
+  // Users belonging to the domain
+  users() []newrelic.user
+  // Groups defined in the domain
+  groups() []newrelic.group
+}
+
+// New Relic User
+//
+// Person holding an account in a New Relic authentication domain. The `type`
+// field carries the user tier, which decides the breadth of capability the
+// account can hold at all, and `lastActive` separates accounts in use from
+// dormant ones that should be removed. The `emailVerificationState` field
+// distinguishes an address that has been proven from one that has not, and
+// `pendingUpgradeRequest` is set when the user has asked to be moved to a
+// higher tier. Group membership is what actually confers privilege, so `groups`
+// together with each group's access grants is what answers what a user can do.
+newrelic.user @defaults("id email type") {
+  // User ID
+  id string
+  // Full name
+  name string
+  // Email address
+  email string
+  // User tier
+  //
+  // One of Basic, Core or Full platform, reported with the display name New
+  // Relic returns. The tier caps which capabilities the account can hold
+  // regardless of the roles granted to it.
+  type string
+  // Email verification state
+  //
+  // One of "Not Verifiable", when the address needs no verification;
+  // "Verified"; or "Pending", when verification was required and has not
+  // happened.
+  emailVerificationState string
+  // Configured time zone, in IANA time zone database format
+  timeZone string
+  // Last time the user was active
+  //
+  // Null when New Relic reports no activity for the account, which for a
+  // recently created account means it has never been used.
+  lastActive time
+  // Whether the user has an open request to be moved to a higher tier
+  pendingUpgrade bool
+  // Tier the user has asked to be moved to
+  //
+  // Empty when the user has no open upgrade request.
+  requestedType string
+  // Authentication domain the user belongs to
+  authenticationDomain() newrelic.authenticationDomain
+  // Groups the user belongs to
+  groups() []newrelic.group
+}
+
+// New Relic Group
+//
+// Set of users that privilege is granted to as a unit, which is how New Relic
+// binds people to roles. A user holds no account access directly, only what the
+// groups they belong to are granted, so a group with an administrative access
+// grant hands that access to every member. Auditing `accessGrants` alongside
+// `users` shows both what a group can do and how many people it reaches.
+newrelic.group @defaults("id displayName") {
+  // Group ID
+  id string
+  // Group name
+  displayName string
+  // Authentication domain the group is defined in
+  authenticationDomain() newrelic.authenticationDomain
+  // Users belonging to the group
+  users() []newrelic.user
+  // Access grants held by the group
+  accessGrants() []newrelic.accessGrant
+}
+
+// New Relic Role
+//
+// Named set of capabilities that an access grant hands to a group. The `type`
+// field separates the roles New Relic ships from the ones the organization
+// authored, and `scope` reports whether the role governs a single account or
+// the whole organization. A role is inert on its own: it confers nothing until
+// an access grant binds it to a group, so the roles list describes what could
+// be granted and the access grants describe what is.
+newrelic.role @defaults("id name type scope") {
+  // Role ID
+  id string
+  // Role name
+  name string
+  // Display name shown in the New Relic interface
+  displayName string
+  // Role type
+  //
+  // One of STANDARD, for a role New Relic ships, or CUSTOM, for one the
+  // organization authored. Any other value is reported as New Relic returned
+  // it.
+  type string
+  // Level the role governs
+  //
+  // One of ACCOUNT, when the role grants capabilities within a single account,
+  // or ORGANIZATION, when it grants them across the organization.
+  scope string
+}
+
+// New Relic Access Grant
+//
+// Binding of one role to one group, over one account or over the whole
+// organization, which is the record that actually confers privilege in New
+// Relic. A grant naming an organization rather than an account reaches every
+// account under the contract, so it is the broadest form of access the platform
+// offers and the one worth counting. The `roleRef` and `groupRef` fields
+// resolve the two ends of the binding, and `account` names the account the
+// grant applies to, null for an organization-wide grant.
+newrelic.accessGrant @defaults("id roleName groupId accountId") {
+  // Access grant ID
+  id string
+  // Name of the role the grant confers
+  roleName string
+  // Display name of the role the grant confers
+  roleDisplayName string
+  // Role type
+  //
+  // One of STANDARD, for a role New Relic ships, or CUSTOM, for one the
+  // organization authored.
+  roleType string
+  // ID of the group the grant is held by
+  groupId string
+  // Account the grant applies to
+  //
+  // Zero for an organization-wide grant, which is not scoped to any single
+  // account.
+  accountId int
+  // Whether the grant reaches every account in the organization
+  //
+  // True when the grant is bound to the organization rather than to one
+  // account, which makes it the broadest access New Relic can hand to a group.
+  organizationWide bool
+  // Role the grant confers
+  //
+  // Null when the role is not present in the organization role list, which
+  // happens when the supplied key may read the grant but not the role.
+  roleRef() newrelic.role
+  // Group the grant is held by
+  //
+  // Null when the group is not present in the organization group list.
+  groupRef() newrelic.group
+  // Account the grant applies to
+  //
+  // Null for an organization-wide grant, and for an account the supplied key
+  // cannot read.
+  account() newrelic.account
+}
+
+// New Relic API Key
+//
+// Credential authenticating against New Relic, covering both the user keys that
+// authorize API calls on a person's behalf and the ingest keys that authorize
+// an agent to submit telemetry. The `type` field separates the two, and
+// `ingestType` further separates a license key, used by APM and infrastructure
+// agents, from a browser key. The `createdAt` timestamp is what rotation audits
+// read, since New Relic reports no last-used time for a key, and `userRef`
+// attributes a user key to the person it acts as, which is what makes a key
+// belonging to a departed employee findable. No field on this resource carries
+// key material: the keystring is never requested from the API.
+newrelic.apiKey @defaults("id name type ingestType") {
+  // Key ID
+  //
+  // Identifies the key without revealing it. This is the value New Relic uses
+  // to update and delete a key, not the keystring itself.
+  id string
+  // Key name
+  name string
+  // Notes attached to the key
+  notes string
+  // Key type
+  //
+  // One of USER, for a key authenticating a person against the API, or INGEST,
+  // for a key authenticating an agent submitting telemetry.
+  type string
+  // Ingest key subtype
+  //
+  // One of LICENSE, used by APM and infrastructure agents, or BROWSER, used by
+  // browser monitoring. Empty for a user key, which has no ingest subtype.
+  ingestType string
+  // Created at
+  //
+  // Null when New Relic reports no creation time for the key, which is the case
+  // for the original account keys that predate key management.
+  createdAt time
+  // Account the key reports into or acts on
+  account() newrelic.account
+  // User the key acts as
+  //
+  // Null for an ingest key, which acts as no person, and for a user key whose
+  // owner is not present in the organization user list. New Relic obfuscates
+  // user keys belonging to other people, so a key returned for another user
+  // still resolves its owner but never its keystring.
+  userRef() newrelic.user
+}
+
+// New Relic Alert Policy
+//
+// Container grouping alert conditions and deciding how their incidents are
+// rolled up. The `incidentPreference` field sets whether one incident is opened
+// per policy, per condition, or per signal, which decides how much detail
+// reaches the people on call. A policy holding no conditions raises nothing at
+// all, so `conditions` is what separates configured alerting from the
+// appearance of it.
+newrelic.alertPolicy @defaults("id name incidentPreference") {
+  // Policy ID
+  id string
+  // Policy name
+  name string
+  // How incidents are grouped
+  //
+  // One of PER_POLICY, opening a single incident for the whole policy;
+  // PER_CONDITION, opening one per condition; or PER_CONDITION_AND_TARGET,
+  // opening one per condition and signal.
+  incidentPreference string
+  // Account the policy belongs to
+  account() newrelic.account
+  // Conditions evaluated under the policy
+  conditions() []newrelic.alertCondition
+}
+
+// New Relic Alert Condition
+//
+// NRQL condition evaluating a query on a schedule and opening an incident when
+// its terms are breached. The `enabled` field reports whether the condition is
+// evaluated at all, so a disabled condition still appears under its policy while
+// watching nothing. The `nrql` field carries the query being evaluated and
+// `terms` the thresholds that decide a breach, each a dict with `operator`,
+// `priority`, `threshold`, `thresholdDuration` and `thresholdOccurrences`.
+newrelic.alertCondition @defaults("id name enabled type") {
+  // Condition ID
+  id string
+  // Condition name
+  name string
+  // Description
+  description string
+  // Whether the condition is evaluated
+  enabled bool
+  // Condition type
+  //
+  // One of STATIC, evaluating against a fixed threshold; BASELINE, evaluating
+  // against a learned normal; or OUTLIER, evaluating against the spread of a
+  // faceted signal.
+  type string
+  // NRQL query the condition evaluates
+  nrql string
+  // Runbook URL attached to the condition
+  runbookUrl string
+  // Seconds an incident stays open before it is force-closed
+  violationTimeLimitSeconds int
+  // Thresholds deciding a breach
+  //
+  // Each term is a dict with `operator` (ABOVE, ABOVE_OR_EQUALS, BELOW,
+  // BELOW_OR_EQUALS or EQUALS), `priority` (CRITICAL or WARNING), `threshold`
+  // (the value compared against), `thresholdDuration` (seconds the comparison
+  // must hold) and `thresholdOccurrences` (ALL or AT_LEAST_ONCE).
+  terms []dict
+  // Policy the condition is evaluated under
+  //
+  // Null when the policy is not present in the account policy list.
+  policy() newrelic.alertPolicy
+}
+
+// New Relic Notification Destination
+//
+// External system New Relic delivers notifications to, and the egress path an
+// alert takes out of the platform. The `type` field names the receiving system,
+// `active` reports whether it is in use, and `status` reports whether New Relic
+// can currently reach it, so a destination that is active but failing is a
+// silent gap in alerting. The `lastSent` timestamp separates destinations that
+// carry live traffic from ones that were configured and forgotten. Destination
+// credentials and endpoint URLs are not read, because a webhook URL routinely
+// carries a token in its path.
+newrelic.notificationDestination @defaults("id name type active status") {
+  // Destination ID
+  id string
+  // Destination name
+  name string
+  // Receiving system
+  //
+  // One of EMAIL, WEBHOOK, SLACK, SLACK_COLLABORATION, SLACK_LEGACY, JIRA,
+  // SERVICE_NOW, SERVICE_NOW_APP, PAGERDUTY_ACCOUNT_INTEGRATION,
+  // PAGERDUTY_SERVICE_INTEGRATION, MOBILE_PUSH, EVENT_BRIDGE, MICROSOFT_TEAMS
+  // or WORKFLOW_AUTOMATION. Any other value is reported as New Relic returned
+  // it.
+  type string
+  // Whether the destination is in use
+  active bool
+  // Whether New Relic can currently reach the destination
+  //
+  // One of DEFAULT, when the destination is healthy; DRAFT, when it is not yet
+  // complete; ERROR, when delivery is failing; TESTING; or THROTTLED, when
+  // delivery is being rate limited.
+  status string
+  // Whether the destination is authenticated as the user that created it
+  //
+  // True for a destination holding a personal authorization rather than an
+  // account-level one, which stops working when that person loses access.
+  userAuthenticated bool
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+  // Last time a notification was delivered
+  //
+  // Null when the destination has never delivered a notification, which
+  // together with an old createdAt marks a path that has never been proven.
+  lastSent time
+  // Account the destination belongs to
+  account() newrelic.account
+}
+
+// New Relic Notification Channel
+//
+// Binding of a notification destination to a product and a message shape, which
+// is what a workflow attaches to in order to deliver an alert. A destination
+// with no channel receives nothing, so channels are where alert delivery is
+// actually configured. The `active` field reports whether the channel is in
+// use, `status` whether New Relic can render and deliver its message, and
+// `destination` resolves the system the message is sent to.
+newrelic.notificationChannel @defaults("id name type product active") {
+  // Channel ID
+  id string
+  // Channel name
+  name string
+  // Channel type
+  //
+  // Names the message shape sent to the destination, for example EMAIL,
+  // WEBHOOK, SLACK, JIRA_CLASSIC, SERVICENOW_INCIDENTS or
+  // PAGERDUTY_ACCOUNT_INTEGRATION. Any other value is reported as New Relic
+  // returned it.
+  type string
+  // Product the channel serves
+  //
+  // One of IINT, for alerts and applied intelligence; NTFC, for notifications;
+  // SHARING; PD, for PagerDuty; ERROR_TRACKING; DSCPL, for discussions; or
+  // ALERTS. Any other value is reported as New Relic returned it.
+  product string
+  // Whether the channel is in use
+  active bool
+  // Whether New Relic can render and deliver the channel's message
+  //
+  // One of DEFAULT, when the channel is healthy; DRAFT, when it is not yet
+  // complete; ERROR, when delivery is failing; TESTING; or THROTTLED.
+  status string
+  // Created at
+  createdAt time
+  // Updated at
+  updatedAt time
+  // Destination the channel delivers to
+  //
+  // Null when the destination is not present in the account destination list.
+  destination() newrelic.notificationDestination
+  // Account the channel belongs to
+  account() newrelic.account
+}
+
+// New Relic Drop Rule
+//
+// Rule discarding telemetry that matches a NRQL query before it is stored, so
+// the data it selects is never queryable and never reaches a detection built on
+// top of it. The `action` field separates a rule that drops whole events from
+// one that only strips attributes, and `nrql` carries the selection itself, so a
+// rule dropping an audit or security event type is visible by reading the query.
+// Drop rules are not retention settings: the data they match is discarded on
+// ingest and cannot be recovered by lengthening retention.
+newrelic.dropRule @defaults("id action nrql") {
+  // Drop rule ID
+  id string
+  // What the rule discards
+  //
+  // One of DROP_DATA, discarding every event matching the query;
+  // DROP_ATTRIBUTES, stripping the attributes the query selects from matching
+  // events; or DROP_ATTRIBUTES_FROM_METRIC_AGGREGATES, stripping them from
+  // metric aggregates.
+  action string
+  // NRQL query selecting the telemetry the rule discards
+  nrql string
+  // Description attached to the rule
+  description string
+  // What registered the rule
+  //
+  // Empty when New Relic reports no source, otherwise the system or interface
+  // the rule was created through.
+  source string
+  // Created at
+  //
+  // Null when New Relic reports no creation time for the rule.
+  createdAt time
+  // Account the rule applies to
+  account() newrelic.account
+  // User that created the rule
+  //
+  // Null when the rule was created by a system rather than a person, and when
+  // the creating account is no longer present in the organization user list.
+  creator() newrelic.user
+}
+
+// New Relic Data Retention Rule
+//
+// Rule setting how long one event namespace is kept before it ages out, which
+// bounds how far back an investigation can reach. The `namespace` field names
+// the data the rule governs, for example APM or Log, and `retentionInDays` is
+// the window itself, so a short window on a security-relevant namespace ends an
+// investigation before it starts. New Relic returns deleted rules alongside
+// live ones, so `active` is what separates a rule in force from a record of one
+// that was removed, and an inactive rule leaves its namespace on the account
+// default.
+newrelic.dataRetentionRule @defaults("namespace retentionInDays active") {
+  // Retention rule ID
+  id string
+  // Event namespace the rule governs
+  //
+  // Names the data type retention is set for, for example APM, Browser,
+  // Infrastructure, Log, Metric, Mobile, Synthetics or Tracing. The set of
+  // namespaces an account may customize varies by subscription.
+  namespace string
+  // Days matching data is kept
+  retentionInDays int
+  // Whether the rule is in force
+  //
+  // False once the rule has been deleted, at which point the namespace falls
+  // back to the account default. New Relic keeps deleted rules in the list, so
+  // a rule with a retention window set does not mean that window is applied.
+  active bool
+  // Created at
+  //
+  // Null when New Relic reports no creation time for the rule.
+  createdAt time
+  // Deleted at
+  //
+  // Null while the rule is in force.
+  deletedAt time
+  // User that created the rule
+  //
+  // Null when the creating account is no longer present in the organization
+  // user list.
+  createdBy() newrelic.user
+  // User that deleted the rule
+  //
+  // Null while the rule is in force, and when the deleting account is no longer
+  // present in the organization user list.
+  deletedBy() newrelic.user
+}
