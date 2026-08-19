@@ -180,3 +180,11 @@ role needed to list role bindings at the organization scope. Grant it
 **A cluster reports `isPublic` as null** - the cluster's response carried no
 endpoints map, so nothing said how it is reached. The exposure is reported as
 unknown rather than guessed from the endpoint hostname.
+
+**`confluent.auditLog.enabled` is null** - the account endpoint answered without
+an audit log block, so the question could not be put. It is deliberately not
+reported as `false`, which would read as "this organization is not audited" on
+an organization nobody checked. Compare the field explicitly
+(`confluent.auditLog.enabled == true`) rather than relying on a block
+assertion: in MQL's three-valued logic a null satisfies a bare `{ enabled }`
+block.

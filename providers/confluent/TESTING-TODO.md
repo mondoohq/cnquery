@@ -399,12 +399,21 @@ mql> confluent.encryptionKeys {
 mql> confluent.auditLog { enabled topicName cluster { id } environment { id } serviceAccount { id displayName } }
 ```
 
-- [ ] `enabled` - `true` on an organization with audit logging, `false` where it is not configured
-- [ ] `topicName` - `confluent-audit-log-events`
+This field is **null-when-unknown by construction**. `enabled` is `true` or
+`false` only when the account endpoint returned an audit log block; a payload
+without one leaves it null, and a failed read (401, 403, 404, 5xx, or an
+unparseable body) errors rather than answering. Confirm both halves of that
+below, because null is only trustworthy if it is reached for the right reason.
+
+- [ ] `enabled` - `true` on an organization with audit logging, `false` only where the endpoint affirmatively reports no writing service account
+- [ ] `enabled` - **null**, never `false`, on an organization whose payload carries no audit log block
+- [ ] `topicName` - `confluent-audit-log-events`; null whenever `enabled` is null
 - [ ] `cluster` - the audit log cluster, or **null** if the API key cannot list it
 - [ ] `environment` - the audit log environment, or null
 - [ ] `serviceAccount` - the writing account, or null
-- [ ] **Cross-check against `confluent audit-log describe`.** Every one of the four values must match. If the query errors instead, read §6 first, this is the most likely thing in the provider to be wrong.
+- [ ] **Cross-check against `confluent audit-log describe`.** Every one of the four values must match. If the query errors instead, read §6.1 first, this is the most likely thing in the provider to be wrong.
+- [ ] **On an organization you know is audited, `enabled` must be `true`, not null.** A null there means the payload shape is not what this provider decodes, and §6.1 has to be resolved before the field is usable.
+- [ ] **On an organization you know is not audited, `enabled` must be `false`, not null.** A null there means the endpoint does not report the disabled state the way the CLI implies.
 
 ---
 
@@ -453,6 +462,13 @@ quietly passing:
       every cluster carries the map, say so, because that retires a risk in §6.
 - [ ] `streamGovernancePackage` is null, not `""`, on an environment with no
       package.
+- [ ] `auditLog.enabled` is **null**, not `false`, whenever the account endpoint
+      answered without an audit log block, and `auditLog.topicName` is null
+      alongside it. A `false` here must always be traceable to the endpoint
+      saying auditing is off.
+- [ ] A failed read of the account endpoint (401, 403, 404, 5xx, or a body that
+      is not JSON) **errors**. It must never produce a resource at all, let
+      alone one reading `enabled: false`.
 
 ### 5.3 Secret sweep must return 0
 
@@ -519,24 +535,51 @@ out of the organization the CLI's auth client returns, and that client calls
 
 - whether `/api/me` accepts **Cloud API key basic auth** at all. The CLI
   authenticates it with a session JWT obtained at login. If the endpoint only
-  accepts a JWT, `confluent.auditLog` will return 401 on every organization.
+  accepts a JWT, `confluent.auditLog` will fail with a 401 on every
+  organization.
 - whether the JSON key is `audit_log`, and whether the organization block sits
-  at the top level or under `user`. Both positions are decoded, but if it sits
-  somewhere else entirely the field reports `enabled: false` on an organization
-  that has audit logging, which is a **false clean pass**.
+  at the top level or under `user`. Both positions are decoded; anywhere else
+  and the field reads null.
 - whether `account_id` carries `env-...` on a modern organization. Only an
   `env-` prefixed value is resolved to an environment; anything else leaves
   `environment` null.
 - `/api/me` is not part of the published, versioned API surface. It can change
   without a deprecation.
 
+**How the unknown is reported.** The field is null-when-unknown, not
+false-when-unknown, and that is load-bearing rather than cosmetic:
+
+- a failed read (401, 403, 404, 5xx, or a body that is not JSON) **errors**;
+  a permission failure is not evidence of absence,
+- a successful read whose payload carries no audit log block reports `enabled`
+  and `topicName` as **null**,
+- `false` is reported only when the endpoint returns an audit log block with no
+  writing service account, which is how the CLI itself reads "audit logs are not
+  enabled for this organization".
+
+`enabled: false` on an audited organization would be a clean pass on something
+nobody checked, invisible to every test, so no code path produces one from an
+unknown. `resources/auditlog_test.go` pins all three directions against an
+`httptest` server.
+
+**Do not read null as reassurance.** In MQL's three-valued logic `null && null`
+is `true`, so a `confluent.auditLog { enabled }` block assertion can pass
+vacuously on a null. Any policy written against this field must compare
+explicitly (`enabled == true`) rather than rely on the block form. Say so
+wherever the field is used until §6.1 is retired.
+
 **What to do:** run `confluent.auditLog` and `confluent audit-log describe` side
-by side. If the values disagree, or the query 401s, the field needs replacing
-rather than patching. There is no versioned management API for audit log
-configuration at the time this was written, so the alternative may be dropping
-the resource and documenting the gap rather than shipping a field that reads
-`enabled: false` on an audited organization. **Do not ship this field reading
-false-when-unknown.**
+by side.
+
+- If the values match, the risk retires and the field is trustworthy.
+- If the query 401s, the endpoint does not accept Cloud API key auth. The field
+  then errors on every scan, which is honest but useless. There is no versioned
+  management API for audit log configuration at the time this was written, so
+  the right move is likely to **drop the resource and document the gap** rather
+  than ship a field that always errors.
+- If the query returns null on an organization the CLI reports as audited, the
+  payload shape differs from what is decoded here. Capture the raw
+  `/api/me` body and fix the decode before the field ships.
 
 ### 6.2 Topics and ACLs use the per-cluster REST API, not the management API
 

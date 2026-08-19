@@ -60,15 +60,24 @@ func (p *accountPayload) auditLog() *auditLogRecord {
 	return nil
 }
 
-// auditLogEnabled reports whether audit logging is switched on. Confluent
-// answers with an audit log block on every organization and marks a disabled
-// one by leaving the writing service account unset, so the service account is
-// what tells the two apart rather than the presence of the block.
-func auditLogEnabled(record *auditLogRecord) bool {
+// auditLogEnabled reports whether audit logging is switched on, and whether the
+// payload answered the question at all.
+//
+// Confluent marks a disabled audit log by leaving the writing service account
+// unset, so the service account is what separates "off" from "on" once a block
+// is present. A payload carrying no audit log block has not answered: the
+// endpoint this is read from is not part of the versioned management API and
+// its shape is not guaranteed, so an absent block means the question could not
+// be put rather than that the answer is no.
+//
+// Reporting "off" for an unanswered question would turn an organization that
+// is audited into a clean pass, which is the failure direction that matters,
+// so the caller reports the field as null instead.
+func auditLogEnabled(record *auditLogRecord) (enabled bool, known bool) {
 	if record == nil {
-		return false
+		return false, false
 	}
-	return record.ServiceAccountID != 0 || record.ServiceAccountResourceID != ""
+	return record.ServiceAccountID != 0 || record.ServiceAccountResourceID != "", true
 }
 
 func (r *mqlConfluent) auditLog() (*mqlConfluentAuditLogConfig, error) {
@@ -78,24 +87,36 @@ func (r *mqlConfluent) auditLog() (*mqlConfluentAuditLogConfig, error) {
 	}
 
 	var payload accountPayload
-	// A failure here is reported rather than degraded. An organization whose
-	// audit log could not be read is not an organization without one, and
-	// answering false would turn a permission or transport problem into a clean
-	// audit pass.
+	// A failure here is reported rather than degraded, in either direction. An
+	// organization whose audit log could not be read is not an organization
+	// without one, and a 401 or 403 says the caller may not look rather than
+	// that there is nothing to see. Turning either into `enabled: false` would
+	// report a clean audit pass on an organization nobody checked.
 	if err := conn.Get(context.Background(), conn.CloudTarget(), auditLogPath, nil, &payload); err != nil {
 		return nil, err
 	}
 
 	record := payload.auditLog()
-	enabled := auditLogEnabled(record)
+	enabled, known := auditLogEnabled(record)
+
+	// An answered question is reported as it was answered; an unanswered one is
+	// reported as null. llx.NilData sets the field to StateIsSet|StateIsNull,
+	// which is what tells the runtime the field was resolved and holds nothing,
+	// rather than leaving it unset or claiming a value the API never gave.
+	enabledData := llx.NilData
+	topicNameData := llx.NilData
+	if known {
+		enabledData = llx.BoolData(enabled)
+		topicNameData = llx.StringData(record.TopicName)
+	}
 	if record == nil {
 		record = &auditLogRecord{}
 	}
 
 	res, err := CreateResource(r.MqlRuntime, "confluent.auditLogConfig", map[string]*llx.RawData{
 		"__id":      llx.StringData(connection.NewConfluentOrgIdentifier(conn.OrganizationID()) + "/auditLog"),
-		"enabled":   llx.BoolData(enabled),
-		"topicName": llx.StringData(record.TopicName),
+		"enabled":   enabledData,
+		"topicName": topicNameData,
 	})
 	if err != nil {
 		return nil, err

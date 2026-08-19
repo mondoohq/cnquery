@@ -586,7 +586,9 @@ func TestDecodeAuditLogPayload(t *testing.T) {
 		assert.Equal(t, "env-audit", record.AccountID)
 		assert.Equal(t, "confluent-audit-log-events", record.TopicName)
 		assert.Equal(t, "sa-audit", record.ServiceAccountResourceID)
-		assert.True(t, auditLogEnabled(record))
+		enabled, known := auditLogEnabled(record)
+		assert.True(t, known)
+		assert.True(t, enabled)
 	})
 
 	t.Run("organization nested under the user", func(t *testing.T) {
@@ -599,22 +601,57 @@ func TestDecodeAuditLogPayload(t *testing.T) {
 		record := payloadRecord.auditLog()
 		require.NotNil(t, record)
 		assert.Equal(t, "lkc-audit", record.ClusterID)
-		assert.True(t, auditLogEnabled(record))
+		enabled, known := auditLogEnabled(record)
+		assert.True(t, known)
+		assert.True(t, enabled)
 	})
 
-	t.Run("an organization with no audit log", func(t *testing.T) {
+	// A payload with no audit log block has not answered the question. It must
+	// not read as "auditing is off", which would be a clean pass on an
+	// organization that may well be audited.
+	t.Run("an organization with no audit log block is unknown, not disabled", func(t *testing.T) {
 		var payloadRecord accountPayload
 		require.NoError(t, json.Unmarshal([]byte(`{"organization":{"id":1,"name":"Acme"}}`), &payloadRecord))
 		assert.Nil(t, payloadRecord.auditLog())
-		assert.False(t, auditLogEnabled(payloadRecord.auditLog()))
+
+		enabled, known := auditLogEnabled(payloadRecord.auditLog())
+		assert.False(t, known, "an absent block must report the answer as unknown")
+		assert.False(t, enabled, "the value is meaningless while known is false")
 	})
 
-	t.Run("an audit log block with no writing account is disabled", func(t *testing.T) {
+	// An empty answer from the endpoint is the same absence one step removed.
+	t.Run("an empty payload is unknown, not disabled", func(t *testing.T) {
+		for _, body := range []string{`{}`, `{"organization":null}`, `{"user":{"organization":{}}}`} {
+			var payloadRecord accountPayload
+			require.NoError(t, json.Unmarshal([]byte(body), &payloadRecord), body)
+			_, known := auditLogEnabled(payloadRecord.auditLog())
+			assert.False(t, known, body)
+		}
+	})
+
+	// The API affirmatively saying auditing is off is the only thing that may
+	// read as false.
+	t.Run("an audit log block with no writing account is an answered false", func(t *testing.T) {
 		var payloadRecord accountPayload
 		require.NoError(t, json.Unmarshal([]byte(`{"organization":{"audit_log":{"service_account_id":0}}}`), &payloadRecord))
 		record := payloadRecord.auditLog()
 		require.NotNil(t, record)
-		assert.False(t, auditLogEnabled(record))
+
+		enabled, known := auditLogEnabled(record)
+		assert.True(t, known, "a present block is an answer")
+		assert.False(t, enabled)
+	})
+
+	t.Run("either half of the writing account counts as enabled", func(t *testing.T) {
+		numericOnly := &auditLogRecord{ServiceAccountID: 7}
+		enabled, known := auditLogEnabled(numericOnly)
+		assert.True(t, known)
+		assert.True(t, enabled)
+
+		resourceOnly := &auditLogRecord{ServiceAccountResourceID: "sa-1"}
+		enabled, known = auditLogEnabled(resourceOnly)
+		assert.True(t, known)
+		assert.True(t, enabled)
 	})
 }
 

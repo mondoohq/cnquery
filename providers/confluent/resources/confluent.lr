@@ -683,10 +683,17 @@ private confluent.encryptionKey @defaults("id provider state validationPhase") {
 // an ACL, or read a topic.
 private confluent.auditLogConfig @defaults("enabled topicName") {
   // Whether audit logging is enabled for the organization
+  //
+  // Null when the account endpoint answered without an audit log block, which
+  // means the question could not be put rather than that the answer is no. A
+  // false here is an answer from the API that auditing is off, never a stand-in
+  // for an unread value, so a check asserting this field is true fails on an
+  // organization whose audit log could not be determined.
   enabled bool
   // Topic the audit records are delivered to
   //
-  // Empty when audit logging is not enabled.
+  // Empty when audit logging is reported as not enabled, and null when
+  // `enabled` is null.
   topicName string
   // Kafka cluster holding the audit log topic
   //
