@@ -174,6 +174,17 @@ func enumString[T ~string](v *T) string {
 	return string(*v)
 }
 
+// enumStringPtr is the null-preserving form of enumString: it keeps a nil
+// enum as nil so the field reads null rather than "". Use it where an
+// absent value means "not reported" instead of "empty".
+func enumStringPtr[T ~string](v *T) *string {
+	if v == nil {
+		return nil
+	}
+	converted := string(*v)
+	return &converted
+}
+
 // strPtrSliceToAny converts an SDK []*string to the []any llx expects, skipping
 // nil elements rather than dereferencing them.
 func strPtrSliceToAny(in []*string) []any {

@@ -3871,8 +3871,10 @@ azure.subscription.netAppService.account.capacityPool.totalThroughputMibps 13.36
 azure.subscription.netAppService.account.capacityPool.type 13.36.1
 azure.subscription.netAppService.account.capacityPool.utilizedThroughputMibps 13.36.1
 azure.subscription.netAppService.account.capacityPool.volume 13.36.1
+azure.subscription.netAppService.account.capacityPool.volume.actualRansomwareProtectionState 13.36.1
 azure.subscription.netAppService.account.capacityPool.volume.coolAccess 13.36.1
 azure.subscription.netAppService.account.capacityPool.volume.creationToken 13.36.1
+azure.subscription.netAppService.account.capacityPool.volume.desiredRansomwareProtectionState 13.36.1
 azure.subscription.netAppService.account.capacityPool.volume.effectiveNetworkFeatures 13.36.1
 azure.subscription.netAppService.account.capacityPool.volume.encrypted 13.36.1
 azure.subscription.netAppService.account.capacityPool.volume.encryptionKeySource 13.36.1

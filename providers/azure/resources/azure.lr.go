@@ -21756,6 +21756,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.netAppService.account.capacityPool.volume.isLargeVolume": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetIsLargeVolume()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.netAppService.account.capacityPool.volume.desiredRansomwareProtectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetDesiredRansomwareProtectionState()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.actualRansomwareProtectionState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetActualRansomwareProtectionState()).ToDataRes(types.String)
+	},
 	"azure.subscription.netAppService.account.capacityPool.volume.networkFeatures": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetNetworkFeatures()).ToDataRes(types.String)
 	},
@@ -49418,6 +49424,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.netAppService.account.capacityPool.volume.isLargeVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).IsLargeVolume, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.desiredRansomwareProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).DesiredRansomwareProtectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.actualRansomwareProtectionState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).ActualRansomwareProtectionState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.netAppService.account.capacityPool.volume.networkFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -116054,36 +116068,38 @@ type mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeInternal
-	Id                        plugin.TValue[string]
-	Name                      plugin.TValue[string]
-	Location                  plugin.TValue[string]
-	Type                      plugin.TValue[string]
-	Tags                      plugin.TValue[map[string]any]
-	ProvisioningState         plugin.TValue[string]
-	CreationToken             plugin.TValue[string]
-	FileSystemId              plugin.TValue[string]
-	ServiceLevel              plugin.TValue[string]
-	UsageThreshold            plugin.TValue[int64]
-	ProtocolTypes             plugin.TValue[[]any]
-	SecurityStyle             plugin.TValue[string]
-	UnixPermissions           plugin.TValue[string]
-	Encrypted                 plugin.TValue[bool]
-	EncryptionKeySource       plugin.TValue[string]
-	KerberosEnabled           plugin.TValue[bool]
-	LdapEnabled               plugin.TValue[bool]
-	SmbEncryption             plugin.TValue[bool]
-	SmbContinuouslyAvailable  plugin.TValue[bool]
-	SmbAccessBasedEnumeration plugin.TValue[string]
-	SmbNonBrowsable           plugin.TValue[string]
-	SnapshotDirectoryVisible  plugin.TValue[bool]
-	CoolAccess                plugin.TValue[bool]
-	IsLargeVolume             plugin.TValue[bool]
-	NetworkFeatures           plugin.TValue[string]
-	EffectiveNetworkFeatures  plugin.TValue[string]
-	Subnet                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
-	MountTargetIpAddresses    plugin.TValue[[]any]
-	ExportPolicyRules         plugin.TValue[[]any]
-	SystemMetadata            plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Location                         plugin.TValue[string]
+	Type                             plugin.TValue[string]
+	Tags                             plugin.TValue[map[string]any]
+	ProvisioningState                plugin.TValue[string]
+	CreationToken                    plugin.TValue[string]
+	FileSystemId                     plugin.TValue[string]
+	ServiceLevel                     plugin.TValue[string]
+	UsageThreshold                   plugin.TValue[int64]
+	ProtocolTypes                    plugin.TValue[[]any]
+	SecurityStyle                    plugin.TValue[string]
+	UnixPermissions                  plugin.TValue[string]
+	Encrypted                        plugin.TValue[bool]
+	EncryptionKeySource              plugin.TValue[string]
+	KerberosEnabled                  plugin.TValue[bool]
+	LdapEnabled                      plugin.TValue[bool]
+	SmbEncryption                    plugin.TValue[bool]
+	SmbContinuouslyAvailable         plugin.TValue[bool]
+	SmbAccessBasedEnumeration        plugin.TValue[string]
+	SmbNonBrowsable                  plugin.TValue[string]
+	SnapshotDirectoryVisible         plugin.TValue[bool]
+	CoolAccess                       plugin.TValue[bool]
+	IsLargeVolume                    plugin.TValue[bool]
+	DesiredRansomwareProtectionState plugin.TValue[string]
+	ActualRansomwareProtectionState  plugin.TValue[string]
+	NetworkFeatures                  plugin.TValue[string]
+	EffectiveNetworkFeatures         plugin.TValue[string]
+	Subnet                           plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	MountTargetIpAddresses           plugin.TValue[[]any]
+	ExportPolicyRules                plugin.TValue[[]any]
+	SystemMetadata                   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionNetAppServiceAccountCapacityPoolVolume creates a new instance of this resource
@@ -116217,6 +116233,14 @@ func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetCoolAcce
 
 func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetIsLargeVolume() *plugin.TValue[bool] {
 	return &c.IsLargeVolume
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetDesiredRansomwareProtectionState() *plugin.TValue[string] {
+	return &c.DesiredRansomwareProtectionState
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetActualRansomwareProtectionState() *plugin.TValue[string] {
+	return &c.ActualRansomwareProtectionState
 }
 
 func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetNetworkFeatures() *plugin.TValue[string] {
