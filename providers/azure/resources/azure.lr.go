@@ -4500,6 +4500,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.databricksService.workspaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksService).GetWorkspaces()).ToDataRes(types.Array(types.Resource("azure.subscription.databricksService.workspace")))
 	},
+	"azure.subscription.databricksService.workspace.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
 	"azure.subscription.databricksService.workspace.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetId()).ToDataRes(types.String)
 	},
@@ -24438,6 +24441,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.databricksService.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.databricksService.workspace.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.databricksService.workspace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -55571,6 +55578,7 @@ type mqlAzureSubscriptionDatabricksServiceWorkspace struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionDatabricksServiceWorkspaceInternal
+	PrivateEndpointConnections      plugin.TValue[[]any]
 	Id                              plugin.TValue[string]
 	Name                            plugin.TValue[string]
 	Location                        plugin.TValue[string]
@@ -55647,6 +55655,22 @@ func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) MqlName() string {
 
 func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.databricksService.workspace", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
 }
 
 func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetId() *plugin.TValue[string] {

@@ -1812,6 +1812,14 @@ private azure.subscription.databricksService {
 // and the Compliance Security Profile posture. The requiredNsgRules value
 // selects which network security group rules the data plane relies on.
 azure.subscription.databricksService.workspace @defaults("id name location publicNetworkAccess") {
+  // Private endpoint connections on the workspace
+  //
+  // Connections created against the workspace's private link resources.
+  // A workspace reached over a private endpoint has at least one whose
+  // `privateLinkServiceConnectionState.status` is Approved. Note this is
+  // separate from `publicNetworkAccess`: a workspace can carry an approved
+  // connection and still answer on its public endpoint.
+  privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Workspace ID
   id string
   // Workspace name

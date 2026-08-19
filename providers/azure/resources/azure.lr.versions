@@ -2371,6 +2371,7 @@ azure.subscription.databricksService.workspace.managedServicesKeySource 13.5.1
 azure.subscription.databricksService.workspace.managedServicesKeyVaultUri 13.5.1
 azure.subscription.databricksService.workspace.managedServicesKeyVersion 13.5.1
 azure.subscription.databricksService.workspace.name 11.4.25
+azure.subscription.databricksService.workspace.privateEndpointConnections 13.36.1
 azure.subscription.databricksService.workspace.properties 11.4.25
 azure.subscription.databricksService.workspace.provisioningState 13.5.1
 azure.subscription.databricksService.workspace.publicNetworkAccess 13.5.1

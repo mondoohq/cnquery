@@ -284,12 +284,29 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		return nil, err
 	}
 	mqlWorkspace.cacheSystemData = sysData
+	if workspace.Properties != nil {
+		mqlWorkspace.cachePrivateEndpointConnections = workspace.Properties.PrivateEndpointConnections
+	}
 
 	return mqlWorkspace, nil
 }
 
 type mqlAzureSubscriptionDatabricksServiceWorkspaceInternal struct {
-	cacheSystemData any
+	cacheSystemData                 any
+	cachePrivateEndpointConnections []*armdatabricks.PrivateEndpointConnection
+}
+
+// privateEndpointConnections reports the connections created against the
+// workspace's private link resources.
+//
+// The list arrives with the workspace, so this reads what was already fetched
+// rather than issuing a request of its own. The values go through the shared
+// converter every other azure resource uses, which normalizes the SDK type
+// through a dict, so the workspace's connections are the same resource shape a
+// storage account's or a key vault's are and a fleet-wide query over
+// privateEndpointConnections stays comparable.
+func (a *mqlAzureSubscriptionDatabricksServiceWorkspace) privateEndpointConnections() ([]any, error) {
+	return azurePrivateEndpointConnectionsToMql(a.MqlRuntime, a.cachePrivateEndpointConnections)
 }
 
 func (a *mqlAzureSubscriptionDatabricksServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
