@@ -132,6 +132,9 @@ func (a *mqlAwsWafAcl) fetchACLDetails() error {
 	if err != nil {
 		return err
 	}
+	if resp.WebACL == nil {
+		return errors.New("GetWebACL returned no web acl for " + a.Name.Data)
+	}
 	a.cachedManagedByFwManager = resp.WebACL.ManagedByFirewallManager
 	a.cachedRules = resp.WebACL.Rules
 	a.cachedACL = resp.WebACL
@@ -306,6 +309,9 @@ func (a *mqlAwsWafIpset) fetchIPSet() error {
 	})
 	if err != nil {
 		return err
+	}
+	if resp.IPSet == nil {
+		return errors.New("GetIPSet returned no ip set for " + a.Name.Data)
 	}
 	a.cachedAddrType = string(resp.IPSet.IPAddressVersion)
 	a.cachedAddresses = convert.SliceAnyToInterface(resp.IPSet.Addresses)
@@ -506,7 +512,14 @@ func (a *mqlAwsWafRulegroup) rules() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	if ruleGroupDetails.RuleGroup == nil {
+		return nil, errors.New("GetRuleGroup returned no rule group for " + a.Name.Data)
+	}
 	for _, rule := range ruleGroupDetails.RuleGroup.Rules {
+		if rule.Name == nil {
+			log.Debug().Str("rulegroup", a.Arn.Data).Msg("skipping a rule group rule with no name")
+			continue
+		}
 		ruleID := a.Arn.Data + "/" + *rule.Name
 		mqlStatement, err := createStatementResource(a.MqlRuntime, rule.Statement, rule.Name, ruleID)
 		if err != nil {
@@ -1260,6 +1273,9 @@ func (a *mqlAwsWafAcl) loggingConfiguration() (*mqlAwsWafAclLoggingConfiguration
 		return res.(*mqlAwsWafAclLoggingConfiguration), nil
 	}
 
+	if resp.LoggingConfiguration == nil {
+		return nil, errors.New("GetLoggingConfiguration returned no configuration for " + arnVal)
+	}
 	logConfig := resp.LoggingConfiguration
 	destinations := convert.SliceAnyToInterface(logConfig.LogDestinationConfigs)
 

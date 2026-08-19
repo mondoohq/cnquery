@@ -599,6 +599,11 @@ func (a *mqlAwsEksNodegroup) fetchDetails() (*ekstypes.Nodegroup, error) {
 		a.fetched = true
 		return nil, err
 	}
+	if desc.Nodegroup == nil {
+		a.fetchErr = errors.New("DescribeNodegroup returned no nodegroup for " + a.Name.Data)
+		a.fetched = true
+		return nil, a.fetchErr
+	}
 	a.details = desc.Nodegroup
 	a.fetched = true
 	return desc.Nodegroup, nil
@@ -933,6 +938,11 @@ func (a *mqlAwsEksAddon) fetchDetails() (*ekstypes.Addon, error) {
 		a.fetched = true
 		return nil, err
 	}
+	if desc.Addon == nil {
+		a.fetchErr = errors.New("DescribeAddon returned no addon for " + a.Name.Data)
+		a.fetched = true
+		return nil, a.fetchErr
+	}
 	a.details = desc.Addon
 	a.fetched = true
 	return desc.Addon, nil
@@ -1126,6 +1136,11 @@ func (a *mqlAwsEksAccessEntry) fetchDetails() (*ekstypes.AccessEntry, error) {
 		a.fetched = true
 		return nil, err
 	}
+	if desc.AccessEntry == nil {
+		a.fetchErr = errors.New("DescribeAccessEntry returned no access entry for " + principalArn)
+		a.fetched = true
+		return nil, a.fetchErr
+	}
 	a.details = desc.AccessEntry
 	a.fetched = true
 	return desc.AccessEntry, nil
@@ -1298,6 +1313,11 @@ func (a *mqlAwsEksFargateProfile) fetchDetails() (*ekstypes.FargateProfile, erro
 		a.fetched = true
 		return nil, err
 	}
+	if desc.FargateProfile == nil {
+		a.fetchErr = errors.New("DescribeFargateProfile returned no profile for " + name)
+		a.fetched = true
+		return nil, a.fetchErr
+	}
 	a.details = desc.FargateProfile
 	a.fetched = true
 	return desc.FargateProfile, nil
@@ -1458,6 +1478,11 @@ func (a *mqlAwsEksPodIdentityAssociation) fetchDetails() (*ekstypes.PodIdentityA
 		a.fetchErr = err
 		a.fetched = true
 		return nil, err
+	}
+	if desc.Association == nil {
+		a.fetchErr = errors.New("DescribePodIdentityAssociation returned no association for " + assocId)
+		a.fetched = true
+		return nil, a.fetchErr
 	}
 	a.details = desc.Association
 	a.fetched = true
