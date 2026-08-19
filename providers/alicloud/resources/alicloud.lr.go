@@ -70,6 +70,8 @@ const (
 	ResourceAlicloudActiontrailTrail             string = "alicloud.actiontrail.trail"
 	ResourceAlicloudLog                          string = "alicloud.log"
 	ResourceAlicloudLogProject                   string = "alicloud.log.project"
+	ResourceAlicloudLogAlert                     string = "alicloud.log.alert"
+	ResourceAlicloudLogAlertQuery                string = "alicloud.log.alert.query"
 	ResourceAlicloudLogLogstore                  string = "alicloud.log.logstore"
 	ResourceAlicloudConfig                       string = "alicloud.config"
 	ResourceAlicloudConfigRule                   string = "alicloud.config.rule"
@@ -361,6 +363,14 @@ func init() {
 		"alicloud.log.project": {
 			Init:   initAlicloudLogProject,
 			Create: createAlicloudLogProject,
+		},
+		"alicloud.log.alert": {
+			// to override args, implement: initAlicloudLogAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudLogAlert,
+		},
+		"alicloud.log.alert.query": {
+			// to override args, implement: initAlicloudLogAlertQuery(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudLogAlertQuery,
 		},
 		"alicloud.log.logstore": {
 			Init:   initAlicloudLogLogstore,
@@ -3274,6 +3284,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.log.project.isPublic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudLogProject).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"alicloud.log.project.alerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogProject).GetAlerts()).ToDataRes(types.Array(types.Resource("alicloud.log.alert")))
+	},
+	"alicloud.log.alert.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.projectName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetProjectName()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.displayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetDisplayName()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.log.alert.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.scheduleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetScheduleType()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.scheduleInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetScheduleInterval()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.scheduleCronExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetScheduleCronExpression()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.scheduleTimeZone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetScheduleTimeZone()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.scheduleRunImmediately": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetScheduleRunImmediately()).ToDataRes(types.Bool)
+	},
+	"alicloud.log.alert.threshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetThreshold()).ToDataRes(types.Int)
+	},
+	"alicloud.log.alert.noDataFire": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetNoDataFire()).ToDataRes(types.Bool)
+	},
+	"alicloud.log.alert.muteUntil": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetMuteUntil()).ToDataRes(types.Time)
+	},
+	"alicloud.log.alert.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetLabels()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.log.alert.annotations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetAnnotations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.log.alert.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.log.alert.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.log.alert.queries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetQueries()).ToDataRes(types.Array(types.Resource("alicloud.log.alert.query")))
+	},
+	"alicloud.log.alert.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlert).GetProject()).ToDataRes(types.Resource("alicloud.log.project"))
+	},
+	"alicloud.log.alert.query.projectName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetProjectName()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.query.store": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetStore()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.query.query": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetQuery()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.query.start": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetStart()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.query.end": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetEnd()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.query.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.query.roleArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetRoleArn()).ToDataRes(types.String)
+	},
+	"alicloud.log.alert.query.logstore": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudLogAlertQuery).GetLogstore()).ToDataRes(types.Resource("alicloud.log.logstore"))
 	},
 	"alicloud.log.logstore.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudLogLogstore).GetRegionId()).ToDataRes(types.String)
@@ -9641,6 +9741,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.log.project.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudLogProject).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.project.alerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogProject).Alerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.log.alert.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.projectName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).ProjectName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).DisplayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.scheduleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).ScheduleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.scheduleInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).ScheduleInterval, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.scheduleCronExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).ScheduleCronExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.scheduleTimeZone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).ScheduleTimeZone, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.scheduleRunImmediately": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).ScheduleRunImmediately, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.threshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Threshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.noDataFire": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).NoDataFire, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.muteUntil": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).MuteUntil, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.annotations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Annotations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.queries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Queries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlert).Project, ok = plugin.RawToTValue[*mqlAlicloudLogProject](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.log.alert.query.projectName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).ProjectName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.store": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).Store, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.query": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).Query, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.start": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).Start, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.end": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).End, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.roleArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).RoleArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.log.alert.query.logstore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudLogAlertQuery).Logstore, ok = plugin.RawToTValue[*mqlAlicloudLogLogstore](v.Value, v.Error)
 		return
 	},
 	"alicloud.log.logstore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -21812,6 +22040,7 @@ type mqlAlicloudLogProject struct {
 	Logstores          plugin.TValue[[]any]
 	Policy             plugin.TValue[string]
 	IsPublic           plugin.TValue[bool]
+	Alerts             plugin.TValue[[]any]
 }
 
 // createAlicloudLogProject creates a new instance of this resource
@@ -21940,6 +22169,286 @@ func (c *mqlAlicloudLogProject) GetPolicy() *plugin.TValue[string] {
 func (c *mqlAlicloudLogProject) GetIsPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
 		return c.isPublic()
+	})
+}
+
+func (c *mqlAlicloudLogProject) GetAlerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Alerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.log.project", c.__id, "alerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.alerts()
+	})
+}
+
+// mqlAlicloudLogAlert for the alicloud.log.alert resource
+type mqlAlicloudLogAlert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudLogAlertInternal
+	RegionId               plugin.TValue[string]
+	ProjectName            plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	Description            plugin.TValue[string]
+	Enabled                plugin.TValue[bool]
+	Status                 plugin.TValue[string]
+	ScheduleType           plugin.TValue[string]
+	ScheduleInterval       plugin.TValue[string]
+	ScheduleCronExpression plugin.TValue[string]
+	ScheduleTimeZone       plugin.TValue[string]
+	ScheduleRunImmediately plugin.TValue[bool]
+	Threshold              plugin.TValue[int64]
+	NoDataFire             plugin.TValue[bool]
+	MuteUntil              plugin.TValue[*time.Time]
+	Labels                 plugin.TValue[map[string]any]
+	Annotations            plugin.TValue[map[string]any]
+	CreateTime             plugin.TValue[*time.Time]
+	LastModifiedTime       plugin.TValue[*time.Time]
+	Queries                plugin.TValue[[]any]
+	Project                plugin.TValue[*mqlAlicloudLogProject]
+}
+
+// createAlicloudLogAlert creates a new instance of this resource
+func createAlicloudLogAlert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudLogAlert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.log.alert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudLogAlert) MqlName() string {
+	return "alicloud.log.alert"
+}
+
+func (c *mqlAlicloudLogAlert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudLogAlert) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudLogAlert) GetProjectName() *plugin.TValue[string] {
+	return &c.ProjectName
+}
+
+func (c *mqlAlicloudLogAlert) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudLogAlert) GetDisplayName() *plugin.TValue[string] {
+	return &c.DisplayName
+}
+
+func (c *mqlAlicloudLogAlert) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudLogAlert) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudLogAlert) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudLogAlert) GetScheduleType() *plugin.TValue[string] {
+	return &c.ScheduleType
+}
+
+func (c *mqlAlicloudLogAlert) GetScheduleInterval() *plugin.TValue[string] {
+	return &c.ScheduleInterval
+}
+
+func (c *mqlAlicloudLogAlert) GetScheduleCronExpression() *plugin.TValue[string] {
+	return &c.ScheduleCronExpression
+}
+
+func (c *mqlAlicloudLogAlert) GetScheduleTimeZone() *plugin.TValue[string] {
+	return &c.ScheduleTimeZone
+}
+
+func (c *mqlAlicloudLogAlert) GetScheduleRunImmediately() *plugin.TValue[bool] {
+	return &c.ScheduleRunImmediately
+}
+
+func (c *mqlAlicloudLogAlert) GetThreshold() *plugin.TValue[int64] {
+	return &c.Threshold
+}
+
+func (c *mqlAlicloudLogAlert) GetNoDataFire() *plugin.TValue[bool] {
+	return &c.NoDataFire
+}
+
+func (c *mqlAlicloudLogAlert) GetMuteUntil() *plugin.TValue[*time.Time] {
+	return &c.MuteUntil
+}
+
+func (c *mqlAlicloudLogAlert) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
+}
+
+func (c *mqlAlicloudLogAlert) GetAnnotations() *plugin.TValue[map[string]any] {
+	return &c.Annotations
+}
+
+func (c *mqlAlicloudLogAlert) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudLogAlert) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAlicloudLogAlert) GetQueries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Queries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.log.alert", c.__id, "queries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.queries()
+	})
+}
+
+func (c *mqlAlicloudLogAlert) GetProject() *plugin.TValue[*mqlAlicloudLogProject] {
+	return plugin.GetOrCompute[*mqlAlicloudLogProject](&c.Project, func() (*mqlAlicloudLogProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.log.alert", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudLogProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlAlicloudLogAlertQuery for the alicloud.log.alert.query resource
+type mqlAlicloudLogAlertQuery struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudLogAlertQueryInternal
+	ProjectName plugin.TValue[string]
+	Store       plugin.TValue[string]
+	Query       plugin.TValue[string]
+	Start       plugin.TValue[string]
+	End         plugin.TValue[string]
+	RegionId    plugin.TValue[string]
+	RoleArn     plugin.TValue[string]
+	Logstore    plugin.TValue[*mqlAlicloudLogLogstore]
+}
+
+// createAlicloudLogAlertQuery creates a new instance of this resource
+func createAlicloudLogAlertQuery(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudLogAlertQuery{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.log.alert.query", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudLogAlertQuery) MqlName() string {
+	return "alicloud.log.alert.query"
+}
+
+func (c *mqlAlicloudLogAlertQuery) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetProjectName() *plugin.TValue[string] {
+	return &c.ProjectName
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetStore() *plugin.TValue[string] {
+	return &c.Store
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetQuery() *plugin.TValue[string] {
+	return &c.Query
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetStart() *plugin.TValue[string] {
+	return &c.Start
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetEnd() *plugin.TValue[string] {
+	return &c.End
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetRoleArn() *plugin.TValue[string] {
+	return &c.RoleArn
+}
+
+func (c *mqlAlicloudLogAlertQuery) GetLogstore() *plugin.TValue[*mqlAlicloudLogLogstore] {
+	return plugin.GetOrCompute[*mqlAlicloudLogLogstore](&c.Logstore, func() (*mqlAlicloudLogLogstore, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.log.alert.query", c.__id, "logstore")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudLogLogstore), nil
+			}
+		}
+
+		return c.logstore()
 	})
 }
 

@@ -3059,6 +3059,124 @@ alicloud.log.project {
   // project's log data to callers outside the account. False when no policy is
   // attached or every grant is scoped to named principals.
   isPublic() bool
+  // Alert rules defined in the project
+  //
+  // The rules that watch the project's logs and raise a notification when a
+  // query matches. Logs being collected is only half of monitoring; without a
+  // rule reading them, nothing is noticed.
+  alerts() []alicloud.log.alert
+}
+
+// Log Service alert rule
+//
+// A single alert rule in a Log Service project, keyed by the project and the
+// rule name. Exposes whether the rule is enabled, how often it is evaluated,
+// and the queries it runs, each naming the store it reads and the search it
+// performs. Both halves matter: a rule whose query matches nothing raises
+// nothing, and so does a rule that is disabled or muted, however well written
+// its query is.
+alicloud.log.alert @defaults("name enabled scheduleInterval") {
+  // Region of the project the rule belongs to
+  regionId string
+  // Name of the project the rule belongs to
+  projectName string
+  // Rule name, used with the project as the lookup key
+  name string
+  // Display name shown in the console
+  displayName string
+  // Description of the rule
+  description string
+  // Whether the rule is evaluated
+  //
+  // A disabled rule is kept but never runs, so it raises nothing regardless of
+  // what its query would have matched.
+  enabled bool
+  // Status the API reports, either ENABLED or DISABLED
+  status string
+  // Kind of schedule the rule runs on, for example FixedRate or Cron
+  scheduleType string
+  // How often the rule is evaluated, for example 1m or 5m
+  //
+  // Empty when the rule runs on a cron expression instead, given by
+  // scheduleCronExpression.
+  scheduleInterval string
+  // Cron expression the rule is evaluated on
+  //
+  // Empty when the rule runs at a fixed interval instead.
+  scheduleCronExpression string
+  // Time zone the schedule is interpreted in
+  scheduleTimeZone string
+  // Whether the schedule is currently running
+  //
+  // False when the rule is disabled.
+  scheduleRunImmediately bool
+  // Consecutive matches required before the rule fires
+  //
+  // A threshold above 1 means a single match does not raise anything.
+  threshold int
+  // Whether the rule fires when its query returns no data at all
+  //
+  // A rule watching for the absence of an expected event needs this, otherwise
+  // a silent source is indistinguishable from a healthy one.
+  noDataFire bool
+  // Time until which the rule is muted
+  //
+  // Null when the rule is not muted. A muted rule is evaluated but raises no
+  // notification, so it can read as enabled while notifying nobody.
+  muteUntil time
+  // Labels attached to the rule as key-value pairs
+  labels map[string]string
+  // Annotations attached to the rule as key-value pairs
+  annotations map[string]string
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  lastModifiedTime time
+  // Queries the rule evaluates
+  //
+  // A rule can read several stores. Each entry names the store and the search
+  // run against it, which is what decides whether the rule notices the events
+  // it was meant to.
+  queries() []alicloud.log.alert.query
+  // Log Service project the rule belongs to
+  project() alicloud.log.project
+}
+
+// Log Service alert rule query
+//
+// A single query an alert rule evaluates. Exposes the store it reads, the
+// search it runs, and the time range it covers, so the events a rule can
+// actually notice are readable rather than implied by the rule's name.
+alicloud.log.alert.query @defaults("store query") {
+  // Name of the project the query reads from
+  projectName string
+  // Name of the logstore or metricstore the query reads
+  store string
+  // Search the query runs
+  //
+  // The Log Service query the rule evaluates, for example a filter over an
+  // ActionTrail logstore selecting a particular event name.
+  query string
+  // Start of the time range the query covers, relative to each evaluation
+  //
+  // For example -5m.
+  start string
+  // End of the time range the query covers, relative to each evaluation
+  //
+  // For example now.
+  end string
+  // Region the queried store resides in
+  regionId string
+  // RAM role assumed to read the store
+  //
+  // Set when the query reads a store in another account. Empty when it reads a
+  // store in the account being scanned.
+  roleArn string
+  // Logstore the query reads
+  //
+  // Null when the query reads a store in another account or region, or a store
+  // that can no longer be read.
+  logstore() alicloud.log.logstore
 }
 
 // Log Service logstore
