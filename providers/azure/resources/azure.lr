@@ -4562,7 +4562,22 @@ private azure.subscription.networkService.privateEndpoint.serviceconnection @def
   id string
   // Connection name
   name string
-  // Private link service being connected to
+  // Resource ID of the connection target
+  //
+  // The ARM ID of whatever the endpoint connects to. For a connection to a
+  // Private Link service this is that service's ID, and privateLinkService
+  // resolves it. For a connection to a first-party service (a storage
+  // account, a SQL server, a key vault, a Cosmos DB account) this is the
+  // target resource's own ID, which spans too many resource types for a
+  // single reference, so it is reported here as an ID.
+  privateLinkServiceId string
+  // Private Link service being connected to, or null when the target is a first-party service
+  //
+  // Resolves the provider-side Private Link service the endpoint consumes, so
+  // its visibility and auto-approval subscription lists and its own endpoint
+  // connections can be examined from the consumer side. Null for a connection
+  // to a first-party service, which has no Private Link service of its own;
+  // privateLinkServiceId names the target in that case.
   privateLinkService() azure.subscription.networkService.privateLinkService
   // Group IDs obtained from the remote resource
   groupIds []string
