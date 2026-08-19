@@ -79,3 +79,40 @@ func TestNetAppMountTargetIps(t *testing.T) {
 		assert.Equal(t, []any{"10.0.1.4", "10.0.2.4"}, res)
 	})
 }
+
+// The regression this guards: the rule index builds the cache id. Two rules
+// that both came back without one would land on the same id, and the runtime
+// would serve the first rule's data for both -- so a volume with a permissive
+// rule and a restrictive one could read as two copies of whichever came first.
+func TestNetAppExportPolicyRuleKey(t *testing.T) {
+	idx := func(i int32) *int32 { return &i }
+
+	t.Run("the rule index is the key when the API supplies one", func(t *testing.T) {
+		assert.Equal(t, "1", netAppExportPolicyRuleKey(&armnetapp.ExportPolicyRule{RuleIndex: idx(1)}, 0))
+		assert.Equal(t, "7", netAppExportPolicyRuleKey(&armnetapp.ExportPolicyRule{RuleIndex: idx(7)}, 3))
+	})
+
+	// Index 0 is a real index, not an absent one, so it must not be confused
+	// with the fallback.
+	t.Run("index zero is an index", func(t *testing.T) {
+		assert.Equal(t, "0", netAppExportPolicyRuleKey(&armnetapp.ExportPolicyRule{RuleIndex: idx(0)}, 5))
+	})
+
+	t.Run("rules with no index keep distinct keys", func(t *testing.T) {
+		first := netAppExportPolicyRuleKey(&armnetapp.ExportPolicyRule{}, 0)
+		second := netAppExportPolicyRuleKey(&armnetapp.ExportPolicyRule{}, 1)
+		assert.NotEqual(t, first, second)
+	})
+
+	// The fallback is prefixed so a positional key can never collide with a
+	// real index from a sibling rule.
+	t.Run("a positional key cannot collide with a real index", func(t *testing.T) {
+		positional := netAppExportPolicyRuleKey(&armnetapp.ExportPolicyRule{}, 2)
+		indexed := netAppExportPolicyRuleKey(&armnetapp.ExportPolicyRule{RuleIndex: idx(2)}, 9)
+		assert.NotEqual(t, positional, indexed)
+	})
+
+	t.Run("a nil rule falls back rather than panicking", func(t *testing.T) {
+		assert.NotEmpty(t, netAppExportPolicyRuleKey(nil, 4))
+	})
+}

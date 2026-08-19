@@ -349,20 +349,22 @@ func (a *mqlAzureSubscriptionNetAppServiceAccount) capacityPools() ([]any, error
 
 			resource, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetAppServiceAccountCapacityPool,
 				map[string]*llx.RawData{
-					"id":                      llx.StringDataPtr(pool.ID),
-					"name":                    llx.StringDataPtr(pool.Name),
-					"location":                llx.StringDataPtr(pool.Location),
-					"type":                    llx.StringDataPtr(pool.Type),
-					"tags":                    llx.MapData(convert.PtrMapStrToInterface(pool.Tags), types.String),
-					"poolId":                  llx.StringDataPtr(props.PoolID),
-					"provisioningState":       llx.StringDataPtr(props.ProvisioningState),
-					"serviceLevel":            llx.StringData(enumString(props.ServiceLevel)),
-					"sizeBytes":               llx.IntDataPtr(props.Size),
-					"qosType":                 llx.StringData(enumString(props.QosType)),
-					"coolAccess":              llx.BoolDataPtr(props.CoolAccess),
-					"encryptionType":          llx.StringData(enumString(props.EncryptionType)),
-					"totalThroughputMibps":    llx.FloatData(float64(convert.ToValue(props.TotalThroughputMibps))),
-					"utilizedThroughputMibps": llx.FloatData(float64(convert.ToValue(props.UtilizedThroughputMibps))),
+					"id":                llx.StringDataPtr(pool.ID),
+					"name":              llx.StringDataPtr(pool.Name),
+					"location":          llx.StringDataPtr(pool.Location),
+					"type":              llx.StringDataPtr(pool.Type),
+					"tags":              llx.MapData(convert.PtrMapStrToInterface(pool.Tags), types.String),
+					"poolId":            llx.StringDataPtr(props.PoolID),
+					"provisioningState": llx.StringDataPtr(props.ProvisioningState),
+					"serviceLevel":      llx.StringData(enumString(props.ServiceLevel)),
+					"sizeBytes":         llx.IntDataPtr(props.Size),
+					"qosType":           llx.StringData(enumString(props.QosType)),
+					"coolAccess":        llx.BoolDataPtr(props.CoolAccess),
+					"encryptionType":    llx.StringData(enumString(props.EncryptionType)),
+					// Carried through as pointers: a pool the API reports no
+					// throughput figures for is not a pool doing zero MiB/s.
+					"totalThroughputMibps":    llx.FloatDataPtr(props.TotalThroughputMibps),
+					"utilizedThroughputMibps": llx.FloatDataPtr(props.UtilizedThroughputMibps),
 				})
 			if err != nil {
 				return nil, err
@@ -498,22 +500,34 @@ func (a *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) subnet() (*
 	return resolveDelegatedSubnet(a.MqlRuntime, a.cacheSubnetId, &a.Subnet)
 }
 
+// netAppExportPolicyRuleKey returns the volume-local key of an export policy
+// rule, used to build its cache id.
+//
+// The rule index is the natural key and is stable across reads. It is optional
+// in the SDK, though, and two rules that both came back without one would share
+// a cache entry -- every row would then read as the first one. A rule with no
+// index falls back to its position in the list, which is less stable but keeps
+// the rows distinct.
+func netAppExportPolicyRuleKey(rule *armnetapp.ExportPolicyRule, position int) string {
+	if rule != nil && rule.RuleIndex != nil {
+		return strconv.FormatInt(int64(*rule.RuleIndex), 10)
+	}
+	return "position" + strconv.Itoa(position)
+}
+
 func (a *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) exportPolicyRules() ([]any, error) {
 	res := []any{}
-	for _, rule := range a.cacheExportPolicyRules {
+	for i, rule := range a.cacheExportPolicyRules {
 		if rule == nil {
 			continue
 		}
 
-		// The rule index is the volume-local key; without it the rules of one
-		// volume would share a cache entry and every row would read as the
-		// first one.
-		id := a.Id.Data + "/exportPolicyRules/" + strconv.FormatInt(int64(convert.ToValue(rule.RuleIndex)), 10)
+		id := a.Id.Data + "/exportPolicyRules/" + netAppExportPolicyRuleKey(rule, i)
 
 		mqlRule, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule,
 			map[string]*llx.RawData{
 				"__id":                llx.StringData(id),
-				"ruleIndex":           llx.IntData(int64(convert.ToValue(rule.RuleIndex))),
+				"ruleIndex":           llx.IntDataPtr(rule.RuleIndex),
 				"allowedClients":      llx.StringDataPtr(rule.AllowedClients),
 				"cifs":                llx.BoolDataPtr(rule.Cifs),
 				"nfsv3":               llx.BoolDataPtr(rule.Nfsv3),

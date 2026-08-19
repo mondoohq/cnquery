@@ -18905,8 +18905,13 @@ azure.subscription.netAppService.account.capacityPool @defaults("id name service
   // Encryption type applied to data at rest in the pool ("Single" or "Double")
   encryptionType string
   // Total throughput of the pool in MiB/s
+  //
+  // Null when the API does not report it, which is not the same as a pool
+  // doing zero MiB/s.
   totalThroughputMibps float
   // Utilized throughput of the pool in MiB/s
+  //
+  // Null when the API does not report it.
   utilizedThroughputMibps float
   // Volumes in the capacity pool
   volumes() []azure.subscription.netAppService.account.capacityPool.volume
@@ -19009,6 +19014,8 @@ azure.subscription.netAppService.account.capacityPool.volume @defaults("id name 
 // can reach the volume's network.
 private azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule @defaults("ruleIndex allowedClients unixReadWrite hasRootAccess") {
   // Order the rule is evaluated in
+  //
+  // Null on a rule Azure returns without one.
   ruleIndex int
   // Clients the rule matches
   //
