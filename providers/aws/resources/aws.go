@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	orgtypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"io"
 	"strings"
 	"sync"
@@ -214,6 +215,26 @@ func Is400AccessDeniedError(err error) bool {
 		return statusCodeMatches && errorMessageMatches
 	}
 	return false
+}
+
+// isOrganizationsNotInUseError reports the answer AWS gives a standalone
+// account: AWSOrganizationsNotInUseException.
+//
+// It is a statement about the account, not a failure to read one. Every
+// Organizations call answers this way when the account belongs to no
+// organization, so it is what separates "not a multi-account environment" from
+// "could not find out", and the two must not look alike to a caller trying to
+// scope a check.
+//
+// Deliberately not folded into Is400AccessDeniedError, which answers a
+// different question: a denial leaves the account's membership unknown, while
+// this establishes it.
+func isOrganizationsNotInUseError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var notInUse *orgtypes.AWSOrganizationsNotInUseException
+	return errors.As(err, &notInUse)
 }
 
 // isResourceNotFoundError reports whether err is an AWS "not found" API error
