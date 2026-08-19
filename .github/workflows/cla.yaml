@@ -20,6 +20,7 @@ jobs:
     steps:
       - name: "CLA Assistant"
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the Mondoo CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        # contributor-assistant/github-action is archived; using this trusted fork, pinned to a commit to avoid supply-chain risk.
         uses: marksalpeter/cla-assistant-action@e980cbf75ae27b7b9d09c6b01f7c64a366cb1ccd # master, 2026-04-08
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
