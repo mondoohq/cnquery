@@ -337,6 +337,16 @@ func (a *mqlAzureSubscription) dataBox() (*mqlAzureSubscriptionDataBoxService, e
 	return svc.(*mqlAzureSubscriptionDataBoxService), nil
 }
 
+func (a *mqlAzureSubscription) netApp() (*mqlAzureSubscriptionNetAppService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetAppService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionNetAppService), nil
+}
+
 func (a *mqlAzureSubscription) functions() (*mqlAzureSubscriptionFunctionsService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFunctionsService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

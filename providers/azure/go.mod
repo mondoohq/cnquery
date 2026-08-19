@@ -47,6 +47,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi v1.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql v1.2.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers/v2 v2.0.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/netapp/armnetapp/v8 v8.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11 v11.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v3 v3.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/policyinsights/armpolicyinsights v0.10.0

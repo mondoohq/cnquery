@@ -251,6 +251,8 @@ azure.subscription @defaults ("name") {
   dataProtection() azure.subscription.dataProtectionService
   // Azure Data Box resources in the subscription
   dataBox() azure.subscription.dataBoxService
+  // Azure NetApp Files resources in the subscription
+  netApp() azure.subscription.netAppService
   // Azure Functions resources in the subscription
   functions() azure.subscription.functionsService
   // Service Bus resources in the subscription
@@ -18621,6 +18623,68 @@ azure.subscription.dataProtectionService.backupVault @defaults("id name location
   systemMetadata() azure.subscription.systemData
 }
 
+// Azure NetApp Files
+private azure.subscription.netAppService {
+  // Subscription identifier
+  subscriptionId string
+  // NetApp accounts in the subscription
+  accounts() []azure.subscription.netAppService.account
+}
+
+// Azure NetApp Files account
+//
+// Top-level container for Azure NetApp Files in a subscription, holding the
+// capacity pools that carry volumes and the Active Directory connections
+// those volumes authenticate against. Query an account to read whether its
+// data at rest is encrypted with a customer-managed key rather than the
+// platform key, which identity reaches that key, and how SMB and LDAP
+// traffic to the domain controller is protected.
+azure.subscription.netAppService.account @defaults("id name location provisioningState") {
+  // Account resource ID
+  id string
+  // Account name
+  name string
+  // Azure region the account lives in
+  location string
+  // Resource type
+  type string
+  // Account tags
+  tags map[string]string
+  // Provisioning state
+  provisioningState string
+  // Managed identity configuration
+  //
+  // Managed identity block of the account, with keys `type` (one of
+  // "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned", or
+  // "None"), `principalId` and `tenantId` for the system-assigned identity,
+  // and `userAssignedIdentities` mapping each assigned identity resource ID
+  // to its client and principal IDs. See userAssignedIdentities for the
+  // resolved user-assigned identity resources.
+  identity dict
+  // User-assigned managed identities associated with the account
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Domain used for NFSv4 user ID mapping
+  //
+  // Applies to every non-LDAP NFSv4 volume in the account. Empty when the
+  // account uses the service default.
+  nfsV4IdDomain string
+  // Whether showmount is disabled for volumes under the account
+  //
+  // Showmount lets any client on the network enumerate the NFS exports a
+  // volume offers. True means that enumeration is turned off.
+  disableShowmount bool
+  // Multi Active Directory status of the account
+  multiAdStatus string
+  // Encryption settings for data at rest
+  encryption() azure.subscription.netAppService.account.encryption
+  // Active Directory connections configured on the account
+  activeDirectories() []azure.subscription.netAppService.account.activeDirectory
+  // Capacity pools in the account
+  capacityPools() []azure.subscription.netAppService.account.capacityPool
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
 // Azure Data Box
 private azure.subscription.dataBoxService {
   // Subscription identifier
@@ -18723,4 +18787,258 @@ azure.subscription.dataBoxService.job @defaults("id name status transferType") {
   deviceErasureStatus() string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+// Encryption settings of an Azure NetApp Files account
+//
+// Which key protects the account's data at rest, and which identity is used
+// to reach it. keySource is "Microsoft.NetApp" when the platform key is in
+// use and "Microsoft.KeyVault" when a customer-managed key is, in which case
+// the key, its vault, and the authenticating identity are also reported.
+private azure.subscription.netAppService.account.encryption @defaults("keySource keyVaultStatus") {
+  // Encryption key source ("Microsoft.NetApp" or "Microsoft.KeyVault")
+  keySource string
+  // Name of the Key Vault key encrypting the account
+  keyName string
+  // URI of the Key Vault holding the encryption key
+  keyVaultUri string
+  // Key Vault key used to encrypt the account
+  key() azure.subscription.keyVaultService.key
+  // Key Vault holding the encryption key
+  vault() azure.subscription.keyVaultService.vault
+  // Status of the Key Vault connection ("Created", "InUse", "Deleted", "Error", or "Updating")
+  keyVaultStatus string
+  // Principal ID of the identity used to reach the Key Vault
+  identityPrincipalId string
+  // User-assigned managed identity used to reach the Key Vault
+  //
+  // Null when the account authenticates to the vault with its
+  // system-assigned identity instead.
+  identity() azure.subscription.managedIdentity
+  // Client ID of the multi-tenant application used to reach a cross-tenant Key Vault
+  federatedClientId string
+}
+
+// Active Directory connection of an Azure NetApp Files account
+//
+// Domain the account's SMB and LDAP-enabled volumes authenticate against.
+// Fields cover how that traffic is protected: whether AES is negotiated for
+// SMB, whether the connection to the domain controller is encrypted, and
+// whether LDAP is signed and carried over TLS. The privileged group
+// memberships the connection grants are also listed, since they decide who
+// holds administrator, backup and security-privilege rights on the volumes.
+private azure.subscription.netAppService.account.activeDirectory @defaults("activeDirectoryId domain status") {
+  // Identifier of the Active Directory connection
+  activeDirectoryId string
+  // Name of the Active Directory domain
+  domain string
+  // DNS server IP addresses for the domain, comma separated
+  dns string
+  // NetBIOS name registered in the domain for the SMB server
+  smbServerName string
+  // Organizational unit the computer account is created in
+  organizationalUnit string
+  // Active Directory site domain controller discovery is limited to
+  site string
+  // Name of the Active Directory machine account used for Kerberos volumes
+  adName string
+  // KDC server IP address used for Kerberos volumes
+  kdcIp string
+  // Whether AES encryption is negotiated for SMB communication
+  aesEncryption bool
+  // Whether traffic between the SMB server and the domain controller is encrypted
+  encryptDcConnections bool
+  // Whether LDAP traffic is carried over TLS
+  ldapOverTls bool
+  // Whether LDAP traffic is signed
+  ldapSigning bool
+  // Whether NFS client local users may access NFS volumes alongside LDAP users
+  allowLocalNfsUsersWithLdap bool
+  // LDAP search scope
+  //
+  // Keys `userDN`, `groupDN`, and `groupMembershipFilter`, which narrow the
+  // part of the directory the LDAP client searches. Null when the default
+  // scope is in use.
+  ldapSearchScope dict
+  // Preferred LDAP server IPv4 addresses, comma separated
+  preferredServersForLdapClient string
+  // Domain users added to the built-in Administrators group
+  administrators []string
+  // Domain users added to the built-in Backup Operators group
+  backupOperators []string
+  // Domain users granted the SeSecurityPrivilege privilege
+  securityOperators []string
+  // Status of the connection ("Created", "InUse", "Deleted", "Error", or "Updating")
+  status string
+  // Detail behind the connection status
+  statusDetails string
+}
+
+// Azure NetApp Files capacity pool
+//
+// Pool of provisioned storage inside a NetApp account, from which volumes
+// draw their capacity. The pool sets the service level and the encryption
+// type every volume in it inherits, so it is the level at which data-at-rest
+// encryption and performance tiering are decided.
+azure.subscription.netAppService.account.capacityPool @defaults("id name serviceLevel sizeBytes") {
+  // Capacity pool resource ID
+  id string
+  // Capacity pool name
+  name string
+  // Azure region the pool lives in
+  location string
+  // Resource type
+  type string
+  // Capacity pool tags
+  tags map[string]string
+  // Identifier of the pool
+  poolId string
+  // Provisioning state
+  provisioningState string
+  // Service level of the pool ("Standard", "Premium", "Ultra", or "Flexible")
+  serviceLevel string
+  // Provisioned size of the pool in bytes
+  sizeBytes int
+  // QoS type of the pool ("Auto" or "Manual")
+  qosType string
+  // Whether the pool may contain cool-access volumes
+  coolAccess bool
+  // Encryption type applied to data at rest in the pool ("Single" or "Double")
+  encryptionType string
+  // Total throughput of the pool in MiB/s
+  totalThroughputMibps float
+  // Utilized throughput of the pool in MiB/s
+  utilizedThroughputMibps float
+  // Volumes in the capacity pool
+  volumes() []azure.subscription.netAppService.account.capacityPool.volume
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure NetApp Files volume
+//
+// File system exported from a capacity pool over NFS, SMB, or both. Fields
+// cover the protocols it answers on, the export policy rules deciding which
+// clients may mount it and with what rights, whether Kerberos and LDAP are
+// in use, whether SMB traffic is encrypted, and whether the volume is
+// reachable from a delegated subnet or a standard network. This is the level
+// at which NetApp data is actually exposed, so it carries the access surface
+// an exposure audit reads.
+azure.subscription.netAppService.account.capacityPool.volume @defaults("id name serviceLevel securityStyle") {
+  // Volume resource ID
+  id string
+  // Volume name
+  name string
+  // Azure region the volume lives in
+  location string
+  // Resource type
+  type string
+  // Volume tags
+  tags map[string]string
+  // Provisioning state
+  provisioningState string
+  // Path the volume is exported at
+  creationToken string
+  // Unique file system identifier of the volume
+  fileSystemId string
+  // Service level of the volume ("Standard", "Premium", "Ultra", or "Flexible")
+  serviceLevel string
+  // Maximum size the volume may grow to, in bytes
+  usageThreshold int
+  // Protocols the volume is exported over
+  //
+  // Entries are "NFSv3", "NFSv4.1", or "CIFS". A volume carrying both an NFS
+  // and a CIFS entry is a dual-protocol volume, where the security style
+  // decides which permission model applies.
+  protocolTypes []string
+  // Security style of the volume ("ntfs" or "unix")
+  securityStyle string
+  // Default Unix permissions on the volume's mount point
+  //
+  // Four octal digits, for example "0770". Empty for NTFS-style volumes.
+  unixPermissions string
+  // Whether the volume is encrypted at rest
+  encrypted bool
+  // Source of the key encrypting the volume ("Microsoft.NetApp" or "Microsoft.KeyVault")
+  encryptionKeySource string
+  // Whether Kerberos is enabled on the volume
+  kerberosEnabled bool
+  // Whether LDAP is enabled on the volume
+  ldapEnabled bool
+  // Whether SMB traffic to the volume is encrypted
+  smbEncryption bool
+  // Whether the volume's SMB shares are continuously available
+  smbContinuouslyAvailable bool
+  // SMB access-based enumeration state ("Enabled" or "Disabled")
+  //
+  // When enabled, an SMB client sees only the files and folders it has read
+  // access to, rather than the whole listing.
+  smbAccessBasedEnumeration string
+  // SMB non-browsable state ("Enabled" or "Disabled")
+  smbNonBrowsable string
+  // Whether the .snapshot directory is visible to clients
+  snapshotDirectoryVisible bool
+  // Whether cool access tiering is enabled on the volume
+  coolAccess bool
+  // Whether the volume is a large volume
+  isLargeVolume bool
+  // Requested network features of the volume ("Basic", "Standard", "Basic_Standard", or "Standard_Basic")
+  networkFeatures string
+  // Network features actually in effect on the volume
+  //
+  // Can differ from networkFeatures while an upgrade between the two is in
+  // progress. Standard features are what allow network security groups and
+  // user-defined routes to govern traffic reaching the volume.
+  effectiveNetworkFeatures string
+  // Delegated subnet the volume is reachable from
+  subnet() azure.subscription.networkService.subnet
+  // IP addresses the volume is mounted at
+  mountTargetIpAddresses []string
+  // Export policy rules governing which clients may mount the volume
+  exportPolicyRules() []azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Export policy rule of an Azure NetApp Files volume
+//
+// One rule in a volume's export policy, deciding which clients may mount it
+// and with what rights. allowedClients carries the client match, the protocol
+// flags say which NFS or CIFS versions the rule answers for, and the read
+// only and read write flags say what those clients get. A rule matching
+// "0.0.0.0/0" with unixReadWrite set grants write access to every client that
+// can reach the volume's network.
+private azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule @defaults("ruleIndex allowedClients unixReadWrite hasRootAccess") {
+  // Order the rule is evaluated in
+  ruleIndex int
+  // Clients the rule matches
+  //
+  // A comma separated list of IPv4 addresses, CIDR ranges, host names, or
+  // netgroups. "0.0.0.0/0" matches every client that can reach the volume.
+  allowedClients string
+  // Whether the rule applies to CIFS clients
+  cifs bool
+  // Whether the rule applies to NFSv3 clients
+  nfsv3 bool
+  // Whether the rule applies to NFSv4.1 clients
+  nfsv41 bool
+  // Whether matching clients get read-only access under UNIX authentication
+  unixReadOnly bool
+  // Whether matching clients get read-write access under UNIX authentication
+  unixReadWrite bool
+  // Whether matching clients keep root privileges rather than being squashed
+  hasRootAccess bool
+  // Ownership change mode ("Restricted" or "Unrestricted")
+  chownMode string
+  // Whether matching clients get read-only access under Kerberos krb5
+  kerberos5ReadOnly bool
+  // Whether matching clients get read-write access under Kerberos krb5
+  kerberos5ReadWrite bool
+  // Whether matching clients get read-only access under Kerberos krb5i
+  kerberos5iReadOnly bool
+  // Whether matching clients get read-write access under Kerberos krb5i
+  kerberos5iReadWrite bool
+  // Whether matching clients get read-only access under Kerberos krb5p
+  kerberos5pReadOnly bool
+  // Whether matching clients get read-write access under Kerberos krb5p
+  kerberos5pReadWrite bool
 }
