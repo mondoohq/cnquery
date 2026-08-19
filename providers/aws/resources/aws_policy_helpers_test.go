@@ -25,6 +25,10 @@ func TestAnyWildcardResource(t *testing.T) {
 	assert.True(t, anyWildcardResource([]any{"arn:aws:secretsmanager:us-east-1:000000000000:secret:*"}))
 	assert.True(t, anyWildcardResource([]any{"arn:aws:s3:::bucket", "arn:aws:s3:::*"}))
 
+	// An ARN that wildcards the account as well as the resource is broader
+	// still, not narrower, so it matches for the same reason.
+	assert.True(t, anyWildcardResource([]any{"arn:aws:iam::*:*"}))
+
 	// A path wildcard under a named resource is every object in one bucket,
 	// which is scoped to that bucket and is what a correct bucket policy looks
 	// like.
