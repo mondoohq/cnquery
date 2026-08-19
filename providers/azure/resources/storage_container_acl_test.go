@@ -15,18 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBlobContainerURL(t *testing.T) {
-	assert.Equal(t,
-		"https://contoso.blob.core.windows.net/logs",
-		blobContainerURL("contoso", "logs"))
-
-	t.Run("a container name is escaped, not pasted into the path", func(t *testing.T) {
-		assert.Equal(t,
-			"https://contoso.blob.core.windows.net/logs%2F..%2Fsecrets",
-			blobContainerURL("contoso", "logs/../secrets"))
-	})
-}
-
 func TestSignedIdentifiersToDicts(t *testing.T) {
 	str := func(s string) *string { return &s }
 	ts := func(s string) *time.Time {

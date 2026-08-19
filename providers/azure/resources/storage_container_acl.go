@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -15,14 +14,6 @@ import (
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 )
-
-// blobContainerURL builds the blob service URL of a container. Both segments
-// are escaped: a storage account name cannot contain anything that needs it,
-// but a container name reaches this from ARM rather than from a literal, so it
-// is not treated as trusted path text.
-func blobContainerURL(account, containerName string) string {
-	return "https://" + url.PathEscape(account) + ".blob.core.windows.net/" + url.PathEscape(containerName)
-}
 
 // signedIdentifiersToDicts converts blob stored access policies into the same
 // dict shape the table resource already reports, so a query that spans
@@ -88,7 +79,12 @@ func (a *mqlAzureSubscriptionStorageServiceAccountContainer) signedIdentifiers()
 		return nil, err
 	}
 
-	client, err := container.NewClient(blobContainerURL(accountName, a.Name.Data), conn.Token(), &container.ClientOptions{
+	containerURL, err := azureStorageDataPlaneURL(accountName, "blob", a.Name.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := container.NewClient(containerURL, conn.Token(), &container.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
