@@ -4810,6 +4810,21 @@ alicloud.waf.instance {
   defenseResources() []alicloud.waf.defenseResource
   // CNAME-access domains protected by the instance
   domains() []alicloud.waf.domain
+  // Whether the instance is delivering its logs to Log Service
+  //
+  // True only while logStatus reports normal. A failed initialization and an
+  // in-progress release both leave the instance protecting traffic while
+  // recording nothing about it.
+  logDeliveryEnabled() bool
+  // State of Log Service log delivery for the instance
+  //
+  // One of initializing, initialize_failed, normal, releasing, or
+  // release_failed. Empty when log delivery has never been configured.
+  logStatus() string
+  // Region the instance delivers its logs to
+  //
+  // Empty when log delivery has never been configured.
+  logRegionId() string
 }
 
 // Web Application Firewall protected resource
@@ -4839,6 +4854,12 @@ alicloud.waf.defenseResource {
   resourceGroup string
   // Time the protected object was created
   createTime time
+  // Whether the protected object's logs are delivered to Log Service
+  //
+  // Log delivery is switched on per protected object as well as for the
+  // instance as a whole, so an instance whose logStatus reads normal still
+  // records nothing for an object left switched off.
+  logDeliveryEnabled() bool
 }
 
 // Web Application Firewall protected domain
@@ -4897,6 +4918,35 @@ alicloud.cloudFirewall {
   edition() int
   // Internet-boundary control policies in both the inbound and outbound directions
   controlPolicies() []alicloud.cloudFirewall.controlPolicy
+  // Whether Cloud Firewall delivers its traffic logs to Log Service
+  //
+  // Reports whether a Log Service logstore is provisioned to receive the
+  // firewall's logs. This is the log-analysis feature and is separate from
+  // enabled: a firewall that is running with log analysis off keeps no
+  // searchable record of the traffic it allowed or denied, so a control policy
+  // cannot be shown to have ever matched.
+  logDeliveryEnabled() bool
+  // Name of the Log Service project holding the firewall logs
+  //
+  // Empty when log analysis is off.
+  logProjectName() string
+  // Name of the Log Service logstore holding the firewall logs
+  //
+  // Empty when log analysis is off.
+  logStoreName() string
+  // Region the firewall logs are delivered to
+  //
+  // Empty when log analysis is off.
+  logRegionId() string
+  // Days the firewall logs are retained
+  //
+  // Zero when log analysis is off. Logs older than this are dropped, which
+  // bounds how far back an investigation can reach.
+  logRetentionDays() int
+  // Log Service project holding the firewall logs
+  //
+  // Null when log analysis is off or the project can no longer be read.
+  logProject() alicloud.log.project
 }
 
 // Cloud Firewall control policy
@@ -5034,6 +5084,27 @@ alicloud.antiddos.webRule {
   // Each entry lists the realServer (an IP or hostname) and its rsType (0 for an
   // IP, 1 for a domain).
   realServers []dict
+  // Whether access and attack logs for the domain are delivered to Log Service
+  //
+  // Anti-DDoS keeps a searchable record of the traffic it scrubbed only while
+  // this is on, so an attack on a domain with it off leaves nothing to
+  // investigate afterwards. The switch is per protected domain rather than per
+  // instance, so one domain having it on says nothing about the others.
+  logDeliveryEnabled() bool
+  // Name of the Log Service project the domain's logs are delivered to
+  //
+  // Empty when log delivery is off.
+  logProjectName() string
+  // Name of the Log Service logstore the domain's logs are delivered to
+  //
+  // Empty when log delivery is off.
+  logLogstoreName() string
+  // Log Service project the domain's logs are delivered to
+  //
+  // Null when log delivery is off or the project can no longer be read.
+  // Traverse to it for the retention and the access policy of the store that
+  // holds the scrubbing records.
+  logProject() alicloud.log.project
 }
 
 // Anti-DDoS protected forwarding port
@@ -5397,6 +5468,12 @@ alicloud.sas {
   alarmEvents() []alicloud.sas.alarmEvent
   // Account-level Security Center settings
   config() alicloud.sas.config
+  // Log analysis delivery configured for each Security Center log type
+  //
+  // Security Center delivers its host, network and security logs to Log Service
+  // under separate switches, so read every entry rather than assuming one
+  // setting covers all three.
+  logDeliveries() []alicloud.sas.logDelivery
 }
 
 // Security Center settings
@@ -5556,6 +5633,46 @@ alicloud.sas.propertySchedule @defaults("type scheduleHours") {
   //
   // Null when no schedule is configured for the kind.
   nextScheduleTime time
+}
+
+// Security Center log analysis delivery
+//
+// The log analysis configuration for a single Security Center log type, keyed
+// by topic (for example aegis-log-login). Exposes the category the log type
+// belongs to, whether delivery to Log Service is switched on, the destination
+// project and logstore, and how long the delivered logs are kept. A category
+// left switched off means Security Center detects against those events but
+// keeps no searchable record of them.
+alicloud.sas.logDelivery @defaults("topic category enabled") {
+  // Log topic, used as the lookup key, for example aegis-log-login
+  topic string
+  // Category of log the entry covers
+  //
+  // One of host (host logs), network (network logs), or security (security
+  // logs).
+  category string
+  // Name of the log type, for example Login
+  description string
+  // Whether delivery of this log type to Log Service is switched on
+  enabled bool
+  // Days the delivered logs are retained
+  //
+  // Zero when the entry reports no retention window.
+  ttlDays int
+  // Name of the Log Service project in the account the logs are delivered to
+  //
+  // Empty when the account has no dedicated project for Security Center logs.
+  projectName string
+  // Name of the Log Service logstore in the account the logs are delivered to
+  //
+  // Empty when the account has no dedicated logstore for this log type.
+  logstoreName string
+  // Region the logs are delivered to
+  regionId string
+  // Log Service project the logs are delivered to
+  //
+  // Null when the account has no dedicated project or it can no longer be read.
+  logProject() alicloud.log.project
 }
 
 // Machine protected by Security Center

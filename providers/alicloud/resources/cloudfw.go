@@ -12,6 +12,7 @@ import (
 	tea "github.com/alibabacloud-go/tea/tea"
 
 	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/alicloud/connection"
 )
 
@@ -23,6 +24,10 @@ type mqlAlicloudCloudFirewallInternal struct {
 	fetched atomic.Bool
 	region  string
 	version *cloudfwclient.DescribeUserBuyVersionResponseBody
+
+	logLock sync.Mutex
+	logDone bool
+	log     *cloudfwclient.DescribeLogStoreInfoResponseBody
 }
 
 func (r *mqlAlicloudCloudFirewall) id() (string, error) {
@@ -82,6 +87,101 @@ func (r *mqlAlicloudCloudFirewall) edition() (int64, error) {
 		return 0, err
 	}
 	return int64(tea.Int32Value(v.Version)), nil
+}
+
+// cloudfwLogDelivering reports whether a log store info response describes a
+// provisioned log store. Cloud Firewall has no boolean for the log-analysis
+// feature: switching it on provisions a Log Service project and logstore, so
+// their presence is the signal. A response naming neither means log analysis
+// was never switched on.
+func cloudfwLogDelivering(info *cloudfwclient.DescribeLogStoreInfoResponseBody) bool {
+	if info == nil {
+		return false
+	}
+	return tea.StringValue(info.ProjectName) != "" && tea.StringValue(info.LogStoreName) != ""
+}
+
+// logStoreInfo lazily reads the account's Cloud Firewall log store detail and
+// memoizes it, so the six log fields share one call. Returns nil when Cloud
+// Firewall is not provisioned or the call fails, which reads as log analysis
+// off rather than claiming an audit trail nobody confirmed.
+func (r *mqlAlicloudCloudFirewall) logStoreInfo() *cloudfwclient.DescribeLogStoreInfoResponseBody {
+	r.logLock.Lock()
+	defer r.logLock.Unlock()
+	if r.logDone {
+		return r.log
+	}
+	r.logDone = true
+
+	region, _, err := r.buyVersion()
+	if err != nil || region == "" {
+		return nil
+	}
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.CloudfwClient(region)
+	if err != nil {
+		return nil
+	}
+	// DescribeLogStoreInfo is account-scoped and takes no request parameters.
+	resp, err := client.DescribeLogStoreInfo()
+	if err != nil || resp == nil || resp.Body == nil {
+		return nil
+	}
+	r.log = resp.Body
+	return r.log
+}
+
+func (r *mqlAlicloudCloudFirewall) logDeliveryEnabled() (bool, error) {
+	return cloudfwLogDelivering(r.logStoreInfo()), nil
+}
+
+func (r *mqlAlicloudCloudFirewall) logProjectName() (string, error) {
+	info := r.logStoreInfo()
+	if info == nil {
+		return "", nil
+	}
+	return tea.StringValue(info.ProjectName), nil
+}
+
+func (r *mqlAlicloudCloudFirewall) logStoreName() (string, error) {
+	info := r.logStoreInfo()
+	if info == nil {
+		return "", nil
+	}
+	return tea.StringValue(info.LogStoreName), nil
+}
+
+func (r *mqlAlicloudCloudFirewall) logRegionId() (string, error) {
+	info := r.logStoreInfo()
+	if info == nil {
+		return "", nil
+	}
+	return tea.StringValue(info.RegionId), nil
+}
+
+func (r *mqlAlicloudCloudFirewall) logRetentionDays() (int64, error) {
+	info := r.logStoreInfo()
+	if info == nil {
+		return 0, nil
+	}
+	return int64(tea.Int32Value(info.Ttl)), nil
+}
+
+// logProject resolves the project holding the firewall logs. The response names
+// the region logs are delivered to, so the ref is built from that rather than
+// from the center the firewall answers at, which need not be the same.
+func (r *mqlAlicloudCloudFirewall) logProject() (*mqlAlicloudLogProject, error) {
+	info := r.logStoreInfo()
+	if !cloudfwLogDelivering(info) {
+		r.LogProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	project, err := resolveLogProject(r.MqlRuntime, tea.StringValue(info.RegionId), tea.StringValue(info.ProjectName))
+	if err != nil || project == nil {
+		r.LogProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return project, nil
 }
 
 func (r *mqlAlicloudCloudFirewall) controlPolicies() ([]any, error) {
