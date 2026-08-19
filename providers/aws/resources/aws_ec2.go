@@ -1349,6 +1349,8 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			}
 			mqlInstanceDevice, err := CreateResource(a.MqlRuntime, ResourceAwsEc2InstanceDevice,
 				map[string]*llx.RawData{
+					"__id": llx.StringData(instanceDeviceCacheKey(regionVal,
+						convert.ToValue(instance.InstanceId), convert.ToValue(device.DeviceName))),
 					"deleteOnTermination": llx.BoolData(convert.ToValue(device.Ebs.DeleteOnTermination)),
 					"status":              llx.StringData(string(device.Ebs.Status)),
 					"deviceName":          llx.StringData(convert.ToValue(device.DeviceName)),
@@ -2354,6 +2356,19 @@ type mqlAwsEc2InstanceDeviceInternal struct {
 	region        string
 }
 
+// instanceDeviceCacheKey identifies one block device mapping.
+//
+// A device is identified by the instance it is attached to and its name in that
+// instance. The volume id is not usable here: it lives on the Internal struct,
+// which is only populated after the generated constructor has already computed
+// the cache key from it.
+func instanceDeviceCacheKey(region, instanceID, deviceName string) string {
+	return region + "/" + instanceID + "/" + deviceName
+}
+
+// id is a fallback only. gatherInstanceInfo passes an explicit "__id", which
+// wins, because cacheVolumeId is still empty while the generated constructor
+// runs and every device would otherwise share one cache entry.
 func (a *mqlAwsEc2InstanceDevice) id() (string, error) {
 	return a.cacheVolumeId, nil
 }
