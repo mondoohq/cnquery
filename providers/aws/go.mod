@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.60.6
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.72.1
 	github.com/aws/aws-sdk-go-v2/service/backup v1.60.2
-	github.com/aws/aws-sdk-go-v2/service/batch v1.68.6
+	github.com/aws/aws-sdk-go-v2/service/batch v1.68.7
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.66.6
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.58.6
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.57.0
@@ -55,7 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.63.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.321.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.321.3
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.60.6
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.41.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.90.2
@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.77.5
 	github.com/aws/aws-sdk-go-v2/service/workdocs v1.33.6
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.73.3
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.42.6
 	github.com/aws/smithy-go v1.27.8
 	github.com/cockroachdb/errors v1.14.0
