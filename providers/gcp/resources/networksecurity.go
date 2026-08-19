@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
@@ -240,6 +241,32 @@ func (g *mqlGcpProjectNetworkSecurityService) serverTlsPolicies() ([]any, error)
 	return res, nil
 }
 
+// zonalLocationSuffix matches a zone id, which is a region followed by a single
+// letter (us-central1-a). The locations endpoint lists zones alongside regions,
+// but a zonal parent is rejected as a malformed name, so they are dropped.
+var zonalLocationSuffix = regexp.MustCompile(`-[a-z]$`)
+
+// listNetworkSecurityLocations returns the non-zonal locations the Network
+// Security API reports for the project, which are the parents its regional
+// collections can be listed under.
+func listNetworkSecurityLocations(ctx context.Context, nsSvc *networksecurity.Service, projectId string) ([]string, error) {
+	var locations []string
+	err := nsSvc.Projects.Locations.List(fmt.Sprintf("projects/%s", projectId)).
+		Pages(ctx, func(page *networksecurity.ListLocationsResponse) error {
+			for _, l := range page.Locations {
+				if l == nil || l.LocationId == "" || zonalLocationSuffix.MatchString(l.LocationId) {
+					continue
+				}
+				locations = append(locations, l.LocationId)
+			}
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+	return locations, nil
+}
+
 func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error) {
 	enabled, err := g.isEnabled()
 	if err != nil {
@@ -248,7 +275,7 @@ func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error)
 	if !enabled {
 		return nil, nil
 	}
-	conn, parent, err := g.networkSecurityHTTPClient()
+	conn, _, err := g.networkSecurityHTTPClient()
 	if err != nil {
 		return nil, err
 	}
@@ -262,8 +289,22 @@ func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error)
 		return nil, err
 	}
 
+	// ListClientTlsPolicies is the one method in this API that rejects the
+	// locations=- wildcard every other collection here uses, answering
+	// "aggregated list (locations=-) is not supported ... for
+	// method=ListClientTlsPolicies". So the policies are listed per location,
+	// the way Cloud Tasks queues already are for the same reason.
+	locations, err := listNetworkSecurityLocations(ctx, nsSvc, g.ProjectId.Data)
+	if err != nil {
+		if isSkippable(err) {
+			log.Warn().Err(err).Msg("could not list network security locations")
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	res := []any{}
-	err = nsSvc.Projects.Locations.ClientTlsPolicies.List(parent).Pages(ctx, func(page *networksecurity.ListClientTlsPoliciesResponse) error {
+	listPage := func(page *networksecurity.ListClientTlsPoliciesResponse) error {
 		for _, p := range page.ClientTlsPolicies {
 			clientCertificate, err := convert.JsonToDict(p.ClientCertificate)
 			if err != nil {
@@ -289,7 +330,15 @@ func (g *mqlGcpProjectNetworkSecurityService) clientTlsPolicies() ([]any, error)
 			res = append(res, mqlPolicy)
 		}
 		return nil
-	})
+	}
+
+	for _, location := range locations {
+		locParent := fmt.Sprintf("projects/%s/locations/%s", g.ProjectId.Data, location)
+		err = nsSvc.Projects.Locations.ClientTlsPolicies.List(locParent).Pages(ctx, listPage)
+		if err != nil {
+			break
+		}
+	}
 	if err != nil {
 		if isSkippable(err) {
 			log.Warn().Err(err).Msg("could not list client TLS policies")
