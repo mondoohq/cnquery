@@ -44,9 +44,21 @@ func (h *mqlHetzner) firewalls() ([]any, error) {
 	return out, nil
 }
 
-func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHetznerFirewall, error) {
-	rules := make([]any, 0, len(fw.Rules))
-	for _, r := range fw.Rules {
+// firewallRuleDicts renders a firewall's rules as the dicts the rules field
+// carries.
+//
+// Every value has to be JSON-native, because the dict-to-primitive converter
+// accepts only bool/int64/float64/string/[]any/map. The port and description
+// are *string in the SDK and are dereferenced only when set, so an absent one
+// stays out of the dict rather than becoming an empty string that reads as a
+// configured value.
+//
+// These dicts feed firewallRuleOpenToInternet and through it the exposure
+// verdict, so a serialization failure here would take the reachability answer
+// with it.
+func firewallRuleDicts(rules []hcloud.FirewallRule) []any {
+	out := make([]any, 0, len(rules))
+	for _, r := range rules {
 		srcs := make([]any, 0, len(r.SourceIPs))
 		for _, ip := range r.SourceIPs {
 			srcs = append(srcs, ip.String())
@@ -67,8 +79,13 @@ func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHe
 		if r.Description != nil {
 			entry["description"] = *r.Description
 		}
-		rules = append(rules, entry)
+		out = append(out, entry)
 	}
+	return out
+}
+
+func newMqlHetznerFirewall(runtime *plugin.Runtime, fw *hcloud.Firewall) (*mqlHetznerFirewall, error) {
+	rules := firewallRuleDicts(fw.Rules)
 
 	var serverIDs []int64
 	var labelSelectors []string
