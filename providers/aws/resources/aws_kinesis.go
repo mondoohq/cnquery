@@ -701,11 +701,6 @@ type mqlAwsKinesisFirehoseDeliveryStreamInternal struct {
 }
 
 func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region string, stream *firehose_types.DeliveryStreamDescription) (*mqlAwsKinesisFirehoseDeliveryStream, error) {
-	encryption, err := convert.JsonToDict(stream.DeliveryStreamEncryptionConfiguration)
-	if err != nil {
-		return nil, err
-	}
-
 	kinesisStreamArn := ""
 	if stream.Source != nil && stream.Source.KinesisStreamSourceDescription != nil &&
 		stream.Source.KinesisStreamSourceDescription.KinesisStreamARN != nil {
@@ -713,17 +708,7 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 	}
 
 	resource, err := CreateResource(runtime, "aws.kinesis.firehoseDeliveryStream",
-		map[string]*llx.RawData{
-			"__id":               llx.StringDataPtr(stream.DeliveryStreamARN),
-			"arn":                llx.StringDataPtr(stream.DeliveryStreamARN),
-			"name":               llx.StringDataPtr(stream.DeliveryStreamName),
-			"status":             llx.StringData(string(stream.DeliveryStreamStatus)),
-			"deliveryStreamType": llx.StringData(string(stream.DeliveryStreamType)),
-			"encryption":         llx.DictData(encryption),
-			"createdAt":          llx.TimeDataPtr(stream.CreateTimestamp),
-			"lastUpdatedAt":      llx.TimeDataPtr(stream.LastUpdateTimestamp),
-			"region":             llx.StringData(region),
-		})
+		firehoseDeliveryStreamArgs(stream, region))
 	if err != nil {
 		return nil, err
 	}
@@ -733,6 +718,25 @@ func newMqlAwsKinesisFirehoseDeliveryStream(runtime *plugin.Runtime, region stri
 	mqlStream.cacheEncryption = stream.DeliveryStreamEncryptionConfiguration
 	mqlStream.cacheKinesisStreamArn = kinesisStreamArn
 	return mqlStream, nil
+}
+
+// firehoseDeliveryStreamArgs maps a delivery stream onto the fields
+// aws.kinesis.firehoseDeliveryStream declares. Every key has to be a settable
+// field: SetAllData fails the whole resource on an unknown one, so the
+// encryption configuration, which the schema exposes through the typed
+// serverSideEncryption accessor, is seeded on the internal cache instead of
+// passed here.
+func firehoseDeliveryStreamArgs(stream *firehose_types.DeliveryStreamDescription, region string) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":               llx.StringDataPtr(stream.DeliveryStreamARN),
+		"arn":                llx.StringDataPtr(stream.DeliveryStreamARN),
+		"name":               llx.StringDataPtr(stream.DeliveryStreamName),
+		"status":             llx.StringData(string(stream.DeliveryStreamStatus)),
+		"deliveryStreamType": llx.StringData(string(stream.DeliveryStreamType)),
+		"createdAt":          llx.TimeDataPtr(stream.CreateTimestamp),
+		"lastUpdatedAt":      llx.TimeDataPtr(stream.LastUpdateTimestamp),
+		"region":             llx.StringData(region),
+	}
 }
 
 func (a *mqlAwsKinesisFirehoseDeliveryStream) serverSideEncryption() (*mqlAwsKinesisFirehoseDeliveryStreamEncryption, error) {
