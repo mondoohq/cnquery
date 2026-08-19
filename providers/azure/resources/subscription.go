@@ -357,6 +357,16 @@ func (a *mqlAzureSubscription) fileShares() (*mqlAzureSubscriptionFileSharesServ
 	return svc.(*mqlAzureSubscriptionFileSharesService), nil
 }
 
+func (a *mqlAzureSubscription) elasticSan() (*mqlAzureSubscriptionElasticSanService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionElasticSanService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionElasticSanService), nil
+}
+
 func (a *mqlAzureSubscription) functions() (*mqlAzureSubscriptionFunctionsService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFunctionsService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

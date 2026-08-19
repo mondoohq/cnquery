@@ -124,6 +124,8 @@
     "Microsoft.DocumentDB/databaseAccounts/tableRoleAssignments/read",
     "Microsoft.DocumentDB/databaseAccounts/tableRoleDefinitions/read",
     "Microsoft.DocumentDB/mongoClusters/read",
+    "Microsoft.ElasticSan/elasticSans/read",
+    "Microsoft.ElasticSan/elasticSans/volumeGroups/read",
     "Microsoft.EventGrid/domains/eventSubscriptions/read",
     "Microsoft.EventGrid/domains/read",
     "Microsoft.EventGrid/namespaces/read",
@@ -1085,6 +1087,18 @@
       "service": "Microsoft.Mongocluster",
       "action": "NewListPager",
       "source_file": "cosmosdb.go"
+    },
+    {
+      "permission": "Microsoft.ElasticSan/elasticSans/read",
+      "service": "Microsoft.ElasticSan",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "elasticsan.go"
+    },
+    {
+      "permission": "Microsoft.ElasticSan/elasticSans/volumeGroups/read",
+      "service": "Microsoft.ElasticSan",
+      "action": "NewListByElasticSanPager",
+      "source_file": "elasticsan.go"
     },
     {
       "permission": "Microsoft.EventGrid/domains/eventSubscriptions/read",
