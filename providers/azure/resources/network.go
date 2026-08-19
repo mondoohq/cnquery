@@ -1792,6 +1792,12 @@ func mqlBgpSettingsFromSdk(runtime *plugin.Runtime, parentId string, bgp *networ
 	bgpSettingsId := parentId + "/bgpSettings"
 	bgpPeeringAddresses := []any{}
 	for i, bpa := range bgp.BgpPeeringAddresses {
+		// ARM models every element of this slice as an optional pointer. A nil
+		// one panics on the first field read, and a panic here kills the scan
+		// rather than this gateway.
+		if bpa == nil {
+			continue
+		}
 		bpaId := fmt.Sprintf("%s/%s/%d", bgpSettingsId, "bgpPeeringAddresses", i)
 		mqlBpa, err := CreateResource(runtime, "azure.subscription.networkService.bgpSettings.ipConfigurationBgpPeeringAddress",
 			map[string]*llx.RawData{
@@ -5622,6 +5628,13 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 
 	if secRule.Properties != nil && secRule.Properties.DestinationPortRanges != nil {
 		for _, r := range secRule.Properties.DestinationPortRanges {
+			// The same slice is walked again below with a nil guard. Without one
+			// here a nil element panics, and a panic in an accessor is
+			// unrecoverable: the executor runs blocks in goroutines, so it takes
+			// down the whole scan rather than this one rule.
+			if r == nil {
+				continue
+			}
 			dPortRange := parseAzureSecurityRulePortRange(*r)
 			for i := range dPortRange {
 				destinationPortRange = append(destinationPortRange, map[string]any{

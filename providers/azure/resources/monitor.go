@@ -298,62 +298,12 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 		if err != nil {
 			return nil, err
 		}
-		type mqlAlertAction struct {
-			ActionGroupId     string            `json:"actionGroupId"`
-			WebhookProperties map[string]string `json:"webhookProperties"`
-		}
-
-		type mqlAlertLeafCondition struct {
-			FieldName   string   `json:"fieldName"`
-			Equals      string   `json:"equals"`
-			ContainsAny []string `json:"containsAny"`
-		}
-
-		type mqlAlertCondition struct {
-			FieldName   string                  `json:"fieldName"`
-			Equals      string                  `json:"equals"`
-			ContainsAny []string                `json:"containsAny"`
-			AnyOf       []mqlAlertLeafCondition `json:"anyOf"`
-		}
-
 		for _, entry := range page.Value {
 			if entry == nil || entry.Properties == nil {
 				continue
 			}
-			actions := []mqlAlertAction{}
-			conditions := []mqlAlertCondition{}
-
-			if entry.Properties.Actions != nil {
-				for _, act := range entry.Properties.Actions.ActionGroups {
-					mqlAction := mqlAlertAction{
-						ActionGroupId:     convert.ToValue(act.ActionGroupID),
-						WebhookProperties: convert.PtrMapStrToStr(act.WebhookProperties),
-					}
-					actions = append(actions, mqlAction)
-				}
-			}
-			var allOf []*monitor.AlertRuleAnyOfOrLeafCondition
-			if entry.Properties.Condition != nil {
-				allOf = entry.Properties.Condition.AllOf
-			}
-			for _, cond := range allOf {
-				anyOf := []mqlAlertLeafCondition{}
-				for _, leaf := range cond.AnyOf {
-					mqlAnyOfLeaf := mqlAlertLeafCondition{
-						FieldName:   convert.ToValue(leaf.Field),
-						Equals:      convert.ToValue(leaf.Equals),
-						ContainsAny: azureStrPtrsToStr(leaf.ContainsAny),
-					}
-					anyOf = append(anyOf, mqlAnyOfLeaf)
-				}
-				mqlCondition := mqlAlertCondition{
-					FieldName:   convert.ToValue(cond.Field),
-					Equals:      convert.ToValue(cond.Equals),
-					ContainsAny: azureStrPtrsToStr(cond.ContainsAny),
-					AnyOf:       anyOf,
-				}
-				conditions = append(conditions, mqlCondition)
-			}
+			actions := alertActions(entry.Properties.Actions)
+			conditions := alertConditions(entry.Properties.Condition)
 
 			actionsDict := []any{}
 			for _, a := range actions {
@@ -395,6 +345,84 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 		}
 	}
 	return res, nil
+}
+
+// The flattened shapes an activity-log alert's actions and conditions are
+// reported as. They were declared inside the pager loop, which is why nothing
+// could test them.
+type (
+	mqlAlertAction struct {
+		ActionGroupId     string            `json:"actionGroupId"`
+		WebhookProperties map[string]string `json:"webhookProperties"`
+	}
+
+	mqlAlertLeafCondition struct {
+		FieldName   string   `json:"fieldName"`
+		Equals      string   `json:"equals"`
+		ContainsAny []string `json:"containsAny"`
+	}
+
+	mqlAlertCondition struct {
+		FieldName   string                  `json:"fieldName"`
+		Equals      string                  `json:"equals"`
+		ContainsAny []string                `json:"containsAny"`
+		AnyOf       []mqlAlertLeafCondition `json:"anyOf"`
+	}
+)
+
+// alertActions flattens an activity-log alert's action groups.
+//
+// ARM models each element as an optional pointer. A nil one panics on the first
+// field read, and a panic in a provider accessor is unrecoverable: the executor
+// runs query blocks in goroutines, so it takes down the whole scan rather than
+// the one alert rule.
+func alertActions(actions *monitor.ActionList) []mqlAlertAction {
+	res := []mqlAlertAction{}
+	if actions == nil {
+		return res
+	}
+	for _, act := range actions.ActionGroups {
+		if act == nil {
+			continue
+		}
+		res = append(res, mqlAlertAction{
+			ActionGroupId:     convert.ToValue(act.ActionGroupID),
+			WebhookProperties: convert.PtrMapStrToStr(act.WebhookProperties),
+		})
+	}
+	return res
+}
+
+// alertConditions flattens an activity-log alert's condition tree, skipping nil
+// elements at both levels for the same reason as alertActions.
+func alertConditions(condition *monitor.AlertRuleAllOfCondition) []mqlAlertCondition {
+	res := []mqlAlertCondition{}
+	if condition == nil {
+		return res
+	}
+	for _, cond := range condition.AllOf {
+		if cond == nil {
+			continue
+		}
+		anyOf := []mqlAlertLeafCondition{}
+		for _, leaf := range cond.AnyOf {
+			if leaf == nil {
+				continue
+			}
+			anyOf = append(anyOf, mqlAlertLeafCondition{
+				FieldName:   convert.ToValue(leaf.Field),
+				Equals:      convert.ToValue(leaf.Equals),
+				ContainsAny: azureStrPtrsToStr(leaf.ContainsAny),
+			})
+		}
+		res = append(res, mqlAlertCondition{
+			FieldName:   convert.ToValue(cond.Field),
+			Equals:      convert.ToValue(cond.Equals),
+			ContainsAny: azureStrPtrsToStr(cond.ContainsAny),
+			AnyOf:       anyOf,
+		})
+	}
+	return res
 }
 
 type mqlAzureSubscriptionMonitorServiceActionGroupInternal struct {
