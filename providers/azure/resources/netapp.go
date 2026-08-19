@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/netapp/armnetapp/v8"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/netapp/armnetapp/v10"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
@@ -433,35 +433,47 @@ func createNetAppVolumeResource(runtime *plugin.Runtime, volume *armnetapp.Volum
 		props = &armnetapp.VolumeProperties{}
 	}
 
+	// Ransomware protection is reported only for volumes where the feature
+	// applies. Nil stays nil so those volumes read null: a "Disabled" we
+	// invented would claim protection was considered and turned off.
+	var desiredRansomwareProtectionState, actualRansomwareProtectionState *string
+	if props.DataProtection != nil && props.DataProtection.RansomwareProtection != nil {
+		ransomware := props.DataProtection.RansomwareProtection
+		desiredRansomwareProtectionState = enumStringPtr(ransomware.DesiredRansomwareProtectionState)
+		actualRansomwareProtectionState = enumStringPtr(ransomware.ActualRansomwareProtectionState)
+	}
+
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolume,
 		map[string]*llx.RawData{
-			"id":                        llx.StringDataPtr(volume.ID),
-			"name":                      llx.StringDataPtr(volume.Name),
-			"location":                  llx.StringDataPtr(volume.Location),
-			"type":                      llx.StringDataPtr(volume.Type),
-			"tags":                      llx.MapData(convert.PtrMapStrToInterface(volume.Tags), types.String),
-			"provisioningState":         llx.StringDataPtr(props.ProvisioningState),
-			"creationToken":             llx.StringDataPtr(props.CreationToken),
-			"fileSystemId":              llx.StringDataPtr(props.FileSystemID),
-			"serviceLevel":              llx.StringData(enumString(props.ServiceLevel)),
-			"usageThreshold":            llx.IntDataPtr(props.UsageThreshold),
-			"protocolTypes":             llx.ArrayData(strPtrSliceToAny(props.ProtocolTypes), types.String),
-			"securityStyle":             llx.StringData(enumString(props.SecurityStyle)),
-			"unixPermissions":           llx.StringDataPtr(props.UnixPermissions),
-			"encrypted":                 llx.BoolDataPtr(props.Encrypted),
-			"encryptionKeySource":       llx.StringData(enumString(props.EncryptionKeySource)),
-			"kerberosEnabled":           llx.BoolDataPtr(props.KerberosEnabled),
-			"ldapEnabled":               llx.BoolDataPtr(props.LdapEnabled),
-			"smbEncryption":             llx.BoolDataPtr(props.SmbEncryption),
-			"smbContinuouslyAvailable":  llx.BoolDataPtr(props.SmbContinuouslyAvailable),
-			"smbAccessBasedEnumeration": llx.StringData(enumString(props.SmbAccessBasedEnumeration)),
-			"smbNonBrowsable":           llx.StringData(enumString(props.SmbNonBrowsable)),
-			"snapshotDirectoryVisible":  llx.BoolDataPtr(props.SnapshotDirectoryVisible),
-			"coolAccess":                llx.BoolDataPtr(props.CoolAccess),
-			"isLargeVolume":             llx.BoolDataPtr(props.IsLargeVolume),
-			"networkFeatures":           llx.StringData(enumString(props.NetworkFeatures)),
-			"effectiveNetworkFeatures":  llx.StringData(enumString(props.EffectiveNetworkFeatures)),
-			"mountTargetIpAddresses":    llx.ArrayData(netAppMountTargetIps(props.MountTargets), types.String),
+			"id":                               llx.StringDataPtr(volume.ID),
+			"name":                             llx.StringDataPtr(volume.Name),
+			"location":                         llx.StringDataPtr(volume.Location),
+			"type":                             llx.StringDataPtr(volume.Type),
+			"tags":                             llx.MapData(convert.PtrMapStrToInterface(volume.Tags), types.String),
+			"provisioningState":                llx.StringDataPtr(props.ProvisioningState),
+			"creationToken":                    llx.StringDataPtr(props.CreationToken),
+			"fileSystemId":                     llx.StringDataPtr(props.FileSystemID),
+			"serviceLevel":                     llx.StringData(enumString(props.ServiceLevel)),
+			"usageThreshold":                   llx.IntDataPtr(props.UsageThreshold),
+			"protocolTypes":                    llx.ArrayData(strPtrSliceToAny(props.ProtocolTypes), types.String),
+			"securityStyle":                    llx.StringData(enumString(props.SecurityStyle)),
+			"unixPermissions":                  llx.StringDataPtr(props.UnixPermissions),
+			"encrypted":                        llx.BoolDataPtr(props.Encrypted),
+			"encryptionKeySource":              llx.StringData(enumString(props.EncryptionKeySource)),
+			"kerberosEnabled":                  llx.BoolDataPtr(props.KerberosEnabled),
+			"ldapEnabled":                      llx.BoolDataPtr(props.LdapEnabled),
+			"smbEncryption":                    llx.BoolDataPtr(props.SmbEncryption),
+			"smbContinuouslyAvailable":         llx.BoolDataPtr(props.SmbContinuouslyAvailable),
+			"smbAccessBasedEnumeration":        llx.StringData(enumString(props.SmbAccessBasedEnumeration)),
+			"smbNonBrowsable":                  llx.StringData(enumString(props.SmbNonBrowsable)),
+			"snapshotDirectoryVisible":         llx.BoolDataPtr(props.SnapshotDirectoryVisible),
+			"coolAccess":                       llx.BoolDataPtr(props.CoolAccess),
+			"isLargeVolume":                    llx.BoolDataPtr(props.IsLargeVolume),
+			"networkFeatures":                  llx.StringData(enumString(props.NetworkFeatures)),
+			"effectiveNetworkFeatures":         llx.StringData(enumString(props.EffectiveNetworkFeatures)),
+			"mountTargetIpAddresses":           llx.ArrayData(netAppMountTargetIps(props.MountTargets), types.String),
+			"desiredRansomwareProtectionState": llx.StringDataPtr(desiredRansomwareProtectionState),
+			"actualRansomwareProtectionState":  llx.StringDataPtr(actualRansomwareProtectionState),
 		})
 	if err != nil {
 		return nil, err

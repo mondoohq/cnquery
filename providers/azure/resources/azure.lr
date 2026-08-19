@@ -19273,6 +19273,19 @@ azure.subscription.netAppService.account.capacityPool.volume @defaults("id name 
   coolAccess bool
   // Whether the volume is a large volume
   isLargeVolume bool
+  // Desired Advanced Ransomware Protection state
+  //
+  // One of Disabled or Enabled. Null when the volume does not report
+  // ransomware protection. This is the configured intent, so compare it
+  // against actualRansomwareProtectionState to catch a volume where
+  // protection was asked for but is not yet in force.
+  desiredRansomwareProtectionState string
+  // Actual Advanced Ransomware Protection state
+  //
+  // One of Disabled, Enabled, Learning, or Paused. Null when the volume
+  // does not report ransomware protection. Learning and Paused both mean
+  // the feature is not blocking anything yet.
+  actualRansomwareProtectionState string
   // Requested network features of the volume ("Basic", "Standard", "Basic_Standard", or "Standard_Basic")
   networkFeatures string
   // Network features actually in effect on the volume

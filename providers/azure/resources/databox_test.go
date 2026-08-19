@@ -6,7 +6,7 @@ package resources
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databox/armdatabox/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/databox/armdatabox/v3"
 	"github.com/stretchr/testify/assert"
 )
 
