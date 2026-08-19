@@ -172,6 +172,7 @@ To learn about Mondoo Platform, read the [Mondoo Platform docs](https://mondoo.c
 | Ollama instance               | `ollama`                   | `mql shell ollama` or `mql shell ollama --host HOST --token TOKEN`                                                                              |
 | OpenAI account                | `openai`                   | `mql shell openai --token TOKEN`                                                                                                                |
 | Oracle Cloud Interface (OCI)  | `oci`                      | `mql shell oci`                                                                                                                                 |
+| Oracle Database               | `oracledb`                 | `mql shell oracledb db.contoso.com --service FREEPDB1 --user auditor --ask-pass`                                                                |
 | OpenSearch cluster            | `opensearch`               | `mql shell opensearch localhost --user admin --ask-pass --tls-insecure`                                                                        |
 | OpenStack project             | `openstack`                | `mql shell openstack --cloud CLOUD_NAME` or<br></br>`mql shell openstack --auth-url AUTH_URL --username USER --password PASSWORD --project-name PROJECT` |
 | Portainer server              | `portainer`                | `mql shell portainer HOST --access-token TOKEN`                                                                                                 |
