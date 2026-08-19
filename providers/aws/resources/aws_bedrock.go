@@ -211,19 +211,13 @@ func (a *mqlAwsBedrock) getCustomModels(conn *connection.AwsConnection) []*jobpo
 
 				for _, cm := range page.ModelSummaries {
 					mqlCM, err := CreateResource(a.MqlRuntime, "aws.bedrock.customModel",
-						map[string]*llx.RawData{
-							"__id":              llx.StringDataPtr(cm.ModelArn),
-							"modelArn":          llx.StringDataPtr(cm.ModelArn),
-							"modelName":         llx.StringDataPtr(cm.ModelName),
-							"region":            llx.StringData(region),
-							"customizationType": llx.StringData(string(cm.CustomizationType)),
-						})
+						bedrockCustomModelArgs(cm.ModelArn, cm.ModelName, region, cm.CustomizationType))
 					if err != nil {
 						return nil, err
 					}
-					mqlCM.(*mqlAwsBedrockCustomModel).cacheBaseModelArn = convert.ToValue(cm.BaseModelArn)
 					mqlCMRes := mqlCM.(*mqlAwsBedrockCustomModel)
 					mqlCMRes.cacheRegion = region
+					mqlCMRes.cacheBaseModelArn = convert.ToValue(cm.BaseModelArn)
 					res = append(res, mqlCM)
 				}
 			}
