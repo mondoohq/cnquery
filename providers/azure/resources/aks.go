@@ -663,9 +663,10 @@ func (a *mqlAzureSubscriptionAksServiceCluster) privateEndpointConnections() ([]
 	if err != nil {
 		// Private endpoint connections are absent on clusters without private
 		// networking, and the endpoint returns 403 when the caller lacks
-		// access. Treat both as "no connections" rather than failing.
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden) {
+		// access. A cluster that is not a private-link private cluster -- the
+		// default shape -- answers 400 ClusterIsNotAPrivateLinkCluster, which
+		// is the same absence. None of them should fail the cluster list.
+		if isAzureNotConfigured(err) {
 			return []any{}, nil
 		}
 		return nil, err

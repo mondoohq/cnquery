@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/v13/providers/azure/connection"
 )
@@ -40,6 +42,12 @@ func parseAzureTimestamp(s *string) *time.Time {
 // data action on the sub-resource. Neither should fail the surrounding query:
 // the honest answer is a null field, not an error on every row.
 //
+// Some resource providers answer 400 instead, for the same "there is nothing
+// here" reason. Those are matched by code, never by status alone, because 400
+// also carries the two things that must NOT be swallowed: a request the caller
+// got wrong, and a resource whose provisioning state has not settled yet. See
+// azureNotApplicableCodes.
+//
 // It deliberately does NOT match 429 or 5xx. A throttled or failing call
 // proves nothing about configuration, and swallowing it would report an
 // authoritative "not configured" for a resource that may well be configured.
@@ -48,7 +56,93 @@ func isAzureNotConfigured(err error) bool {
 	if !errors.As(err, &respErr) {
 		return false
 	}
-	return respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden
+	if respErr.StatusCode == http.StatusNotFound || respErr.StatusCode == http.StatusForbidden {
+		return true
+	}
+	return azureFeatureNotApplicable(respErr.StatusCode, respErr.ErrorCode, azureErrorSubcode(respErr))
+}
+
+// azureNotApplicableCodes maps an ARM error code to the subcode that has to
+// accompany it, or "" when the code alone is specific enough. Keys and values
+// are lower-cased; matching is case-insensitive.
+//
+// This is an allowlist rather than a status check because a 400 from ARM means
+// three different things, and only one of them is an absence:
+//
+//   - the feature this sub-resource describes does not exist on the parent, and
+//     never will unless it is reconfigured. That is the honest empty answer, and
+//     what is listed below.
+//   - the parent's provisioning state has not settled ("Cannot fetch databases
+//     while resource is in state 'Creating'", "API Management service is
+//     activating"). Retrying succeeds, so reporting empty would report an
+//     authoritative "no databases" for a cluster that has them.
+//   - the request itself is wrong: a malformed filter, an API version the
+//     provider does not accept. That is our bug, and swallowing it hides it.
+//
+// Only the first belongs here, so every entry names the resource and quotes the
+// message ARM returns with it.
+var azureNotApplicableCodes = map[string]string{
+	// AKS private endpoint connections: "Cluster <name> is not a private link
+	// service based private cluster." Answered by every cluster that is not a
+	// private-link private cluster, which is the default shape. The code itself
+	// is the generic BadRequest, so the subcode is what tells this apart from a
+	// request the caller got wrong.
+	"badrequest": "clusterisnotaprivatelinkcluster",
+
+	// Azure SQL long-term retention: "Long Term Retention is not supported :
+	// Not supported for master." Every server has a master database, so every
+	// server produces this.
+	"longtermretentionpolicynotsupported": "",
+
+	// Defender for Cloud regulatory compliance: "Regulatory compliance is not
+	// supported for subscription '...' as it has no standard pricing bundle."
+	// ARM puts the whole sentence in the code field for this one.
+	"subscription with no standard pricing bundle": "",
+}
+
+// azureFeatureNotApplicable reports whether an ARM 400's code and subcode name
+// a feature that is absent from the parent rather than a fault.
+func azureFeatureNotApplicable(statusCode int, code, subcode string) bool {
+	if statusCode != http.StatusBadRequest {
+		return false
+	}
+	wantSubcode, ok := azureNotApplicableCodes[strings.ToLower(strings.TrimSpace(code))]
+	if !ok {
+		return false
+	}
+	return wantSubcode == "" || wantSubcode == strings.ToLower(strings.TrimSpace(subcode))
+}
+
+// azureErrorSubcode reads the subcode out of an ARM error body.
+//
+// azcore surfaces only the code (ResponseError.ErrorCode), and some providers
+// leave that generic and put the useful discriminator in a sibling subcode
+// field. Reading the body back is safe and cheap: azcore already downloaded it
+// to build the error, and runtime.Payload serves the cached copy rather than
+// re-reading the stream.
+func azureErrorSubcode(respErr *azcore.ResponseError) string {
+	if respErr == nil || respErr.RawResponse == nil {
+		return ""
+	}
+	body, err := runtime.Payload(respErr.RawResponse)
+	if err != nil || len(body) == 0 {
+		return ""
+	}
+	// ARM sends the error bare or wrapped in an "error" envelope, depending on
+	// the resource provider.
+	var envelope struct {
+		Subcode string `json:"subcode"`
+		Error   struct {
+			Subcode string `json:"subcode"`
+		} `json:"error"`
+	}
+	if json.Unmarshal(body, &envelope) != nil {
+		return ""
+	}
+	if envelope.Subcode != "" {
+		return envelope.Subcode
+	}
+	return envelope.Error.Subcode
 }
 
 // missingResourceID reports that a resource was asked for without an id, and
