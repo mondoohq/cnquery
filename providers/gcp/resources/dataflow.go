@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/llx"
 	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/v13/providers/gcp/connection"
@@ -95,6 +96,15 @@ func (g *mqlGcpProjectDataflowService) jobs() ([]any, error) {
 		}
 		return nil
 	}); err != nil {
+		// Dataflow is not enabled on most projects, and an unused API answers
+		// 403 "has not been used ... or it is disabled" rather than with an
+		// empty list. Left to propagate, that error renders as the value of the
+		// enclosing collection, so selecting jobs inside a gcp.project block
+		// costs every other field in it.
+		if isSkippable(err) {
+			log.Warn().Err(err).Msg("could not list dataflow jobs")
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res, nil
