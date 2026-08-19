@@ -3739,6 +3739,71 @@ alicloud.resourceManager.controlPolicy {
 alicloud.cs {
   // Kubernetes clusters across all enabled regions
   clusters() []alicloud.cs.cluster
+  // Cluster access grants held by the account's RAM users and roles
+  //
+  // Every grant in the account, across all clusters. Container Service reports
+  // grants per principal rather than per cluster, so reading these costs one
+  // call for each RAM user and each RAM role in the account. A credential that
+  // is itself a RAM user or role only sees the clusters it administers, so the
+  // result can be incomplete for anything other than the account owner.
+  grants() []alicloud.cs.grant
+}
+
+// Container Service cluster access grant
+//
+// A single cluster access grant held by a RAM user or role, keyed by the
+// principal together with the scope and role it confers. Exposes what the grant
+// covers (one cluster, one namespace of a cluster, or every cluster in the
+// account), which preset role it confers, and whether it is the cluster
+// creator's implicit administrator right. This is the answer to who can reach a
+// cluster's API server and with what rights, which cluster settings alone do not
+// show.
+alicloud.cs.grant @defaults("principalName roleType resourceType resourceId") {
+  // ID of the RAM user or role holding the grant
+  uid string
+  // Name of the RAM user or role holding the grant
+  principalName string
+  // Whether the grant is held by a RAM role rather than a RAM user
+  ramRole bool
+  // Scope the grant applies at
+  //
+  // One of cluster (a single cluster), namespace (one namespace of a single
+  // cluster), or console (every cluster in the account).
+  resourceType string
+  // Resource the grant applies to
+  //
+  // The cluster ID for a cluster-scoped grant, clusterId/namespace for a
+  // namespace-scoped grant, or all-clusters for a grant covering every cluster
+  // in the account.
+  resourceId string
+  // Preset role the grant confers
+  //
+  // One of admin (administrator), ops (operations), dev (developer),
+  // restricted (limited), or custom, where the rights come from the cluster
+  // role named by roleName instead.
+  roleType string
+  // Name of the custom cluster role the grant confers
+  //
+  // Empty unless roleType is custom.
+  roleName string
+  // Whether the grant is the cluster creator's implicit administrator right
+  //
+  // A creator grant is not one somebody assigned, so it does not appear in a
+  // review of assigned permissions.
+  owner bool
+  // Cluster the grant applies to
+  //
+  // Null for a grant that covers every cluster rather than a named one, and
+  // null when the named cluster can no longer be read.
+  cluster() alicloud.cs.cluster
+  // RAM user holding the grant
+  //
+  // Null when the grant is held by a RAM role.
+  user() alicloud.ram.user
+  // RAM role holding the grant
+  //
+  // Null when the grant is held by a RAM user.
+  role() alicloud.ram.role
 }
 
 // Container Service for Kubernetes cluster
@@ -3871,6 +3936,41 @@ alicloud.cs.cluster {
   // example security-inspector, logtail-ds, terway-eniip, or csi-plugin. Use it
   // to audit which security and observability addons are present.
   addons() []dict
+  // Cluster access grants that reach this cluster
+  //
+  // The grants naming this cluster or a namespace within it, together with the
+  // account-wide grants that cover every cluster. Shares one sweep with the
+  // grants on the parent service, so reading it for a second cluster costs no
+  // further calls.
+  grants() []alicloud.cs.grant
+  // Cluster inspection runs
+  //
+  // The cluster check runs recorded for the cluster, most recent first. Each
+  // carries when it ran and how it finished, so a cluster that has never been
+  // inspected reports an empty list and one whose last run is old is visible
+  // from finishedAt.
+  checks() []alicloud.cs.cluster.check
+}
+
+// Container Service cluster inspection run
+//
+// A single cluster check run, keyed by checkId. Exposes the kind of check, how
+// it finished, and when it started and completed.
+alicloud.cs.cluster.check @defaults("type status finishedAt") {
+  // Check run ID, used as the lookup key
+  checkId string
+  // Kind of check that ran, for example ClusterUpgrade or NodePoolUpgrade
+  type string
+  // Outcome of the run, for example Succeeded, Failed, or Running
+  status string
+  // Status message the run reported
+  message string
+  // Time the run was created
+  createdAt time
+  // Time the run completed
+  //
+  // Null while the run is still in progress.
+  finishedAt time
 }
 
 // Container Service for Kubernetes node pool
