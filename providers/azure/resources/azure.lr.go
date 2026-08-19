@@ -528,8 +528,15 @@ const (
 	ResourceAzureSubscriptionDesktopVirtualizationServiceHostPool                                       string = "azure.subscription.desktopVirtualizationService.hostPool"
 	ResourceAzureSubscriptionDataProtectionService                                                      string = "azure.subscription.dataProtectionService"
 	ResourceAzureSubscriptionDataProtectionServiceBackupVault                                           string = "azure.subscription.dataProtectionService.backupVault"
+	ResourceAzureSubscriptionNetAppService                                                              string = "azure.subscription.netAppService"
+	ResourceAzureSubscriptionNetAppServiceAccount                                                       string = "azure.subscription.netAppService.account"
 	ResourceAzureSubscriptionDataBoxService                                                             string = "azure.subscription.dataBoxService"
 	ResourceAzureSubscriptionDataBoxServiceJob                                                          string = "azure.subscription.dataBoxService.job"
+	ResourceAzureSubscriptionNetAppServiceAccountEncryption                                             string = "azure.subscription.netAppService.account.encryption"
+	ResourceAzureSubscriptionNetAppServiceAccountActiveDirectory                                        string = "azure.subscription.netAppService.account.activeDirectory"
+	ResourceAzureSubscriptionNetAppServiceAccountCapacityPool                                           string = "azure.subscription.netAppService.account.capacityPool"
+	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolume                                     string = "azure.subscription.netAppService.account.capacityPool.volume"
+	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule                     string = "azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2584,6 +2591,14 @@ func init() {
 			Init:   initAzureSubscriptionDataProtectionServiceBackupVault,
 			Create: createAzureSubscriptionDataProtectionServiceBackupVault,
 		},
+		"azure.subscription.netAppService": {
+			Init:   initAzureSubscriptionNetAppService,
+			Create: createAzureSubscriptionNetAppService,
+		},
+		"azure.subscription.netAppService.account": {
+			Init:   initAzureSubscriptionNetAppServiceAccount,
+			Create: createAzureSubscriptionNetAppServiceAccount,
+		},
 		"azure.subscription.dataBoxService": {
 			Init:   initAzureSubscriptionDataBoxService,
 			Create: createAzureSubscriptionDataBoxService,
@@ -2591,6 +2606,26 @@ func init() {
 		"azure.subscription.dataBoxService.job": {
 			Init:   initAzureSubscriptionDataBoxServiceJob,
 			Create: createAzureSubscriptionDataBoxServiceJob,
+		},
+		"azure.subscription.netAppService.account.encryption": {
+			// to override args, implement: initAzureSubscriptionNetAppServiceAccountEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetAppServiceAccountEncryption,
+		},
+		"azure.subscription.netAppService.account.activeDirectory": {
+			// to override args, implement: initAzureSubscriptionNetAppServiceAccountActiveDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetAppServiceAccountActiveDirectory,
+		},
+		"azure.subscription.netAppService.account.capacityPool": {
+			// to override args, implement: initAzureSubscriptionNetAppServiceAccountCapacityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetAppServiceAccountCapacityPool,
+		},
+		"azure.subscription.netAppService.account.capacityPool.volume": {
+			// to override args, implement: initAzureSubscriptionNetAppServiceAccountCapacityPoolVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetAppServiceAccountCapacityPoolVolume,
+		},
+		"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule": {
+			// to override args, implement: initAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule,
 		},
 	}
 }
@@ -2842,6 +2877,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.dataBox": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetDataBox()).ToDataRes(types.Resource("azure.subscription.dataBoxService"))
+	},
+	"azure.subscription.netApp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetNetApp()).ToDataRes(types.Resource("azure.subscription.netAppService"))
 	},
 	"azure.subscription.functions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetFunctions()).ToDataRes(types.Resource("azure.subscription.functionsService"))
@@ -21074,6 +21112,57 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.dataProtectionService.backupVault.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.netAppService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.accounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppService).GetAccounts()).ToDataRes(types.Array(types.Resource("azure.subscription.netAppService.account")))
+	},
+	"azure.subscription.netAppService.account.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.netAppService.account.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetIdentity()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.netAppService.account.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
+	},
+	"azure.subscription.netAppService.account.nfsV4IdDomain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetNfsV4IdDomain()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.disableShowmount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetDisableShowmount()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.multiAdStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetMultiAdStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.encryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetEncryption()).ToDataRes(types.Resource("azure.subscription.netAppService.account.encryption"))
+	},
+	"azure.subscription.netAppService.account.activeDirectories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetActiveDirectories()).ToDataRes(types.Array(types.Resource("azure.subscription.netAppService.account.activeDirectory")))
+	},
+	"azure.subscription.netAppService.account.capacityPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetCapacityPools()).ToDataRes(types.Array(types.Resource("azure.subscription.netAppService.account.capacityPool")))
+	},
+	"azure.subscription.netAppService.account.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.dataBoxService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataBoxService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -21169,6 +21258,276 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.dataBoxService.job.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.netAppService.account.encryption.keySource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetKeySource()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.encryption.keyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetKeyName()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.encryption.keyVaultUri": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetKeyVaultUri()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.encryption.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetKey()).ToDataRes(types.Resource("azure.subscription.keyVaultService.key"))
+	},
+	"azure.subscription.netAppService.account.encryption.vault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetVault()).ToDataRes(types.Resource("azure.subscription.keyVaultService.vault"))
+	},
+	"azure.subscription.netAppService.account.encryption.keyVaultStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetKeyVaultStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.encryption.identityPrincipalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetIdentityPrincipalId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.encryption.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetIdentity()).ToDataRes(types.Resource("azure.subscription.managedIdentity"))
+	},
+	"azure.subscription.netAppService.account.encryption.federatedClientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).GetFederatedClientId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.activeDirectoryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetActiveDirectoryId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetDomain()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.dns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetDns()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.smbServerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetSmbServerName()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.organizationalUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetOrganizationalUnit()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.site": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetSite()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.adName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetAdName()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.kdcIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetKdcIp()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.aesEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetAesEncryption()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.encryptDcConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetEncryptDcConnections()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.ldapOverTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetLdapOverTls()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.ldapSigning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetLdapSigning()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.allowLocalNfsUsersWithLdap": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetAllowLocalNfsUsersWithLdap()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.ldapSearchScope": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetLdapSearchScope()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.preferredServersForLdapClient": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetPreferredServersForLdapClient()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.administrators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetAdministrators()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.netAppService.account.activeDirectory.backupOperators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetBackupOperators()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.netAppService.account.activeDirectory.securityOperators": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetSecurityOperators()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.netAppService.account.activeDirectory.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.activeDirectory.statusDetails": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).GetStatusDetails()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.netAppService.account.capacityPool.poolId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetPoolId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.serviceLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetServiceLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.sizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetSizeBytes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.netAppService.account.capacityPool.qosType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetQosType()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.coolAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetCoolAccess()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.encryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetEncryptionType()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.totalThroughputMibps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetTotalThroughputMibps()).ToDataRes(types.Float)
+	},
+	"azure.subscription.netAppService.account.capacityPool.utilizedThroughputMibps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetUtilizedThroughputMibps()).ToDataRes(types.Float)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetVolumes()).ToDataRes(types.Array(types.Resource("azure.subscription.netAppService.account.capacityPool.volume")))
+	},
+	"azure.subscription.netAppService.account.capacityPool.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.creationToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetCreationToken()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.fileSystemId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetFileSystemId()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.serviceLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetServiceLevel()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.usageThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetUsageThreshold()).ToDataRes(types.Int)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.protocolTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetProtocolTypes()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.securityStyle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSecurityStyle()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.unixPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetUnixPermissions()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.encryptionKeySource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetEncryptionKeySource()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.kerberosEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetKerberosEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.ldapEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetLdapEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbEncryption": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSmbEncryption()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbContinuouslyAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSmbContinuouslyAvailable()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbAccessBasedEnumeration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSmbAccessBasedEnumeration()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbNonBrowsable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSmbNonBrowsable()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.snapshotDirectoryVisible": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSnapshotDirectoryVisible()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.coolAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetCoolAccess()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.isLargeVolume": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetIsLargeVolume()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.networkFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetNetworkFeatures()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.effectiveNetworkFeatures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetEffectiveNetworkFeatures()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.mountTargetIpAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetMountTargetIpAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetExportPolicyRules()).ToDataRes(types.Array(types.Resource("azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule")))
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.ruleIndex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetRuleIndex()).ToDataRes(types.Int)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.allowedClients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetAllowedClients()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.cifs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetCifs()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.nfsv3": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetNfsv3()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.nfsv41": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetNfsv41()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.unixReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetUnixReadOnly()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.unixReadWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetUnixReadWrite()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.hasRootAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetHasRootAccess()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.chownMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetChownMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5ReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetKerberos5ReadOnly()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5ReadWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetKerberos5ReadWrite()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5iReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetKerberos5iReadOnly()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5iReadWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetKerberos5iReadWrite()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5pReadOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetKerberos5pReadOnly()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5pReadWrite": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetKerberos5pReadWrite()).ToDataRes(types.Bool)
 	},
 }
 
@@ -21436,6 +21795,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.dataBox": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).DataBox, ok = plugin.RawToTValue[*mqlAzureSubscriptionDataBoxService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netApp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).NetApp, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetAppService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47778,6 +48141,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.netAppService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.accounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppService).Accounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.account.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).UserAssignedIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.nfsV4IdDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).NfsV4IdDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.disableShowmount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).DisableShowmount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.multiAdStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).MultiAdStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).Encryption, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetAppServiceAccountEncryption](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).ActiveDirectories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).CapacityPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.dataBoxService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDataBoxService).__id, ok = v.Value.(string)
 		return
@@ -47912,6 +48351,386 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.dataBoxService.job.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDataBoxServiceJob).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.keySource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).KeySource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.keyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).KeyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.keyVaultUri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).KeyVaultUri, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).Key, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceKey](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.vault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).Vault, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceVault](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.keyVaultStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).KeyVaultStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.identityPrincipalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).IdentityPrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).Identity, ok = plugin.RawToTValue[*mqlAzureSubscriptionManagedIdentity](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.encryption.federatedClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountEncryption).FederatedClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.activeDirectoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).ActiveDirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.dns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).Dns, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.smbServerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).SmbServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.organizationalUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).OrganizationalUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.site": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).Site, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.adName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).AdName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.kdcIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).KdcIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.aesEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).AesEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.encryptDcConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).EncryptDcConnections, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.ldapOverTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).LdapOverTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.ldapSigning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).LdapSigning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.allowLocalNfsUsersWithLdap": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).AllowLocalNfsUsersWithLdap, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.ldapSearchScope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).LdapSearchScope, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.preferredServersForLdapClient": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).PreferredServersForLdapClient, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.administrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).Administrators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.backupOperators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).BackupOperators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.securityOperators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).SecurityOperators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.activeDirectory.statusDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountActiveDirectory).StatusDetails, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.poolId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).PoolId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.serviceLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).ServiceLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.sizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).SizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.qosType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).QosType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.coolAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).CoolAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.encryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).EncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.totalThroughputMibps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).TotalThroughputMibps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.utilizedThroughputMibps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).UtilizedThroughputMibps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPool).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.creationToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).CreationToken, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.fileSystemId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).FileSystemId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.serviceLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).ServiceLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.usageThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).UsageThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.protocolTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).ProtocolTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.securityStyle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).SecurityStyle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.unixPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).UnixPermissions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.encryptionKeySource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).EncryptionKeySource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.kerberosEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).KerberosEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.ldapEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).LdapEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).SmbEncryption, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbContinuouslyAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).SmbContinuouslyAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbAccessBasedEnumeration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).SmbAccessBasedEnumeration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.smbNonBrowsable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).SmbNonBrowsable, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.snapshotDirectoryVisible": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).SnapshotDirectoryVisible, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.coolAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).CoolAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.isLargeVolume": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).IsLargeVolume, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.networkFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).NetworkFeatures, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.effectiveNetworkFeatures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).EffectiveNetworkFeatures, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.mountTargetIpAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).MountTargetIpAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).ExportPolicyRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.ruleIndex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).RuleIndex, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.allowedClients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).AllowedClients, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.cifs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Cifs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.nfsv3": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Nfsv3, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.nfsv41": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Nfsv41, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.unixReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).UnixReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.unixReadWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).UnixReadWrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.hasRootAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).HasRootAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.chownMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).ChownMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5ReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Kerberos5ReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5ReadWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Kerberos5ReadWrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5iReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Kerberos5iReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5iReadWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Kerberos5iReadWrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5pReadOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Kerberos5pReadOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5pReadWrite": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Kerberos5pReadWrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 }
@@ -48264,6 +49083,7 @@ type mqlAzureSubscription struct {
 	RecoveryServices      plugin.TValue[*mqlAzureSubscriptionRecoveryServicesService]
 	DataProtection        plugin.TValue[*mqlAzureSubscriptionDataProtectionService]
 	DataBox               plugin.TValue[*mqlAzureSubscriptionDataBoxService]
+	NetApp                plugin.TValue[*mqlAzureSubscriptionNetAppService]
 	Functions             plugin.TValue[*mqlAzureSubscriptionFunctionsService]
 	ServiceBus            plugin.TValue[*mqlAzureSubscriptionServiceBusService]
 	EventHub              plugin.TValue[*mqlAzureSubscriptionEventHubService]
@@ -48838,6 +49658,22 @@ func (c *mqlAzureSubscription) GetDataBox() *plugin.TValue[*mqlAzureSubscription
 		}
 
 		return c.dataBox()
+	})
+}
+
+func (c *mqlAzureSubscription) GetNetApp() *plugin.TValue[*mqlAzureSubscriptionNetAppService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetAppService](&c.NetApp, func() (*mqlAzureSubscriptionNetAppService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "netApp")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetAppService), nil
+			}
+		}
+
+		return c.netApp()
 	})
 }
 
@@ -112366,6 +113202,251 @@ func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetSystemMetadata
 	})
 }
 
+// mqlAzureSubscriptionNetAppService for the azure.subscription.netAppService resource
+type mqlAzureSubscriptionNetAppService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetAppServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	Accounts       plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetAppService creates a new instance of this resource
+func createAzureSubscriptionNetAppService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppService) MqlName() string {
+	return "azure.subscription.netAppService"
+}
+
+func (c *mqlAzureSubscriptionNetAppService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionNetAppService) GetAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Accounts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService", c.__id, "accounts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accounts()
+	})
+}
+
+// mqlAzureSubscriptionNetAppServiceAccount for the azure.subscription.netAppService.account resource
+type mqlAzureSubscriptionNetAppServiceAccount struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetAppServiceAccountInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Location               plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Tags                   plugin.TValue[map[string]any]
+	ProvisioningState      plugin.TValue[string]
+	Identity               plugin.TValue[any]
+	UserAssignedIdentities plugin.TValue[[]any]
+	NfsV4IdDomain          plugin.TValue[string]
+	DisableShowmount       plugin.TValue[bool]
+	MultiAdStatus          plugin.TValue[string]
+	Encryption             plugin.TValue[*mqlAzureSubscriptionNetAppServiceAccountEncryption]
+	ActiveDirectories      plugin.TValue[[]any]
+	CapacityPools          plugin.TValue[[]any]
+	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionNetAppServiceAccount creates a new instance of this resource
+func createAzureSubscriptionNetAppServiceAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppServiceAccount{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService.account", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) MqlName() string {
+	return "azure.subscription.netAppService.account"
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetIdentity() *plugin.TValue[any] {
+	return &c.Identity
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetUserAssignedIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.UserAssignedIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account", c.__id, "userAssignedIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.userAssignedIdentities()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetNfsV4IdDomain() *plugin.TValue[string] {
+	return &c.NfsV4IdDomain
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetDisableShowmount() *plugin.TValue[bool] {
+	return &c.DisableShowmount
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetMultiAdStatus() *plugin.TValue[string] {
+	return &c.MultiAdStatus
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetEncryption() *plugin.TValue[*mqlAzureSubscriptionNetAppServiceAccountEncryption] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetAppServiceAccountEncryption](&c.Encryption, func() (*mqlAzureSubscriptionNetAppServiceAccountEncryption, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account", c.__id, "encryption")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetAppServiceAccountEncryption), nil
+			}
+		}
+
+		return c.encryption()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetActiveDirectories() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActiveDirectories, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account", c.__id, "activeDirectories")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.activeDirectories()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetCapacityPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CapacityPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account", c.__id, "capacityPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.capacityPools()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionDataBoxService for the azure.subscription.dataBoxService resource
 type mqlAzureSubscriptionDataBoxService struct {
 	MqlRuntime *plugin.Runtime
@@ -112688,4 +113769,755 @@ func (c *mqlAzureSubscriptionDataBoxServiceJob) GetSystemMetadata() *plugin.TVal
 
 		return c.systemMetadata()
 	})
+}
+
+// mqlAzureSubscriptionNetAppServiceAccountEncryption for the azure.subscription.netAppService.account.encryption resource
+type mqlAzureSubscriptionNetAppServiceAccountEncryption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetAppServiceAccountEncryptionInternal
+	KeySource           plugin.TValue[string]
+	KeyName             plugin.TValue[string]
+	KeyVaultUri         plugin.TValue[string]
+	Key                 plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	Vault               plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVault]
+	KeyVaultStatus      plugin.TValue[string]
+	IdentityPrincipalId plugin.TValue[string]
+	Identity            plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
+	FederatedClientId   plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetAppServiceAccountEncryption creates a new instance of this resource
+func createAzureSubscriptionNetAppServiceAccountEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppServiceAccountEncryption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService.account.encryption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) MqlName() string {
+	return "azure.subscription.netAppService.account.encryption"
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetKeySource() *plugin.TValue[string] {
+	return &c.KeySource
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetKeyName() *plugin.TValue[string] {
+	return &c.KeyName
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetKeyVaultUri() *plugin.TValue[string] {
+	return &c.KeyVaultUri
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetKey() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceKey](&c.Key, func() (*mqlAzureSubscriptionKeyVaultServiceKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.encryption", c.__id, "key")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceKey), nil
+			}
+		}
+
+		return c.key()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetVault() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVault] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceVault](&c.Vault, func() (*mqlAzureSubscriptionKeyVaultServiceVault, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.encryption", c.__id, "vault")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceVault), nil
+			}
+		}
+
+		return c.vault()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetKeyVaultStatus() *plugin.TValue[string] {
+	return &c.KeyVaultStatus
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetIdentityPrincipalId() *plugin.TValue[string] {
+	return &c.IdentityPrincipalId
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetIdentity() *plugin.TValue[*mqlAzureSubscriptionManagedIdentity] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionManagedIdentity](&c.Identity, func() (*mqlAzureSubscriptionManagedIdentity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.encryption", c.__id, "identity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionManagedIdentity), nil
+			}
+		}
+
+		return c.identity()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountEncryption) GetFederatedClientId() *plugin.TValue[string] {
+	return &c.FederatedClientId
+}
+
+// mqlAzureSubscriptionNetAppServiceAccountActiveDirectory for the azure.subscription.netAppService.account.activeDirectory resource
+type mqlAzureSubscriptionNetAppServiceAccountActiveDirectory struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetAppServiceAccountActiveDirectoryInternal it will be used here
+	ActiveDirectoryId             plugin.TValue[string]
+	Domain                        plugin.TValue[string]
+	Dns                           plugin.TValue[string]
+	SmbServerName                 plugin.TValue[string]
+	OrganizationalUnit            plugin.TValue[string]
+	Site                          plugin.TValue[string]
+	AdName                        plugin.TValue[string]
+	KdcIp                         plugin.TValue[string]
+	AesEncryption                 plugin.TValue[bool]
+	EncryptDcConnections          plugin.TValue[bool]
+	LdapOverTls                   plugin.TValue[bool]
+	LdapSigning                   plugin.TValue[bool]
+	AllowLocalNfsUsersWithLdap    plugin.TValue[bool]
+	LdapSearchScope               plugin.TValue[any]
+	PreferredServersForLdapClient plugin.TValue[string]
+	Administrators                plugin.TValue[[]any]
+	BackupOperators               plugin.TValue[[]any]
+	SecurityOperators             plugin.TValue[[]any]
+	Status                        plugin.TValue[string]
+	StatusDetails                 plugin.TValue[string]
+}
+
+// createAzureSubscriptionNetAppServiceAccountActiveDirectory creates a new instance of this resource
+func createAzureSubscriptionNetAppServiceAccountActiveDirectory(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppServiceAccountActiveDirectory{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService.account.activeDirectory", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) MqlName() string {
+	return "azure.subscription.netAppService.account.activeDirectory"
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetActiveDirectoryId() *plugin.TValue[string] {
+	return &c.ActiveDirectoryId
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetDns() *plugin.TValue[string] {
+	return &c.Dns
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetSmbServerName() *plugin.TValue[string] {
+	return &c.SmbServerName
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetOrganizationalUnit() *plugin.TValue[string] {
+	return &c.OrganizationalUnit
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetSite() *plugin.TValue[string] {
+	return &c.Site
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetAdName() *plugin.TValue[string] {
+	return &c.AdName
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetKdcIp() *plugin.TValue[string] {
+	return &c.KdcIp
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetAesEncryption() *plugin.TValue[bool] {
+	return &c.AesEncryption
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetEncryptDcConnections() *plugin.TValue[bool] {
+	return &c.EncryptDcConnections
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetLdapOverTls() *plugin.TValue[bool] {
+	return &c.LdapOverTls
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetLdapSigning() *plugin.TValue[bool] {
+	return &c.LdapSigning
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetAllowLocalNfsUsersWithLdap() *plugin.TValue[bool] {
+	return &c.AllowLocalNfsUsersWithLdap
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetLdapSearchScope() *plugin.TValue[any] {
+	return &c.LdapSearchScope
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetPreferredServersForLdapClient() *plugin.TValue[string] {
+	return &c.PreferredServersForLdapClient
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetAdministrators() *plugin.TValue[[]any] {
+	return &c.Administrators
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetBackupOperators() *plugin.TValue[[]any] {
+	return &c.BackupOperators
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetSecurityOperators() *plugin.TValue[[]any] {
+	return &c.SecurityOperators
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountActiveDirectory) GetStatusDetails() *plugin.TValue[string] {
+	return &c.StatusDetails
+}
+
+// mqlAzureSubscriptionNetAppServiceAccountCapacityPool for the azure.subscription.netAppService.account.capacityPool resource
+type mqlAzureSubscriptionNetAppServiceAccountCapacityPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetAppServiceAccountCapacityPoolInternal
+	Id                      plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Location                plugin.TValue[string]
+	Type                    plugin.TValue[string]
+	Tags                    plugin.TValue[map[string]any]
+	PoolId                  plugin.TValue[string]
+	ProvisioningState       plugin.TValue[string]
+	ServiceLevel            plugin.TValue[string]
+	SizeBytes               plugin.TValue[int64]
+	QosType                 plugin.TValue[string]
+	CoolAccess              plugin.TValue[bool]
+	EncryptionType          plugin.TValue[string]
+	TotalThroughputMibps    plugin.TValue[float64]
+	UtilizedThroughputMibps plugin.TValue[float64]
+	Volumes                 plugin.TValue[[]any]
+	SystemMetadata          plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionNetAppServiceAccountCapacityPool creates a new instance of this resource
+func createAzureSubscriptionNetAppServiceAccountCapacityPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppServiceAccountCapacityPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService.account.capacityPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) MqlName() string {
+	return "azure.subscription.netAppService.account.capacityPool"
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetPoolId() *plugin.TValue[string] {
+	return &c.PoolId
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetServiceLevel() *plugin.TValue[string] {
+	return &c.ServiceLevel
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetSizeBytes() *plugin.TValue[int64] {
+	return &c.SizeBytes
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetQosType() *plugin.TValue[string] {
+	return &c.QosType
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetCoolAccess() *plugin.TValue[bool] {
+	return &c.CoolAccess
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetEncryptionType() *plugin.TValue[string] {
+	return &c.EncryptionType
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetTotalThroughputMibps() *plugin.TValue[float64] {
+	return &c.TotalThroughputMibps
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetUtilizedThroughputMibps() *plugin.TValue[float64] {
+	return &c.UtilizedThroughputMibps
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.capacityPool", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPool) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.capacityPool", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume for the azure.subscription.netAppService.account.capacityPool.volume resource
+type mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeInternal
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Location                  plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	Tags                      plugin.TValue[map[string]any]
+	ProvisioningState         plugin.TValue[string]
+	CreationToken             plugin.TValue[string]
+	FileSystemId              plugin.TValue[string]
+	ServiceLevel              plugin.TValue[string]
+	UsageThreshold            plugin.TValue[int64]
+	ProtocolTypes             plugin.TValue[[]any]
+	SecurityStyle             plugin.TValue[string]
+	UnixPermissions           plugin.TValue[string]
+	Encrypted                 plugin.TValue[bool]
+	EncryptionKeySource       plugin.TValue[string]
+	KerberosEnabled           plugin.TValue[bool]
+	LdapEnabled               plugin.TValue[bool]
+	SmbEncryption             plugin.TValue[bool]
+	SmbContinuouslyAvailable  plugin.TValue[bool]
+	SmbAccessBasedEnumeration plugin.TValue[string]
+	SmbNonBrowsable           plugin.TValue[string]
+	SnapshotDirectoryVisible  plugin.TValue[bool]
+	CoolAccess                plugin.TValue[bool]
+	IsLargeVolume             plugin.TValue[bool]
+	NetworkFeatures           plugin.TValue[string]
+	EffectiveNetworkFeatures  plugin.TValue[string]
+	Subnet                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	MountTargetIpAddresses    plugin.TValue[[]any]
+	ExportPolicyRules         plugin.TValue[[]any]
+	SystemMetadata            plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionNetAppServiceAccountCapacityPoolVolume creates a new instance of this resource
+func createAzureSubscriptionNetAppServiceAccountCapacityPoolVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService.account.capacityPool.volume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) MqlName() string {
+	return "azure.subscription.netAppService.account.capacityPool.volume"
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetCreationToken() *plugin.TValue[string] {
+	return &c.CreationToken
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetFileSystemId() *plugin.TValue[string] {
+	return &c.FileSystemId
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetServiceLevel() *plugin.TValue[string] {
+	return &c.ServiceLevel
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetUsageThreshold() *plugin.TValue[int64] {
+	return &c.UsageThreshold
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetProtocolTypes() *plugin.TValue[[]any] {
+	return &c.ProtocolTypes
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSecurityStyle() *plugin.TValue[string] {
+	return &c.SecurityStyle
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetUnixPermissions() *plugin.TValue[string] {
+	return &c.UnixPermissions
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetEncryptionKeySource() *plugin.TValue[string] {
+	return &c.EncryptionKeySource
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetKerberosEnabled() *plugin.TValue[bool] {
+	return &c.KerberosEnabled
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetLdapEnabled() *plugin.TValue[bool] {
+	return &c.LdapEnabled
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSmbEncryption() *plugin.TValue[bool] {
+	return &c.SmbEncryption
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSmbContinuouslyAvailable() *plugin.TValue[bool] {
+	return &c.SmbContinuouslyAvailable
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSmbAccessBasedEnumeration() *plugin.TValue[string] {
+	return &c.SmbAccessBasedEnumeration
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSmbNonBrowsable() *plugin.TValue[string] {
+	return &c.SmbNonBrowsable
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSnapshotDirectoryVisible() *plugin.TValue[bool] {
+	return &c.SnapshotDirectoryVisible
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetCoolAccess() *plugin.TValue[bool] {
+	return &c.CoolAccess
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetIsLargeVolume() *plugin.TValue[bool] {
+	return &c.IsLargeVolume
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetNetworkFeatures() *plugin.TValue[string] {
+	return &c.NetworkFeatures
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetEffectiveNetworkFeatures() *plugin.TValue[string] {
+	return &c.EffectiveNetworkFeatures
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.capacityPool.volume", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetMountTargetIpAddresses() *plugin.TValue[[]any] {
+	return &c.MountTargetIpAddresses
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetExportPolicyRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExportPolicyRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.capacityPool.volume", c.__id, "exportPolicyRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exportPolicyRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolume) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.netAppService.account.capacityPool.volume", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
+// mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule for the azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule resource
+type mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRuleInternal it will be used here
+	RuleIndex           plugin.TValue[int64]
+	AllowedClients      plugin.TValue[string]
+	Cifs                plugin.TValue[bool]
+	Nfsv3               plugin.TValue[bool]
+	Nfsv41              plugin.TValue[bool]
+	UnixReadOnly        plugin.TValue[bool]
+	UnixReadWrite       plugin.TValue[bool]
+	HasRootAccess       plugin.TValue[bool]
+	ChownMode           plugin.TValue[string]
+	Kerberos5ReadOnly   plugin.TValue[bool]
+	Kerberos5ReadWrite  plugin.TValue[bool]
+	Kerberos5iReadOnly  plugin.TValue[bool]
+	Kerberos5iReadWrite plugin.TValue[bool]
+	Kerberos5pReadOnly  plugin.TValue[bool]
+	Kerberos5pReadWrite plugin.TValue[bool]
+}
+
+// createAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule creates a new instance of this resource
+func createAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) MqlName() string {
+	return "azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule"
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetRuleIndex() *plugin.TValue[int64] {
+	return &c.RuleIndex
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetAllowedClients() *plugin.TValue[string] {
+	return &c.AllowedClients
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetCifs() *plugin.TValue[bool] {
+	return &c.Cifs
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetNfsv3() *plugin.TValue[bool] {
+	return &c.Nfsv3
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetNfsv41() *plugin.TValue[bool] {
+	return &c.Nfsv41
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetUnixReadOnly() *plugin.TValue[bool] {
+	return &c.UnixReadOnly
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetUnixReadWrite() *plugin.TValue[bool] {
+	return &c.UnixReadWrite
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetHasRootAccess() *plugin.TValue[bool] {
+	return &c.HasRootAccess
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetChownMode() *plugin.TValue[string] {
+	return &c.ChownMode
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetKerberos5ReadOnly() *plugin.TValue[bool] {
+	return &c.Kerberos5ReadOnly
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetKerberos5ReadWrite() *plugin.TValue[bool] {
+	return &c.Kerberos5ReadWrite
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetKerberos5iReadOnly() *plugin.TValue[bool] {
+	return &c.Kerberos5iReadOnly
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetKerberos5iReadWrite() *plugin.TValue[bool] {
+	return &c.Kerberos5iReadWrite
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetKerberos5pReadOnly() *plugin.TValue[bool] {
+	return &c.Kerberos5pReadOnly
+}
+
+func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetKerberos5pReadWrite() *plugin.TValue[bool] {
+	return &c.Kerberos5pReadWrite
 }

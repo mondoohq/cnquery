@@ -170,6 +170,9 @@
     "Microsoft.Managedservices/registrationAssignments/read",
     "Microsoft.Managedservices/registrationDefinitions/read",
     "Microsoft.Management/managementGroups/read",
+    "Microsoft.NetApp/netAppAccounts/capacityPools/read",
+    "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/read",
+    "Microsoft.NetApp/netAppAccounts/read",
     "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",
     "Microsoft.Network/adminRuleCollections/read",
     "Microsoft.Network/adminRules/read",
@@ -1356,6 +1359,24 @@
       "service": "Microsoft.Management",
       "action": "NewListPager",
       "source_file": "managementgroups.go"
+    },
+    {
+      "permission": "Microsoft.NetApp/netAppAccounts/capacityPools/read",
+      "service": "Microsoft.NetApp",
+      "action": "NewListPager",
+      "source_file": "netapp.go"
+    },
+    {
+      "permission": "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/read",
+      "service": "Microsoft.NetApp",
+      "action": "NewListPager",
+      "source_file": "netapp.go"
+    },
+    {
+      "permission": "Microsoft.NetApp/netAppAccounts/read",
+      "service": "Microsoft.NetApp",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "netapp.go"
     },
     {
       "permission": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/read",

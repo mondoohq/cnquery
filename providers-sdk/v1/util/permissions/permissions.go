@@ -1901,6 +1901,9 @@ var azureServiceToARMMap = map[string]string{
 	// "Microsoft.Databox", neither of which is a real provider namespace.
 	"dataprotection": "Microsoft.DataProtection",
 	"databox":        "Microsoft.DataBox",
+	// Same again: the default branch would emit "Microsoft.Netapp", which is
+	// not a real provider namespace.
+	"netapp": "Microsoft.NetApp",
 }
 
 func azureServiceToARM(service string) string {
@@ -2218,6 +2221,13 @@ var azurePermissionOverrides = map[string]string{
 
 	// Storage: network security perimeter configs are nested under storageAccounts/.
 	"Microsoft.Storage/networkSecurityPerimeterConfigurations/read": "Microsoft.Storage/storageAccounts/networkSecurityPerimeterConfigurations/read",
+
+	// NetApp: the ARM resource type is netAppAccounts, and pools and volumes
+	// are nested under it, which the AccountsClient/PoolsClient/VolumesClient
+	// names do not carry.
+	"Microsoft.NetApp/accounts/read": "Microsoft.NetApp/netAppAccounts/read",
+	"Microsoft.NetApp/pools/read":    "Microsoft.NetApp/netAppAccounts/capacityPools/read",
+	"Microsoft.NetApp/volumes/read":  "Microsoft.NetApp/netAppAccounts/capacityPools/volumes/read",
 }
 
 // azurePermission constructs the RBAC permission string.

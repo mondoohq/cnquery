@@ -178,8 +178,9 @@ func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) sourceServer() (*m
 	return res.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer), nil
 }
 
-// resolveDelegatedSubnet is shared by the PostgreSQL and MySQL flexible servers,
-// which model virtual network injection identically.
+// resolveDelegatedSubnet is shared by the resources that model virtual network
+// injection identically: the PostgreSQL and MySQL flexible servers, and Azure
+// NetApp Files volumes.
 func resolveDelegatedSubnet(runtime *plugin.Runtime, id *string, field *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]) (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
 	if id == nil || *id == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull
