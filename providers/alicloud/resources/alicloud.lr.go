@@ -123,6 +123,11 @@ const (
 	ResourceAlicloudCloudssoPermissionPolicy     string = "alicloud.cloudsso.permissionPolicy"
 	ResourceAlicloudCloudssoAccessAssignment     string = "alicloud.cloudsso.accessAssignment"
 	ResourceAlicloudSas                          string = "alicloud.sas"
+	ResourceAlicloudSasConfig                    string = "alicloud.sas.config"
+	ResourceAlicloudSasWebPath                   string = "alicloud.sas.webPath"
+	ResourceAlicloudSasNoticeConfig              string = "alicloud.sas.noticeConfig"
+	ResourceAlicloudSasVulnerabilityConfig       string = "alicloud.sas.vulnerabilityConfig"
+	ResourceAlicloudSasPropertySchedule          string = "alicloud.sas.propertySchedule"
 	ResourceAlicloudSasMachine                   string = "alicloud.sas.machine"
 	ResourceAlicloudSasVulnerability             string = "alicloud.sas.vulnerability"
 	ResourceAlicloudSasBaselineCheck             string = "alicloud.sas.baselineCheck"
@@ -573,6 +578,26 @@ func init() {
 		"alicloud.sas": {
 			// to override args, implement: initAlicloudSas(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudSas,
+		},
+		"alicloud.sas.config": {
+			// to override args, implement: initAlicloudSasConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasConfig,
+		},
+		"alicloud.sas.webPath": {
+			// to override args, implement: initAlicloudSasWebPath(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasWebPath,
+		},
+		"alicloud.sas.noticeConfig": {
+			// to override args, implement: initAlicloudSasNoticeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasNoticeConfig,
+		},
+		"alicloud.sas.vulnerabilityConfig": {
+			// to override args, implement: initAlicloudSasVulnerabilityConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasVulnerabilityConfig,
+		},
+		"alicloud.sas.propertySchedule": {
+			// to override args, implement: initAlicloudSasPropertySchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudSasPropertySchedule,
 		},
 		"alicloud.sas.machine": {
 			// to override args, implement: initAlicloudSasMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5242,6 +5267,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.sas.alarmEvents": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudSas).GetAlarmEvents()).ToDataRes(types.Array(types.Resource("alicloud.sas.alarmEvent")))
+	},
+	"alicloud.sas.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSas).GetConfig()).ToDataRes(types.Resource("alicloud.sas.config"))
+	},
+	"alicloud.sas.config.virusScanEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetVirusScanEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.config.virusScanInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetVirusScanInterval()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.config.virusScanPeriodUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetVirusScanPeriodUnit()).ToDataRes(types.String)
+	},
+	"alicloud.sas.config.virusScanPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetVirusScanPaths()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.sas.config.virusScanType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetVirusScanType()).ToDataRes(types.String)
+	},
+	"alicloud.sas.config.configAssessmentEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetConfigAssessmentEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.config.configAssessmentAutoAddEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetConfigAssessmentAutoAddEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.config.configAssessmentCycleDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetConfigAssessmentCycleDays()).ToDataRes(types.Array(types.Int))
+	},
+	"alicloud.sas.config.configAssessmentStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetConfigAssessmentStandards()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.sas.config.webPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetWebPaths()).ToDataRes(types.Array(types.Resource("alicloud.sas.webPath")))
+	},
+	"alicloud.sas.config.noticeConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetNoticeConfigs()).ToDataRes(types.Array(types.Resource("alicloud.sas.noticeConfig")))
+	},
+	"alicloud.sas.config.vulnerabilityConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetVulnerabilityConfigs()).ToDataRes(types.Array(types.Resource("alicloud.sas.vulnerabilityConfig")))
+	},
+	"alicloud.sas.config.propertySchedules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasConfig).GetPropertySchedules()).ToDataRes(types.Array(types.Resource("alicloud.sas.propertySchedule")))
+	},
+	"alicloud.sas.webPath.webPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasWebPath).GetWebPath()).ToDataRes(types.String)
+	},
+	"alicloud.sas.webPath.webPathType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasWebPath).GetWebPathType()).ToDataRes(types.String)
+	},
+	"alicloud.sas.webPath.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasWebPath).GetTargets()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.sas.noticeConfig.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasNoticeConfig).GetProject()).ToDataRes(types.String)
+	},
+	"alicloud.sas.noticeConfig.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasNoticeConfig).GetCategory()).ToDataRes(types.String)
+	},
+	"alicloud.sas.noticeConfig.channels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasNoticeConfig).GetChannels()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.sas.noticeConfig.route": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasNoticeConfig).GetRoute()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.noticeConfig.timeLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasNoticeConfig).GetTimeLimit()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.vulnerabilityConfig.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerabilityConfig).GetType()).ToDataRes(types.String)
+	},
+	"alicloud.sas.vulnerabilityConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerabilityConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.sas.vulnerabilityConfig.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasVulnerabilityConfig).GetConfig()).ToDataRes(types.String)
+	},
+	"alicloud.sas.propertySchedule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasPropertySchedule).GetType()).ToDataRes(types.String)
+	},
+	"alicloud.sas.propertySchedule.scheduleHours": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasPropertySchedule).GetScheduleHours()).ToDataRes(types.Int)
+	},
+	"alicloud.sas.propertySchedule.nextScheduleTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudSasPropertySchedule).GetNextScheduleTime()).ToDataRes(types.Time)
 	},
 	"alicloud.sas.machine.uuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudSasMachine).GetUuid()).ToDataRes(types.String)
@@ -12477,6 +12586,138 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.sas.alarmEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudSas).AlarmEvents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSas).Config, ok = plugin.RawToTValue[*mqlAlicloudSasConfig](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.config.virusScanEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).VirusScanEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.virusScanInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).VirusScanInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.virusScanPeriodUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).VirusScanPeriodUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.virusScanPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).VirusScanPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.virusScanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).VirusScanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.configAssessmentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).ConfigAssessmentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.configAssessmentAutoAddEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).ConfigAssessmentAutoAddEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.configAssessmentCycleDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).ConfigAssessmentCycleDays, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.configAssessmentStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).ConfigAssessmentStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.webPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).WebPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.noticeConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).NoticeConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.vulnerabilityConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).VulnerabilityConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.config.propertySchedules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasConfig).PropertySchedules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.webPath.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasWebPath).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.webPath.webPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasWebPath).WebPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.webPath.webPathType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasWebPath).WebPathType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.webPath.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasWebPath).Targets, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.noticeConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasNoticeConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.noticeConfig.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasNoticeConfig).Project, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.noticeConfig.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasNoticeConfig).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.noticeConfig.channels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasNoticeConfig).Channels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.noticeConfig.route": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasNoticeConfig).Route, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.noticeConfig.timeLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasNoticeConfig).TimeLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerabilityConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerabilityConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.vulnerabilityConfig.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerabilityConfig).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerabilityConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerabilityConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.vulnerabilityConfig.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasVulnerabilityConfig).Config, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.propertySchedule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasPropertySchedule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.sas.propertySchedule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasPropertySchedule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.propertySchedule.scheduleHours": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasPropertySchedule).ScheduleHours, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.sas.propertySchedule.nextScheduleTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudSasPropertySchedule).NextScheduleTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.sas.machine.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28819,6 +29060,7 @@ type mqlAlicloudSas struct {
 	Vulnerabilities plugin.TValue[[]any]
 	BaselineChecks  plugin.TValue[[]any]
 	AlarmEvents     plugin.TValue[[]any]
+	Config          plugin.TValue[*mqlAlicloudSasConfig]
 }
 
 // createAlicloudSas creates a new instance of this resource
@@ -28962,6 +29204,425 @@ func (c *mqlAlicloudSas) GetAlarmEvents() *plugin.TValue[[]any] {
 
 		return c.alarmEvents()
 	})
+}
+
+func (c *mqlAlicloudSas) GetConfig() *plugin.TValue[*mqlAlicloudSasConfig] {
+	return plugin.GetOrCompute[*mqlAlicloudSasConfig](&c.Config, func() (*mqlAlicloudSasConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas", c.__id, "config")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudSasConfig), nil
+			}
+		}
+
+		return c.config()
+	})
+}
+
+// mqlAlicloudSasConfig for the alicloud.sas.config resource
+type mqlAlicloudSasConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudSasConfigInternal
+	VirusScanEnabled               plugin.TValue[bool]
+	VirusScanInterval              plugin.TValue[int64]
+	VirusScanPeriodUnit            plugin.TValue[string]
+	VirusScanPaths                 plugin.TValue[[]any]
+	VirusScanType                  plugin.TValue[string]
+	ConfigAssessmentEnabled        plugin.TValue[bool]
+	ConfigAssessmentAutoAddEnabled plugin.TValue[bool]
+	ConfigAssessmentCycleDays      plugin.TValue[[]any]
+	ConfigAssessmentStandards      plugin.TValue[[]any]
+	WebPaths                       plugin.TValue[[]any]
+	NoticeConfigs                  plugin.TValue[[]any]
+	VulnerabilityConfigs           plugin.TValue[[]any]
+	PropertySchedules              plugin.TValue[[]any]
+}
+
+// createAlicloudSasConfig creates a new instance of this resource
+func createAlicloudSasConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.config", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasConfig) MqlName() string {
+	return "alicloud.sas.config"
+}
+
+func (c *mqlAlicloudSasConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasConfig) GetVirusScanEnabled() *plugin.TValue[bool] {
+	return &c.VirusScanEnabled
+}
+
+func (c *mqlAlicloudSasConfig) GetVirusScanInterval() *plugin.TValue[int64] {
+	return &c.VirusScanInterval
+}
+
+func (c *mqlAlicloudSasConfig) GetVirusScanPeriodUnit() *plugin.TValue[string] {
+	return &c.VirusScanPeriodUnit
+}
+
+func (c *mqlAlicloudSasConfig) GetVirusScanPaths() *plugin.TValue[[]any] {
+	return &c.VirusScanPaths
+}
+
+func (c *mqlAlicloudSasConfig) GetVirusScanType() *plugin.TValue[string] {
+	return &c.VirusScanType
+}
+
+func (c *mqlAlicloudSasConfig) GetConfigAssessmentEnabled() *plugin.TValue[bool] {
+	return &c.ConfigAssessmentEnabled
+}
+
+func (c *mqlAlicloudSasConfig) GetConfigAssessmentAutoAddEnabled() *plugin.TValue[bool] {
+	return &c.ConfigAssessmentAutoAddEnabled
+}
+
+func (c *mqlAlicloudSasConfig) GetConfigAssessmentCycleDays() *plugin.TValue[[]any] {
+	return &c.ConfigAssessmentCycleDays
+}
+
+func (c *mqlAlicloudSasConfig) GetConfigAssessmentStandards() *plugin.TValue[[]any] {
+	return &c.ConfigAssessmentStandards
+}
+
+func (c *mqlAlicloudSasConfig) GetWebPaths() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WebPaths, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas.config", c.__id, "webPaths")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.webPaths()
+	})
+}
+
+func (c *mqlAlicloudSasConfig) GetNoticeConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NoticeConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas.config", c.__id, "noticeConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.noticeConfigs()
+	})
+}
+
+func (c *mqlAlicloudSasConfig) GetVulnerabilityConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VulnerabilityConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas.config", c.__id, "vulnerabilityConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vulnerabilityConfigs()
+	})
+}
+
+func (c *mqlAlicloudSasConfig) GetPropertySchedules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PropertySchedules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.sas.config", c.__id, "propertySchedules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.propertySchedules()
+	})
+}
+
+// mqlAlicloudSasWebPath for the alicloud.sas.webPath resource
+type mqlAlicloudSasWebPath struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudSasWebPathInternal it will be used here
+	WebPath     plugin.TValue[string]
+	WebPathType plugin.TValue[string]
+	Targets     plugin.TValue[map[string]any]
+}
+
+// createAlicloudSasWebPath creates a new instance of this resource
+func createAlicloudSasWebPath(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasWebPath{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.webPath", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasWebPath) MqlName() string {
+	return "alicloud.sas.webPath"
+}
+
+func (c *mqlAlicloudSasWebPath) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasWebPath) GetWebPath() *plugin.TValue[string] {
+	return &c.WebPath
+}
+
+func (c *mqlAlicloudSasWebPath) GetWebPathType() *plugin.TValue[string] {
+	return &c.WebPathType
+}
+
+func (c *mqlAlicloudSasWebPath) GetTargets() *plugin.TValue[map[string]any] {
+	return &c.Targets
+}
+
+// mqlAlicloudSasNoticeConfig for the alicloud.sas.noticeConfig resource
+type mqlAlicloudSasNoticeConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudSasNoticeConfigInternal it will be used here
+	Project   plugin.TValue[string]
+	Category  plugin.TValue[string]
+	Channels  plugin.TValue[[]any]
+	Route     plugin.TValue[int64]
+	TimeLimit plugin.TValue[int64]
+}
+
+// createAlicloudSasNoticeConfig creates a new instance of this resource
+func createAlicloudSasNoticeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasNoticeConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.noticeConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasNoticeConfig) MqlName() string {
+	return "alicloud.sas.noticeConfig"
+}
+
+func (c *mqlAlicloudSasNoticeConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasNoticeConfig) GetProject() *plugin.TValue[string] {
+	return &c.Project
+}
+
+func (c *mqlAlicloudSasNoticeConfig) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAlicloudSasNoticeConfig) GetChannels() *plugin.TValue[[]any] {
+	return &c.Channels
+}
+
+func (c *mqlAlicloudSasNoticeConfig) GetRoute() *plugin.TValue[int64] {
+	return &c.Route
+}
+
+func (c *mqlAlicloudSasNoticeConfig) GetTimeLimit() *plugin.TValue[int64] {
+	return &c.TimeLimit
+}
+
+// mqlAlicloudSasVulnerabilityConfig for the alicloud.sas.vulnerabilityConfig resource
+type mqlAlicloudSasVulnerabilityConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudSasVulnerabilityConfigInternal it will be used here
+	Type    plugin.TValue[string]
+	Enabled plugin.TValue[bool]
+	Config  plugin.TValue[string]
+}
+
+// createAlicloudSasVulnerabilityConfig creates a new instance of this resource
+func createAlicloudSasVulnerabilityConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasVulnerabilityConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.vulnerabilityConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasVulnerabilityConfig) MqlName() string {
+	return "alicloud.sas.vulnerabilityConfig"
+}
+
+func (c *mqlAlicloudSasVulnerabilityConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasVulnerabilityConfig) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAlicloudSasVulnerabilityConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudSasVulnerabilityConfig) GetConfig() *plugin.TValue[string] {
+	return &c.Config
+}
+
+// mqlAlicloudSasPropertySchedule for the alicloud.sas.propertySchedule resource
+type mqlAlicloudSasPropertySchedule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudSasPropertyScheduleInternal it will be used here
+	Type             plugin.TValue[string]
+	ScheduleHours    plugin.TValue[int64]
+	NextScheduleTime plugin.TValue[*time.Time]
+}
+
+// createAlicloudSasPropertySchedule creates a new instance of this resource
+func createAlicloudSasPropertySchedule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudSasPropertySchedule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.sas.propertySchedule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudSasPropertySchedule) MqlName() string {
+	return "alicloud.sas.propertySchedule"
+}
+
+func (c *mqlAlicloudSasPropertySchedule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudSasPropertySchedule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAlicloudSasPropertySchedule) GetScheduleHours() *plugin.TValue[int64] {
+	return &c.ScheduleHours
+}
+
+func (c *mqlAlicloudSasPropertySchedule) GetNextScheduleTime() *plugin.TValue[*time.Time] {
+	return &c.NextScheduleTime
 }
 
 // mqlAlicloudSasMachine for the alicloud.sas.machine resource
