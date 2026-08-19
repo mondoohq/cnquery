@@ -27,7 +27,6 @@ func newMqlBitwardenGroup(runtime *plugin.Runtime, g connection.Group) (plugin.R
 		"__id":       llx.StringData(g.Id),
 		"id":         llx.StringData(g.Id),
 		"name":       llx.StringData(g.Name),
-		"accessAll":  llx.BoolData(g.AccessAll),
 		"externalId": llx.StringDataPtr(g.ExternalId),
 	})
 	if err != nil {

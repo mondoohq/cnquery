@@ -33,7 +33,6 @@ func newMqlBitwardenMember(runtime *plugin.Runtime, m connection.Member) (plugin
 		"status":                llx.StringData(connection.MemberStatusName(m.Status)),
 		"twoFactorEnabled":      llx.BoolData(m.TwoFactorEnabled),
 		"resetPasswordEnrolled": llx.BoolData(m.ResetPasswordEnrolled),
-		"accessAllCollections":  llx.BoolData(m.AccessAll),
 		"externalId":            llx.StringDataPtr(m.ExternalId),
 	})
 	if err != nil {
