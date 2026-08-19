@@ -3,11 +3,11 @@
 Work to remove redundant API calls from cloud provider scans. Same data, same
 scores, far fewer requests — which matters most where APIs throttle.
 
-Status: **Azure, AWS, GCP, GitLab, Okta and ms365 all merged to main**, and
-backported to the **v13** release branch. **vSphere is in draft** (#10049)
-pending a decision — it is the one change with no measured user-visible benefit.
-Each provider has a *What is not covered* note where a test environment could
-not exercise everything.
+Status: **Azure, AWS, GCP, GitLab, Okta and ms365 all merged to main**, with
+Okta and ms365 also backported to the **v13** release branch. **GitHub is in
+review**. **vSphere is in draft** (#10049) pending a decision — it is the one
+change with no measured user-visible benefit. Each provider has a *What is not
+covered* note where a test environment could not exercise everything.
 
 ---
 
@@ -22,6 +22,7 @@ not exercise everything.
 | **ms365** (worst-path query) | 123s | **24s** | **−80%** |
 | **ms365** (registration details) | 58 calls | **10** | **−83%** |
 | **Okta** | 7 calls | **3** | **−57%** |
+| **GitHub** | 1,291 calls | **1,049** | **−18.7%** |
 
 AWS was measured end to end on a 169-asset scan and GCP on a 71-asset project,
 both with server policies. Azure was measured per change on a live subscription,
@@ -37,9 +38,9 @@ by running the fixed build twice and confirming byte-identical scores.
 
 ---
 
-## Three root causes
+## Four root causes
 
-All three come from shared machinery, so they recur in every provider.
+All four come from shared machinery, so they recur in every provider.
 
 **1. The resource cache is per connection.** Every discovered asset gets its own
 runtime. Unless a provider opts in, data belonging to a subscription or account
@@ -57,6 +58,14 @@ run while an EC2 instance was being scanned, adopt the instance's ARN, and call
 `DescribeSecret` with it. The call fails, failures are not cached, so it retries
 per referrer. This was the largest single cause in AWS and was invisible in
 normal output — it surfaces only in a request trace.
+
+**4. Two fields, one request.** The cache stores resolved values *per field*,
+and nothing in it knows that two different fields issue the same HTTP request.
+Each field is computed exactly once, correctly, and the API is still asked
+twice. This is not a caching failure and no amount of cache sharing fixes it:
+the duplication lives below the resource layer, where only the request URL is
+visible. GitHub is the worked example — `files` read the repository root and
+`findSpecialFiles` read the same directory as `"."`.
 
 ---
 
@@ -322,6 +331,80 @@ The test org has **8 users, 2 groups and 0 applications**. The six
 per-application accessors never executed and the per-user fan-out was too small
 to stress, so "otherwise clean" is a weaker claim here than for GitLab, where 36
 projects exercised the fan-out properly.
+
+## GitHub
+
+**1,291 → 1,049 calls (−18.7%)** on the mondoohq organization, 226 repositories,
+both runs stopped at the same 97 asset blocks. The 159 redundant calls went to
+**zero**, and 404s fell from 375 to 289.
+
+This is the worked example of root cause 4, and it is the one provider where the
+resource cache was working perfectly and the duplication happened anyway.
+
+`repository.files` reads the repository root. `findSpecialFiles`, which resolves
+`securityFile`, `supportFile` and `codeOfConductFile`, read the same directory as
+`"."`. Those normalize to the identical request. Scanning an organization paid
+it twice per repository: once while the organization asset resolved the
+repository, once while that repository was scanned as its own asset.
+
+The cache could not help, and this was verified rather than assumed. Discovery
+sets `WithParentConnectionId`, so a repository asset inherits the organization's
+`runtime.Resources`; instrumenting the resource showed **the same
+`github.repository` object, at the same address, serving both assets**. Across
+226 repositories: zero resolved to more than one instance, and
+`findSpecialFiles` never ran twice. Both fields computed exactly once. The cache
+stores values per field, so two fields wanting one request is simply outside
+what it can see.
+
+The fix reads the root from the `files` field instead of fetching it, so
+whichever caller arrives second reuses the cached field, and reaches `.github`
+by descending through its entry in that listing rather than requesting it
+outright. That second part was unplanned and turned out to be the larger win: a
+repository with no `.github` directory now costs **no request at all**, where
+before it bought a 404. That is the 86 vanished 404s.
+
+| | before | after |
+|---|---|---|
+| root `contents/` | 321 for 226 repos | **226** |
+| `contents/.github` | 290 for 226 repos | **140** |
+| redundant calls | 159 | **0** |
+
+An earlier attempt cached directory listings in the connection layer with
+single-flighting. It also reached zero redundancy but only −12.0%, because it
+still paid the `.github` 404s, and it cost ~205 lines and a new dependency
+against 68 net lines and none. It is recorded here because it is the fix that
+generalizes: it holds under parallel scanning, where the field approach does not
+(see below).
+
+**Correctness:** all 13,480 per-check score tuples identical, none missing.
+
+### What is not covered
+
+The field approach relies on GitHub scans running **sequentially**, which they
+currently do. `GetOrCompute` (`providers-sdk/v1/plugin/runtime.go:263`) checks
+`IsSet` and computes with no lock between the two, so under `--parallelism > 1`
+two assets could resolve `files` on the same shared resource at once and both
+fetch. That degrades to an occasional duplicate, never to wrong data, and it is
+the same exposure as **server#18630**. Fixing that guard upstream would make the
+field approach airtight and benefit every provider.
+
+No repository in the measured organization keeps a `SECURITY.md`,
+`SUPPORT.md` or `CODE_OF_CONDUCT.md` **inside `.github/`** — a code search across
+the org returns zero. The descent path is therefore the one part of the change
+with no measurement behind it, and carries unit tests instead. The positive root
+path was confirmed live against `mondoohq/.github`, which returns all three with
+their real uppercase names.
+
+`allFiles` never ran in either scan: no policy in the bundle asks for it. It is
+backed by the Git Trees API rather than `contents/`, so it neither benefits from
+nor contributes to this change. Serving `files` and the special files from one
+recursive tree call would cut 2–3 requests per repository to 1, but it changes
+which API backs a shipped field and would truncate on large repositories, so it
+belongs in its own change.
+
+The scan was stopped at 97 of 227 assets, so the percentage is measured at 43%
+completion. The redundancy share grew with completion, so a full scan would have
+saved somewhat more.
 
 ## vSphere — in draft, undecided
 
