@@ -7,9 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"sort"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
@@ -752,8 +754,47 @@ func (a *mqlAzureSubscriptionAuthorizationServiceClassicAdministrator) id() (str
 	return a.Id.Data, nil
 }
 
-// classicAdministrators lists legacy ASM co-admins / service admins on the subscription.
-// CIS 1.21 requires this to be empty. Distinct from RBAC role assignments.
+// azureProviderNotInRegion reports whether the error is ARM saying the resource
+// provider is not deployed in that region.
+//
+// A subscription's location list includes staging and edge regions that most
+// services never ship to, so any per-region fan-out hits this routinely. It
+// means there is nothing there to find, which is a different thing from being
+// unable to look.
+func azureProviderNotInRegion(err error) bool {
+	var respErr *azcore.ResponseError
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	return respErr.ErrorCode == "NoRegisteredProviderFound"
+}
+
+// azureClassicAdministratorsRetired reports whether the error is ARM saying the
+// classic administrators resource type no longer exists.
+//
+// The retirement removed the type from the Microsoft.Authorization namespace
+// rather than emptying it, so ARM answers 404 InvalidResourceType. The code is
+// checked alongside the status so that a genuinely missing subscription, which
+// is also a 404 but carries SubscriptionNotFound, still reports as the error it
+// is.
+func azureClassicAdministratorsRetired(err error) bool {
+	var respErr *azcore.ResponseError
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	return respErr.StatusCode == http.StatusNotFound && respErr.ErrorCode == "InvalidResourceType"
+}
+
+// classicAdministrators lists legacy ASM co-admins and service admins on the
+// subscription. Distinct from RBAC role assignments, which roleAssignments
+// covers.
+//
+// Azure retired classic subscription administrators on 31 August 2024 and
+// removed the resource type with them, so every subscription now answers this
+// with 404 InvalidResourceType. That is not a fault to report: it means the
+// subscription has no classic administrators, which is also the answer an audit
+// of this field is looking for. Returning the 404 instead failed the field on
+// every subscription in existence.
 func (a *mqlAzureSubscriptionAuthorizationService) classicAdministrators() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()
@@ -767,10 +808,13 @@ func (a *mqlAzureSubscriptionAuthorizationService) classicAdministrators() ([]an
 	}
 
 	pager := client.NewListPager(nil)
-	var res []any
+	res := []any{}
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
+			if azureClassicAdministratorsRetired(err) {
+				return []any{}, nil
+			}
 			return nil, err
 		}
 		for _, ca := range page.Value {
