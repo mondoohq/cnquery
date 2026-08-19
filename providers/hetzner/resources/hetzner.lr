@@ -48,7 +48,13 @@ hetzner {
   // Locations (Hetzner regions)
   locations() []hetzner.location
   // Datacenters within locations
-  datacenters() []hetzner.datacenter
+  //
+  // Deprecated in favor of locations, and of serverType.locations for
+  // where a given server type can be provisioned. Hetzner withdrew the
+  // datacenters API after 2026-10-01, so this reports null from that
+  // date on: the endpoint answers that the functionality was removed,
+  // which establishes nothing about what the project holds.
+  datacenters() @maturity("deprecated") []hetzner.datacenter
   // Storage Boxes (managed backup/file storage)
   storageBoxes() []hetzner.storageBox
   // Storage Box types (storage tiers)
@@ -861,13 +867,18 @@ private hetzner.location @defaults("id name city") {
 
 // Hetzner Cloud datacenter
 //
+// Deprecated in favor of hetzner.location, and of
+// hetzner.serverType.locations for where a given server type can be
+// provisioned. Hetzner withdrew the datacenters API after 2026-10-01
+// and requests to it now report that the functionality was removed, so
+// nothing here can be read from that date on.
+//
 // A single datacenter within a Hetzner location, identified by a slug
 // such as fsn1-dc14. Select one by its numeric id, for example
 // hetzner.datacenter(id: 4). Reports the location it belongs to, the
 // server types it supports, which of those are currently available for
-// new servers, and which are open for migration, so you can plan
-// placement and capacity.
-private hetzner.datacenter @defaults("id name") {
+// new servers, and which are open for migration.
+private hetzner.datacenter @defaults("id name") @maturity("deprecated") {
   init(id? int)
   // Datacenter ID
   id int
@@ -878,11 +889,21 @@ private hetzner.datacenter @defaults("id name") {
   // Location of the datacenter
   location() hetzner.location
   // Server types supported in this datacenter
-  supportedServerTypes() []hetzner.serverType
+  //
+  // Deprecated in favor of serverType.locations, whose available field
+  // carries the same fact per location. Hetzner stopped returning the
+  // datacenter server-type lists after 2026-10-01.
+  supportedServerTypes() @maturity("deprecated") []hetzner.serverType
   // Server types currently available for new servers in this datacenter
-  availableServerTypes() []hetzner.serverType
+  //
+  // Deprecated in favor of serverType.locations, whose available and
+  // recommended fields carry the same facts per location.
+  availableServerTypes() @maturity("deprecated") []hetzner.serverType
   // Server types available for migration into this datacenter
-  serverTypesAvailableForMigration() []hetzner.serverType
+  //
+  // Deprecated in favor of serverType.locations. Hetzner stopped
+  // returning the datacenter server-type lists after 2026-10-01.
+  serverTypesAvailableForMigration() @maturity("deprecated") []hetzner.serverType
 }
 
 // Hetzner Cloud Storage Box (managed backup/file storage)
