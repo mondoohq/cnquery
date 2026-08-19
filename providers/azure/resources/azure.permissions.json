@@ -1,7 +1,7 @@
 {
   "provider": "azure",
-  "version": "13.35.0",
-  "generated_at": "2026-08-17T13:55:03-07:00",
+  "version": "13.36.0",
+  "generated_at": "2026-08-18T22:23:51-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -105,6 +105,7 @@
     "Microsoft.DataFactory/factories/managedvirtualnetworks/managedprivateendpoints/read",
     "Microsoft.DataFactory/factories/managedvirtualnetworks/read",
     "Microsoft.DataFactory/factories/read",
+    "Microsoft.DataProtection/backupVaults/read",
     "Microsoft.Databricks/workspaces/read",
     "Microsoft.DesktopVirtualization/hostPools/read",
     "Microsoft.Devices/resource/read",
@@ -964,6 +965,12 @@
       "service": "Microsoft.DataFactory",
       "action": "NewListPager",
       "source_file": "datafactory.go"
+    },
+    {
+      "permission": "Microsoft.DataProtection/backupVaults/read",
+      "service": "Microsoft.DataProtection",
+      "action": "NewGetInSubscriptionPager",
+      "source_file": "dataprotection.go"
     },
     {
       "permission": "Microsoft.Databricks/workspaces/read",

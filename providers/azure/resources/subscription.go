@@ -317,6 +317,16 @@ func (a *mqlAzureSubscription) recoveryServices() (*mqlAzureSubscriptionRecovery
 	return svc.(*mqlAzureSubscriptionRecoveryServicesService), nil
 }
 
+func (a *mqlAzureSubscription) dataProtection() (*mqlAzureSubscriptionDataProtectionService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionDataProtectionService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionDataProtectionService), nil
+}
+
 func (a *mqlAzureSubscription) functions() (*mqlAzureSubscriptionFunctionsService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFunctionsService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

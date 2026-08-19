@@ -247,6 +247,8 @@ azure.subscription @defaults ("name") {
   containerRegistry() azure.subscription.containerRegistryService
   // Recovery Services resources in the subscription
   recoveryServices() azure.subscription.recoveryServicesService
+  // Data Protection resources in the subscription
+  dataProtection() azure.subscription.dataProtectionService
   // Azure Functions resources in the subscription
   functions() azure.subscription.functionsService
   // Service Bus resources in the subscription
@@ -18476,6 +18478,134 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   vmTemplate string
   // Number of approved private endpoint connections to the host pool
   privateEndpointConnectionCount int
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
+}
+
+// Azure Data Protection
+private azure.subscription.dataProtectionService {
+  // Subscription identifier
+  subscriptionId string
+  // Backup vaults in the subscription
+  backupVaults() []azure.subscription.dataProtectionService.backupVault
+}
+
+// Azure Backup vault
+//
+// Vault of the Data Protection resource provider, holding backups of disks,
+// blobs, database workloads, and Kubernetes clusters. This is a different
+// service from the Recovery Services vault modelled as
+// `azure.subscription.recoveryServicesService.vault`, and a subscription can
+// hold both.
+//
+// Fields cover the protections that decide whether a backup survives an
+// attacker who already holds write access: whether soft delete retains a
+// deleted backup and for how long, whether immutability prevents a retention
+// policy from being shortened, whether the data is encrypted with a
+// customer-managed key on top of infrastructure encryption, and whether
+// restores may cross a region or a subscription boundary.
+azure.subscription.dataProtectionService.backupVault @defaults("id name location softDeleteState immutabilityState") {
+  // Backup vault resource ID
+  id string
+  // Backup vault name
+  name string
+  // Azure region the vault lives in
+  location string
+  // Resource type
+  type string
+  // Backup vault tags
+  tags map[string]string
+  // Entity tag of the vault
+  etag string
+  // Provisioning state ("Succeeded", "Failed", "Provisioning", "Updating", "Unknown", or "Deleting")
+  provisioningState string
+  // Managed identity configuration
+  //
+  // Managed identity block of the vault, with keys `type` (one of
+  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
+  // `tenantId` for the system-assigned identity, and
+  // `userAssignedIdentities` mapping each assigned identity resource ID to
+  // its client and principal IDs. See userAssignedIdentities for the resolved
+  // identity resources.
+  identity dict
+  // User-assigned managed identities associated with the vault
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Soft delete state ("AlwaysOn", "On", or "Off")
+  //
+  // Soft delete retains a deleted backup for the retention period rather than
+  // removing it immediately, so a deletion can be reversed. "AlwaysOn" cannot
+  // be turned back off.
+  softDeleteState string
+  // Days a soft-deleted backup is retained before permanent removal
+  softDeleteRetentionPeriodInDays float
+  // Immutability state ("Disabled", "Unlocked", or "Locked")
+  //
+  // Immutability stops a retention policy from being shortened or a backup
+  // from being deleted before it expires. "Unlocked" can still be turned off,
+  // "Locked" cannot.
+  immutabilityState string
+  // Encryption state of the vault ("Enabled", "Disabled", or "Inconsistent")
+  //
+  // Says whether a customer-managed key is in effect. "Inconsistent" means
+  // the vault was configured for one but not every backup datastore has
+  // picked it up yet.
+  encryptionState string
+  // Infrastructure encryption state ("Enabled" or "Disabled")
+  //
+  // A second encryption pass at the storage layer, underneath the vault's own
+  // encryption. It can only be set when the vault is created.
+  infrastructureEncryption string
+  // URI of the Key Vault key encrypting the vault
+  //
+  // Empty when the vault is encrypted with the platform key rather than a
+  // customer-managed one.
+  encryptionKeyUri string
+  // Key Vault key encrypting the vault
+  encryptionKey() azure.subscription.keyVaultService.key
+  // Type of identity used to reach the encryption key ("SystemAssigned" or "UserAssigned")
+  encryptionKeyIdentityType string
+  // User-assigned managed identity used to reach the encryption key
+  //
+  // Null when the vault authenticates to the key with its system-assigned
+  // identity instead.
+  encryptionKeyIdentity() azure.subscription.managedIdentity
+  // Cross-region restore state ("Enabled" or "Disabled")
+  //
+  // Empty when the vault carries no explicit setting. When enabled, backups
+  // replicate to the paired region and can be restored there while the
+  // primary region is unavailable.
+  crossRegionRestoreState string
+  // Cross-subscription restore state ("Enabled", "Disabled", or "PermanentlyDisabled")
+  //
+  // Empty when the vault carries no explicit setting, which Azure treats as
+  // enabled. When restores are allowed across subscriptions, backup data held
+  // here can be recovered into a subscription that does not own the vault.
+  // "PermanentlyDisabled" cannot be reversed.
+  crossSubscriptionRestoreState string
+  // Regions the vault's backup data is replicated to
+  replicatedRegions []string
+  // Storage redundancy of the vault, by datastore
+  //
+  // Keys are the datastore the setting applies to ("VaultStore",
+  // "OperationalStore", or "ArchiveStore") and values the redundancy in force
+  // for it ("LocallyRedundant", "ZoneRedundant", or "GeoRedundant").
+  storageRedundancy map[string]string
+  // Business continuity and disaster recovery security level ("Excellent", "Good", "Fair", "Poor", or "NotSupported")
+  bcdrSecurityLevel string
+  // Secure score of the vault ("Maximum", "Adequate", "Minimum", "None", or "NotSupported")
+  secureScore string
+  // Whether a Resource Guard authorizes destructive operations on the vault
+  //
+  // A Resource Guard makes deleting the vault or weakening its protections
+  // require a second approval outside the vault's own RBAC.
+  isVaultProtectedByResourceGuard bool
+  // Resource Guard operation requests configured on the vault
+  //
+  // Each entry pairs a Resource Guard resource ID with the operation it
+  // guards.
+  resourceGuardOperationRequests []string
+  // Whether an alert is raised for every backup job failure ("Enabled" or "Disabled")
+  alertsForAllJobFailures string
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

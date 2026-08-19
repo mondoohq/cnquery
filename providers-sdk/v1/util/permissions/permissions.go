@@ -1897,6 +1897,9 @@ var azureServiceToARMMap = map[string]string{
 	// "Microsoft.Eventgrid" and "Microsoft.Apimanagement" for these two.
 	"eventgrid":     "Microsoft.EventGrid",
 	"apimanagement": "Microsoft.ApiManagement",
+	// Same again: the default branch would emit "Microsoft.Dataprotection",
+	// which is not a real provider namespace.
+	"dataprotection": "Microsoft.DataProtection",
 }
 
 func azureServiceToARM(service string) string {
@@ -2253,6 +2256,13 @@ func isAzureReadMethod(name string) bool {
 		"NewListByResourceGroupPager", "Get",
 		"NewListByServerPager", "NewListByAccountPager",
 		"NewListByNamespacePager",
+		// The Data Protection SDK names its subscription-wide enumeration
+		// NewGetInSubscriptionPager, which the NewList*Pager catch-all below
+		// does not reach. Other New*Pager verbs exist elsewhere in the SDKs
+		// and are also reads, but widening the catch-all to every New*Pager
+		// surfaces permissions for calls this provider already makes, and
+		// getting their strings right is separate work from this one.
+		"NewGetInSubscriptionPager",
 		// Non-paged list variants (some SDKs return the full list in one call)
 		"ListByServer", "ListBySubscription",
 	}
