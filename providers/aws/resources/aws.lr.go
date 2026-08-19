@@ -5735,6 +5735,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.acl.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetScope()).ToDataRes(types.String)
 	},
+	"aws.waf.acl.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.waf.acl.loggingConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetLoggingConfiguration()).ToDataRes(types.Resource("aws.waf.acl.loggingConfiguration"))
 	},
@@ -5764,6 +5767,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rulegroup.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.rulegroup.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRulegroup).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.waf.rulegroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRulegroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -6197,6 +6203,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.ipset.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetScope()).ToDataRes(types.String)
 	},
+	"aws.waf.ipset.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafIpset).GetRegion()).ToDataRes(types.String)
+	},
 	"aws.waf.ipset.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafIpset).GetName()).ToDataRes(types.String)
 	},
@@ -6220,6 +6229,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.regexPatternSet.scope": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRegexPatternSet).GetScope()).ToDataRes(types.String)
+	},
+	"aws.waf.regexPatternSet.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRegexPatternSet).GetRegion()).ToDataRes(types.String)
 	},
 	"aws.waf.regexPatternSet.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRegexPatternSet).GetName()).ToDataRes(types.String)
@@ -37539,6 +37551,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafAcl).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.waf.acl.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.acl.loggingConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafAcl).LoggingConfiguration, ok = plugin.RawToTValue[*mqlAwsWafAclLoggingConfiguration](v.Value, v.Error)
 		return
@@ -37581,6 +37597,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.rulegroup.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRulegroup).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rulegroup.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRulegroup).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rulegroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38283,6 +38303,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafIpset).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.waf.ipset.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafIpset).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.ipset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafIpset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -38317,6 +38341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.regexPatternSet.scope": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRegexPatternSet).Scope, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.regexPatternSet.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRegexPatternSet).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.regexPatternSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -85310,6 +85338,7 @@ type mqlAwsWafAcl struct {
 	LabelNamespace           plugin.TValue[string]
 	Rules                    plugin.TValue[[]any]
 	Scope                    plugin.TValue[string]
+	Region                   plugin.TValue[string]
 	LoggingConfiguration     plugin.TValue[*mqlAwsWafAclLoggingConfiguration]
 	AssociatedResources      plugin.TValue[[]any]
 	AssociatedLoadBalancers  plugin.TValue[[]any]
@@ -85425,6 +85454,10 @@ func (c *mqlAwsWafAcl) GetScope() *plugin.TValue[string] {
 	return &c.Scope
 }
 
+func (c *mqlAwsWafAcl) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
 func (c *mqlAwsWafAcl) GetLoggingConfiguration() *plugin.TValue[*mqlAwsWafAclLoggingConfiguration] {
 	return plugin.GetOrCompute[*mqlAwsWafAclLoggingConfiguration](&c.LoggingConfiguration, func() (*mqlAwsWafAclLoggingConfiguration, error) {
 		if c.MqlRuntime.HasRecording {
@@ -85480,6 +85513,7 @@ type mqlAwsWafRulegroup struct {
 	Description plugin.TValue[string]
 	Rules       plugin.TValue[[]any]
 	Scope       plugin.TValue[string]
+	Region      plugin.TValue[string]
 	Tags        plugin.TValue[map[string]any]
 }
 
@@ -85554,6 +85588,10 @@ func (c *mqlAwsWafRulegroup) GetRules() *plugin.TValue[[]any] {
 
 func (c *mqlAwsWafRulegroup) GetScope() *plugin.TValue[string] {
 	return &c.Scope
+}
+
+func (c *mqlAwsWafRulegroup) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlAwsWafRulegroup) GetTags() *plugin.TValue[map[string]any] {
@@ -87580,6 +87618,7 @@ type mqlAwsWafIpset struct {
 	Arn         plugin.TValue[string]
 	Id          plugin.TValue[string]
 	Scope       plugin.TValue[string]
+	Region      plugin.TValue[string]
 	Name        plugin.TValue[string]
 	Description plugin.TValue[string]
 	AddressType plugin.TValue[string]
@@ -87636,6 +87675,10 @@ func (c *mqlAwsWafIpset) GetScope() *plugin.TValue[string] {
 	return &c.Scope
 }
 
+func (c *mqlAwsWafIpset) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
 func (c *mqlAwsWafIpset) GetName() *plugin.TValue[string] {
 	return &c.Name
 }
@@ -87670,6 +87713,7 @@ type mqlAwsWafRegexPatternSet struct {
 	Arn                plugin.TValue[string]
 	Id                 plugin.TValue[string]
 	Scope              plugin.TValue[string]
+	Region             plugin.TValue[string]
 	Name               plugin.TValue[string]
 	Description        plugin.TValue[string]
 	RegularExpressions plugin.TValue[[]any]
@@ -87723,6 +87767,10 @@ func (c *mqlAwsWafRegexPatternSet) GetId() *plugin.TValue[string] {
 
 func (c *mqlAwsWafRegexPatternSet) GetScope() *plugin.TValue[string] {
 	return &c.Scope
+}
+
+func (c *mqlAwsWafRegexPatternSet) GetRegion() *plugin.TValue[string] {
+	return &c.Region
 }
 
 func (c *mqlAwsWafRegexPatternSet) GetName() *plugin.TValue[string] {
