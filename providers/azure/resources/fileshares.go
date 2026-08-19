@@ -142,6 +142,11 @@ func fileShareNfsProtocol(props *armfileshares.NfsProtocolProperties) (encryptio
 // reports a time. Parsing it here keeps a retention query readable the same way
 // across both kinds of share, instead of making one of them compare text.
 //
+// Azure writes seven fractional digits ("2026-03-15T08:12:34.0000000Z"). The
+// RFC3339 layout carries no fractional part, but time.Parse accepts one after
+// the seconds field regardless, so both that form and a bare
+// "2026-03-15T08:12:34Z" parse, and the digits are kept rather than truncated.
+//
 // A value that will not parse reports as null rather than failing the listing:
 // the resource provider is new and its timestamp format is not pinned by the
 // SDK, and one unreadable timestamp should not take the share's other fields
