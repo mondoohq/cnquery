@@ -5646,6 +5646,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.subnet.ipAllocations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetIpAllocations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.ipAllocation")))
 	},
+	"azure.subscription.networkService.subnet.interfaceIpConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetInterfaceIpConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.interface.ipConfiguration")))
+	},
 	"azure.subscription.networkService.subnet.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceSubnet).GetIpConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.virtualNetworkGateway.ipConfig")))
 	},
@@ -25213,6 +25216,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.subnet.ipAllocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceSubnet).IpAllocations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.subnet.interfaceIpConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceSubnet).InterfaceIpConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.subnet.ipConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -57593,6 +57600,7 @@ type mqlAzureSubscriptionNetworkServiceSubnet struct {
 	NatGateway                        plugin.TValue[*mqlAzureSubscriptionNetworkServiceNatGateway]
 	PrivateEndpoints                  plugin.TValue[[]any]
 	IpAllocations                     plugin.TValue[[]any]
+	InterfaceIpConfigurations         plugin.TValue[[]any]
 	IpConfigurations                  plugin.TValue[[]any]
 }
 
@@ -57778,6 +57786,22 @@ func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetIpAllocations() *plugin.TV
 		}
 
 		return c.ipAllocations()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceSubnet) GetInterfaceIpConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InterfaceIpConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.subnet", c.__id, "interfaceIpConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.interfaceIpConfigurations()
 	})
 }
 
