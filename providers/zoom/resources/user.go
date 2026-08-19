@@ -27,8 +27,9 @@ type mqlZoomUserInternal struct {
 const usersPageSize = 300
 
 // zoomSsoLoginType is the login_type Zoom reports for users who authenticate
-// through the account's SSO configuration.
-const zoomSsoLoginType = 100
+// through the account's SSO configuration. Zoom uses 101 for SSO and 100 for
+// Zoom Work Email.
+const zoomSsoLoginType = 101
 
 // userVerified reports whether the user's email address is verified. Zoom
 // encodes this as 0 (unverified) or 1 (verified).
@@ -37,9 +38,20 @@ func userVerified(u *connection.User) bool {
 }
 
 // userSsoLinked reports whether the user signs in through the account's SSO
-// configuration, derived from the login_type Zoom assigns to SSO users.
+// configuration, derived from the login type Zoom assigns to SSO users. The
+// list endpoint (GET /users) reports a scalar login_type while the single-user
+// endpoint (GET /users/{id}) reports a login_types array, so either the scalar
+// equal to the SSO type or the array containing it marks the user SSO-linked.
 func userSsoLinked(u *connection.User) bool {
-	return u.LoginType == zoomSsoLoginType
+	if u.LoginType == zoomSsoLoginType {
+		return true
+	}
+	for _, lt := range u.LoginTypes {
+		if lt == zoomSsoLoginType {
+			return true
+		}
+	}
+	return false
 }
 
 // resolveZoomUsers turns a list of member IDs into typed zoom.user resources.

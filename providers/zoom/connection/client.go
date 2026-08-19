@@ -90,8 +90,15 @@ type User struct {
 	Type        int64  `json:"type"`
 	Status      string `json:"status"`
 	// Verified is 0 or 1 (whether the user's email address is verified).
-	Verified      int        `json:"verified"`
-	LoginType     int64      `json:"login_type"`
+	Verified int `json:"verified"`
+	// LoginType is the scalar sign-in method returned by GET /users
+	// (list). 101 is SSO, 100 is Zoom Work Email.
+	LoginType int64 `json:"login_type"`
+	// LoginTypes is the array of sign-in methods returned by
+	// GET /users/{id} (single user). The list and single-user endpoints
+	// report this differently, so both are decoded and either carrying 101
+	// marks the user as SSO-linked.
+	LoginTypes    []int      `json:"login_types"`
 	RoleID        string     `json:"role_id"`
 	GroupIDs      []string   `json:"group_ids"`
 	LastLoginTime *time.Time `json:"last_login_time"`
@@ -156,25 +163,44 @@ func (c *Client) GetAccount(ctx context.Context, accountID string) (*AccountInfo
 	return &out, nil
 }
 
-// AccountSettings is the subset of Get Account Settings this provider reads:
-// meeting-security defaults, cloud-recording encryption, and the sign-in
-// session timeout.
+// AccountSettings is the subset of the default GET /accounts/{id}/settings
+// response this provider reads: meeting-security defaults, cloud recording,
+// SSO sign-in config, and the client/web re-authentication intervals.
+//
+// Field shapes verified against ZoomNet captured responses; confirm against
+// a live GET /accounts/{id}/settings. Note that meeting_authentication is a
+// top-level boolean, not nested under meeting_security, and that
+// only_authenticated_can_join_from_webclient is scoped to web-client joins
+// only (narrower than a general authenticated-join restriction).
 type AccountSettings struct {
-	MeetingSecurity struct {
+	// MeetingAuthentication is a top-level boolean in the settings response,
+	// not a member of the meeting_security object.
+	MeetingAuthentication bool `json:"meeting_authentication"`
+	MeetingSecurity       struct {
 		WaitingRoom                bool   `json:"waiting_room"`
 		MeetingPasswordRequirement bool   `json:"meeting_password"`
 		PmiPasswordRequirement     bool   `json:"pmi_password"`
 		EncryptionType             string `json:"encryption_type"`
 		E2eeAvailable              bool   `json:"end_to_end_encrypted_meetings"`
-		MeetingAuthentication      bool   `json:"meeting_authentication"`
-		OnlyAuthenticatedCanJoin   bool   `json:"only_authenticated_can_join"`
+		// OnlyAuthenticatedCanJoinFromWebclient restricts web-client joins to
+		// authenticated users only (narrower than all join methods).
+		OnlyAuthenticatedCanJoinFromWebclient bool `json:"only_authenticated_can_join_from_webclient"`
 	} `json:"meeting_security"`
 	Recording struct {
-		CloudRecording           bool `json:"cloud_recording"`
-		CloudRecordingEncryption bool `json:"cloud_recording_encryption"`
+		CloudRecording bool `json:"cloud_recording"`
 	} `json:"recording"`
 	Security struct {
-		SignInSessionTimeout int64 `json:"session_timeout"`
+		// SignInWithSso is the nested SSO configuration in the default
+		// settings response.
+		SignInWithSso struct {
+			Enable  bool     `json:"enable"`
+			Domains []string `json:"domains"`
+		} `json:"signin_with_sso"`
+		// SignAgainPeriodForInactivityOnClient/OnWeb are the minutes of
+		// inactivity before a user must re-authenticate on the desktop client
+		// and on the web, respectively.
+		SignAgainPeriodForInactivityOnClient int64 `json:"sign_again_period_for_inactivity_on_client"`
+		SignAgainPeriodForInactivityOnWeb    int64 `json:"sign_again_period_for_inactivity_on_web"`
 	} `json:"security"`
 }
 
@@ -183,24 +209,6 @@ type AccountSettings struct {
 func (c *Client) GetAccountSettings(ctx context.Context, accountID string) (*AccountSettings, error) {
 	var out AccountSettings
 	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", nil, &out); err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-// SsoSettings is the account's single sign-on configuration.
-type SsoSettings struct {
-	Enabled             bool     `json:"sso_enabled"`
-	Domains             []string `json:"domains"`
-	GroupMappingEnabled bool     `json:"group_mapping_enabled"`
-	IdpIssuer           string   `json:"idp_issuer"`
-	IdpSsoUrl           string   `json:"idp_sso_url"`
-}
-
-// GetSsoSettings fetches the account's SSO configuration.
-func (c *Client) GetSsoSettings(ctx context.Context, accountID string) (*SsoSettings, error) {
-	var out SsoSettings
-	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", url.Values{"option": {"sso"}}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -305,12 +313,19 @@ func (c *Client) GetGroup(ctx context.Context, groupID string) (*Group, error) {
 
 // GroupSettings is the meeting-security overrides configured on a group,
 // which take precedence over the account defaults for the group's members.
+//
+// Field shapes verified against ZoomNet captured responses; confirm against
+// a live GET /accounts/{id}/settings. only_authenticated_can_join_from_webclient
+// is scoped to web-client joins only (narrower than a general
+// authenticated-join restriction).
 type GroupSettings struct {
 	MeetingSecurity struct {
-		WaitingRoom              bool `json:"waiting_room"`
-		MeetingPasswordRequired  bool `json:"meeting_password"`
-		E2eeAvailable            bool `json:"end_to_end_encrypted_meetings"`
-		OnlyAuthenticatedCanJoin bool `json:"only_authenticated_can_join"`
+		WaitingRoom             bool `json:"waiting_room"`
+		MeetingPasswordRequired bool `json:"meeting_password"`
+		E2eeAvailable           bool `json:"end_to_end_encrypted_meetings"`
+		// OnlyAuthenticatedCanJoinFromWebclient restricts web-client joins to
+		// authenticated users only (narrower than all join methods).
+		OnlyAuthenticatedCanJoinFromWebclient bool `json:"only_authenticated_can_join_from_webclient"`
 	} `json:"meeting_security"`
 }
 

@@ -5,7 +5,6 @@ zoom 13.0.0
 zoom.account 13.0.0
 zoom.account.accountName 13.0.0
 zoom.account.cloudRecordingEnabled 13.0.0
-zoom.account.cloudRecordingEncryptionEnabled 13.0.0
 zoom.account.id 13.0.0
 zoom.account.meetingAuthenticationRequired 13.0.0
 zoom.account.meetingE2eeAvailable 13.0.0
@@ -15,13 +14,11 @@ zoom.account.meetingPasscodeRequired 13.0.0
 zoom.account.meetingPmiPasscodeRequired 13.0.0
 zoom.account.meetingWaitingRoomEnabled 13.0.0
 zoom.account.ownerEmail 13.0.0
-zoom.account.signInSessionTimeoutMinutes 13.0.0
+zoom.account.signAgainMinutesClient 13.0.0
+zoom.account.signAgainMinutesWeb 13.0.0
 zoom.account.sso 13.0.0
 zoom.account.sso.domains 13.0.0
 zoom.account.sso.enabled 13.0.0
-zoom.account.sso.groupMappingEnabled 13.0.0
-zoom.account.sso.idpIssuer 13.0.0
-zoom.account.sso.idpSsoUrl 13.0.0
 zoom.group 13.0.0
 zoom.group.id 13.0.0
 zoom.group.members 13.0.0

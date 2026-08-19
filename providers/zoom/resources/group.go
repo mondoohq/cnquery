@@ -175,5 +175,5 @@ func (g *mqlZoomGroup) settingsOnlyAuthenticatedUsersCanJoin() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.OnlyAuthenticatedCanJoin, nil
+	return s.MeetingSecurity.OnlyAuthenticatedCanJoinFromWebclient, nil
 }

@@ -28,9 +28,9 @@ zoom @maturity("experimental") {
 // Server-to-Server OAuth account, selected by `id` (the Zoom account ID
 // tied to the credentials used to connect). Covers the meeting-security
 // defaults applied to every meeting on the account (waiting room,
-// passcode requirements, encryption type), cloud-recording encryption,
-// whether only authenticated or account-internal users may join
-// meetings, and the sign-in session timeout enforced for the workforce.
+// passcode requirements, encryption type), cloud recording, whether
+// web-client joins are restricted to authenticated users, and the
+// client and web re-authentication intervals enforced for the workforce.
 // The account's single sign-on configuration is available through the
 // `zoom.account.sso` resource.
 zoom.account @defaults("id accountName") @maturity("experimental") {
@@ -49,39 +49,37 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
   // Default meeting encryption type
   //
   // One of `enhanced_encryption` (encrypted in transit and at rest on
-  // Zoom's servers) or `end_to_end_encryption` (E2EE, only the meeting
+  // Zoom's servers) or `e2ee` (end-to-end encryption, only the meeting
   // participants hold the decryption keys).
   meetingEncryptionType() string
   // Whether end-to-end encryption (E2EE) is available to hosts on this account
   meetingE2eeAvailable() bool
   // Whether meetings require participants to be authenticated before joining
   meetingAuthenticationRequired() bool
-  // Whether meeting participation is restricted to users signed in on this account (blocks external/guest participants)
+  // Whether web-client joins are restricted to authenticated users
+  //
+  // Corresponds to the meeting-security `only_authenticated_can_join_from_webclient`
+  // setting, which restricts joins from the browser web client (not native
+  // clients) to authenticated users.
   meetingOnlyAccountUsersCanJoin() bool
   // Whether cloud recording is enabled for the account
   cloudRecordingEnabled() bool
-  // Whether cloud recordings are encrypted at rest
-  cloudRecordingEncryptionEnabled() bool
-  // Sign-in session timeout, in minutes, before a user is forced to re-authenticate (0 means no timeout is enforced)
-  signInSessionTimeoutMinutes() int
+  // Minutes of inactivity on the desktop client before a user must sign in again (0 means no interval is enforced)
+  signAgainMinutesClient() int
+  // Minutes of inactivity on the web before a user must sign in again (0 means no interval is enforced)
+  signAgainMinutesWeb() int
 }
 
 // Zoom single sign-on (SSO) configuration
 //
-// Account-wide SSO settings: whether SSO is enabled, the email domains
-// provisioned through it, whether group membership is synced from the
-// identity provider, and the identity provider's issuer and login URL.
+// Account-wide SSO settings read from `security.signin_with_sso` in the
+// account settings: whether SSO sign-in is enabled and the email domains
+// provisioned through it.
 zoom.account.sso @defaults("enabled") @maturity("experimental") {
   // Whether SSO is enabled for the account
   enabled bool
   // Email domains provisioned through SSO
   domains []string
-  // Whether group membership is mapped from the identity provider
-  groupMappingEnabled bool
-  // Identity provider issuer URL
-  idpIssuer string
-  // Identity provider single sign-on URL
-  idpSsoUrl string
 }
 
 // Zoom user
@@ -117,7 +115,7 @@ zoom.user @defaults("id email type") @maturity("experimental") {
   // Sign-in method
   //
   // 1 (Google OAuth), 24 (Apple), 27 (Microsoft OAuth), 99 (API), 100
-  // (SSO), or 101 (Zoom Work Email), among others. Check the Zoom Users
+  // (Zoom Work Email), or 101 (SSO), among others. Check the Zoom Users
   // API docs for the current complete set.
   loginType int
   // Whether the user authenticates through the account's SSO configuration
@@ -186,6 +184,11 @@ zoom.group @defaults("id name") @maturity("experimental") {
   settingsMeetingPasscodeRequired() bool
   // Whether end-to-end encryption (E2EE) is available to the group's hosts
   settingsE2eeAvailable() bool
-  // Whether the group's meetings are restricted to users signed in on this account
+  // Whether web-client joins to the group's meetings are restricted to authenticated users
+  //
+  // Corresponds to the group meeting-security
+  // `only_authenticated_can_join_from_webclient` override, which restricts
+  // joins from the browser web client (not native clients) to authenticated
+  // users.
   settingsOnlyAuthenticatedUsersCanJoin() bool
 }

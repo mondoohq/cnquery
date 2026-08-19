@@ -117,7 +117,7 @@ func (a *mqlZoomAccount) meetingAuthenticationRequired() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.MeetingAuthentication, nil
+	return s.MeetingAuthentication, nil
 }
 
 func (a *mqlZoomAccount) meetingOnlyAccountUsersCanJoin() (bool, error) {
@@ -125,7 +125,7 @@ func (a *mqlZoomAccount) meetingOnlyAccountUsersCanJoin() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.OnlyAuthenticatedCanJoin, nil
+	return s.MeetingSecurity.OnlyAuthenticatedCanJoinFromWebclient, nil
 }
 
 func (a *mqlZoomAccount) cloudRecordingEnabled() (bool, error) {
@@ -136,20 +136,20 @@ func (a *mqlZoomAccount) cloudRecordingEnabled() (bool, error) {
 	return s.Recording.CloudRecording, nil
 }
 
-func (a *mqlZoomAccount) cloudRecordingEncryptionEnabled() (bool, error) {
-	s, err := a.fetchSettings()
-	if err != nil {
-		return false, err
-	}
-	return s.Recording.CloudRecordingEncryption, nil
-}
-
-func (a *mqlZoomAccount) signInSessionTimeoutMinutes() (int64, error) {
+func (a *mqlZoomAccount) signAgainMinutesClient() (int64, error) {
 	s, err := a.fetchSettings()
 	if err != nil {
 		return 0, err
 	}
-	return s.Security.SignInSessionTimeout, nil
+	return s.Security.SignAgainPeriodForInactivityOnClient, nil
+}
+
+func (a *mqlZoomAccount) signAgainMinutesWeb() (int64, error) {
+	s, err := a.fetchSettings()
+	if err != nil {
+		return 0, err
+	}
+	return s.Security.SignAgainPeriodForInactivityOnWeb, nil
 }
 
 // initZoomAccountSso populates the account's single sign-on singleton on
@@ -157,8 +157,9 @@ func (a *mqlZoomAccount) signInSessionTimeoutMinutes() (int64, error) {
 // zoom.account.sso is a directly-addressable resource whose dotted name would
 // otherwise collide with an sso field on zoom.account and leave its fields
 // unset when queried as `zoom.account.sso`. There is exactly one SSO
-// configuration per connected account, so it resolves from the connection
-// alone.
+// configuration per connected account, and it lives nested under
+// security.signin_with_sso in the default GET /accounts/{id}/settings
+// response, so it resolves from that single settings call.
 func initZoomAccountSso(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	// fast path: the caller already provided a populated resource
 	if len(args) > 1 {
@@ -166,16 +167,14 @@ func initZoomAccountSso(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	conn := runtime.Connection.(*connection.ZoomConnection)
-	s, err := conn.Client().GetSsoSettings(context.Background(), conn.AccountID())
+	s, err := conn.Client().GetAccountSettings(context.Background(), conn.AccountID())
 	if err != nil {
 		return nil, nil, err
 	}
 
+	sso := s.Security.SignInWithSso
 	args["__id"] = llx.StringData(conn.AccountID() + "/sso")
-	args["enabled"] = llx.BoolData(s.Enabled)
-	args["domains"] = llx.ArrayData(strToAnyList(s.Domains), types.String)
-	args["groupMappingEnabled"] = llx.BoolData(s.GroupMappingEnabled)
-	args["idpIssuer"] = llx.StringData(s.IdpIssuer)
-	args["idpSsoUrl"] = llx.StringData(s.IdpSsoUrl)
+	args["enabled"] = llx.BoolData(sso.Enable)
+	args["domains"] = llx.ArrayData(strToAnyList(sso.Domains), types.String)
 	return args, nil, nil
 }

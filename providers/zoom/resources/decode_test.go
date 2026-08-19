@@ -110,21 +110,27 @@ func TestUserVerified(t *testing.T) {
 
 func TestUserSsoLinked(t *testing.T) {
 	cases := []struct {
-		name      string
-		loginType int64
-		want      bool
+		name       string
+		loginType  int64
+		loginTypes []int
+		want       bool
 	}{
-		{"sso login type", 100, true},
-		{"google oauth", 1, false},
-		{"zero default", 0, false},
-		{"api login type", 99, false},
-		{"zoom work email", 101, false},
+		{"sso scalar login type", 101, nil, true},
+		{"zoom work email scalar", 100, nil, false},
+		{"google oauth", 1, nil, false},
+		{"zero default", 0, nil, false},
+		{"api login type", 99, nil, false},
+		// GET /users/{id} reports login_types as an array; SSO in the array
+		// still marks the user SSO-linked even when the scalar is absent.
+		{"sso in array", 0, []int{101}, true},
+		{"non-sso array", 0, []int{100}, false},
+		{"sso mixed array", 0, []int{100, 101}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			u := &connection.User{LoginType: tc.loginType}
+			u := &connection.User{LoginType: tc.loginType, LoginTypes: tc.loginTypes}
 			if got := userSsoLinked(u); got != tc.want {
-				t.Errorf("userSsoLinked(%d): got %v, want %v", tc.loginType, got, tc.want)
+				t.Errorf("userSsoLinked(scalar=%d, array=%v): got %v, want %v", tc.loginType, tc.loginTypes, got, tc.want)
 			}
 		})
 	}
