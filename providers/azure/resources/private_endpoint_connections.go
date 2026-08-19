@@ -72,6 +72,24 @@ func newPrivateLinkServiceConnectionState(runtime *plugin.Runtime, connectionID 
 		})
 }
 
+// dictStringPtr returns a pointer to the string at key, and nil when the key is
+// absent or holds something other than a string.
+//
+// It keeps two different answers apart. A key ARM never sent is unknown, and
+// reads as null. A key ARM sent as "" is a value it reported, and reads as the
+// empty string.
+func dictStringPtr(m map[string]any, key string) *string {
+	v, ok := m[key]
+	if !ok {
+		return nil
+	}
+	s, ok := v.(string)
+	if !ok {
+		return nil
+	}
+	return &s
+}
+
 func azurePrivateEndpointConnectionToMql(runtime *plugin.Runtime, entry any) (plugin.Resource, error) {
 	dict, err := convert.JsonToDict(entry)
 	if err != nil {
@@ -146,21 +164,15 @@ func azurePrivateEndpointConnectionToMql(runtime *plugin.Runtime, entry any) (pl
 			args["provisioningState"] = llx.StringData(provState)
 		}
 		if cs, ok := props["privateLinkServiceConnectionState"].(map[string]any); ok && cs != nil {
-			// Derive a unique cache key from the parent connection so multiple
-			// connection states never collide on an empty __id.
-			stateArgs := map[string]*llx.RawData{
-				"__id": llx.StringData(id + "/privateLinkServiceConnectionState"),
-			}
-			if v, _ := cs["actionsRequired"].(string); v != "" {
-				stateArgs["actionsRequired"] = llx.StringData(v)
-			}
-			if v, _ := cs["description"].(string); v != "" {
-				stateArgs["description"] = llx.StringData(v)
-			}
-			if v, _ := cs["status"].(string); v != "" {
-				stateArgs["status"] = llx.StringData(v)
-			}
-			stateRes, err := CreateResource(runtime, ResourceAzureSubscriptionPrivateEndpointConnectionConnectionState, stateArgs)
+			// Through the same helper the per-SDK callers use. Building the args
+			// here instead is what left an absent field unset rather than null:
+			// a key that never lands in args crosses the plugin boundary as an
+			// empty DataRes. actionsRequired is the one that showed it, because
+			// a connection needing no action is the normal case.
+			stateRes, err := newPrivateLinkServiceConnectionState(runtime, id,
+				dictStringPtr(cs, "actionsRequired"),
+				dictStringPtr(cs, "description"),
+				dictStringPtr(cs, "status"))
 			if err != nil {
 				return nil, err
 			}
