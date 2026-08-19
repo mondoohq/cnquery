@@ -412,8 +412,8 @@ github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.1 h1:tf9+nPZ/1
 github.com/stackitcloud/stackit-sdk-go/services/certificates v1.9.1/go.mod h1:eJpB3/pukz+KzVPVHQ4g3DVtQkxGga18VbFBhq9ugdY=
 github.com/stackitcloud/stackit-sdk-go/services/dns v0.22.1 h1:vC0GpKVKH1Tce9VNyZTMWbheyGGS9a9GZWv6H5/z4Ek=
 github.com/stackitcloud/stackit-sdk-go/services/dns v0.22.1/go.mod h1:FiYSv3D9rzgEVzi8Mpq5oYZBosrasa5uUYqVdEIbM1U=
-github.com/stackitcloud/stackit-sdk-go/services/iaas v1.14.0 h1:oT8MPM4nEV/5O09+4SBmo+sT1nuxSyA6YWmK+pdNQog=
-github.com/stackitcloud/stackit-sdk-go/services/iaas v1.14.0/go.mod h1:gkUAQcOPukQQhER997HZe50WQK9JblwFc4O9PHExVQo=
+github.com/stackitcloud/stackit-sdk-go/services/iaas v1.14.1 h1:P8XhOi8TLA7NbLHhxU8dCJjgQpha/65agos3pI59+vw=
+github.com/stackitcloud/stackit-sdk-go/services/iaas v1.14.1/go.mod h1:/QpOsaCOQjwGgQqG8y9xXqryp25AfkorPjInX9xIeOU=
 github.com/stackitcloud/stackit-sdk-go/services/kms v1.13.0 h1:4S9gcTlijtvlF8wYZR5anbQ98oIP2+fIaEsvBXluux4=
 github.com/stackitcloud/stackit-sdk-go/services/kms v1.13.0/go.mod h1:pVaCmb1ZHAPGVRlSlBlVOjThp9Tb2sX9+nRX0M+d1KU=
 github.com/stackitcloud/stackit-sdk-go/services/loadbalancer v1.15.1 h1:+NT2okD80TlFNDTKSgaEvV/o7LevTrATqcDL0r4nuhU=
