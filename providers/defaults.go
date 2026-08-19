@@ -1011,6 +1011,21 @@ var DefaultProviders Providers = map[string]*Provider{
 		},
 	},
 
+	"oracledb": {
+		Provider: &plugin.Provider{
+			Name:            "oracledb",
+			ID:              "go.mondoo.com/mql-enterprise-providers/providers/oracledb",
+			ConnectionTypes: []string{"oracledb"},
+			Connectors: []plugin.Connector{
+				{
+					Name:  "oracledb",
+					Use:   "oracledb [host]",
+					Short: "an Oracle Database",
+				},
+			},
+		},
+	},
+
 	"os": {
 		Provider: &plugin.Provider{
 			Name:            "os",
