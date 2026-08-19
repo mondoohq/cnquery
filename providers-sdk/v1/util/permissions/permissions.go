@@ -1910,6 +1910,9 @@ var azureServiceToARMMap = map[string]string{
 	// Same again: the default branch would emit "Microsoft.Elasticsan", which
 	// is not a real provider namespace.
 	"elasticsan": "Microsoft.ElasticSan",
+	// Same again: the default branch would emit "Microsoft.Storagecache",
+	// which is not a real provider namespace.
+	"storagecache": "Microsoft.StorageCache",
 }
 
 func azureServiceToARM(service string) string {

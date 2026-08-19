@@ -367,6 +367,16 @@ func (a *mqlAzureSubscription) elasticSan() (*mqlAzureSubscriptionElasticSanServ
 	return svc.(*mqlAzureSubscriptionElasticSanService), nil
 }
 
+func (a *mqlAzureSubscription) storageCache() (*mqlAzureSubscriptionStorageCacheService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionStorageCacheService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionStorageCacheService), nil
+}
+
 func (a *mqlAzureSubscription) functions() (*mqlAzureSubscriptionFunctionsService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFunctionsService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

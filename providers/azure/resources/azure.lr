@@ -258,6 +258,9 @@ azure.subscription @defaults ("name") {
 
   // Azure Elastic SAN resources in the subscription
   elasticSan() azure.subscription.elasticSanService
+
+  // Azure Managed Lustre resources in the subscription
+  storageCache() azure.subscription.storageCacheService
   // Azure Functions resources in the subscription
   functions() azure.subscription.functionsService
   // Service Bus resources in the subscription
@@ -19351,4 +19354,115 @@ private azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetwo
   action string
   // Subnet the rule admits
   subnet() azure.subscription.networkService.subnet
+}
+
+// Azure Managed Lustre
+private azure.subscription.storageCacheService {
+  // Subscription identifier
+  subscriptionId string
+  // Azure Managed Lustre file systems in the subscription
+  amlFilesystems() []azure.subscription.storageCacheService.amlFilesystem
+}
+
+// Azure Managed Lustre file system
+//
+// Managed Lustre cluster providing a parallel file system to compute in a
+// delegated subnet, optionally backed by blob storage that it hydrates from
+// and archives to. Query a file system to read whether its data at rest is
+// protected by a customer-managed key rather than the platform key, how root
+// access from clients is squashed, which subnet the file system is reachable
+// from, and which blob containers hold its hydration and logging data.
+azure.subscription.storageCacheService.amlFilesystem @defaults("id name location provisioningState") {
+  // File system resource ID
+  id string
+  // File system name
+  name string
+  // Azure region the file system lives in
+  location string
+  // Resource type
+  type string
+  // File system tags
+  tags map[string]string
+  // Availability zones the file system is pinned to
+  zones []string
+  // SKU name of the file system
+  skuName string
+  // Provisioning state ("Succeeded", "Failed", "Creating", "Deleting", "Updating", or "Canceled")
+  provisioningState string
+  // Managed identity configuration
+  //
+  // Managed identity block of the file system, with keys `type` (one of
+  // "UserAssigned" or "None"), `principalId` and `tenantId`, and
+  // `userAssignedIdentities` mapping each assigned identity resource ID to
+  // its client and principal IDs. A user-assigned identity is what reaches
+  // the customer-managed key. See userAssignedIdentities for the resolved
+  // identity resources.
+  identity dict
+  // User-assigned managed identities associated with the file system
+  userAssignedIdentities() []azure.subscription.managedIdentity
+  // Provisioned storage capacity in TiB
+  storageCapacityTiB float
+  // Storage capacity currently available in TiB
+  currentStorageCapacityTiB float
+  // Provisioned throughput in MB/s
+  throughputProvisionedMbps int
+  // Identifier of the underlying Lustre cluster
+  clusterUuid string
+  // Health state of the file system ("Available", "Degraded", "Maintenance", "Transitioning", or "Unavailable")
+  healthState string
+  // Machine-readable code behind the health state
+  healthStatusCode string
+  // Description behind the health state
+  healthStatusDescription string
+  // URL of the Key Vault key encrypting the file system
+  //
+  // Empty when the file system is encrypted with the platform key rather
+  // than a customer-managed one.
+  keyEncryptionKeyUrl string
+  // Key Vault key encrypting the file system
+  keyEncryptionKey() azure.subscription.keyVaultService.key
+  // Key Vault holding the encryption key
+  keyEncryptionKeyVault() azure.subscription.keyVaultService.vault
+  // Subnet the file system is reachable from
+  subnet() azure.subscription.networkService.subnet
+  // Root squash mode ("All", "RootOnly", or "None")
+  //
+  // Squashing maps a client's root user to an unprivileged UID and GID, so
+  // "None" means a client that mounts the file system as root keeps root on
+  // it. Clients listed in rootSquashNoSquashNidLists are exempt from
+  // whichever mode applies.
+  rootSquashMode string
+  // Lustre network identifiers exempt from root squash
+  //
+  // A semicolon separated list of NID ranges. Clients matching an entry keep
+  // the identity they mount with regardless of rootSquashMode.
+  rootSquashNoSquashNidLists string
+  // UID that a squashed client's root user is mapped to
+  rootSquashUid int
+  // GID that a squashed client's root group is mapped to
+  rootSquashGid int
+  // Status of the root squash configuration
+  rootSquashStatus string
+  // Blob container the file system hydrates from and archives to
+  //
+  // Null when the file system has no blob integration configured.
+  hsmContainer() azure.subscription.storageService.account.container
+  // Blob container the file system writes hydration and archive logs to
+  hsmLoggingContainer() azure.subscription.storageService.account.container
+  // Prefix limiting which blobs were imported into the namespace
+  hsmImportPrefix string
+  // Prefixes limiting which blobs were imported into the namespace at creation
+  hsmImportPrefixesInitial []string
+  // Day of the week maintenance runs ("Monday" through "Sunday")
+  maintenanceWindowDayOfWeek string
+  // Time of day maintenance runs, in UTC, as "HH:MM"
+  maintenanceWindowTimeOfDayUtc string
+  // Lustre version the file system runs
+  lustreVersion string
+  // Address of the management service clients mount against
+  mgsAddress string
+  // Mount command clients use to reach the file system
+  mountCommand string
+  // Creation and last-modification provenance recorded by Azure Resource Manager
+  systemMetadata() azure.subscription.systemData
 }
