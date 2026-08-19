@@ -35,6 +35,11 @@ type ProviderRegistry interface {
 
 	// DownloadProvider downloads a provider package and returns a ReadCloser for the content
 	DownloadProvider(ctx context.Context, name, version, os, arch string) (io.ReadCloser, error)
+
+	// DownloadProviderMetadata downloads only a provider's config (the
+	// contents of <name>.json) and resource schema (the contents of
+	// <name>.resources.json), without the provider binary.
+	DownloadProviderMetadata(ctx context.Context, name, version string) (confJSON []byte, schemaJSON []byte, err error)
 }
 
 // MondooProviderRegistry implements ProviderRegistry for Mondoo's provider registry
@@ -154,4 +159,62 @@ func (r *MondooProviderRegistry) DownloadProvider(ctx context.Context, name, ver
 	// Wrap with idle timeout so slow-but-active downloads succeed while
 	// truly stalled transfers are detected. Callers just read and close.
 	return httpx.NewIdleTimeoutReader(res.Body, httpx.DownloadTimeout()), nil
+}
+
+// DownloadProviderMetadata downloads only a provider's config and resource
+// schema. The registry publishes these alongside the binary archives as
+// provider.json and schema.json, so schema-only installs don't have to pull
+// the (much larger) provider binary down.
+func (r *MondooProviderRegistry) DownloadProviderMetadata(ctx context.Context, name, version string) ([]byte, []byte, error) {
+	confJSON, err := r.downloadReleaseFile(ctx, name, version, "provider.json")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	schemaJSON, err := r.downloadReleaseFile(ctx, name, version, "schema.json")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return confJSON, schemaJSON, nil
+}
+
+// downloadReleaseFile fetches a single file from a provider's release
+// directory, e.g. <base>/<name>/<version>/schema.json.
+func (r *MondooProviderRegistry) downloadReleaseFile(ctx context.Context, name, version, filename string) ([]byte, error) {
+	downloadURL, err := url.JoinPath(r.BaseURL, name, version, filename)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to construct download URL")
+	}
+
+	log.Debug().Str("url", downloadURL).Msg("downloading provider file from URL")
+
+	client, err := httpClientWithRetry()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to build download request")
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to download "+filename+" for "+name+"-"+version)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusNotFound {
+		return nil, errors.New("cannot find " + filename + " for provider " + name + "-" + version + " under url " + downloadURL)
+	} else if res.StatusCode != http.StatusOK {
+		log.Debug().Str("url", downloadURL).Int("status", res.StatusCode).Msg("failed to download from URL (status code)")
+		return nil, errors.New("failed to download " + filename + " for " + name + "-" + version + ", received status code: " + res.Status)
+	}
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read "+filename+" for "+name+"-"+version)
+	}
+	return data, nil
 }
