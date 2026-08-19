@@ -98,6 +98,8 @@ digitalocean {
   secrets() []digitalocean.secret
   // Account billing balance and month-to-date usage
   billing() digitalocean.billing
+  // Teams belonging to the organization the token is scoped to
+  teams() []digitalocean.team
 }
 
 // DigitalOcean account
@@ -1796,6 +1798,36 @@ digitalocean.cdn @defaults("id origin") {
   customDomain string
   // Time the resource was created
   createdAt time
+}
+
+// DigitalOcean organization team
+//
+// Team within a DigitalOcean organization, which is the boundary
+// resources and access are divided along. The `memberCount` field
+// reports how many people the team carries, `status` distinguishes a
+// team that has joined the organization from one still pending, and
+// `joinedOrganizationAt` dates the join. Teams are only visible to a
+// token scoped to an organization; a token scoped to a plain account
+// reports none. The DigitalOcean API exposes no per-member listing, so
+// individual members and the roles they hold are not queryable.
+digitalocean.team @defaults("name status memberCount") {
+  // Unique identifier for the team
+  id int
+  // Universal unique identifier for the team
+  uuid string
+  // Human-readable name for the team
+  name string
+  // Email address associated with the team
+  email string
+  // Number of members on the team
+  memberCount int
+  // Team's membership status within the organization
+  //
+  // Either "joined" for a team that is part of the organization, or
+  // "pending" for one that has been invited and has not accepted.
+  status string
+  // Time the team joined the organization
+  joinedOrganizationAt time
 }
 
 // DigitalOcean tag
