@@ -210,6 +210,17 @@ func (a *mqlAzureSubscriptionRecoveryServicesService) deletedVaults() ([]any, er
 				if err != nil {
 					// One unreachable or access-denied region shouldn't fail the
 					// whole listing; log it and continue with the rest.
+					//
+					// Most of them are neither. The location list is every region
+					// the subscription can see, and Recovery Services is not
+					// deployed in all of them: staging and edge regions answer
+					// NoRegisteredProviderFound. That is an expected absence, so
+					// it stays out of the warning stream a real access problem
+					// needs to stand out in.
+					if azureProviderNotInRegion(err) {
+						log.Debug().Err(err).Str("location", location).Msg("recovery services is not available in region")
+						return nil
+					}
 					log.Warn().Err(err).Str("location", location).Msg("could not list deleted recovery services vaults in region")
 					return nil
 				}
