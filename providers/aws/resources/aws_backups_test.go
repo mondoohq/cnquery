@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
+	backuptypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -79,4 +80,29 @@ func TestBackupVaultArgsAreSettableFields(t *testing.T) {
 	// The encryption key reaches the resource through the typed encryptionKey
 	// accessor, never as a raw ARN argument.
 	assert.NotContains(t, args, "encryptionKeyArn")
+}
+
+// TestBackupRecoveryPointArgsAreSettableFields pins every argument the
+// recovery point constructor passes to a field the generated schema can
+// actually set. SetAllData rejects an unknown key outright, so a stale
+// argument left behind by a schema change fails the whole resource - and this
+// constructor is on both the listing path and the per-recovery-point describe.
+func TestBackupRecoveryPointArgsAreSettableFields(t *testing.T) {
+	args := backupRecoveryPointArgs(backuptypes.RecoveryPointByBackupVault{
+		RecoveryPointArn: aws.String("arn:aws:backup:us-east-1:123456789012:recovery-point:abc"),
+		EncryptionKeyArn: aws.String("arn:aws:kms:us-east-1:123456789012:key/abc"),
+		IamRoleArn:       aws.String("arn:aws:iam::123456789012:role/service-role/AWSBackupDefaultServiceRole"),
+		IsEncrypted:      true,
+	}, map[string]any{})
+
+	require.NotEmpty(t, args)
+	for key := range args {
+		_, ok := setDataFields["aws.backup.vaultRecoveryPoint."+key]
+		assert.True(t, ok, "aws.backup.vaultRecoveryPoint has no settable field %q", key)
+	}
+
+	// Both ARNs reach the resource through typed accessors, never as raw
+	// arguments.
+	assert.NotContains(t, args, "encryptionKeyArn")
+	assert.NotContains(t, args, "iamRoleArn")
 }

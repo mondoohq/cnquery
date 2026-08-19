@@ -267,20 +267,36 @@ func newMqlBackupRecoveryPoint(runtime *plugin.Runtime, rp backuptypes.RecoveryP
 	if err != nil {
 		return nil, err
 	}
-	return CreateResource(runtime, "aws.backup.vaultRecoveryPoint",
-		map[string]*llx.RawData{
-			"arn":                  llx.StringDataPtr(rp.RecoveryPointArn),
-			"completionDate":       llx.TimeDataPtr(rp.CompletionDate),
-			"createdAt":            llx.TimeDataPtr(rp.CreationDate),
-			"createdBy":            llx.MapData(createdBy, types.String),
-			"encryptionKeyArn":     llx.StringDataPtr(rp.EncryptionKeyArn),
-			"iamRoleArn":           llx.StringDataPtr(rp.IamRoleArn),
-			"isEncrypted":          llx.BoolData(rp.IsEncrypted),
-			"resourceType":         llx.StringDataPtr(rp.ResourceType),
-			"status":               llx.StringData(string(rp.Status)),
-			"sourceResourceArn":    llx.StringDataPtr(rp.ResourceArn),
-			"sourceBackupVaultArn": llx.StringDataPtr(rp.SourceBackupVaultArn),
-		})
+	res, err := CreateResource(runtime, "aws.backup.vaultRecoveryPoint",
+		backupRecoveryPointArgs(rp, createdBy))
+	if err != nil {
+		return nil, err
+	}
+	// The KMS key and the IAM role are not arguments: the schema exposes both
+	// as typed accessors, which read the ARNs back off the internal cache.
+	mqlRP := res.(*mqlAwsBackupVaultRecoveryPoint)
+	mqlRP.cacheEncryptionKeyArn = convert.ToValue(rp.EncryptionKeyArn)
+	mqlRP.cacheIamRoleArn = convert.ToValue(rp.IamRoleArn)
+	return mqlRP, nil
+}
+
+// backupRecoveryPointArgs maps a recovery point onto the fields
+// aws.backup.vaultRecoveryPoint declares. Every key has to be a settable
+// field: SetAllData fails the whole resource on an unknown one, so the two
+// ARNs the schema exposes through typed accessors - encryptionKey and iamRole
+// - are seeded on the internal cache instead of passed here.
+func backupRecoveryPointArgs(rp backuptypes.RecoveryPointByBackupVault, createdBy map[string]any) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"arn":                  llx.StringDataPtr(rp.RecoveryPointArn),
+		"completionDate":       llx.TimeDataPtr(rp.CompletionDate),
+		"createdAt":            llx.TimeDataPtr(rp.CreationDate),
+		"createdBy":            llx.MapData(createdBy, types.String),
+		"isEncrypted":          llx.BoolData(rp.IsEncrypted),
+		"resourceType":         llx.StringDataPtr(rp.ResourceType),
+		"status":               llx.StringData(string(rp.Status)),
+		"sourceResourceArn":    llx.StringDataPtr(rp.ResourceArn),
+		"sourceBackupVaultArn": llx.StringDataPtr(rp.SourceBackupVaultArn),
+	}
 }
 
 func (a *mqlAwsBackupVault) recoveryPoints() ([]any, error) {
