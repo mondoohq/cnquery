@@ -226,10 +226,17 @@ type mqlAlicloudWafDefenseResourceInternal struct {
 // read: claiming delivery is on would assert an audit trail that may not exist.
 func (r *mqlAlicloudWafDefenseResource) logDeliveryEnabled() (bool, error) {
 	if r.parentInstance == nil {
+		log.Debug().Str("resource", r.Resource.Data).
+			Msg("alicloud> WAF protected object reached without its instance, reporting log delivery off")
 		return false, nil
 	}
 	statuses, err := r.parentInstance.resourceLogStatuses()
 	if err != nil || statuses == nil {
+		// The false is deliberate (an unread status must not read as an audit
+		// trail nobody confirmed), but it is indistinguishable from a genuine
+		// "delivery is off", so the cause is logged rather than dropped.
+		log.Debug().Err(err).Str("resource", r.Resource.Data).
+			Msg("alicloud> could not read WAF per-resource log status, reporting log delivery off")
 		return false, nil
 	}
 	return statuses[r.Resource.Data], nil

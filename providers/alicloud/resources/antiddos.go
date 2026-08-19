@@ -269,10 +269,19 @@ func (r *mqlAlicloudAntiddosWebRule) logLogstoreName() (string, error) {
 	return tea.StringValue(status.SlsLogstore), nil
 }
 
-// logProject resolves the destination project. The API reports no region for
-// it, so the instance's own center region is used, which is where Anti-DDoS
-// provisions the project. A project that does not resolve degrades to null
-// rather than failing the query, and logProjectName still carries the name.
+// logProject resolves the destination project.
+//
+// DescribeWebAccessLogStatus carries no region for the destination: its whole
+// response is SlsStatus, SlsProject and SlsLogstore. So unlike Cloud Firewall,
+// which reads the destination region straight off DescribeLogStoreInfo, the
+// region here has to be assumed, and the assumption is the instance's own
+// center region, which is where Anti-DDoS provisions the project (its name has
+// the region in it: ddoscoo-project-<uid>-cn-hangzhou).
+//
+// If that ever fails to hold, the reference degrades to null rather than
+// failing the query, and logProjectName still carries the name the API
+// reported. Should a future SDK version add a region to this response, prefer
+// it over the assumption.
 func (r *mqlAlicloudAntiddosWebRule) logProject() (*mqlAlicloudLogProject, error) {
 	status := r.fetchLogStatus()
 	if status == nil || tea.StringValue(status.SlsProject) == "" {
