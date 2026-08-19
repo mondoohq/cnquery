@@ -3,22 +3,44 @@
 
 package resources
 
-import (
-	"strings"
-	"time"
-)
-
 // The structs below mirror what the Rancher Manager v3 API puts on the wire.
 //
-// That shape is not the shape of the Kubernetes objects behind it. Rancher
+// Every field name and type here is taken from Rancher's own generated v3
+// client, which is machine generated from the schema a running server serves
+// after every Norman mapper has been applied. Two upstream revisions are the
+// source, both pinned:
+//
+//	rancher/rancher v2.12.9 (db2754edc35189187bb10c524601d3d62642ff9b)
+//	  pkg/client/generated/management/v3/zz_generated_*.go
+//	  pkg/client/generated/project/v3/zz_generated_docker_credential.go
+//	  pkg/client/generated/project/v3/zz_generated_registry_credential.go
+//	rancher/rancher v2.11.6 (8e2eb63d5d2b4744ab3b4ab44de573106519d77d)
+//	  pkg/client/generated/management/v3/zz_generated_cluster_template.go
+//	  pkg/client/generated/management/v3/zz_generated_cluster_template_revision.go
+//
+// The second revision is needed because 2.12 deleted the cluster template
+// types along with RKE1, while servers still running 2.11 serve them.
+//
+// The generated package is not imported, and wireformat_test.go records the
+// measurement and the reasons. The short version: the generated structs and the
+// Norman client live in one Go package, so the types cannot be taken without
+// the transport, and three of those structs decode credentials this provider
+// must never hold. What is adopted instead is the generated *field inventory*:
+// wireformat_test.go carries the wire names upstream declares for each type,
+// verbatim from its generated `<Type>Field<Name>` constants, and asserts that
+// every tag below is one of them and that no credential-bearing name is.
+//
+// The wire shape is not the shape of the Kubernetes objects behind it. Rancher
 // serves the management API through Norman, which flattens metadata, spec and
 // status into one object, renames creationTimestamp to created and uid to uuid,
 // moves a resource's displayName onto name and its Kubernetes name onto id, and
 // rewrites every reference field ending in Name to end in Id. So a cluster's
 // clusterName arrives as clusterId, a binding's roleTemplateName as
 // roleTemplateId, and a role template's roleTemplateNames as roleTemplateIds.
-// Fields carrying a password are declared write-only in the schema and are not
-// returned at all; none of them are modeled here either way.
+//
+// The `id` every record below decodes is contributed by norman's embedded
+// types.Resource rather than by the generated struct, which is why it has no
+// `<Type>FieldID` constant upstream.
 //
 // Timestamps arrive as RFC 3339 strings, and an absent one is an empty string
 // rather than a null, which is why every timestamp goes through parseTime and
@@ -35,6 +57,17 @@ type settingRecord struct {
 }
 
 // clusterRecord is one entry of /v3/clusters.
+//
+// The generated Cluster declares 77 fields; this decodes 20 of them, plus the
+// id norman contributes. Among the ones left out are aadClientSecret,
+// aadClientCertSecret, caCert, clusterSecrets, openStackSecret,
+// privateRegistrySecret, s3CredentialSecret, serviceAccountTokenSecret,
+// virtualCenterSecret, vsphereSecret and weavePasswordSecret, and the
+// aksConfig, eksConfig, gkeConfig, rancherKubernetesEngineConfig, appliedSpec
+// and failedSpec specifications that carry provisioning credentials of their
+// own. None of them has a field here to land in, and
+// TestNoRecordTypeDecodesAnUpstreamCredentialField holds that open against the
+// upstream inventory rather than against this list.
 type clusterRecord struct {
 	ID                   string            `json:"id"`
 	Name                 string            `json:"name"`
@@ -80,6 +113,13 @@ type localClusterAuthEndpoint struct {
 }
 
 // projectRecord is one entry of /v3/projects.
+//
+// ResourceQuota and ContainerDefaultResourceLimit stay map[string]any rather
+// than the generated *ProjectResourceQuota and *ContainerResourceLimit. Both
+// reach MQL as dicts, and the generated structs are closed lists: a quota key
+// Rancher adds, or an extended resource under a name the struct does not
+// declare, would decode to nothing and a project with a quota would report an
+// incomplete one. A map keeps whatever the server sent.
 type projectRecord struct {
 	ID                            string            `json:"id"`
 	Name                          string            `json:"name"`
@@ -167,6 +207,15 @@ type bindingRecord struct {
 
 // clusterTemplateRecord is one entry of /v3/clusterTemplates, which exists on
 // Rancher 2.11 and older only.
+//
+// Rancher 2.12 deleted the generated ClusterTemplate type with the rest of
+// RKE1, so this and clusterTemplateRevisionRecord are pinned to the 2.11.6
+// generated client. A server still serving the endpoint is by definition
+// running a release that still has the type.
+//
+// Members stays a []map[string]any rather than the generated []Member. The
+// members field reaches MQL as a dict, and decoding through the generated
+// struct would silently drop any key outside its five fields.
 type clusterTemplateRecord struct {
 	ID                string           `json:"id"`
 	Name              string           `json:"name"`
@@ -177,9 +226,20 @@ type clusterTemplateRecord struct {
 }
 
 // clusterTemplateRevisionRecord is one entry of /v3/clusterTemplateRevisions.
-// The revision's clusterConfig is deliberately not decoded: it carries the
-// whole cluster specification, including credential-bearing sections, and none
-// of it is modeled.
+//
+// This is the worst-populated type in the whole API for credential material:
+// the generated ClusterTemplateRevision declares thirty-one fields, of which
+// fifteen are named secrets (aadClientSecret, aadClientCertSecret,
+// aciAPICUserKeySecret, aciKafkaClientKeySecret, aciTokenSecret,
+// bastionHostSSHKeySecret, kubeletExtraEnvSecret, openStackSecret,
+// privateRegistryECRSecret, privateRegistrySecret, s3CredentialSecret,
+// secretsEncryptionProvidersSecret, virtualCenterSecret, vsphereSecret,
+// weavePasswordSecret) and one, clusterConfig, is the whole cluster
+// specification. Seven fields are decoded and none of those is among them.
+//
+// Questions stays a []map[string]any for the same reason Members does on the
+// template: it reaches MQL as a dict, and the generated []Question would
+// narrow it to that struct's fields.
 type clusterTemplateRevisionRecord struct {
 	ID                string           `json:"id"`
 	Name              string           `json:"name"`
@@ -241,6 +301,12 @@ type authConfigRecord struct {
 //
 // TTLMillis is spelled ttl on the wire, not ttlMillis, and the timestamps are
 // strings rather than the Kubernetes time objects the stored type uses.
+//
+// The generated Token declares a Token string tagged json:"token" alongside
+// these, which is the token value itself. It is deliberately absent: a struct
+// without the field cannot decode the value whatever the server sends, whereas
+// a struct with it would hold the secret in process and one careless field
+// mapping away from a query result.
 type tokenRecord struct {
 	ID                 string `json:"id"`
 	UserID             string `json:"userId"`
@@ -259,8 +325,12 @@ type tokenRecord struct {
 	ClusterID          string `json:"clusterId"`
 }
 
-// userRecord is one entry of /v3/users. The password field is write-only in the
-// schema and is not decoded here in any case.
+// userRecord is one entry of /v3/users.
+//
+// The generated User declares a Password string tagged json:"password", which
+// the schema marks write-only. Write-only is the server's current behavior; not
+// having the field is this provider's own guarantee, and the second is the one
+// worth relying on.
 type userRecord struct {
 	ID                 string   `json:"id"`
 	Username           string   `json:"username"`
@@ -276,9 +346,11 @@ type userRecord struct {
 // namespacedDockerCredentials collection.
 //
 // The registries map is decoded into registryAccount, which carries the user
-// name only. The API's own shape also has password, auth and email; leaving
-// them off the struct is what keeps a registry password from ever entering the
-// process, let alone a query result.
+// name only. Upstream this map is a map[string]RegistryCredential, and the
+// generated RegistryCredential declares auth, description, email, password and
+// username. Substituting a one-field type for it is what keeps a registry
+// password, and the pre-encoded auth header that is equivalent to one, from
+// ever entering the process, let alone a query result.
 type dockerCredentialRecord struct {
 	ID          string                     `json:"id"`
 	Name        string                     `json:"name"`
@@ -291,209 +363,4 @@ type dockerCredentialRecord struct {
 
 type registryAccount struct {
 	Username string `json:"username"`
-}
-
-// parseTime turns an API timestamp into a time, and anything unusable into
-// null. An absent timestamp must not become the zero date: reported as a real
-// value it would place a token's last use in the year one and satisfy any
-// "used recently" comparison written against it.
-func parseTime(value string) *time.Time {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return nil
-	}
-	for _, layout := range []string{time.RFC3339Nano, time.RFC3339, "2006-01-02T15:04:05Z0700"} {
-		if parsed, err := time.Parse(layout, trimmed); err == nil {
-			return &parsed
-		}
-	}
-	return nil
-}
-
-// nilIfEmpty reports an unset string as null rather than as an empty value.
-// An admission template that pins no enforce level and one that pins the empty
-// string are the same thing, and neither should read as a level.
-func nilIfEmpty(value string) *string {
-	if value == "" {
-		return nil
-	}
-	return &value
-}
-
-// wildcard is the RBAC token that matches everything in its position.
-const wildcard = "*"
-
-// escalatingVerbs are the verbs that let a principal grant itself, or somebody
-// else, permissions it does not already hold.
-var escalatingVerbs = map[string]bool{
-	"escalate":    true,
-	"bind":        true,
-	"impersonate": true,
-}
-
-// roleResources are the resources through which permissions are handed out. A
-// rule granting every verb on one of them is privilege escalation by another
-// route, since the holder can simply write itself a better role.
-var roleResources = map[string]bool{
-	"roles":                       true,
-	"clusterroles":                true,
-	"rolebindings":                true,
-	"clusterrolebindings":         true,
-	"roletemplates":               true,
-	"globalroles":                 true,
-	"globalrolebindings":          true,
-	"clusterroletemplatebindings": true,
-	"projectroletemplatebindings": true,
-}
-
-// grantsFullAdmin reports whether any rule grants every verb on every resource
-// in every API group, which is administration of everything the rules reach
-// whatever the role is called.
-func grantsFullAdmin(rules []policyRule) bool {
-	for _, rule := range rules {
-		if contains(rule.Verbs, wildcard) &&
-			contains(rule.Resources, wildcard) &&
-			contains(rule.APIGroups, wildcard) {
-			return true
-		}
-	}
-	return false
-}
-
-// grantsPrivilegeEscalation reports whether any rule lets the holder raise its
-// own or another principal's permissions, either through a verb that does so
-// directly or through unrestricted write access to the objects that grant
-// permissions.
-func grantsPrivilegeEscalation(rules []policyRule) bool {
-	for _, rule := range rules {
-		for _, verb := range rule.Verbs {
-			if escalatingVerbs[strings.ToLower(verb)] {
-				return true
-			}
-		}
-		if !contains(rule.Verbs, wildcard) {
-			continue
-		}
-		for _, resource := range rule.Resources {
-			lowered := strings.ToLower(resource)
-			if lowered == wildcard || roleResources[lowered] {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// effectiveRules picks the rule set a role template is actually evaluated
-// against. An external template takes its permissions from a cluster role in
-// the local cluster, and reports them in externalRules when it reports them at
-// all, so reading rules alone would report an external template as granting
-// nothing.
-func effectiveRules(record *roleTemplateRecord) []policyRule {
-	if record.External && len(record.ExternalRules) > 0 {
-		return record.ExternalRules
-	}
-	return record.Rules
-}
-
-// isSystemUser reports whether the account is one Rancher created for its own
-// components rather than for a person.
-func isSystemUser(principalIDs []string) bool {
-	for _, id := range principalIDs {
-		if strings.HasPrefix(id, "system:") {
-			return true
-		}
-	}
-	return false
-}
-
-// neverExpires reports whether a token was issued without a lifetime. Rancher
-// writes a time-to-live of zero for a token that never expires; a negative
-// value is not a lifetime either.
-func neverExpires(ttlMillis int64) bool {
-	return ttlMillis <= 0
-}
-
-// subjectKind and subjectName describe who a binding grants access to. Rancher
-// spreads the subject over four optional fields, and which one is populated
-// depends on whether the subject is a local account, an external identity, or a
-// group that only the identity provider can enumerate.
-func subjectKind(userID, userPrincipalID, groupID, groupPrincipalID, serviceAccount string) string {
-	switch {
-	case userID != "" || userPrincipalID != "":
-		return "user"
-	case groupID != "" || groupPrincipalID != "":
-		return "group"
-	case serviceAccount != "":
-		return "serviceAccount"
-	default:
-		return "unknown"
-	}
-}
-
-func subjectName(userID, userPrincipalID, groupID, groupPrincipalID, serviceAccount string) string {
-	switch {
-	case userID != "":
-		return userID
-	case userPrincipalID != "":
-		return userPrincipalID
-	case groupPrincipalID != "":
-		return groupPrincipalID
-	case groupID != "":
-		return groupID
-	default:
-		return serviceAccount
-	}
-}
-
-// rulesToDicts turns policy rules into the plain maps the dict fields carry.
-func rulesToDicts(rules []policyRule) []any {
-	out := make([]any, 0, len(rules))
-	for _, rule := range rules {
-		out = append(out, map[string]any{
-			"apiGroups":       toAnySlice(rule.APIGroups),
-			"resources":       toAnySlice(rule.Resources),
-			"resourceNames":   toAnySlice(rule.ResourceNames),
-			"nonResourceURLs": toAnySlice(rule.NonResourceURLs),
-			"verbs":           toAnySlice(rule.Verbs),
-		})
-	}
-	return out
-}
-
-// namespacedRulesToDict turns a namespace-keyed rule map into a dict.
-func namespacedRulesToDict(rules map[string][]policyRule) map[string]any {
-	if rules == nil {
-		return nil
-	}
-	out := make(map[string]any, len(rules))
-	for namespace, set := range rules {
-		out[namespace] = rulesToDicts(set)
-	}
-	return out
-}
-
-func toAnySlice(values []string) []any {
-	out := make([]any, 0, len(values))
-	for _, value := range values {
-		out = append(out, value)
-	}
-	return out
-}
-
-func toStringMap(values map[string]string) map[string]any {
-	out := make(map[string]any, len(values))
-	for key, value := range values {
-		out[key] = value
-	}
-	return out
-}
-
-func contains(values []string, want string) bool {
-	for _, value := range values {
-		if value == want {
-			return true
-		}
-	}
-	return false
 }

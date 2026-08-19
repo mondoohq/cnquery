@@ -26,8 +26,34 @@ const maxPages = 200
 const defaultPageLimit = 1000
 
 // Client talks to the Rancher Manager API over HTTP. It is deliberately a thin
-// JSON client rather than the generated Rancher SDK, which pulls in the whole
-// Kubernetes API machinery for what is a handful of read-only list calls.
+// JSON client rather than Rancher's generated one.
+//
+// The generated client was read before this was written. It is missing three
+// things this needs, each of which turns a failure into a quiet wrong answer:
+//
+//   - Its ListAll shadows the error variable in the pagination loop's init
+//     statement, so the `if err != nil` after the loop reads the outer err,
+//     which is always nil by then. A page-two fetch that fails ends the walk
+//     and returns a truncated list with no error at all. (v2.12.9,
+//     pkg/client/generated/management/v3/zz_generated_token.go:118-134, and
+//     the same shape in every other generated ListAll.)
+//   - Its Next follows pagination.next with the Authorization header attached,
+//     without checking that the link names the configured server and without a
+//     cap on how many links it will follow. This one refuses a cross-host link
+//     and stops on a repeated one.
+//   - Its IsNotFound uses a bare type assertion rather than errors.As, so any
+//     wrapping defeats it, and it has no IsForbidden at all. Reading a 403 as
+//     "not found" is what would turn an unreadable endpoint into an absent
+//     feature. (github.com/rancher/norman@v0.9.7 clientbase/common.go:86-93.)
+//
+// Two of its habits are also wrong for a provider that handles tokens:
+// clientbase.DoGet puts the entire response body into the error text when the
+// body does not parse (ops.go:95), and an init() turns full request and
+// response logging on from RANCHER_CLIENT_DEBUG (common.go:403-407) writing to
+// stdout, which is the go-plugin handshake channel.
+//
+// The collection envelope below is the same shape as norman's types.Collection
+// and types.Pagination, field for field on the parts that are read.
 type Client struct {
 	baseURL string
 	token   string

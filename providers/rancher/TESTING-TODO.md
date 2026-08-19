@@ -12,6 +12,73 @@ top to bottom.
 
 ---
 
+## 0.0 What pinning the generated client changed, and what it did not
+
+The field inventory of Rancher's own generated v3 client is now carried in
+`resources/wireformat_test.go`, taken verbatim from its `<Type>Field<Name>`
+constants at two pinned revisions (`v2.12.9`
+`db2754edc35189187bb10c524601d3d62642ff9b`, and `v2.11.6`
+`8e2eb63d5d2b4744ab3b4ab44de573106519d77d` for the two cluster template types
+2.12 deleted). Every tag this provider decodes is now checked against it by
+test, in both directions.
+
+**This narrows what a live run has to check. It does not move the bar.** The
+generated client is the schema a server serves, so it settles *names*. It says
+nothing whatever about *values*, and every box in §2 is a value. A field whose
+name is now machine-verified can still return the wrong thing, return nothing,
+or be populated only under a feature flag nobody turned on. Nothing below is
+ticked, and §2 is unchanged in length.
+
+What it settles, with the evidence:
+
+| was a risk | now |
+|---|---|
+| the nine wire names that contradict the stored Kubernetes types might be wrong | **settled.** All nine appear as generated constants at v2.12.9 and are pinned by `TestWireNamesThatContradictTheStoredKubernetesTypes`. `ttl`, `lastUsedAt`, `userPrincipal`, `globalRoleId`, `roleTemplateIds`, `clusterId`, `enforce-version`, `audit-version`, `warn-version` |
+| the hyphenated pod security version keys might be a camel-case tag away from reading null (old Rank 3, first half) | **settled for the tag.** `PodSecurityAdmissionConfigurationTemplateDefaultsFieldEnforceVersion = "enforce-version"` is a generated constant. §2.9's row stays open because it asks a different question: whether a template that pins a version reports it |
+| a credential field might be one careless struct edit away from the schema | **settled structurally.** `TestNoRecordTypeDecodesAnUpstreamCredentialField` sweeps every record recursively against the credential-bearing names the inventory declares, and `TestCredentialGuardIsNotVacuous` requires it to fire on reproductions of `client.Token`, `client.User`, `client.RegistryCredential`, `client.Cluster` and `client.ClusterTemplateRevision`. The live sweep in §4.3 still has to be run |
+
+What it narrows without settling:
+
+- **Rank 1 (`clusterTemplateEnforcement`).** v2.12.9 has no `ClusterTemplate`
+  type at all: `zz_generated_cluster_template.go` and
+  `zz_generated_cluster_template_revision.go` are 404 at that tag, and no
+  `ClusterTemplateFieldX` constant survives. A type that is not generated is
+  not registered as a schema, and an unregistered schema is what produces a
+  404 rather than an empty collection. That is corroboration, not observation:
+  the guard rests on how the server answers, and only step 3 of Rank 1 can
+  read that. **Do it.** The trap is visible in the same source, which makes it
+  worse rather than better: `Cluster` at v2.12.9 *still declares*
+  `clusterTemplateId` and `clusterTemplateRevisionId`, so the references
+  outlive the collection they point into, exactly as the setting outlives the
+  feature.
+- **Rank 2 (`grantsFullAdmin` under-reporting).** The types confirm
+  `RoleTemplate.externalRules` and `GlobalRole.inheritedClusterRoles` exist and
+  are spelled as decoded. They cannot say whether a server without the
+  `external-rules` feature flag populates the first, which is the whole risk.
+  Unchanged.
+- **Ranks 4, 5 and 6.** Untouched. Permissions-dependent listings, null
+  references and per-project cost are all behaviour, and the types are silent
+  on all three.
+
+### New hazards the pinned source turned up
+
+- **`globalRole.inheritedNamespacedRules` reads null on every released
+  Rancher.** `GlobalRole` gained `inheritedNamespacedRules` on
+  `rancher/rancher` **main only**. It is absent from the generated client at
+  v2.10.7, v2.11.6, v2.12.0, v2.12.5 and v2.12.9, and present on main, so the
+  field will start carrying data on 2.13 and reads null until then. The field
+  stays (removing a shipped field is breaking, and it is about to be correct),
+  but **a null there today means nothing**, and no policy should read one.
+  `wireformat_test.go`'s `unreleasedFields` records the exception and
+  `TestExceptionsAreStillNeeded` deletes it for you, by failing, once a
+  release declares the field. Add a §2.4 reading for it against a 2.13 server
+  when one exists.
+- **`User` diverges between 2.12 and main.** v2.12.9 declares `state`,
+  `transitioning` and `transitioningMessage` on `User`; main has dropped them.
+  Nothing here models them, and nothing should start.
+
+---
+
 ## 0. What a mock server already established (and what it did not)
 
 Before writing this, the provider was run end to end through the real `mql`
@@ -242,7 +309,8 @@ Query: `rancher.projects { <field> }`
 | ☐ | `builtin` | `true` for shipped roles |
 | ☐ | `newUserDefault` | `true` for exactly the roles the console marks as default |
 | ☐ | `rules` | for `admin`, one rule of `*`/`*`/`*` |
-| ☐ | `namespacedRules`, `inheritedNamespacedRules` | null on most roles |
+| ☐ | `namespacedRules` | null on most roles |
+| ☐ | `inheritedNamespacedRules` | **null on every Rancher released so far** — the field exists on `rancher/rancher` main only (see §0.0). Record the reading anyway, and expect it to stay null until 2.13 |
 | ☐ | `grantsFullAdmin` | `true` for `admin`, `false` for `user` |
 | ☐ | `grantsPrivilegeEscalation` | `true` for `admin` |
 | ☐ | `inheritedClusterRoleTemplates` | resolves for `user` (usually `cluster-member` or similar) |
@@ -563,6 +631,13 @@ that Rancher 2.12 answers 404 rather than an empty collection for a schema it no
 longer registers. If it answers `200` with `{"data":[]}` instead, the guard
 fails open and this becomes the wrong answer it was meant to prevent.
 
+The pinned generated client corroborates the assumption without settling it
+(§0.0): at v2.12.9 the cluster template types are not generated at all, and an
+ungenerated type is not a registered schema. It also shows the trap in its
+purest form — `Cluster` at v2.12.9 still declares `clusterTemplateId` and
+`clusterTemplateRevisionId`, so the reference fields outlive the collection just
+as the setting outlives the feature.
+
 **Verify, and treat this as the single most important row in this document:**
 
 1. On a **2.11** server, set `cluster-template-enforcement=true`, confirm the
@@ -606,9 +681,12 @@ pinned to a reviewed version" would fail on a compliant template, which is the
 safe direction, but a policy checking "the level is not pinned to something old"
 would pass on a template pinned to a version from three releases ago.
 
-The unit test pins the tag. **Verify against a real template that pins a
-version** (F10's custom one) — that is the only thing that proves the tag
-matches what the server sends rather than what the generated client declares.
+The tag half of this is now settled: `enforce-version`, `audit-version` and
+`warn-version` are generated constants at v2.12.9, pinned by
+`TestWireNamesThatContradictTheStoredKubernetesTypes` (§0.0). **What remains is
+to verify against a real template that pins a version** (F10's custom one) —
+that is the only thing that proves the server *sends* one, rather than that the
+generated client declares the name.
 
 ### Rank 4: `tokens` under-reporting because of the caller's permissions
 
@@ -637,6 +715,91 @@ slow field, and any project the token cannot read is skipped only on a 404 —
 a 403 fails the whole listing. Confirm the behavior against a token that can
 read some projects but not others, and decide whether a partial listing with a
 count is better than a failure.
+
+---
+
+## 7. Why these stay local
+
+Rancher publishes a generated Go client and this provider does not use it. That
+looks like an omission, and somebody will eventually "finish the job" by
+importing it. This section exists so that they read the measurement first.
+
+`github.com/rancher/rancher/pkg/client` **is** its own Go module, so taking it
+does not drag in the rest of `rancher/rancher`. The footprint is real but
+modest: 7 modules that are not in `providers/rancher/go.mod` today
+(`rancher/norman`, `rancher/wrangler/v3`, `k8s.io/apimachinery`,
+`gorilla/websocket`, `sirupsen/logrus`, `ghodss/yaml`, `gopkg.in/yaml.v2`), 43
+non-stdlib packages compiled, of which `k8s.io/apimachinery` contributes exactly
+one (`pkg/util/rand`), and **192,404 bytes** on the provider binary, measured by
+adding the import and building both ways. Footprint alone would not settle it.
+
+These four do.
+
+**1. The types and the client are one package.** Every `zz_generated_*.go` is
+`package client`, and `zz_generated_client.go` imports
+`github.com/rancher/norman/clientbase`. Go imports packages, not files. There is
+no way to take the structs and leave the transport, which is why the types are
+mirrored locally in `resources/records.go` and the *inventory* is adopted in
+`resources/wireformat_test.go` instead.
+
+**2. Three of the generated structs decode credentials.**
+
+| generated type | field |
+|---|---|
+| `client.Token` | `Token string` tagged `json:"token"` — the token value |
+| `client.User` | `Password string` tagged `json:"password"` |
+| `client.RegistryCredential` | `Password` and `Auth`, the pre-encoded registry header |
+
+and two more carry them by the dozen: `client.Cluster` declares
+`aadClientSecret`, `caCert`, `clusterSecrets`, `openStackSecret`,
+`privateRegistrySecret`, `s3CredentialSecret`, `serviceAccountTokenSecret`,
+`virtualCenterSecret`, `vsphereSecret`, `weavePasswordSecret` and the
+`aksConfig` / `eksConfig` / `gkeConfig` / `rancherKubernetesEngineConfig`
+specifications; `client.ClusterTemplateRevision` declares fifteen named secrets
+plus `clusterConfig`. Decoding into any of them puts the material in process.
+The guarantee this provider makes is that *there is no field for it to land in*,
+which is a property of these structs and would be given up by the swap.
+
+**3. The module has no tagged version, and its head has deleted what we model.**
+Only pseudo-versions off `main` exist. At v2.12.9 and on main,
+`zz_generated_cluster_template.go` and
+`zz_generated_cluster_template_revision.go` are **gone** — `rancher.clusterTemplate`
+and `rancher.clusterTemplate.revision` would have no type to decode into.
+Pinning main breaks those two; pinning a 2.11-era commit freezes everything
+else at 2.11. The local records take both, from two pinned revisions, which an
+import cannot do.
+
+**4. The generated client's own list and error handling are worse than what is
+here.** Read before rejecting, all at v2.12.9 / `norman@v0.9.7`:
+
+- `ListAll` shadows `err` in the pagination loop's init statement
+  (`zz_generated_token.go:118-134`, and identically in every other generated
+  `ListAll`). The `if err != nil` after the loop reads the *outer* `err`, which
+  is nil by then. **A failed page-two fetch ends the walk and returns a
+  truncated collection with no error.** A fleet-wide "no non-expiring tokens"
+  check would pass on whatever fitted in page one.
+- `Next` follows `pagination.next` with the `Authorization` header attached, to
+  whatever host the link names, with no cap on how many links it follows. The
+  local client refuses a cross-host link and stops on a repeated one.
+- `clientbase.IsNotFound` uses a bare `err.(*APIError)` rather than `errors.As`
+  (`common.go:86-93`), so any wrapping defeats it — and `DoGet` wraps
+  (`ops.go:95`). There is no `IsForbidden` at all. Reading a 403 as "not found"
+  is exactly how the absent-feature handling in `listOptionalRecords` would
+  turn an unreadable endpoint into a clean pass.
+- `clientbase.DoGet` puts the **entire response body** into the error text when
+  the body does not parse (`ops.go:95`). For `/v3/tokens` that body is token
+  values, and the error text reaches the query result.
+- An `init()` turns full request and response logging on from
+  `RANCHER_CLIENT_DEBUG` (`common.go:403-407`), printing to **stdout**. In a
+  provider that is the go-plugin handshake channel.
+
+**So: adopt the model, not the machinery.** If Rancher ever publishes the
+generated types as a package free of `clientbase`, or tags the module and stops
+deleting types from it, revisit 1 and 3 — but 2 and 4 are properties of the
+code, not of the packaging, and they would still have to be answered.
+
+Refreshing the pinned inventory when Rancher moves is four lines of shell,
+written out at the top of `resources/wireformat_test.go`.
 
 ---
 
