@@ -14,6 +14,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -362,27 +363,53 @@ func CheckIam(cfg aws.Config) (*sts.GetCallerIdentityOutput, error) {
 	}
 }
 
-func (h *AwsConnection) Regions() ([]string, error) {
-	// check cache for regions list, return if exists
-	c, ok := h.clientcache.Load("_regions")
-	if ok {
-		log.Debug().Msg("use regions from cache")
-		return c.Data.([]string), nil
+// normalizeRegionFilter trims and de-duplicates the regions filter.
+//
+// The filter is split on commas without trimming, so `regions=us-east-1, us-west-2`
+// yields " us-west-2" with a leading space, and a trailing comma yields "". An
+// empty entry is worse than useless: the client treats an empty region as "use
+// the configured one", so it silently scans the default region a second time.
+func normalizeRegionFilter(regions []string) []string {
+	out := make([]string, 0, len(regions))
+	seen := make(map[string]struct{}, len(regions))
+	for _, region := range regions {
+		region = strings.TrimSpace(region)
+		if region == "" {
+			continue
+		}
+		if _, dup := seen[region]; dup {
+			continue
+		}
+		seen[region] = struct{}{}
+		out = append(out, region)
 	}
+	return out
+}
 
-	// include filters have precedence over exclude filters. in any normal situation they should be mutually exclusive.
-	regionLimits := h.Filters.General.Regions
-	if len(regionLimits) > 0 {
-		log.Debug().Interface("regions", regionLimits).Msg("using region limits")
-		// cache the regions as part of the provider instance
-		h.clientcache.Store("_regions", &CacheEntry{Data: regionLimits})
-		return regionLimits, nil
+// unknownRegions reports which requested regions the account does not have
+// enabled, preserving the order they were given in.
+func unknownRegions(requested, enabled []string) []string {
+	have := make(map[string]struct{}, len(enabled))
+	for _, region := range enabled {
+		have[region] = struct{}{}
 	}
-	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
-	log.Debug().Msg("no region cache or region limits found. fetching regions")
-	regions := []string{}
+	unknown := []string{}
+	for _, region := range requested {
+		if _, ok := have[region]; !ok {
+			unknown = append(unknown, region)
+		}
+	}
+	return unknown
+}
+
+// discoverEnabledRegions lists the regions this account has enabled.
+//
+// allowFallback controls whether a failed DescribeRegions escalates to the
+// slower routes (Account list-regions, then the public regional table plus a
+// per-region access probe). They are worth it when the answer decides the whole
+// scan's scope, and not worth it when the caller has already named its regions.
+func (h *AwsConnection) discoverEnabledRegions(ctx context.Context, allowFallback bool) ([]string, error) {
 	svc := h.Ec2(h.cfg.Region)
-	ctx := context.Background()
 
 	// DescribeRegions works to get the list of enabled regions for the account ( each account of organization)
 	// but this does not mean the respective service endpoint is available in that region. They will timeout instead of failing fast
@@ -391,22 +418,66 @@ func (h *AwsConnection) Regions() ([]string, error) {
 	res, err := svc.DescribeRegions(ctx, &ec2.DescribeRegionsInput{})
 	if err != nil {
 		log.Warn().Err(err).Msg("unable to describe regions")
+		if !allowFallback {
+			return nil, err
+		}
 		// when we can't use `DescribeRegions` we will fallback to:
 		// 1. Account list-regions
 		// 2. Public regional table + region access verification
 		enabledRegions, fallbackErr := h.fallbackGetEnabledRegions(ctx)
 		if fallbackErr != nil {
 			log.Warn().Err(fallbackErr).Msg("unable to list regions from fallback options")
-			return regions, err
+			return nil, err
 		}
-		regions = enabledRegions
-	} else {
-		for _, region := range res.Regions {
-			if region.RegionName == nil {
-				continue
-			}
-			regions = append(regions, *region.RegionName)
+		return enabledRegions, nil
+	}
+
+	regions := []string{}
+	for _, region := range res.Regions {
+		if region.RegionName == nil {
+			continue
 		}
+		regions = append(regions, *region.RegionName)
+	}
+	return regions, nil
+}
+
+func (h *AwsConnection) Regions() ([]string, error) {
+	// check cache for regions list, return if exists
+	c, ok := h.clientcache.Load("_regions")
+	if ok {
+		log.Debug().Msg("use regions from cache")
+		return c.Data.([]string), nil
+	}
+
+	ctx := context.Background()
+
+	// include filters have precedence over exclude filters. in any normal situation they should be mutually exclusive.
+	if regionLimits := normalizeRegionFilter(h.Filters.General.Regions); len(regionLimits) > 0 {
+		// A region name that the account does not have enabled resolves to no
+		// endpoint at all, and every lister then classifies the resulting DNS
+		// miss as "this service is absent here". Left unchecked, a typo makes the
+		// whole scan report zero resources and exit successfully. Skip the
+		// expensive fallback here: it costs a probe per region, and the caller
+		// has already told us which regions it wants.
+		enabled, err := h.discoverEnabledRegions(ctx, false)
+		if err != nil {
+			log.Warn().Err(err).Strs("regions", regionLimits).
+				Msg("cannot check the regions filter against the account's enabled regions")
+		} else if unknown := unknownRegions(regionLimits, enabled); len(unknown) > 0 {
+			return nil, fmt.Errorf("regions filter names %d region(s) this account does not have enabled: %s",
+				len(unknown), strings.Join(unknown, ", "))
+		}
+		log.Debug().Strs("regions", regionLimits).Msg("using region limits")
+		// cache the regions as part of the provider instance
+		h.clientcache.Store("_regions", &CacheEntry{Data: regionLimits})
+		return regionLimits, nil
+	}
+	// if no cache, get regions using ec2 client (using the ssm list global regions does not give the same list)
+	log.Debug().Msg("no region cache or region limits found. fetching regions")
+	regions, err := h.discoverEnabledRegions(ctx, true)
+	if err != nil {
+		return []string{}, err
 	}
 
 	// ensure excluded regions are discarded
