@@ -1320,6 +1320,7 @@ alicloud.rds.instance.instanceNetworkType 13.0.0
 alicloud.rds.instance.lockMode 13.0.0
 alicloud.rds.instance.lockReason 13.0.0
 alicloud.rds.instance.masterInstance 13.0.0
+alicloud.rds.instance.parameters 13.5.1
 alicloud.rds.instance.payType 13.0.0
 alicloud.rds.instance.port 13.0.0
 alicloud.rds.instance.readOnlyStatus 13.4.1
@@ -1328,10 +1329,14 @@ alicloud.rds.instance.resourceGroup 13.3.2
 alicloud.rds.instance.resourceGroupId 13.0.0
 alicloud.rds.instance.securityGroups 13.2.5
 alicloud.rds.instance.securityIPList 13.0.0
+alicloud.rds.instance.sqlAuditEnabled 13.5.1
+alicloud.rds.instance.sqlAuditRetentionDays 13.5.1
 alicloud.rds.instance.sslEnabled 13.0.0
 alicloud.rds.instance.sslExpireTime 13.0.0
 alicloud.rds.instance.tags 13.0.0
 alicloud.rds.instance.tdeEnabled 13.0.0
+alicloud.rds.instance.tdeEncryptionKey 13.5.1
+alicloud.rds.instance.tdeMode 13.5.1
 alicloud.rds.instance.vectorSupportStatus 13.4.1
 alicloud.rds.instance.vpc 13.0.0
 alicloud.rds.instance.vswitch 13.0.0
