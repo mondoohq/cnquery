@@ -31,6 +31,55 @@ func rdsParseTime(s *string) *time.Time {
 	return &t
 }
 
+// rdsStatusEnabled reports whether an RDS on/off status string means on. The
+// RDS APIs are not consistent about the spelling: TDE reports Enabled, SQL
+// Explorer reports Enable, and both have been seen with surrounding space.
+// Anything else, including a nil or empty value, counts as off so a "must be
+// enabled" check fails rather than passing on a value nobody recognised.
+func rdsStatusEnabled(status *string) bool {
+	if status == nil {
+		return false
+	}
+	switch strings.ToLower(strings.TrimSpace(*status)) {
+	case "enable", "enabled":
+		return true
+	default:
+		return false
+	}
+}
+
+// rdsRetentionDays converts the SQL Explorer retention window, which the API
+// returns as a string, to a day count. An absent or unparseable value is 0,
+// which fails a minimum-retention check rather than satisfying it.
+func rdsRetentionDays(configValue *string) int64 {
+	if configValue == nil {
+		return 0
+	}
+	days, err := strconv.Atoi(strings.TrimSpace(*configValue))
+	if err != nil || days < 0 {
+		return 0
+	}
+	return int64(days)
+}
+
+// rdsRunningParameters flattens the running parameter list into a name-keyed
+// map. It reads RunningParameters, the values in effect on the instance, and
+// not ConfigParameters, which also carries changes that have not been applied
+// yet and would report a setting as active before the instance restarts.
+func rdsRunningParameters(body *rdsclient.DescribeParametersResponseBody) map[string]any {
+	res := map[string]any{}
+	if body == nil || body.RunningParameters == nil {
+		return res
+	}
+	for _, param := range body.RunningParameters.DBInstanceParameter {
+		if param == nil || param.ParameterName == nil || *param.ParameterName == "" {
+			continue
+		}
+		res[*param.ParameterName] = tea.StringValue(param.ParameterValue)
+	}
+	return res
+}
+
 func (r *mqlAlicloudRds) id() (string, error) {
 	return "alicloud.rds", nil
 }
@@ -51,6 +100,10 @@ type mqlAlicloudRdsInstanceInternal struct {
 	sslLock sync.Mutex
 	sslDone bool
 	ssl     *rdsclient.DescribeDBInstanceSSLResponseBody
+
+	tdeLock sync.Mutex
+	tdeDone bool
+	tde     *rdsclient.DescribeDBInstanceTDEResponseBody
 }
 
 func (r *mqlAlicloudRds) instances() ([]any, error) {
@@ -409,19 +462,125 @@ func (r *mqlAlicloudRdsInstance) sslExpireTime() (*time.Time, error) {
 	return rdsParseTime(ssl.SSLExpireTime), nil
 }
 
+// fetchTDE lazily loads the per-instance DescribeDBInstanceTDE detail and
+// caches it, so the TDE status, the key generation mode and the customer key
+// share a single call. Returns nil when the call fails or returns no detail, so
+// callers fall back to their safe default: encryption reads as off rather than
+// on, which fails an encryption check instead of passing it vacuously.
+func (r *mqlAlicloudRdsInstance) fetchTDE() *rdsclient.DescribeDBInstanceTDEResponseBody {
+	r.tdeLock.Lock()
+	defer r.tdeLock.Unlock()
+	if r.tdeDone {
+		return r.tde
+	}
+	r.tdeDone = true
+
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.RdsClient(r.region)
+	if err != nil {
+		return nil
+	}
+	resp, err := client.DescribeDBInstanceTDE(&rdsclient.DescribeDBInstanceTDERequest{
+		DBInstanceId: tea.String(r.instanceId),
+	})
+	if err != nil || resp == nil || resp.Body == nil {
+		return nil
+	}
+	r.tde = resp.Body
+	return r.tde
+}
+
 func (r *mqlAlicloudRdsInstance) tdeEnabled() (bool, error) {
+	tde := r.fetchTDE()
+	if tde == nil {
+		return false, nil
+	}
+	return rdsStatusEnabled(tde.TDEStatus), nil
+}
+
+func (r *mqlAlicloudRdsInstance) tdeMode() (string, error) {
+	tde := r.fetchTDE()
+	if tde == nil {
+		return "", nil
+	}
+	return tea.StringValue(tde.TDEMode), nil
+}
+
+// tdeEncryptionKey resolves the customer key protecting the instance. It is
+// null whenever the instance is not encrypted with a key of its own: TDE off,
+// or on with a key Alibaba Cloud generated and holds, in which case the API
+// reports no EncryptionKey at all.
+func (r *mqlAlicloudRdsInstance) tdeEncryptionKey() (*mqlAlicloudKmsKey, error) {
+	tde := r.fetchTDE()
+	if tde == nil || tea.StringValue(tde.EncryptionKey) == "" {
+		r.TdeEncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	key, err := resolveKmsKey(r.MqlRuntime, r.cacheRegion, tea.StringValue(tde.EncryptionKey))
+	if err != nil || key == nil {
+		r.TdeEncryptionKey.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return key, nil
+}
+
+// sqlAuditEnabled reports whether SQL Explorer is collecting statements. A
+// failed read returns false so an "auditing is on" check fails rather than
+// passing on an instance nobody could read.
+func (r *mqlAlicloudRdsInstance) sqlAuditEnabled() (bool, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
 	client, err := conn.RdsClient(r.region)
 	if err != nil {
 		return false, nil
 	}
-	resp, err := client.DescribeDBInstanceTDE(&rdsclient.DescribeDBInstanceTDERequest{
+	resp, err := client.DescribeSQLCollectorPolicy(&rdsclient.DescribeSQLCollectorPolicyRequest{
 		DBInstanceId: tea.String(r.instanceId),
 	})
-	if err != nil || resp == nil || resp.Body == nil || resp.Body.TDEStatus == nil {
+	if err != nil || resp == nil || resp.Body == nil {
 		return false, nil
 	}
-	return strings.EqualFold(strings.TrimSpace(*resp.Body.TDEStatus), "Enabled"), nil
+	return rdsStatusEnabled(resp.Body.SQLCollectorStatus), nil
+}
+
+// sqlAuditRetentionDays reads the retention window from
+// DescribeSQLCollectorRetention rather than the DescribeSQLCollectorPolicy
+// StoragePeriod field, which the API documents as reserved and leaves at 0.
+func (r *mqlAlicloudRdsInstance) sqlAuditRetentionDays() (int64, error) {
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.RdsClient(r.region)
+	if err != nil {
+		return 0, nil
+	}
+	resp, err := client.DescribeSQLCollectorRetention(&rdsclient.DescribeSQLCollectorRetentionRequest{
+		DBInstanceId: tea.String(r.instanceId),
+	})
+	if err != nil || resp == nil || resp.Body == nil {
+		return 0, nil
+	}
+	return rdsRetentionDays(resp.Body.ConfigValue), nil
+}
+
+// parameters returns the parameter values in effect on the running instance,
+// keyed by parameter name. A fetch error is propagated rather than reported as
+// an empty map: an empty map reads as "the parameter is unset", which is a
+// legitimate answer, and would let a check on log_connections pass judgement on
+// an instance whose parameters were never read.
+func (r *mqlAlicloudRdsInstance) parameters() (map[string]any, error) {
+	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.RdsClient(r.region)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DescribeParameters(&rdsclient.DescribeParametersRequest{
+		DBInstanceId: tea.String(r.instanceId),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil {
+		return map[string]any{}, nil
+	}
+	return rdsRunningParameters(resp.Body), nil
 }
 
 func (r *mqlAlicloudRdsInstance) securityIPList() ([]any, error) {

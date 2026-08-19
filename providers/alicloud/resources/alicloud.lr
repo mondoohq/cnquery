@@ -2238,6 +2238,41 @@ alicloud.rds.instance {
   sslExpireTime() time
   // Whether Transparent Data Encryption (TDE) is enabled for the instance
   tdeEnabled() bool
+  // Key generation method used for Transparent Data Encryption
+  //
+  // One of Aliyun_Generate_Key (the key is generated and held by Alibaba
+  // Cloud), Customer_Provided_Key (the key is one you supply through Key
+  // Management Service), or Unknown. Empty when TDE is disabled or the engine
+  // does not report a mode.
+  tdeMode() string
+  // Key Management Service key that protects the instance under TDE
+  //
+  // Null when TDE is disabled, when the instance is encrypted with a key
+  // Alibaba Cloud generated and holds, or when the key can no longer be read.
+  // Traverse to the key to see its rotation state, deletion protection, and
+  // who is allowed to use it.
+  tdeEncryptionKey() alicloud.kms.key
+  // Whether SQL Explorer collects the statements executed against the instance
+  //
+  // SQL Explorer (also called SQL audit) records each statement the instance
+  // executes, which is what makes after-the-fact review of database activity
+  // possible. False when the feature was never switched on, when it has been
+  // switched off, or when the engine does not offer it.
+  sqlAuditEnabled() bool
+  // Days that SQL Explorer retains the statements it collects
+  //
+  // Zero when SQL Explorer is switched off or the instance reports no
+  // retention setting. Configurable values are 30, 180, and 365 days.
+  sqlAuditRetentionDays() int
+  // Running parameter values of the instance, keyed by parameter name
+  //
+  // The values in effect on the running instance, so a check reads
+  // parameters["log_connections"] without a nested traversal. Parameters
+  // changed but not yet applied are not reflected here. For a PostgreSQL
+  // instance this carries the log_connections, log_disconnections, and
+  // log_duration settings that decide what the database records about the
+  // sessions that connect to it.
+  parameters() map[string]string
   // IP address whitelist
   //
   // The IP addresses and CIDR blocks allowed to connect to the instance. A

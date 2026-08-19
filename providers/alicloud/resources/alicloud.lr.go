@@ -2561,6 +2561,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.rds.instance.tdeEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetTdeEnabled()).ToDataRes(types.Bool)
 	},
+	"alicloud.rds.instance.tdeMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetTdeMode()).ToDataRes(types.String)
+	},
+	"alicloud.rds.instance.tdeEncryptionKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetTdeEncryptionKey()).ToDataRes(types.Resource("alicloud.kms.key"))
+	},
+	"alicloud.rds.instance.sqlAuditEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetSqlAuditEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.rds.instance.sqlAuditRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetSqlAuditRetentionDays()).ToDataRes(types.Int)
+	},
+	"alicloud.rds.instance.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRdsInstance).GetParameters()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"alicloud.rds.instance.securityIPList": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRdsInstance).GetSecurityIPList()).ToDataRes(types.Array(types.String))
 	},
@@ -8633,6 +8648,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.rds.instance.tdeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRdsInstance).TdeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.tdeMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).TdeMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.tdeEncryptionKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).TdeEncryptionKey, ok = plugin.RawToTValue[*mqlAlicloudKmsKey](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.sqlAuditEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).SqlAuditEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.sqlAuditRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).SqlAuditRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.rds.instance.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRdsInstance).Parameters, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.rds.instance.securityIPList": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -19476,6 +19511,11 @@ type mqlAlicloudRdsInstance struct {
 	SslEnabled              plugin.TValue[bool]
 	SslExpireTime           plugin.TValue[*time.Time]
 	TdeEnabled              plugin.TValue[bool]
+	TdeMode                 plugin.TValue[string]
+	TdeEncryptionKey        plugin.TValue[*mqlAlicloudKmsKey]
+	SqlAuditEnabled         plugin.TValue[bool]
+	SqlAuditRetentionDays   plugin.TValue[int64]
+	Parameters              plugin.TValue[map[string]any]
 	SecurityIPList          plugin.TValue[[]any]
 	SecurityGroups          plugin.TValue[[]any]
 	BlueGreenDeploymentName plugin.TValue[string]
@@ -19708,6 +19748,46 @@ func (c *mqlAlicloudRdsInstance) GetSslExpireTime() *plugin.TValue[*time.Time] {
 func (c *mqlAlicloudRdsInstance) GetTdeEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.TdeEnabled, func() (bool, error) {
 		return c.tdeEnabled()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetTdeMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TdeMode, func() (string, error) {
+		return c.tdeMode()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetTdeEncryptionKey() *plugin.TValue[*mqlAlicloudKmsKey] {
+	return plugin.GetOrCompute[*mqlAlicloudKmsKey](&c.TdeEncryptionKey, func() (*mqlAlicloudKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.rds.instance", c.__id, "tdeEncryptionKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudKmsKey), nil
+			}
+		}
+
+		return c.tdeEncryptionKey()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetSqlAuditEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SqlAuditEnabled, func() (bool, error) {
+		return c.sqlAuditEnabled()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetSqlAuditRetentionDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SqlAuditRetentionDays, func() (int64, error) {
+		return c.sqlAuditRetentionDays()
+	})
+}
+
+func (c *mqlAlicloudRdsInstance) GetParameters() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Parameters, func() (map[string]any, error) {
+		return c.parameters()
 	})
 }
 
