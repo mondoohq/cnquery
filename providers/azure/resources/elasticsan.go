@@ -129,14 +129,19 @@ func createElasticSanResource(runtime *plugin.Runtime, san *armelasticsan.Elasti
 		skuTier = enumString(props.SKU.Tier)
 	}
 
+	// The SDK pointers are carried through rather than dereferenced: a SAN
+	// with no auto-scale configured reports none of these, and 0 TiB is a
+	// value a configured policy could legitimately hold. Passing nil through
+	// llx.IntDataPtr reports them as null, which keeps "not configured"
+	// distinct from "configured at zero".
 	var scaleEnforcement string
-	var scaleUpLimit, scaleIncreaseBy, scaleUnusedSize int64
+	var scaleUpLimit, scaleIncreaseBy, scaleUnusedSize *int64
 	if props.AutoScaleProperties != nil && props.AutoScaleProperties.ScaleUpProperties != nil {
 		up := props.AutoScaleProperties.ScaleUpProperties
 		scaleEnforcement = enumString(up.AutoScalePolicyEnforcement)
-		scaleUpLimit = convert.ToValue(up.CapacityUnitScaleUpLimitTiB)
-		scaleIncreaseBy = convert.ToValue(up.IncreaseCapacityUnitByTiB)
-		scaleUnusedSize = convert.ToValue(up.UnusedSizeTiB)
+		scaleUpLimit = up.CapacityUnitScaleUpLimitTiB
+		scaleIncreaseBy = up.IncreaseCapacityUnitByTiB
+		scaleUnusedSize = up.UnusedSizeTiB
 	}
 
 	resource, err := CreateResource(runtime, ResourceAzureSubscriptionElasticSanServiceElasticSan,
@@ -159,9 +164,9 @@ func createElasticSanResource(runtime *plugin.Runtime, san *armelasticsan.Elasti
 			"volumeGroupCount":                     llx.IntDataPtr(props.VolumeGroupCount),
 			"availabilityZones":                    llx.ArrayData(strPtrSliceToAny(props.AvailabilityZones), types.String),
 			"autoScalePolicyEnforcement":           llx.StringData(scaleEnforcement),
-			"autoScaleCapacityUnitScaleUpLimitTiB": llx.IntData(scaleUpLimit),
-			"autoScaleIncreaseCapacityUnitByTiB":   llx.IntData(scaleIncreaseBy),
-			"autoScaleUnusedSizeTiB":               llx.IntData(scaleUnusedSize),
+			"autoScaleCapacityUnitScaleUpLimitTiB": llx.IntDataPtr(scaleUpLimit),
+			"autoScaleIncreaseCapacityUnitByTiB":   llx.IntDataPtr(scaleIncreaseBy),
+			"autoScaleUnusedSizeTiB":               llx.IntDataPtr(scaleUnusedSize),
 		})
 	if err != nil {
 		return nil, err

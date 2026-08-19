@@ -18855,12 +18855,21 @@ azure.subscription.elasticSanService.elasticSan @defaults("id name location publ
   // Availability zones the SAN is pinned to
   availabilityZones []string
   // Whether automatic capacity scale-up is enforced ("None" or "Automatic")
+  //
+  // Empty when the SAN has no auto-scale policy configured.
   autoScalePolicyEnforcement string
   // Capacity in TiB scale-up will not grow the SAN past
+  //
+  // Null when the SAN has no auto-scale policy configured, which is not the
+  // same as a policy that caps growth at zero.
   autoScaleCapacityUnitScaleUpLimitTiB int
   // Capacity in TiB each scale-up step adds
+  //
+  // Null when the SAN has no auto-scale policy configured.
   autoScaleIncreaseCapacityUnitByTiB int
   // Unused capacity in TiB that triggers a scale-up
+  //
+  // Null when the SAN has no auto-scale policy configured.
   autoScaleUnusedSizeTiB int
   // Private endpoint connections to the SAN
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
@@ -19329,8 +19338,6 @@ private azure.subscription.fileSharesService.fileShare.snapshot @defaults("id na
   initiatorId string
   // Application-defined name/value pairs stored on the snapshot
   metadata map[string]string
-  // Creation and last-modification provenance recorded by Azure Resource Manager
-  systemMetadata() azure.subscription.systemData
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

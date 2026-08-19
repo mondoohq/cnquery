@@ -21804,9 +21804,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
-	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
-	},
 	"azure.subscription.elasticSanService.elasticSan.volumeGroup.virtualNetworkRule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroupVirtualNetworkRule).GetAction()).ToDataRes(types.String)
 	},
@@ -49355,10 +49352,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
-		return
-	},
-	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -115967,7 +115960,6 @@ type mqlAzureSubscriptionFileSharesServiceFileShareSnapshot struct {
 	InitiatorId    plugin.TValue[string]
 	Metadata       plugin.TValue[map[string]any]
 	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
-	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionFileSharesServiceFileShareSnapshot creates a new instance of this resource
@@ -116029,22 +116021,6 @@ func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetInitiatorId(
 
 func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetMetadata() *plugin.TValue[map[string]any] {
 	return &c.Metadata
-}
-
-func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
-	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService.fileShare.snapshot", c.__id, "systemMetadata")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAzureSubscriptionSystemData), nil
-			}
-		}
-
-		return c.systemMetadata()
-	})
 }
 
 func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
