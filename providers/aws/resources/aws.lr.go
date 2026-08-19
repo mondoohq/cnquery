@@ -16025,6 +16025,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudwatch.loggroup.retentionInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroup).GetRetentionInDays()).ToDataRes(types.Int)
 	},
+	"aws.cloudwatch.loggroup.neverExpires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudwatchLoggroup).GetNeverExpires()).ToDataRes(types.Bool)
+	},
 	"aws.cloudwatch.loggroup.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudwatchLoggroup).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -52670,6 +52673,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cloudwatch.loggroup.retentionInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudwatchLoggroup).RetentionInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cloudwatch.loggroup.neverExpires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudwatchLoggroup).NeverExpires, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.cloudwatch.loggroup.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -126268,6 +126275,7 @@ type mqlAwsCloudwatchLoggroup struct {
 	Region                    plugin.TValue[string]
 	CreatedAt                 plugin.TValue[*time.Time]
 	RetentionInDays           plugin.TValue[int64]
+	NeverExpires              plugin.TValue[bool]
 	Tags                      plugin.TValue[map[string]any]
 	CloudformationStack       plugin.TValue[*mqlAwsCloudformationStack]
 	ManagedBy                 plugin.TValue[string]
@@ -126399,6 +126407,10 @@ func (c *mqlAwsCloudwatchLoggroup) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlAwsCloudwatchLoggroup) GetRetentionInDays() *plugin.TValue[int64] {
 	return &c.RetentionInDays
+}
+
+func (c *mqlAwsCloudwatchLoggroup) GetNeverExpires() *plugin.TValue[bool] {
+	return &c.NeverExpires
 }
 
 func (c *mqlAwsCloudwatchLoggroup) GetTags() *plugin.TValue[map[string]any] {
