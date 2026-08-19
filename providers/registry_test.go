@@ -9,7 +9,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -201,4 +204,166 @@ func TestMondooProviderRegistry_DownloadProviderMetadata(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "cannot find provider.json")
 	})
+}
+
+// latestJSONServer serves latest.json and counts how many times it is asked.
+func latestJSONServer(t *testing.T, hits *int64) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/latest.json" {
+			http.NotFound(w, r)
+			return
+		}
+		atomic.AddInt64(hits, 1)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(ProviderVersions{Providers: []ProviderVersion{
+			{Name: "aws", Version: "1.2.3"},
+			{Name: "os", Version: "2.0.0"},
+			{Name: "core", Version: "3.0.0"},
+		}})
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// The reason this cache exists. Providers are started per asset -- the
+// coordinator shuts an idle provider down when an asset's runtime is removed
+// and the next asset starts it again -- so this used to be one blocking
+// request per provider start: 170 of them on a measured 169-asset scan.
+func TestGetLatestVersionFetchesOncePerTTL(t *testing.T) {
+	var hits int64
+	reg := NewMondooProviderRegistry(WithBaseURL(latestJSONServer(t, &hits).URL))
+
+	for i := 0; i < 50; i++ {
+		v, err := reg.GetLatestVersion(context.Background(), "aws")
+		require.NoError(t, err)
+		assert.Equal(t, "1.2.3", v)
+	}
+	assert.Equal(t, int64(1), atomic.LoadInt64(&hits), "latest.json should be fetched once")
+}
+
+// One file lists every provider, so a scan touching several answers all of
+// them from a single request rather than one identical request each.
+func TestGetLatestVersionSharesOneFetchAcrossProviders(t *testing.T) {
+	var hits int64
+	reg := NewMondooProviderRegistry(WithBaseURL(latestJSONServer(t, &hits).URL))
+
+	for name, want := range map[string]string{"aws": "1.2.3", "os": "2.0.0", "core": "3.0.0"} {
+		v, err := reg.GetLatestVersion(context.Background(), name)
+		require.NoError(t, err)
+		assert.Equal(t, want, v)
+	}
+	assert.Equal(t, int64(1), atomic.LoadInt64(&hits))
+}
+
+// Provider starts overlap, so without single-flighting every concurrent
+// caller misses the cache and fetches its own copy.
+func TestGetLatestVersionCollapsesConcurrentFetches(t *testing.T) {
+	var hits int64
+	release := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt64(&hits, 1)
+		<-release // hold the first request open so the rest pile up behind it
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(ProviderVersions{Providers: []ProviderVersion{{Name: "aws", Version: "1.2.3"}}})
+	}))
+	defer srv.Close()
+	reg := NewMondooProviderRegistry(WithBaseURL(srv.URL))
+
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			v, err := reg.GetLatestVersion(context.Background(), "aws")
+			assert.NoError(t, err)
+			assert.Equal(t, "1.2.3", v)
+		}()
+	}
+	close(release)
+	wg.Wait()
+
+	assert.Equal(t, int64(1), atomic.LoadInt64(&hits), "concurrent callers should share one fetch")
+}
+
+// The cache is a TTL, not a permanent memo: a long-running process must pick
+// up a newly published provider without being restarted.
+func TestGetLatestVersionRefetchesAfterTTL(t *testing.T) {
+	var hits int64
+	reg := NewMondooProviderRegistry(WithBaseURL(latestJSONServer(t, &hits).URL))
+
+	now := time.Now()
+	reg.now = func() time.Time { return now }
+
+	_, err := reg.GetLatestVersion(context.Background(), "aws")
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), atomic.LoadInt64(&hits))
+
+	now = now.Add(defaultLatestVersionsTTL - time.Second) // still inside the window
+	_, err = reg.GetLatestVersion(context.Background(), "aws")
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), atomic.LoadInt64(&hits), "must not refetch before the TTL expires")
+
+	now = now.Add(2 * time.Second) // now past it
+	_, err = reg.GetLatestVersion(context.Background(), "aws")
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), atomic.LoadInt64(&hits), "must refetch once the TTL expires")
+}
+
+// An offline scan must not repeat the request for every provider start, but a
+// transient failure has to recover within the same run -- so failures are
+// remembered on a much shorter TTL than successes.
+func TestGetLatestVersionCachesFailuresBriefly(t *testing.T) {
+	var hits int64
+	var broken atomic.Bool
+	broken.Store(true)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt64(&hits, 1)
+		w.Header().Set("Content-Type", "application/json")
+		if broken.Load() {
+			// malformed rather than a 5xx: the retrying client would otherwise
+			// turn one logical failure into several requests
+			_, _ = w.Write([]byte("{not json"))
+			return
+		}
+		_ = json.NewEncoder(w).Encode(ProviderVersions{Providers: []ProviderVersion{{Name: "aws", Version: "1.2.3"}}})
+	}))
+	defer srv.Close()
+	reg := NewMondooProviderRegistry(WithBaseURL(srv.URL))
+
+	now := time.Now()
+	reg.now = func() time.Time { return now }
+
+	for i := 0; i < 5; i++ {
+		_, err := reg.GetLatestVersion(context.Background(), "aws")
+		require.Error(t, err)
+	}
+	assert.Equal(t, int64(1), atomic.LoadInt64(&hits), "a failure must not be retried by every caller")
+
+	// the failure TTL is short, so the run recovers on its own
+	broken.Store(false)
+	now = now.Add(failedLatestVersionsTTL + time.Second)
+	v, err := reg.GetLatestVersion(context.Background(), "aws")
+	require.NoError(t, err)
+	assert.Equal(t, "1.2.3", v)
+	assert.Equal(t, int64(2), atomic.LoadInt64(&hits))
+
+	// a success must not then be re-fetched on the short failure TTL
+	now = now.Add(2 * failedLatestVersionsTTL)
+	_, err = reg.GetLatestVersion(context.Background(), "aws")
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), atomic.LoadInt64(&hits), "a success is held for the full TTL")
+}
+
+func TestFlushVersionCacheForcesRefetch(t *testing.T) {
+	var hits int64
+	reg := NewMondooProviderRegistry(WithBaseURL(latestJSONServer(t, &hits).URL))
+
+	_, err := reg.GetLatestVersion(context.Background(), "aws")
+	require.NoError(t, err)
+	reg.FlushVersionCache()
+	_, err = reg.GetLatestVersion(context.Background(), "aws")
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(2), atomic.LoadInt64(&hits))
 }
