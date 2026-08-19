@@ -3915,6 +3915,7 @@ azure.subscription.networkService.ddosProtectionPlan.type 13.3.3
 azure.subscription.networkService.ddosProtectionPlan.virtualNetworks 13.3.3
 azure.subscription.networkService.ddosProtectionPlans 13.3.3
 azure.subscription.networkService.exposure 13.20.1
+azure.subscription.networkService.exposure.behindPublicLoadBalancer 13.36.1
 azure.subscription.networkService.exposure.hasPublicIp 13.20.1
 azure.subscription.networkService.exposure.internetReachable 13.20.1
 azure.subscription.networkService.exposure.openIngressRules 13.20.1

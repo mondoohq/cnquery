@@ -3793,11 +3793,27 @@ private azure.subscription.networkService.securityrule @defaults("id name") {
 private azure.subscription.networkService.exposure {
   // Whether the resource is reachable from the public internet
   //
-  // True when the resource has a public IP AND the effective NSG chain admits
-  // inbound traffic from any source. False when either signal is absent.
+  // True when internet traffic can arrive at the resource AND the effective NSG
+  // chain admits inbound traffic from any source. Traffic can arrive either
+  // because the resource holds a public IP itself, or because a public load
+  // balancer forwards to it, so this is hasPublicIp or behindPublicLoadBalancer
+  // combined with securityGroupAllowsIngress. Check securityGroupsEvaluated
+  // before trusting a false.
   internetReachable bool
   // Whether the resource has at least one public IP address assigned
+  //
+  // A public IP on the resource's own network interfaces. False on a resource
+  // reached only through a load balancer, which is the common topology.
   hasPublicIp bool
+  // Whether a public load balancer forwards internet traffic to the resource
+  //
+  // True when a load balancer with a public frontend IP has a rule bound to that
+  // frontend, pointing at a backend the resource's network interface is a member
+  // of. Both load balancing rules and inbound NAT rules count, and a NAT rule
+  // bound straight to one IP configuration counts as well. This is the way
+  // Azure's reference architectures expose a virtual machine, with the public IP
+  // on the load balancer and only a private address on the machine.
+  behindPublicLoadBalancer bool
   // Whether the effective NSG chain (NIC and subnet NSGs, resolved by priority) admits inbound traffic from any internet source
   //
   // A resource whose network interfaces have no NSG attached at all admits

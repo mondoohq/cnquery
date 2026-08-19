@@ -563,12 +563,26 @@ func (a *mqlAzureSubscriptionComputeServiceVm) exposure() (*mqlAzureSubscription
 		}
 	}
 
-	internetReachable := hasPublicIp && securityGroupAllowsIngress
+	// The other way in. Azure's own reference architectures put the public IP on a
+	// load balancer frontend and leave the machine's interface with a private
+	// address only, so reading public IPs off the interfaces alone reports the
+	// recommended topology as closed.
+	behindPublicLb, err := a.behindPublicLoadBalancer(nics.Data)
+	if err != nil {
+		// One unreadable listing must not turn into "closed". Drop the signal,
+		// mark the verdict provisional, and say why.
+		logLoadBalancerLookupFailure(a.Id.Data, err)
+		behindPublicLb = false
+		allEvaluated = false
+	}
+
+	internetReachable := (hasPublicIp || behindPublicLb) && securityGroupAllowsIngress
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceExposure, map[string]*llx.RawData{
 		"__id":                       llx.StringData("azure.subscription.computeService.vm/" + a.Id.Data + "/exposure"),
 		"internetReachable":          llx.BoolData(internetReachable),
 		"hasPublicIp":                llx.BoolData(hasPublicIp),
+		"behindPublicLoadBalancer":   llx.BoolData(behindPublicLb),
 		"securityGroupAllowsIngress": llx.BoolData(securityGroupAllowsIngress),
 		"securityGroupsEvaluated":    llx.BoolData(allEvaluated),
 		"openIngressRules":           llx.ArrayData(openRules, types.Dict),

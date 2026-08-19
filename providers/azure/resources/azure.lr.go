@@ -6390,6 +6390,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.exposure.hasPublicIp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetHasPublicIp()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.networkService.exposure.behindPublicLoadBalancer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetBehindPublicLoadBalancer()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.networkService.exposure.securityGroupAllowsIngress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceExposure).GetSecurityGroupAllowsIngress()).ToDataRes(types.Bool)
 	},
@@ -26300,6 +26303,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.exposure.hasPublicIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceExposure).HasPublicIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.exposure.behindPublicLoadBalancer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceExposure).BehindPublicLoadBalancer, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.exposure.securityGroupAllowsIngress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -60446,6 +60453,7 @@ type mqlAzureSubscriptionNetworkServiceExposure struct {
 	// optional: if you define mqlAzureSubscriptionNetworkServiceExposureInternal it will be used here
 	InternetReachable          plugin.TValue[bool]
 	HasPublicIp                plugin.TValue[bool]
+	BehindPublicLoadBalancer   plugin.TValue[bool]
 	SecurityGroupAllowsIngress plugin.TValue[bool]
 	SecurityGroupsEvaluated    plugin.TValue[bool]
 	OpenIngressRules           plugin.TValue[[]any]
@@ -60489,6 +60497,10 @@ func (c *mqlAzureSubscriptionNetworkServiceExposure) GetInternetReachable() *plu
 
 func (c *mqlAzureSubscriptionNetworkServiceExposure) GetHasPublicIp() *plugin.TValue[bool] {
 	return &c.HasPublicIp
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceExposure) GetBehindPublicLoadBalancer() *plugin.TValue[bool] {
+	return &c.BehindPublicLoadBalancer
 }
 
 func (c *mqlAzureSubscriptionNetworkServiceExposure) GetSecurityGroupAllowsIngress() *plugin.TValue[bool] {
