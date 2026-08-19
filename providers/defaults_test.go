@@ -50,3 +50,39 @@ func TestDefaultProvidersIncludesAllLocalProviders(t *testing.T) {
 	// turn this into a no-op test.
 	assert.True(t, foundProvider, "no provider directories were discovered; the directory scan is likely broken")
 }
+
+// TestDefaultProvidersIncludesExternalProviders pins the providers that are
+// published to the registry but do not live in this repository. The generator
+// behind defaults.go builds its map by scanning ./providers on disk, so it
+// cannot see these — and regenerating the file silently deletes them.
+// TestDefaultProvidersIncludesAllLocalProviders can't catch that either,
+// because it only walks local provider directories.
+//
+// A missing entry is not a cosmetic problem: DefaultProviders is the only
+// bridge between a policy that requires provider X and the on-demand install
+// in EnsureProvider. Without it, Lookup returns nil, Install is never reached,
+// and the scan dies with "cannot find provider for provider=X".
+//
+// Add to this list whenever a new externally published provider is registered
+// in defaults.go by hand.
+func TestDefaultProvidersIncludesExternalProviders(t *testing.T) {
+	external := []string{
+		"ai",
+		"bigip",
+		"checkpoint",
+		"db2",
+		"fortios",
+		"junos",
+		"networkdevices",
+		"networkdiscovery",
+		"oracledb",
+		"panos",
+		"unifi",
+		"yara",
+	}
+
+	for _, name := range external {
+		assert.Containsf(t, DefaultProviders, name,
+			"externally published provider %q is missing from DefaultProviders; it must be added by hand (the generator only sees local provider directories)", name)
+	}
+}
