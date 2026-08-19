@@ -1869,33 +1869,74 @@ digitalocean.spacesBucket @defaults("name region encryptionEnabled versioningSta
   // and `hasWildcardPolicy`, which read the bucket ACL and policy
   // directly.
   publicAccessBlocked bool
-  // Whether the bucket ACL grants READ to the AllUsers group (anonymous read)
+  // Whether the bucket ACL grants READ to the AllUsers group
+  //
+  // Anonymous read. Null when the bucket ACL could not be read, either
+  // because the credentials are not allowed to read it or because the
+  // service does not implement the call, so an unread ACL is not
+  // mistaken for one that grants nothing.
   publicReadAcl bool
-  // Whether the bucket ACL grants WRITE to the AllUsers group (anonymous write, should always be false)
+  // Whether the bucket ACL grants WRITE to the AllUsers group
+  //
+  // Anonymous write, which should always be false. Null when the bucket
+  // ACL could not be read.
   publicWriteAcl bool
-  // Whether the bucket ACL grants READ to the AuthenticatedUsers group (any DO/AWS-compatible account can list)
+  // Whether the bucket ACL grants READ to the AuthenticatedUsers group
+  //
+  // That group covers every account on the platform rather than only this
+  // one, so such a grant lets any DigitalOcean or S3-compatible account
+  // list the bucket. Null when the bucket ACL could not be read.
   authenticatedReadAcl bool
-  // Raw ACL grants (each entry: granteeType, granteeUri, granteeDisplayName, permission)
+  // Raw ACL grants
+  //
+  // Each entry: granteeType, granteeUri, granteeDisplayName, permission.
+  // Null when the bucket ACL could not be read, as distinct from an empty
+  // list, which means the ACL was read and carries no grants.
   aclGrants []dict
   // Whether server-side encryption is configured on the bucket
+  //
+  // False when the service answered that nothing is configured, which is a
+  // real answer. Null when the encryption configuration could not be read
+  // at all, so an unread bucket is not reported as unencrypted.
   encryptionEnabled bool
-  // Default encryption algorithm ("AES256" or "aws:kms"); empty when encryption is not configured
+  // Default encryption algorithm
+  //
+  // Either "AES256" or "aws:kms". Empty when encryption is not configured,
+  // and null when the encryption configuration could not be read.
   encryptionAlgorithm string
   // KMS key id used for default encryption when `encryptionAlgorithm` is "aws:kms"
+  //
+  // Null when the encryption configuration could not be read.
   encryptionKmsKeyId string
-  // Versioning state ("Enabled", "Suspended"); empty when versioning has never been configured
+  // Versioning state
+  //
+  // Either "Enabled" or "Suspended", and empty when versioning has never
+  // been configured. Null when the versioning configuration could not be
+  // read, so an unread bucket is not reported as unversioned.
   versioningStatus string
   // Whether MFA delete is required for permanent version deletion
+  //
+  // Null when the versioning configuration could not be read.
   mfaDeleteEnabled bool
-  // Bucket policy JSON document; nil when no policy is set
+  // Bucket policy JSON document
+  //
+  // Null when no policy is set, and also when the policy could not be
+  // read. Use `hasWildcardPolicy`, which reports null in the second case
+  // rather than answering as though the policy were absent.
   policy dict
   // CORS rules configured on the bucket
   //
-  // Each entry: allowedHeaders, allowedMethods, allowedOrigins, exposeHeaders, maxAgeSeconds, id.
+  // Each entry: allowedHeaders, allowedMethods, allowedOrigins,
+  // exposeHeaders, maxAgeSeconds, id. Null when the CORS configuration
+  // could not be read, as distinct from an empty list, which means it was
+  // read and no rules are set.
   corsRules []dict
   // Lifecycle rules configured on the bucket
   //
-  // Each entry: id, status, prefix, expirationDays, noncurrentVersionExpirationDays, abortIncompleteMultipartUploadDays.
+  // Each entry: id, status, prefix, expirationDays,
+  // noncurrentVersionExpirationDays, abortIncompleteMultipartUploadDays.
+  // Null when the lifecycle configuration could not be read, as distinct
+  // from an empty list.
   lifecycleRules []dict
   // Whether the bucket's contents are reachable by anyone on the internet
   //
@@ -1906,13 +1947,20 @@ digitalocean.spacesBucket @defaults("name region encryptionEnabled versioningSta
   // public. Spaces has no block-public-access control to override those
   // grants, so on DigitalOcean the verdict rests on the ACL and the
   // policy alone.
+  //
+  // A grant that was read and is public settles the verdict as true
+  // whatever else could not be read. When nothing read says public but
+  // the ACL or the policy could not be read, the verdict is null rather
+  // than false, because clearing the bucket would rest on an answer
+  // nobody gave.
   isPublic() bool
   // Whether the bucket policy allows the wildcard principal
   //
   // True when any Allow statement in the bucket policy names "*" as its
   // principal, which grants the action to every requester. This describes
   // the policy alone; isPublic combines it with the ACL grants to say
-  // whether the bucket is actually reachable.
+  // whether the bucket is actually reachable. Null when the policy could
+  // not be read, which is not the same as a bucket that has no policy.
   hasWildcardPolicy() bool
 }
 
