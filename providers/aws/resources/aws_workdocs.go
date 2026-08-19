@@ -92,6 +92,9 @@ func (a *mqlAwsWorkdocs) getUsers(conn *connection.AwsConnection) []*jobpool.Job
 			if err != nil {
 				return nil, err
 			}
+			if len(orgIds) == 0 {
+				return res, nil
+			}
 
 			svc := conn.WorkDocs(region)
 			for _, orgId := range orgIds {
@@ -114,9 +117,15 @@ func (a *mqlAwsWorkdocs) getUsers(conn *connection.AwsConnection) []*jobpool.Job
 							log.Debug().Str("region", region).Msg("AWS WorkDocs is not available in region")
 							return res, nil
 						}
+						// A denial is a fact about one organization, not about
+						// the region: a policy can scope WorkDocs access to
+						// some directories and not others. Move on to the next
+						// organization rather than dropping the users already
+						// read from the ones that did answer.
 						if Is400AccessDeniedError(err) {
-							log.Warn().Str("region", region).Msg("error accessing region for AWS WorkDocs API")
-							return res, nil
+							log.Warn().Str("region", region).Str("organizationId", orgId).
+								Msg("error accessing WorkDocs organization")
+							break
 						}
 						// A directory that is not registered with WorkDocs is
 						// not an error, it simply hosts no WorkDocs users.
