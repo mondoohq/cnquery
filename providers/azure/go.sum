@@ -108,6 +108,8 @@ github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventgrid/armeventgrid/v2 
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventgrid/armeventgrid/v2 v2.3.0/go.mod h1:NOM/LtCJfoU69VkmxPxV6PMxDm/MsOvmsao/5V5Rhgs=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventhub/armeventhub v1.3.0 h1:4hGvxD72TluuFIXVr8f4XkKZfqAa7Pj61t0jmQ7+kes=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/eventhub/armeventhub v1.3.0/go.mod h1:TSH7DcFItwAufy0Lz+Ft2cyopExCpxbOxI5SkH4dRNo=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/fileshares/armfileshares v0.1.0 h1:tfbf66rC28SunUKmpxNWeL3D6WBZla5CLCCnGmIYN1g=
+github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/fileshares/armfileshares v0.1.0/go.mod h1:vwPbWuuG8DQY7Jj3OTxnWXMeu+ktIMsgxgT3qfoGEGM=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor/v2 v2.0.0 h1:hllt77imY438iao+x/FatjViqGMq9JUuCrlq6+sLxgk=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor/v2 v2.0.0/go.mod h1:oSOL1euXyQO4Cp3x4cr3G40q3NCd80zn46XNEfac2CU=
 github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/hybridcompute/armhybridcompute/v3 v3.0.0 h1:7iqUZadRKfVTzDpFCeV6SwSm5XoaFzlryy3P2rqIWcQ=

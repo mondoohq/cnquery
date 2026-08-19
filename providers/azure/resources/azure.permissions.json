@@ -134,6 +134,8 @@
     "Microsoft.EventHub/namespaces/eventhubs/consumergroups/read",
     "Microsoft.EventHub/namespaces/eventhubs/read",
     "Microsoft.EventHub/namespaces/read",
+    "Microsoft.FileShares/fileShares/read",
+    "Microsoft.FileShares/fileShares/snapshots/read",
     "Microsoft.HybridCompute/machines/extensions/read",
     "Microsoft.HybridCompute/machines/read",
     "Microsoft.Insights/actionGroups/read",
@@ -1143,6 +1145,18 @@
       "service": "Microsoft.EventHub",
       "action": "NewListAuthorizationRulesPager",
       "source_file": "eventhub.go"
+    },
+    {
+      "permission": "Microsoft.FileShares/fileShares/read",
+      "service": "Microsoft.FileShares",
+      "action": "NewListBySubscriptionPager",
+      "source_file": "fileshares.go"
+    },
+    {
+      "permission": "Microsoft.FileShares/fileShares/snapshots/read",
+      "service": "Microsoft.FileShares",
+      "action": "NewListByFileSharePager",
+      "source_file": "fileshares.go"
     },
     {
       "permission": "Microsoft.HybridCompute/machines/extensions/read",

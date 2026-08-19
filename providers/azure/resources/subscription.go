@@ -347,6 +347,16 @@ func (a *mqlAzureSubscription) netApp() (*mqlAzureSubscriptionNetAppService, err
 	return svc.(*mqlAzureSubscriptionNetAppService), nil
 }
 
+func (a *mqlAzureSubscription) fileShares() (*mqlAzureSubscriptionFileSharesService, error) {
+	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFileSharesService, map[string]*llx.RawData{
+		"subscriptionId": llx.StringData(a.SubscriptionId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return svc.(*mqlAzureSubscriptionFileSharesService), nil
+}
+
 func (a *mqlAzureSubscription) functions() (*mqlAzureSubscriptionFunctionsService, error) {
 	svc, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionFunctionsService, map[string]*llx.RawData{
 		"subscriptionId": llx.StringData(a.SubscriptionId.Data),

@@ -530,6 +530,8 @@ const (
 	ResourceAzureSubscriptionDataProtectionServiceBackupVault                                           string = "azure.subscription.dataProtectionService.backupVault"
 	ResourceAzureSubscriptionNetAppService                                                              string = "azure.subscription.netAppService"
 	ResourceAzureSubscriptionNetAppServiceAccount                                                       string = "azure.subscription.netAppService.account"
+	ResourceAzureSubscriptionFileSharesService                                                          string = "azure.subscription.fileSharesService"
+	ResourceAzureSubscriptionFileSharesServiceFileShare                                                 string = "azure.subscription.fileSharesService.fileShare"
 	ResourceAzureSubscriptionDataBoxService                                                             string = "azure.subscription.dataBoxService"
 	ResourceAzureSubscriptionDataBoxServiceJob                                                          string = "azure.subscription.dataBoxService.job"
 	ResourceAzureSubscriptionNetAppServiceAccountEncryption                                             string = "azure.subscription.netAppService.account.encryption"
@@ -537,6 +539,7 @@ const (
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPool                                           string = "azure.subscription.netAppService.account.capacityPool"
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolume                                     string = "azure.subscription.netAppService.account.capacityPool.volume"
 	ResourceAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule                     string = "azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule"
+	ResourceAzureSubscriptionFileSharesServiceFileShareSnapshot                                         string = "azure.subscription.fileSharesService.fileShare.snapshot"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -2599,6 +2602,14 @@ func init() {
 			Init:   initAzureSubscriptionNetAppServiceAccount,
 			Create: createAzureSubscriptionNetAppServiceAccount,
 		},
+		"azure.subscription.fileSharesService": {
+			Init:   initAzureSubscriptionFileSharesService,
+			Create: createAzureSubscriptionFileSharesService,
+		},
+		"azure.subscription.fileSharesService.fileShare": {
+			Init:   initAzureSubscriptionFileSharesServiceFileShare,
+			Create: createAzureSubscriptionFileSharesServiceFileShare,
+		},
 		"azure.subscription.dataBoxService": {
 			Init:   initAzureSubscriptionDataBoxService,
 			Create: createAzureSubscriptionDataBoxService,
@@ -2626,6 +2637,10 @@ func init() {
 		"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule": {
 			// to override args, implement: initAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule,
+		},
+		"azure.subscription.fileSharesService.fileShare.snapshot": {
+			// to override args, implement: initAzureSubscriptionFileSharesServiceFileShareSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionFileSharesServiceFileShareSnapshot,
 		},
 	}
 }
@@ -2817,6 +2832,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storage": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetStorage()).ToDataRes(types.Resource("azure.subscription.storageService"))
+	},
+	"azure.subscription.fileShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscription).GetFileShares()).ToDataRes(types.Resource("azure.subscription.fileSharesService"))
 	},
 	"azure.subscription.web": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscription).GetWeb()).ToDataRes(types.Resource("azure.subscription.webService"))
@@ -21163,6 +21181,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.netAppService.account.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
+	"azure.subscription.fileSharesService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesService).GetSubscriptionId()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShares": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesService).GetFileShares()).ToDataRes(types.Array(types.Resource("azure.subscription.fileSharesService.fileShare")))
+	},
+	"azure.subscription.fileSharesService.fileShare.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.fileSharesService.fileShare.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.mountName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetMountName()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.hostName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetHostName()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.mediaTier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetMediaTier()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.redundancy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetRedundancy()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetPublicNetworkAccess()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.allowedSubnets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetAllowedSubnets()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.subnet")))
+	},
+	"azure.subscription.fileSharesService.fileShare.encryptionInTransitRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetEncryptionInTransitRequired()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.rootSquash": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetRootSquash()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.provisionedStorageGiB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetProvisionedStorageGiB()).ToDataRes(types.Int)
+	},
+	"azure.subscription.fileSharesService.fileShare.provisionedIoPerSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetProvisionedIoPerSec()).ToDataRes(types.Int)
+	},
+	"azure.subscription.fileSharesService.fileShare.provisionedThroughputMibPerSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetProvisionedThroughputMibPerSec()).ToDataRes(types.Int)
+	},
+	"azure.subscription.fileSharesService.fileShare.includedBurstIoPerSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetIncludedBurstIoPerSec()).ToDataRes(types.Int)
+	},
+	"azure.subscription.fileSharesService.fileShare.maxBurstIoPerSecCredits": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetMaxBurstIoPerSecCredits()).ToDataRes(types.Int)
+	},
+	"azure.subscription.fileSharesService.fileShare.privateEndpointConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetPrivateEndpointConnections()).ToDataRes(types.Array(types.Resource("azure.subscription.privateEndpointConnection")))
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetSnapshots()).ToDataRes(types.Array(types.Resource("azure.subscription.fileSharesService.fileShare.snapshot")))
+	},
+	"azure.subscription.fileSharesService.fileShare.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShare).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 	"azure.subscription.dataBoxService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataBoxService).GetSubscriptionId()).ToDataRes(types.String)
 	},
@@ -21529,6 +21622,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.netAppService.account.capacityPool.volume.exportPolicyRule.kerberos5pReadWrite": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).GetKerberos5pReadWrite()).ToDataRes(types.Bool)
 	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.snapshotTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSnapshotTime()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.initiatorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetInitiatorId()).ToDataRes(types.String)
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -21715,6 +21829,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscription).Storage, ok = plugin.RawToTValue[*mqlAzureSubscriptionStorageService](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscription).FileShares, ok = plugin.RawToTValue[*mqlAzureSubscriptionFileSharesService](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.web": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48217,6 +48335,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetAppServiceAccount).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.fileSharesService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesService).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.fileSharesService.subscriptionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesService).SubscriptionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShares": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesService).FileShares, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.mountName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).MountName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).HostName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.mediaTier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).MediaTier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.redundancy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Redundancy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).PublicNetworkAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.allowedSubnets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).AllowedSubnets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.encryptionInTransitRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).EncryptionInTransitRequired, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.rootSquash": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).RootSquash, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.provisionedStorageGiB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).ProvisionedStorageGiB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.provisionedIoPerSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).ProvisionedIoPerSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.provisionedThroughputMibPerSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).ProvisionedThroughputMibPerSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.includedBurstIoPerSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).IncludedBurstIoPerSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.maxBurstIoPerSecCredits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).MaxBurstIoPerSecCredits, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.privateEndpointConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).PrivateEndpointConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShare).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.dataBoxService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionDataBoxService).__id, ok = v.Value.(string)
 		return
@@ -48733,6 +48959,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule).Kerberos5pReadWrite, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.snapshotTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).SnapshotTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.initiatorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).InitiatorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).Metadata, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.fileSharesService.fileShare.snapshot.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFileSharesServiceFileShareSnapshot).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -49063,6 +49321,7 @@ type mqlAzureSubscription struct {
 	Databricks            plugin.TValue[*mqlAzureSubscriptionDatabricksService]
 	Network               plugin.TValue[*mqlAzureSubscriptionNetworkService]
 	Storage               plugin.TValue[*mqlAzureSubscriptionStorageService]
+	FileShares            plugin.TValue[*mqlAzureSubscriptionFileSharesService]
 	Web                   plugin.TValue[*mqlAzureSubscriptionWebService]
 	Sql                   plugin.TValue[*mqlAzureSubscriptionSqlService]
 	MySql                 plugin.TValue[*mqlAzureSubscriptionMySqlService]
@@ -49338,6 +49597,22 @@ func (c *mqlAzureSubscription) GetStorage() *plugin.TValue[*mqlAzureSubscription
 		}
 
 		return c.storage()
+	})
+}
+
+func (c *mqlAzureSubscription) GetFileShares() *plugin.TValue[*mqlAzureSubscriptionFileSharesService] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionFileSharesService](&c.FileShares, func() (*mqlAzureSubscriptionFileSharesService, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription", c.__id, "fileShares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionFileSharesService), nil
+			}
+		}
+
+		return c.fileShares()
 	})
 }
 
@@ -113447,6 +113722,279 @@ func (c *mqlAzureSubscriptionNetAppServiceAccount) GetSystemMetadata() *plugin.T
 	})
 }
 
+// mqlAzureSubscriptionFileSharesService for the azure.subscription.fileSharesService resource
+type mqlAzureSubscriptionFileSharesService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionFileSharesServiceInternal it will be used here
+	SubscriptionId plugin.TValue[string]
+	FileShares     plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionFileSharesService creates a new instance of this resource
+func createAzureSubscriptionFileSharesService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFileSharesService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.fileSharesService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFileSharesService) MqlName() string {
+	return "azure.subscription.fileSharesService"
+}
+
+func (c *mqlAzureSubscriptionFileSharesService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFileSharesService) GetSubscriptionId() *plugin.TValue[string] {
+	return &c.SubscriptionId
+}
+
+func (c *mqlAzureSubscriptionFileSharesService) GetFileShares() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FileShares, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService", c.__id, "fileShares")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.fileShares()
+	})
+}
+
+// mqlAzureSubscriptionFileSharesServiceFileShare for the azure.subscription.fileSharesService.fileShare resource
+type mqlAzureSubscriptionFileSharesServiceFileShare struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionFileSharesServiceFileShareInternal
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Type                           plugin.TValue[string]
+	Tags                           plugin.TValue[map[string]any]
+	ProvisioningState              plugin.TValue[string]
+	Protocol                       plugin.TValue[string]
+	MountName                      plugin.TValue[string]
+	HostName                       plugin.TValue[string]
+	MediaTier                      plugin.TValue[string]
+	Redundancy                     plugin.TValue[string]
+	PublicNetworkAccess            plugin.TValue[string]
+	AllowedSubnets                 plugin.TValue[[]any]
+	EncryptionInTransitRequired    plugin.TValue[string]
+	RootSquash                     plugin.TValue[string]
+	ProvisionedStorageGiB          plugin.TValue[int64]
+	ProvisionedIoPerSec            plugin.TValue[int64]
+	ProvisionedThroughputMibPerSec plugin.TValue[int64]
+	IncludedBurstIoPerSec          plugin.TValue[int64]
+	MaxBurstIoPerSecCredits        plugin.TValue[int64]
+	PrivateEndpointConnections     plugin.TValue[[]any]
+	Snapshots                      plugin.TValue[[]any]
+	SystemMetadata                 plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionFileSharesServiceFileShare creates a new instance of this resource
+func createAzureSubscriptionFileSharesServiceFileShare(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFileSharesServiceFileShare{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.fileSharesService.fileShare", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) MqlName() string {
+	return "azure.subscription.fileSharesService.fileShare"
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetMountName() *plugin.TValue[string] {
+	return &c.MountName
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetHostName() *plugin.TValue[string] {
+	return &c.HostName
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetMediaTier() *plugin.TValue[string] {
+	return &c.MediaTier
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetRedundancy() *plugin.TValue[string] {
+	return &c.Redundancy
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetPublicNetworkAccess() *plugin.TValue[string] {
+	return &c.PublicNetworkAccess
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetAllowedSubnets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedSubnets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService.fileShare", c.__id, "allowedSubnets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowedSubnets()
+	})
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetEncryptionInTransitRequired() *plugin.TValue[string] {
+	return &c.EncryptionInTransitRequired
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetRootSquash() *plugin.TValue[string] {
+	return &c.RootSquash
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetProvisionedStorageGiB() *plugin.TValue[int64] {
+	return &c.ProvisionedStorageGiB
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetProvisionedIoPerSec() *plugin.TValue[int64] {
+	return &c.ProvisionedIoPerSec
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetProvisionedThroughputMibPerSec() *plugin.TValue[int64] {
+	return &c.ProvisionedThroughputMibPerSec
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetIncludedBurstIoPerSec() *plugin.TValue[int64] {
+	return &c.IncludedBurstIoPerSec
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetMaxBurstIoPerSecCredits() *plugin.TValue[int64] {
+	return &c.MaxBurstIoPerSecCredits
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetPrivateEndpointConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrivateEndpointConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService.fileShare", c.__id, "privateEndpointConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.privateEndpointConnections()
+	})
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService.fileShare", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShare) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService.fileShare", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
+}
+
 // mqlAzureSubscriptionDataBoxService for the azure.subscription.dataBoxService resource
 type mqlAzureSubscriptionDataBoxService struct {
 	MqlRuntime *plugin.Runtime
@@ -114520,4 +115068,95 @@ func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyR
 
 func (c *mqlAzureSubscriptionNetAppServiceAccountCapacityPoolVolumeExportPolicyRule) GetKerberos5pReadWrite() *plugin.TValue[bool] {
 	return &c.Kerberos5pReadWrite
+}
+
+// mqlAzureSubscriptionFileSharesServiceFileShareSnapshot for the azure.subscription.fileSharesService.fileShare.snapshot resource
+type mqlAzureSubscriptionFileSharesServiceFileShareSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionFileSharesServiceFileShareSnapshotInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	SnapshotTime   plugin.TValue[string]
+	InitiatorId    plugin.TValue[string]
+	Metadata       plugin.TValue[map[string]any]
+	SystemMetadata plugin.TValue[*mqlAzureSubscriptionSystemData]
+}
+
+// createAzureSubscriptionFileSharesServiceFileShareSnapshot creates a new instance of this resource
+func createAzureSubscriptionFileSharesServiceFileShareSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionFileSharesServiceFileShareSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.fileSharesService.fileShare.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) MqlName() string {
+	return "azure.subscription.fileSharesService.fileShare.snapshot"
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSnapshotTime() *plugin.TValue[string] {
+	return &c.SnapshotTime
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetInitiatorId() *plugin.TValue[string] {
+	return &c.InitiatorId
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetMetadata() *plugin.TValue[map[string]any] {
+	return &c.Metadata
+}
+
+func (c *mqlAzureSubscriptionFileSharesServiceFileShareSnapshot) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.fileSharesService.fileShare.snapshot", c.__id, "systemMetadata")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSystemData), nil
+			}
+		}
+
+		return c.systemMetadata()
+	})
 }
