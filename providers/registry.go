@@ -10,10 +10,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/v13/utils/httpx"
+	"golang.org/x/sync/singleflight"
 )
 
 var DefaultUpdatesURL = "https://releases.mondoo.com"
@@ -42,9 +45,51 @@ type ProviderRegistry interface {
 	DownloadProviderMetadata(ctx context.Context, name, version string) (confJSON []byte, schemaJSON []byte, err error)
 }
 
+const (
+	// How long a fetched latest.json is reused. Providers are started per
+	// asset -- the coordinator shuts an idle one down when an asset's runtime
+	// is removed, and the next asset starts it again -- so without this the
+	// same 3.6KB file was fetched once per provider start: 170 blocking
+	// requests and ~17s on a measured 169-asset scan, scaling linearly.
+	//
+	// An hour matches the existing UpdateProvidersConfig.RefreshInterval
+	// default. The file changes a few times a week.
+	defaultLatestVersionsTTL = time.Hour
+
+	// A failed fetch is remembered only briefly. Long enough that an offline
+	// scan does not repeat the retry storm for every provider start, short
+	// enough that a transient blip recovers within the same run.
+	failedLatestVersionsTTL = time.Minute
+)
+
 // MondooProviderRegistry implements ProviderRegistry for Mondoo's provider registry
 type MondooProviderRegistry struct {
 	BaseURL string
+
+	// CacheTTL is how long a fetched latest.json is reused. Zero means
+	// defaultLatestVersionsTTL.
+	CacheTTL time.Duration
+
+	mu        sync.Mutex
+	cached    *ProviderVersions
+	cachedErr error
+	cachedAt  time.Time
+
+	// group collapses concurrent fetches into one. Provider starts overlap, so
+	// without it every concurrent caller misses the cache and fetches its own
+	// copy.
+	group singleflight.Group
+
+	// now is swapped in tests so cache expiry can be exercised without
+	// sleeping. Nil means time.Now.
+	now func() time.Time
+}
+
+// WithCacheTTL sets how long a fetched latest.json is reused.
+func WithCacheTTL(ttl time.Duration) MondooProviderRegistryOption {
+	return func(r *MondooProviderRegistry) {
+		r.CacheTTL = ttl
+	}
 }
 
 // MondooProviderRegistryOption defines a function type for configuring MondooProviderRegistry
@@ -75,40 +120,127 @@ func LatestVersion(ctx context.Context, name string) (string, error) {
 	return registry.GetLatestVersion(ctx, name)
 }
 
-// GetLatestVersion fetches the latest version for the given provider name
-func (r *MondooProviderRegistry) GetLatestVersion(ctx context.Context, name string) (string, error) {
+func (r *MondooProviderRegistry) clock() time.Time {
+	if r.now != nil {
+		return r.now()
+	}
+	return time.Now()
+}
+
+func (r *MondooProviderRegistry) ttl() time.Duration {
+	if r.CacheTTL > 0 {
+		return r.CacheTTL
+	}
+	return defaultLatestVersionsTTL
+}
+
+// cachedVersions returns the memoized document and whether it is still valid.
+// A remembered failure is returned as such, so callers see the same error
+// rather than each re-running the request behind it.
+func (r *MondooProviderRegistry) cachedVersions() (*ProviderVersions, error, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.cachedAt.IsZero() {
+		return nil, nil, false
+	}
+	ttl := r.ttl()
+	if r.cachedErr != nil {
+		ttl = failedLatestVersionsTTL
+	}
+	if r.clock().Sub(r.cachedAt) >= ttl {
+		return nil, nil, false
+	}
+	return r.cached, r.cachedErr, true
+}
+
+func (r *MondooProviderRegistry) storeVersions(v *ProviderVersions, err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.cached, r.cachedErr, r.cachedAt = v, err, r.clock()
+}
+
+// FlushVersionCache drops the memoized latest.json. Exported for tests and for
+// callers that need to force a fresh read.
+func (r *MondooProviderRegistry) FlushVersionCache() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.cached, r.cachedErr, r.cachedAt = nil, nil, time.Time{}
+}
+
+// latestVersions returns the whole latest.json document, fetching it at most
+// once per TTL.
+//
+// The document is memoized rather than the per-provider version: one file
+// lists every provider, so a scan touching aws, os and core answers all three
+// from a single request instead of three identical ones.
+func (r *MondooProviderRegistry) latestVersions(ctx context.Context) (*ProviderVersions, error) {
+	if v, err, ok := r.cachedVersions(); ok {
+		return v, err
+	}
+
+	res, err, _ := r.group.Do("latest.json", func() (any, error) {
+		// another caller may have completed while this one waited on the group
+		if v, cerr, ok := r.cachedVersions(); ok {
+			return v, cerr
+		}
+		v, ferr := r.fetchLatestVersions(ctx)
+		r.storeVersions(v, ferr)
+		return v, ferr
+	})
+	if err != nil {
+		return nil, err
+	}
+	versions, _ := res.(*ProviderVersions)
+	return versions, nil
+}
+
+func (r *MondooProviderRegistry) fetchLatestVersions(ctx context.Context) (*ProviderVersions, error) {
 	client, err := httpClientWithRetry()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	latestURL, err := url.JoinPath(r.BaseURL, "latest.json")
 	if err != nil {
-		return "", errors.Wrap(err, "failed to construct latest version URL")
+		return nil, errors.Wrap(err, "failed to construct latest version URL")
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, latestURL, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to build latest version request")
+		return nil, errors.Wrap(err, "failed to build latest version request")
 	}
 
 	res, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Debug().Err(err).Msg("reading latest.json failed")
-		return "", errors.New("failed to read response from upstream provider versions")
+		return nil, errors.New("failed to read response from upstream provider versions")
 	}
 
 	var upstreamVersions ProviderVersions
 	err = json.Unmarshal(data, &upstreamVersions)
 	if err != nil {
 		log.Debug().Err(err).Msg("parsing latest.json failed")
-		return "", errors.New("failed to parse response from upstream provider versions")
+		return nil, errors.New("failed to parse response from upstream provider versions")
+	}
+
+	return &upstreamVersions, nil
+}
+
+// GetLatestVersion fetches the latest version for the given provider name
+func (r *MondooProviderRegistry) GetLatestVersion(ctx context.Context, name string) (string, error) {
+	upstreamVersions, err := r.latestVersions(ctx)
+	if err != nil {
+		return "", err
+	}
+	if upstreamVersions == nil {
+		return "", errors.New("cannot determine latest version of provider '" + name + "'")
 	}
 
 	var latestVersion string
