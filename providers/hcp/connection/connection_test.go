@@ -40,17 +40,21 @@ func TestNewPlatformAppliesCatalog(t *testing.T) {
 	}
 }
 
-func TestClientSecretFromConf(t *testing.T) {
-	// The client secret is tagged by credential user; an untagged or wrong-type
-	// credential must be ignored.
+func TestCredentialByUser(t *testing.T) {
+	// Credentials are tagged by user; an untagged or wrong-type credential must
+	// be ignored, and two differently tagged secrets must not cross over.
 	conf := &inventory.Config{
 		Credentials: []*vault.Credential{
 			vault.NewPasswordCredential("other", "nope"),
 			vault.NewPasswordCredential(CredentialClientSecret, "s3cret"),
+			vault.NewPasswordCredential(CredentialTfeToken, "tfe-s3cret"),
 		},
 	}
-	assert.Equal(t, "s3cret", clientSecretFromConf(conf))
+	assert.Equal(t, "s3cret", credentialByUser(conf, CredentialClientSecret))
+	assert.Equal(t, "tfe-s3cret", credentialByUser(conf, CredentialTfeToken))
+	assert.Equal(t, "", credentialByUser(conf, "unknown"))
 
 	empty := &inventory.Config{}
-	assert.Equal(t, "", clientSecretFromConf(empty))
+	assert.Equal(t, "", credentialByUser(empty, CredentialClientSecret))
+	assert.Equal(t, "", credentialByUser(empty, CredentialTfeToken))
 }

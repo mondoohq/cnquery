@@ -12,12 +12,17 @@ option go_package = "go.mondoo.com/mql/v13/providers/hcp/resources"
 // Vault, Consul, and Boundary clusters, the Packer registry, and Waypoint
 // applications. This is the control-plane view of an HCP estate; cluster
 // internal configuration (Vault mounts, Consul ACLs) lives behind each
-// cluster's own API and is not exposed here.
+// cluster's own API and is not exposed here. HCP Terraform and Terraform
+// Enterprise organizations are reached separately, through an API token, and
+// expose the workspaces, team access, policy sets, and agent pools that decide
+// who can run infrastructure changes.
 hcp {
   // Organization the connection is rooted at
   organization() hcp.organization
   // Projects in the organization
   projects() []hcp.project
+  // HCP Terraform organizations reachable with the configured API token
+  terraformOrganizations() []hcp.terraform.organization
 }
 
 // HCP organization
@@ -270,4 +275,405 @@ hcp.iam.servicePrincipal.key @defaults("clientId state createdAt") {
   state string
   // Time the key was created
   createdAt time
+}
+
+// HCP Terraform organization
+//
+// Tenant of HCP Terraform or Terraform Enterprise, holding the workspaces that
+// plan and apply infrastructure, the teams granted access to them, the Sentinel
+// and OPA policy sets that gate their runs, and the agent pools their runs
+// execute on. Carries the organization-wide authentication posture: whether
+// every member is enrolled in two-factor authentication, whether two-factor is
+// mandatory, the SAML configuration, and the session lifetimes. The `name`
+// field selects an organization, for example
+// `hcp.terraform.organization(name: "acme")`.
+hcp.terraform.organization @defaults("name twoFactorRequired twoFactorConformant") {
+  // Organization name, unique across the installation and used as its API id
+  name string
+  // Stable external id of the organization, for example org-Hu9WT3XkVQpMWkBb
+  externalId string
+  // Notification email address for the organization
+  email string
+  // Time the organization was created
+  createdAt time
+  // Authentication policy members must satisfy
+  //
+  // One of password or two_factor_mandatory. The twoFactorRequired field
+  // reports the same setting as a boolean.
+  collaboratorAuthPolicy string
+  // Whether the organization mandates two-factor authentication for members
+  twoFactorRequired bool
+  // Whether every member of the organization currently has two-factor authentication enabled
+  twoFactorConformant bool
+  // Whether SAML single sign-on is configured for the organization
+  samlEnabled bool
+  // SAML role that maps to the owners team, null when SAML is not configured
+  ownersTeamSamlRoleId string
+  // Idle session lifetime in minutes, null when the installation default applies
+  sessionTimeoutMinutes int
+  // Session remember-me lifetime in minutes, null when the installation default applies
+  sessionRememberMinutes int
+  // Whether cost estimation runs on plans in this organization
+  costEstimationEnabled bool
+  // Whether health assessments are enforced on every eligible workspace
+  assessmentsEnforced bool
+  // Whether workspaces that still manage resources may be force-deleted
+  allowForceDeleteWorkspaces bool
+  // Execution mode new workspaces inherit, one of remote, local, or agent
+  defaultExecutionMode string
+  // Whether the organization's billing plan has expired
+  planExpired bool
+  // Owners team, the team whose members hold full administrative control
+  ownersTeam() hcp.terraform.team
+  // Workspaces in the organization
+  workspaces() []hcp.terraform.workspace
+  // Teams in the organization
+  teams() []hcp.terraform.team
+  // Sentinel and OPA policy sets defined in the organization
+  policySets() []hcp.terraform.policySet
+  // Sentinel and OPA policies defined in the organization
+  policies() []hcp.terraform.policy
+  // Agent pools registered in the organization
+  agentPools() []hcp.terraform.agentPool
+}
+
+// HCP Terraform workspace
+//
+// Unit of Terraform state and run execution. Records how runs reach the
+// workspace (a connected VCS repository or the CLI and API), where they
+// execute (remotely, locally, or on an agent pool), whether a successful plan
+// applies without human confirmation, the pinned Terraform version, and
+// whether the workspace is locked against new runs. Remote state sharing
+// reports which other workspaces may read this workspace's outputs, team
+// access reports who may queue and confirm applies, and the variables report
+// which inputs are marked sensitive. The `id` field selects a workspace, for
+// example `hcp.terraform.workspace(id: "ws-Hu9WT3XkVQpMWkBb")`.
+hcp.terraform.workspace @defaults("name executionMode autoApply vcsDriven locked") {
+  // Unique workspace id, for example ws-Hu9WT3XkVQpMWkBb
+  id string
+  // Workspace name, unique within the organization
+  name string
+  // Free-form workspace description
+  description string
+  // Where runs execute
+  //
+  // One of remote (on HCP Terraform infrastructure), local (state storage
+  // only, plans run on the operator's machine), or agent (on a self-hosted
+  // agent from the workspace's agent pool).
+  executionMode string
+  // Whether a successful plan applies automatically without human confirmation
+  autoApply bool
+  // Whether a run started by a run trigger applies automatically
+  autoApplyRunTrigger bool
+  // Terraform version the workspace pins its runs to
+  terraformVersion string
+  // Subdirectory of the repository Terraform runs in, empty for the repository root
+  workingDirectory string
+  // Whether the workspace is locked against new runs
+  locked bool
+  // Whether runs enter the workspace from a connected VCS repository
+  //
+  // True when a VCS repository is attached, meaning commits to the tracked
+  // branch queue runs. False for a CLI- or API-driven workspace, where runs
+  // are queued by an operator or an external pipeline.
+  vcsDriven bool
+  // Repository backing the workspace, for example acme/infrastructure, empty for a CLI-driven workspace
+  vcsRepoIdentifier string
+  // Branch runs are started from, empty when the repository default branch is used
+  vcsRepoBranch string
+  // VCS host the repository lives on, for example github or gitlab_hosted
+  vcsRepoServiceProvider string
+  // Whether submodules are fetched when the repository is cloned
+  vcsRepoIngressSubmodules bool
+  // Whether speculative plans run on pull requests against the repository
+  speculativeEnabled bool
+  // Whether every workspace in the organization may read this workspace's state outputs
+  //
+  // When true, remote state is readable organization-wide and the
+  // remoteStateConsumers list is not consulted. When false, only the
+  // workspaces in remoteStateConsumers may read the outputs.
+  globalRemoteState bool
+  // Whether a destroy plan may be queued against the workspace
+  allowDestroyPlan bool
+  // Whether VCS pushes matching the trigger patterns queue runs automatically
+  fileTriggersEnabled bool
+  // Whether every VCS push queues a run rather than only the most recent
+  queueAllRuns bool
+  // Whether run output is rendered as structured output rather than raw logs
+  structuredRunOutputEnabled bool
+  // Whether health assessments (drift detection) run against the workspace
+  assessmentsEnabled bool
+  // Number of resources under management in the workspace state
+  resourceCount int
+  // Tags applied to the workspace
+  tagNames []string
+  // Time the workspace was created
+  createdAt time
+  // Time the workspace state or settings last changed
+  updatedAt time
+  // Organization the workspace belongs to
+  organization() hcp.terraform.organization
+  // Agent pool runs execute on, null unless the execution mode is agent
+  agentPool() hcp.terraform.agentPool
+  // Workspaces allowed to read this workspace's state outputs
+  //
+  // Empty when no workspace has been granted access, and not consulted at all
+  // when globalRemoteState is true.
+  remoteStateConsumers() []hcp.terraform.workspace
+  // Team access grants on the workspace
+  teamAccess() []hcp.terraform.teamAccess
+  // Variables defined on the workspace
+  variables() []hcp.terraform.variable
+}
+
+// HCP Terraform team access grant
+//
+// Permission a single team holds on a single workspace. The `access` field
+// carries the fixed role (read, plan, write, or admin) or `custom`, in which
+// case the runs, variables, stateVersions, sentinelMocks, workspaceLocking,
+// and runTasks fields carry the individual permissions. The derived canApply
+// field answers who may confirm and apply a plan, which is the permission that
+// turns proposed infrastructure changes into real ones.
+hcp.terraform.teamAccess @defaults("access canApply") {
+  // Unique grant id, for example tws-Hu9WT3XkVQpMWkBb
+  id string
+  // Role the team holds
+  //
+  // One of read, plan, write, admin, or custom. A custom grant carries its
+  // individual permissions in the runs, variables, stateVersions,
+  // sentinelMocks, workspaceLocking, and runTasks fields.
+  access string
+  // Whether the team may confirm and apply a plan
+  //
+  // True for the write and admin roles, and for a custom role whose runs
+  // permission is apply. A team that can apply can change infrastructure.
+  canApply bool
+  // Run permission for a custom role, one of read, plan, or apply
+  runs string
+  // Variable permission for a custom role, one of none, read, or write
+  variables string
+  // State-version permission for a custom role, one of none, read-outputs, read, or write
+  stateVersions string
+  // Sentinel mock permission for a custom role, one of none or read
+  sentinelMocks string
+  // Whether a custom role may lock and unlock the workspace
+  workspaceLocking bool
+  // Whether a custom role may manage the workspace's run tasks
+  runTasks bool
+  // Team the grant applies to
+  team() hcp.terraform.team
+  // Workspace the grant applies to
+  workspace() hcp.terraform.workspace
+}
+
+// HCP Terraform workspace variable
+//
+// Input to a workspace's Terraform runs, either a Terraform input variable or
+// an environment variable exported into the run environment. Reports whether
+// the variable is marked sensitive, which is what keeps its value out of the
+// UI, the API, and run logs, and whether the value is interpreted as HCL. The
+// variable value is deliberately not exposed by this resource, for either
+// sensitive or non-sensitive variables, so a scan never carries credentials
+// out of the workspace. The `key` field is the variable name.
+hcp.terraform.variable @defaults("key category sensitive hcl") {
+  // Unique variable id, for example var-Hu9WT3XkVQpMWkBb
+  id string
+  // Variable name as Terraform sees it
+  key string
+  // Where the variable is injected, one of terraform (an input variable) or env (an environment variable)
+  category string
+  // Whether the value is write-only and hidden from the UI, the API, and run logs
+  sensitive bool
+  // Whether the value is parsed as an HCL expression rather than a literal string
+  hcl bool
+  // Free-form variable description
+  description string
+  // Workspace the variable is defined on
+  workspace() hcp.terraform.workspace
+}
+
+// HCP Terraform team
+//
+// Group of users that permissions are granted to, both organization-wide and
+// per workspace. The organization-level permissions report which teams can
+// manage policies, workspaces, VCS settings, membership, and agent pools, and
+// the visibility field reports whether the team is discoverable by other
+// members. Team tokens are API credentials that act with the team's
+// permissions and are not tied to any single user. The `name` field is the
+// team name.
+hcp.terraform.team @defaults("name usersCount visibility") {
+  // Unique team id, for example team-Hu9WT3XkVQpMWkBb
+  id string
+  // Team name, unique within the organization
+  name string
+  // Number of users in the team
+  usersCount int
+  // Whether the team is visible to non-members, one of secret or organization
+  visibility string
+  // SAML or SSO group the team is mapped to, null when no mapping is configured
+  ssoTeamId string
+  // Whether members may create and revoke their own team tokens
+  allowMemberTokenManagement bool
+  // Whether the team may create, edit, and delete the organization's policies
+  canManagePolicies bool
+  // Whether the team may override soft-mandatory policy checks
+  canManagePolicyOverrides bool
+  // Whether the team may create and administer every workspace in the organization
+  canManageWorkspaces bool
+  // Whether the team may manage the organization's VCS connections
+  canManageVcsSettings bool
+  // Whether the team may add and remove organization members
+  canManageMembership bool
+  // Whether the team may create and delete teams
+  canManageTeams bool
+  // Whether the team may change the organization access level of other teams
+  canManageOrganizationAccess bool
+  // Whether the team may create and administer projects
+  canManageProjects bool
+  // Whether the team may create and administer run tasks
+  canManageRunTasks bool
+  // Whether the team may create and administer agent pools
+  canManageAgentPools bool
+  // Whether the team may publish and delete private providers
+  canManageProviders bool
+  // Whether the team may publish and delete private modules
+  canManageModules bool
+  // Whether the team may view every workspace in the organization
+  canReadWorkspaces bool
+  // Whether the team may view every project in the organization
+  canReadProjects bool
+  // Whether the team may see teams whose visibility is secret
+  canAccessSecretTeams bool
+  // Organization the team belongs to
+  organization() hcp.terraform.organization
+  // API tokens issued to the team
+  tokens() []hcp.terraform.teamToken
+}
+
+// HCP Terraform team token
+//
+// API credential that authenticates as a team rather than as a user, carrying
+// the team's permissions and surviving the departure of any individual member.
+// The creation, last-use, and expiry times drive rotation and dormancy audits.
+// The token secret itself is returned only once at creation and is never
+// exposed by this resource. The `id` field identifies the token.
+hcp.terraform.teamToken @defaults("id description createdAt lastUsedAt") {
+  // Unique token id, for example at-Hu9WT3XkVQpMWkBb
+  id string
+  // Free-form token description, empty for the legacy single team token
+  description string
+  // Time the token was created
+  createdAt time
+  // Time the token was last used to authenticate, null when it has never been used
+  lastUsedAt time
+  // Time the token expires, null when the token does not expire
+  expiredAt time
+  // Team the token authenticates as
+  team() hcp.terraform.team
+}
+
+// HCP Terraform policy set
+//
+// Collection of Sentinel or OPA policies applied to workspace runs. A global
+// set applies to every workspace in the organization, otherwise the set
+// applies only to the workspaces it is explicitly attached to. Reports the
+// policy engine, how many policies the set carries, and how many workspaces it
+// gates, so audits can find workspaces that no policy set covers. The `name`
+// field is the policy set name.
+hcp.terraform.policySet @defaults("name kind global policyCount workspaceCount") {
+  // Unique policy set id, for example polset-Hu9WT3XkVQpMWkBb
+  id string
+  // Policy set name, unique within the organization
+  name string
+  // Free-form policy set description
+  description string
+  // Policy engine the set uses, one of sentinel or opa
+  kind string
+  // Whether the set applies to every workspace in the organization
+  global bool
+  // Number of policies in the set
+  policyCount int
+  // Number of workspaces the set is explicitly attached to, 0 for a global set
+  workspaceCount int
+  // Whether the set is sourced from a VCS repository or an uploaded version rather than from individually managed policies
+  versioned bool
+  // Subdirectory of the repository the policies are read from, empty for the repository root
+  policiesPath string
+  // Whether the set's policies evaluate on a self-hosted agent
+  agentEnabled bool
+  // Whether the set's soft-mandatory failures may be overridden
+  overridable bool
+  // Time the policy set was created
+  createdAt time
+  // Time the policy set was last updated
+  updatedAt time
+  // Organization the policy set belongs to
+  organization() hcp.terraform.organization
+  // Policies in the set
+  policies() []hcp.terraform.policy
+  // Workspaces the set is explicitly attached to, empty for a global set
+  workspaces() []hcp.terraform.workspace
+}
+
+// HCP Terraform policy
+//
+// Single Sentinel or OPA rule evaluated against a plan before it may be
+// applied. The enforcement level decides what a failure does: an advisory
+// failure only warns, a soft-mandatory failure blocks the apply until someone
+// with override permission overrides it, and a hard-mandatory failure blocks
+// the apply outright. The derived blocking field reports whether a failure
+// stops the run with no override path. The `name` field is the policy name.
+hcp.terraform.policy @defaults("name kind enforcementLevel blocking") {
+  // Unique policy id, for example pol-Hu9WT3XkVQpMWkBb
+  id string
+  // Policy name, unique within the organization
+  name string
+  // Free-form policy description
+  description string
+  // Policy engine the policy is written for, one of sentinel or opa
+  kind string
+  // What a policy failure does to the run
+  //
+  // For a Sentinel policy one of advisory, soft-mandatory, or hard-mandatory.
+  // For an OPA policy one of advisory or mandatory. Empty when the API
+  // reported no enforcement level for the policy.
+  enforcementLevel string
+  // Whether a failure blocks the apply with no override path
+  //
+  // True for the Sentinel hard-mandatory level and the OPA mandatory level.
+  // False for advisory (warn only) and soft-mandatory (blocks, but a user
+  // with override permission can proceed).
+  blocking bool
+  // Number of policy sets the policy belongs to
+  policySetCount int
+  // Time the policy was last updated
+  updatedAt time
+  // Organization the policy belongs to
+  organization() hcp.terraform.organization
+}
+
+// HCP Terraform agent pool
+//
+// Group of self-hosted agents that execute runs for workspaces whose execution
+// mode is agent. An organization-scoped pool may be selected by any workspace
+// in the organization; a scoped pool may be selected only by the workspaces on
+// its allow list, which is what keeps a production network's agents away from
+// unrelated workspaces. The `name` field is the pool name.
+hcp.terraform.agentPool @defaults("name agentCount organizationScoped") {
+  // Unique agent pool id, for example apool-Hu9WT3XkVQpMWkBb
+  id string
+  // Agent pool name, unique within the organization
+  name string
+  // Number of agents registered to the pool
+  agentCount int
+  // Whether any workspace in the organization may run on the pool
+  //
+  // When false, only the workspaces in allowedWorkspaces may select the pool.
+  organizationScoped bool
+  // Time the agent pool was created
+  createdAt time
+  // Organization the agent pool belongs to
+  organization() hcp.terraform.organization
+  // Workspaces allowed to run on the pool, empty when the pool is organization-scoped
+  allowedWorkspaces() []hcp.terraform.workspace
 }

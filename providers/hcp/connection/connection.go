@@ -51,6 +51,15 @@ type HcpConnection struct {
 	projectID  string
 	resourceID string
 
+	// HCP Terraform / Terraform Enterprise is a separate control plane with
+	// its own tenancy and its own bearer token; the HCP service principal
+	// above does not authenticate to it.
+	tfeAddress string
+	tfeOrgName string
+	tfeToken   string
+	tfeClient  *TfeClient
+	tfeMu      sync.Mutex
+
 	// transport is the authenticated go-openapi transport shared by every HCP
 	// service client. Resource files build the per-service client on top of it.
 	transport runtime.ClientTransport
@@ -64,6 +73,9 @@ func NewHcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 		orgID:      conf.Options[OptionOrgID],
 		projectID:  conf.Options[OptionProjectID],
 		resourceID: conf.Options[OptionResourceID],
+		tfeAddress: conf.Options[OptionTfeAddress],
+		tfeOrgName: conf.Options[OptionTfeOrganization],
+		tfeToken:   credentialByUser(conf, CredentialTfeToken),
 	}
 
 	// A scope may be set explicitly by discovery; otherwise infer it from the
@@ -79,7 +91,7 @@ func NewHcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	}
 
 	clientID := conf.Options[OptionClientID]
-	clientSecret := clientSecretFromConf(conf)
+	clientSecret := credentialByUser(conf, CredentialClientSecret)
 	if clientID == "" || clientSecret == "" {
 		return nil, errors.New("HCP credentials required: set --client-id and --client-secret (service principal)")
 	}
@@ -103,17 +115,16 @@ func NewHcpConnection(id uint32, asset *inventory.Asset, conf *inventory.Config)
 	return conn, nil
 }
 
-// clientSecretFromConf extracts the service principal client secret from the
-// connection credentials. The credentials are keyed by their user tag (a
-// routing label, not a secret), so the switch selects the client-secret
-// credential rather than comparing any secret material.
-func clientSecretFromConf(conf *inventory.Config) string {
+// credentialByUser extracts a password credential from the connection config by
+// its user tag. The credentials are keyed by that tag (a routing label, not a
+// secret), so the comparison selects the wanted credential rather than
+// comparing any secret material.
+func credentialByUser(conf *inventory.Config, user string) string {
 	for _, cred := range conf.Credentials {
 		if cred.Type != vault.CredentialType_password {
 			continue
 		}
-		switch cred.User {
-		case CredentialClientSecret:
+		if cred.User == user {
 			return string(cred.Secret)
 		}
 	}
@@ -164,4 +175,27 @@ func (c *HcpConnection) EnsureOrgID(ctx context.Context) (string, error) {
 	}
 	c.orgID = orgID
 	return c.orgID, nil
+}
+
+// TerraformOrganization returns the HCP Terraform organization the connection
+// is scoped to, or the empty string when every reachable organization is in
+// scope.
+func (c *HcpConnection) TerraformOrganization() string { return c.tfeOrgName }
+
+// TerraformClient returns the HCP Terraform API client, building it on first
+// use. It fails when no API token was supplied rather than reporting an empty
+// estate, so a missing credential cannot be mistaken for an organization with
+// no workspaces. It is safe to call concurrently.
+func (c *HcpConnection) TerraformClient() (*TfeClient, error) {
+	c.tfeMu.Lock()
+	defer c.tfeMu.Unlock()
+	if c.tfeClient != nil {
+		return c.tfeClient, nil
+	}
+	client, err := NewTfeClient(c.tfeAddress, c.tfeToken, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.tfeClient = client
+	return c.tfeClient, nil
 }

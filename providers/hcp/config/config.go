@@ -33,14 +33,23 @@ project with --project-id.
 
 Authenticate with an HCP service principal (client id and client secret).
 
+HCP Terraform and Terraform Enterprise are a separate control plane with their
+own tenancy, so they are reached with their own API token (--tfe-token). With
+a token supplied, hcp.terraformOrganizations exposes the workspaces, team
+access, remote state sharing, variables, policy sets, teams, team tokens, and
+agent pools of every organization the token can reach. Point --tfe-address at
+a self-hosted Terraform Enterprise installation, and --tfe-organization at a
+single organization.
+
 Examples:
   cnspec shell hcp --client-id <id> --client-secret <secret>
   cnspec shell hcp --org-id <org-id> --client-id <id> --client-secret <secret>
   cnspec shell hcp --project-id <project-id> --client-id <id> --client-secret <secret>
+  cnspec shell hcp --client-id <id> --client-secret <secret> --tfe-token <token>
 
 Notes:
-  Set HCP_CLIENT_ID, HCP_CLIENT_SECRET, HCP_ORGANIZATION_ID, or
-  HCP_PROJECT_ID to omit the matching flags.
+  Set HCP_CLIENT_ID, HCP_CLIENT_SECRET, HCP_ORGANIZATION_ID, HCP_PROJECT_ID,
+  TFE_TOKEN, TFE_ADDRESS, or TFE_ORGANIZATION to omit the matching flags.
 `,
 			Discovery: []string{
 				connection.DiscoveryAuto,
@@ -76,6 +85,24 @@ Notes:
 					Type:    plugin.FlagType_String,
 					Default: "",
 					Desc:    "HCP project id for a single-project connect",
+				},
+				{
+					Long:    "tfe-token",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "HCP Terraform or Terraform Enterprise API token",
+				},
+				{
+					Long:    "tfe-address",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "Terraform Enterprise base URL (defaults to https://app.terraform.io)",
+				},
+				{
+					Long:    "tfe-organization",
+					Type:    plugin.FlagType_String,
+					Default: "",
+					Desc:    "HCP Terraform organization name for a single-organization connect",
 				},
 			},
 		},

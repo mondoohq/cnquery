@@ -53,6 +53,9 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	clientSecret := flagOrEnv("client-secret", "HCP_CLIENT_SECRET")
 	orgID := flagOrEnv("org-id", "HCP_ORGANIZATION_ID")
 	projectID := flagOrEnv("project-id", "HCP_PROJECT_ID")
+	tfeToken := flagOrEnv("tfe-token", "TFE_TOKEN")
+	tfeAddress := flagOrEnv("tfe-address", "TFE_ADDRESS")
+	tfeOrganization := flagOrEnv("tfe-organization", "TFE_ORGANIZATION")
 
 	// A project id scopes to a single project; otherwise the connection is
 	// rooted at the organization and discovers its projects.
@@ -70,6 +73,18 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 	}
 	if clientSecret != "" {
 		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(connection.CredentialClientSecret, clientSecret))
+	}
+
+	// HCP Terraform is a separate control plane reached with its own API token,
+	// so it is configured independently of the service principal above.
+	if tfeAddress != "" {
+		conf.Options[connection.OptionTfeAddress] = tfeAddress
+	}
+	if tfeOrganization != "" {
+		conf.Options[connection.OptionTfeOrganization] = tfeOrganization
+	}
+	if tfeToken != "" {
+		conf.Credentials = append(conf.Credentials, vault.NewPasswordCredential(connection.CredentialTfeToken, tfeToken))
 	}
 
 	discoverTargets := []string{}

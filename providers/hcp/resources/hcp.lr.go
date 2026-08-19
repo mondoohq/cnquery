@@ -27,6 +27,15 @@ const (
 	ResourceHcpWaypointApplication    string = "hcp.waypoint.application"
 	ResourceHcpIamServicePrincipal    string = "hcp.iam.servicePrincipal"
 	ResourceHcpIamServicePrincipalKey string = "hcp.iam.servicePrincipal.key"
+	ResourceHcpTerraformOrganization  string = "hcp.terraform.organization"
+	ResourceHcpTerraformWorkspace     string = "hcp.terraform.workspace"
+	ResourceHcpTerraformTeamAccess    string = "hcp.terraform.teamAccess"
+	ResourceHcpTerraformVariable      string = "hcp.terraform.variable"
+	ResourceHcpTerraformTeam          string = "hcp.terraform.team"
+	ResourceHcpTerraformTeamToken     string = "hcp.terraform.teamToken"
+	ResourceHcpTerraformPolicySet     string = "hcp.terraform.policySet"
+	ResourceHcpTerraformPolicy        string = "hcp.terraform.policy"
+	ResourceHcpTerraformAgentPool     string = "hcp.terraform.agentPool"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -76,6 +85,42 @@ func init() {
 		"hcp.iam.servicePrincipal.key": {
 			// to override args, implement: initHcpIamServicePrincipalKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createHcpIamServicePrincipalKey,
+		},
+		"hcp.terraform.organization": {
+			Init:   initHcpTerraformOrganization,
+			Create: createHcpTerraformOrganization,
+		},
+		"hcp.terraform.workspace": {
+			Init:   initHcpTerraformWorkspace,
+			Create: createHcpTerraformWorkspace,
+		},
+		"hcp.terraform.teamAccess": {
+			// to override args, implement: initHcpTerraformTeamAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHcpTerraformTeamAccess,
+		},
+		"hcp.terraform.variable": {
+			// to override args, implement: initHcpTerraformVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHcpTerraformVariable,
+		},
+		"hcp.terraform.team": {
+			Init:   initHcpTerraformTeam,
+			Create: createHcpTerraformTeam,
+		},
+		"hcp.terraform.teamToken": {
+			// to override args, implement: initHcpTerraformTeamToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHcpTerraformTeamToken,
+		},
+		"hcp.terraform.policySet": {
+			// to override args, implement: initHcpTerraformPolicySet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHcpTerraformPolicySet,
+		},
+		"hcp.terraform.policy": {
+			// to override args, implement: initHcpTerraformPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHcpTerraformPolicy,
+		},
+		"hcp.terraform.agentPool": {
+			Init:   initHcpTerraformAgentPool,
+			Create: createHcpTerraformAgentPool,
 		},
 	}
 }
@@ -153,6 +198,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hcp.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHcp).GetProjects()).ToDataRes(types.Array(types.Resource("hcp.project")))
+	},
+	"hcp.terraformOrganizations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcp).GetTerraformOrganizations()).ToDataRes(types.Array(types.Resource("hcp.terraform.organization")))
 	},
 	"hcp.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHcpOrganization).GetId()).ToDataRes(types.String)
@@ -391,6 +439,399 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hcp.iam.servicePrincipal.key.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHcpIamServicePrincipalKey).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"hcp.terraform.organization.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetName()).ToDataRes(types.String)
+	},
+	"hcp.terraform.organization.externalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetExternalId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.organization.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetEmail()).ToDataRes(types.String)
+	},
+	"hcp.terraform.organization.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.organization.collaboratorAuthPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetCollaboratorAuthPolicy()).ToDataRes(types.String)
+	},
+	"hcp.terraform.organization.twoFactorRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetTwoFactorRequired()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.organization.twoFactorConformant": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetTwoFactorConformant()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.organization.samlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetSamlEnabled()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.organization.ownersTeamSamlRoleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetOwnersTeamSamlRoleId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.organization.sessionTimeoutMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetSessionTimeoutMinutes()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.organization.sessionRememberMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetSessionRememberMinutes()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.organization.costEstimationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetCostEstimationEnabled()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.organization.assessmentsEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetAssessmentsEnforced()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.organization.allowForceDeleteWorkspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetAllowForceDeleteWorkspaces()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.organization.defaultExecutionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetDefaultExecutionMode()).ToDataRes(types.String)
+	},
+	"hcp.terraform.organization.planExpired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetPlanExpired()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.organization.ownersTeam": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetOwnersTeam()).ToDataRes(types.Resource("hcp.terraform.team"))
+	},
+	"hcp.terraform.organization.workspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetWorkspaces()).ToDataRes(types.Array(types.Resource("hcp.terraform.workspace")))
+	},
+	"hcp.terraform.organization.teams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetTeams()).ToDataRes(types.Array(types.Resource("hcp.terraform.team")))
+	},
+	"hcp.terraform.organization.policySets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetPolicySets()).ToDataRes(types.Array(types.Resource("hcp.terraform.policySet")))
+	},
+	"hcp.terraform.organization.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetPolicies()).ToDataRes(types.Array(types.Resource("hcp.terraform.policy")))
+	},
+	"hcp.terraform.organization.agentPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformOrganization).GetAgentPools()).ToDataRes(types.Array(types.Resource("hcp.terraform.agentPool")))
+	},
+	"hcp.terraform.workspace.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetName()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetDescription()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.executionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetExecutionMode()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.autoApply": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetAutoApply()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.autoApplyRunTrigger": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetAutoApplyRunTrigger()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.terraformVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetTerraformVersion()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.workingDirectory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetWorkingDirectory()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetLocked()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.vcsDriven": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetVcsDriven()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.vcsRepoIdentifier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetVcsRepoIdentifier()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.vcsRepoBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetVcsRepoBranch()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.vcsRepoServiceProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetVcsRepoServiceProvider()).ToDataRes(types.String)
+	},
+	"hcp.terraform.workspace.vcsRepoIngressSubmodules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetVcsRepoIngressSubmodules()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.speculativeEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetSpeculativeEnabled()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.globalRemoteState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetGlobalRemoteState()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.allowDestroyPlan": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetAllowDestroyPlan()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.fileTriggersEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetFileTriggersEnabled()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.queueAllRuns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetQueueAllRuns()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.structuredRunOutputEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetStructuredRunOutputEnabled()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.assessmentsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetAssessmentsEnabled()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.workspace.resourceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetResourceCount()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.workspace.tagNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetTagNames()).ToDataRes(types.Array(types.String))
+	},
+	"hcp.terraform.workspace.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.workspace.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.workspace.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetOrganization()).ToDataRes(types.Resource("hcp.terraform.organization"))
+	},
+	"hcp.terraform.workspace.agentPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetAgentPool()).ToDataRes(types.Resource("hcp.terraform.agentPool"))
+	},
+	"hcp.terraform.workspace.remoteStateConsumers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetRemoteStateConsumers()).ToDataRes(types.Array(types.Resource("hcp.terraform.workspace")))
+	},
+	"hcp.terraform.workspace.teamAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetTeamAccess()).ToDataRes(types.Array(types.Resource("hcp.terraform.teamAccess")))
+	},
+	"hcp.terraform.workspace.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformWorkspace).GetVariables()).ToDataRes(types.Array(types.Resource("hcp.terraform.variable")))
+	},
+	"hcp.terraform.teamAccess.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamAccess.access": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetAccess()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamAccess.canApply": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetCanApply()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.teamAccess.runs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetRuns()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamAccess.variables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetVariables()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamAccess.stateVersions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetStateVersions()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamAccess.sentinelMocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetSentinelMocks()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamAccess.workspaceLocking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetWorkspaceLocking()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.teamAccess.runTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetRunTasks()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.teamAccess.team": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetTeam()).ToDataRes(types.Resource("hcp.terraform.team"))
+	},
+	"hcp.terraform.teamAccess.workspace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamAccess).GetWorkspace()).ToDataRes(types.Resource("hcp.terraform.workspace"))
+	},
+	"hcp.terraform.variable.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformVariable).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.variable.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformVariable).GetKey()).ToDataRes(types.String)
+	},
+	"hcp.terraform.variable.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformVariable).GetCategory()).ToDataRes(types.String)
+	},
+	"hcp.terraform.variable.sensitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformVariable).GetSensitive()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.variable.hcl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformVariable).GetHcl()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.variable.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformVariable).GetDescription()).ToDataRes(types.String)
+	},
+	"hcp.terraform.variable.workspace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformVariable).GetWorkspace()).ToDataRes(types.Resource("hcp.terraform.workspace"))
+	},
+	"hcp.terraform.team.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.team.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetName()).ToDataRes(types.String)
+	},
+	"hcp.terraform.team.usersCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetUsersCount()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.team.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetVisibility()).ToDataRes(types.String)
+	},
+	"hcp.terraform.team.ssoTeamId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetSsoTeamId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.team.allowMemberTokenManagement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetAllowMemberTokenManagement()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManagePolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManagePolicies()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManagePolicyOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManagePolicyOverrides()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageWorkspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageWorkspaces()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageVcsSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageVcsSettings()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageMembership": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageMembership()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageTeams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageTeams()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageOrganizationAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageOrganizationAccess()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageProjects()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageRunTasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageRunTasks()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageAgentPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageAgentPools()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageProviders()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canManageModules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanManageModules()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canReadWorkspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanReadWorkspaces()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canReadProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanReadProjects()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.canAccessSecretTeams": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetCanAccessSecretTeams()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.team.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetOrganization()).ToDataRes(types.Resource("hcp.terraform.organization"))
+	},
+	"hcp.terraform.team.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeam).GetTokens()).ToDataRes(types.Array(types.Resource("hcp.terraform.teamToken")))
+	},
+	"hcp.terraform.teamToken.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamToken).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamToken.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamToken).GetDescription()).ToDataRes(types.String)
+	},
+	"hcp.terraform.teamToken.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamToken).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.teamToken.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamToken).GetLastUsedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.teamToken.expiredAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamToken).GetExpiredAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.teamToken.team": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformTeamToken).GetTeam()).ToDataRes(types.Resource("hcp.terraform.team"))
+	},
+	"hcp.terraform.policySet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policySet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetName()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policySet.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetDescription()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policySet.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetKind()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policySet.global": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetGlobal()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.policySet.policyCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetPolicyCount()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.policySet.workspaceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetWorkspaceCount()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.policySet.versioned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetVersioned()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.policySet.policiesPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetPoliciesPath()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policySet.agentEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetAgentEnabled()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.policySet.overridable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetOverridable()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.policySet.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.policySet.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.policySet.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetOrganization()).ToDataRes(types.Resource("hcp.terraform.organization"))
+	},
+	"hcp.terraform.policySet.policies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetPolicies()).ToDataRes(types.Array(types.Resource("hcp.terraform.policy")))
+	},
+	"hcp.terraform.policySet.workspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicySet).GetWorkspaces()).ToDataRes(types.Array(types.Resource("hcp.terraform.workspace")))
+	},
+	"hcp.terraform.policy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetName()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policy.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetKind()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policy.enforcementLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetEnforcementLevel()).ToDataRes(types.String)
+	},
+	"hcp.terraform.policy.blocking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetBlocking()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.policy.policySetCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetPolicySetCount()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.policy.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.policy.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformPolicy).GetOrganization()).ToDataRes(types.Resource("hcp.terraform.organization"))
+	},
+	"hcp.terraform.agentPool.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformAgentPool).GetId()).ToDataRes(types.String)
+	},
+	"hcp.terraform.agentPool.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformAgentPool).GetName()).ToDataRes(types.String)
+	},
+	"hcp.terraform.agentPool.agentCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformAgentPool).GetAgentCount()).ToDataRes(types.Int)
+	},
+	"hcp.terraform.agentPool.organizationScoped": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformAgentPool).GetOrganizationScoped()).ToDataRes(types.Bool)
+	},
+	"hcp.terraform.agentPool.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformAgentPool).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"hcp.terraform.agentPool.organization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformAgentPool).GetOrganization()).ToDataRes(types.Resource("hcp.terraform.organization"))
+	},
+	"hcp.terraform.agentPool.allowedWorkspaces": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHcpTerraformAgentPool).GetAllowedWorkspaces()).ToDataRes(types.Array(types.Resource("hcp.terraform.workspace")))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -413,6 +854,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hcp.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHcp).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraformOrganizations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcp).TerraformOrganizations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"hcp.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -771,6 +1216,566 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHcpIamServicePrincipalKey).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"hcp.terraform.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.organization.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.externalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).ExternalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.collaboratorAuthPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).CollaboratorAuthPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.twoFactorRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).TwoFactorRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.twoFactorConformant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).TwoFactorConformant, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.samlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).SamlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.ownersTeamSamlRoleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).OwnersTeamSamlRoleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.sessionTimeoutMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).SessionTimeoutMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.sessionRememberMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).SessionRememberMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.costEstimationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).CostEstimationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.assessmentsEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).AssessmentsEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.allowForceDeleteWorkspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).AllowForceDeleteWorkspaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.defaultExecutionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).DefaultExecutionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.planExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).PlanExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.ownersTeam": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).OwnersTeam, ok = plugin.RawToTValue[*mqlHcpTerraformTeam](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.workspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).Workspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.teams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).Teams, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.policySets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).PolicySets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.organization.agentPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformOrganization).AgentPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.workspace.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.executionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).ExecutionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.autoApply": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).AutoApply, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.autoApplyRunTrigger": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).AutoApplyRunTrigger, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.terraformVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).TerraformVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.workingDirectory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).WorkingDirectory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.vcsDriven": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).VcsDriven, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.vcsRepoIdentifier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).VcsRepoIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.vcsRepoBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).VcsRepoBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.vcsRepoServiceProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).VcsRepoServiceProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.vcsRepoIngressSubmodules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).VcsRepoIngressSubmodules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.speculativeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).SpeculativeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.globalRemoteState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).GlobalRemoteState, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.allowDestroyPlan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).AllowDestroyPlan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.fileTriggersEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).FileTriggersEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.queueAllRuns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).QueueAllRuns, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.structuredRunOutputEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).StructuredRunOutputEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.assessmentsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).AssessmentsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.resourceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).ResourceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.tagNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).TagNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).Organization, ok = plugin.RawToTValue[*mqlHcpTerraformOrganization](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.agentPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).AgentPool, ok = plugin.RawToTValue[*mqlHcpTerraformAgentPool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.remoteStateConsumers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).RemoteStateConsumers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.teamAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).TeamAccess, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.workspace.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformWorkspace).Variables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.teamAccess.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.access": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).Access, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.canApply": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).CanApply, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.runs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).Runs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.variables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).Variables, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.stateVersions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).StateVersions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.sentinelMocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).SentinelMocks, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.workspaceLocking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).WorkspaceLocking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.runTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).RunTasks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.team": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).Team, ok = plugin.RawToTValue[*mqlHcpTerraformTeam](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamAccess.workspace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamAccess).Workspace, ok = plugin.RawToTValue[*mqlHcpTerraformWorkspace](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.variable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.variable.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.variable.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.variable.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.variable.sensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).Sensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.variable.hcl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).Hcl, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.variable.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.variable.workspace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformVariable).Workspace, ok = plugin.RawToTValue[*mqlHcpTerraformWorkspace](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.team.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.usersCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).UsersCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.ssoTeamId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).SsoTeamId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.allowMemberTokenManagement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).AllowMemberTokenManagement, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManagePolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManagePolicies, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManagePolicyOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManagePolicyOverrides, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageWorkspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageWorkspaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageVcsSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageVcsSettings, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageMembership": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageMembership, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageTeams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageTeams, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageOrganizationAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageOrganizationAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageProjects, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageRunTasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageRunTasks, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageAgentPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageAgentPools, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageProviders, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canManageModules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanManageModules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canReadWorkspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanReadWorkspaces, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canReadProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanReadProjects, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.canAccessSecretTeams": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).CanAccessSecretTeams, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).Organization, ok = plugin.RawToTValue[*mqlHcpTerraformOrganization](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.team.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeam).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamToken).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.teamToken.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamToken.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamToken).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamToken.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamToken).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamToken.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamToken).LastUsedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamToken.expiredAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamToken).ExpiredAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.teamToken.team": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformTeamToken).Team, ok = plugin.RawToTValue[*mqlHcpTerraformTeam](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.policySet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.global": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Global, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.policyCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).PolicyCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.workspaceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).WorkspaceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.versioned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Versioned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.policiesPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).PoliciesPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.agentEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).AgentEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.overridable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Overridable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Organization, ok = plugin.RawToTValue[*mqlHcpTerraformOrganization](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Policies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policySet.workspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicySet).Workspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.policy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.enforcementLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).EnforcementLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.blocking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).Blocking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.policySetCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).PolicySetCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.policy.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformPolicy).Organization, ok = plugin.RawToTValue[*mqlHcpTerraformOrganization](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.agentPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).__id, ok = v.Value.(string)
+		return
+	},
+	"hcp.terraform.agentPool.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.agentPool.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.agentPool.agentCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).AgentCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.agentPool.organizationScoped": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).OrganizationScoped, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.agentPool.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.agentPool.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).Organization, ok = plugin.RawToTValue[*mqlHcpTerraformOrganization](v.Value, v.Error)
+		return
+	},
+	"hcp.terraform.agentPool.allowedWorkspaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHcpTerraformAgentPool).AllowedWorkspaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -800,8 +1805,9 @@ type mqlHcp struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlHcpInternal it will be used here
-	Organization plugin.TValue[*mqlHcpOrganization]
-	Projects     plugin.TValue[[]any]
+	Organization           plugin.TValue[*mqlHcpOrganization]
+	Projects               plugin.TValue[[]any]
+	TerraformOrganizations plugin.TValue[[]any]
 }
 
 // createHcp creates a new instance of this resource
@@ -870,6 +1876,22 @@ func (c *mqlHcp) GetProjects() *plugin.TValue[[]any] {
 		}
 
 		return c.projects()
+	})
+}
+
+func (c *mqlHcp) GetTerraformOrganizations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TerraformOrganizations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp", c.__id, "terraformOrganizations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.terraformOrganizations()
 	})
 }
 
@@ -1850,4 +2872,1286 @@ func (c *mqlHcpIamServicePrincipalKey) GetState() *plugin.TValue[string] {
 
 func (c *mqlHcpIamServicePrincipalKey) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+// mqlHcpTerraformOrganization for the hcp.terraform.organization resource
+type mqlHcpTerraformOrganization struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformOrganizationInternal
+	Name                       plugin.TValue[string]
+	ExternalId                 plugin.TValue[string]
+	Email                      plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	CollaboratorAuthPolicy     plugin.TValue[string]
+	TwoFactorRequired          plugin.TValue[bool]
+	TwoFactorConformant        plugin.TValue[bool]
+	SamlEnabled                plugin.TValue[bool]
+	OwnersTeamSamlRoleId       plugin.TValue[string]
+	SessionTimeoutMinutes      plugin.TValue[int64]
+	SessionRememberMinutes     plugin.TValue[int64]
+	CostEstimationEnabled      plugin.TValue[bool]
+	AssessmentsEnforced        plugin.TValue[bool]
+	AllowForceDeleteWorkspaces plugin.TValue[bool]
+	DefaultExecutionMode       plugin.TValue[string]
+	PlanExpired                plugin.TValue[bool]
+	OwnersTeam                 plugin.TValue[*mqlHcpTerraformTeam]
+	Workspaces                 plugin.TValue[[]any]
+	Teams                      plugin.TValue[[]any]
+	PolicySets                 plugin.TValue[[]any]
+	Policies                   plugin.TValue[[]any]
+	AgentPools                 plugin.TValue[[]any]
+}
+
+// createHcpTerraformOrganization creates a new instance of this resource
+func createHcpTerraformOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformOrganization{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.organization", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformOrganization) MqlName() string {
+	return "hcp.terraform.organization"
+}
+
+func (c *mqlHcpTerraformOrganization) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformOrganization) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHcpTerraformOrganization) GetExternalId() *plugin.TValue[string] {
+	return &c.ExternalId
+}
+
+func (c *mqlHcpTerraformOrganization) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlHcpTerraformOrganization) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlHcpTerraformOrganization) GetCollaboratorAuthPolicy() *plugin.TValue[string] {
+	return &c.CollaboratorAuthPolicy
+}
+
+func (c *mqlHcpTerraformOrganization) GetTwoFactorRequired() *plugin.TValue[bool] {
+	return &c.TwoFactorRequired
+}
+
+func (c *mqlHcpTerraformOrganization) GetTwoFactorConformant() *plugin.TValue[bool] {
+	return &c.TwoFactorConformant
+}
+
+func (c *mqlHcpTerraformOrganization) GetSamlEnabled() *plugin.TValue[bool] {
+	return &c.SamlEnabled
+}
+
+func (c *mqlHcpTerraformOrganization) GetOwnersTeamSamlRoleId() *plugin.TValue[string] {
+	return &c.OwnersTeamSamlRoleId
+}
+
+func (c *mqlHcpTerraformOrganization) GetSessionTimeoutMinutes() *plugin.TValue[int64] {
+	return &c.SessionTimeoutMinutes
+}
+
+func (c *mqlHcpTerraformOrganization) GetSessionRememberMinutes() *plugin.TValue[int64] {
+	return &c.SessionRememberMinutes
+}
+
+func (c *mqlHcpTerraformOrganization) GetCostEstimationEnabled() *plugin.TValue[bool] {
+	return &c.CostEstimationEnabled
+}
+
+func (c *mqlHcpTerraformOrganization) GetAssessmentsEnforced() *plugin.TValue[bool] {
+	return &c.AssessmentsEnforced
+}
+
+func (c *mqlHcpTerraformOrganization) GetAllowForceDeleteWorkspaces() *plugin.TValue[bool] {
+	return &c.AllowForceDeleteWorkspaces
+}
+
+func (c *mqlHcpTerraformOrganization) GetDefaultExecutionMode() *plugin.TValue[string] {
+	return &c.DefaultExecutionMode
+}
+
+func (c *mqlHcpTerraformOrganization) GetPlanExpired() *plugin.TValue[bool] {
+	return &c.PlanExpired
+}
+
+func (c *mqlHcpTerraformOrganization) GetOwnersTeam() *plugin.TValue[*mqlHcpTerraformTeam] {
+	return plugin.GetOrCompute[*mqlHcpTerraformTeam](&c.OwnersTeam, func() (*mqlHcpTerraformTeam, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.organization", c.__id, "ownersTeam")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformTeam), nil
+			}
+		}
+
+		return c.ownersTeam()
+	})
+}
+
+func (c *mqlHcpTerraformOrganization) GetWorkspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.organization", c.__id, "workspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workspaces()
+	})
+}
+
+func (c *mqlHcpTerraformOrganization) GetTeams() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Teams, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.organization", c.__id, "teams")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.teams()
+	})
+}
+
+func (c *mqlHcpTerraformOrganization) GetPolicySets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicySets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.organization", c.__id, "policySets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policySets()
+	})
+}
+
+func (c *mqlHcpTerraformOrganization) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.organization", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlHcpTerraformOrganization) GetAgentPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AgentPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.organization", c.__id, "agentPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agentPools()
+	})
+}
+
+// mqlHcpTerraformWorkspace for the hcp.terraform.workspace resource
+type mqlHcpTerraformWorkspace struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformWorkspaceInternal
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Description                plugin.TValue[string]
+	ExecutionMode              plugin.TValue[string]
+	AutoApply                  plugin.TValue[bool]
+	AutoApplyRunTrigger        plugin.TValue[bool]
+	TerraformVersion           plugin.TValue[string]
+	WorkingDirectory           plugin.TValue[string]
+	Locked                     plugin.TValue[bool]
+	VcsDriven                  plugin.TValue[bool]
+	VcsRepoIdentifier          plugin.TValue[string]
+	VcsRepoBranch              plugin.TValue[string]
+	VcsRepoServiceProvider     plugin.TValue[string]
+	VcsRepoIngressSubmodules   plugin.TValue[bool]
+	SpeculativeEnabled         plugin.TValue[bool]
+	GlobalRemoteState          plugin.TValue[bool]
+	AllowDestroyPlan           plugin.TValue[bool]
+	FileTriggersEnabled        plugin.TValue[bool]
+	QueueAllRuns               plugin.TValue[bool]
+	StructuredRunOutputEnabled plugin.TValue[bool]
+	AssessmentsEnabled         plugin.TValue[bool]
+	ResourceCount              plugin.TValue[int64]
+	TagNames                   plugin.TValue[[]any]
+	CreatedAt                  plugin.TValue[*time.Time]
+	UpdatedAt                  plugin.TValue[*time.Time]
+	Organization               plugin.TValue[*mqlHcpTerraformOrganization]
+	AgentPool                  plugin.TValue[*mqlHcpTerraformAgentPool]
+	RemoteStateConsumers       plugin.TValue[[]any]
+	TeamAccess                 plugin.TValue[[]any]
+	Variables                  plugin.TValue[[]any]
+}
+
+// createHcpTerraformWorkspace creates a new instance of this resource
+func createHcpTerraformWorkspace(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformWorkspace{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.workspace", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformWorkspace) MqlName() string {
+	return "hcp.terraform.workspace"
+}
+
+func (c *mqlHcpTerraformWorkspace) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformWorkspace) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformWorkspace) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHcpTerraformWorkspace) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHcpTerraformWorkspace) GetExecutionMode() *plugin.TValue[string] {
+	return &c.ExecutionMode
+}
+
+func (c *mqlHcpTerraformWorkspace) GetAutoApply() *plugin.TValue[bool] {
+	return &c.AutoApply
+}
+
+func (c *mqlHcpTerraformWorkspace) GetAutoApplyRunTrigger() *plugin.TValue[bool] {
+	return &c.AutoApplyRunTrigger
+}
+
+func (c *mqlHcpTerraformWorkspace) GetTerraformVersion() *plugin.TValue[string] {
+	return &c.TerraformVersion
+}
+
+func (c *mqlHcpTerraformWorkspace) GetWorkingDirectory() *plugin.TValue[string] {
+	return &c.WorkingDirectory
+}
+
+func (c *mqlHcpTerraformWorkspace) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+func (c *mqlHcpTerraformWorkspace) GetVcsDriven() *plugin.TValue[bool] {
+	return &c.VcsDriven
+}
+
+func (c *mqlHcpTerraformWorkspace) GetVcsRepoIdentifier() *plugin.TValue[string] {
+	return &c.VcsRepoIdentifier
+}
+
+func (c *mqlHcpTerraformWorkspace) GetVcsRepoBranch() *plugin.TValue[string] {
+	return &c.VcsRepoBranch
+}
+
+func (c *mqlHcpTerraformWorkspace) GetVcsRepoServiceProvider() *plugin.TValue[string] {
+	return &c.VcsRepoServiceProvider
+}
+
+func (c *mqlHcpTerraformWorkspace) GetVcsRepoIngressSubmodules() *plugin.TValue[bool] {
+	return &c.VcsRepoIngressSubmodules
+}
+
+func (c *mqlHcpTerraformWorkspace) GetSpeculativeEnabled() *plugin.TValue[bool] {
+	return &c.SpeculativeEnabled
+}
+
+func (c *mqlHcpTerraformWorkspace) GetGlobalRemoteState() *plugin.TValue[bool] {
+	return &c.GlobalRemoteState
+}
+
+func (c *mqlHcpTerraformWorkspace) GetAllowDestroyPlan() *plugin.TValue[bool] {
+	return &c.AllowDestroyPlan
+}
+
+func (c *mqlHcpTerraformWorkspace) GetFileTriggersEnabled() *plugin.TValue[bool] {
+	return &c.FileTriggersEnabled
+}
+
+func (c *mqlHcpTerraformWorkspace) GetQueueAllRuns() *plugin.TValue[bool] {
+	return &c.QueueAllRuns
+}
+
+func (c *mqlHcpTerraformWorkspace) GetStructuredRunOutputEnabled() *plugin.TValue[bool] {
+	return &c.StructuredRunOutputEnabled
+}
+
+func (c *mqlHcpTerraformWorkspace) GetAssessmentsEnabled() *plugin.TValue[bool] {
+	return &c.AssessmentsEnabled
+}
+
+func (c *mqlHcpTerraformWorkspace) GetResourceCount() *plugin.TValue[int64] {
+	return &c.ResourceCount
+}
+
+func (c *mqlHcpTerraformWorkspace) GetTagNames() *plugin.TValue[[]any] {
+	return &c.TagNames
+}
+
+func (c *mqlHcpTerraformWorkspace) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlHcpTerraformWorkspace) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlHcpTerraformWorkspace) GetOrganization() *plugin.TValue[*mqlHcpTerraformOrganization] {
+	return plugin.GetOrCompute[*mqlHcpTerraformOrganization](&c.Organization, func() (*mqlHcpTerraformOrganization, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.workspace", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformOrganization), nil
+			}
+		}
+
+		return c.organization()
+	})
+}
+
+func (c *mqlHcpTerraformWorkspace) GetAgentPool() *plugin.TValue[*mqlHcpTerraformAgentPool] {
+	return plugin.GetOrCompute[*mqlHcpTerraformAgentPool](&c.AgentPool, func() (*mqlHcpTerraformAgentPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.workspace", c.__id, "agentPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformAgentPool), nil
+			}
+		}
+
+		return c.agentPool()
+	})
+}
+
+func (c *mqlHcpTerraformWorkspace) GetRemoteStateConsumers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RemoteStateConsumers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.workspace", c.__id, "remoteStateConsumers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.remoteStateConsumers()
+	})
+}
+
+func (c *mqlHcpTerraformWorkspace) GetTeamAccess() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TeamAccess, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.workspace", c.__id, "teamAccess")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.teamAccess()
+	})
+}
+
+func (c *mqlHcpTerraformWorkspace) GetVariables() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Variables, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.workspace", c.__id, "variables")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.variables()
+	})
+}
+
+// mqlHcpTerraformTeamAccess for the hcp.terraform.teamAccess resource
+type mqlHcpTerraformTeamAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformTeamAccessInternal
+	Id               plugin.TValue[string]
+	Access           plugin.TValue[string]
+	CanApply         plugin.TValue[bool]
+	Runs             plugin.TValue[string]
+	Variables        plugin.TValue[string]
+	StateVersions    plugin.TValue[string]
+	SentinelMocks    plugin.TValue[string]
+	WorkspaceLocking plugin.TValue[bool]
+	RunTasks         plugin.TValue[bool]
+	Team             plugin.TValue[*mqlHcpTerraformTeam]
+	Workspace        plugin.TValue[*mqlHcpTerraformWorkspace]
+}
+
+// createHcpTerraformTeamAccess creates a new instance of this resource
+func createHcpTerraformTeamAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformTeamAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.teamAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformTeamAccess) MqlName() string {
+	return "hcp.terraform.teamAccess"
+}
+
+func (c *mqlHcpTerraformTeamAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetAccess() *plugin.TValue[string] {
+	return &c.Access
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetCanApply() *plugin.TValue[bool] {
+	return &c.CanApply
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetRuns() *plugin.TValue[string] {
+	return &c.Runs
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetVariables() *plugin.TValue[string] {
+	return &c.Variables
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetStateVersions() *plugin.TValue[string] {
+	return &c.StateVersions
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetSentinelMocks() *plugin.TValue[string] {
+	return &c.SentinelMocks
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetWorkspaceLocking() *plugin.TValue[bool] {
+	return &c.WorkspaceLocking
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetRunTasks() *plugin.TValue[bool] {
+	return &c.RunTasks
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetTeam() *plugin.TValue[*mqlHcpTerraformTeam] {
+	return plugin.GetOrCompute[*mqlHcpTerraformTeam](&c.Team, func() (*mqlHcpTerraformTeam, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.teamAccess", c.__id, "team")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformTeam), nil
+			}
+		}
+
+		return c.team()
+	})
+}
+
+func (c *mqlHcpTerraformTeamAccess) GetWorkspace() *plugin.TValue[*mqlHcpTerraformWorkspace] {
+	return plugin.GetOrCompute[*mqlHcpTerraformWorkspace](&c.Workspace, func() (*mqlHcpTerraformWorkspace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.teamAccess", c.__id, "workspace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformWorkspace), nil
+			}
+		}
+
+		return c.workspace()
+	})
+}
+
+// mqlHcpTerraformVariable for the hcp.terraform.variable resource
+type mqlHcpTerraformVariable struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformVariableInternal
+	Id          plugin.TValue[string]
+	Key         plugin.TValue[string]
+	Category    plugin.TValue[string]
+	Sensitive   plugin.TValue[bool]
+	Hcl         plugin.TValue[bool]
+	Description plugin.TValue[string]
+	Workspace   plugin.TValue[*mqlHcpTerraformWorkspace]
+}
+
+// createHcpTerraformVariable creates a new instance of this resource
+func createHcpTerraformVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformVariable{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.variable", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformVariable) MqlName() string {
+	return "hcp.terraform.variable"
+}
+
+func (c *mqlHcpTerraformVariable) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformVariable) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformVariable) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlHcpTerraformVariable) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlHcpTerraformVariable) GetSensitive() *plugin.TValue[bool] {
+	return &c.Sensitive
+}
+
+func (c *mqlHcpTerraformVariable) GetHcl() *plugin.TValue[bool] {
+	return &c.Hcl
+}
+
+func (c *mqlHcpTerraformVariable) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHcpTerraformVariable) GetWorkspace() *plugin.TValue[*mqlHcpTerraformWorkspace] {
+	return plugin.GetOrCompute[*mqlHcpTerraformWorkspace](&c.Workspace, func() (*mqlHcpTerraformWorkspace, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.variable", c.__id, "workspace")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformWorkspace), nil
+			}
+		}
+
+		return c.workspace()
+	})
+}
+
+// mqlHcpTerraformTeam for the hcp.terraform.team resource
+type mqlHcpTerraformTeam struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformTeamInternal
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	UsersCount                  plugin.TValue[int64]
+	Visibility                  plugin.TValue[string]
+	SsoTeamId                   plugin.TValue[string]
+	AllowMemberTokenManagement  plugin.TValue[bool]
+	CanManagePolicies           plugin.TValue[bool]
+	CanManagePolicyOverrides    plugin.TValue[bool]
+	CanManageWorkspaces         plugin.TValue[bool]
+	CanManageVcsSettings        plugin.TValue[bool]
+	CanManageMembership         plugin.TValue[bool]
+	CanManageTeams              plugin.TValue[bool]
+	CanManageOrganizationAccess plugin.TValue[bool]
+	CanManageProjects           plugin.TValue[bool]
+	CanManageRunTasks           plugin.TValue[bool]
+	CanManageAgentPools         plugin.TValue[bool]
+	CanManageProviders          plugin.TValue[bool]
+	CanManageModules            plugin.TValue[bool]
+	CanReadWorkspaces           plugin.TValue[bool]
+	CanReadProjects             plugin.TValue[bool]
+	CanAccessSecretTeams        plugin.TValue[bool]
+	Organization                plugin.TValue[*mqlHcpTerraformOrganization]
+	Tokens                      plugin.TValue[[]any]
+}
+
+// createHcpTerraformTeam creates a new instance of this resource
+func createHcpTerraformTeam(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformTeam{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.team", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformTeam) MqlName() string {
+	return "hcp.terraform.team"
+}
+
+func (c *mqlHcpTerraformTeam) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformTeam) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformTeam) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHcpTerraformTeam) GetUsersCount() *plugin.TValue[int64] {
+	return &c.UsersCount
+}
+
+func (c *mqlHcpTerraformTeam) GetVisibility() *plugin.TValue[string] {
+	return &c.Visibility
+}
+
+func (c *mqlHcpTerraformTeam) GetSsoTeamId() *plugin.TValue[string] {
+	return &c.SsoTeamId
+}
+
+func (c *mqlHcpTerraformTeam) GetAllowMemberTokenManagement() *plugin.TValue[bool] {
+	return &c.AllowMemberTokenManagement
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManagePolicies() *plugin.TValue[bool] {
+	return &c.CanManagePolicies
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManagePolicyOverrides() *plugin.TValue[bool] {
+	return &c.CanManagePolicyOverrides
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageWorkspaces() *plugin.TValue[bool] {
+	return &c.CanManageWorkspaces
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageVcsSettings() *plugin.TValue[bool] {
+	return &c.CanManageVcsSettings
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageMembership() *plugin.TValue[bool] {
+	return &c.CanManageMembership
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageTeams() *plugin.TValue[bool] {
+	return &c.CanManageTeams
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageOrganizationAccess() *plugin.TValue[bool] {
+	return &c.CanManageOrganizationAccess
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageProjects() *plugin.TValue[bool] {
+	return &c.CanManageProjects
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageRunTasks() *plugin.TValue[bool] {
+	return &c.CanManageRunTasks
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageAgentPools() *plugin.TValue[bool] {
+	return &c.CanManageAgentPools
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageProviders() *plugin.TValue[bool] {
+	return &c.CanManageProviders
+}
+
+func (c *mqlHcpTerraformTeam) GetCanManageModules() *plugin.TValue[bool] {
+	return &c.CanManageModules
+}
+
+func (c *mqlHcpTerraformTeam) GetCanReadWorkspaces() *plugin.TValue[bool] {
+	return &c.CanReadWorkspaces
+}
+
+func (c *mqlHcpTerraformTeam) GetCanReadProjects() *plugin.TValue[bool] {
+	return &c.CanReadProjects
+}
+
+func (c *mqlHcpTerraformTeam) GetCanAccessSecretTeams() *plugin.TValue[bool] {
+	return &c.CanAccessSecretTeams
+}
+
+func (c *mqlHcpTerraformTeam) GetOrganization() *plugin.TValue[*mqlHcpTerraformOrganization] {
+	return plugin.GetOrCompute[*mqlHcpTerraformOrganization](&c.Organization, func() (*mqlHcpTerraformOrganization, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.team", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformOrganization), nil
+			}
+		}
+
+		return c.organization()
+	})
+}
+
+func (c *mqlHcpTerraformTeam) GetTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.team", c.__id, "tokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tokens()
+	})
+}
+
+// mqlHcpTerraformTeamToken for the hcp.terraform.teamToken resource
+type mqlHcpTerraformTeamToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformTeamTokenInternal
+	Id          plugin.TValue[string]
+	Description plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	LastUsedAt  plugin.TValue[*time.Time]
+	ExpiredAt   plugin.TValue[*time.Time]
+	Team        plugin.TValue[*mqlHcpTerraformTeam]
+}
+
+// createHcpTerraformTeamToken creates a new instance of this resource
+func createHcpTerraformTeamToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformTeamToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.teamToken", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformTeamToken) MqlName() string {
+	return "hcp.terraform.teamToken"
+}
+
+func (c *mqlHcpTerraformTeamToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformTeamToken) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformTeamToken) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHcpTerraformTeamToken) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlHcpTerraformTeamToken) GetLastUsedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUsedAt
+}
+
+func (c *mqlHcpTerraformTeamToken) GetExpiredAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiredAt
+}
+
+func (c *mqlHcpTerraformTeamToken) GetTeam() *plugin.TValue[*mqlHcpTerraformTeam] {
+	return plugin.GetOrCompute[*mqlHcpTerraformTeam](&c.Team, func() (*mqlHcpTerraformTeam, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.teamToken", c.__id, "team")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformTeam), nil
+			}
+		}
+
+		return c.team()
+	})
+}
+
+// mqlHcpTerraformPolicySet for the hcp.terraform.policySet resource
+type mqlHcpTerraformPolicySet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformPolicySetInternal
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Kind           plugin.TValue[string]
+	Global         plugin.TValue[bool]
+	PolicyCount    plugin.TValue[int64]
+	WorkspaceCount plugin.TValue[int64]
+	Versioned      plugin.TValue[bool]
+	PoliciesPath   plugin.TValue[string]
+	AgentEnabled   plugin.TValue[bool]
+	Overridable    plugin.TValue[bool]
+	CreatedAt      plugin.TValue[*time.Time]
+	UpdatedAt      plugin.TValue[*time.Time]
+	Organization   plugin.TValue[*mqlHcpTerraformOrganization]
+	Policies       plugin.TValue[[]any]
+	Workspaces     plugin.TValue[[]any]
+}
+
+// createHcpTerraformPolicySet creates a new instance of this resource
+func createHcpTerraformPolicySet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformPolicySet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.policySet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformPolicySet) MqlName() string {
+	return "hcp.terraform.policySet"
+}
+
+func (c *mqlHcpTerraformPolicySet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformPolicySet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformPolicySet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHcpTerraformPolicySet) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHcpTerraformPolicySet) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlHcpTerraformPolicySet) GetGlobal() *plugin.TValue[bool] {
+	return &c.Global
+}
+
+func (c *mqlHcpTerraformPolicySet) GetPolicyCount() *plugin.TValue[int64] {
+	return &c.PolicyCount
+}
+
+func (c *mqlHcpTerraformPolicySet) GetWorkspaceCount() *plugin.TValue[int64] {
+	return &c.WorkspaceCount
+}
+
+func (c *mqlHcpTerraformPolicySet) GetVersioned() *plugin.TValue[bool] {
+	return &c.Versioned
+}
+
+func (c *mqlHcpTerraformPolicySet) GetPoliciesPath() *plugin.TValue[string] {
+	return &c.PoliciesPath
+}
+
+func (c *mqlHcpTerraformPolicySet) GetAgentEnabled() *plugin.TValue[bool] {
+	return &c.AgentEnabled
+}
+
+func (c *mqlHcpTerraformPolicySet) GetOverridable() *plugin.TValue[bool] {
+	return &c.Overridable
+}
+
+func (c *mqlHcpTerraformPolicySet) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlHcpTerraformPolicySet) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlHcpTerraformPolicySet) GetOrganization() *plugin.TValue[*mqlHcpTerraformOrganization] {
+	return plugin.GetOrCompute[*mqlHcpTerraformOrganization](&c.Organization, func() (*mqlHcpTerraformOrganization, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.policySet", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformOrganization), nil
+			}
+		}
+
+		return c.organization()
+	})
+}
+
+func (c *mqlHcpTerraformPolicySet) GetPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Policies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.policySet", c.__id, "policies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policies()
+	})
+}
+
+func (c *mqlHcpTerraformPolicySet) GetWorkspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Workspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.policySet", c.__id, "workspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workspaces()
+	})
+}
+
+// mqlHcpTerraformPolicy for the hcp.terraform.policy resource
+type mqlHcpTerraformPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformPolicyInternal
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Kind             plugin.TValue[string]
+	EnforcementLevel plugin.TValue[string]
+	Blocking         plugin.TValue[bool]
+	PolicySetCount   plugin.TValue[int64]
+	UpdatedAt        plugin.TValue[*time.Time]
+	Organization     plugin.TValue[*mqlHcpTerraformOrganization]
+}
+
+// createHcpTerraformPolicy creates a new instance of this resource
+func createHcpTerraformPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.policy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformPolicy) MqlName() string {
+	return "hcp.terraform.policy"
+}
+
+func (c *mqlHcpTerraformPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHcpTerraformPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlHcpTerraformPolicy) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlHcpTerraformPolicy) GetEnforcementLevel() *plugin.TValue[string] {
+	return &c.EnforcementLevel
+}
+
+func (c *mqlHcpTerraformPolicy) GetBlocking() *plugin.TValue[bool] {
+	return &c.Blocking
+}
+
+func (c *mqlHcpTerraformPolicy) GetPolicySetCount() *plugin.TValue[int64] {
+	return &c.PolicySetCount
+}
+
+func (c *mqlHcpTerraformPolicy) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlHcpTerraformPolicy) GetOrganization() *plugin.TValue[*mqlHcpTerraformOrganization] {
+	return plugin.GetOrCompute[*mqlHcpTerraformOrganization](&c.Organization, func() (*mqlHcpTerraformOrganization, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.policy", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformOrganization), nil
+			}
+		}
+
+		return c.organization()
+	})
+}
+
+// mqlHcpTerraformAgentPool for the hcp.terraform.agentPool resource
+type mqlHcpTerraformAgentPool struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHcpTerraformAgentPoolInternal
+	Id                 plugin.TValue[string]
+	Name               plugin.TValue[string]
+	AgentCount         plugin.TValue[int64]
+	OrganizationScoped plugin.TValue[bool]
+	CreatedAt          plugin.TValue[*time.Time]
+	Organization       plugin.TValue[*mqlHcpTerraformOrganization]
+	AllowedWorkspaces  plugin.TValue[[]any]
+}
+
+// createHcpTerraformAgentPool creates a new instance of this resource
+func createHcpTerraformAgentPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHcpTerraformAgentPool{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hcp.terraform.agentPool", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHcpTerraformAgentPool) MqlName() string {
+	return "hcp.terraform.agentPool"
+}
+
+func (c *mqlHcpTerraformAgentPool) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHcpTerraformAgentPool) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlHcpTerraformAgentPool) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlHcpTerraformAgentPool) GetAgentCount() *plugin.TValue[int64] {
+	return &c.AgentCount
+}
+
+func (c *mqlHcpTerraformAgentPool) GetOrganizationScoped() *plugin.TValue[bool] {
+	return &c.OrganizationScoped
+}
+
+func (c *mqlHcpTerraformAgentPool) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlHcpTerraformAgentPool) GetOrganization() *plugin.TValue[*mqlHcpTerraformOrganization] {
+	return plugin.GetOrCompute[*mqlHcpTerraformOrganization](&c.Organization, func() (*mqlHcpTerraformOrganization, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.agentPool", c.__id, "organization")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHcpTerraformOrganization), nil
+			}
+		}
+
+		return c.organization()
+	})
+}
+
+func (c *mqlHcpTerraformAgentPool) GetAllowedWorkspaces() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedWorkspaces, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hcp.terraform.agentPool", c.__id, "allowedWorkspaces")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowedWorkspaces()
+	})
 }
