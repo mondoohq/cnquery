@@ -116,6 +116,8 @@ private cloudflare.zone @defaults("name account.name") {
 	aiSecurity() cloudflare.zone.aiSecurity
 	// Crawler directives Cloudflare read from the zone's robots.txt
 	aiAudit() cloudflare.zone.aiAudit
+	// Precursor request-enforcement configuration for the zone
+	precursor() cloudflare.zone.precursor
 }
 
 // Cloudflare account
@@ -403,6 +405,14 @@ private cloudflare.account @defaults("name") {
 	// widgets left in a permissive mode or scoped to domains the account no
 	// longer owns.
 	turnstileWidgets() []cloudflare.turnstile.widget
+
+	// Log Explorer datasets
+	//
+	// Datasets Log Explorer retains for the account and, where the account
+	// owns them, for its zones. Each reports whether it is still ingesting
+	// and whether deletion protection is on, which is what stops retained
+	// logs from being removed while an investigation is open.
+	logExplorerDatasets() []cloudflare.logExplorerDataset
 }
 
 // Cloudflare API Token
@@ -869,6 +879,14 @@ private cloudflare.one.serviceToken @defaults("name id") {
 }
 
 // Cloudflare One organization configuration
+//
+// Account-wide Zero Trust settings that apply before any individual Access
+// application policy is evaluated. `authDomain` is the team domain users
+// authenticate against, `sessionDuration` and `warpAuthSessionDuration`
+// bound how long issued tokens stay valid, and
+// `userSeatExpirationInactiveTime` controls when an idle seat is reclaimed.
+// `isUiReadOnly` reports whether the dashboard is locked to read-only
+// regardless of a user's permissions.
 private cloudflare.one.organization @defaults("name authDomain") {
 	// Organization name
 	name string
@@ -886,6 +904,13 @@ private cloudflare.one.organization @defaults("name authDomain") {
 	warpAuthSessionDuration string
 	// Whether authentication via WARP is allowed
 	allowAuthenticateViaWarp bool
+	// Whether failed WARP authentication returns 401 instead of a login redirect
+	//
+	// When enabled, an unsuccessful WARP authentication request carrying a
+	// non-HTML Accept header receives a 401 response rather than being
+	// redirected to the login page. Null when the organization does not
+	// report the setting.
+	warpAuthNonBrowser401 bool
 	// Time the organization was created
 	createdAt time
 	// Time the organization was last updated
@@ -1370,6 +1395,46 @@ private cloudflare.zone.logpushJob @defaults("name dataset") {
 	lastComplete time
 	// Time of last error
 	lastError time
+}
+
+// Cloudflare Log Explorer dataset
+//
+// A log stream Log Explorer retains so it can be queried after the fact.
+// `dataset` names the stream, such as `http_requests`, and `objectType`
+// reports whether the dataset is scoped to the whole account or to a single
+// zone, with `objectId` naming that account or zone. `enabled` reports
+// whether the dataset is still ingesting, and `deletionProtection` whether
+// it is guarded against removal, which is what keeps retained logs
+// available while an investigation is open. `filter` carries the expression
+// limiting which entries are kept.
+private cloudflare.logExplorerDataset @defaults("dataset objectType enabled deletionProtection") {
+	// Dataset identifier
+	datasetId string
+	// Name of the log stream this dataset retains, such as `http_requests`
+	dataset string
+	// Whether the dataset is protected against deletion
+	deletionProtection bool
+	// Whether the dataset is currently ingesting logs
+	enabled bool
+	// Scope the dataset belongs to
+	//
+	// One of `account` or `zone`.
+	objectType string
+	// Identifier of the account or zone the dataset belongs to
+	objectId string
+	// Zone the dataset is scoped to
+	//
+	// Null for an account-scoped dataset, and for a zone the calling token
+	// cannot list.
+	zone() cloudflare.zone
+	// Expression limiting which log entries the dataset retains
+	//
+	// Empty when the dataset retains every entry for its stream.
+	filter() string
+	// Time the dataset was created
+	createdAt time
+	// Time the dataset was last updated
+	updatedAt time
 }
 
 // Cloudflare zone bot management settings
@@ -1925,6 +1990,50 @@ private cloudflare.zone.aiAudit.userAgent @defaults("userAgent") {
 	//
 	// Carries the search content signal, empty when robots.txt states none.
 	contentSignalSearch string
+}
+
+// Cloudflare Precursor enforcement for a zone
+//
+// Enforcement posture Precursor applies to requests arriving at the zone.
+// `defaultMode` is the mode used for any request that matches no rule:
+// `off` disables enforcement entirely, `min-friction` favors letting
+// visitors through, and `max-security` favors challenging or blocking them.
+// `enforcementRules` is the ordered list of overrides evaluated ahead of
+// that default. Use it to find zones left with enforcement off, or rules
+// that relax the posture for a subset of traffic.
+private cloudflare.zone.precursor @defaults("defaultMode") {
+	// Enforcement mode applied to requests matching no enforcement rule
+	//
+	// One of `off`, `min-friction`, or `max-security`.
+	defaultMode string
+	// Ordered list of rules that override the default enforcement mode
+	//
+	// Empty when the zone relies on `defaultMode` alone. Cloudflare
+	// evaluates the rules in the order returned.
+	enforcementRules []cloudflare.zone.precursor.enforcementRule
+}
+
+// Cloudflare Precursor enforcement rule
+//
+// A single override in a zone's Precursor rule list. `expression` is the
+// filter that decides which requests the rule matches and `mode` is the
+// enforcement applied to them. `enabled` reports whether the rule is
+// evaluated at all, so a rule that appears to tighten the posture may be
+// inert.
+private cloudflare.zone.precursor.enforcementRule @defaults("mode expression enabled") {
+	// Rule identifier assigned by Cloudflare
+	id string
+	// Filter expression deciding which requests the rule matches
+	expression string
+	// Enforcement mode applied to matching requests
+	//
+	// One of `min-friction` or `max-security`. Unlike the zone-level
+	// `defaultMode`, a rule cannot set `off`.
+	mode string
+	// Description of the rule (empty when none was provided)
+	description string
+	// Whether the rule is currently evaluated
+	enabled bool
 }
 
 // Vulnerability disclosure policy (security.txt)
