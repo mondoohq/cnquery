@@ -39,7 +39,12 @@ Import-Module ExchangeOnlineManagement
 Connect-IPPSSession -AccessToken $complianceToken -AppID $appId -Organization $organization -ShowBanner:$false
 $DlpCompliancePolicy = @(Get-DlpCompliancePolicy)
 $DlpComplianceRule = @(Get-DlpComplianceRule)
-$securityAndCompliance = @{ DlpCompliancePolicy = $DlpCompliancePolicy; DlpComplianceRule = $DlpComplianceRule }
+# a cmdlet that fails non-terminating still yields @(), which serializes to []
+# and would report "this tenant publishes no label policies" as fact; $null
+# serializes to null and the field reads null instead
+$LabelPolicy = $null
+try { $LabelPolicy = @(Get-LabelPolicy -ErrorAction Stop) } catch { $LabelPolicy = $null }
+$securityAndCompliance = @{ DlpCompliancePolicy = $DlpCompliancePolicy; DlpComplianceRule = $DlpComplianceRule; LabelPolicy = $LabelPolicy }
 
 ConvertTo-Json -Depth 6 $securityAndCompliance
 `
@@ -82,6 +87,14 @@ $ExoMailbox = (Get-EXOMailbox -ResultSize Unlimited -RecipientTypeDetails Shared
 $TeamsProtectionPolicy = (Get-TeamsProtectionPolicy)
 $ReportSubmissionPolicy = (Get-ReportSubmissionPolicy)
 $TransportConfig = (Get-TransportConfig)
+# see the note on $LabelPolicy: these three answer questions that turn on the
+# result being empty, so a failed cmdlet has to read null rather than empty
+$EmailTenantSettings = $null
+try { $EmailTenantSettings = (Get-EmailTenantSettings -ErrorAction Stop) } catch { $EmailTenantSettings = $null }
+$EOPProtectionPolicyRule = $null
+try { $EOPProtectionPolicyRule = @(Get-EOPProtectionPolicyRule -ErrorAction Stop) } catch { $EOPProtectionPolicyRule = $null }
+$ATPProtectionPolicyRule = $null
+try { $ATPProtectionPolicyRule = @(Get-ATPProtectionPolicyRule -ErrorAction Stop) } catch { $ATPProtectionPolicyRule = $null }
 
 $exchangeOnline = New-Object PSObject
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MalwareFilterPolicy -Value @($MalwareFilterPolicy)
@@ -112,6 +125,9 @@ Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TeamsProt
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ReportSubmissionPolicy -Value @($ReportSubmissionPolicy)
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name TransportConfig -Value $TransportConfig
 Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name MailboxAuditBypassAssociation -Value @($MailboxAuditBypassAssociation)
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name EmailTenantSettings -Value $EmailTenantSettings
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name EOPProtectionPolicyRule -Value $EOPProtectionPolicyRule
+Add-Member -InputObject $exchangeOnline -MemberType NoteProperty -Name ATPProtectionPolicyRule -Value $ATPProtectionPolicyRule
 
 Disconnect-ExchangeOnline -Confirm:$false
 
@@ -149,6 +165,10 @@ type ExchangeOnlineReport struct {
 	Mailbox                []MailboxWithAudit        `json:"Mailbox"`
 
 	MailboxAuditBypassAssociation []MailboxAuditBypassAssociation `json:"MailboxAuditBypassAssociation"`
+
+	EmailTenantSettings     any   `json:"EmailTenantSettings"`
+	EOPProtectionPolicyRule []any `json:"EOPProtectionPolicyRule"`
+	ATPProtectionPolicyRule []any `json:"ATPProtectionPolicyRule"`
 }
 
 type MailboxAuditBypassAssociation struct {
@@ -159,6 +179,7 @@ type MailboxAuditBypassAssociation struct {
 type SecurityAndComplianceReport struct {
 	DlpCompliancePolicy []any `json:"DlpCompliancePolicy"`
 	DlpComplianceRule   []any `json:"DlpComplianceRule"`
+	LabelPolicy         []any `json:"LabelPolicy"`
 }
 
 type MailboxWithAudit struct {
@@ -796,6 +817,18 @@ func (r *mqlMs365Exchangeonline) getExchangeReport() error {
 	roleAssignmentPolicies, roleAssignmentPoliciesErr := convertRoleAssignmentPolicies(r, report.RoleAssignmentPolicy)
 	r.RoleAssignmentPolicies = exchangeNullableList(isAbsentSection(report.RoleAssignmentPolicy), roleAssignmentPolicies, roleAssignmentPoliciesErr)
 
+	emailTenantSettings, emailTenantSettingsErr := convert.JsonToDict(report.EmailTenantSettings)
+	r.PriorityAccountProtectionEnabled = exchangeNullableBool(isAbsentSection(report.EmailTenantSettings),
+		dictBoolValue(emailTenantSettings, "enablePriorityAccountProtection"), emailTenantSettingsErr)
+
+	// a preset is turned on by one rule of each kind, so a partial answer cannot
+	// support "the preset is not in use" -- if either cmdlet did not run, the
+	// whole list reads null rather than a list missing half its rows
+	protectionPolicyRules, protectionPolicyRulesErr := convertProtectionPolicyRules(r, report.EOPProtectionPolicyRule, report.ATPProtectionPolicyRule)
+	r.ProtectionPolicyRules = exchangeNullableList(
+		isAbsentSection(report.EOPProtectionPolicyRule) || isAbsentSection(report.ATPProtectionPolicyRule),
+		protectionPolicyRules, protectionPolicyRulesErr)
+
 	r.fetched = true
 	return nil
 }
@@ -1041,5 +1074,13 @@ func (r *mqlMs365Exchangeonline) securityAndCompliance() (*mqlMs365Exchangeonlin
 }
 
 func (r *mqlMs365Exchangeonline) mailboxAuditBypassAssociation() ([]any, error) {
+	return nil, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) priorityAccountProtectionEnabled() (bool, error) {
+	return false, r.getExchangeReport()
+}
+
+func (r *mqlMs365Exchangeonline) protectionPolicyRules() ([]any, error) {
 	return nil, r.getExchangeReport()
 }

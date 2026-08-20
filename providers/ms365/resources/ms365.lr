@@ -2173,10 +2173,48 @@ microsoft.security.exchange.antispam.hostedConnectionFilterPolicy @defaults("ide
 //
 // Microsoft Purview Information Protection configuration. `sensitivityLabels`
 // lists the sensitivity labels defined in the tenant for classifying and
-// protecting content.
+// protecting content, and `labelPolicies` lists the label policies that
+// publish those labels to users.
 microsoft.security.informationProtection {
   // List of sensitivity labels
   sensitivityLabels() []microsoft.security.informationProtection.sensitivityLabel
+  // List of sensitivity label policies
+  labelPolicies() []microsoft.security.informationProtection.labelPolicy
+}
+
+// Microsoft Purview sensitivity label policy
+//
+// Policy that publishes a set of sensitivity labels to users, selected by its
+// `name`. A label exists in the tenant whether or not anybody can apply it;
+// the label policy is what makes it available, so this is the resource that
+// answers whether label publishing is configured at all. `labels` lists the
+// labels the policy publishes, `enabled` and `mode` report whether the policy
+// is on and how strictly it is enforced, and `distributionStatus` reports
+// whether the service has finished pushing it out.
+microsoft.security.informationProtection.labelPolicy @defaults("name enabled mode") {
+  // Policy name
+  name string
+  // Policy GUID
+  guid string
+  // Whether the policy is enabled
+  enabled bool
+  // Enforcement mode
+  //
+  // One of Enforce, TestWithNotifications, TestWithoutNotifications, Disable,
+  // or PendingDeletion.
+  mode string
+  // Names of the sensitivity labels the policy publishes
+  labels []string
+  // Workloads the policy applies to, such as Exchange or SharePoint
+  workload string
+  // Whether the service has finished distributing the policy
+  distributionStatus string
+  // Free-form administrator comment on the policy
+  comment string
+  // When the policy was created
+  whenCreated time
+  // When the policy was last changed
+  whenChanged time
 }
 
 // Microsoft Purview Sensitivity Label
@@ -2293,6 +2331,71 @@ private microsoft.deviceRegistrationPolicy @defaults("multiFactorAuthConfigurati
   userDeviceQuota int
   // Whether the Windows local administrator password solution is enabled
   localAdminPasswordEnabled bool
+  // Microsoft Entra join settings
+  azureADJoin microsoft.deviceRegistrationPolicy.joinPolicy
+  // Microsoft Entra registration settings
+  azureADRegistration microsoft.deviceRegistrationPolicy.registrationPolicy
+}
+
+// Microsoft Entra join settings
+//
+// Who may join a device to Microsoft Entra, and who becomes a local
+// administrator on the devices that are joined. `allowedToJoin` reports the
+// scope permitted to join, `localAdmins` the local administrator assignment
+// that follows from a join, and `isAdminConfigurable` whether the tenant is
+// allowed to change these at all.
+private microsoft.deviceRegistrationPolicy.joinPolicy @defaults("isAdminConfigurable") {
+  // Users and groups permitted to join devices to Microsoft Entra
+  allowedToJoin microsoft.deviceRegistrationPolicy.membership
+  // Whether administrators may modify the join settings
+  isAdminConfigurable bool
+  // Who becomes a local administrator on joined devices
+  localAdmins microsoft.deviceRegistrationPolicy.localAdminSettings
+}
+
+// Microsoft Entra registration settings
+//
+// Who may register a device with Microsoft Entra. `allowedToRegister` reports
+// the scope permitted to register, and `isAdminConfigurable` whether the
+// tenant is allowed to change it.
+private microsoft.deviceRegistrationPolicy.registrationPolicy @defaults("isAdminConfigurable") {
+  // Users and groups permitted to register devices with Microsoft Entra
+  allowedToRegister microsoft.deviceRegistrationPolicy.membership
+  // Whether administrators may modify the registration settings
+  isAdminConfigurable bool
+}
+
+// Local administrator assignment on Microsoft Entra joined devices
+//
+// Which accounts become local administrators on a device joined to Microsoft
+// Entra. `enableGlobalAdmins` reports whether every Global Administrator is a
+// local administrator on all joined devices, and `registeringUsers` reports
+// whether the user performing the join becomes one.
+private microsoft.deviceRegistrationPolicy.localAdminSettings @defaults("enableGlobalAdmins") {
+  // Whether Global Administrators are local administrators on all joined devices
+  enableGlobalAdmins bool
+  // Whether the user who joins a device becomes a local administrator on it
+  registeringUsers microsoft.deviceRegistrationPolicy.membership
+}
+
+// Scope of a device registration setting
+//
+// The set of principals a device registration setting applies to. `appliesTo`
+// is `all` when it applies to everyone, `none` when it applies to nobody, and
+// `selected` when it is limited to the accounts in `allowedUsers` and
+// `allowedGroups`. Both lists hold directory object IDs and are empty unless
+// `appliesTo` is `selected`.
+private microsoft.deviceRegistrationPolicy.membership @defaults("appliesTo") {
+  // Who the setting applies to (all, selected, none)
+  appliesTo string
+  // Object IDs of the users the setting is limited to
+  allowedUsers []string
+  // Object IDs of the groups the setting is limited to
+  allowedGroups []string
+  // The users the setting is limited to
+  allowedUserRefs() []microsoft.user
+  // The groups the setting is limited to
+  allowedGroupRefs() []microsoft.group
 }
 
 // Tenant Default App Management Policy
@@ -2532,6 +2635,45 @@ private microsoft.authenticationMethodsPolicy.microsoftAuthenticator @defaults("
   displayAppInformationRequiredState string
   // Geographic context shown in push notifications (default, enabled, disabled)
   displayLocationInformationRequiredState string
+  // Per-feature toggles for the Microsoft Authenticator app
+  featureSettings() microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings
+}
+
+// Microsoft Authenticator feature settings
+//
+// The individual features of Microsoft Authenticator push notifications, each
+// reported as its own configuration with a state and the users it is scoped
+// to. `companionAppAllowedState` reports whether approvals may be completed
+// from a companion application such as a smart watch,
+// `numberMatchingRequiredState` whether the user must type a displayed number
+// to approve, and `displayAppInformationRequiredState` and
+// `displayLocationInformationRequiredState` whether the requesting
+// application and the sign-in location are shown in the prompt.
+private microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings {
+  // Whether approvals may be completed from a companion application
+  companionAppAllowedState microsoft.authenticationMethodsPolicy.featureConfiguration
+  // Whether the requesting application is shown in the approval prompt
+  displayAppInformationRequiredState microsoft.authenticationMethodsPolicy.featureConfiguration
+  // Whether the sign-in location is shown in the approval prompt
+  displayLocationInformationRequiredState microsoft.authenticationMethodsPolicy.featureConfiguration
+  // Whether the user must type a displayed number to approve a sign-in
+  numberMatchingRequiredState microsoft.authenticationMethodsPolicy.featureConfiguration
+}
+
+// Authentication method feature configuration
+//
+// State of one authentication method feature and the users it is scoped to.
+// `state` is `default`, `enabled`, or `disabled`, where `default` means the
+// service decides. `includeTarget` and `excludeTarget` each carry an `id` (a
+// group object ID, or `all_users`) and a `targetType`, and name the group the
+// feature is turned on for and the group exempted from it.
+private microsoft.authenticationMethodsPolicy.featureConfiguration @defaults("state") {
+  // Feature state (default, enabled, disabled)
+  state string
+  // Group the feature applies to, with `id` and `targetType` keys
+  includeTarget dict
+  // Group exempted from the feature, with `id` and `targetType` keys
+  excludeTarget dict
 }
 
 // Temporary Access Pass authentication method configuration
@@ -4105,6 +4247,65 @@ ms365.exchangeonline {
   securityAndCompliance() ms365.exchangeonline.securityAndCompliance
   // List of mailbox audit bypass associations
   mailboxAuditBypassAssociation() []ms365.exchangeonlineMailboxAuditBypassAssociation
+  // Whether priority account protection is turned on for the organization
+  //
+  // Priority account protection applies stricter mail filtering heuristics to
+  // the accounts an organization flags as high value. This reports the
+  // organization-wide switch only, not which accounts are flagged.
+  priorityAccountProtectionEnabled() bool
+  // Preset security policy rules
+  //
+  // The rules that turn the Standard and Strict preset security policies on
+  // and decide who they cover.
+  protectionPolicyRules() []ms365.exchangeonline.protectionPolicyRule
+}
+
+// Exchange Online preset security policy rule
+//
+// Rule that applies one of the built-in Standard or Strict preset security
+// policies to a set of recipients, selected by `name`. A preset policy does
+// nothing until a rule turns it on, so this resource is what reports whether
+// the presets are in use and who they cover. `kind` distinguishes the
+// Exchange Online Protection rule (`eop`, covering anti-spam, anti-malware,
+// and anti-phishing) from the Defender for Office 365 rule (`atp`, covering
+// Safe Links and Safe Attachments), because each preset is turned on by one
+// of each. `state` reports whether the rule is enabled, and the recipient
+// conditions (`sentTo`, `sentToMemberOf`, `recipientDomainIs`) and exceptions
+// (`exceptIfSentTo`, `exceptIfSentToMemberOf`, `exceptIfRecipientDomainIs`)
+// report its scope.
+private ms365.exchangeonline.protectionPolicyRule @defaults("name kind state") {
+  // Rule identity
+  identity string
+  // Rule name
+  name string
+  // Which preset the rule turns on (eop, atp)
+  kind string
+  // Whether the rule is enabled (Enabled, Disabled)
+  state string
+  // Rule priority, where a lower number is evaluated first
+  priority int
+  // Name of the Exchange Online Protection policy the rule applies
+  eopProtectionPolicy string
+  // Name of the Safe Attachments policy the rule applies
+  safeAttachmentPolicy string
+  // Name of the Safe Links policy the rule applies
+  safeLinksPolicy string
+  // Recipients the rule applies to
+  sentTo []string
+  // Groups whose members the rule applies to
+  sentToMemberOf []string
+  // Recipient domains the rule applies to
+  recipientDomainIs []string
+  // Recipients excluded from the rule
+  exceptIfSentTo []string
+  // Groups whose members are excluded from the rule
+  exceptIfSentToMemberOf []string
+  // Recipient domains excluded from the rule
+  exceptIfRecipientDomainIs []string
+  // Free-form administrator comment on the rule
+  comment string
+  // When the rule was last changed
+  whenChanged time
 }
 
 // Mailbox audit bypass association
@@ -5159,6 +5360,15 @@ private ms365.exchangeonline.owaMailboxPolicyEntry @defaults("name additionalSto
   wssAccessOnPublicComputersEnabled bool
   // Whether weather is enabled
   weatherEnabled bool
+  // Whether users may connect personal email accounts to Outlook on the web
+  //
+  // Null when the policy carries no value for the setting, which the service
+  // treats as its own default rather than as a decision the tenant made.
+  personalAccountsEnabled bool
+  // Whether users may connect personal calendars to Outlook on the web
+  //
+  // Null when the policy carries no value for the setting.
+  personalAccountCalendarsEnabled bool
 }
 
 // Exchange Online remote domain configuration

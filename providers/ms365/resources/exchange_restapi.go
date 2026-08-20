@@ -494,6 +494,30 @@ func exchangeReportSections() []exchangeSection {
 			},
 		},
 		{
+			name: "EmailTenantSettings", cmdlet: "Get-EmailTenantSettings",
+			assign: func(rows []json.RawMessage, r *ExchangeOnlineReport) error {
+				out, err := decodeSingle(rows)
+				r.EmailTenantSettings = out
+				return err
+			},
+		},
+		{
+			name: "EOPProtectionPolicyRule", cmdlet: "Get-EOPProtectionPolicyRule",
+			assign: func(rows []json.RawMessage, r *ExchangeOnlineReport) error {
+				out, err := decodeRows[any](rows)
+				r.EOPProtectionPolicyRule = out
+				return err
+			},
+		},
+		{
+			name: "ATPProtectionPolicyRule", cmdlet: "Get-ATPProtectionPolicyRule",
+			assign: func(rows []json.RawMessage, r *ExchangeOnlineReport) error {
+				out, err := decodeRows[any](rows)
+				r.ATPProtectionPolicyRule = out
+				return err
+			},
+		},
+		{
 			name: "TransportConfig", cmdlet: "Get-TransportConfig",
 			assign: func(rows []json.RawMessage, r *ExchangeOnlineReport) error {
 				if len(rows) == 0 {

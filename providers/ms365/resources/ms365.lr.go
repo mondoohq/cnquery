@@ -98,9 +98,14 @@ const (
 	ResourceMicrosoftSecurityExchangeAntispam                                                            string = "microsoft.security.exchange.antispam"
 	ResourceMicrosoftSecurityExchangeAntispamHostedConnectionFilterPolicy                                string = "microsoft.security.exchange.antispam.hostedConnectionFilterPolicy"
 	ResourceMicrosoftSecurityInformationProtection                                                       string = "microsoft.security.informationProtection"
+	ResourceMicrosoftSecurityInformationProtectionLabelPolicy                                            string = "microsoft.security.informationProtection.labelPolicy"
 	ResourceMicrosoftSecurityInformationProtectionSensitivityLabel                                       string = "microsoft.security.informationProtection.sensitivityLabel"
 	ResourceMicrosoftPolicies                                                                            string = "microsoft.policies"
 	ResourceMicrosoftDeviceRegistrationPolicy                                                            string = "microsoft.deviceRegistrationPolicy"
+	ResourceMicrosoftDeviceRegistrationPolicyJoinPolicy                                                  string = "microsoft.deviceRegistrationPolicy.joinPolicy"
+	ResourceMicrosoftDeviceRegistrationPolicyRegistrationPolicy                                          string = "microsoft.deviceRegistrationPolicy.registrationPolicy"
+	ResourceMicrosoftDeviceRegistrationPolicyLocalAdminSettings                                          string = "microsoft.deviceRegistrationPolicy.localAdminSettings"
+	ResourceMicrosoftDeviceRegistrationPolicyMembership                                                  string = "microsoft.deviceRegistrationPolicy.membership"
 	ResourceMicrosoftDefaultAppManagementPolicy                                                          string = "microsoft.defaultAppManagementPolicy"
 	ResourceMicrosoftDefaultAppManagementPolicyAppManagementConfiguration                                string = "microsoft.defaultAppManagementPolicy.appManagementConfiguration"
 	ResourceMicrosoftExternalIdentitiesPolicy                                                            string = "microsoft.externalIdentitiesPolicy"
@@ -111,6 +116,8 @@ const (
 	ResourceMicrosoftAuthenticationMethodConfiguration                                                   string = "microsoft.authenticationMethodConfiguration"
 	ResourceMicrosoftAuthenticationMethodsPolicyFido2                                                    string = "microsoft.authenticationMethodsPolicy.fido2"
 	ResourceMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator                                   string = "microsoft.authenticationMethodsPolicy.microsoftAuthenticator"
+	ResourceMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings                             string = "microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings"
+	ResourceMicrosoftAuthenticationMethodsPolicyFeatureConfiguration                                     string = "microsoft.authenticationMethodsPolicy.featureConfiguration"
 	ResourceMicrosoftAuthenticationMethodsPolicyTemporaryAccessPass                                      string = "microsoft.authenticationMethodsPolicy.temporaryAccessPass"
 	ResourceMicrosoftAuthenticationMethodsPolicyEmail                                                    string = "microsoft.authenticationMethodsPolicy.email"
 	ResourceMicrosoftAuthenticationMethodsPolicyVoice                                                    string = "microsoft.authenticationMethodsPolicy.voice"
@@ -162,6 +169,7 @@ const (
 	ResourceMicrosoftPowerbiCapacity                                                                     string = "microsoft.powerbi.capacity"
 	ResourceMicrosoftPowerbiArtifactAccess                                                               string = "microsoft.powerbi.artifactAccess"
 	ResourceMs365Exchangeonline                                                                          string = "ms365.exchangeonline"
+	ResourceMs365ExchangeonlineProtectionPolicyRule                                                      string = "ms365.exchangeonline.protectionPolicyRule"
 	ResourceMs365ExchangeonlineMailboxAuditBypassAssociation                                             string = "ms365.exchangeonlineMailboxAuditBypassAssociation"
 	ResourceMs365ExchangeonlineSecurityAndCompliance                                                     string = "ms365.exchangeonline.securityAndCompliance"
 	ResourceMs365ExchangeonlineDlpComplianceRule                                                         string = "ms365.exchangeonline.dlpComplianceRule"
@@ -533,6 +541,10 @@ func init() {
 			// to override args, implement: initMicrosoftSecurityInformationProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurityInformationProtection,
 		},
+		"microsoft.security.informationProtection.labelPolicy": {
+			// to override args, implement: initMicrosoftSecurityInformationProtectionLabelPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftSecurityInformationProtectionLabelPolicy,
+		},
 		"microsoft.security.informationProtection.sensitivityLabel": {
 			// to override args, implement: initMicrosoftSecurityInformationProtectionSensitivityLabel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftSecurityInformationProtectionSensitivityLabel,
@@ -544,6 +556,22 @@ func init() {
 		"microsoft.deviceRegistrationPolicy": {
 			// to override args, implement: initMicrosoftDeviceRegistrationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftDeviceRegistrationPolicy,
+		},
+		"microsoft.deviceRegistrationPolicy.joinPolicy": {
+			// to override args, implement: initMicrosoftDeviceRegistrationPolicyJoinPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDeviceRegistrationPolicyJoinPolicy,
+		},
+		"microsoft.deviceRegistrationPolicy.registrationPolicy": {
+			// to override args, implement: initMicrosoftDeviceRegistrationPolicyRegistrationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDeviceRegistrationPolicyRegistrationPolicy,
+		},
+		"microsoft.deviceRegistrationPolicy.localAdminSettings": {
+			// to override args, implement: initMicrosoftDeviceRegistrationPolicyLocalAdminSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDeviceRegistrationPolicyLocalAdminSettings,
+		},
+		"microsoft.deviceRegistrationPolicy.membership": {
+			// to override args, implement: initMicrosoftDeviceRegistrationPolicyMembership(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDeviceRegistrationPolicyMembership,
 		},
 		"microsoft.defaultAppManagementPolicy": {
 			Init:   initMicrosoftDefaultAppManagementPolicy,
@@ -584,6 +612,14 @@ func init() {
 		"microsoft.authenticationMethodsPolicy.microsoftAuthenticator": {
 			// to override args, implement: initMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator,
+		},
+		"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings": {
+			// to override args, implement: initMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings,
+		},
+		"microsoft.authenticationMethodsPolicy.featureConfiguration": {
+			// to override args, implement: initMicrosoftAuthenticationMethodsPolicyFeatureConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftAuthenticationMethodsPolicyFeatureConfiguration,
 		},
 		"microsoft.authenticationMethodsPolicy.temporaryAccessPass": {
 			// to override args, implement: initMicrosoftAuthenticationMethodsPolicyTemporaryAccessPass(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -788,6 +824,10 @@ func init() {
 		"ms365.exchangeonline": {
 			// to override args, implement: initMs365Exchangeonline(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365Exchangeonline,
+		},
+		"ms365.exchangeonline.protectionPolicyRule": {
+			// to override args, implement: initMs365ExchangeonlineProtectionPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMs365ExchangeonlineProtectionPolicyRule,
 		},
 		"ms365.exchangeonlineMailboxAuditBypassAssociation": {
 			// to override args, implement: initMs365ExchangeonlineMailboxAuditBypassAssociation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2895,6 +2935,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"microsoft.security.informationProtection.sensitivityLabels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityInformationProtection).GetSensitivityLabels()).ToDataRes(types.Array(types.Resource("microsoft.security.informationProtection.sensitivityLabel")))
 	},
+	"microsoft.security.informationProtection.labelPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtection).GetLabelPolicies()).ToDataRes(types.Array(types.Resource("microsoft.security.informationProtection.labelPolicy")))
+	},
+	"microsoft.security.informationProtection.labelPolicy.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.labelPolicy.guid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetGuid()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.labelPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.security.informationProtection.labelPolicy.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetMode()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.labelPolicy.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetLabels()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.security.informationProtection.labelPolicy.workload": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetWorkload()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.labelPolicy.distributionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetDistributionStatus()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.labelPolicy.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetComment()).ToDataRes(types.String)
+	},
+	"microsoft.security.informationProtection.labelPolicy.whenCreated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetWhenCreated()).ToDataRes(types.Time)
+	},
+	"microsoft.security.informationProtection.labelPolicy.whenChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).GetWhenChanged()).ToDataRes(types.Time)
+	},
 	"microsoft.security.informationProtection.sensitivityLabel.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).GetId()).ToDataRes(types.String)
 	},
@@ -2978,6 +3051,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.deviceRegistrationPolicy.localAdminPasswordEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetLocalAdminPasswordEnabled()).ToDataRes(types.Bool)
+	},
+	"microsoft.deviceRegistrationPolicy.azureADJoin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetAzureADJoin()).ToDataRes(types.Resource("microsoft.deviceRegistrationPolicy.joinPolicy"))
+	},
+	"microsoft.deviceRegistrationPolicy.azureADRegistration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicy).GetAzureADRegistration()).ToDataRes(types.Resource("microsoft.deviceRegistrationPolicy.registrationPolicy"))
+	},
+	"microsoft.deviceRegistrationPolicy.joinPolicy.allowedToJoin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy).GetAllowedToJoin()).ToDataRes(types.Resource("microsoft.deviceRegistrationPolicy.membership"))
+	},
+	"microsoft.deviceRegistrationPolicy.joinPolicy.isAdminConfigurable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy).GetIsAdminConfigurable()).ToDataRes(types.Bool)
+	},
+	"microsoft.deviceRegistrationPolicy.joinPolicy.localAdmins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy).GetLocalAdmins()).ToDataRes(types.Resource("microsoft.deviceRegistrationPolicy.localAdminSettings"))
+	},
+	"microsoft.deviceRegistrationPolicy.registrationPolicy.allowedToRegister": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy).GetAllowedToRegister()).ToDataRes(types.Resource("microsoft.deviceRegistrationPolicy.membership"))
+	},
+	"microsoft.deviceRegistrationPolicy.registrationPolicy.isAdminConfigurable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy).GetIsAdminConfigurable()).ToDataRes(types.Bool)
+	},
+	"microsoft.deviceRegistrationPolicy.localAdminSettings.enableGlobalAdmins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings).GetEnableGlobalAdmins()).ToDataRes(types.Bool)
+	},
+	"microsoft.deviceRegistrationPolicy.localAdminSettings.registeringUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings).GetRegisteringUsers()).ToDataRes(types.Resource("microsoft.deviceRegistrationPolicy.membership"))
+	},
+	"microsoft.deviceRegistrationPolicy.membership.appliesTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).GetAppliesTo()).ToDataRes(types.String)
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).GetAllowedUsers()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).GetAllowedGroups()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedUserRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).GetAllowedUserRefs()).ToDataRes(types.Array(types.Resource("microsoft.user")))
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedGroupRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).GetAllowedGroupRefs()).ToDataRes(types.Array(types.Resource("microsoft.group")))
 	},
 	"microsoft.defaultAppManagementPolicy.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftDefaultAppManagementPolicy).GetDisplayName()).ToDataRes(types.String)
@@ -3140,6 +3255,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.authenticationMethodsPolicy.microsoftAuthenticator.displayLocationInformationRequiredState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator).GetDisplayLocationInformationRequiredState()).ToDataRes(types.String)
+	},
+	"microsoft.authenticationMethodsPolicy.microsoftAuthenticator.featureSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator).GetFeatureSettings()).ToDataRes(types.Resource("microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings"))
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.companionAppAllowedState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).GetCompanionAppAllowedState()).ToDataRes(types.Resource("microsoft.authenticationMethodsPolicy.featureConfiguration"))
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.displayAppInformationRequiredState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).GetDisplayAppInformationRequiredState()).ToDataRes(types.Resource("microsoft.authenticationMethodsPolicy.featureConfiguration"))
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.displayLocationInformationRequiredState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).GetDisplayLocationInformationRequiredState()).ToDataRes(types.Resource("microsoft.authenticationMethodsPolicy.featureConfiguration"))
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.numberMatchingRequiredState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).GetNumberMatchingRequiredState()).ToDataRes(types.Resource("microsoft.authenticationMethodsPolicy.featureConfiguration"))
+	},
+	"microsoft.authenticationMethodsPolicy.featureConfiguration.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration).GetState()).ToDataRes(types.String)
+	},
+	"microsoft.authenticationMethodsPolicy.featureConfiguration.includeTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration).GetIncludeTarget()).ToDataRes(types.Dict)
+	},
+	"microsoft.authenticationMethodsPolicy.featureConfiguration.excludeTarget": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration).GetExcludeTarget()).ToDataRes(types.Dict)
 	},
 	"microsoft.authenticationMethodsPolicy.temporaryAccessPass.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftAuthenticationMethodsPolicyTemporaryAccessPass).GetState()).ToDataRes(types.String)
@@ -4551,6 +4690,60 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.mailboxAuditBypassAssociation": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365Exchangeonline).GetMailboxAuditBypassAssociation()).ToDataRes(types.Array(types.Resource("ms365.exchangeonlineMailboxAuditBypassAssociation")))
 	},
+	"ms365.exchangeonline.priorityAccountProtectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetPriorityAccountProtectionEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.protectionPolicyRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365Exchangeonline).GetProtectionPolicyRules()).ToDataRes(types.Array(types.Resource("ms365.exchangeonline.protectionPolicyRule")))
+	},
+	"ms365.exchangeonline.protectionPolicyRule.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetIdentity()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetName()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetKind()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetState()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.priority": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetPriority()).ToDataRes(types.Int)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.eopProtectionPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetEopProtectionPolicy()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.safeAttachmentPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetSafeAttachmentPolicy()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.safeLinksPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetSafeLinksPolicy()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.sentTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetSentTo()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.protectionPolicyRule.sentToMemberOf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetSentToMemberOf()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.protectionPolicyRule.recipientDomainIs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetRecipientDomainIs()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.protectionPolicyRule.exceptIfSentTo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetExceptIfSentTo()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.protectionPolicyRule.exceptIfSentToMemberOf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetExceptIfSentToMemberOf()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.protectionPolicyRule.exceptIfRecipientDomainIs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetExceptIfRecipientDomainIs()).ToDataRes(types.Array(types.String))
+	},
+	"ms365.exchangeonline.protectionPolicyRule.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetComment()).ToDataRes(types.String)
+	},
+	"ms365.exchangeonline.protectionPolicyRule.whenChanged": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineProtectionPolicyRule).GetWhenChanged()).ToDataRes(types.Time)
+	},
 	"ms365.exchangeonlineMailboxAuditBypassAssociation.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).GetName()).ToDataRes(types.String)
 	},
@@ -5597,6 +5790,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ms365.exchangeonline.owaMailboxPolicyEntry.weatherEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetWeatherEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.personalAccountsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetPersonalAccountsEnabled()).ToDataRes(types.Bool)
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.personalAccountCalendarsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).GetPersonalAccountCalendarsEnabled()).ToDataRes(types.Bool)
 	},
 	"ms365.exchangeonline.remoteDomainEntry.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineRemoteDomainEntry).GetIdentity()).ToDataRes(types.String)
@@ -8544,6 +8743,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMicrosoftSecurityInformationProtection).SensitivityLabels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.security.informationProtection.labelPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtection).LabelPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.guid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).Guid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).Labels, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.workload": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).Workload, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.distributionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).DistributionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.whenCreated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).WhenCreated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"microsoft.security.informationProtection.labelPolicy.whenChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftSecurityInformationProtectionLabelPolicy).WhenChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"microsoft.security.informationProtection.sensitivityLabel.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftSecurityInformationProtectionSensitivityLabel).__id, ok = v.Value.(string)
 		return
@@ -8666,6 +8913,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.deviceRegistrationPolicy.localAdminPasswordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftDeviceRegistrationPolicy).LocalAdminPasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.azureADJoin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).AzureADJoin, ok = plugin.RawToTValue[*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.azureADRegistration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicy).AzureADRegistration, ok = plugin.RawToTValue[*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.joinPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.joinPolicy.allowedToJoin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy).AllowedToJoin, ok = plugin.RawToTValue[*mqlMicrosoftDeviceRegistrationPolicyMembership](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.joinPolicy.isAdminConfigurable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy).IsAdminConfigurable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.joinPolicy.localAdmins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy).LocalAdmins, ok = plugin.RawToTValue[*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.registrationPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.registrationPolicy.allowedToRegister": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy).AllowedToRegister, ok = plugin.RawToTValue[*mqlMicrosoftDeviceRegistrationPolicyMembership](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.registrationPolicy.isAdminConfigurable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy).IsAdminConfigurable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.localAdminSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.localAdminSettings.enableGlobalAdmins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings).EnableGlobalAdmins, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.localAdminSettings.registeringUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings).RegisteringUsers, ok = plugin.RawToTValue[*mqlMicrosoftDeviceRegistrationPolicyMembership](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.membership.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.membership.appliesTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).AppliesTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).AllowedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).AllowedGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedUserRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).AllowedUserRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.deviceRegistrationPolicy.membership.allowedGroupRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDeviceRegistrationPolicyMembership).AllowedGroupRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.defaultAppManagementPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -8922,6 +9241,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.authenticationMethodsPolicy.microsoftAuthenticator.displayLocationInformationRequiredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator).DisplayLocationInformationRequiredState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.microsoftAuthenticator.featureSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator).FeatureSettings, ok = plugin.RawToTValue[*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.companionAppAllowedState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).CompanionAppAllowedState, ok = plugin.RawToTValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.displayAppInformationRequiredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).DisplayAppInformationRequiredState, ok = plugin.RawToTValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.displayLocationInformationRequiredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).DisplayLocationInformationRequiredState, ok = plugin.RawToTValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings.numberMatchingRequiredState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings).NumberMatchingRequiredState, ok = plugin.RawToTValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.featureConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.featureConfiguration.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.featureConfiguration.includeTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration).IncludeTarget, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"microsoft.authenticationMethodsPolicy.featureConfiguration.excludeTarget": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration).ExcludeTarget, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"microsoft.authenticationMethodsPolicy.temporaryAccessPass.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11008,6 +11367,82 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365Exchangeonline).MailboxAuditBypassAssociation, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"ms365.exchangeonline.priorityAccountProtectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).PriorityAccountProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365Exchangeonline).ProtectionPolicyRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.priority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).Priority, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.eopProtectionPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).EopProtectionPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.safeAttachmentPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).SafeAttachmentPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.safeLinksPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).SafeLinksPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.sentTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).SentTo, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.sentToMemberOf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).SentToMemberOf, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.recipientDomainIs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).RecipientDomainIs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.exceptIfSentTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).ExceptIfSentTo, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.exceptIfSentToMemberOf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).ExceptIfSentToMemberOf, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.exceptIfRecipientDomainIs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).ExceptIfRecipientDomainIs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.protectionPolicyRule.whenChanged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineProtectionPolicyRule).WhenChanged, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"ms365.exchangeonlineMailboxAuditBypassAssociation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineMailboxAuditBypassAssociation).__id, ok = v.Value.(string)
 		return
@@ -12530,6 +12965,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ms365.exchangeonline.owaMailboxPolicyEntry.weatherEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).WeatherEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.personalAccountsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).PersonalAccountsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ms365.exchangeonline.owaMailboxPolicyEntry.personalAccountCalendarsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMs365ExchangeonlineOwaMailboxPolicyEntry).PersonalAccountCalendarsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ms365.exchangeonline.remoteDomainEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20039,6 +20482,7 @@ type mqlMicrosoftSecurityInformationProtection struct {
 	__id       string
 	// optional: if you define mqlMicrosoftSecurityInformationProtectionInternal it will be used here
 	SensitivityLabels plugin.TValue[[]any]
+	LabelPolicies     plugin.TValue[[]any]
 }
 
 // createMicrosoftSecurityInformationProtection creates a new instance of this resource
@@ -20087,6 +20531,111 @@ func (c *mqlMicrosoftSecurityInformationProtection) GetSensitivityLabels() *plug
 
 		return c.sensitivityLabels()
 	})
+}
+
+func (c *mqlMicrosoftSecurityInformationProtection) GetLabelPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LabelPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.security.informationProtection", c.__id, "labelPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.labelPolicies()
+	})
+}
+
+// mqlMicrosoftSecurityInformationProtectionLabelPolicy for the microsoft.security.informationProtection.labelPolicy resource
+type mqlMicrosoftSecurityInformationProtectionLabelPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftSecurityInformationProtectionLabelPolicyInternal it will be used here
+	Name               plugin.TValue[string]
+	Guid               plugin.TValue[string]
+	Enabled            plugin.TValue[bool]
+	Mode               plugin.TValue[string]
+	Labels             plugin.TValue[[]any]
+	Workload           plugin.TValue[string]
+	DistributionStatus plugin.TValue[string]
+	Comment            plugin.TValue[string]
+	WhenCreated        plugin.TValue[*time.Time]
+	WhenChanged        plugin.TValue[*time.Time]
+}
+
+// createMicrosoftSecurityInformationProtectionLabelPolicy creates a new instance of this resource
+func createMicrosoftSecurityInformationProtectionLabelPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftSecurityInformationProtectionLabelPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.security.informationProtection.labelPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) MqlName() string {
+	return "microsoft.security.informationProtection.labelPolicy"
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetGuid() *plugin.TValue[string] {
+	return &c.Guid
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetLabels() *plugin.TValue[[]any] {
+	return &c.Labels
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetWorkload() *plugin.TValue[string] {
+	return &c.Workload
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetDistributionStatus() *plugin.TValue[string] {
+	return &c.DistributionStatus
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetWhenCreated() *plugin.TValue[*time.Time] {
+	return &c.WhenCreated
+}
+
+func (c *mqlMicrosoftSecurityInformationProtectionLabelPolicy) GetWhenChanged() *plugin.TValue[*time.Time] {
+	return &c.WhenChanged
 }
 
 // mqlMicrosoftSecurityInformationProtectionSensitivityLabel for the microsoft.security.informationProtection.sensitivityLabel resource
@@ -20385,6 +20934,8 @@ type mqlMicrosoftDeviceRegistrationPolicy struct {
 	MultiFactorAuthConfiguration plugin.TValue[string]
 	UserDeviceQuota              plugin.TValue[int64]
 	LocalAdminPasswordEnabled    plugin.TValue[bool]
+	AzureADJoin                  plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy]
+	AzureADRegistration          plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy]
 }
 
 // createMicrosoftDeviceRegistrationPolicy creates a new instance of this resource
@@ -20441,6 +20992,254 @@ func (c *mqlMicrosoftDeviceRegistrationPolicy) GetUserDeviceQuota() *plugin.TVal
 
 func (c *mqlMicrosoftDeviceRegistrationPolicy) GetLocalAdminPasswordEnabled() *plugin.TValue[bool] {
 	return &c.LocalAdminPasswordEnabled
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetAzureADJoin() *plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy] {
+	return &c.AzureADJoin
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicy) GetAzureADRegistration() *plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy] {
+	return &c.AzureADRegistration
+}
+
+// mqlMicrosoftDeviceRegistrationPolicyJoinPolicy for the microsoft.deviceRegistrationPolicy.joinPolicy resource
+type mqlMicrosoftDeviceRegistrationPolicyJoinPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDeviceRegistrationPolicyJoinPolicyInternal it will be used here
+	AllowedToJoin       plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyMembership]
+	IsAdminConfigurable plugin.TValue[bool]
+	LocalAdmins         plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings]
+}
+
+// createMicrosoftDeviceRegistrationPolicyJoinPolicy creates a new instance of this resource
+func createMicrosoftDeviceRegistrationPolicyJoinPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDeviceRegistrationPolicyJoinPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.deviceRegistrationPolicy.joinPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyJoinPolicy) MqlName() string {
+	return "microsoft.deviceRegistrationPolicy.joinPolicy"
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyJoinPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyJoinPolicy) GetAllowedToJoin() *plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyMembership] {
+	return &c.AllowedToJoin
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyJoinPolicy) GetIsAdminConfigurable() *plugin.TValue[bool] {
+	return &c.IsAdminConfigurable
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyJoinPolicy) GetLocalAdmins() *plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings] {
+	return &c.LocalAdmins
+}
+
+// mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy for the microsoft.deviceRegistrationPolicy.registrationPolicy resource
+type mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicyInternal it will be used here
+	AllowedToRegister   plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyMembership]
+	IsAdminConfigurable plugin.TValue[bool]
+}
+
+// createMicrosoftDeviceRegistrationPolicyRegistrationPolicy creates a new instance of this resource
+func createMicrosoftDeviceRegistrationPolicyRegistrationPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.deviceRegistrationPolicy.registrationPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy) MqlName() string {
+	return "microsoft.deviceRegistrationPolicy.registrationPolicy"
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy) GetAllowedToRegister() *plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyMembership] {
+	return &c.AllowedToRegister
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy) GetIsAdminConfigurable() *plugin.TValue[bool] {
+	return &c.IsAdminConfigurable
+}
+
+// mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings for the microsoft.deviceRegistrationPolicy.localAdminSettings resource
+type mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettingsInternal it will be used here
+	EnableGlobalAdmins plugin.TValue[bool]
+	RegisteringUsers   plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyMembership]
+}
+
+// createMicrosoftDeviceRegistrationPolicyLocalAdminSettings creates a new instance of this resource
+func createMicrosoftDeviceRegistrationPolicyLocalAdminSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.deviceRegistrationPolicy.localAdminSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings) MqlName() string {
+	return "microsoft.deviceRegistrationPolicy.localAdminSettings"
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings) GetEnableGlobalAdmins() *plugin.TValue[bool] {
+	return &c.EnableGlobalAdmins
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings) GetRegisteringUsers() *plugin.TValue[*mqlMicrosoftDeviceRegistrationPolicyMembership] {
+	return &c.RegisteringUsers
+}
+
+// mqlMicrosoftDeviceRegistrationPolicyMembership for the microsoft.deviceRegistrationPolicy.membership resource
+type mqlMicrosoftDeviceRegistrationPolicyMembership struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDeviceRegistrationPolicyMembershipInternal it will be used here
+	AppliesTo        plugin.TValue[string]
+	AllowedUsers     plugin.TValue[[]any]
+	AllowedGroups    plugin.TValue[[]any]
+	AllowedUserRefs  plugin.TValue[[]any]
+	AllowedGroupRefs plugin.TValue[[]any]
+}
+
+// createMicrosoftDeviceRegistrationPolicyMembership creates a new instance of this resource
+func createMicrosoftDeviceRegistrationPolicyMembership(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDeviceRegistrationPolicyMembership{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.deviceRegistrationPolicy.membership", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyMembership) MqlName() string {
+	return "microsoft.deviceRegistrationPolicy.membership"
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyMembership) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyMembership) GetAppliesTo() *plugin.TValue[string] {
+	return &c.AppliesTo
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyMembership) GetAllowedUsers() *plugin.TValue[[]any] {
+	return &c.AllowedUsers
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyMembership) GetAllowedGroups() *plugin.TValue[[]any] {
+	return &c.AllowedGroups
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyMembership) GetAllowedUserRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedUserRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.deviceRegistrationPolicy.membership", c.__id, "allowedUserRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowedUserRefs()
+	})
+}
+
+func (c *mqlMicrosoftDeviceRegistrationPolicyMembership) GetAllowedGroupRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AllowedGroupRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.deviceRegistrationPolicy.membership", c.__id, "allowedGroupRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.allowedGroupRefs()
+	})
 }
 
 // mqlMicrosoftDefaultAppManagementPolicy for the microsoft.defaultAppManagementPolicy resource
@@ -21122,13 +21921,14 @@ func (c *mqlMicrosoftAuthenticationMethodsPolicyFido2) GetKeyRestrictionsAaGuids
 type mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticatorInternal it will be used here
+	mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticatorInternal
 	State                                   plugin.TValue[string]
 	IncludeTargets                          plugin.TValue[[]any]
 	ExcludeTargets                          plugin.TValue[[]any]
 	IsSoftwareOathEnabled                   plugin.TValue[bool]
 	DisplayAppInformationRequiredState      plugin.TValue[string]
 	DisplayLocationInformationRequiredState plugin.TValue[string]
+	FeatureSettings                         plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings]
 }
 
 // createMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator creates a new instance of this resource
@@ -21185,6 +21985,135 @@ func (c *mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator) GetDispl
 
 func (c *mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator) GetDisplayLocationInformationRequiredState() *plugin.TValue[string] {
 	return &c.DisplayLocationInformationRequiredState
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyMicrosoftAuthenticator) GetFeatureSettings() *plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings] {
+	return plugin.GetOrCompute[*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings](&c.FeatureSettings, func() (*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft.authenticationMethodsPolicy.microsoftAuthenticator", c.__id, "featureSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings), nil
+			}
+		}
+
+		return c.featureSettings()
+	})
+}
+
+// mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings for the microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings resource
+type mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettingsInternal it will be used here
+	CompanionAppAllowedState                plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration]
+	DisplayAppInformationRequiredState      plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration]
+	DisplayLocationInformationRequiredState plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration]
+	NumberMatchingRequiredState             plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration]
+}
+
+// createMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings creates a new instance of this resource
+func createMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings) MqlName() string {
+	return "microsoft.authenticationMethodsPolicy.authenticatorFeatureSettings"
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings) GetCompanionAppAllowedState() *plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration] {
+	return &c.CompanionAppAllowedState
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings) GetDisplayAppInformationRequiredState() *plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration] {
+	return &c.DisplayAppInformationRequiredState
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings) GetDisplayLocationInformationRequiredState() *plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration] {
+	return &c.DisplayLocationInformationRequiredState
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyAuthenticatorFeatureSettings) GetNumberMatchingRequiredState() *plugin.TValue[*mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration] {
+	return &c.NumberMatchingRequiredState
+}
+
+// mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration for the microsoft.authenticationMethodsPolicy.featureConfiguration resource
+type mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftAuthenticationMethodsPolicyFeatureConfigurationInternal it will be used here
+	State         plugin.TValue[string]
+	IncludeTarget plugin.TValue[any]
+	ExcludeTarget plugin.TValue[any]
+}
+
+// createMicrosoftAuthenticationMethodsPolicyFeatureConfiguration creates a new instance of this resource
+func createMicrosoftAuthenticationMethodsPolicyFeatureConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.authenticationMethodsPolicy.featureConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration) MqlName() string {
+	return "microsoft.authenticationMethodsPolicy.featureConfiguration"
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration) GetIncludeTarget() *plugin.TValue[any] {
+	return &c.IncludeTarget
+}
+
+func (c *mqlMicrosoftAuthenticationMethodsPolicyFeatureConfiguration) GetExcludeTarget() *plugin.TValue[any] {
+	return &c.ExcludeTarget
 }
 
 // mqlMicrosoftAuthenticationMethodsPolicyTemporaryAccessPass for the microsoft.authenticationMethodsPolicy.temporaryAccessPass resource
@@ -26046,6 +26975,8 @@ type mqlMs365Exchangeonline struct {
 	TransportConfig                  plugin.TValue[any]
 	SecurityAndCompliance            plugin.TValue[*mqlMs365ExchangeonlineSecurityAndCompliance]
 	MailboxAuditBypassAssociation    plugin.TValue[[]any]
+	PriorityAccountProtectionEnabled plugin.TValue[bool]
+	ProtectionPolicyRules            plugin.TValue[[]any]
 }
 
 // createMs365Exchangeonline creates a new instance of this resource
@@ -26580,6 +27511,147 @@ func (c *mqlMs365Exchangeonline) GetMailboxAuditBypassAssociation() *plugin.TVal
 
 		return c.mailboxAuditBypassAssociation()
 	})
+}
+
+func (c *mqlMs365Exchangeonline) GetPriorityAccountProtectionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PriorityAccountProtectionEnabled, func() (bool, error) {
+		return c.priorityAccountProtectionEnabled()
+	})
+}
+
+func (c *mqlMs365Exchangeonline) GetProtectionPolicyRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ProtectionPolicyRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("ms365.exchangeonline", c.__id, "protectionPolicyRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protectionPolicyRules()
+	})
+}
+
+// mqlMs365ExchangeonlineProtectionPolicyRule for the ms365.exchangeonline.protectionPolicyRule resource
+type mqlMs365ExchangeonlineProtectionPolicyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMs365ExchangeonlineProtectionPolicyRuleInternal it will be used here
+	Identity                  plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Kind                      plugin.TValue[string]
+	State                     plugin.TValue[string]
+	Priority                  plugin.TValue[int64]
+	EopProtectionPolicy       plugin.TValue[string]
+	SafeAttachmentPolicy      plugin.TValue[string]
+	SafeLinksPolicy           plugin.TValue[string]
+	SentTo                    plugin.TValue[[]any]
+	SentToMemberOf            plugin.TValue[[]any]
+	RecipientDomainIs         plugin.TValue[[]any]
+	ExceptIfSentTo            plugin.TValue[[]any]
+	ExceptIfSentToMemberOf    plugin.TValue[[]any]
+	ExceptIfRecipientDomainIs plugin.TValue[[]any]
+	Comment                   plugin.TValue[string]
+	WhenChanged               plugin.TValue[*time.Time]
+}
+
+// createMs365ExchangeonlineProtectionPolicyRule creates a new instance of this resource
+func createMs365ExchangeonlineProtectionPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMs365ExchangeonlineProtectionPolicyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("ms365.exchangeonline.protectionPolicyRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) MqlName() string {
+	return "ms365.exchangeonline.protectionPolicyRule"
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetPriority() *plugin.TValue[int64] {
+	return &c.Priority
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetEopProtectionPolicy() *plugin.TValue[string] {
+	return &c.EopProtectionPolicy
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetSafeAttachmentPolicy() *plugin.TValue[string] {
+	return &c.SafeAttachmentPolicy
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetSafeLinksPolicy() *plugin.TValue[string] {
+	return &c.SafeLinksPolicy
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetSentTo() *plugin.TValue[[]any] {
+	return &c.SentTo
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetSentToMemberOf() *plugin.TValue[[]any] {
+	return &c.SentToMemberOf
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetRecipientDomainIs() *plugin.TValue[[]any] {
+	return &c.RecipientDomainIs
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetExceptIfSentTo() *plugin.TValue[[]any] {
+	return &c.ExceptIfSentTo
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetExceptIfSentToMemberOf() *plugin.TValue[[]any] {
+	return &c.ExceptIfSentToMemberOf
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetExceptIfRecipientDomainIs() *plugin.TValue[[]any] {
+	return &c.ExceptIfRecipientDomainIs
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlMs365ExchangeonlineProtectionPolicyRule) GetWhenChanged() *plugin.TValue[*time.Time] {
+	return &c.WhenChanged
 }
 
 // mqlMs365ExchangeonlineMailboxAuditBypassAssociation for the ms365.exchangeonlineMailboxAuditBypassAssociation resource
@@ -29602,6 +30674,8 @@ type mqlMs365ExchangeonlineOwaMailboxPolicyEntry struct {
 	WssAccessOnPrivateComputersEnabled        plugin.TValue[bool]
 	WssAccessOnPublicComputersEnabled         plugin.TValue[bool]
 	WeatherEnabled                            plugin.TValue[bool]
+	PersonalAccountsEnabled                   plugin.TValue[bool]
+	PersonalAccountCalendarsEnabled           plugin.TValue[bool]
 }
 
 // createMs365ExchangeonlineOwaMailboxPolicyEntry creates a new instance of this resource
@@ -29786,6 +30860,14 @@ func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetWssAccessOnPublicComput
 
 func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetWeatherEnabled() *plugin.TValue[bool] {
 	return &c.WeatherEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetPersonalAccountsEnabled() *plugin.TValue[bool] {
+	return &c.PersonalAccountsEnabled
+}
+
+func (c *mqlMs365ExchangeonlineOwaMailboxPolicyEntry) GetPersonalAccountCalendarsEnabled() *plugin.TValue[bool] {
+	return &c.PersonalAccountCalendarsEnabled
 }
 
 // mqlMs365ExchangeonlineRemoteDomainEntry for the ms365.exchangeonline.remoteDomainEntry resource
