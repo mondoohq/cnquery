@@ -546,6 +546,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.user.hasRsaPublicKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetHasRsaPublicKey()).ToDataRes(types.Bool)
 	},
+	"snowflake.user.rsaPublicKeySetAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetRsaPublicKeySetAt()).ToDataRes(types.Time)
+	},
+	"snowflake.user.rsaPublicKey2SetAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeUser).GetRsaPublicKey2SetAt()).ToDataRes(types.Time)
+	},
 	"snowflake.user.mustChangePassword": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeUser).GetMustChangePassword()).ToDataRes(types.Bool)
 	},
@@ -2854,6 +2860,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.user.hasRsaPublicKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeUser).HasRsaPublicKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.rsaPublicKeySetAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).RsaPublicKeySetAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"snowflake.user.rsaPublicKey2SetAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeUser).RsaPublicKey2SetAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"snowflake.user.mustChangePassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6715,6 +6729,8 @@ type mqlSnowflakeUser struct {
 	Disabled              plugin.TValue[bool]
 	HasPassword           plugin.TValue[bool]
 	HasRsaPublicKey       plugin.TValue[bool]
+	RsaPublicKeySetAt     plugin.TValue[*time.Time]
+	RsaPublicKey2SetAt    plugin.TValue[*time.Time]
 	MustChangePassword    plugin.TValue[bool]
 	LastSuccessLogin      plugin.TValue[*time.Time]
 	LockedUntil           plugin.TValue[*time.Time]
@@ -6842,6 +6858,18 @@ func (c *mqlSnowflakeUser) GetHasPassword() *plugin.TValue[bool] {
 
 func (c *mqlSnowflakeUser) GetHasRsaPublicKey() *plugin.TValue[bool] {
 	return &c.HasRsaPublicKey
+}
+
+func (c *mqlSnowflakeUser) GetRsaPublicKeySetAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.RsaPublicKeySetAt, func() (*time.Time, error) {
+		return c.rsaPublicKeySetAt()
+	})
+}
+
+func (c *mqlSnowflakeUser) GetRsaPublicKey2SetAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.RsaPublicKey2SetAt, func() (*time.Time, error) {
+		return c.rsaPublicKey2SetAt()
+	})
 }
 
 func (c *mqlSnowflakeUser) GetMustChangePassword() *plugin.TValue[bool] {

@@ -183,6 +183,25 @@ snowflake.user @defaults("name") {
   hasPassword bool
   // Whether the user has an RSA public key registered for key-pair authentication
   hasRsaPublicKey bool
+  // When the primary key-pair public key was last set
+  //
+  // The time the most recent statement assigning RSA_PUBLIC_KEY to this user
+  // succeeded, for assessing how long a key-pair credential has gone without
+  // rotation, for example
+  // `snowflake.account.users.where(hasRsaPublicKey).all(rsaPublicKeySetAt > time.now - 90*time.day)`.
+  // Snowflake records no set time on the user itself, so this is correlated
+  // from the account query history, which is retained for one year: a key last
+  // set before that window, or on an account where the history cannot be read,
+  // reports null rather than a date.
+  rsaPublicKeySetAt() time
+  // When the secondary key-pair public key was last set
+  //
+  // The time the most recent statement assigning RSA_PUBLIC_KEY_2 to this user
+  // succeeded. The second slot exists so a new key can be staged before the old
+  // one is retired, so during a rotation both this and rsaPublicKeySetAt carry a
+  // value. Null when the second slot has never been used, and subject to the
+  // same one-year history window as rsaPublicKeySetAt.
+  rsaPublicKey2SetAt() time
   // Whether the user is forced to change their password
   mustChangePassword bool
   // Last time the user logged in
