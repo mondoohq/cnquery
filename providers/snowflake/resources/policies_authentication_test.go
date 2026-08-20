@@ -59,6 +59,50 @@ func TestParseAuthPolicyStruct(t *testing.T) {
 			},
 		},
 		{
+			// Verbatim from DESCRIBE AUTHENTICATION POLICY on a live account
+			// (Snowflake 9.x, 2026-08-20). Note the three sub-parameters the
+			// CREATE reference does not list, the unquoted 12-digit account id,
+			// and the lowercase booleans.
+			"real payload: PAT_POLICY",
+			"{DEFAULT_EXPIRY_IN_DAYS=7, MAX_EXPIRY_IN_DAYS=30, NETWORK_POLICY_EVALUATION=NOT_ENFORCED, REQUIRE_ROLE_RESTRICTION_FOR_SERVICE_USERS=true, REQUIRE_ROLE_RESTRICTION_FOR_PERSON_USERS=false, BLOCKED_ROLES_LIST=[]}",
+			map[string]any{
+				"DEFAULT_EXPIRY_IN_DAYS":                     int64(7),
+				"MAX_EXPIRY_IN_DAYS":                         int64(30),
+				"NETWORK_POLICY_EVALUATION":                  "NOT_ENFORCED",
+				"REQUIRE_ROLE_RESTRICTION_FOR_SERVICE_USERS": true,
+				"REQUIRE_ROLE_RESTRICTION_FOR_PERSON_USERS":  false,
+				"BLOCKED_ROLES_LIST":                         []any{},
+			},
+		},
+		{
+			// Verbatim from the same run. ALLOWED_AWS_ACCOUNTS holds a bare
+			// 12-digit number: coercing list members would drop a leading zero
+			// on any account id that has one.
+			"real payload: WORKLOAD_IDENTITY_POLICY",
+			"{ALLOWED_PROVIDERS=[AWS, AZURE], ALLOWED_AWS_ACCOUNTS=[123456789012], ALLOWED_AWS_PARTITIONS=[ALL], ALLOWED_AZURE_ISSUERS=[ALL], ALLOWED_OIDC_ISSUERS=[ALL]}",
+			map[string]any{
+				"ALLOWED_PROVIDERS":      []any{"AWS", "AZURE"},
+				"ALLOWED_AWS_ACCOUNTS":   []any{"123456789012"},
+				"ALLOWED_AWS_PARTITIONS": []any{"ALL"},
+				"ALLOWED_AZURE_ISSUERS":  []any{"ALL"},
+				"ALLOWED_OIDC_ISSUERS":   []any{"ALL"},
+			},
+		},
+		{
+			// MFA_POLICY is a third structured property in the same format,
+			// still unmodelled. Parsed here to pin that the shape is shared.
+			"real payload: MFA_POLICY",
+			"{ALLOWED_METHODS=[ALL], ENFORCE_MFA_ON_EXTERNAL_AUTHENTICATION=NONE}",
+			map[string]any{
+				"ALLOWED_METHODS":                        []any{"ALL"},
+				"ENFORCE_MFA_ON_EXTERNAL_AUTHENTICATION": "NONE",
+			},
+		},
+		{
+			// CLIENT_POLICY reports an empty struct rather than null when unset.
+			"real payload: empty CLIENT_POLICY", "{}", map[string]any{},
+		},
+		{
 			"pat policy with the unsafe network setting",
 			"{MAX_EXPIRY_IN_DAYS=30, NETWORK_POLICY_EVALUATION=NOT_ENFORCED}",
 			map[string]any{
@@ -146,6 +190,8 @@ func TestParseAuthPolicyStructIsDictSerializable(t *testing.T) {
 		"{DEFAULT_EXPIRY_IN_DAYS=15, MAX_EXPIRY_IN_DAYS=365, NETWORK_POLICY_EVALUATION=ENFORCED_REQUIRED, REQUIRE_ROLE_RESTRICTION_FOR_SERVICE_USERS=true}",
 		"{ALLOWED_PROVIDERS=[AWS, AZURE], ALLOWED_AWS_ACCOUNTS=[123456789012]}",
 		"{GO_DRIVER={MINIMUM_VERSION=3.14.1}}",
+		"{DEFAULT_EXPIRY_IN_DAYS=7, MAX_EXPIRY_IN_DAYS=30, NETWORK_POLICY_EVALUATION=NOT_ENFORCED, REQUIRE_ROLE_RESTRICTION_FOR_SERVICE_USERS=true, REQUIRE_ROLE_RESTRICTION_FOR_PERSON_USERS=false, BLOCKED_ROLES_LIST=[]}",
+		"{ALLOWED_PROVIDERS=[AWS, AZURE], ALLOWED_AWS_ACCOUNTS=[123456789012], ALLOWED_AWS_PARTITIONS=[ALL], ALLOWED_AZURE_ISSUERS=[ALL], ALLOWED_OIDC_ISSUERS=[ALL]}",
 		"{}",
 	}
 	for _, in := range inputs {
