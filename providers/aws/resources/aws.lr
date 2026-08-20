@@ -16360,6 +16360,14 @@ private aws.apigateway.stage @defaults("arn") {
   cacheClusterStatus string
   // Whether the stage response cache is encrypted, from the default method settings
   cacheDataEncrypted bool
+  // Access-log configuration for the stage
+  //
+  // Keys: destinationArn (CloudWatch Logs log group or Kinesis Data
+  // Firehose delivery stream) and format (the $context log format
+  // string). Null when access logging is off. Mirrors
+  // `aws.apigatewayv2.stage.accessLogSettings`, so one check can cover
+  // REST and HTTP APIs the same way.
+  accessLogSettings dict
   // Client certificate ID for mutual TLS with backend
   clientCertificateId string
   // WAF web ACL associated with the stage

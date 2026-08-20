@@ -189,6 +189,13 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 		if ms, ok := stage.MethodSettings["*/*"]; ok {
 			cacheDataEncrypted = ms.CacheDataEncrypted
 		}
+		// Nil when access logging is off, which JsonToDict maps to a null dict
+		// rather than an empty one, so `accessLogSettings == null` is the test
+		// for "logging is not configured".
+		accessLogSettings, err := convert.JsonToDict(stage.AccessLogSettings)
+		if err != nil {
+			return nil, err
+		}
 		mqlStage, err := CreateResource(a.MqlRuntime, ResourceAwsApigatewayStage,
 			map[string]*llx.RawData{
 				"arn":                  llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))),
@@ -201,6 +208,7 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 				"cacheClusterSize":     llx.StringData(string(stage.CacheClusterSize)),
 				"cacheClusterStatus":   llx.StringData(string(stage.CacheClusterStatus)),
 				"cacheDataEncrypted":   llx.BoolData(cacheDataEncrypted),
+				"accessLogSettings":    llx.DictData(accessLogSettings),
 				"clientCertificateId":  llx.StringData(convert.ToValue(stage.ClientCertificateId)),
 				"createdAt":            llx.TimeDataPtr(stage.CreatedDate),
 				"lastUpdatedAt":        llx.TimeDataPtr(stage.LastUpdatedDate),
