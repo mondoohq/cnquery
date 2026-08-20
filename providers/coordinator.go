@@ -370,6 +370,11 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	// fork/exec error, so catch schema-only installations here. With
 	// auto-update enabled, TryProviderUpdate above already completed such an
 	// installation, so this only triggers when auto-update is off.
+	// The disk is probed instead of trusting provider.HasBinary: that field
+	// is only populated by readProviderDir, so a Provider handed to the
+	// coordinator any other way (e.g. SetProviders) reads false even when
+	// the binary exists, and probing also reflects installs that happened
+	// after the provider list was cached.
 	if !config.ProbeFile(provider.binPath()) {
 		return nil, errors.New("provider '" + provider.Name + "' is installed schema-only and has no binary to run; install it fully or enable auto-update")
 	}
