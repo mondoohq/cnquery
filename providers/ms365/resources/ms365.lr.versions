@@ -669,6 +669,16 @@ microsoft.devices 11.1.21
 microsoft.devices.filter 11.1.21
 microsoft.devices.list 11.1.21
 microsoft.devices.search 11.1.21
+microsoft.diagnosticSetting 13.12.1
+microsoft.diagnosticSetting.enabledLogCategories 13.12.1
+microsoft.diagnosticSetting.eventHubAuthorizationRuleId 13.12.1
+microsoft.diagnosticSetting.eventHubName 13.12.1
+microsoft.diagnosticSetting.id 13.12.1
+microsoft.diagnosticSetting.logs 13.12.1
+microsoft.diagnosticSetting.name 13.12.1
+microsoft.diagnosticSetting.storageAccountId 13.12.1
+microsoft.diagnosticSetting.type 13.12.1
+microsoft.diagnosticSetting.workspaceId 13.12.1
 microsoft.domain 9.0.0
 microsoft.domain.authenticationType 9.0.0
 microsoft.domain.availabilityStatus 9.0.0
@@ -701,6 +711,7 @@ microsoft.domaindnsrecord.ttl 9.0.0
 microsoft.domaindnsrecord.weight 13.2.2
 microsoft.domains 9.0.0
 microsoft.enterpriseApplications 9.0.0
+microsoft.entraDiagnosticSettings 13.12.1
 microsoft.externalIdentitiesPolicy 11.1.99
 microsoft.externalIdentitiesPolicy.allowExternalIdentitiesToLeave 11.1.99
 microsoft.externalIdentitiesPolicy.description 11.1.99
@@ -818,6 +829,7 @@ microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleDefinition 13.3.
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.roleEligibilityScheduleId 11.1.41
 microsoft.identityAndAccess.roleEligibilityScheduleInstance.startDateTime 11.1.41
 microsoft.identityAndAccess.roleEligibilityScheduleInstances 11.1.40
+microsoft.intuneDiagnosticSettings 13.12.1
 microsoft.keyCredential 11.0.28
 microsoft.keyCredential.description 11.0.28
 microsoft.keyCredential.expired 11.0.28

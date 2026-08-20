@@ -207,6 +207,7 @@ const (
 	ResourceMs365ExchangeonlineAtpPolicyForO365Entry                                                     string = "ms365.exchangeonline.atpPolicyForO365Entry"
 	ResourceMs365ExchangeonlineSharingPolicyEntry                                                        string = "ms365.exchangeonline.sharingPolicyEntry"
 	ResourceMs365ExchangeonlineRoleAssignmentPolicyEntry                                                 string = "ms365.exchangeonline.roleAssignmentPolicyEntry"
+	ResourceMicrosoftDiagnosticSetting                                                                   string = "microsoft.diagnosticSetting"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -977,6 +978,10 @@ func init() {
 			// to override args, implement: initMs365ExchangeonlineRoleAssignmentPolicyEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMs365ExchangeonlineRoleAssignmentPolicyEntry,
 		},
+		"microsoft.diagnosticSetting": {
+			// to override args, implement: initMicrosoftDiagnosticSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMicrosoftDiagnosticSetting,
+		},
 	}
 }
 
@@ -1092,6 +1097,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"microsoft.accessReviews": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoft).GetAccessReviews()).ToDataRes(types.Resource("microsoft.identityAndAccess.accessReviews"))
+	},
+	"microsoft.entraDiagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetEntraDiagnosticSettings()).ToDataRes(types.Array(types.Resource("microsoft.diagnosticSetting")))
+	},
+	"microsoft.intuneDiagnosticSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoft).GetIntuneDiagnosticSettings()).ToDataRes(types.Array(types.Resource("microsoft.diagnosticSetting")))
 	},
 	"microsoft.identityAndAccess.accessReviews.filter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMicrosoftIdentityAndAccessAccessReviews).GetFilter()).ToDataRes(types.String)
@@ -5887,6 +5898,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ms365.exchangeonline.roleAssignmentPolicyEntry.assignedRoles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).GetAssignedRoles()).ToDataRes(types.Array(types.String))
 	},
+	"microsoft.diagnosticSetting.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetId()).ToDataRes(types.String)
+	},
+	"microsoft.diagnosticSetting.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetName()).ToDataRes(types.String)
+	},
+	"microsoft.diagnosticSetting.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetType()).ToDataRes(types.String)
+	},
+	"microsoft.diagnosticSetting.enabledLogCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetEnabledLogCategories()).ToDataRes(types.Array(types.String))
+	},
+	"microsoft.diagnosticSetting.logs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetLogs()).ToDataRes(types.Array(types.Dict))
+	},
+	"microsoft.diagnosticSetting.workspaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetWorkspaceId()).ToDataRes(types.String)
+	},
+	"microsoft.diagnosticSetting.storageAccountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetStorageAccountId()).ToDataRes(types.String)
+	},
+	"microsoft.diagnosticSetting.eventHubName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetEventHubName()).ToDataRes(types.String)
+	},
+	"microsoft.diagnosticSetting.eventHubAuthorizationRuleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMicrosoftDiagnosticSetting).GetEventHubAuthorizationRuleId()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -5961,6 +5999,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"microsoft.accessReviews": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMicrosoft).AccessReviews, ok = plugin.RawToTValue[*mqlMicrosoftIdentityAndAccessAccessReviews](v.Value, v.Error)
+		return
+	},
+	"microsoft.entraDiagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).EntraDiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.intuneDiagnosticSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoft).IntuneDiagnosticSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"microsoft.identityAndAccess.accessReviews.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13115,6 +13161,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMs365ExchangeonlineRoleAssignmentPolicyEntry).AssignedRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"microsoft.diagnosticSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"microsoft.diagnosticSetting.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.enabledLogCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).EnabledLogCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.logs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).Logs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.workspaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).WorkspaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.storageAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).StorageAccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.eventHubName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).EventHubName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"microsoft.diagnosticSetting.eventHubAuthorizationRuleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMicrosoftDiagnosticSetting).EventHubAuthorizationRuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -13144,21 +13230,23 @@ type mqlMicrosoft struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlMicrosoftInternal
-	Organizations          plugin.TValue[[]any]
-	Users                  plugin.TValue[*mqlMicrosoftUsers]
-	Groups                 plugin.TValue[*mqlMicrosoftGroups]
-	GroupLifecyclePolicies plugin.TValue[[]any]
-	Domains                plugin.TValue[[]any]
-	Applications           plugin.TValue[*mqlMicrosoftApplications]
-	Serviceprincipals      plugin.TValue[[]any]
-	EnterpriseApplications plugin.TValue[[]any]
-	Oauth2PermissionGrants plugin.TValue[[]any]
-	Roles                  plugin.TValue[*mqlMicrosoftRoles]
-	Settings               plugin.TValue[any]
-	GroupSettings          plugin.TValue[[]any]
-	TenantDomainName       plugin.TValue[string]
-	IdentityAndAccess      plugin.TValue[*mqlMicrosoftIdentityAndAccess]
-	AccessReviews          plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews]
+	Organizations            plugin.TValue[[]any]
+	Users                    plugin.TValue[*mqlMicrosoftUsers]
+	Groups                   plugin.TValue[*mqlMicrosoftGroups]
+	GroupLifecyclePolicies   plugin.TValue[[]any]
+	Domains                  plugin.TValue[[]any]
+	Applications             plugin.TValue[*mqlMicrosoftApplications]
+	Serviceprincipals        plugin.TValue[[]any]
+	EnterpriseApplications   plugin.TValue[[]any]
+	Oauth2PermissionGrants   plugin.TValue[[]any]
+	Roles                    plugin.TValue[*mqlMicrosoftRoles]
+	Settings                 plugin.TValue[any]
+	GroupSettings            plugin.TValue[[]any]
+	TenantDomainName         plugin.TValue[string]
+	IdentityAndAccess        plugin.TValue[*mqlMicrosoftIdentityAndAccess]
+	AccessReviews            plugin.TValue[*mqlMicrosoftIdentityAndAccessAccessReviews]
+	EntraDiagnosticSettings  plugin.TValue[[]any]
+	IntuneDiagnosticSettings plugin.TValue[[]any]
 }
 
 // createMicrosoft creates a new instance of this resource
@@ -13410,6 +13498,38 @@ func (c *mqlMicrosoft) GetAccessReviews() *plugin.TValue[*mqlMicrosoftIdentityAn
 		}
 
 		return c.accessReviews()
+	})
+}
+
+func (c *mqlMicrosoft) GetEntraDiagnosticSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EntraDiagnosticSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "entraDiagnosticSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entraDiagnosticSettings()
+	})
+}
+
+func (c *mqlMicrosoft) GetIntuneDiagnosticSettings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IntuneDiagnosticSettings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("microsoft", c.__id, "intuneDiagnosticSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.intuneDiagnosticSettings()
 	})
 }
 
@@ -31213,4 +31333,88 @@ func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) GetDescription() *plug
 
 func (c *mqlMs365ExchangeonlineRoleAssignmentPolicyEntry) GetAssignedRoles() *plugin.TValue[[]any] {
 	return &c.AssignedRoles
+}
+
+// mqlMicrosoftDiagnosticSetting for the microsoft.diagnosticSetting resource
+type mqlMicrosoftDiagnosticSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMicrosoftDiagnosticSettingInternal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	EnabledLogCategories        plugin.TValue[[]any]
+	Logs                        plugin.TValue[[]any]
+	WorkspaceId                 plugin.TValue[string]
+	StorageAccountId            plugin.TValue[string]
+	EventHubName                plugin.TValue[string]
+	EventHubAuthorizationRuleId plugin.TValue[string]
+}
+
+// createMicrosoftDiagnosticSetting creates a new instance of this resource
+func createMicrosoftDiagnosticSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMicrosoftDiagnosticSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("microsoft.diagnosticSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) MqlName() string {
+	return "microsoft.diagnosticSetting"
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetEnabledLogCategories() *plugin.TValue[[]any] {
+	return &c.EnabledLogCategories
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetLogs() *plugin.TValue[[]any] {
+	return &c.Logs
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetWorkspaceId() *plugin.TValue[string] {
+	return &c.WorkspaceId
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetStorageAccountId() *plugin.TValue[string] {
+	return &c.StorageAccountId
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetEventHubName() *plugin.TValue[string] {
+	return &c.EventHubName
+}
+
+func (c *mqlMicrosoftDiagnosticSetting) GetEventHubAuthorizationRuleId() *plugin.TValue[string] {
+	return &c.EventHubAuthorizationRuleId
 }
