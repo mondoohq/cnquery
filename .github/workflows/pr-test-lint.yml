@@ -66,7 +66,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ">=${{ env.golang-version }}"
+          go-version: "${{ env.golang-version }}"
           check-latest: true
           cache: false
 
@@ -87,7 +87,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ">=${{ env.golang-version }}"
+          go-version: "${{ env.golang-version }}"
           check-latest: true
           cache: false
 
@@ -128,7 +128,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ">=${{ env.golang-version }}"
+          go-version: "${{ env.golang-version }}"
           check-latest: true
           cache: false
 
@@ -160,7 +160,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ">=${{ env.golang-version }}"
+          go-version: "${{ env.golang-version }}"
           check-latest: true
           cache: false
 
@@ -218,7 +218,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ">=${{ env.golang-version }}"
+          go-version: "${{ env.golang-version }}"
           check-latest: true
           cache: false
 
@@ -251,7 +251,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: ">=${{ env.golang-version }}"
+          go-version: "${{ env.golang-version }}"
           check-latest: true
           cache: false
 
