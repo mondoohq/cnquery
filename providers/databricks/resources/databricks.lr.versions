@@ -590,7 +590,10 @@ databricks.token.createdByUsername 13.0.0
 databricks.token.creationTime 13.0.0
 databricks.token.expiryTime 13.0.0
 databricks.token.id 13.0.0
+databricks.token.lastUsedDay 13.3.1
 databricks.token.ownerId 13.0.0
+databricks.token.scopes 13.3.1
+databricks.tokenPermissions 13.3.1
 databricks.tokens 13.0.0
 databricks.user 13.0.0
 databricks.user.active 13.0.0

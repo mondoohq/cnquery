@@ -96,6 +96,14 @@ databricks {
   appIntegrations() []databricks.appIntegration
   // Serverless egress network policies in the account
   networkPolicies() []databricks.networkPolicy
+  // Who may create and use personal access tokens in the workspace
+  //
+  // The workspace access control list of the token authorization object, which
+  // governs personal access tokens as a whole rather than any single token. A
+  // principal holding CAN_USE may create tokens. Read it together with the
+  // tokensEnabled field on workspaceSettings, which says whether tokens are
+  // permitted at all: this list says who may create one once they are.
+  tokenPermissions() []databricks.permission
 }
 
 // Databricks workspace
@@ -414,6 +422,18 @@ databricks.token @defaults("comment createdByUsername expiryTime") {
   creationTime time
   // Time the token expires, null when the token never expires
   expiryTime time
+  // Day the token was last used, null when it has never been used
+  //
+  // The API reports the last use to a day's resolution rather than to a
+  // timestamp, so this answers whether a standing credential is still in use,
+  // not the moment it was last used. A token that has never been used reports
+  // null, which is distinct from a token last used today.
+  lastUsedDay time
+  // API scopes the token is restricted to, empty when the token is unscoped
+  //
+  // An unscoped token carries the full authority of the user that owns it. A
+  // scoped token may only call the APIs covered by the scopes listed here.
+  scopes []string
 }
 
 // Databricks secret scope
