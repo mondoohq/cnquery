@@ -26,6 +26,11 @@ import (
 const (
 	createdByLabel = "created-by"
 	createdValue   = "cnspec"
+
+	// zoneOperationTimeout caps how long we wait for a single zonal operation.
+	// Snapshotting a large disk is slow, so this is a backstop against an
+	// operation that never reaches DONE, not a target duration.
+	zoneOperationTimeout = 30 * time.Minute
 )
 
 // invalidDiskNameChars matches any character that is not allowed in a GCP disk
@@ -244,26 +249,12 @@ func (sc *SnapshotCreator) createDisk(disk *compute.Disk, projectID, zone, diskN
 	}
 
 	// wait for the disk creation operation to complete
-	for {
-		operation, err := computeService.ZoneOperations.Get(projectID, zone, op.Name).Context(ctx).Do()
-		if err != nil {
-			return clonedDiskUrl, err
-		}
-		if operation.Status == "DONE" {
-			if operation.Error != nil {
-				errMessage, _ := operation.Error.MarshalJSON()
-				log.Debug().Str("error", string(errMessage)).Msg("operation failed")
-				if len(operation.Error.Errors) > 0 {
-					errMessage = []byte(operation.Error.Errors[0].Message)
-				}
-				return clonedDiskUrl, fmt.Errorf("create disk failed: %s", errMessage)
-			}
-			clonedDiskUrl = operation.TargetLink
-			break
-		}
+	operation, err := sc.waitForZoneOperation(ctx, computeService, projectID, zone, op.Name, "create disk")
+	if err != nil {
+		return clonedDiskUrl, err
 	}
 
-	return clonedDiskUrl, nil
+	return operation.TargetLink, nil
 }
 
 // createSnapshotDisk creates a new disk from a snapshot
@@ -277,12 +268,20 @@ func (sc *SnapshotCreator) createSnapshotDisk(snapshotUrl, projectID, zone, disk
 	return sc.createDisk(disk, projectID, zone, diskName)
 }
 
+// isCrossZoneClone reports whether the source disk lives in a different zone
+// than the target. A zonal disk can only be cloned directly within its own
+// zone, so a cross-zone clone has to be bridged through a snapshot.
+func isCrossZoneClone(sourceDisk, targetZone string) bool {
+	_, srcZone, _, err := parseDiskUrl(sourceDisk)
+	return err == nil && srcZone != "" && srcZone != targetZone
+}
+
 // cloneDisk clones a provided disk
 func (sc *SnapshotCreator) cloneDisk(sourceDisk, projectID, zone, diskName string) (string, error) {
 	// A zonal disk can only be cloned directly within the same zone. If the
 	// source disk lives in a different zone than the target, bridge through a
 	// temporary snapshot (snapshots are global) so cross-zone scanning works.
-	if _, srcZone, _, err := parseDiskUrl(sourceDisk); err == nil && srcZone != "" && srcZone != zone {
+	if isCrossZoneClone(sourceDisk, zone) {
 		return sc.cloneDiskViaSnapshot(sourceDisk, projectID, zone, diskName)
 	}
 
@@ -334,7 +333,22 @@ func (sc *SnapshotCreator) cloneDiskViaSnapshot(sourceDisk, projectID, zone, dis
 		return "", err
 	}
 
-	if err := sc.waitForZoneOperation(ctx, computeService, srcProject, srcZone, op.Name, "create snapshot"); err != nil {
+	// From here the snapshot may exist, so clean it up on every exit path, not
+	// just the successful one. The scanner disk is independent of the snapshot
+	// once created: GCP guarantees that deleting a snapshot does not affect
+	// disks already created from it.
+	defer func() {
+		delOp, delErr := computeService.Snapshots.Delete(srcProject, snapName).Context(ctx).Do()
+		if delErr != nil {
+			log.Warn().Err(delErr).Str("snapshot", snapName).Msg("could not delete temporary snapshot created for cross-zone clone")
+			return
+		}
+		// the API has accepted the delete; we deliberately do not wait for the
+		// operation to finish, so log its name to keep it traceable.
+		log.Debug().Str("snapshot", snapName).Str("operation", delOp.Name).Msg("deleting temporary snapshot created for cross-zone clone")
+	}()
+
+	if _, err := sc.waitForZoneOperation(ctx, computeService, srcProject, srcZone, op.Name, "create snapshot"); err != nil {
 		return "", err
 	}
 
@@ -345,25 +359,23 @@ func (sc *SnapshotCreator) cloneDiskViaSnapshot(sourceDisk, projectID, zone, dis
 	}
 
 	// create the scanner disk from the snapshot in the target project/zone
-	clonedDiskUrl, err := sc.createSnapshotDisk(snap.SelfLink, projectID, zone, diskName)
-
-	// best-effort cleanup: the scanner disk no longer needs the snapshot once it
-	// has been created, so delete the temporary snapshot. Do not fail the clone
-	// if cleanup fails.
-	if _, delErr := computeService.Snapshots.Delete(srcProject, snapName).Context(ctx).Do(); delErr != nil {
-		log.Warn().Err(delErr).Str("snapshot", snapName).Msg("could not delete temporary snapshot created for cross-zone clone")
-	}
-
-	return clonedDiskUrl, err
+	return sc.createSnapshotDisk(snap.SelfLink, projectID, zone, diskName)
 }
 
 // waitForZoneOperation blocks until the given zonal operation reaches the DONE
-// state, returning an error if the operation reported one.
-func (sc *SnapshotCreator) waitForZoneOperation(ctx context.Context, computeService *compute.Service, projectID, zone, opName, action string) error {
+// state and returns it, or returns an error if the operation reported one or
+// did not finish within zoneOperationTimeout.
+func (sc *SnapshotCreator) waitForZoneOperation(ctx context.Context, computeService *compute.Service, projectID, zone, opName, action string) (*compute.Operation, error) {
+	ctx, cancel := context.WithTimeout(ctx, zoneOperationTimeout)
+	defer cancel()
+
 	for {
-		operation, err := computeService.ZoneOperations.Get(projectID, zone, opName).Context(ctx).Do()
+		// Wait blocks server-side for up to two minutes, so a slow operation
+		// costs a couple of requests instead of thousands of polls. It is
+		// best-effort and may return before the operation is DONE, hence the loop.
+		operation, err := computeService.ZoneOperations.Wait(projectID, zone, opName).Context(ctx).Do()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if operation.Status == "DONE" {
 			if operation.Error != nil {
@@ -372,9 +384,12 @@ func (sc *SnapshotCreator) waitForZoneOperation(ctx context.Context, computeServ
 				if len(operation.Error.Errors) > 0 {
 					errMessage = []byte(operation.Error.Errors[0].Message)
 				}
-				return fmt.Errorf("%s failed: %s", action, errMessage)
+				return nil, fmt.Errorf("%s failed: %s", action, errMessage)
 			}
-			return nil
+			return operation, nil
+		}
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("%s did not complete: %w", action, err)
 		}
 	}
 }
@@ -400,22 +415,8 @@ func (sc *SnapshotCreator) attachDisk(projectID, zone, instanceName, sourceDiskU
 		return err
 	}
 	// wait for the operation to complete
-	for {
-		operation, err := computeService.ZoneOperations.Get(projectID, zone, op.Name).Context(ctx).Do()
-		if err != nil {
-			return err
-		}
-		if operation.Status == "DONE" {
-			if operation.Error != nil {
-				errMessage, _ := operation.Error.MarshalJSON()
-				log.Debug().Str("error", string(errMessage)).Msg("operation failed")
-				if len(operation.Error.Errors) > 0 {
-					errMessage = []byte(operation.Error.Errors[0].Message)
-				}
-				return fmt.Errorf("attach disk failed: %s", errMessage)
-			}
-			break
-		}
+	if _, err := sc.waitForZoneOperation(ctx, computeService, projectID, zone, op.Name, "attach disk"); err != nil {
+		return err
 	}
 
 	return nil
@@ -436,22 +437,8 @@ func (sc *SnapshotCreator) detachDisk(projectID, zone, instanceName, deviceName 
 	}
 
 	// wait for the operation to complete
-	for {
-		operation, err := computeService.ZoneOperations.Get(projectID, zone, op.Name).Context(ctx).Do()
-		if err != nil {
-			return err
-		}
-		if operation.Status == "DONE" {
-			if operation.Error != nil {
-				errMessage, _ := operation.Error.MarshalJSON()
-				log.Debug().Str("error", string(errMessage)).Msg("operation failed")
-				if len(operation.Error.Errors) > 0 {
-					errMessage = []byte(operation.Error.Errors[0].Message)
-				}
-				return fmt.Errorf("detach disk failed: %s", errMessage)
-			}
-			break
-		}
+	if _, err := sc.waitForZoneOperation(ctx, computeService, projectID, zone, op.Name, "detach disk"); err != nil {
+		return err
 	}
 
 	return nil
@@ -466,6 +453,14 @@ func parseDiskUrl(diskURL string) (string, string, string, error) {
 
 	// extract the path and split it into components
 	pathComponents := strings.Split(url.Path, "/")
+
+	// the path we expect is
+	// /compute/v1/projects/<project>/zones/<zone>/disks/<disk>. url.Parse
+	// accepts almost anything, so guard the indexes here: without this a disk
+	// url in an unexpected shape panics and takes the whole scan down.
+	if len(pathComponents) < 9 {
+		return "", "", "", fmt.Errorf("unexpected gcp disk url: %q", diskURL)
+	}
 
 	// extract project, zone, and disk names
 	projectId := pathComponents[4]

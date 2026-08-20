@@ -19,21 +19,70 @@ func TestParseDiskUrl(t *testing.T) {
 	assert.Equal(t, "super-dupa-disk", disk)
 }
 
-// isCrossZoneClone mirrors the decision cloneDisk makes: a source disk whose
-// zone differs from the target zone must be bridged through a snapshot.
-func isCrossZoneClone(sourceDisk, targetZone string) bool {
-	_, srcZone, _, err := parseDiskUrl(sourceDisk)
-	return err == nil && srcZone != "" && srcZone != targetZone
+func TestParseDiskUrlMalformed(t *testing.T) {
+	// url.Parse accepts nearly anything, so these reach the path-component
+	// indexing. They must return an error rather than panic.
+	for _, diskUrl := range []string{
+		"",
+		"not-a-disk-url",
+		"https://www.googleapis.com/compute/v1/projects/my-project-1234",
+		"projects/my-project-1234/zones/us-central1-a/disks/super-dupa-disk",
+	} {
+		t.Run(diskUrl, func(t *testing.T) {
+			require.NotPanics(t, func() {
+				_, _, _, err := parseDiskUrl(diskUrl)
+				assert.Error(t, err)
+			})
+		})
+	}
 }
 
-func TestCloneDiskCrossZoneDecision(t *testing.T) {
-	sourceDisk := "https://www.googleapis.com/compute/v1/projects/my-project-1234/zones/us-central1-a/disks/super-dupa-disk"
+func TestIsCrossZoneClone(t *testing.T) {
+	const diskUrl = "https://www.googleapis.com/compute/v1/projects/my-project-1234/zones/us-central1-a/disks/super-dupa-disk"
 
-	// different zones -> must bridge through a snapshot
-	assert.True(t, isCrossZoneClone(sourceDisk, "us-west1-a"),
-		"a source disk in us-central1-a with target us-west1-a should be detected as cross-zone")
+	tests := []struct {
+		name       string
+		sourceDisk string
+		targetZone string
+		expected   bool
+	}{
+		{
+			name:       "different zone bridges through a snapshot",
+			sourceDisk: diskUrl,
+			targetZone: "us-west1-a",
+			expected:   true,
+		},
+		{
+			name:       "same zone clones directly",
+			sourceDisk: diskUrl,
+			targetZone: "us-central1-a",
+			expected:   false,
+		},
+		{
+			name:       "same region but a different zone still bridges",
+			sourceDisk: diskUrl,
+			targetZone: "us-central1-b",
+			expected:   true,
+		},
+		{
+			// an unparseable url must fall back to the direct clone rather than
+			// bridging on a zone we never actually determined
+			name:       "unparseable source disk does not bridge",
+			sourceDisk: "not-a-disk-url",
+			targetZone: "us-west1-a",
+			expected:   false,
+		},
+		{
+			name:       "empty source disk does not bridge",
+			sourceDisk: "",
+			targetZone: "us-west1-a",
+			expected:   false,
+		},
+	}
 
-	// same zone -> direct clone, no snapshot bridge
-	assert.False(t, isCrossZoneClone(sourceDisk, "us-central1-a"),
-		"a source disk and target in the same zone should not be detected as cross-zone")
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, isCrossZoneClone(test.sourceDisk, test.targetZone))
+		})
+	}
 }
