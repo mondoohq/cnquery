@@ -21504,14 +21504,24 @@ private aws.codedeploy.deployment @defaults("deploymentId status applicationName
 // user's root folder, including creator references, resource state,
 // labels, and (for documents) latest-version metadata. Folder and document
 // discovery is bounded to one level below each user's root folder; deeper
-// subtrees are not traversed.
-aws.workdocs {
-  // List of WorkDocs users across all enabled regions
-  users() []aws.workdocs.user
-  // List of WorkDocs folders reachable from each user's root folder (one level deep)
-  folders() []aws.workdocs.folder
-  // List of WorkDocs documents reachable from each user's root folder (one level deep)
-  documents() []aws.workdocs.document
+// subtrees are not traversed. AWS shut WorkDocs down on 2025-04-25 and
+// deleted all user data the following day, so every list below is empty on
+// any account and an assertion made over one passes without checking
+// anything. There is no replacement service. Will be removed in the next
+// major release.
+aws.workdocs @maturity("deprecated") {
+  // WorkDocs users across all enabled regions
+  //
+  // AWS shut WorkDocs down on 2025-04-25, so this list is always empty.
+  users() @maturity("deprecated") []aws.workdocs.user
+  // WorkDocs folders reachable from each user's root folder (one level deep)
+  //
+  // AWS shut WorkDocs down on 2025-04-25, so this list is always empty.
+  folders() @maturity("deprecated") []aws.workdocs.folder
+  // WorkDocs documents reachable from each user's root folder (one level deep)
+  //
+  // AWS shut WorkDocs down on 2025-04-25, so this list is always empty.
+  documents() @maturity("deprecated") []aws.workdocs.document
 }
 
 // Amazon WorkDocs user
@@ -21522,7 +21532,9 @@ aws.workdocs {
 // storage rule (allocated bytes, type), and current utilization. The
 // `rootFolder` and `recycleBinFolder` fields resolve to the user's folders
 // so audits can traverse into the WorkDocs hierarchy without copying ids.
-private aws.workdocs.user @defaults("username emailAddress status") {
+// AWS shut WorkDocs down on 2025-04-25, so no account returns one. Will be
+// removed in the next major release.
+private aws.workdocs.user @defaults("username emailAddress status") @maturity("deprecated") {
   // Internal user ID
   id string
   // Username
@@ -21571,8 +21583,9 @@ private aws.workdocs.user @defaults("username emailAddress status") {
 // resource state (ACTIVE, RESTORING, RECYCLING, RECYCLED), latest-version
 // size, signature, and labels. Folders are discovered by walking one level
 // below each WorkDocs user's root folder; deeper subtrees are not yet
-// traversed.
-private aws.workdocs.folder @defaults("name id resourceState") {
+// traversed. AWS shut WorkDocs down on 2025-04-25, so no account returns
+// one. Will be removed in the next major release.
+private aws.workdocs.folder @defaults("name id resourceState") @maturity("deprecated") {
   // ID of the folder
   id string
   // Name of the folder
@@ -21610,8 +21623,10 @@ private aws.workdocs.folder @defaults("name id resourceState") {
 // the metadata of the document's latest version (content type, size,
 // signature, status, source, and timestamps). Documents are discovered by
 // walking one level below each WorkDocs user's root folder; documents
-// nested deeper than one level are not yet traversed.
-private aws.workdocs.document @defaults("id resourceState") {
+// nested deeper than one level are not yet traversed. AWS shut WorkDocs
+// down on 2025-04-25, so no account returns one. Will be removed in the
+// next major release.
+private aws.workdocs.document @defaults("id resourceState") @maturity("deprecated") {
   // ID of the document
   id string
   // Parent folder

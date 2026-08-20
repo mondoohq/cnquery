@@ -1100,7 +1100,10 @@ gcp.project @defaults("name number") {
   // GCP Vertex AI Workbench resources
   workbench() gcp.project.workbenchService
   // GCP legacy Notebooks resources
-  notebooks() gcp.project.notebooksService
+  //
+  // Deprecated in favor of workbench. Google deleted the last managed and
+  // user-managed notebook instances on 2026-03-30.
+  notebooks() @maturity("deprecated") gcp.project.notebooksService
   // GCP Cloud Composer resources
   composer() gcp.project.composerService
   // GCP Cloud Healthcare resources
@@ -11755,13 +11758,20 @@ private gcp.project.workbenchService.instance @defaults("name state healthState"
 // Legacy Notebooks service for the project, hosting the user-managed
 // notebook `instances`. Each instance exposes its machine configuration,
 // network settings, and public-IP exposure, so you can audit notebook VMs
-// left over from before the move to Vertex AI Workbench. New deployments
-// should use `workbench` instead.
-private gcp.project.notebooksService {
+// left over from before the move to Vertex AI Workbench. Deprecated in favor
+// of `workbench`: Google deleted the last managed and user-managed notebook
+// instances on 2026-03-30, so this returns nothing on any project and an
+// assertion made over it passes without checking anything. Will be removed in
+// the next major release.
+private gcp.project.notebooksService @maturity("deprecated") {
   // Project ID
   projectId string
-  // List of legacy User-Managed Notebooks instances
-  instances() []gcp.project.notebooksService.instance
+  // Legacy User-Managed Notebooks instances
+  //
+  // Deprecated in favor of the instances field on gcp.project.workbenchService.
+  // Google deleted the last notebook instances on 2026-03-30, so this list is
+  // always empty.
+  instances() @maturity("deprecated") []gcp.project.notebooksService.instance
 }
 
 // Google Cloud (GCP) legacy Notebooks instance
@@ -11770,8 +11780,11 @@ private gcp.project.notebooksService {
 // JupyterLab. Audit its network exposure through `noPublicIp` (whether an
 // external IP is assigned) and `noProxyAccess` (whether the notebook proxy is
 // registered), review the VPC network and subnet it runs in, and check the
-// service account it runs as and the creator who provisioned it.
-private gcp.project.notebooksService.instance @defaults("name state noPublicIp") {
+// service account it runs as and the creator who provisioned it. Deprecated
+// in favor of the instance resource on gcp.project.workbenchService: Google
+// deleted the last notebook instances on 2026-03-30, so no project returns
+// one. Will be removed in the next major release.
+private gcp.project.notebooksService.instance @defaults("name state noPublicIp") @maturity("deprecated") {
   // Project ID
   projectId string
   // Full resource name (projects/{project}/locations/{location}/instances/{instance})
