@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -44,6 +45,7 @@ func (s *Spdx) ApplyOptions(opts ...renderOption) {
 }
 
 func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
+	extractedLicenses := extractedLicenseSet{}
 	doc := &spdx.Document{
 		SPDXVersion:                spdx.Version,
 		SPDXIdentifier:             "DOCUMENT",
@@ -116,17 +118,36 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 			})
 		}
 
+		// The SPDX specification requires NOASSERTION rather than an empty value
+		// for the license and copyright fields. An empty string is not valid
+		// SPDX, and a strict consumer may reject the whole document over it.
+		declared := spdxNoAssertion(pkg.License)
 		doc.Packages = append(doc.Packages, &spdx.Package{
-			PackageSPDXIdentifier:     id,
-			PackageName:               pkg.Name,
-			PackageVersion:            pkg.Version,
-			PackageLicenseDeclared:    pkg.License,
+			PackageSPDXIdentifier:  id,
+			PackageName:            pkg.Name,
+			PackageVersion:         pkg.Version,
+			PackageLicenseDeclared: declared,
+			// Concluded is the license this document asserts the package is
+			// under. With only a declared value to go on, the honest concluded
+			// value is the same one — asserting more than was determined is what
+			// NOASSERTION exists to avoid.
+			PackageLicenseConcluded: declared,
+			// The model carries no copyright field yet, so this states
+			// NOASSERTION rather than omitting a spec-required field. When
+			// Package gains one, this is the single line that changes.
+			PackageCopyrightText:      spdxNoAssertionValue,
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
 			PackageFileName:           pkg.Location,
 			PackageChecksums:          checksums,
 		})
+		// A LicenseRef-* identifier is not on the SPDX license list, so the
+		// specification requires the document to define it before it may be
+		// referenced.
+		extractedLicenses.add(pkg.License)
 	}
+
+	doc.OtherLicenses = extractedLicenses.render()
 
 	// Emit the package→package dependency graph as SPDX DEPENDS_ON relationships,
 	// skipping any edge whose endpoints are not in this document.
@@ -322,4 +343,59 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 	}
 
 	return bom
+}
+
+// spdxNoAssertion returns the SPDX-mandated NOASSERTION for an empty value.
+func spdxNoAssertion(v string) string {
+	if strings.TrimSpace(v) == "" {
+		return spdxNoAssertionValue
+	}
+	return v
+}
+
+const spdxNoAssertionValue = "NOASSERTION"
+
+// licenseRefPrefix marks a custom identifier that is not on the SPDX license
+// list.
+const licenseRefPrefix = "LicenseRef-"
+
+// extractedLicenseSet collects the LicenseRef-* identifiers a document
+// references, so each can be declared in hasExtractedLicensingInfos as the
+// specification requires.
+type extractedLicenseSet map[string]struct{}
+
+func (s extractedLicenseSet) add(license string) {
+	for _, tok := range strings.FieldsFunc(license, func(r rune) bool {
+		return r == ' ' || r == '\t' || r == '(' || r == ')'
+	}) {
+		if strings.HasPrefix(tok, licenseRefPrefix) {
+			s[tok] = struct{}{}
+		}
+	}
+}
+
+// render returns the collected identifiers as SPDX other-license entries, sorted
+// so a document is byte-stable across runs.
+func (s extractedLicenseSet) render() []*spdx.OtherLicense {
+	if len(s) == 0 {
+		return nil
+	}
+	ids := make([]string, 0, len(s))
+	for id := range s {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+
+	out := make([]*spdx.OtherLicense, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, &spdx.OtherLicense{
+			LicenseIdentifier: id,
+			// The text is not available here — the extractors carry an
+			// identifier, not a license body — so the field states that rather
+			// than inventing one.
+			ExtractedText: spdxNoAssertionValue,
+			LicenseName:   id,
+		})
+	}
+	return out
 }

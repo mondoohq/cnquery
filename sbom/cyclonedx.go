@@ -126,13 +126,15 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		emitted[ref] = true
 
 		bomPkg := cyclonedx.Component{
-			BOMRef:     ref,
-			Type:       cyclonedx.ComponentTypeLibrary,
-			Name:       pkg.Name,
-			Version:    pkg.Version,
-			PackageURL: pkg.Purl,
-			CPE:        cpe,
-			Evidence:   evidence,
+			BOMRef:      ref,
+			Type:        cyclonedx.ComponentTypeLibrary,
+			Name:        pkg.Name,
+			Version:     pkg.Version,
+			PackageURL:  pkg.Purl,
+			CPE:         cpe,
+			Evidence:    evidence,
+			Description: pkg.Description,
+			Licenses:    cycloneDXLicenses(pkg.License),
 		}
 		if pkg.Scope == PackageScopeDev {
 			bomPkg.Scope = cyclonedx.ScopeExcluded
@@ -338,4 +340,67 @@ var familyMap = map[string][]string{
 	"alpine":  {"linux", "unix", "os"},
 	"fedora":  {"linux", "unix", "os"},
 	"rhel":    {"linux", "unix", "os"},
+}
+
+// cycloneDXLicenses renders a package's declared license as a CycloneDX license
+// list, or nil when there is none.
+//
+// CycloneDX models a license three mutually exclusive ways, and choosing the
+// wrong one fails schema validation:
+//
+//   - expression, for a full SPDX expression such as "MIT OR Apache-2.0";
+//   - license.id, for a bare SPDX identifier;
+//   - license.name, for anything that is neither.
+//
+// Package license strings in the wild are all three, so the shape is decided
+// per value rather than assumed. A string containing an SPDX operator is an
+// expression; one that looks like a bare identifier is an id; everything else —
+// "BSD-like", "see LICENSE" — is a name, which is honest rather than lossy.
+func cycloneDXLicenses(license string) *cyclonedx.Licenses {
+	license = strings.TrimSpace(license)
+	if license == "" {
+		return nil
+	}
+	if isSPDXExpression(license) {
+		return &cyclonedx.Licenses{{Expression: license}}
+	}
+	if isSPDXIdentifierShaped(license) {
+		return &cyclonedx.Licenses{{License: &cyclonedx.License{ID: license}}}
+	}
+	return &cyclonedx.Licenses{{License: &cyclonedx.License{Name: license}}}
+}
+
+// isSPDXExpression reports whether a license string joins operands with SPDX
+// operators, which is what makes it an expression rather than an identifier.
+func isSPDXExpression(s string) bool {
+	for _, t := range strings.Fields(s) {
+		switch strings.ToUpper(t) {
+		case "AND", "OR", "WITH":
+			return true
+		}
+	}
+	return strings.ContainsAny(s, "()")
+}
+
+// isSPDXIdentifierShaped reports whether a license string could be a bare SPDX
+// identifier: one token of the characters identifiers actually use.
+//
+// It deliberately does not check the value against the SPDX list. This package
+// renders whatever the extractors found and must not silently drop a license it
+// does not recognize; an unlisted identifier still belongs in the document, and
+// a consumer validating against the SPDX list will say so more usefully than a
+// renderer that omitted it.
+func isSPDXIdentifierShaped(s string) bool {
+	if s == "" || strings.ContainsAny(s, " \t") {
+		return false
+	}
+	for _, r := range s {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+		case r == '-' || r == '.' || r == '+' || r == '_':
+		default:
+			return false
+		}
+	}
+	return true
 }
