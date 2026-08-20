@@ -9,7 +9,6 @@ import (
 
 	bqreservation "cloud.google.com/go/bigquery/reservation/apiv1"
 	"cloud.google.com/go/bigquery/reservation/apiv1/reservationpb"
-	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/gcp/connection"
@@ -31,14 +30,6 @@ func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
 	}
 	projectId := g.ProjectId.Data
 
-	locations, err := g.bigqueryLocations()
-	if err != nil {
-		return nil, err
-	}
-	if len(locations) == 0 {
-		return nil, nil
-	}
-
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 	creds, err := conn.Credentials(bqreservation.DefaultAuthScopes()...)
 	if err != nil {
@@ -52,8 +43,8 @@ func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
 	}
 	defer client.Close()
 
-	var res []any
-	for _, location := range locations {
+	return listBigqueryLocations(func(location string) ([]any, error) {
+		var res []any
 		it := client.ListReservations(ctx, &reservationpb.ListReservationsRequest{
 			Parent: fmt.Sprintf("projects/%s/locations/%s", projectId, location),
 		})
@@ -63,10 +54,6 @@ func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
 				break
 			}
 			if err != nil {
-				if isSkippable(err) {
-					log.Warn().Err(err).Str("location", location).Msg("could not list BigQuery reservations")
-					break
-				}
 				return nil, err
 			}
 
@@ -108,8 +95,8 @@ func (g *mqlGcpProjectBigqueryService) reservations() ([]any, error) {
 			}
 			res = append(res, mqlRes)
 		}
-	}
-	return res, nil
+		return res, nil
+	})
 }
 
 func (g *mqlGcpProjectBigqueryServiceReservation) id() (string, error) {
