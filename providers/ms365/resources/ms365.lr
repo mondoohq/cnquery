@@ -47,6 +47,21 @@ microsoft {
   identityAndAccess() microsoft.identityAndAccess
   // Access review definitions
   accessReviews() microsoft.identityAndAccess.accessReviews
+  // Diagnostic settings exporting Microsoft Entra ID tenant logs
+  //
+  // The tenant-scoped diagnostic settings configured under Entra ID
+  // monitoring, which decide whether sign-in, audit, provisioning, and
+  // Microsoft Graph activity logs leave the tenant and where they land.
+  // Retention beyond the portal's own window depends on one of these existing.
+  entraDiagnosticSettings() []microsoft.diagnosticSetting
+  // Diagnostic settings exporting Microsoft Intune tenant logs
+  //
+  // The tenant-scoped diagnostic settings configured under Intune reports,
+  // covering the audit, operational, device compliance, and device inventory
+  // log streams. Reading these needs a role that grants
+  // Microsoft.Intune/diagnosticSettings/read, which is granted separately from
+  // the Entra one, so the two lists can succeed and fail independently.
+  intuneDiagnosticSettings() []microsoft.diagnosticSetting
 }
 
 // Microsoft Entra ID Access Review Definitions
@@ -5487,4 +5502,51 @@ private ms365.exchangeonline.roleAssignmentPolicyEntry @defaults("name isDefault
   description string
   // Management roles assigned by the policy
   assignedRoles []string
+}
+
+// Tenant diagnostic setting
+//
+// One Azure Monitor diagnostic setting attached to a tenant-wide service,
+// keyed by its resource id. Covers the log categories the setting exports and
+// the destination they are sent to: a Log Analytics workspace, a storage
+// account, or an Event Hub. Microsoft Entra ID and Microsoft Intune each hold
+// their own tenant-scoped settings, reached through entraDiagnosticSettings
+// and intuneDiagnosticSettings. A tenant may hold several settings at once, so
+// a log category counts as exported when any one setting enables it.
+private microsoft.diagnosticSetting @defaults("name enabledLogCategories") {
+  // Resource id of the diagnostic setting
+  id string
+  // Name of the diagnostic setting
+  name string
+  // Resource type the setting is attached to
+  //
+  // Either microsoft.aadiam/diagnosticSettings for Microsoft Entra ID or
+  // Microsoft.Intune/diagnosticSettings for Microsoft Intune.
+  type string
+  // Log categories the setting exports
+  //
+  // Only the categories switched on, so a setting that exists but exports
+  // nothing reports an empty list. The available categories are an open set
+  // that grows as services add log streams. Microsoft Entra ID publishes
+  // AuditLogs, SignInLogs, NonInteractiveUserSignInLogs,
+  // ServicePrincipalSignInLogs, ManagedIdentitySignInLogs, ProvisioningLogs,
+  // RiskyUsers, and MicrosoftGraphActivityLogs among others. Microsoft Intune
+  // publishes AuditLogs, OperationalLogs, DeviceComplianceOrg, Devices, and
+  // Windows365AuditLogs.
+  enabledLogCategories []string
+  // Per-category log settings
+  //
+  // Each entry describes one log stream with its `category`, whether it is
+  // `enabled`, and the legacy `retentionPolicy` carrying `days` and `enabled`.
+  // Retention is managed at the destination now, so the policy here is
+  // reported as the service returns it rather than as the effective setting.
+  logs []dict
+  // Resource id of the Log Analytics workspace logs are sent to, empty when no workspace destination is configured
+  workspaceId string
+  // Resource id of the storage account logs are archived to, empty when no storage destination is configured
+  storageAccountId string
+  // Name of the Event Hub logs are streamed to, empty when no Event Hub destination is configured
+  eventHubName string
+  // Resource id of the authorization rule for the Event Hub destination
+  eventHubAuthorizationRuleId string
 }
