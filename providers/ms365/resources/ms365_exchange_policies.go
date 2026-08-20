@@ -584,6 +584,11 @@ type ExchangeOwaMailboxPolicy struct {
 	WSSAccessOnPrivateComputersEnabled        bool     `json:"WSSAccessOnPrivateComputersEnabled"`
 	WSSAccessOnPublicComputersEnabled         bool     `json:"WSSAccessOnPublicComputersEnabled"`
 	WeatherEnabled                            bool     `json:"WeatherEnabled"`
+	// pointers: the cmdlet leaves these unset on a policy that never configured
+	// them, and a plain bool would report an unconfigured policy as one that
+	// disallows personal accounts
+	PersonalAccountsEnabled         *bool `json:"PersonalAccountsEnabled"`
+	PersonalAccountCalendarsEnabled *bool `json:"PersonalAccountCalendarsEnabled"`
 }
 
 func convertOwaMailboxPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error) {
@@ -637,6 +642,8 @@ func convertOwaMailboxPolicies(r *mqlMs365Exchangeonline, raw any) ([]any, error
 				"wssAccessOnPrivateComputersEnabled":        llx.BoolData(p.WSSAccessOnPrivateComputersEnabled),
 				"wssAccessOnPublicComputersEnabled":         llx.BoolData(p.WSSAccessOnPublicComputersEnabled),
 				"weatherEnabled":                            llx.BoolData(p.WeatherEnabled),
+				"personalAccountsEnabled":                   llx.BoolDataPtr(p.PersonalAccountsEnabled),
+				"personalAccountCalendarsEnabled":           llx.BoolDataPtr(p.PersonalAccountCalendarsEnabled),
 			})
 		if err != nil {
 			return nil, err
@@ -902,4 +909,77 @@ func (r *mqlMs365Exchangeonline) sharingPolicies() ([]any, error) {
 
 func (r *mqlMs365Exchangeonline) roleAssignmentPolicies() ([]any, error) {
 	return nil, r.getExchangeReport()
+}
+
+// --- Preset security policy rules ---
+
+// protectionPolicyRuleKinds maps a report section to the kind reported on each
+// rule it produced. A preset security policy is turned on by one Exchange
+// Online Protection rule and one Defender for Office 365 rule, and the two come
+// from different cmdlets, so the kind is what tells them apart once they are
+// merged into a single list.
+type protectionPolicyRuleSection struct {
+	kind string
+	rows []any
+}
+
+// convertProtectionPolicyRules renders the rules that apply the built-in
+// Standard and Strict preset security policies.
+//
+// The rows are read defensively rather than struct-decoded, the same way the
+// DLP policies are: these cmdlets are served both by the admin REST endpoint
+// and by the PowerShell module, and the two do not agree on how an enum or an
+// empty multi-valued property serializes.
+func convertProtectionPolicyRules(r *mqlMs365Exchangeonline, eopRows []any, atpRows []any) ([]any, error) {
+	result := []any{}
+
+	for _, section := range []protectionPolicyRuleSection{
+		{kind: "eop", rows: eopRows},
+		{kind: "atp", rows: atpRows},
+	} {
+		for _, item := range section.rows {
+			m, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			identity := dlpString(m, "Identity")
+			id := identity
+			if id == "" {
+				id = dlpString(m, "Name")
+			}
+
+			mql, err := CreateResource(r.MqlRuntime, ResourceMs365ExchangeonlineProtectionPolicyRule,
+				protectionPolicyRuleFields(m, section.kind, id, identity))
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, mql)
+		}
+	}
+
+	return result, nil
+}
+
+// protectionPolicyRuleFields maps one rule row onto the resource's fields.
+func protectionPolicyRuleFields(m map[string]any, kind string, id string, identity string) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":                      llx.StringData("protectionPolicyRule-" + kind + "-" + id),
+		"identity":                  llx.StringData(identity),
+		"name":                      llx.StringData(dlpString(m, "Name")),
+		"kind":                      llx.StringData(kind),
+		"state":                     llx.StringData(dlpString(m, "State")),
+		"priority":                  llx.IntData(dlpInt(m, "Priority")),
+		"eopProtectionPolicy":       llx.StringData(dlpString(m, "EOPProtectionPolicy")),
+		"safeAttachmentPolicy":      llx.StringData(dlpString(m, "SafeAttachmentPolicy")),
+		"safeLinksPolicy":           llx.StringData(dlpString(m, "SafeLinksPolicy")),
+		"sentTo":                    llx.ArrayData(dlpStringSlice(m, "SentTo"), types.String),
+		"sentToMemberOf":            llx.ArrayData(dlpStringSlice(m, "SentToMemberOf"), types.String),
+		"recipientDomainIs":         llx.ArrayData(dlpStringSlice(m, "RecipientDomainIs"), types.String),
+		"exceptIfSentTo":            llx.ArrayData(dlpStringSlice(m, "ExceptIfSentTo"), types.String),
+		"exceptIfSentToMemberOf":    llx.ArrayData(dlpStringSlice(m, "ExceptIfSentToMemberOf"), types.String),
+		"exceptIfRecipientDomainIs": llx.ArrayData(dlpStringSlice(m, "ExceptIfRecipientDomainIs"), types.String),
+		"comment":                   llx.StringData(dlpString(m, "Comment")),
+		"whenChanged":               llx.TimeDataPtr(dlpTime(m, "WhenChanged")),
+	}
 }

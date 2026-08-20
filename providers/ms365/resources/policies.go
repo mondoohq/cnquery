@@ -13,6 +13,7 @@ import (
 	"github.com/microsoft/kiota-abstractions-go/serialization"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -386,12 +387,101 @@ func (a *mqlMicrosoftPolicies) externalIdentitiesPolicy() (*mqlMicrosoftExternal
 	return mqlPolicy.(*mqlMicrosoftExternalIdentitiesPolicy), nil
 }
 
-// deviceRegistrationPolicy reports the tenant's Entra device settings.
+// deviceRegistrationMembershipScope reads the scope out of one
+// deviceRegistrationMembership: who it applies to, and the users and groups it
+// names when it applies to a chosen set.
 //
-// Only the scalars are reported. Graph also models azureADJoin and
-// azureADRegistration here, but both came back empty against a live tenant and
-// the cause was not established, so they are left out rather than shipped as a
-// field that reads "this policy names nobody" whatever the truth is.
+// The variant carries the meaning, and the concrete type is what identifies it,
+// because the sibling interfaces add no methods over the shared base and so
+// every variant satisfies all of them. A variant Graph adds later deserializes
+// to the base type; that yields an empty scope, which the caller reports as
+// null rather than inventing one.
+func deviceRegistrationMembershipScope(m models.DeviceRegistrationMembershipable) (string, []any, []any) {
+	users := []any{}
+	groups := []any{}
+
+	switch v := m.(type) {
+	case *models.AllDeviceRegistrationMembership:
+		return "all", users, groups
+	case *models.NoDeviceRegistrationMembership:
+		return "none", users, groups
+	case *models.EnumeratedDeviceRegistrationMembership:
+		for _, u := range v.GetUsers() {
+			users = append(users, u)
+		}
+		for _, g := range v.GetGroups() {
+			groups = append(groups, g)
+		}
+		return "selected", users, groups
+	}
+	log.Warn().
+		Str("odataType", convert.ToValue(m.GetOdataType())).
+		Msg("unrecognized device registration membership, reporting its scope as null")
+	return "", users, groups
+}
+
+// deviceRegistrationMembership renders one deviceRegistrationMembership as a
+// resource. The Graph type is a union whose variant carries the meaning: the
+// membership either applies to everyone, to nobody, or to an enumerated set of
+// users and groups. The concrete type is what identifies the variant, because
+// the sibling interfaces add no methods over the shared base and so every
+// variant satisfies all of them.
+func deviceRegistrationMembership(runtime *plugin.Runtime, id string, m models.DeviceRegistrationMembershipable) (*mqlMicrosoftDeviceRegistrationPolicyMembership, error) {
+	if m == nil {
+		return nil, nil
+	}
+
+	appliesTo, users, groups := deviceRegistrationMembershipScope(m)
+
+	args := map[string]*llx.RawData{
+		"__id":          llx.StringData(id),
+		"allowedUsers":  llx.ArrayData(users, types.String),
+		"allowedGroups": llx.ArrayData(groups, types.String),
+	}
+	// a variant Graph adds later deserializes to the base type, which carries no
+	// scope of its own; reporting null says that rather than inventing one
+	if appliesTo == "" {
+		args["appliesTo"] = llx.NilData
+	} else {
+		args["appliesTo"] = llx.StringData(appliesTo)
+	}
+
+	res, err := CreateResource(runtime, ResourceMicrosoftDeviceRegistrationPolicyMembership, args)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlMicrosoftDeviceRegistrationPolicyMembership), nil
+}
+
+// deviceRegistrationLocalAdmins renders who becomes a local administrator on a
+// device joined to Microsoft Entra.
+func deviceRegistrationLocalAdmins(runtime *plugin.Runtime, id string, s models.LocalAdminSettingsable) (*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings, error) {
+	if s == nil {
+		return nil, nil
+	}
+
+	registeringUsers, err := deviceRegistrationMembership(runtime, id+"/registeringUsers", s.GetRegisteringUsers())
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(runtime, ResourceMicrosoftDeviceRegistrationPolicyLocalAdminSettings,
+		map[string]*llx.RawData{
+			"__id":               llx.StringData(id),
+			"enableGlobalAdmins": llx.BoolDataPtr(s.GetEnableGlobalAdmins()),
+			"registeringUsers":   llx.ResourceData(registeringUsers, ResourceMicrosoftDeviceRegistrationPolicyMembership),
+		})
+	if err != nil {
+		return nil, err
+	}
+	mql := res.(*mqlMicrosoftDeviceRegistrationPolicyLocalAdminSettings)
+	if registeringUsers == nil {
+		mql.RegisteringUsers.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return mql, nil
+}
+
+// deviceRegistrationPolicy reports the tenant's Entra device settings.
 func (a *mqlMicrosoftPolicies) deviceRegistrationPolicy() (*mqlMicrosoftDeviceRegistrationPolicy, error) {
 	conn := a.MqlRuntime.Connection.(*connection.Ms365Connection)
 	graphClient, err := conn.GraphClient()
@@ -417,6 +507,58 @@ func (a *mqlMicrosoftPolicies) deviceRegistrationPolicy() (*mqlMicrosoftDeviceRe
 		localAdminPasswordEnabled = lap.GetIsEnabled()
 	}
 
+	policyId := convert.ToValue(policy.GetId())
+
+	var mqlJoin *mqlMicrosoftDeviceRegistrationPolicyJoinPolicy
+	if join := policy.GetAzureADJoin(); join != nil {
+		allowedToJoin, err := deviceRegistrationMembership(a.MqlRuntime, policyId+"/azureADJoin/allowedToJoin", join.GetAllowedToJoin())
+		if err != nil {
+			return nil, err
+		}
+		localAdmins, err := deviceRegistrationLocalAdmins(a.MqlRuntime, policyId+"/azureADJoin/localAdmins", join.GetLocalAdmins())
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(a.MqlRuntime, ResourceMicrosoftDeviceRegistrationPolicyJoinPolicy,
+			map[string]*llx.RawData{
+				"__id":                llx.StringData(policyId + "/azureADJoin"),
+				"allowedToJoin":       llx.ResourceData(allowedToJoin, ResourceMicrosoftDeviceRegistrationPolicyMembership),
+				"isAdminConfigurable": llx.BoolDataPtr(join.GetIsAdminConfigurable()),
+				"localAdmins":         llx.ResourceData(localAdmins, ResourceMicrosoftDeviceRegistrationPolicyLocalAdminSettings),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlJoin = res.(*mqlMicrosoftDeviceRegistrationPolicyJoinPolicy)
+		if allowedToJoin == nil {
+			mqlJoin.AllowedToJoin.State = plugin.StateIsSet | plugin.StateIsNull
+		}
+		if localAdmins == nil {
+			mqlJoin.LocalAdmins.State = plugin.StateIsSet | plugin.StateIsNull
+		}
+	}
+
+	var mqlRegistration *mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy
+	if registration := policy.GetAzureADRegistration(); registration != nil {
+		allowedToRegister, err := deviceRegistrationMembership(a.MqlRuntime, policyId+"/azureADRegistration/allowedToRegister", registration.GetAllowedToRegister())
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(a.MqlRuntime, ResourceMicrosoftDeviceRegistrationPolicyRegistrationPolicy,
+			map[string]*llx.RawData{
+				"__id":                llx.StringData(policyId + "/azureADRegistration"),
+				"allowedToRegister":   llx.ResourceData(allowedToRegister, ResourceMicrosoftDeviceRegistrationPolicyMembership),
+				"isAdminConfigurable": llx.BoolDataPtr(registration.GetIsAdminConfigurable()),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlRegistration = res.(*mqlMicrosoftDeviceRegistrationPolicyRegistrationPolicy)
+		if allowedToRegister == nil {
+			mqlRegistration.AllowedToRegister.State = plugin.StateIsSet | plugin.StateIsNull
+		}
+	}
+
 	mqlPolicy, err := CreateResource(a.MqlRuntime, ResourceMicrosoftDeviceRegistrationPolicy,
 		map[string]*llx.RawData{
 			"__id":                         llx.StringDataPtr(policy.GetId()),
@@ -426,12 +568,21 @@ func (a *mqlMicrosoftPolicies) deviceRegistrationPolicy() (*mqlMicrosoftDeviceRe
 			"multiFactorAuthConfiguration": llx.StringDataPtr(mfaConfiguration),
 			"userDeviceQuota":              llx.IntDataPtr(policy.GetUserDeviceQuota()),
 			"localAdminPasswordEnabled":    llx.BoolDataPtr(localAdminPasswordEnabled),
+			"azureADJoin":                  llx.ResourceData(mqlJoin, ResourceMicrosoftDeviceRegistrationPolicyJoinPolicy),
+			"azureADRegistration":          llx.ResourceData(mqlRegistration, ResourceMicrosoftDeviceRegistrationPolicyRegistrationPolicy),
 		})
 	if err != nil {
 		return nil, err
 	}
 
-	return mqlPolicy.(*mqlMicrosoftDeviceRegistrationPolicy), nil
+	res := mqlPolicy.(*mqlMicrosoftDeviceRegistrationPolicy)
+	if mqlJoin == nil {
+		res.AzureADJoin.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	if mqlRegistration == nil {
+		res.AzureADRegistration.State = plugin.StateIsSet | plugin.StateIsNull
+	}
+	return res, nil
 }
 
 func initMicrosoftExternalIdentitiesPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -883,4 +1034,47 @@ func newCrossTenantAccessPolicyTarget(runtime *plugin.Runtime, accessPolicyTarge
 	}
 
 	return resource.(*mqlMicrosoftCrossTenantAccessPolicyDefaultB2bSettingTargetConfig), nil
+}
+
+// allowedUserRefs resolves the users an enumerated membership names.
+//
+// A principal that cannot be resolved fails the field rather than being
+// skipped: this list is the scope of who may join or administer a device, and
+// a list that quietly lost an entry still satisfies every assertion made
+// about it.
+func (a *mqlMicrosoftDeviceRegistrationPolicyMembership) allowedUserRefs() ([]any, error) {
+	res := []any{}
+	for _, id := range a.GetAllowedUsers().Data {
+		s, ok := id.(string)
+		if !ok || s == "" {
+			continue
+		}
+		user, err := NewResource(a.MqlRuntime, ResourceMicrosoftUser, map[string]*llx.RawData{
+			"id": llx.StringData(s),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, user)
+	}
+	return res, nil
+}
+
+// allowedGroupRefs resolves the groups an enumerated membership names.
+func (a *mqlMicrosoftDeviceRegistrationPolicyMembership) allowedGroupRefs() ([]any, error) {
+	res := []any{}
+	for _, id := range a.GetAllowedGroups().Data {
+		s, ok := id.(string)
+		if !ok || s == "" {
+			continue
+		}
+		group, err := NewResource(a.MqlRuntime, ResourceMicrosoftGroup, map[string]*llx.RawData{
+			"id": llx.StringData(s),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, group)
+	}
+	return res, nil
 }
