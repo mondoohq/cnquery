@@ -1048,6 +1048,28 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 		return nil, errors.New("cannot determine installation path for provider")
 	}
 
+	// A schema-only installation has no binary to run. Whatever its version,
+	// complete it by installing the full package for that version. This check
+	// comes before any freshness check: a provider whose schema is current is
+	// still unusable without its binary.
+	if !config.ProbeFile(provider.binPath()) {
+		log.Info().
+			Str("version", provider.Version).
+			Msg("provider '" + provider.Name + "' is installed schema-only, downloading its binary")
+		completed, err := installVersion(ctx, provider.Name, provider.Version)
+		if err != nil {
+			return nil, err
+		}
+		PrintInstallResults([]*Provider{completed})
+
+		if providers, err := ListActive(); err == nil {
+			if err := installDependencies(completed, providers); err != nil {
+				return nil, err
+			}
+		}
+		return completed, nil
+	}
+
 	statPath := provider.confJSONPath()
 	stat, err := os.Stat(statPath)
 	if err != nil {

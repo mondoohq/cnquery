@@ -16,6 +16,7 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/cli/config"
 	"go.mondoo.com/mql/logger"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -363,6 +364,14 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 		} else {
 			provider = updated
 		}
+	}
+
+	// Without a binary the exec below can only fail with an obscure
+	// fork/exec error, so catch schema-only installations here. With
+	// auto-update enabled, TryProviderUpdate above already completed such an
+	// installation, so this only triggers when auto-update is off.
+	if !config.ProbeFile(provider.binPath()) {
+		return nil, errors.New("provider '" + provider.Name + "' is installed schema-only and has no binary to run; install it fully or enable auto-update")
 	}
 
 	// LoadResources is idempotent and safe under concurrent calls; it
