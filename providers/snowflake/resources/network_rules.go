@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -18,6 +19,7 @@ type mqlSnowflakeNetworkRuleInternal struct {
 	valuesLock    sync.Mutex
 	valuesLoaded  bool
 	valuesLoadErr error
+	valuesDenied  bool
 	values        []any
 }
 
@@ -71,13 +73,28 @@ func (r *mqlSnowflakeNetworkRule) schema() (*mqlSnowflakeSchema, error) {
 	return resolveSchemaRef(r.MqlRuntime, r.DatabaseName.Data, r.SchemaName.Data, &r.Schema)
 }
 
+// markValuesNull records that the value list was not readable. A list accessor
+// returning (nil, nil) alone renders as an empty array, so the null state has to
+// be set explicitly for the field to read as unknown.
+func (r *mqlSnowflakeNetworkRule) markValuesNull() {
+	r.ValueList.State = plugin.StateIsSet | plugin.StateIsNull
+}
+
 func (r *mqlSnowflakeNetworkRule) valueList() ([]any, error) {
 	if r.valuesLoaded {
+		if r.valuesDenied {
+			r.markValuesNull()
+			return nil, nil
+		}
 		return r.values, r.valuesLoadErr
 	}
 	r.valuesLock.Lock()
 	defer r.valuesLock.Unlock()
 	if r.valuesLoaded {
+		if r.valuesDenied {
+			r.markValuesNull()
+			return nil, nil
+		}
 		return r.values, r.valuesLoadErr
 	}
 
@@ -90,6 +107,22 @@ func (r *mqlSnowflakeNetworkRule) valueList() ([]any, error) {
 	)
 	if err != nil {
 		r.valuesLoaded = true
+		if isAccessDenied(err) {
+			// DESCRIBE NETWORK RULE requires OWNERSHIP, which no role holds on
+			// the rules Snowflake ships in SNOWFLAKE.EXTERNAL_ACCESS. Report
+			// the values as unknown rather than failing the field, and never as
+			// an empty list: empty would read as "this rule permits nothing",
+			// the opposite of what an unreadable rule means, and would let a
+			// check asserting no open value pass on a rule nobody has read.
+			r.valuesDenied = true
+			r.markValuesNull()
+			log.Debug().
+				Str("rule", r.Name.Data).
+				Str("schema", r.SchemaName.Data).
+				Str("database", r.DatabaseName.Data).
+				Msg("snowflake: insufficient privileges to describe network rule, value list unavailable")
+			return nil, nil
+		}
 		r.valuesLoadErr = err
 		return nil, err
 	}
