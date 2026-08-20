@@ -1413,6 +1413,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"snowflake.authenticationPolicy.securityIntegrationRefs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAuthenticationPolicy).GetSecurityIntegrationRefs()).ToDataRes(types.Array(types.Resource("snowflake.securityIntegration")))
 	},
+	"snowflake.authenticationPolicy.patPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAuthenticationPolicy).GetPatPolicy()).ToDataRes(types.Dict)
+	},
+	"snowflake.authenticationPolicy.workloadIdentityPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeAuthenticationPolicy).GetWorkloadIdentityPolicy()).ToDataRes(types.Dict)
+	},
 	"snowflake.maskingPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeMaskingPolicy).GetName()).ToDataRes(types.String)
 	},
@@ -4080,6 +4086,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.authenticationPolicy.securityIntegrationRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeAuthenticationPolicy).SecurityIntegrationRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"snowflake.authenticationPolicy.patPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAuthenticationPolicy).PatPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"snowflake.authenticationPolicy.workloadIdentityPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeAuthenticationPolicy).WorkloadIdentityPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"snowflake.maskingPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -9555,6 +9569,8 @@ type mqlSnowflakeAuthenticationPolicy struct {
 	ClientTypes              plugin.TValue[[]any]
 	SecurityIntegrations     plugin.TValue[[]any]
 	SecurityIntegrationRefs  plugin.TValue[[]any]
+	PatPolicy                plugin.TValue[any]
+	WorkloadIdentityPolicy   plugin.TValue[any]
 }
 
 // createSnowflakeAuthenticationPolicy creates a new instance of this resource
@@ -9664,6 +9680,18 @@ func (c *mqlSnowflakeAuthenticationPolicy) GetSecurityIntegrationRefs() *plugin.
 		}
 
 		return c.securityIntegrationRefs()
+	})
+}
+
+func (c *mqlSnowflakeAuthenticationPolicy) GetPatPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.PatPolicy, func() (any, error) {
+		return c.patPolicy()
+	})
+}
+
+func (c *mqlSnowflakeAuthenticationPolicy) GetWorkloadIdentityPolicy() *plugin.TValue[any] {
+	return plugin.GetOrCompute[any](&c.WorkloadIdentityPolicy, func() (any, error) {
+		return c.workloadIdentityPolicy()
 	})
 }
 

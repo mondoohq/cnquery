@@ -1114,6 +1114,28 @@ snowflake.authenticationPolicy @defaults("name mfaEnrollment") {
   securityIntegrations() []string
   // Security integrations permitted by this policy
   securityIntegrationRefs() []snowflake.securityIntegration
+  // Programmatic access token rules
+  //
+  // The PAT_POLICY value from DESCRIBE AUTHENTICATION POLICY, as a map keyed by
+  // sub-parameter name: DEFAULT_EXPIRY_IN_DAYS and MAX_EXPIRY_IN_DAYS (numbers),
+  // NETWORK_POLICY_EVALUATION (ENFORCED_REQUIRED, ENFORCED_NOT_REQUIRED or
+  // NOT_ENFORCED) and REQUIRE_ROLE_RESTRICTION_FOR_SERVICE_USERS (a boolean).
+  // These decide whether a programmatic access token is bounded in lifetime and
+  // whether it is usable from any network, for example
+  // `patPolicy["NETWORK_POLICY_EVALUATION"] == "ENFORCED_REQUIRED"`. Empty on a
+  // policy that sets no token rules, and on a Snowflake version that does not
+  // report the property.
+  patPolicy() dict
+  // Workload identity federation rules
+  //
+  // The WORKLOAD_IDENTITY_POLICY value from DESCRIBE AUTHENTICATION POLICY, as a
+  // map keyed by sub-parameter name: ALLOWED_PROVIDERS (any of ALL, AWS, AZURE,
+  // GCP, OIDC), ALLOWED_AWS_ACCOUNTS, ALLOWED_AZURE_ISSUERS and
+  // ALLOWED_OIDC_ISSUERS. These decide which external identities may federate
+  // into the account at all. Every value is a list of strings, so an account id
+  // keeps its leading zeros. Empty on a policy that places no restriction, and
+  // on a Snowflake version that does not report the property.
+  workloadIdentityPolicy() dict
 }
 
 // Snowflake Masking Policy

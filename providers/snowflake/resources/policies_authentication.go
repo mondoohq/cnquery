@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -28,6 +29,8 @@ type mqlSnowflakeAuthenticationPolicyInternal struct {
 	descMfaEnrollment string
 	descClientTypes   []any
 	descSecIntegs     []any
+	descPatPolicy     map[string]any
+	descWorkloadIdent map[string]any
 }
 
 func (r *mqlSnowflakeAccount) authenticationPolicies() ([]any, error) {
@@ -107,6 +110,10 @@ func (r *mqlSnowflakeAuthenticationPolicy) gatherDescribe() error {
 			r.descClientTypes = parseAuthPolicyList(row.Value)
 		case "SECURITY_INTEGRATIONS":
 			r.descSecIntegs = parseAuthPolicyList(row.Value)
+		case "PAT_POLICY":
+			r.descPatPolicy = parseAuthPolicyStruct(row.Value)
+		case "WORKLOAD_IDENTITY_POLICY":
+			r.descWorkloadIdent = parseAuthPolicyStruct(row.Value)
 		}
 	}
 
@@ -233,4 +240,129 @@ func (r *mqlSnowflakeAuthenticationPolicy) allSecurityIntegrationRefs() ([]any, 
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// parseAuthPolicyStruct parses a structured DESCRIBE AUTHENTICATION POLICY
+// value into a dict.
+//
+// These values are not JSON. Snowflake renders them the way a Java map prints
+// itself, which the documented CLIENT_POLICY example shows exactly:
+//
+//	{GO_DRIVER={MINIMUM_VERSION=3.14.1}}
+//
+// so a PAT policy arrives as
+//
+//	{DEFAULT_EXPIRY_IN_DAYS=15, MAX_EXPIRY_IN_DAYS=365, NETWORK_POLICY_EVALUATION=ENFORCED_REQUIRED}
+//
+// Entries are split at top-level separators only, so a nested map or list is
+// carried through whole. A value that is neither is returned as int64 or bool
+// where it reads as one, since the point of MAX_EXPIRY_IN_DAYS is to compare it
+// against a bound. List members are always left as strings: ALLOWED_AWS_ACCOUNTS
+// holds 12-digit account ids, and reading one as a number would drop a leading
+// zero.
+//
+// An unrecognizable value yields an empty map rather than an error. The
+// property is reported by newer Snowflake versions only, and one unreadable
+// entry must not take the other four properties of the policy down with it.
+func parseAuthPolicyStruct(s string) map[string]any {
+	out := map[string]any{}
+	s = strings.TrimSpace(s)
+	if !strings.HasPrefix(s, "{") || !strings.HasSuffix(s, "}") {
+		return out
+	}
+	for _, entry := range splitTopLevel(s[1 : len(s)-1]) {
+		key, value, found := strings.Cut(entry, "=")
+		if !found {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		out[key] = parseAuthPolicyValue(value)
+	}
+	return out
+}
+
+// parseAuthPolicyValue converts one value of a structured DESCRIBE value,
+// recursing into nested maps and lists.
+func parseAuthPolicyValue(s string) any {
+	s = strings.TrimSpace(s)
+	switch {
+	case strings.HasPrefix(s, "{") && strings.HasSuffix(s, "}"):
+		return parseAuthPolicyStruct(s)
+	case strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]"):
+		out := []any{}
+		for _, member := range splitTopLevel(s[1 : len(s)-1]) {
+			member = strings.TrimSpace(member)
+			member = strings.Trim(member, "'\"")
+			if member != "" {
+				out = append(out, member)
+			}
+		}
+		return out
+	}
+	s = strings.Trim(s, "'\"")
+	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return n
+	}
+	switch strings.ToUpper(s) {
+	case "TRUE":
+		return true
+	case "FALSE":
+		return false
+	}
+	return s
+}
+
+// splitTopLevel splits on commas that sit outside any nested {} or [] group, so
+// that {A=[X, Y], B=1} yields "A=[X, Y]" and "B=1" rather than three fragments.
+func splitTopLevel(s string) []string {
+	out := []string{}
+	depth := 0
+	start := 0
+	for i, r := range s {
+		switch r {
+		case '{', '[':
+			depth++
+		case '}', ']':
+			if depth > 0 {
+				depth--
+			}
+		case ',':
+			if depth == 0 {
+				out = append(out, s[start:i])
+				start = i + 1
+			}
+		}
+	}
+	out = append(out, s[start:])
+
+	trimmed := make([]string, 0, len(out))
+	for _, part := range out {
+		if strings.TrimSpace(part) != "" {
+			trimmed = append(trimmed, part)
+		}
+	}
+	return trimmed
+}
+
+func (r *mqlSnowflakeAuthenticationPolicy) patPolicy() (any, error) {
+	if err := r.gatherDescribe(); err != nil {
+		return nil, err
+	}
+	if r.descPatPolicy == nil {
+		return map[string]any{}, nil
+	}
+	return r.descPatPolicy, nil
+}
+
+func (r *mqlSnowflakeAuthenticationPolicy) workloadIdentityPolicy() (any, error) {
+	if err := r.gatherDescribe(); err != nil {
+		return nil, err
+	}
+	if r.descWorkloadIdent == nil {
+		return map[string]any{}, nil
+	}
+	return r.descWorkloadIdent, nil
 }
