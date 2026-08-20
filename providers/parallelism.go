@@ -7,7 +7,7 @@ import (
 	goruntime "runtime"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 // SequentialParallelism scans one asset at a time. It is the fallback whenever
