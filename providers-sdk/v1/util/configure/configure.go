@@ -291,8 +291,8 @@ func buildDependencies(deps map[string]*resources.ProviderInfo) {
 }
 
 var (
-	reBuiltinReplace = regexp.MustCompile(`replace go.mondoo.com/mql/providers/.* => ./providers/.*`)
-	reBuiltinDep     = regexp.MustCompile(`go.mondoo.com/mql/providers/.*`)
+	reBuiltinReplace = regexp.MustCompile(`replace go\.mondoo\.com/mql/providers/.* => \./providers/.*`)
+	reBuiltinDep     = regexp.MustCompile(`go\.mondoo\.com/mql/providers/.*`)
 )
 
 func rewireDependencies(providers []Builtin) {
