@@ -13,6 +13,7 @@ import (
 	"github.com/microsoft/kiota-abstractions-go/serialization"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/policies"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -413,6 +414,9 @@ func deviceRegistrationMembershipScope(m models.DeviceRegistrationMembershipable
 		}
 		return "selected", users, groups
 	}
+	log.Warn().
+		Str("odataType", convert.ToValue(m.GetOdataType())).
+		Msg("unrecognized device registration membership, reporting its scope as null")
 	return "", users, groups
 }
 

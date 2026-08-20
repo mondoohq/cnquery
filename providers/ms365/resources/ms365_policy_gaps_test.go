@@ -163,6 +163,34 @@ func TestLabelPolicyFields(t *testing.T) {
 	assert.NotNil(t, fields["whenChanged"].Value)
 }
 
+// Enabled decides whether a label policy counts as published, so a row that
+// does not carry the property has to read null. Reporting false would answer
+// "this policy is switched off" with a value the service never sent.
+func TestLabelPolicyFields_EnabledIsNullableAndTolerant(t *testing.T) {
+	tests := []struct {
+		name string
+		row  map[string]any
+		want any
+	}{
+		{"real bool true", map[string]any{"Enabled": true}, true},
+		{"real bool false", map[string]any{"Enabled": false}, false},
+		// ConvertTo-Json on some module versions emits booleans as strings
+		{"string True", map[string]any{"Enabled": "True"}, true},
+		{"string false", map[string]any{"Enabled": "false"}, false},
+		{"property absent", map[string]any{}, nil},
+		{"explicit null", map[string]any{"Enabled": nil}, nil},
+		// an unparseable value is not evidence the policy is off
+		{"unexpected type", map[string]any{"Enabled": 1.0}, nil},
+		{"unexpected string", map[string]any{"Enabled": "Pending"}, nil},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, labelPolicyFields(tc.row, "g", "g")["enabled"].Value)
+		})
+	}
+}
+
 // --- Microsoft Authenticator feature settings ---
 
 // authenticatorBetaJSON is the MicrosoftAuthenticator configuration the beta

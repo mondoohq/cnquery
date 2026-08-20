@@ -2197,13 +2197,21 @@ microsoft.security.informationProtection.labelPolicy @defaults("name enabled mod
   // Policy GUID
   guid string
   // Whether the policy is enabled
+  //
+  // Null when the policy carries no value for it, which is not the same as
+  // the policy being off.
   enabled bool
   // Enforcement mode
   //
   // One of Enforce, TestWithNotifications, TestWithoutNotifications, Disable,
   // or PendingDeletion.
   mode string
-  // Names of the sensitivity labels the policy publishes
+  // The sensitivity labels the policy publishes
+  //
+  // Purview identifies a label by its `Name`, which is a GUID for the labels
+  // the service provides, so these usually match the `id` of a
+  // `microsoft.security.informationProtection.sensitivityLabel` rather than
+  // its display name.
   labels []string
   // Workloads the policy applies to, such as Exchange or SharePoint
   workload string

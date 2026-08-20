@@ -78,6 +78,25 @@ func dlpString(m map[string]any, key string) string {
 	return ""
 }
 
+// dlpBoolPtr is dlpBool for a field where an absent value has to stay null.
+// dlpBool cannot distinguish "the policy reports false" from "the property was
+// not in the response", and for a field an audit reads as a decision the
+// tenant made, inventing false is worse than reporting nothing.
+func dlpBoolPtr(m map[string]any, key string) *bool {
+	switch v := m[key].(type) {
+	case bool:
+		return &v
+	case string:
+		// some PowerShell JSON serializers emit booleans as "True"/"False"
+		b := strings.EqualFold(v, "true")
+		if !b && !strings.EqualFold(v, "false") {
+			return nil
+		}
+		return &b
+	}
+	return nil
+}
+
 func dlpBool(m map[string]any, key string) bool {
 	switch v := m[key].(type) {
 	case bool:

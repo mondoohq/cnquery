@@ -158,7 +158,7 @@ func labelPolicyFields(m map[string]any, guid string, id string) map[string]*llx
 		"__id":               llx.StringData("labelPolicy-" + id),
 		"name":               llx.StringData(dlpString(m, "Name")),
 		"guid":               llx.StringData(guid),
-		"enabled":            llx.BoolData(dlpBool(m, "Enabled")),
+		"enabled":            llx.BoolDataPtr(dlpBoolPtr(m, "Enabled")),
 		"mode":               llx.StringData(dlpString(m, "Mode")),
 		"labels":             llx.ArrayData(dlpStringSlice(m, "Labels"), types.String),
 		"workload":           llx.StringData(dlpWorkload(m)),
