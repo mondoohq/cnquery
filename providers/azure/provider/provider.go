@@ -367,10 +367,15 @@ func applyAzureSubscriptionIdentity(asset *inventory.Asset, subID, tenantID, pla
 		asset.Labels[resources.SubscriptionLabel] = subID
 	}
 
-	if displayName == "" {
-		displayName = subID
+	// Only name an asset that has no name. A caller who passed --asset-name
+	// has already named this asset, and detect running afterwards must not
+	// take that back; the sibling fields above guard for the same reason.
+	if asset.Name == "" {
+		if displayName == "" {
+			displayName = subID
+		}
+		asset.Name = "Azure subscription " + displayName
 	}
-	asset.Name = "Azure subscription " + displayName
 }
 
 // azureSubscriptionDisplayName reads the connected subscription's display name,

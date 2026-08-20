@@ -87,6 +87,20 @@ func TestApplyAzureSubscriptionIdentityDoesNotOverwriteExistingIdentity(t *testi
 	assert.Equal(t, []string{testPlatformID}, asset.PlatformIds)
 }
 
+// A name the caller supplied via --asset-name survives detect. Naming the root
+// asset here runs after cnspec has already applied --asset-name, so an
+// unconditional write makes that flag a no-op for every Azure scan.
+func TestApplyAzureSubscriptionIdentityKeepsARequestedName(t *testing.T) {
+	asset := &inventory.Asset{Name: "prod-billing-account"}
+	applyAzureSubscriptionIdentity(asset, testSubID, testTenantID, testPlatformID, "Production")
+
+	assert.Equal(t, "prod-billing-account", asset.Name, "a name already set is left alone")
+
+	// The rest of the identity is still stamped on.
+	assert.Equal(t, []string{testPlatformID}, asset.PlatformIds)
+	assert.Equal(t, testSubID, asset.Labels[resources.SubscriptionLabel])
+}
+
 // detect returns without touching the asset when there is no single subscription
 // to be: the caller named several, or none, and discovery enumerates them.
 func TestDetectLeavesAMultiSubscriptionConnectionAlone(t *testing.T) {
