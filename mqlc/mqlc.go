@@ -91,6 +91,9 @@ type CompilerConfig struct {
 	UseAssetContext bool
 	Stats           CompilerStats
 	Features        mql.Features
+	// EditorMode suppresses non-fatal interactive advisories, like standalone
+	// where warnings, that would otherwise spam terminals during live shell recompiles.
+	EditorMode bool
 }
 
 func (c *CompilerConfig) EnableStats() {

@@ -4,11 +4,14 @@
 package mqlc_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"sort"
 	"testing"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/v13"
@@ -32,6 +35,30 @@ var (
 
 func init() {
 	logger.InitTestEnv()
+}
+
+func TestStandaloneWhereEditorMode(t *testing.T) {
+	var buf bytes.Buffer
+	oldLogger := log.Logger
+	log.Logger = zerolog.New(&buf)
+	defer func() {
+		log.Logger = oldLogger
+	}()
+
+	const query = `packages.where("foo")`
+	res, err := mqlc.Compile(query, nil, conf)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Contains(t, buf.String(), "standalone function in a WHERE clause")
+
+	buf.Reset()
+
+	editorConf := mqlc.NewConfig(conf.Schema, features)
+	editorConf.EditorMode = true
+	res, err = mqlc.Compile(query, nil, editorConf)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.NotContains(t, buf.String(), "standalone function in a WHERE clause")
 }
 
 func compileProps(t *testing.T, s string, props mqlc.PropsHandler, f func(res *llx.CodeBundle)) {

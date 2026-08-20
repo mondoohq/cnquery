@@ -60,7 +60,9 @@ func (c *Completer) Complete(text string) []Suggestion {
 		}
 	}
 
-	bundle, _ := mqlc.Compile(text, nil, mqlc.NewConfig(c.schema, c.features))
+	cfg := mqlc.NewConfig(c.schema, c.features)
+	cfg.EditorMode = true
+	bundle, _ := mqlc.Compile(text, nil, cfg)
 	if bundle != nil && len(bundle.Suggestions) > 0 {
 		// reorder suggestions to put the ones from connected providers first
 		slices.SortFunc(bundle.Suggestions, c.sortFn)
