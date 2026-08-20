@@ -470,6 +470,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.networkPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricks).GetNetworkPolicies()).ToDataRes(types.Array(types.Resource("databricks.networkPolicy")))
 	},
+	"databricks.tokenPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetTokenPermissions()).ToDataRes(types.Array(types.Resource("databricks.permission")))
+	},
 	"databricks.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspace).GetWorkspaceId()).ToDataRes(types.Int)
 	},
@@ -751,6 +754,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.token.expiryTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksToken).GetExpiryTime()).ToDataRes(types.Time)
+	},
+	"databricks.token.lastUsedDay": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksToken).GetLastUsedDay()).ToDataRes(types.Time)
+	},
+	"databricks.token.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksToken).GetScopes()).ToDataRes(types.Array(types.String))
 	},
 	"databricks.secretScope.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksSecretScope).GetName()).ToDataRes(types.String)
@@ -2391,6 +2400,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricks).NetworkPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.tokenPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).TokenPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"databricks.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksWorkspace).__id, ok = v.Value.(string)
 		return
@@ -2809,6 +2822,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.token.expiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksToken).ExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.token.lastUsedDay": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksToken).LastUsedDay, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.token.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksToken).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"databricks.secretScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4995,6 +5016,7 @@ type mqlDatabricks struct {
 	FederationPolicies        plugin.TValue[[]any]
 	AppIntegrations           plugin.TValue[[]any]
 	NetworkPolicies           plugin.TValue[[]any]
+	TokenPermissions          plugin.TValue[[]any]
 }
 
 // createDatabricks creates a new instance of this resource
@@ -5655,6 +5677,22 @@ func (c *mqlDatabricks) GetNetworkPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.networkPolicies()
+	})
+}
+
+func (c *mqlDatabricks) GetTokenPermissions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TokenPermissions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "tokenPermissions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tokenPermissions()
 	})
 }
 
@@ -6619,6 +6657,8 @@ type mqlDatabricksToken struct {
 	CreatedByUsername plugin.TValue[string]
 	CreationTime      plugin.TValue[*time.Time]
 	ExpiryTime        plugin.TValue[*time.Time]
+	LastUsedDay       plugin.TValue[*time.Time]
+	Scopes            plugin.TValue[[]any]
 }
 
 // createDatabricksToken creates a new instance of this resource
@@ -6675,6 +6715,14 @@ func (c *mqlDatabricksToken) GetCreationTime() *plugin.TValue[*time.Time] {
 
 func (c *mqlDatabricksToken) GetExpiryTime() *plugin.TValue[*time.Time] {
 	return &c.ExpiryTime
+}
+
+func (c *mqlDatabricksToken) GetLastUsedDay() *plugin.TValue[*time.Time] {
+	return &c.LastUsedDay
+}
+
+func (c *mqlDatabricksToken) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
 }
 
 // mqlDatabricksSecretScope for the databricks.secretScope resource

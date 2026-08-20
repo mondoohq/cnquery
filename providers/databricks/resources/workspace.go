@@ -46,6 +46,25 @@ func (r *mqlDatabricks) ipAccessLists() ([]any, error) {
 	return out, nil
 }
 
+// tokenFields maps one token record to its MQL fields. The mapping is kept
+// apart from the API call so the absent cases can be asserted directly: a
+// token that has never been used and a token that never expires both have to
+// arrive as null rather than as the zero time, which would read as a real date
+// in the year 1.
+func tokenFields(t settings.TokenInfo) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":              llx.StringData("databricks.token/" + t.TokenId),
+		"id":                llx.StringData(t.TokenId),
+		"comment":           llx.StringData(t.Comment),
+		"ownerId":           llx.IntData(t.OwnerId),
+		"createdByUsername": llx.StringData(t.CreatedByUsername),
+		"creationTime":      llx.TimeDataPtr(epochMsTime(t.CreationTime)),
+		"expiryTime":        llx.TimeDataPtr(epochMsTime(t.ExpiryTime)),
+		"lastUsedDay":       llx.TimeDataPtr(epochMsTime(t.LastUsedDay)),
+		"scopes":            llx.ArrayData(strSlice(t.Scopes), types.String),
+	}
+}
+
 func (r *mqlDatabricks) tokens() ([]any, error) {
 	ws, err := workspaceClient(r.MqlRuntime)
 	if err != nil {
@@ -59,16 +78,7 @@ func (r *mqlDatabricks) tokens() ([]any, error) {
 
 	out := []any{}
 	for i := range tokens {
-		t := tokens[i]
-		res, err := CreateResource(r.MqlRuntime, "databricks.token", map[string]*llx.RawData{
-			"__id":              llx.StringData("databricks.token/" + t.TokenId),
-			"id":                llx.StringData(t.TokenId),
-			"comment":           llx.StringData(t.Comment),
-			"ownerId":           llx.IntData(t.OwnerId),
-			"createdByUsername": llx.StringData(t.CreatedByUsername),
-			"creationTime":      llx.TimeDataPtr(epochMsTime(t.CreationTime)),
-			"expiryTime":        llx.TimeDataPtr(epochMsTime(t.ExpiryTime)),
-		})
+		res, err := CreateResource(r.MqlRuntime, "databricks.token", tokenFields(tokens[i]))
 		if err != nil {
 			return nil, err
 		}

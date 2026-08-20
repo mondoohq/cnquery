@@ -26,6 +26,12 @@ const (
 	permissionObjectServingEndpoint = "serving-endpoints"
 	permissionObjectRepo            = "repos"
 	permissionObjectInstancePool    = "instance-pools"
+	// The authorization object type has no per-instance id: the workspace-wide
+	// switches it guards are addressed by a fixed name in the id position.
+	permissionObjectAuthorization = "authorization"
+	// authorizationObjectTokens is the id of the authorization object that
+	// governs personal access tokens for the whole workspace.
+	authorizationObjectTokens = "tokens"
 )
 
 // principalKinds classifies an access control entry. Exactly one of the three
@@ -155,6 +161,18 @@ func mqlDatabricksPermissions(runtime *plugin.Runtime, objectType string, object
 		out = append(out, res)
 	}
 	return out, nil
+}
+
+// tokenPermissions reads the access control list of the workspace-wide token
+// authorization object, which is what decides who may mint a personal access
+// token. It is not the ACL of any one token: personal access tokens carry no
+// per-token ACL.
+//
+// It answers who may create a token, not whether tokens are permitted at all.
+// The workspace's tokensEnabled setting answers that, and a workspace with
+// tokens switched off can still carry an access control list here.
+func (r *mqlDatabricks) tokenPermissions() ([]any, error) {
+	return mqlDatabricksPermissions(r.MqlRuntime, permissionObjectAuthorization, authorizationObjectTokens)
 }
 
 func (r *mqlDatabricksCluster) permissions() ([]any, error) {
