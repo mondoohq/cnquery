@@ -497,6 +497,14 @@ claude.userProfile @defaults("id name relationship") {
   //
   // One of external, resold, or internal.
   relationship string
+  // How the platform uses the API on behalf of this entity
+  //
+  // `application` means the platform sells a product that calls the API
+  // behind the scenes and the profile is an individual end user of that
+  // product. `passthrough` means the platform resells raw inference and the
+  // profile identifies the company it is resold to. Null when the profile
+  // does not report an access type.
+  accessType string
   // Profile creation timestamp
   createdAt time
   // Last update timestamp

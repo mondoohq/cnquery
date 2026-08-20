@@ -631,6 +631,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.userProfile.relationship": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeUserProfile).GetRelationship()).ToDataRes(types.String)
 	},
+	"claude.userProfile.accessType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeUserProfile).GetAccessType()).ToDataRes(types.String)
+	},
 	"claude.userProfile.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeUserProfile).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -1459,6 +1462,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"claude.userProfile.relationship": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeUserProfile).Relationship, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"claude.userProfile.accessType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeUserProfile).AccessType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"claude.userProfile.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3246,6 +3253,7 @@ type mqlClaudeUserProfile struct {
 	Name         plugin.TValue[string]
 	ExternalId   plugin.TValue[string]
 	Relationship plugin.TValue[string]
+	AccessType   plugin.TValue[string]
 	CreatedAt    plugin.TValue[*time.Time]
 	UpdatedAt    plugin.TValue[*time.Time]
 	Type         plugin.TValue[string]
@@ -3297,6 +3305,10 @@ func (c *mqlClaudeUserProfile) GetExternalId() *plugin.TValue[string] {
 
 func (c *mqlClaudeUserProfile) GetRelationship() *plugin.TValue[string] {
 	return &c.Relationship
+}
+
+func (c *mqlClaudeUserProfile) GetAccessType() *plugin.TValue[string] {
+	return &c.AccessType
 }
 
 func (c *mqlClaudeUserProfile) GetCreatedAt() *plugin.TValue[*time.Time] {
