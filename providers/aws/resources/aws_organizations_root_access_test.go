@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	orgtypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,5 +49,35 @@ func TestIsRootAccessNotConfigured(t *testing.T) {
 
 	t.Run("nil is not a not-configured answer", func(t *testing.T) {
 		assert.False(t, isRootAccessNotConfigured(nil))
+	})
+
+	// A plain member account cannot read this. That leaves the organization's
+	// setting unknown, not off, so it must stay an error -- the empty list is
+	// the finding.
+	t.Run("a member account is not proof that the feature is off", func(t *testing.T) {
+		assert.False(t, isRootAccessNotConfigured(
+			&iamtypes.AccountNotManagementOrDelegatedAdministratorException{}))
+	})
+}
+
+// TestTrustedAccessErrorClassification pins which errors
+// trustedAccessServicePrincipals treats as an answer. ListAWSServiceAccess-
+// ForOrganization models seven errors, and only AWSOrganizationsNotInUse-
+// Exception establishes one; the policy-type exceptions belong to the policy
+// operations and can never reach this path.
+func TestTrustedAccessErrorClassification(t *testing.T) {
+	t.Run("a standalone account has no trusted access to report", func(t *testing.T) {
+		assert.True(t, isOrganizationsNotInUseError(notInUseErr()))
+	})
+
+	t.Run("a policy-type error cannot come from this API and is not an answer", func(t *testing.T) {
+		// Guards the reason this predicate is not isPolicyTypeUnavailable:
+		// matching these here would be dead code that reads as intent.
+		assert.False(t, isOrganizationsNotInUseError(&orgtypes.PolicyTypeNotEnabledException{}))
+		assert.False(t, isOrganizationsNotInUseError(&orgtypes.PolicyTypeNotAvailableForOrganizationException{}))
+	})
+
+	t.Run("a denial is not proof of no trusted access", func(t *testing.T) {
+		assert.False(t, isOrganizationsNotInUseError(orgDeniedErr()))
 	})
 }

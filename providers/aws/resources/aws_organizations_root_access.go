@@ -15,11 +15,21 @@ import (
 
 // isRootAccessNotConfigured reports whether the error means centralized root
 // access has simply never been turned on, rather than that the read failed.
-// IAM answers OrganizationNotFoundException when the calling account is not in
-// an organization at all, and OrganizationNotInAllFeaturesModeException when
-// the organization exists but runs in consolidated-billing mode, where the
-// feature cannot be enabled. Both are "no root features are enabled", which is
-// an answer about the organization, so they resolve to an empty list.
+//
+// ListOrganizationsFeatures models exactly four errors, and this covers the
+// three that establish an answer:
+//
+//   - OrganizationNotFoundException - the calling account is in no
+//     organization, so there is nothing to enable the feature on.
+//   - OrganizationNotInAllFeaturesModeException - the organization runs in
+//     consolidated-billing mode, where the feature cannot be enabled.
+//   - ServiceAccessNotEnabledException - IAM has no trusted access in the
+//     organization, which is the prerequisite, so nothing is enabled.
+//
+// The fourth, AccountNotManagementOrDelegatedAdministratorException, is
+// deliberately absent: it fires on a plain member account, which leaves the
+// organization's setting unknown rather than off. It stays an error for the
+// reason given at the call site.
 func isRootAccessNotConfigured(err error) bool {
 	var noOrg *iamtypes.OrganizationNotFoundException
 	var notAllFeatures *iamtypes.OrganizationNotInAllFeaturesModeException
@@ -41,9 +51,11 @@ func (a *mqlAwsOrganization) enabledRootFeatures() ([]any, error) {
 		if isRootAccessNotConfigured(err) {
 			return []any{}, nil
 		}
-		// A member account cannot read this. That leaves the answer unknown
-		// rather than empty, so it stays an error: an empty list here would
-		// read as "centralized root access is off", which is the finding.
+		// Anything else - a plain member account
+		// (AccountNotManagementOrDelegatedAdministratorException), a denial, a
+		// transport failure - leaves the answer unknown rather than empty, so
+		// it stays an error. An empty list here would read as "centralized root
+		// access is off", which is the finding an audit acts on.
 		return nil, err
 	}
 	if resp == nil {
@@ -71,9 +83,17 @@ func (a *mqlAwsOrganization) trustedAccessServicePrincipals() ([]any, error) {
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			// Consolidated-billing organizations cannot enable trusted access
-			// for anything, so "no principals" is the correct answer there.
-			if isPolicyTypeUnavailable(err) {
+			// A standalone account has no organization, so it has no trusted
+			// access to report. That is the only error this operation models
+			// that establishes an answer rather than hiding one: the rest are
+			// AccessDenied, ConstraintViolation, InvalidInput, Service,
+			// TooManyRequests and UnsupportedAPIEndpoint, none of which say
+			// anything about which services are trusted.
+			//
+			// Note that a consolidated-billing organization is *not* an error
+			// here - it is a real organization and answers normally, with a
+			// list that is simply short.
+			if isOrganizationsNotInUseError(err) {
 				return res, nil
 			}
 			return nil, err
