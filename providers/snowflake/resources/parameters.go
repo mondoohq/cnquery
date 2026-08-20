@@ -39,6 +39,8 @@ type mqlSnowflakeAccountInternal struct {
 	cachedUserIndex    map[string]sdk.User
 	cachedUserIndexErr error
 
+	keySetIndex keySetIndex
+
 	cachedDatabaseIndex  memoIndex[sdk.Database]
 	cachedSchemaIndex    memoIndex[sdk.Schema]
 	cachedWarehouseIndex memoIndex[sdk.Warehouse]

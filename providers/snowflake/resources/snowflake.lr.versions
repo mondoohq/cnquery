@@ -749,6 +749,8 @@ snowflake.user.name 11.0.0
 snowflake.user.owner 13.3.7
 snowflake.user.parameters 11.0.0
 snowflake.user.roles 13.4.5
+snowflake.user.rsaPublicKey2SetAt 13.6.1
+snowflake.user.rsaPublicKeySetAt 13.6.1
 snowflake.user.snowflakeLock 13.3.7
 snowflake.user.type 13.3.7
 snowflake.view 11.0.0
