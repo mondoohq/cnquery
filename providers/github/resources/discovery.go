@@ -88,11 +88,7 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 		assetList = append(assetList, repoAssets...)
 	}
 
-	userId := conf.Options["user"]
-	if userId == "" {
-		userId = conf.Options["owner"]
-	}
-	if userId != "" {
+	if userId := userDiscoveryTarget(conf); userId != "" {
 		userAssets, err := user(runtime, userId, conn, targets)
 		if err != nil {
 			return nil, err
@@ -101,6 +97,22 @@ func discover(runtime *plugin.Runtime, targets []string) ([]*inventory.Asset, er
 	}
 
 	return assetList, nil
+}
+
+// userDiscoveryTarget returns the account to discover as a user scope, or "" for
+// none. An explicit "user" option is always a user scope. "owner" is only a user
+// shortcut when it stands alone (`--owner someuser`): once a "repository" is set,
+// "owner" is merely that repo's namespace, not a user to scan — returning it
+// there would emit a phantom user asset for the repo's owner (empty-named when
+// the owner is an organization rather than a user).
+func userDiscoveryTarget(conf *inventory.Config) string {
+	if user := conf.Options["user"]; user != "" {
+		return user
+	}
+	if conf.Options["repository"] == "" {
+		return conf.Options["owner"]
+	}
+	return ""
 }
 
 func org(runtime *plugin.Runtime, orgName string, conn *connection.GithubConnection, targets []string) ([]*inventory.Asset, error) {

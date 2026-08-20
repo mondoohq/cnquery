@@ -116,12 +116,39 @@ func TestDiscoverUserRepos(t *testing.T) {
 	})
 
 	t.Run("an explicit repository never fans out", func(t *testing.T) {
-		// discover() reaches the user path via the owner fallback of
-		// single-repo scans — those must scan exactly the one repo
+		// a single-repo scan must scan exactly the one repo
 		assert.False(t, discoverUserRepos(
 			conf(map[string]string{"owner": "some-user", "repository": "one-repo"}),
 			[]string{connection.DiscoveryAuto},
 		))
+	})
+}
+
+// A single-repo scan carries owner+repository; "owner" is that repo's namespace,
+// not a user to discover. Treating it as a user emitted a phantom user asset for
+// the owner (empty-named when the owner is an organization).
+func TestUserDiscoveryTarget(t *testing.T) {
+	conf := func(opts map[string]string) *inventory.Config {
+		return &inventory.Config{Options: opts}
+	}
+
+	t.Run("explicit user scope discovers that user", func(t *testing.T) {
+		assert.Equal(t, "some-user",
+			userDiscoveryTarget(conf(map[string]string{"user": "some-user"})))
+	})
+
+	t.Run("bare owner (no repository) is a user shortcut", func(t *testing.T) {
+		assert.Equal(t, "some-user",
+			userDiscoveryTarget(conf(map[string]string{"owner": "some-user"})))
+	})
+
+	t.Run("owner with a repository is NOT a user scope", func(t *testing.T) {
+		assert.Empty(t, userDiscoveryTarget(
+			conf(map[string]string{"owner": "some-org", "repository": "one-repo"})))
+	})
+
+	t.Run("nothing to discover", func(t *testing.T) {
+		assert.Empty(t, userDiscoveryTarget(conf(map[string]string{})))
 	})
 
 	t.Run("no repo-ish discovery target means no fan-out", func(t *testing.T) {
