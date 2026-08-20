@@ -16,6 +16,10 @@ var Config = plugin.Provider{
 	Version:         "13.3.0",
 	ConnectionTypes: []string{provider.HostConnectionType},
 	Platforms:       provider.Platforms,
+	// Host scans are almost entirely spent waiting on DNS, TLS and HTTP against
+	// unrelated targets, with no shared rate limit to trip, so this is the
+	// highest default we hand out.
+	DefaultParallelism: 10,
 	CrossProviderTypes: []string{
 		"go.mondoo.com/mql/providers/os",
 		"go.mondoo.com/mql/providers/k8s",

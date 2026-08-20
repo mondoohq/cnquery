@@ -20,6 +20,10 @@ var Config = plugin.Provider{
 		provider.ConnectionType,
 		string(azureinstancesnapshot.SnapshotConnectionType),
 	},
+	// Lower than the other clouds: ARM read throttling is scoped to the
+	// subscription, so it bites hardest in the common case where several assets
+	// share one.
+	DefaultParallelism: 6,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "azure",
