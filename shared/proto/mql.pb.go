@@ -10,7 +10,7 @@
 package proto
 
 import (
-	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	inventory "go.mondoo.com/mql/providers-sdk/v1/inventory"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -281,7 +281,7 @@ const file_mql_proto_rawDesc = "" +
 	"\bMqlQuery\x12/\n" +
 	"\bRunQuery\x12\x15.proto.RunQueryConfig\x1a\f.proto.Empty24\n" +
 	"\fOutputHelper\x12$\n" +
-	"\x05Write\x12\r.proto.String\x1a\f.proto.EmptyB$Z\"go.mondoo.com/mql/v13/shared/protob\x06proto3"
+	"\x05Write\x12\r.proto.String\x1a\f.proto.EmptyB Z\x1ego.mondoo.com/mql/shared/protob\x06proto3"
 
 var (
 	file_mql_proto_rawDescOnce sync.Once

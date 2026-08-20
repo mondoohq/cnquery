@@ -5,8 +5,8 @@ package resources
 
 import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/quotasets"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func (o *mqlOpenstack) computeQuotaSet() (*mqlOpenstackComputeQuotaSet, error) {

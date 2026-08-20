@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc"
 )
 
 func label(t *testing.T, s string, f func(res *llx.Labels)) {

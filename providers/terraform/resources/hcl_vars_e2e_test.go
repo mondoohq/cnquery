@@ -9,12 +9,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	mql "go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/terraform/connection"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	mql "go.mondoo.com/mql"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/terraform/connection"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 // writeVarFixture writes the reviewer's mondoohq/mql#8966 repro to a temp dir: a

@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/vllm/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/vllm/connection"
 )
 
 func TestModelCreatedTime(t *testing.T) {

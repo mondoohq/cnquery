@@ -4,8 +4,8 @@
 package mqlx
 
 import (
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc"
 )
 
 // Query is a compiled MQL query. It is immutable and safe to share across

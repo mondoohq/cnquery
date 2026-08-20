@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"go.mondoo.com/mql/v13/providers/zoom/connection"
+	"go.mondoo.com/mql/providers/zoom/connection"
 )
 
 func (r *mqlZoom) id() (string, error) {

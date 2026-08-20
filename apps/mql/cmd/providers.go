@@ -18,13 +18,13 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/mql/v13/cli/theme"
-	"go.mondoo.com/mql/v13/cli/theme/colors"
-	"go.mondoo.com/mql/v13/providers"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/sortx"
+	"go.mondoo.com/mql/cli/theme"
+	"go.mondoo.com/mql/cli/theme/colors"
+	"go.mondoo.com/mql/providers"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/sortx"
 )
 
 func init() {

@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/providers-sdk/v1/util/jobpool"
 )
 
 // fakeServiceError implements the SDK's common.ServiceError interface so the

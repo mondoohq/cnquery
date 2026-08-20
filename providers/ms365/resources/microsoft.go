@@ -11,7 +11,7 @@ import (
 	betareports "github.com/microsoftgraph/msgraph-beta-sdk-go/reports"
 	"github.com/microsoftgraph/msgraph-sdk-go/models"
 	"github.com/microsoftgraph/msgraph-sdk-go/reports"
-	"go.mondoo.com/mql/v13/providers/ms365/connection"
+	"go.mondoo.com/mql/providers/ms365/connection"
 )
 
 var idxUsersById = &sync.RWMutex{}

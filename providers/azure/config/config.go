@@ -4,11 +4,11 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/azure/connection/azureinstancesnapshot"
-	"go.mondoo.com/mql/v13/providers/azure/provider"
-	"go.mondoo.com/mql/v13/providers/azure/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/azure/connection/azureinstancesnapshot"
+	"go.mondoo.com/mql/providers/azure/provider"
+	"go.mondoo.com/mql/providers/azure/resources"
 )
 
 var Config = plugin.Provider{

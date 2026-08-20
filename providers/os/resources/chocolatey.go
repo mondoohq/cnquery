@@ -4,9 +4,9 @@
 package resources
 
 import (
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/packages"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/packages"
 )
 
 func (r *mqlChocolateyPackages) list() ([]any, error) {

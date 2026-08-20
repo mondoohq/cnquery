@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/gocql/gocql"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/cassandra/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/cassandra/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // initCassandraCluster fetches the cluster identity from system.local.

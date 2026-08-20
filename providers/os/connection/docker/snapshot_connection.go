@@ -8,10 +8,10 @@ import (
 	"os"
 
 	"github.com/moby/moby/client"
-	"go.mondoo.com/mql/v13/cli/tmp"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/connection/tar"
+	"go.mondoo.com/mql/cli/tmp"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/tar"
 )
 
 var _ shared.Connection = &SnapshotConnection{}

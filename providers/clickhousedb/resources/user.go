@@ -6,8 +6,8 @@ package resources
 import (
 	"slices"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/clickhousedb/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/clickhousedb/connection"
 )
 
 func (r *mqlClickhousedbInstance) users() ([]any, error) {

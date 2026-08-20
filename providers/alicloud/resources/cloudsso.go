@@ -11,9 +11,9 @@ import (
 	cloudssoclient "github.com/alibabacloud-go/cloudsso-20210515/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/alicloud/connection"
 )
 
 // alicloudCloudSsoRegions are the two regions CloudSSO answers at: cn-shanghai

@@ -16,7 +16,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/aws/resources/awspolicy"
+	"go.mondoo.com/mql/providers/aws/resources/awspolicy"
 )
 
 func TestS3BucketArnValidation(t *testing.T) {

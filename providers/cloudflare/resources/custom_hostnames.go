@@ -7,8 +7,8 @@ import (
 
 	cloudflare "github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/custom_hostnames"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/cloudflare/connection"
 )
 
 func (c *mqlCloudflareZoneCustomHostname) id() (string, error) {

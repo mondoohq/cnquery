@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/resources/nginx"
+	"go.mondoo.com/mql/providers/os/resources/nginx"
 )
 
 func TestParseNginxServerBlock(t *testing.T) {

@@ -6,7 +6,7 @@ package resources
 import (
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/sshutil"
+	"go.mondoo.com/mql/providers-sdk/v1/util/sshutil"
 )
 
 // parseAuthorizedKeys turns a newline-separated list of OpenSSH public keys

@@ -68,7 +68,7 @@ providers/auth0/
 
 ```lr
 option provider = "go.mondoo.com/mql/providers/auth0"
-option go_package = "go.mondoo.com/mql/v13/providers/auth0/resources"
+option go_package = "go.mondoo.com/mql/providers/auth0/resources"
 
 // Auth0 tenant
 //
@@ -473,9 +473,9 @@ import (
 
 	"github.com/auth0/go-auth0/management"
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/vault"
 )
 
 type Auth0Connection struct {

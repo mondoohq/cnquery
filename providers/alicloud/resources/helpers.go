@@ -5,7 +5,7 @@ package resources
 
 import (
 	tea "github.com/alibabacloud-go/tea/tea"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+	"go.mondoo.com/mql/providers/alicloud/connection"
 )
 
 // strPtrsToStrings converts a []*string SDK slice into a []string, dropping nil

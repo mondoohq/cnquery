@@ -14,7 +14,6 @@ ifndef VERSION
 # echo "read VERSION from git"
 VERSION=${LATEST_VERSION_TAG}+$(shell git rev-list --count HEAD)
 endif
-MAJOR_VERSION=v13
 
 ifndef TARGETOS
 	TARGETOS = $(shell go env GOOS)
@@ -29,8 +28,8 @@ ifeq ($(TARGETOS),windows)
 	BIN_SUFFIX=".exe"
 endif
 
-LDFLAGS=-ldflags "-s -w -X go.mondoo.com/mql/${MAJOR_VERSION}.Version=${VERSION}" # -linkmode external -extldflags=-static
-LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/mql/${MAJOR_VERSION}.Version=${LATEST_VERSION_TAG} -s -w"
+LDFLAGS=-ldflags "-s -w -X go.mondoo.com/mql.Version=${VERSION}" # -linkmode external -extldflags=-static
+LDFLAGSDIST=-tags production -ldflags "-s -w -X go.mondoo.com/mql.Version=${LATEST_VERSION_TAG} -s -w"
 
 .PHONY: info/ldflags
 info/ldflags:
@@ -445,7 +444,7 @@ test/lint: test/lint/golangci-lint/run
 test: test/go test/lint
 
 race/go:
-	go test -race go.mondoo.com/mql/${MAJOR_VERSION}/internal/workerpool
+	go test -race go.mondoo.com/mql/internal/workerpool
 
 test/generate: prep/tools/mockgen
 	go generate ./providers/...

@@ -8,7 +8,7 @@ package mql.fex.v1;
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/fex";
+option go_package = "go.mondoo.com/mql/providers-sdk/v1/upstream/fex";
 
 // The enum value names and field names below intentionally mirror the
 // server-internal etl schema byte-for-byte so the proto-JSON upload contract

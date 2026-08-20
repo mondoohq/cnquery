@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
 // DigitalOcean Functions are backed by Apache OpenWhisk. godo lists

@@ -6,9 +6,9 @@ package resources
 import (
 	"strconv"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/arista/resources/eos"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/arista/resources/eos"
+	"go.mondoo.com/mql/types"
 )
 
 // =====================================================================

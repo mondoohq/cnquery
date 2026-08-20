@@ -7,10 +7,10 @@ import (
 	"github.com/alibabacloud-go/tea/tea"
 	vpcclient "github.com/alibabacloud-go/vpc-20160428/v7/client"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/alicloud/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // vpnPageSize is the per-request item count for the page-numbered VPN APIs.

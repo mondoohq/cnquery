@@ -4,9 +4,9 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/mssql/connection"
-	"go.mondoo.com/mql/v13/providers/mssql/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/mssql/connection"
+	"go.mondoo.com/mql/providers/mssql/provider"
 )
 
 var Config = plugin.Provider{

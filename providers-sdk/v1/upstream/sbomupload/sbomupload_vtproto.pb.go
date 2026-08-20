@@ -7,7 +7,7 @@ package sbomupload
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
-	sbom "go.mondoo.com/mql/v13/sbom"
+	sbom "go.mondoo.com/mql/sbom"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"

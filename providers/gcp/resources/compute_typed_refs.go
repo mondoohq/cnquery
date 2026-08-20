@@ -3,7 +3,7 @@
 
 package resources
 
-import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+import "go.mondoo.com/mql/providers-sdk/v1/plugin"
 
 // region/zone typed accessors. The raw self-link URLs are held on each
 // resource's Internal struct (cacheRegionUrl/cacheZoneUrl) so the accessor can

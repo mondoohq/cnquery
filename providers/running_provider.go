@@ -15,8 +15,8 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 	"github.com/rs/zerolog/log"
-	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -9,9 +9,9 @@ import (
 
 	cloudflare "github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/zero_trust"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/cloudflare/connection"
+	"go.mondoo.com/mql/types"
 )
 
 func (c *mqlCloudflareOneGatewayRule) id() (string, error) {

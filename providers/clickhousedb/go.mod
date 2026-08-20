@@ -1,12 +1,12 @@
-module go.mondoo.com/mql/v13/providers/clickhousedb
+module go.mondoo.com/mql/providers/clickhousedb
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.8.1
 )
 

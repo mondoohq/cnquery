@@ -11,9 +11,9 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/delegateaccesscontrol"
 	"github.com/oracle/oci-go-sdk/v65/lockbox"
 	"github.com/oracle/oci-go-sdk/v65/operatoraccesscontrol"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/oci/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/oci/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // Who outside the tenancy can reach the data inside it.

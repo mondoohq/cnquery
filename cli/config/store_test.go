@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	subject "go.mondoo.com/mql/v13/cli/config"
+	subject "go.mondoo.com/mql/cli/config"
 	sigsyaml "sigs.k8s.io/yaml"
 
 	"github.com/spf13/afero"

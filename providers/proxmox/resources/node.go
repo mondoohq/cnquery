@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/proxmox/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/proxmox/connection"
 )
 
 type mqlProxmoxNodeInternal struct {

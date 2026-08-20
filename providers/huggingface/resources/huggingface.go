@@ -12,11 +12,11 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/huggingface/connection"
-	hfmodels "go.mondoo.com/mql/v13/providers/huggingface/internal/huggingface-hub-go/models"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/huggingface/connection"
+	hfmodels "go.mondoo.com/mql/providers/huggingface/internal/huggingface-hub-go/models"
+	"go.mondoo.com/mql/types"
 )
 
 func hfConn(r *plugin.Runtime) *connection.HuggingfaceConnection {

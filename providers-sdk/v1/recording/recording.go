@@ -11,12 +11,12 @@ import (
 	"os"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/mapx"
-	"go.mondoo.com/mql/v13/utils/multierr"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/mapx"
+	"go.mondoo.com/mql/utils/multierr"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 var _ llx.Recording = &recording{}

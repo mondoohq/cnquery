@@ -1,4 +1,4 @@
-module go.mondoo.com/mql/v13/providers/grafana
+module go.mondoo.com/mql/providers/grafana
 
 go 1.26.6
 
@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	golang.org/x/sync v0.22.0
 )
 
@@ -102,4 +102,4 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..

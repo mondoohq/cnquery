@@ -6,7 +6,7 @@ package resources
 import (
 	"fmt"
 
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // withDefaultArg returns args with name set to value, unless args already

@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/providers/aws/connection"
 )
 
 // testConn builds a connection pinned to an explicit region list. Regions()

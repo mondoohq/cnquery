@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v3"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/openai/connection"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/openai/connection"
 )
 
 func openaiConn(runtime *plugin.Runtime) *connection.OpenaiConnection {

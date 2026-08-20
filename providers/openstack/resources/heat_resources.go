@@ -9,8 +9,8 @@ import (
 
 	"github.com/gophercloud/gophercloud/v2/openstack/orchestration/v1/stackresources"
 	"github.com/gophercloud/gophercloud/v2/openstack/orchestration/v1/stacktemplates"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 type mqlOpenstackOrchestrationStackResourceInternal struct {

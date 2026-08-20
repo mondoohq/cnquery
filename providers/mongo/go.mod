@@ -1,11 +1,11 @@
-module go.mondoo.com/mql/v13/providers/mongo
+module go.mondoo.com/mql/providers/mongo
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
 require (
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.8.1
 	go.mongodb.org/mongo-driver/v2 v2.8.0
 )

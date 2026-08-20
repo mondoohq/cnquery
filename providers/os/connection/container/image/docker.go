@@ -12,7 +12,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/daemon"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
-	"go.mondoo.com/mql/v13/providers/os/connection/dockerclient"
+	"go.mondoo.com/mql/providers/os/connection/dockerclient"
 )
 
 type ShaReference struct {

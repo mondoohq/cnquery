@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/helm/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/helm/connection"
 )
 
 // requiredStringArg reads the selector argument a resource can only be reached

@@ -9,8 +9,8 @@ import (
 	"sync/atomic"
 
 	"github.com/deploymenttheory/go-api-sdk-jamfpro/sdk/jamfpro"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/jamf/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/jamf/connection"
 )
 
 // mqlJamfRestrictedSoftwareInternal caches the detail record. The list API

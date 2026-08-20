@@ -9,8 +9,8 @@ import (
 	"sort"
 	"sync"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 func NewAssetRecording(asset *inventory.Asset) *Asset {

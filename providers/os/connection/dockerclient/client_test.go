@@ -8,7 +8,7 @@ import (
 
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers/os/connection/dockerclient"
+	"go.mondoo.com/mql/providers/os/connection/dockerclient"
 )
 
 func newClientFromDockerEnv(t *testing.T) (*client.Client, error) {

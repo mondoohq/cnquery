@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // stringOrNumber accepts a JSON string or number and stores it as a string.

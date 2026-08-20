@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/snowflakedb/gosnowflake"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/snowflake/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/snowflake/provider"
 )
 
 func main() {

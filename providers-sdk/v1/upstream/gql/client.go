@@ -9,7 +9,7 @@ import (
 
 	mondoogql "go.mondoo.com/mondoo-go"
 	"go.mondoo.com/mondoo-go/option"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream"
 )
 
 type MondooClient struct {

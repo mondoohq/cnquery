@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/registry"
 )
 
 // regItems builds a name->item map mirroring readRegistryKey output (keys are

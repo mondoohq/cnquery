@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 
 	"github.com/rs/zerolog/log"
 	"github.com/vmware/govmomi"

@@ -7,9 +7,9 @@ import (
 	"context"
 	"net/url"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/neon/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/neon/connection"
 )
 
 // mqlNeonEndpointInternal caches the project and branch the endpoint serves.

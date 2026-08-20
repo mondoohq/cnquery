@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"text/template"
 
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // amznLegacyVersion matches the Amazon Linux 1 version scheme.

@@ -14,11 +14,11 @@ import (
 
 	"github.com/shadowscatcher/shodan/models"
 	"github.com/shadowscatcher/shodan/search"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/shodan/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/shodan/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // mqlShodanHostInternal caches state derived from the Shodan host fetch so we

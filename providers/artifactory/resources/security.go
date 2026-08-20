@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // securityConfig is the part of the instance configuration descriptor this

@@ -4,8 +4,8 @@
 package provider
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/k8s/connection/shared"
 )
 
 func (s *Service) detect(asset *inventory.Asset, conn shared.Connection) error {

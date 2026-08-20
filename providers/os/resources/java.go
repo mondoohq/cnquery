@@ -12,14 +12,14 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/java/gradlelockfile"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/java/jarscanner"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/java/pomxml"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/providers/os/resources/languages/java/gradlelockfile"
+	"go.mondoo.com/mql/providers/os/resources/languages/java/jarscanner"
+	"go.mondoo.com/mql/providers/os/resources/languages/java/pomxml"
+	"go.mondoo.com/mql/types"
 )
 
 // defaultJavaPaths are searched for pom.xml, gradle.lockfile, and JAR files.

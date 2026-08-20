@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/digitalocean/godo"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/sshutil"
-	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/sshutil"
+	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
 func (r *mqlDigitalocean) id() (string, error) {

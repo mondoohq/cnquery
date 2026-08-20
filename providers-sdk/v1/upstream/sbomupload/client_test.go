@@ -6,7 +6,7 @@ package sbomupload
 import (
 	"testing"
 
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/sbom"
 )
 
 func TestNewSbomClient(t *testing.T) {

@@ -17,12 +17,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
-	mql "go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/checksums"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/terraform/connection"
-	"go.mondoo.com/mql/v13/types"
+	mql "go.mondoo.com/mql"
+	"go.mondoo.com/mql/checksums"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/terraform/connection"
+	"go.mondoo.com/mql/types"
 )
 
 type mqlTerraformInternal struct {

@@ -9,8 +9,8 @@ import (
 
 	"github.com/stackitcloud/stackit-sdk-go/core/config"
 	resourcemanager "github.com/stackitcloud/stackit-sdk-go/services/resourcemanager/v0api"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/vault"
 )
 
 // applyOpts replays a slice of ConfigurationOptions against an empty

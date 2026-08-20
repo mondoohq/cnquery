@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // validMdDevicePath matches standard md device paths like /dev/md0, /dev/md127, /dev/md/name

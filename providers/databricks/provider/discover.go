@@ -4,9 +4,9 @@
 package provider
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/databricks/connection"
-	"go.mondoo.com/mql/v13/providers/databricks/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/databricks/connection"
+	"go.mondoo.com/mql/providers/databricks/resources"
 )
 
 func (s *Service) discover(conn *connection.DatabricksConnection) (*inventory.Inventory, error) {

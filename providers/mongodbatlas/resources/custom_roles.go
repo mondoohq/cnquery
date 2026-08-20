@@ -6,8 +6,8 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/types"
 )
 
 func (r *mqlMongodbatlas) customDatabaseRoles() ([]any, error) {

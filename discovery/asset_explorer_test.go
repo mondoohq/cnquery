@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/cli/config"
-	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/cli/config"
+	inventory "go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 // TestMergeConnectionFeatures verifies that connection features are the union of

@@ -14,7 +14,7 @@ import (
 
 	wmi "github.com/StackExchange/wmi"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 // native WMI on local Windows; PowerShell otherwise or on failure

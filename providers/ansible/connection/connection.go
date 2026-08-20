@@ -10,10 +10,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/ansible/play"
-	"go.mondoo.com/mql/v13/providers/ansible/project"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/ansible/play"
+	"go.mondoo.com/mql/providers/ansible/project"
 )
 
 var _ plugin.Connection = (*AnsibleConnection)(nil)

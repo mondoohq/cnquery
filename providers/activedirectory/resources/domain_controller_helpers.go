@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
-	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
+	"go.mondoo.com/mql/providers/activedirectory/connection"
 )
 
 const ntdsSettingsGCBit = 0x1

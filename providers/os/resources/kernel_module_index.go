@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
 // normalizeModuleName canonicalizes a kernel module name for lookup. The

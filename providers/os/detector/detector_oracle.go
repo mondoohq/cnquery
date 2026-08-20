@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/parsers"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/parsers"
 )
 
 // hasOracleELSEnabled checks whether any Oracle Linux Extended Lifecycle Support (ELS)

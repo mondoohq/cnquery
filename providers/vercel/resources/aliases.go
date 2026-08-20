@@ -7,9 +7,9 @@ import (
 	"context"
 	"sort"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/vercel/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/vercel/connection"
 )
 
 // mqlVercelAliasInternal caches the team the alias was listed under and the

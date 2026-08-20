@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/registry"
 )
 
 // spoolerRegItems builds a name->RegistryKeyItem map from a map of DWORD values,

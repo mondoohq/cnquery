@@ -10,7 +10,7 @@ import (
 	"github.com/shadowscatcher/shodan/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/shodan/connection"
+	"go.mondoo.com/mql/providers/shodan/connection"
 )
 
 func TestParseShodanTime(t *testing.T) {

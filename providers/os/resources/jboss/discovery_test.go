@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/resources/jboss"
+	"go.mondoo.com/mql/providers/os/resources/jboss"
 )
 
 // newFs builds an in-memory filesystem holding the given files.

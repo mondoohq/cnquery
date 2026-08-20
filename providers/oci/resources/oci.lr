@@ -4,7 +4,7 @@
 import "../../network/resources/network.lr"
 
 option provider = "go.mondoo.com/cnquery/v9/providers/oci"
-option go_package = "go.mondoo.com/mql/v13/providers/oci/resources"
+option go_package = "go.mondoo.com/mql/providers/oci/resources"
 
 // Oracle Cloud Infrastructure (OCI)
 //

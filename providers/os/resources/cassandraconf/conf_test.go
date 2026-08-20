@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/resources/cassandraconf"
-	"go.mondoo.com/mql/v13/providers/os/resources/yamlconf"
+	"go.mondoo.com/mql/providers/os/resources/cassandraconf"
+	"go.mondoo.com/mql/providers/os/resources/yamlconf"
 )
 
 func TestParseConfEmpty(t *testing.T) {

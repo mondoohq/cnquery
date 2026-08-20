@@ -11,11 +11,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.mondoo.com/mql/v13/cli/config"
-	cli_errors "go.mondoo.com/mql/v13/cli/errors"
-	"go.mondoo.com/mql/v13/providers"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
-	rangerUtils "go.mondoo.com/mql/v13/utils/ranger"
+	"go.mondoo.com/mql/cli/config"
+	cli_errors "go.mondoo.com/mql/cli/errors"
+	"go.mondoo.com/mql/providers"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream"
+	rangerUtils "go.mondoo.com/mql/utils/ranger"
 )
 
 func init() {

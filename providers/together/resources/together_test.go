@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	together "github.com/togethercomputer/together-go"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func newTestModel(id, displayName string) *mqlTogetherModel {

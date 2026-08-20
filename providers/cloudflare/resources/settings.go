@@ -6,9 +6,9 @@ import (
 	"context"
 	"fmt"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/cloudflare/connection"
 )
 
 // zoneSetting is the shape of a single entry returned by the bulk zone-settings

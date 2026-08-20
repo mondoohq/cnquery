@@ -3,7 +3,7 @@
 
 package connection
 
-import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+import "go.mondoo.com/mql/providers-sdk/v1/plugin"
 
 // Platforms is the static catalog of platforms the AWS provider can emit via
 // GetPlatformForObject: the account root plus one entry per discoverable AWS

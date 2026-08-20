@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers/os/resources/usb"
+	"go.mondoo.com/mql/providers/os/resources/usb"
 )
 
 func TestUsbDevicesWithLocation(t *testing.T) {

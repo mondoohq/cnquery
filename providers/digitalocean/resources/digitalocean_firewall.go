@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/digitalocean/godo"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // mqlDigitaloceanFirewallInternal caches the raw rule set and protected

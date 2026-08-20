@@ -7,7 +7,7 @@ import (
 	"cmp"
 	"io"
 
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/sbom"
 )
 
 // Extractor is the common interface for all language specific bom extractors.

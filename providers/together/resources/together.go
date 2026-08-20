@@ -11,10 +11,10 @@ import (
 	"time"
 
 	together "github.com/togethercomputer/together-go"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/together/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/together/connection"
+	"go.mondoo.com/mql/types"
 )
 
 func togetherConn(runtime *plugin.Runtime) *connection.TogetherConnection {

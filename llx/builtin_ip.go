@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/types"
 )
 
 type RawIP struct {

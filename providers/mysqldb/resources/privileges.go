@@ -6,7 +6,7 @@ package resources
 import (
 	"database/sql"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // privilegesForGrantee lists the global, schema, and table privileges held by

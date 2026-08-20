@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/terraform/connection"
-	"go.mondoo.com/mql/v13/utils/urlx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/terraform/connection"
+	"go.mondoo.com/mql/utils/urlx"
 )
 
 func (s *Service) detect(asset *inventory.Asset, _ *connection.Connection) error {

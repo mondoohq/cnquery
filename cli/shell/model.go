@@ -17,14 +17,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/exec"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/logger"
-	"go.mondoo.com/mql/v13/mqlc"
-	"go.mondoo.com/mql/v13/mqlc/parser"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/exec"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/logger"
+	"go.mondoo.com/mql/mqlc"
+	"go.mondoo.com/mql/mqlc/parser"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // ErrNotTTY is returned when the shell is run without a terminal

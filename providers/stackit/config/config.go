@@ -6,11 +6,11 @@ package config
 import (
 	"fmt"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/stackit/connection"
-	"go.mondoo.com/mql/v13/providers/stackit/provider"
-	"go.mondoo.com/mql/v13/providers/stackit/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/stackit/connection"
+	"go.mondoo.com/mql/providers/stackit/provider"
+	"go.mondoo.com/mql/providers/stackit/resources"
 )
 
 var Config = plugin.Provider{

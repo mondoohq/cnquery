@@ -18,8 +18,8 @@ package resources
 import (
 	corev1 "k8s.io/api/core/v1"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/k8s/connection/shared/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/k8s/connection/shared/resources"
 )
 
 // allWorkloadContainers returns every container that contributes to a pod's

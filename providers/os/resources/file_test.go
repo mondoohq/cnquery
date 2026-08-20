@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
-	"go.mondoo.com/mql/v13/providers/os/resources"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/providers/os/resources"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 const passwdContent = `root:x:0:0::/root:/bin/bash

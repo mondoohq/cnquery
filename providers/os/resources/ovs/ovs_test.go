@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/resources/ovs"
+	"go.mondoo.com/mql/providers/os/resources/ovs"
 )
 
 // The three documents below are shaped like ovs-vsctl --format=json output on

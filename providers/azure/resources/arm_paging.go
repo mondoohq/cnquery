@@ -13,7 +13,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
-	"go.mondoo.com/mql/v13/providers/azure/connection"
+	"go.mondoo.com/mql/providers/azure/connection"
 )
 
 // A handful of endpoints in this provider are fetched with a hand-rolled

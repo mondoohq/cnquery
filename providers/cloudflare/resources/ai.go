@@ -9,10 +9,10 @@ import (
 	cloudflare "github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/ai_audit"
 	"github.com/cloudflare/cloudflare-go/v7/ai_security"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/cloudflare/connection"
+	"go.mondoo.com/mql/types"
 )
 
 type mqlCloudflareZoneAiSecurityInternal struct {

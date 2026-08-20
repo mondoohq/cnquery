@@ -6,7 +6,7 @@ package connection
 import (
 	"fmt"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 // Scope identifies which kind of HCP asset a connection targets. The root

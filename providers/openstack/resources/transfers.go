@@ -6,8 +6,8 @@ package resources
 import (
 	volumetransfers "github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/transfers"
 	sharetransfers "github.com/gophercloud/gophercloud/v2/openstack/sharedfilesystems/v2/sharetransfers"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // Both transfer kinds carry an auth key that redeems the offer. It is read out

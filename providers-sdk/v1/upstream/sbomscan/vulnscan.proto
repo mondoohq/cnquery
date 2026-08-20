@@ -18,7 +18,7 @@ package mql.sbomscan.v1;
 import "providers-sdk/v1/upstream/fex/fex.proto";
 import "sbom/mql_sbom.proto";
 
-option go_package = "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/sbomscan";
+option go_package = "go.mondoo.com/mql/providers-sdk/v1/upstream/sbomscan";
 
 // ScanUploadedSbom scans an SBOM for vulnerabilities scoped to a space. It is
 // ephemeral: the server returns the VEX results without storing anything. The

@@ -15,7 +15,7 @@
 package cassandraconf
 
 import (
-	"go.mondoo.com/mql/v13/providers/os/resources/yamlconf"
+	"go.mondoo.com/mql/providers/os/resources/yamlconf"
 )
 
 // Conf is the result of parsing a cassandra.yaml.

@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	vmmcontent "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/nutanix/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/nutanix/connection"
 )
 
 func newMqlImage(runtime *plugin.Runtime, img *vmmcontent.Image) (*mqlNutanixImage, error) {

@@ -10,11 +10,11 @@ import (
 	"sync"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	sudopkg "go.mondoo.com/mql/v13/providers/os/resources/sudo"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	sudopkg "go.mondoo.com/mql/providers/os/resources/sudo"
+	"go.mondoo.com/mql/types"
 )
 
 // sudoCommonPaths lists where sudo binaries are typically installed.

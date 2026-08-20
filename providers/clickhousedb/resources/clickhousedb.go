@@ -6,8 +6,8 @@ package resources
 import (
 	"fmt"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/clickhousedb/connection"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/clickhousedb/connection"
 )
 
 func (r *mqlClickhousedb) id() (string, error) {

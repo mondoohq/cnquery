@@ -6,9 +6,9 @@ package provider
 import (
 	"context"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/mongo/connection"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/mongo/connection"
+	"go.mondoo.com/mql/utils/stringx"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 

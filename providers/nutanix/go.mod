@@ -1,6 +1,6 @@
-module go.mondoo.com/mql/v13/providers/nutanix
+module go.mondoo.com/mql/providers/nutanix
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 // Nutanix serves the v4 REST APIs only at v4.0 on GA Prism Central. The v4.1+
 // SDKs request URL paths (e.g. /api/clustermgmt/v4.2/...) that GA PCs return 404
@@ -32,7 +32,7 @@ require (
 	// pin v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.0.1
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

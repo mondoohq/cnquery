@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	v2 "github.com/ctreminiom/go-atlassian/v2/jira/v2"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/atlassian/connection/shared"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/atlassian/connection/shared"
 )
 
 const (

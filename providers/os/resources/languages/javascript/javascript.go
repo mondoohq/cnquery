@@ -10,9 +10,9 @@ import (
 
 	"github.com/package-url/packageurl-go"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/providers/os/resources/cpe"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/sbom"
 )
 
 // sriAlgToCycloneDX maps a Subresource-Integrity algorithm token (as it appears

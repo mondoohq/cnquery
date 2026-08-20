@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // The API records in this package are decoded by struct tag alone. A mistyped

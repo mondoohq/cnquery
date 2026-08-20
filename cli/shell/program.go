@@ -11,14 +11,14 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-isatty"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/cli/theme"
-	"go.mondoo.com/mql/v13/exec"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc"
-	"go.mondoo.com/mql/v13/providers"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/cli/theme"
+	"go.mondoo.com/mql/exec"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc"
+	"go.mondoo.com/mql/providers"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // Option configures a ShellProgram

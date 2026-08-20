@@ -6,9 +6,9 @@ package provider
 import (
 	"context"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/mssql/connection"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/mssql/connection"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // discover enumerates the instance's online databases and emits each as a child

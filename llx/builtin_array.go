@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 var arrayBlockType = types.Array(types.Block)

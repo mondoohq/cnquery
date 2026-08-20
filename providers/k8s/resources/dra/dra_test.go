@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/k8s/resources/dra"
+	"go.mondoo.com/mql/providers/k8s/resources/dra"
 )
 
 // resourceSliceJSON is shaped like a slice an SR-IOV DRA driver publishes for

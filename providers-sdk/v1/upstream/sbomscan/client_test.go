@@ -6,7 +6,7 @@ package sbomscan
 import (
 	"testing"
 
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/sbom"
 )
 
 func TestNewExtendedVulnMgmtClient(t *testing.T) {

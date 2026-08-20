@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 // safeBinaryName matches a plain executable name — letters, digits, and the

@@ -4,9 +4,9 @@
 package provider
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/neon/connection"
-	"go.mondoo.com/mql/v13/providers/neon/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/neon/connection"
+	"go.mondoo.com/mql/providers/neon/resources"
 )
 
 func (s *Service) discover(conn *connection.NeonConnection) (*inventory.Inventory, error) {

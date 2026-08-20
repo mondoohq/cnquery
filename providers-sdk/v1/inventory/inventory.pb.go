@@ -10,8 +10,8 @@
 package inventory
 
 import (
-	upstream "go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
-	vault "go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	upstream "go.mondoo.com/mql/providers-sdk/v1/upstream"
+	vault "go.mondoo.com/mql/providers-sdk/v1/vault"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -361,7 +361,7 @@ type Asset struct {
 	IdDetector []string `protobuf:"bytes,31,rep,name=id_detector,json=idDetector,proto3" json:"id_detector,omitempty"`
 	// indicator is this is an inventory object or a CI/CD run
 	Category AssetCategory `protobuf:"varint,32,opt,name=category,proto3,enum=cnquery.providers.v1.AssetCategory" json:"category,omitempty"`
-	// Deprecated: flat, provenance-blind list of related assets, consumed
+	// DEPRECATED in v14: flat, provenance-blind list of related assets, consumed
 	// server-side. Superseded by `relationships` (ADR 030), which anchors each
 	// edge to the resource that produced it. Kept for backward compatibility.
 	RelatedAssets []*Asset `protobuf:"bytes,33,rep,name=related_assets,json=relatedAssets,proto3" json:"related_assets,omitempty"`
@@ -371,8 +371,8 @@ type Asset struct {
 	KindString string `protobuf:"bytes,36,opt,name=kind_string,json=kindString,proto3" json:"kind_string,omitempty"`
 	Fqdn       string `protobuf:"bytes,37,opt,name=fqdn,proto3" json:"fqdn,omitempty"`
 	TraceId    string `protobuf:"bytes,38,opt,name=trace_id,json=traceId,proto3" json:"trace_id,omitempty"`
-	// Resource-anchored relationships to other assets (ADR 030). Each edge names
-	// the counterparty asset and the resource on it that anchors the relationship.
+	// Resource-anchored relationships to other assets (ADR 030). Each edge
+	// names the counterparty asset and the resource on it that anchors the edge.
 	Relationships []*AssetRelationship `protobuf:"bytes,39,rep,name=relationships,proto3" json:"relationships,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1886,7 +1886,7 @@ const file_inventory_proto_rawDesc = "" +
 	"\x03VCD\x10 \x12\a\n" +
 	"\x03OCI\x10!\x12\t\n" +
 	"\x05OPCUA\x10\"\x12!\n" +
-	"\x1dGCP_COMPUTE_INSTANCE_SNAPSHOT\x10#\"\x04\b\v\x10\vB2Z0go.mondoo.com/mql/v13/providers-sdk/v1/inventoryb\x06proto3"
+	"\x1dGCP_COMPUTE_INSTANCE_SNAPSHOT\x10#\"\x04\b\v\x10\vB.Z,go.mondoo.com/mql/providers-sdk/v1/inventoryb\x06proto3"
 
 var (
 	file_inventory_proto_rawDescOnce sync.Once

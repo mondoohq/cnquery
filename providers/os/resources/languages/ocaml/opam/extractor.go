@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/sbom"
 )
 
 // Compiled once: applied to every opam file parsed.

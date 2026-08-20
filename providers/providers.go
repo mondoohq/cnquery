@@ -25,12 +25,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"github.com/ulikunitz/xz"
-	"go.mondoo.com/mql/v13/cli/config"
-	"go.mondoo.com/mql/v13/logger/zerologadapter"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/cli/config"
+	"go.mondoo.com/mql/logger/zerologadapter"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/providers/core/resources/versions/semver"
 	"golang.org/x/exp/slices"
 )
 

@@ -4,8 +4,8 @@
 package resources
 
 import (
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/alicloud/connection"
 )
 
 func (r *mqlAlicloud) id() (string, error) {

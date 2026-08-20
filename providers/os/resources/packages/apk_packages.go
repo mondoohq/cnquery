@@ -10,12 +10,12 @@ import (
 	"regexp"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	cpe2 "go.mondoo.com/mql/v13/providers/os/resources/cpe"
-	"go.mondoo.com/mql/v13/providers/os/resources/purl"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	cpe2 "go.mondoo.com/mql/providers/os/resources/cpe"
+	"go.mondoo.com/mql/providers/os/resources/purl"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 const (

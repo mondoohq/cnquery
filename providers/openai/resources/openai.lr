@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/mql/providers/openai"
-option go_package = "go.mondoo.com/mql/v13/providers/openai/resources"
+option go_package = "go.mondoo.com/mql/providers/openai/resources"
 
 // OpenAI account
 //

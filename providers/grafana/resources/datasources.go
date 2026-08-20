@@ -11,9 +11,9 @@ import (
 	"slices"
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/types"
 )
 
 // grafanaDatasourceJSON mirrors one element of the /api/datasources response.

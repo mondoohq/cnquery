@@ -7,8 +7,8 @@ import (
 	"errors"
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
 // modprobeRule captures the "module must not load" intent expressed by a

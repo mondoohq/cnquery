@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/fsutil"
+	"go.mondoo.com/mql/providers/os/fsutil"
 )
 
 // walkedPaths returns every directory defaultPythonPaths resolves to on the

@@ -6,7 +6,7 @@ package connection
 import (
 	"slices"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
+	"go.mondoo.com/mql/providers-sdk/v1/util/filteropts"
 )
 
 // DiscoveryFilters narrows which objects discovery turns into assets, and which

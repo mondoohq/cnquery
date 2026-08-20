@@ -7,9 +7,9 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/jumpcloud/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/jumpcloud/connection"
 )
 
 func newMqlJumpcloudUser(runtime *plugin.Runtime, u *connection.SystemUser) (*mqlJumpcloudUser, error) {

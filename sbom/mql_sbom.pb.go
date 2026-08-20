@@ -1262,7 +1262,7 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x19EXTERNAL_ID_TYPE_AZURE_ID\x10\x05*E\n" +
 	"\fEvidenceType\x12\x1d\n" +
 	"\x19EVIDENCE_TYPE_UNSPECIFIED\x10\x00\x12\x16\n" +
-	"\x12EVIDENCE_TYPE_FILE\x10\x01B\x1cZ\x1ago.mondoo.com/mql/v13/sbomb\x06proto3"
+	"\x12EVIDENCE_TYPE_FILE\x10\x01B\x18Z\x16go.mondoo.com/mql/sbomb\x06proto3"
 
 var (
 	file_mql_sbom_proto_rawDescOnce sync.Once

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
 
 // Microsoft Defender Antivirus is queried through the Defender PowerShell

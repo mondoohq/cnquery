@@ -5,7 +5,7 @@ package resources
 
 import (
 	"github.com/digitalocean/godo"
-	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
+	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
 // The helpers below decide whether a discovery-target object survives the

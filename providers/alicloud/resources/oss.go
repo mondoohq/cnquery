@@ -14,10 +14,10 @@ import (
 	tea "github.com/alibabacloud-go/tea/tea"
 	oss "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/alicloud/connection"
 )
 
 func (r *mqlAlicloudOss) id() (string, error) {

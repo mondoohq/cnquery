@@ -14,7 +14,7 @@ import (
 	"path"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers/huggingface/internal/huggingface-hub-go/models"
+	"go.mondoo.com/mql/providers/huggingface/internal/huggingface-hub-go/models"
 )
 
 const (

@@ -73,7 +73,7 @@ providers/zoom/
 
 ```lr
 option provider = "go.mondoo.com/mql/v13/providers/zoom"
-option go_package = "go.mondoo.com/mql/v13/providers/zoom/resources"
+option go_package = "go.mondoo.com/mql/providers/zoom/resources"
 
 // Zoom account
 //

@@ -9,10 +9,10 @@ import (
 	cloudflare "github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/custom_certificates"
 	"github.com/cloudflare/cloudflare-go/v7/origin_ca_certificates"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/cloudflare/connection"
+	"go.mondoo.com/mql/types"
 )
 
 func (c *mqlCloudflareZoneCustomCertificate) id() (string, error) {

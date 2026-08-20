@@ -9,10 +9,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // connectedAppsTokenFanoutLimit bounds the parallel Tokens.List fan-out

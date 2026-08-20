@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/oracle/oci-go-sdk/v65/core"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // securityRuleDirection values, matching core.SecurityRuleDirectionEnum. Security

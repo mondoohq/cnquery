@@ -6,9 +6,9 @@ package resources
 import (
 	"sync"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/windows"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 func (r *mqlWindowsSmartScreen) id() (string, error) {

@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"io"
 
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/cpp"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/providers/os/resources/languages/cpp"
 )
 
 var (

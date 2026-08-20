@@ -9,12 +9,12 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/registry"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
-	"go.mondoo.com/mql/v13/providers/os/resources/windows"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/resources/windows"
+	"go.mondoo.com/mql/types"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )

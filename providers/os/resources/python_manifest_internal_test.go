@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/python"
+	"go.mondoo.com/mql/providers/os/resources/languages/python"
 )
 
 func TestCollectPythonManifestPackages_PipfileLock(t *testing.T) {

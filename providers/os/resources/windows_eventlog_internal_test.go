@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/registry"
 )
 
 func dwordItem(key string, n int64) registry.RegistryKeyItem {

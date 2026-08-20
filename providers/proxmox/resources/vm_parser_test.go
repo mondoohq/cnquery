@@ -6,7 +6,7 @@ package resources
 import (
 	"testing"
 
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 func getStr(m map[string]*llx.RawData, key string) string {

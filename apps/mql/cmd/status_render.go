@@ -10,9 +10,9 @@ import (
 	"unicode/utf8"
 
 	"github.com/muesli/termenv"
-	"go.mondoo.com/mql/v13/cli/theme"
-	"go.mondoo.com/mql/v13/cli/theme/colors"
-	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/cli/theme"
+	"go.mondoo.com/mql/cli/theme/colors"
+	"go.mondoo.com/mql/providers/core/resources/versions/semver"
 )
 
 // RenderOptions controls how RenderCli formats the status screen. Color is

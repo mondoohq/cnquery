@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/claude/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/claude/connection"
 )
 
 func parseTime(s string) (time.Time, error) {

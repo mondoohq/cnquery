@@ -15,8 +15,8 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/cli/config"
-	"go.mondoo.com/mql/v13/logger/zerologadapter"
+	"go.mondoo.com/mql/cli/config"
+	"go.mondoo.com/mql/logger/zerologadapter"
 )
 
 const (

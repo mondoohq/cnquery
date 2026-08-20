@@ -10,8 +10,8 @@ import (
 	"slices"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/types"
 )
 
 func Schema(ast *LR) (*resources.Schema, error) {

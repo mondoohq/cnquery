@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers/os/resources/cassandraconf"
+	"go.mondoo.com/mql/providers/os/resources/cassandraconf"
 )
 
 // shippedJMXBlock is the JMX section of the cassandra-env.sh Cassandra ships,

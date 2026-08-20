@@ -8,9 +8,9 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/elasticsearch/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/elasticsearch/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // jsonHasContent reports whether a raw JSON value carries a real restriction,

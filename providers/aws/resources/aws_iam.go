@@ -21,13 +21,13 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/aws/connection"
-	"go.mondoo.com/mql/v13/providers/aws/resources/awsiam"
-	"go.mondoo.com/mql/v13/providers/aws/resources/awspolicy"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/aws/connection"
+	"go.mondoo.com/mql/providers/aws/resources/awsiam"
+	"go.mondoo.com/mql/providers/aws/resources/awspolicy"
+	"go.mondoo.com/mql/types"
 )
 
 func (a *mqlAwsIam) id() (string, error) {

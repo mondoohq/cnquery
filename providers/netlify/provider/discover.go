@@ -4,9 +4,9 @@
 package provider
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/netlify/connection"
-	"go.mondoo.com/mql/v13/providers/netlify/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/netlify/connection"
+	"go.mondoo.com/mql/providers/netlify/resources"
 )
 
 func (s *Service) discover(conn *connection.NetlifyConnection) (*inventory.Inventory, error) {

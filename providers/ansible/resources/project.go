@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/ansible/connection"
-	"go.mondoo.com/mql/v13/providers/ansible/play"
-	"go.mondoo.com/mql/v13/providers/ansible/project"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/ansible/connection"
+	"go.mondoo.com/mql/providers/ansible/play"
+	"go.mondoo.com/mql/providers/ansible/project"
+	"go.mondoo.com/mql/types"
 )
 
 // ansibleProject returns the parsed project model, or nil when the provider is

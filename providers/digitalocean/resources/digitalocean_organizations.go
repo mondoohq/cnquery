@@ -10,8 +10,8 @@ import (
 
 	"github.com/digitalocean/godo"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/digitalocean/connection"
 )
 
 // godo does not wrap the Organizations endpoints, so the request goes through

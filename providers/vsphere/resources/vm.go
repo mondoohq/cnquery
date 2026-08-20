@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/vmware/govmomi/vim25/mo"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/vsphere/connection"
-	"go.mondoo.com/mql/v13/providers/vsphere/resources/resourceclient"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/vsphere/connection"
+	"go.mondoo.com/mql/providers/vsphere/resources/resourceclient"
 )
 
 type mqlVsphereVmInternal struct {

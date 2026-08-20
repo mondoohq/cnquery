@@ -6,12 +6,12 @@ package resources
 import (
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/packages"
-	"go.mondoo.com/mql/v13/providers/os/resources/purl"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/packages"
+	"go.mondoo.com/mql/providers/os/resources/purl"
 )
 
 // runtimeKind selects how the runtime() accessor resolves an agent's host — the

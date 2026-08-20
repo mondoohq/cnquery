@@ -11,7 +11,7 @@ import (
 
 	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
+	"go.mondoo.com/mql/providers/os/connection/ssh/cat"
 )
 
 type FS struct {

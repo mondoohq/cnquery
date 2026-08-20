@@ -17,8 +17,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/mql/v13/logger"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/logger"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 var rootCmd = &cobra.Command{
@@ -87,7 +87,7 @@ const template = `// Copyright Mondoo, Inc. 2024, 2026
 
 package providers
 
-import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+import "go.mondoo.com/mql/providers-sdk/v1/plugin"
 
 // DefaultProviders are useful when working in air-gapped environments
 // to tell users what providers are used for common connections, when there

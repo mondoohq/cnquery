@@ -5,8 +5,8 @@ package resources
 
 import (
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/rbac"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/types"
 )
 
 func (r *mqlWeaviateInstance) roles() ([]any, error) {

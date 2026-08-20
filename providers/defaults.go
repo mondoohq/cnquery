@@ -5,7 +5,7 @@
 
 package providers
 
-import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+import "go.mondoo.com/mql/providers-sdk/v1/plugin"
 
 // DefaultProviders are useful when working in air-gapped environments
 // to tell users what providers are used for common connections, when there

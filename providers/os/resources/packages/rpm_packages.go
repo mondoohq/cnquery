@@ -14,17 +14,17 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
-	"go.mondoo.com/mql/v13/providers/os/resources/cpe"
-	"go.mondoo.com/mql/v13/providers/os/resources/purl"
+	"go.mondoo.com/mql/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/providers/os/resources/cpe"
+	"go.mondoo.com/mql/providers/os/resources/purl"
 
 	"github.com/cockroachdb/errors"
 	_ "github.com/glebarez/go-sqlite" // required for sqlite3 rpm support
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 const (

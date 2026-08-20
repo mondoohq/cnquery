@@ -4,9 +4,9 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/postgresdb/connection"
-	"go.mondoo.com/mql/v13/providers/postgresdb/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/postgresdb/connection"
+	"go.mondoo.com/mql/providers/postgresdb/provider"
 )
 
 var Config = plugin.Provider{

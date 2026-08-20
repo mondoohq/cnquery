@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
-	"go.mondoo.com/mql/v13/logger"
-	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/logger"
+	inventory "go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 type Provider struct {

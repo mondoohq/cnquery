@@ -15,15 +15,15 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/ksuid"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/providers-sdk/v1/vault"
 	"sigs.k8s.io/yaml"
 
 	// The in-memory vault has no heavy dependencies and stays in the SDK. Linking
 	// it here guarantees the memory backend is always registered wherever
 	// GetVault is used. Heavy backends (AWS, GCP, HashiCorp, keyring) live in the
-	// separate go.mondoo.com/mql/v13/vault module and are opted into by the binary
+	// separate go.mondoo.com/mql/vault module and are opted into by the binary
 	// (see vault/register).
-	_ "go.mondoo.com/mql/v13/providers-sdk/v1/vault/inmemory"
+	_ "go.mondoo.com/mql/providers-sdk/v1/vault/inmemory"
 )
 
 //go:generate protoc --plugin=protoc-gen-go=../../../scripts/protoc/protoc-gen-go --plugin=protoc-gen-rangerrpc=../../../scripts/protoc/protoc-gen-rangerrpc --plugin=protoc-gen-go-vtproto=../../../scripts/protoc/protoc-gen-go-vtproto --proto_path=../../../:. --go_out=. --go_opt=paths=source_relative --rangerrpc_out=. --go-vtproto_out=. --go-vtproto_opt=paths=source_relative --go-vtproto_opt=features=marshal+unmarshal+size+clone inventory.proto
