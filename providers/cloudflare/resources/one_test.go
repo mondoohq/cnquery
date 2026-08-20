@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func TestAccessPolicies(t *testing.T) {
@@ -131,4 +132,43 @@ func TestIdentityProviders(t *testing.T) {
 	assert.False(t, otp.Saml.Data)
 	assert.False(t, otp.ScimEnabled.Data)
 	assert.Empty(t, otp.SsoTargetUrl.Data)
+}
+
+// warpAuthNonBrowser401 is optional on the organization payload. An absent
+// value has to stay null: reporting false would claim the organization
+// redirects failed WARP authentication to a login page, which is a statement
+// about its behavior that the API never made.
+func TestOrganizationWarpAuthNonBrowser401(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		field    string
+		wantData bool
+		wantNull bool
+	}{
+		{name: "enabled", field: `,"warp_auth_non_browser_401":true`, wantData: true},
+		{name: "disabled", field: `,"warp_auth_non_browser_401":false`, wantData: false},
+		{name: "absent", field: ``, wantNull: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := setupTestEnv(t)
+			one := createTestOne(t, env)
+
+			env.Mux.HandleFunc(fmt.Sprintf("/accounts/%s/access/organizations", testAccountID), func(w http.ResponseWriter, r *http.Request) {
+				jsonResponse(w, fmt.Sprintf(
+					`{"success":true,"result":{"name":"My Organization","auth_domain":"myorg.cloudflareaccess.com"%s}}`,
+					tc.field))
+			})
+
+			result, err := one.organization()
+			require.NoError(t, err)
+			require.NotNil(t, result)
+
+			if tc.wantNull {
+				assert.True(t, result.WarpAuthNonBrowser401.State&plugin.StateIsNull != 0,
+					"an absent setting must read as null, not as false")
+				return
+			}
+			assert.Equal(t, tc.wantData, result.WarpAuthNonBrowser401.Data)
+		})
+	}
 }

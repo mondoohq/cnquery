@@ -99,6 +99,7 @@ type (
 		SessionDuration                *string    `json:"session_duration"`
 		WarpAuthSessionDuration        *string    `json:"warp_auth_session_duration"`
 		AllowAuthenticateViaWarp       *bool      `json:"allow_authenticate_via_warp"`
+		WarpAuthNonBrowser401          *bool      `json:"warp_auth_non_browser_401"`
 		CreatedAt                      *time.Time `json:"created_at"`
 		UpdatedAt                      *time.Time `json:"updated_at"`
 	}
@@ -442,6 +443,7 @@ func (c *mqlCloudflareOne) organization() (*mqlCloudflareOneOrganization, error)
 		"sessionDuration":                llx.StringDataPtr(org.SessionDuration),
 		"warpAuthSessionDuration":        llx.StringDataPtr(org.WarpAuthSessionDuration),
 		"allowAuthenticateViaWarp":       llx.BoolDataPtr(org.AllowAuthenticateViaWarp),
+		"warpAuthNonBrowser401":          llx.BoolDataPtr(org.WarpAuthNonBrowser401),
 		"createdAt":                      llx.TimeDataPtr(org.CreatedAt),
 		"updatedAt":                      llx.TimeDataPtr(org.UpdatedAt),
 	})
