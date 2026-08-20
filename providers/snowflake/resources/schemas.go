@@ -5,13 +5,21 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/snowflake/connection"
 )
+
+// errSchemaNotFound marks a schema that SHOW SCHEMAS does not report. It is a
+// sentinel rather than a bare error so a caller resolving a reference can tell
+// "this schema is not listed" apart from "the lookup itself failed", and
+// degrade only the former.
+var errSchemaNotFound = errors.New("snowflake schema not found")
 
 // initSnowflakeSchema resolves a schema by its database and name when the
 // resource is requested through a typed reference (e.g.
@@ -54,7 +62,7 @@ func initSnowflakeSchema(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 			return nil, res, nil
 		}
 	}
-	return nil, nil, fmt.Errorf("snowflake.schema %q not found in database %q", name, databaseName)
+	return nil, nil, fmt.Errorf("snowflake.schema %q not found in database %q: %w", name, databaseName, errSchemaNotFound)
 }
 
 // resolveSchemaRef returns the typed schema a database/name pair refers to, or a
@@ -77,6 +85,19 @@ func resolveSchemaRef(runtime *plugin.Runtime, databaseName, schemaName string, 
 		"name":         llx.StringData(schemaName),
 	})
 	if err != nil {
+		if errors.Is(err, errSchemaNotFound) {
+			// SHOW SCHEMAS omits schemas owned by an application, so an object
+			// can name a schema that is real and yet unlistable. Every network
+			// rule Snowflake ships sits in SNOWFLAKE.EXTERNAL_ACCESS, which is
+			// one of these. Report the reference as unknown rather than failing
+			// the field on the owning resource.
+			log.Debug().
+				Str("database", databaseName).
+				Str("schema", schemaName).
+				Msg("snowflake: schema is not listed, reporting the reference as null")
+			field.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res.(*mqlSnowflakeSchema), nil
