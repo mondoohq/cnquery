@@ -55,8 +55,8 @@ func TestTunnels(t *testing.T) {
 	// Cloudflare removed is_pending_reconnect from the API. The field must
 	// read null, never false, which would assert the connection is actively
 	// serving traffic.
-	assert.True(t, conn.IsPendingReconnect.IsNull(), "isPendingReconnect is null, not false")
-	assert.False(t, conn.IsPendingReconnect.Data)
+	assert.True(t, conn.IsPendingReconnect.IsNull(), "isPendingReconnect must be null")
+	assert.True(t, conn.IsPendingReconnect.IsSet(), "isPendingReconnect must be resolved, not left unset")
 	assert.False(t, conn.OpenedAt.Data.IsZero())
 
 	// Second tunnel has no connections
