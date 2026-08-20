@@ -426,21 +426,28 @@ func findGitPath(afs *afero.Afero, startPath string) (root string, gitPath strin
 // (`.git` is a file with a `gitdir:` line), HEAD lives in the per-worktree git
 // dir and config lives in the shared common git dir.
 func resolveGitConfigAndHead(afs *afero.Afero, root, gitPath string) (configPath, headPath string) {
+	commonDir, worktreeDir := resolveGitDirs(afs, root, gitPath)
+	return filepath.Join(commonDir, "config"), filepath.Join(worktreeDir, "HEAD")
+}
+
+// resolveGitDirs returns the shared common git dir (holding config, refs and
+// packed-refs) and the per-worktree git dir (holding HEAD) for a .git entry.
+// For a plain `.git` directory both are that directory. For a linked worktree
+// (`.git` is a file with a `gitdir:` line) the per-worktree git dir holds HEAD
+// while the shared data lives in the common git dir.
+func resolveGitDirs(afs *afero.Afero, root, gitPath string) (commonDir, worktreeDir string) {
 	info, err := afs.Stat(gitPath)
 	if err == nil && info.IsDir() {
-		return filepath.Join(gitPath, "config"), filepath.Join(gitPath, "HEAD")
+		return gitPath, gitPath
 	}
 
 	worktreeGitDir, ok := parseGitdirFile(afs, gitPath, root)
 	if !ok {
 		// Unreadable or malformed pointer: best-effort, treat as if inline.
-		return filepath.Join(gitPath, "config"), filepath.Join(gitPath, "HEAD")
+		return gitPath, gitPath
 	}
 
-	headPath = filepath.Join(worktreeGitDir, "HEAD")
-	commonDir := resolveGitCommonDir(afs, worktreeGitDir)
-	configPath = filepath.Join(commonDir, "config")
-	return configPath, headPath
+	return resolveGitCommonDir(afs, worktreeGitDir), worktreeGitDir
 }
 
 // parseGitdirFile reads a `.git` pointer file and returns the absolute git dir
@@ -595,6 +602,117 @@ func parseGitHeadBranch(afs *afero.Afero, headPath string) string {
 		return ""
 	}
 	return strings.TrimPrefix(line, refPrefix)
+}
+
+// skillPURL derives a package URL (purl) for a skill from the path of its
+// SKILL.md definition. When the skill directory sits inside a git checkout
+// whose origin remote points at github.com, the purl pins the checkout's
+// current HEAD commit:
+//
+//	pkg:github/<org>/<repo>@<first 12 chars of HEAD sha>?skill=<skill dir name>
+//
+// It returns "" when the skill is not inside a git checkout, the checkout has
+// no github.com origin remote, or the HEAD commit cannot be resolved. A
+// coordinate is never guessed: an empty purl means provenance is unknown.
+func skillPURL(afs *afero.Afero, sourcePath string) string {
+	if sourcePath == "" {
+		return ""
+	}
+	skillDir := filepath.Dir(sourcePath)
+	root, gitPath, ok := findGitPath(afs, skillDir)
+	if !ok {
+		return ""
+	}
+
+	commonDir, worktreeDir := resolveGitDirs(afs, root, gitPath)
+	origin := parseGitRemotes(afs, filepath.Join(commonDir, "config"))["origin"]
+	host, slug := parseGitRemoteURL(origin)
+	if host != "github.com" {
+		return ""
+	}
+	org, repo, ok := strings.Cut(slug, "/")
+	if !ok || org == "" || repo == "" || strings.Contains(repo, "/") {
+		return ""
+	}
+
+	sha := resolveGitHeadSha(afs, commonDir, worktreeDir)
+	if sha == "" {
+		return ""
+	}
+	return "pkg:github/" + org + "/" + repo + "@" + sha[:12] + "?skill=" + filepath.Base(skillDir)
+}
+
+// resolveGitHeadSha resolves the commit sha HEAD points at using only file
+// reads: a detached HEAD carries the sha directly, otherwise the named ref is
+// looked up as a loose ref file and then in packed-refs. It returns "" when
+// the sha cannot be resolved.
+func resolveGitHeadSha(afs *afero.Afero, commonDir, worktreeDir string) string {
+	data, err := afs.ReadFile(filepath.Join(worktreeDir, "HEAD"))
+	if err != nil {
+		return ""
+	}
+	line := strings.TrimSpace(string(data))
+	if !strings.HasPrefix(line, "ref:") {
+		// detached HEAD: the commit sha is stored directly
+		if isGitCommitSha(line) {
+			return line
+		}
+		return ""
+	}
+	ref := strings.TrimSpace(strings.TrimPrefix(line, "ref:"))
+	if ref == "" {
+		return ""
+	}
+
+	// Loose ref file: the per-worktree git dir first (worktree-local refs),
+	// then the shared common dir.
+	dirs := []string{worktreeDir}
+	if commonDir != worktreeDir {
+		dirs = append(dirs, commonDir)
+	}
+	for _, dir := range dirs {
+		if data, err := afs.ReadFile(filepath.Join(dir, ref)); err == nil {
+			if sha := strings.TrimSpace(string(data)); isGitCommitSha(sha) {
+				return sha
+			}
+		}
+	}
+	return packedRefSha(afs, filepath.Join(commonDir, "packed-refs"), ref)
+}
+
+// packedRefSha looks up ref in a git packed-refs file (`<sha> <ref>` lines;
+// `#` comment and `^` peel lines are skipped). It returns "" when the ref is
+// absent or the file is unreadable.
+func packedRefSha(afs *afero.Afero, packedRefsPath, ref string) string {
+	data, err := afs.ReadFile(packedRefsPath)
+	if err != nil {
+		return ""
+	}
+	for _, rawLine := range strings.Split(string(data), "\n") {
+		line := strings.TrimSpace(rawLine)
+		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "^") {
+			continue
+		}
+		sha, name, ok := strings.Cut(line, " ")
+		if ok && strings.TrimSpace(name) == ref && isGitCommitSha(sha) {
+			return sha
+		}
+	}
+	return ""
+}
+
+// isGitCommitSha reports whether s is a full hex commit id (40 characters for
+// SHA-1 repositories, 64 for SHA-256 repositories).
+func isGitCommitSha(s string) bool {
+	if len(s) != 40 && len(s) != 64 {
+		return false
+	}
+	for _, c := range s {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F') {
+			return false
+		}
+	}
+	return true
 }
 
 // vscodeUserDataDir returns the platform-specific User data directory of a

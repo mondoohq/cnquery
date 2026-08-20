@@ -145,6 +145,10 @@ func (r *mqlWindsurfSkill) sha256() (string, error) {
 	return contentSHA256(r.Content.Data), nil
 }
 
+func (r *mqlWindsurfSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
+
 // Helper types
 
 type windsurfMCPConfig struct {

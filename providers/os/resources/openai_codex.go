@@ -437,6 +437,10 @@ func (r *mqlOpenaiCodexSkill) sha256() (string, error) {
 	return contentSHA256(r.Content.Data), nil
 }
 
+func (r *mqlOpenaiCodexSkill) purl() (string, error) {
+	return skillPURL(connectionAfs(r.MqlRuntime), r.Source.Data), nil
+}
+
 func (r *mqlOpenaiCodexMcpServer) running() (*llx.AssetValue, error) {
 	return mcpServerAsset(r), nil
 }

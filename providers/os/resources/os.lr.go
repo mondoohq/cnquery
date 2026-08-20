@@ -14076,6 +14076,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"claude.code.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"claude.code.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClaudeCodeSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"claude.code.project.path": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClaudeCodeProject).GetPath()).ToDataRes(types.String)
 	},
@@ -14235,6 +14238,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openai.codex.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"openai.codex.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiCodexSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"openai.codex.mcpServer.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiCodexMcpServer).GetName()).ToDataRes(types.String)
 	},
@@ -14379,6 +14385,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cursor.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCursorSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"cursor.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCursorSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"github.copilot.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilot).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -14445,6 +14454,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"github.copilot.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGithubCopilotSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"github.copilot.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGithubCopilotSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"goose.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGoose).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -14507,6 +14519,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"goose.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGooseSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"goose.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGooseSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"gemini.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGemini).GetConfigPath()).ToDataRes(types.String)
@@ -14573,6 +14588,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gemini.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGeminiSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"gemini.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGeminiSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"windsurf.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurf).GetConfigPath()).ToDataRes(types.String)
@@ -14664,6 +14682,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windsurf.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindsurfSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"windsurf.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindsurfSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"zed.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZed).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -14739,6 +14760,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"roo.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRooSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"roo.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRooSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"cline.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCline).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -14771,6 +14795,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cline.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlClineSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"cline.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlClineSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"kiro.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKiro).GetConfigPath()).ToDataRes(types.String)
@@ -14805,6 +14832,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kiro.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKiroSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"kiro.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKiroSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"continuedev.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContinuedev).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -14837,6 +14867,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"continuedev.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlContinuedevSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"continuedev.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlContinuedevSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"trae.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTrae).GetConfigPath()).ToDataRes(types.String)
@@ -14871,6 +14904,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"trae.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTraeSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"trae.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTraeSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"opencode.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpencode).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -14903,6 +14939,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"opencode.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpencodeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"opencode.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpencodeSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"pi.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPi).GetConfigPath()).ToDataRes(types.String)
@@ -14937,6 +14976,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"pi.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPiSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"pi.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPiSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"mistral.vibe.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMistralVibe).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -14969,6 +15011,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mistral.vibe.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMistralVibeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"mistral.vibe.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMistralVibeSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"antigravity.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAntigravity).GetConfigPath()).ToDataRes(types.String)
@@ -15003,6 +15048,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"antigravity.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAntigravitySkill).GetSha256()).ToDataRes(types.String)
 	},
+	"antigravity.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAntigravitySkill).GetPurl()).ToDataRes(types.String)
+	},
 	"ibm.bob.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmBob).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -15035,6 +15083,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ibm.bob.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlIbmBobSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"ibm.bob.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlIbmBobSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"openclaw.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenclaw).GetConfigPath()).ToDataRes(types.String)
@@ -15069,6 +15120,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openclaw.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenclawSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"openclaw.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenclawSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"snowflake.cortex.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeCortex).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -15101,6 +15155,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"snowflake.cortex.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeCortexSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"snowflake.cortex.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlSnowflakeCortexSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"junie.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJunie).GetConfigPath()).ToDataRes(types.String)
@@ -15135,6 +15192,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"junie.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJunieSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"junie.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJunieSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"augment.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAugment).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -15167,6 +15227,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"augment.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAugmentSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"augment.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAugmentSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"warp.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWarp).GetConfigPath()).ToDataRes(types.String)
@@ -15201,6 +15264,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"warp.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWarpSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"warp.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWarpSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"kilocode.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKilocode).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -15233,6 +15299,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kilocode.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKilocodeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"kilocode.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKilocodeSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"openhands.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenhands).GetConfigPath()).ToDataRes(types.String)
@@ -15267,6 +15336,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openhands.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenhandsSkill).GetSha256()).ToDataRes(types.String)
 	},
+	"openhands.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenhandsSkill).GetPurl()).ToDataRes(types.String)
+	},
 	"qwen.code.configPath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCode).GetConfigPath()).ToDataRes(types.String)
 	},
@@ -15299,6 +15371,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"qwen.code.skill.sha256": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlQwenCodeSkill).GetSha256()).ToDataRes(types.String)
+	},
+	"qwen.code.skill.purl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlQwenCodeSkill).GetPurl()).ToDataRes(types.String)
 	},
 	"sriov.physicalFunctions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSriov).GetPhysicalFunctions()).ToDataRes(types.Array(types.Resource("sriov.physicalFunction")))
@@ -32341,6 +32416,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlClaudeCodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"claude.code.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClaudeCodeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"claude.code.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClaudeCodeProject).__id, ok = v.Value.(string)
 		return
@@ -32581,6 +32660,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenaiCodexSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openai.codex.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiCodexSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"openai.codex.mcpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiCodexMcpServer).__id, ok = v.Value.(string)
 		return
@@ -32805,6 +32888,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCursorSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"cursor.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCursorSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"github.copilot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGithubCopilot).__id, ok = v.Value.(string)
 		return
@@ -32909,6 +32996,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGithubCopilotSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"github.copilot.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGithubCopilotSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"goose.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGoose).__id, ok = v.Value.(string)
 		return
@@ -33003,6 +33094,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"goose.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGooseSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"goose.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGooseSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gemini.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33103,6 +33198,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gemini.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGeminiSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gemini.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGeminiSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windsurf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33245,6 +33344,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindsurfSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"windsurf.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindsurfSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"zed.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZed).__id, ok = v.Value.(string)
 		return
@@ -33361,6 +33464,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlRooSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"roo.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRooSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"cline.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCline).__id, ok = v.Value.(string)
 		return
@@ -33411,6 +33518,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cline.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlClineSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cline.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlClineSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"kiro.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33465,6 +33576,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKiroSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"kiro.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKiroSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"continuedev.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlContinuedev).__id, ok = v.Value.(string)
 		return
@@ -33515,6 +33630,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"continuedev.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlContinuedevSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"continuedev.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlContinuedevSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"trae.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33569,6 +33688,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTraeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"trae.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTraeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"opencode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpencode).__id, ok = v.Value.(string)
 		return
@@ -33619,6 +33742,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"opencode.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpencodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"opencode.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpencodeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"pi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33673,6 +33800,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlPiSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"pi.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPiSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"mistral.vibe.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMistralVibe).__id, ok = v.Value.(string)
 		return
@@ -33723,6 +33854,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mistral.vibe.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMistralVibeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mistral.vibe.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMistralVibeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"antigravity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33777,6 +33912,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAntigravitySkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"antigravity.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAntigravitySkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"ibm.bob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbmBob).__id, ok = v.Value.(string)
 		return
@@ -33827,6 +33966,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ibm.bob.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlIbmBobSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ibm.bob.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlIbmBobSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openclaw.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33881,6 +34024,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenclawSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openclaw.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenclawSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"snowflake.cortex.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeCortex).__id, ok = v.Value.(string)
 		return
@@ -33931,6 +34078,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"snowflake.cortex.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlSnowflakeCortexSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"snowflake.cortex.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlSnowflakeCortexSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"junie.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33985,6 +34136,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlJunieSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"junie.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJunieSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"augment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAugment).__id, ok = v.Value.(string)
 		return
@@ -34035,6 +34190,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"augment.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAugmentSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"augment.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAugmentSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"warp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34089,6 +34248,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWarpSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"warp.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWarpSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"kilocode.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKilocode).__id, ok = v.Value.(string)
 		return
@@ -34139,6 +34302,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kilocode.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKilocodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"kilocode.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKilocodeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openhands.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34193,6 +34360,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOpenhandsSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"openhands.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenhandsSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"qwen.code.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlQwenCode).__id, ok = v.Value.(string)
 		return
@@ -34243,6 +34414,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"qwen.code.skill.sha256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlQwenCodeSkill).Sha256, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"qwen.code.skill.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlQwenCodeSkill).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"sriov.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -84353,6 +84528,7 @@ type mqlClaudeCodeSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createClaudeCodeSkill creates a new instance of this resource
@@ -84419,6 +84595,12 @@ func (c *mqlClaudeCodeSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlClaudeCodeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlClaudeCodeSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -85035,6 +85217,7 @@ type mqlOpenaiCodexSkill struct {
 	Plugin      plugin.TValue[string]
 	Content     plugin.TValue[string]
 	Sha256      plugin.TValue[string]
+	Purl        plugin.TValue[string]
 }
 
 // createOpenaiCodexSkill creates a new instance of this resource
@@ -85097,6 +85280,12 @@ func (c *mqlOpenaiCodexSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlOpenaiCodexSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlOpenaiCodexSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -85701,6 +85890,7 @@ type mqlCursorSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createCursorSkill creates a new instance of this resource
@@ -85767,6 +85957,12 @@ func (c *mqlCursorSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlCursorSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlCursorSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -86051,6 +86247,7 @@ type mqlGithubCopilotSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createGithubCopilotSkill creates a new instance of this resource
@@ -86117,6 +86314,12 @@ func (c *mqlGithubCopilotSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlGithubCopilotSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlGithubCopilotSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -86344,6 +86547,7 @@ type mqlGooseSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createGooseSkill creates a new instance of this resource
@@ -86410,6 +86614,12 @@ func (c *mqlGooseSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlGooseSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlGooseSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -86644,6 +86854,7 @@ type mqlGeminiSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createGeminiSkill creates a new instance of this resource
@@ -86710,6 +86921,12 @@ func (c *mqlGeminiSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlGeminiSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlGeminiSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -87090,6 +87307,7 @@ type mqlWindsurfSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createWindsurfSkill creates a new instance of this resource
@@ -87156,6 +87374,12 @@ func (c *mqlWindsurfSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlWindsurfSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlWindsurfSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -87473,6 +87697,7 @@ type mqlRooSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createRooSkill creates a new instance of this resource
@@ -87539,6 +87764,12 @@ func (c *mqlRooSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlRooSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlRooSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -87654,6 +87885,7 @@ type mqlClineSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createClineSkill creates a new instance of this resource
@@ -87720,6 +87952,12 @@ func (c *mqlClineSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlClineSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlClineSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -87835,6 +88073,7 @@ type mqlKiroSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createKiroSkill creates a new instance of this resource
@@ -87901,6 +88140,12 @@ func (c *mqlKiroSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlKiroSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlKiroSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -88016,6 +88261,7 @@ type mqlContinuedevSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createContinuedevSkill creates a new instance of this resource
@@ -88082,6 +88328,12 @@ func (c *mqlContinuedevSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlContinuedevSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlContinuedevSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -88197,6 +88449,7 @@ type mqlTraeSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createTraeSkill creates a new instance of this resource
@@ -88263,6 +88516,12 @@ func (c *mqlTraeSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlTraeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlTraeSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -88378,6 +88637,7 @@ type mqlOpencodeSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createOpencodeSkill creates a new instance of this resource
@@ -88444,6 +88704,12 @@ func (c *mqlOpencodeSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlOpencodeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlOpencodeSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -88559,6 +88825,7 @@ type mqlPiSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createPiSkill creates a new instance of this resource
@@ -88625,6 +88892,12 @@ func (c *mqlPiSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlPiSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlPiSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -88740,6 +89013,7 @@ type mqlMistralVibeSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createMistralVibeSkill creates a new instance of this resource
@@ -88806,6 +89080,12 @@ func (c *mqlMistralVibeSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlMistralVibeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlMistralVibeSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -88921,6 +89201,7 @@ type mqlAntigravitySkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createAntigravitySkill creates a new instance of this resource
@@ -88987,6 +89268,12 @@ func (c *mqlAntigravitySkill) GetContent() *plugin.TValue[string] {
 func (c *mqlAntigravitySkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlAntigravitySkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -89102,6 +89389,7 @@ type mqlIbmBobSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createIbmBobSkill creates a new instance of this resource
@@ -89168,6 +89456,12 @@ func (c *mqlIbmBobSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlIbmBobSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlIbmBobSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -89283,6 +89577,7 @@ type mqlOpenclawSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createOpenclawSkill creates a new instance of this resource
@@ -89349,6 +89644,12 @@ func (c *mqlOpenclawSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlOpenclawSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlOpenclawSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -89464,6 +89765,7 @@ type mqlSnowflakeCortexSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createSnowflakeCortexSkill creates a new instance of this resource
@@ -89530,6 +89832,12 @@ func (c *mqlSnowflakeCortexSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlSnowflakeCortexSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlSnowflakeCortexSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -89645,6 +89953,7 @@ type mqlJunieSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createJunieSkill creates a new instance of this resource
@@ -89711,6 +90020,12 @@ func (c *mqlJunieSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlJunieSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlJunieSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -89826,6 +90141,7 @@ type mqlAugmentSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createAugmentSkill creates a new instance of this resource
@@ -89892,6 +90208,12 @@ func (c *mqlAugmentSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlAugmentSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlAugmentSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -90007,6 +90329,7 @@ type mqlWarpSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createWarpSkill creates a new instance of this resource
@@ -90073,6 +90396,12 @@ func (c *mqlWarpSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlWarpSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlWarpSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -90188,6 +90517,7 @@ type mqlKilocodeSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createKilocodeSkill creates a new instance of this resource
@@ -90254,6 +90584,12 @@ func (c *mqlKilocodeSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlKilocodeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlKilocodeSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -90369,6 +90705,7 @@ type mqlOpenhandsSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createOpenhandsSkill creates a new instance of this resource
@@ -90435,6 +90772,12 @@ func (c *mqlOpenhandsSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlOpenhandsSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlOpenhandsSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 
@@ -90550,6 +90893,7 @@ type mqlQwenCodeSkill struct {
 	Source       plugin.TValue[string]
 	Content      plugin.TValue[string]
 	Sha256       plugin.TValue[string]
+	Purl         plugin.TValue[string]
 }
 
 // createQwenCodeSkill creates a new instance of this resource
@@ -90616,6 +90960,12 @@ func (c *mqlQwenCodeSkill) GetContent() *plugin.TValue[string] {
 func (c *mqlQwenCodeSkill) GetSha256() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Sha256, func() (string, error) {
 		return c.sha256()
+	})
+}
+
+func (c *mqlQwenCodeSkill) GetPurl() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
+		return c.purl()
 	})
 }
 

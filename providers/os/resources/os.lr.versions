@@ -46,6 +46,7 @@ antigravity.skill.argumentHint 13.13.1
 antigravity.skill.content 13.13.1
 antigravity.skill.description 13.13.1
 antigravity.skill.name 13.13.1
+antigravity.skill.purl 13.40.10
 antigravity.skill.sha256 13.13.1
 antigravity.skill.source 13.13.1
 antigravity.skills 13.13.1
@@ -197,6 +198,7 @@ augment.skill.argumentHint 13.13.1
 augment.skill.content 13.13.1
 augment.skill.description 13.13.1
 augment.skill.name 13.13.1
+augment.skill.purl 13.40.10
 augment.skill.sha256 13.13.1
 augment.skill.source 13.13.1
 augment.skills 13.13.1
@@ -517,6 +519,7 @@ claude.code.skill.argumentHint 13.8.2
 claude.code.skill.content 13.8.2
 claude.code.skill.description 13.8.2
 claude.code.skill.name 13.8.2
+claude.code.skill.purl 13.40.10
 claude.code.skill.sha256 13.10.1
 claude.code.skill.source 13.8.2
 claude.code.skills 13.8.2
@@ -532,6 +535,7 @@ cline.skill.argumentHint 13.13.1
 cline.skill.content 13.13.1
 cline.skill.description 13.13.1
 cline.skill.name 13.13.1
+cline.skill.purl 13.40.10
 cline.skill.sha256 13.13.1
 cline.skill.source 13.13.1
 cline.skills 13.13.1
@@ -591,6 +595,7 @@ continuedev.skill.argumentHint 13.13.1
 continuedev.skill.content 13.13.1
 continuedev.skill.description 13.13.1
 continuedev.skill.name 13.13.1
+continuedev.skill.purl 13.40.10
 continuedev.skill.sha256 13.13.1
 continuedev.skill.source 13.13.1
 continuedev.skills 13.13.1
@@ -639,6 +644,7 @@ cursor.skill.argumentHint 13.10.1
 cursor.skill.content 13.10.1
 cursor.skill.description 13.10.1
 cursor.skill.name 13.10.1
+cursor.skill.purl 13.40.10
 cursor.skill.sha256 13.10.1
 cursor.skill.source 13.10.1
 cursor.skills 13.10.1
@@ -993,6 +999,7 @@ gemini.skill.argumentHint 13.13.1
 gemini.skill.content 13.13.1
 gemini.skill.description 13.13.1
 gemini.skill.name 13.13.1
+gemini.skill.purl 13.40.10
 gemini.skill.sha256 13.13.1
 gemini.skill.source 13.13.1
 gemini.skills 13.13.1
@@ -1019,6 +1026,7 @@ github.copilot.skill.argumentHint 13.12.1
 github.copilot.skill.content 13.12.1
 github.copilot.skill.description 13.12.1
 github.copilot.skill.name 13.12.1
+github.copilot.skill.purl 13.40.10
 github.copilot.skill.sha256 13.12.1
 github.copilot.skill.source 13.12.1
 github.copilot.skills 13.12.1
@@ -1065,6 +1073,7 @@ goose.skill.argumentHint 13.13.1
 goose.skill.content 13.13.1
 goose.skill.description 13.13.1
 goose.skill.name 13.13.1
+goose.skill.purl 13.40.10
 goose.skill.sha256 13.13.1
 goose.skill.source 13.13.1
 goose.skills 13.13.1
@@ -1347,6 +1356,7 @@ ibm.bob.skill.argumentHint 13.13.1
 ibm.bob.skill.content 13.13.1
 ibm.bob.skill.description 13.13.1
 ibm.bob.skill.name 13.13.1
+ibm.bob.skill.purl 13.40.10
 ibm.bob.skill.sha256 13.13.1
 ibm.bob.skill.source 13.13.1
 ibm.bob.skills 13.13.1
@@ -1728,6 +1738,7 @@ junie.skill.argumentHint 13.13.1
 junie.skill.content 13.13.1
 junie.skill.description 13.13.1
 junie.skill.name 13.13.1
+junie.skill.purl 13.40.10
 junie.skill.sha256 13.13.1
 junie.skill.source 13.13.1
 junie.skills 13.13.1
@@ -1770,6 +1781,7 @@ kilocode.skill.argumentHint 13.13.1
 kilocode.skill.content 13.13.1
 kilocode.skill.description 13.13.1
 kilocode.skill.name 13.13.1
+kilocode.skill.purl 13.40.10
 kilocode.skill.sha256 13.13.1
 kilocode.skill.source 13.13.1
 kilocode.skills 13.13.1
@@ -1783,6 +1795,7 @@ kiro.skill.argumentHint 13.13.1
 kiro.skill.content 13.13.1
 kiro.skill.description 13.13.1
 kiro.skill.name 13.13.1
+kiro.skill.purl 13.40.10
 kiro.skill.sha256 13.13.1
 kiro.skill.source 13.13.1
 kiro.skills 13.13.1
@@ -2228,6 +2241,7 @@ mistral.vibe.skill.argumentHint 13.13.1
 mistral.vibe.skill.content 13.13.1
 mistral.vibe.skill.description 13.13.1
 mistral.vibe.skill.name 13.13.1
+mistral.vibe.skill.purl 13.40.10
 mistral.vibe.skill.sha256 13.13.1
 mistral.vibe.skill.source 13.13.1
 mistral.vibe.skills 13.13.1
@@ -2683,6 +2697,7 @@ openai.codex.skill.content 13.8.2
 openai.codex.skill.description 13.8.2
 openai.codex.skill.name 13.8.2
 openai.codex.skill.plugin 13.8.2
+openai.codex.skill.purl 13.40.10
 openai.codex.skill.sha256 13.10.1
 openai.codex.skill.source 13.8.2
 openai.codex.skills 13.8.2
@@ -2696,6 +2711,7 @@ openclaw.skill.argumentHint 13.13.1
 openclaw.skill.content 13.13.1
 openclaw.skill.description 13.13.1
 openclaw.skill.name 13.13.1
+openclaw.skill.purl 13.40.10
 openclaw.skill.sha256 13.13.1
 openclaw.skill.source 13.13.1
 openclaw.skills 13.13.1
@@ -2709,6 +2725,7 @@ opencode.skill.argumentHint 13.13.1
 opencode.skill.content 13.13.1
 opencode.skill.description 13.13.1
 opencode.skill.name 13.13.1
+opencode.skill.purl 13.40.10
 opencode.skill.sha256 13.13.1
 opencode.skill.source 13.13.1
 opencode.skills 13.13.1
@@ -2722,6 +2739,7 @@ openhands.skill.argumentHint 13.13.1
 openhands.skill.content 13.13.1
 openhands.skill.description 13.13.1
 openhands.skill.name 13.13.1
+openhands.skill.purl 13.40.10
 openhands.skill.sha256 13.13.1
 openhands.skill.source 13.13.1
 openhands.skills 13.13.1
@@ -2913,6 +2931,7 @@ pi.skill.argumentHint 13.13.1
 pi.skill.content 13.13.1
 pi.skill.description 13.13.1
 pi.skill.name 13.13.1
+pi.skill.purl 13.40.10
 pi.skill.sha256 13.13.1
 pi.skill.source 13.13.1
 pi.skills 13.13.1
@@ -3172,6 +3191,7 @@ qwen.code.skill.argumentHint 13.13.1
 qwen.code.skill.content 13.13.1
 qwen.code.skill.description 13.13.1
 qwen.code.skill.name 13.13.1
+qwen.code.skill.purl 13.40.10
 qwen.code.skill.sha256 13.13.1
 qwen.code.skill.source 13.13.1
 qwen.code.skills 13.13.1
@@ -3212,6 +3232,7 @@ roo.skill.argumentHint 13.13.1
 roo.skill.content 13.13.1
 roo.skill.description 13.13.1
 roo.skill.name 13.13.1
+roo.skill.purl 13.40.10
 roo.skill.sha256 13.13.1
 roo.skill.source 13.13.1
 roo.skills 13.13.1
@@ -3358,6 +3379,7 @@ snowflake.cortex.skill.argumentHint 13.13.1
 snowflake.cortex.skill.content 13.13.1
 snowflake.cortex.skill.description 13.13.1
 snowflake.cortex.skill.name 13.13.1
+snowflake.cortex.skill.purl 13.40.10
 snowflake.cortex.skill.sha256 13.13.1
 snowflake.cortex.skill.source 13.13.1
 snowflake.cortex.skills 13.13.1
@@ -3808,6 +3830,7 @@ trae.skill.argumentHint 13.13.1
 trae.skill.content 13.13.1
 trae.skill.description 13.13.1
 trae.skill.name 13.13.1
+trae.skill.purl 13.40.10
 trae.skill.sha256 13.13.1
 trae.skill.source 13.13.1
 trae.skills 13.13.1
@@ -3926,6 +3949,7 @@ warp.skill.argumentHint 13.13.1
 warp.skill.content 13.13.1
 warp.skill.description 13.13.1
 warp.skill.name 13.13.1
+warp.skill.purl 13.40.10
 warp.skill.sha256 13.13.1
 warp.skill.source 13.13.1
 warp.skills 13.13.1
@@ -4623,6 +4647,7 @@ windsurf.skill.argumentHint 13.13.1
 windsurf.skill.content 13.13.1
 windsurf.skill.description 13.13.1
 windsurf.skill.name 13.13.1
+windsurf.skill.purl 13.40.10
 windsurf.skill.sha256 13.13.1
 windsurf.skill.source 13.13.1
 windsurf.skills 13.13.1
