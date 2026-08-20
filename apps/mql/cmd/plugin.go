@@ -144,6 +144,9 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 	// Recursively connect all discovered assets depth-first
 	connectAll(explorer, explorer.Discovered())
 	allAssets := explorer.Connected()
+	if err := noUsableAssetsError(len(allAssets), explorer.Errors()); err != nil {
+		return err
+	}
 
 	if conf.Format == "json" {
 		_ = out.WriteString("[")
@@ -259,6 +262,29 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 	}
 
 	return nil
+}
+
+// noUsableAssetsError reports the error to surface when not a single asset
+// could be queried. Both asset runtime creation and asset connection log their
+// failure and carry on, so that one unreachable asset does not abort a scan of
+// many. The cost is that a run where *every* asset failed still reaches the
+// query loop, finds nothing to iterate, and returns success. Anything
+// scripting mql then cannot distinguish "all assets passed" from "no asset was
+// ever scanned", so collapse that case into an error.
+func noUsableAssetsError(connected int, assetErrors []*discovery.AssetWithError) error {
+	if connected > 0 || len(assetErrors) == 0 {
+		return nil
+	}
+
+	first := assetErrors[0]
+	name := first.Asset.GetName()
+	if name == "" {
+		name = "<unnamed asset>"
+	}
+	if len(assetErrors) == 1 {
+		return errors.Wrapf(first.Err, "could not connect to asset %s", name)
+	}
+	return errors.Wrapf(first.Err, "could not connect to any of the %d assets, first failure on %s", len(assetErrors), name)
 }
 
 // connectAll recursively connects all discovered assets depth-first,
