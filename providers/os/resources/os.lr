@@ -13706,7 +13706,7 @@ private claude.code.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -13940,7 +13940,7 @@ private openai.codex.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14168,7 +14168,7 @@ private cursor.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14273,7 +14273,7 @@ private github.copilot.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14364,7 +14364,7 @@ private goose.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14464,7 +14464,7 @@ private gemini.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14607,7 +14607,7 @@ private windsurf.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14753,7 +14753,7 @@ private roo.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14813,7 +14813,7 @@ private cline.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14872,7 +14872,7 @@ private kiro.skill @defaults("name") @maturity("preview") {
   content string
   // SHA-256 hash of the skill content, for integrity checks
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -14955,7 +14955,7 @@ private continuedev.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15038,7 +15038,7 @@ private trae.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15122,7 +15122,7 @@ private opencode.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15205,7 +15205,7 @@ private pi.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15289,7 +15289,7 @@ private mistral.vibe.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15374,7 +15374,7 @@ private antigravity.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15457,7 +15457,7 @@ private ibm.bob.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15540,7 +15540,7 @@ private openclaw.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15625,7 +15625,7 @@ private snowflake.cortex.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15708,7 +15708,7 @@ private junie.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15791,7 +15791,7 @@ private augment.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15875,7 +15875,7 @@ private warp.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -15958,7 +15958,7 @@ private kilocode.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -16042,7 +16042,7 @@ private openhands.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
@@ -16125,7 +16125,7 @@ private qwen.code.skill @defaults("name") @maturity("preview") {
   // Hex-encoded SHA-256 digest of content, for detecting drift or pinning a
   // known-good skill definition against a baseline.
   sha256() string
-  // Package URL identifying the skill's git origin (empty when the skill is not inside a git checkout)
+  // Package URL identifying the skill's git origin
   purl() string
 }
 
