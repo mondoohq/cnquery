@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers/os/resources/services"
+	"go.mondoo.com/mql/providers/os/resources/services"
 )
 
 func TestWindowsServiceParser(t *testing.T) {

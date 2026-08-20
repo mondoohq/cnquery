@@ -4,9 +4,9 @@
 package provider
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/hcp/connection"
-	"go.mondoo.com/mql/v13/providers/hcp/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/hcp/connection"
+	"go.mondoo.com/mql/providers/hcp/resources"
 )
 
 func (s *Service) discover(conn *connection.HcpConnection) (*inventory.Inventory, error) {

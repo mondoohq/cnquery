@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/utils/multierr"
 	"golang.org/x/crypto/ocsp"
 )
 

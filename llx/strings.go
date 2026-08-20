@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/types"
 )
 
 // StringifyValue turns a raw golang value into a string

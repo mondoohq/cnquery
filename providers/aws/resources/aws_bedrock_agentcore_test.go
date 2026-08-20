@@ -9,7 +9,7 @@ import (
 	bacctypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
 func TestCapacityProviderIdFromArn(t *testing.T) {

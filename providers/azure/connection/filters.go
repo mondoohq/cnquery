@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
+	"go.mondoo.com/mql/providers-sdk/v1/util/filteropts"
 )
 
 // DiscoveryFilters narrows what the Azure provider discovers. It mirrors the

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/mql/providers/mikrotik"
-option go_package = "go.mondoo.com/mql/v13/providers/mikrotik/resources"
+option go_package = "go.mondoo.com/mql/providers/mikrotik/resources"
 
 // MikroTik RouterOS device
 //

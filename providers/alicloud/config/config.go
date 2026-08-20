@@ -4,11 +4,11 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
-	"go.mondoo.com/mql/v13/providers/alicloud/provider"
-	"go.mondoo.com/mql/v13/providers/alicloud/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/alicloud/connection"
+	"go.mondoo.com/mql/providers/alicloud/provider"
+	"go.mondoo.com/mql/providers/alicloud/resources"
 )
 
 var Config = plugin.Provider{

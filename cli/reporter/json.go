@@ -6,8 +6,8 @@ package reporter
 import (
 	"errors"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/utils/iox"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/utils/iox"
 )
 
 // CodeBundleToJSON converts a code bundle and its results to JSON output

@@ -11,9 +11,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	lualang "go.mondoo.com/mql/v13/providers/os/resources/languages/lua"
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	lualang "go.mondoo.com/mql/providers/os/resources/languages/lua"
+	"go.mondoo.com/mql/sbom"
 )
 
 // Extractor parses LuaRocks installed package listings.

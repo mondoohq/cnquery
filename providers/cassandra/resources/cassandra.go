@@ -4,8 +4,8 @@
 package resources
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/cassandra/connection"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/cassandra/connection"
 )
 
 func (r *mqlCassandra) id() (string, error) {

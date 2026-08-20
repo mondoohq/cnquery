@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // The Okta SDK is OpenAPI-generated and models most scalars as a pointer so it

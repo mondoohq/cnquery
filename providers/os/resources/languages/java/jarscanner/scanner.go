@@ -13,9 +13,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/java/manifestmf"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/java/pomproperties"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/providers/os/resources/languages/java/manifestmf"
+	"go.mondoo.com/mql/providers/os/resources/languages/java/pomproperties"
 )
 
 // MaxArchiveSize is the maximum size of a JAR/WAR/EAR file to scan (100MB).

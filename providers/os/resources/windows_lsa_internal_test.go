@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/registry"
 )
 
 // dword builds a registry item map entry for a DWORD value, mimicking how the

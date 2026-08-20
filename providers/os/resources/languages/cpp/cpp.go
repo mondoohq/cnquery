@@ -5,7 +5,7 @@ package cpp
 
 import (
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/sbom"
 )
 
 // NewPackageUrl creates a Conan package URL for a given package name and version.

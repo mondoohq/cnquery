@@ -15,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/aws/connection"
-	mqlTypes "go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/aws/connection"
+	mqlTypes "go.mondoo.com/mql/types"
 )
 
 func (a *mqlAwsMacie) id() (string, error) {

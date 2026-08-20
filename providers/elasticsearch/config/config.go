@@ -4,9 +4,9 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/elasticsearch/connection"
-	"go.mondoo.com/mql/v13/providers/elasticsearch/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/elasticsearch/connection"
+	"go.mondoo.com/mql/providers/elasticsearch/provider"
 )
 
 var Config = plugin.Provider{

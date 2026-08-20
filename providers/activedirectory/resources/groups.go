@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/go-ldap/ldap/v3"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/activedirectory/connection"
 )
 
 // parseGroupType interprets the AD groupType bitmask and returns a

@@ -19,11 +19,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	advisor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/advisor/armadvisor"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/azure/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/azure/connection"
+	"go.mondoo.com/mql/types"
 )
 
 func initAzureSubscriptionAdvisorService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

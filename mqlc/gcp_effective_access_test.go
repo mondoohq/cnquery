@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/mqlc"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/mqlc"
+	"go.mondoo.com/mql/providers-sdk/v1/testutils"
 )
 
 // The effective-access resources are parameterized: the caller supplies the

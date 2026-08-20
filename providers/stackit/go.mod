@@ -1,6 +1,6 @@
-module go.mondoo.com/mql/v13/providers/stackit
+module go.mondoo.com/mql/providers/stackit
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
@@ -37,7 +37,7 @@ require (
 	github.com/stackitcloud/stackit-sdk-go/services/telemetryrouter v0.5.1
 	github.com/stackitcloud/stackit-sdk-go/services/vpn v0.15.0
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

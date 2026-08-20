@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/package-url/packageurl-go"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/providers/os/resources/languages/javascript"
 )
 
 var (

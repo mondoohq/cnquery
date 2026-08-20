@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	compute "google.golang.org/api/compute/v1"
 	"google.golang.org/api/dns/v1"

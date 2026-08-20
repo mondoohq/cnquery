@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"go.mondoo.com/mql/v13/providers/zoom/connection"
+	"go.mondoo.com/mql/providers/zoom/connection"
 )
 
 // The zoom.user resource decodes its records by struct tag alone and derives

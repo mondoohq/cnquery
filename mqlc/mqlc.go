@@ -14,12 +14,12 @@ import (
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc/parser"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/sortx"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc/parser"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/sortx"
 )
 
 type ErrIdentifierNotFound struct {

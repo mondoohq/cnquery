@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/os/resources/ovs"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/os/resources/ovs"
+	"go.mondoo.com/mql/types"
 )
 
 // ovsTableDump reads the three tables that make up the switch topology in one

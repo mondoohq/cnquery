@@ -1,6 +1,6 @@
-module go.mondoo.com/mql/v13/providers/atlassian
+module go.mondoo.com/mql/providers/atlassian
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
@@ -10,7 +10,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.8.1
 )
 

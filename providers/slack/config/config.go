@@ -4,10 +4,10 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/slack/connection"
-	"go.mondoo.com/mql/v13/providers/slack/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/slack/connection"
+	"go.mondoo.com/mql/providers/slack/provider"
 )
 
 var Config = plugin.Provider{

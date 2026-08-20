@@ -1,4 +1,4 @@
-module go.mondoo.com/mql/v13
+module go.mondoo.com/mql
 
 go 1.26.6
 

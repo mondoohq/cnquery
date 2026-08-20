@@ -7,11 +7,11 @@ import (
 	"io"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 
-	"go.mondoo.com/mql/v13/providers/core/resources/versions/rpm"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/packages"
+	"go.mondoo.com/mql/providers/core/resources/versions/rpm"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/packages"
 )
 
 // RpmNewestKernel works on all machines running rpm

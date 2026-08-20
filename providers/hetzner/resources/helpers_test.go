@@ -12,7 +12,7 @@ import (
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 func TestTranslateHcloudError(t *testing.T) {

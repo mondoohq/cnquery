@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/connection/tar"
+	"go.mondoo.com/mql/providers/os/connection/tar"
 )
 
 // closeTrackingReader wraps a reader and records whether Close was called.

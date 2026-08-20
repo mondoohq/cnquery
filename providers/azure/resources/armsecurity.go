@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	"go.mondoo.com/mql/v13/providers/azure/connection"
+	"go.mondoo.com/mql/providers/azure/connection"
 )
 
 type armSecurityConn struct {

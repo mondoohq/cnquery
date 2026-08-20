@@ -67,7 +67,7 @@ providers/digitalocean/
 
 ```lr
 option provider = "go.mondoo.com/mql/providers/digitalocean"
-option go_package = "go.mondoo.com/mql/v13/providers/digitalocean/resources"
+option go_package = "go.mondoo.com/mql/providers/digitalocean/resources"
 
 // DigitalOcean cloud provider
 digitalocean {

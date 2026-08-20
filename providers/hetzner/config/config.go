@@ -6,9 +6,9 @@ package config
 import (
 	"fmt"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/hetzner/connection"
-	"go.mondoo.com/mql/v13/providers/hetzner/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/hetzner/connection"
+	"go.mondoo.com/mql/providers/hetzner/provider"
 )
 
 var Config = plugin.Provider{

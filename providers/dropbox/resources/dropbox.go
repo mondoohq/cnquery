@@ -8,9 +8,9 @@ import (
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team_policies"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/dropbox/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/dropbox/connection"
 )
 
 func (r *mqlDropbox) id() (string, error) {

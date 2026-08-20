@@ -6,7 +6,7 @@
 
 package smbios
 
-import "go.mondoo.com/mql/v13/providers/os/connection/shared"
+import "go.mondoo.com/mql/providers/os/connection/shared"
 
 func fetchWindowsSmbios(conn shared.Connection) (smbiosWindows, error) {
 	return fetchWindowsSmbiosPowershell(conn)

@@ -9,7 +9,7 @@ import (
 	"github.com/portainer/client-api-go/v2/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/portainer/connection"
+	"go.mondoo.com/mql/providers/portainer/connection"
 )
 
 func TestUnixTimePtr(t *testing.T) {

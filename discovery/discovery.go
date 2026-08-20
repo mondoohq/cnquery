@@ -6,12 +6,12 @@ package discovery
 import (
 	"maps"
 
-	"go.mondoo.com/mql/v13/cli/config"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers"
-	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/cli/config"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers"
+	inventory "go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream"
 	"google.golang.org/protobuf/proto"
 )
 

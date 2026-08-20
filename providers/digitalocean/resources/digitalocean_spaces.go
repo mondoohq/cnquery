@@ -16,11 +16,11 @@ import (
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/providers/digitalocean/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // knownSpacesRegions enumerates the DigitalOcean regions that host

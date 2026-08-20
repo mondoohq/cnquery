@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/utils/urlx"
+	"go.mondoo.com/mql/utils/urlx"
 )
 
 func TestDetectNameFromFile_Directory(t *testing.T) {

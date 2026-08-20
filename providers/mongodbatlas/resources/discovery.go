@@ -6,10 +6,10 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/mongodbatlas/connection"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/mongodbatlas/connection"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // Discover enumerates the organization's projects and emits each as a child

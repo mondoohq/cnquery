@@ -11,10 +11,10 @@ import (
 	fcclient "github.com/alibabacloud-go/fc-20230330/v4/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/alicloud/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // ramRoleNameFromArn extracts the role name from a RAM role ARN of the form

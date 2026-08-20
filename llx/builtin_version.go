@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/types"
 )
 
 type VersionType byte

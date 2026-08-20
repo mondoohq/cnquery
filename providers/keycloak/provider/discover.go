@@ -4,9 +4,9 @@
 package provider
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/keycloak/connection"
-	"go.mondoo.com/mql/v13/providers/keycloak/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/keycloak/connection"
+	"go.mondoo.com/mql/providers/keycloak/resources"
 )
 
 func (s *Service) discover(conn *connection.KeycloakConnection) (*inventory.Inventory, error) {

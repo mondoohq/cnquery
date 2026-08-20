@@ -11,9 +11,9 @@ import (
 
 	oss "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/types"
 )
 
 // ossConfigAbsent reports whether an error from a per-bucket configuration call

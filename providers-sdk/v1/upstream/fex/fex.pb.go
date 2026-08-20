@@ -4307,7 +4307,7 @@ const file_fex_proto_rawDesc = "" +
 	"\x14SEVERITY_RATING_HIGH\x10\x02\x12\x1a\n" +
 	"\x16SEVERITY_RATING_MEDIUM\x10\x03\x12\x17\n" +
 	"\x13SEVERITY_RATING_LOW\x10\x04\x12\x18\n" +
-	"\x14SEVERITY_RATING_NONE\x10\x05B5Z3go.mondoo.com/mql/v13/providers-sdk/v1/upstream/fexb\x06proto3"
+	"\x14SEVERITY_RATING_NONE\x10\x05B1Z/go.mondoo.com/mql/providers-sdk/v1/upstream/fexb\x06proto3"
 
 var (
 	file_fex_proto_rawDescOnce sync.Once

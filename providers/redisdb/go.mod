@@ -1,12 +1,12 @@
-module go.mondoo.com/mql/v13/providers/redisdb
+module go.mondoo.com/mql/providers/redisdb
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
 require (
 	github.com/redis/go-redis/v9 v9.22.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.8.1
 )
 

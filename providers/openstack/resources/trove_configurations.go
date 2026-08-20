@@ -6,7 +6,7 @@ package resources
 import (
 	"github.com/gophercloud/gophercloud/v2/openstack/db/v1/configurations"
 	"github.com/gophercloud/gophercloud/v2/openstack/db/v1/instances"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 func (r *mqlOpenstackDbConfiguration) id() (string, error) {

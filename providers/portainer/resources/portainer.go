@@ -6,7 +6,7 @@ package resources
 import (
 	"time"
 
-	"go.mondoo.com/mql/v13/providers/portainer/connection"
+	"go.mondoo.com/mql/providers/portainer/connection"
 )
 
 // unixTimePtr converts a Portainer Unix-seconds timestamp into a *time.Time,

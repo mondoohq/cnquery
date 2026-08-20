@@ -63,7 +63,7 @@ providers/dropbox/
 
 ```lr
 option provider = "go.mondoo.com/mql/providers/dropbox"
-option go_package = "go.mondoo.com/mql/v13/providers/dropbox/resources"
+option go_package = "go.mondoo.com/mql/providers/dropbox/resources"
 
 // Dropbox Business team
 //

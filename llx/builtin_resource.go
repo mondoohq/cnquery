@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/timex"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/timex"
 )
 
 type Resource interface {

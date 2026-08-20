@@ -4,12 +4,12 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/detector"
-	"go.mondoo.com/mql/v13/providers/os/resources/discovery/docker_engine"
-	"go.mondoo.com/mql/v13/providers/os/resources/discovery/mcp_servers"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/detector"
+	"go.mondoo.com/mql/providers/os/resources/discovery/docker_engine"
+	"go.mondoo.com/mql/providers/os/resources/discovery/mcp_servers"
 )
 
 var Config = plugin.Provider{

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // TestAssessment_ContextResourceListSurfacesFailures is an end-to-end regression

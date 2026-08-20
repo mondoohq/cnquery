@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/elasticsearch/connection"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/elasticsearch/connection"
 )
 
 func intToStr(i int64) string {

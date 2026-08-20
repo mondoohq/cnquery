@@ -15,8 +15,8 @@ import (
 	"os"
 	"time"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/tokenauth"
-	"go.mondoo.com/mql/v13/providers/os/connection/ssh/signers"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream/tokenauth"
+	"go.mondoo.com/mql/providers/os/connection/ssh/signers"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/crypto/ssh"
 )

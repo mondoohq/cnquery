@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/logger"
 )
 
 func init() {

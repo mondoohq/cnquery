@@ -17,7 +17,7 @@
 package sbomupload
 
 import (
-	sbom "go.mondoo.com/mql/v13/sbom"
+	sbom "go.mondoo.com/mql/sbom"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -174,7 +174,7 @@ const file_sbomupload_proto_rawDesc = "" +
 	"\n" +
 	"asset_mrns\x18\x02 \x03(\tR\tassetMrns2o\n" +
 	"\x04Sbom\x12g\n" +
-	"\x0eBulkUploadSbom\x12(.mql.sbomupload.v1.BulkUploadSbomRequest\x1a).mql.sbomupload.v1.BulkUploadSbomResponse\"\x00B<Z:go.mondoo.com/mql/v13/providers-sdk/v1/upstream/sbomuploadb\x06proto3"
+	"\x0eBulkUploadSbom\x12(.mql.sbomupload.v1.BulkUploadSbomRequest\x1a).mql.sbomupload.v1.BulkUploadSbomResponse\"\x00B8Z6go.mondoo.com/mql/providers-sdk/v1/upstream/sbomuploadb\x06proto3"
 
 var (
 	file_sbomupload_proto_rawDescOnce sync.Once

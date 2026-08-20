@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/fsutil"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/fsutil"
 )
 
 var _ shared.FileSearch = (*MountedFs)(nil)

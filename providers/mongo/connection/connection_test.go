@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 // newTestConn builds a connection from options, always supplying a host so the

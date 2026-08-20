@@ -12,14 +12,14 @@ import (
 	"github.com/gobwas/glob"
 	"github.com/google/go-github/v90/github"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/logger"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
-	"go.mondoo.com/mql/v13/providers/github/connection"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/logger"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/providers/github/connection"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 func Discover(runtime *plugin.Runtime, opts map[string]string) (*inventory.Inventory, error) {

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 const UNKNOWN_VALUE = "?value?"

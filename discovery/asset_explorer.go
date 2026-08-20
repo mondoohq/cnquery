@@ -11,14 +11,14 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/cli/execruntime"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers"
-	inventory "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory/manager"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
-	"go.mondoo.com/mql/v13/utils/slicesx"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/cli/execruntime"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers"
+	inventory "go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory/manager"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/utils/slicesx"
 )
 
 // ErrDuplicateAsset is returned by Connect when the asset is a duplicate

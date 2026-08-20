@@ -1,12 +1,12 @@
-module go.mondoo.com/mql/v13/providers/terraform
+module go.mondoo.com/mql/providers/terraform
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
 require (
 	github.com/hashicorp/hcl/v2 v2.24.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

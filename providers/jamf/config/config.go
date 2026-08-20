@@ -4,10 +4,10 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/jamf/connection"
-	"go.mondoo.com/mql/v13/providers/jamf/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/jamf/connection"
+	"go.mondoo.com/mql/providers/jamf/provider"
 )
 
 var Config = plugin.Provider{

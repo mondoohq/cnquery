@@ -11,10 +11,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/shadowscatcher/shodan/search"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/shodan/connection"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/shodan/connection"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // maxCIDRHosts caps how many addresses a single CIDR may expand to during

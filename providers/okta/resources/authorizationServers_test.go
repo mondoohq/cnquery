@@ -10,7 +10,7 @@ import (
 	"github.com/okta/okta-sdk-golang/v6/okta"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
 // TestAuthorizationServerJwksNilDoesNotError pins the absence of a nil

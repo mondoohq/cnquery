@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
 // commitSHA matches a full 40-character git commit SHA, the only action

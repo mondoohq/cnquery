@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/openai/openai-go/v3"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // mapModel builds the resource args for an openai.model. Both the collection

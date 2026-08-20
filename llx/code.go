@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"sort"
 
-	"go.mondoo.com/mql/v13/checksums"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/checksums"
+	"go.mondoo.com/mql/types"
 )
 
 func (b *Block) ChunkIndex() uint32 {

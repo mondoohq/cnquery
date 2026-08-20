@@ -12,11 +12,11 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/mount"
-	"go.mondoo.com/mql/v13/providers/os/resources/nfs"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/mount"
+	"go.mondoo.com/mql/providers/os/resources/nfs"
+	"go.mondoo.com/mql/types"
 )
 
 const (

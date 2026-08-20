@@ -313,7 +313,7 @@ go run apps/provider-scaffold/provider-scaffold.go \
 cd providers/your-provider && go mod tidy
 ```
 
-The Go package path is derived automatically as `go.mondoo.com/mql/v13/providers/{provider-id}`. New providers use the ID scheme `go.mondoo.com/mql/providers/{provider-id}` (no version in the ID).
+The Go package path and the provider ID are both derived automatically as `go.mondoo.com/mql/providers/{provider-id}` (no version in either).
 
 After scaffolding, register the provider in these files:
 

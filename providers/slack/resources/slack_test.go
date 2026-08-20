@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/slack-go/slack"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func strVal(s string) plugin.TValue[string] {

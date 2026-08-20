@@ -4,9 +4,9 @@
 package recording
 
 import (
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/utils/multierr"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/utils/multierr"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 // MergeOpts controls how recordings are merged.

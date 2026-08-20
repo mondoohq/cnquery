@@ -11,7 +11,7 @@ import (
 
 	"github.com/oracle/oci-go-sdk/v65/identity"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
+	"go.mondoo.com/mql/providers-sdk/v1/util/filteropts"
 )
 
 // DiscoveryFilters narrows what a scan looks at.

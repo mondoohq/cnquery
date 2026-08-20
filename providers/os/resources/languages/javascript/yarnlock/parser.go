@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
+	"go.mondoo.com/mql/providers/os/resources/languages/javascript"
 )
 
 // specIndex maps each "name@versionSpec" a yarn.lock entry answers to the

@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/mongodbatlas/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/mongodbatlas/connection"
 	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/filteropts"
+	"go.mondoo.com/mql/providers-sdk/v1/util/filteropts"
 )
 
 type DiscoveryFilters struct {

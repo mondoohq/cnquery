@@ -16,8 +16,8 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
-	"go.mondoo.com/mql/v13/providers/os/fsutil"
+	"go.mondoo.com/mql/providers/os/connection/ssh/cat"
+	"go.mondoo.com/mql/providers/os/fsutil"
 )
 
 func FileOpen(dockerClient *client.Client, path string, container string, conn *ContainerConnection, catFs *cat.Fs) (afero.File, error) {

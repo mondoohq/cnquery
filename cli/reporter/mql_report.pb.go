@@ -284,7 +284,7 @@ const file_mql_report_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x125\n" +
 	"\x05value\x18\x02 \x01(\v2\x1f.mondoo.report.mql.v1.DataValueR\x05value:\x028\x01\"=\n" +
 	"\tDataValue\x120\n" +
-	"\acontent\x18\x01 \x01(\v2\x16.google.protobuf.ValueR\acontentB$Z\"go.mondoo.com/mql/v13/cli/reporterb\x06proto3"
+	"\acontent\x18\x01 \x01(\v2\x16.google.protobuf.ValueR\acontentB Z\x1ego.mondoo.com/mql/cli/reporterb\x06proto3"
 
 var (
 	file_mql_report_proto_rawDescOnce sync.Once

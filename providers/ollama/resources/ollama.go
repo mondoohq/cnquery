@@ -15,10 +15,10 @@ import (
 
 	"github.com/ollama/ollama/api"
 	modeltypes "github.com/ollama/ollama/types/model"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/ollama/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/ollama/connection"
+	"go.mondoo.com/mql/types"
 )
 
 func ollamaConn(runtime *plugin.Runtime) *connection.OllamaConnection {

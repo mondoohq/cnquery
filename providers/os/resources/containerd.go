@@ -12,8 +12,8 @@ import (
 
 	"github.com/kballard/go-shellquote"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/types"
 )
 
 // containerInfo represents the parsed JSON output from ctr containers info

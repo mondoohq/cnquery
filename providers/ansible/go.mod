@@ -1,12 +1,12 @@
-module go.mondoo.com/mql/v13/providers/ansible
+module go.mondoo.com/mql/providers/ansible
 
 go 1.26.6
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 require (
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v3 v3.0.1
 )
 

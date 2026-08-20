@@ -8,9 +8,9 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/jobpool"
-	"go.mondoo.com/mql/v13/providers/oci/connection"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/jobpool"
+	"go.mondoo.com/mql/providers/oci/connection"
 )
 
 // Almost every OCI list API answers for exactly one compartment in one region,

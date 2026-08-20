@@ -3,7 +3,7 @@
 
 package connection
 
-import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+import "go.mondoo.com/mql/providers-sdk/v1/plugin"
 
 // gcpPlatformNames is the set of platform names the GCP provider can emit: the
 // org/project/folder roots plus every discoverable GCP object type (the

@@ -8,9 +8,9 @@ import (
 	"encoding/base64"
 	"strconv"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/core/resources/classifier"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/core/resources/classifier"
 )
 
 func unicodeInputHash(input string) string {

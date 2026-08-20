@@ -23,10 +23,10 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/cli/config"
-	"go.mondoo.com/mql/v13/logger/zerologadapter"
-	"go.mondoo.com/mql/v13/providers/core/resources/versions/semver"
-	"go.mondoo.com/mql/v13/utils/httpx"
+	"go.mondoo.com/mql/cli/config"
+	"go.mondoo.com/mql/logger/zerologadapter"
+	"go.mondoo.com/mql/providers/core/resources/versions/semver"
+	"go.mondoo.com/mql/utils/httpx"
 )
 
 const (

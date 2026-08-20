@@ -1,15 +1,15 @@
-module go.mondoo.com/mql/v13/providers/nmap
+module go.mondoo.com/mql/providers/nmap
 
 go 1.26.6
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 require (
 	github.com/Ullaakut/nmap/v3 v3.1.0
 	github.com/cockroachdb/errors v1.14.0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

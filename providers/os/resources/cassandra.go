@@ -9,11 +9,11 @@ import (
 	"path"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/cassandraconf"
-	"go.mondoo.com/mql/v13/providers/os/resources/yamlconf"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/cassandraconf"
+	"go.mondoo.com/mql/providers/os/resources/yamlconf"
 )
 
 // cassandraConfDirs lists the directories a Cassandra installation keeps its

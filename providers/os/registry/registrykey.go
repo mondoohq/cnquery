@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
 // normalizeMultiSz strips the Windows API artifact where an empty REG_MULTI_SZ

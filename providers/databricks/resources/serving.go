@@ -9,10 +9,10 @@ import (
 	"sync/atomic"
 
 	"github.com/databricks/databricks-sdk-go/service/serving"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/types"
 )
 
 // mqlDatabricksServingEndpointInternal caches the source endpoint so the served

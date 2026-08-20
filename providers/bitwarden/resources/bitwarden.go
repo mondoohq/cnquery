@@ -6,7 +6,7 @@ package resources
 import (
 	"context"
 
-	"go.mondoo.com/mql/v13/providers/bitwarden/connection"
+	"go.mondoo.com/mql/providers/bitwarden/connection"
 )
 
 func (r *mqlBitwarden) id() (string, error) {

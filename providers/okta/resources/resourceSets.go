@@ -10,10 +10,10 @@ import (
 	"net/http"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/okta/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/okta/connection"
+	"go.mondoo.com/mql/types"
 )
 
 type mqlOktaResourceSetResourceInternal struct {

@@ -18,7 +18,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/utils/stringx"
 
 	mastermind "github.com/Masterminds/semver"
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,9 +28,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.mondoo.com/mql/v13/cli/components"
-	"go.mondoo.com/mql/v13/logger"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/cli/components"
+	"go.mondoo.com/mql/logger"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
 )

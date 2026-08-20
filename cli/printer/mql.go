@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/multierr"
-	"go.mondoo.com/mql/v13/utils/sortx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/multierr"
+	"go.mondoo.com/mql/utils/sortx"
 	"golang.org/x/exp/slices"
 )
 

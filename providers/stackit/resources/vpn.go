@@ -5,8 +5,8 @@ package resources
 
 import (
 	vpn "github.com/stackitcloud/stackit-sdk-go/services/vpn/v1api"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 type mqlStackitVpnGatewayConnectionInternal struct {

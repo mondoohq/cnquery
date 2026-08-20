@@ -1,6 +1,6 @@
-module go.mondoo.com/mql/v13/providers/alicloud
+module go.mondoo.com/mql/providers/alicloud
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
@@ -39,7 +39,7 @@ require (
 	github.com/aliyun/credentials-go v1.4.13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

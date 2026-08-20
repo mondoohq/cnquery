@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/cli/reporter"
-	"go.mondoo.com/mql/v13/mrn"
-	"go.mondoo.com/mql/v13/sbom"
-	"go.mondoo.com/mql/v13/utils/sortx"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/cli/reporter"
+	"go.mondoo.com/mql/mrn"
+	"go.mondoo.com/mql/sbom"
+	"go.mondoo.com/mql/utils/sortx"
 )
 
 var LABEL_KERNEL_RUNNING = "mondoo.com/os/kernel-running"

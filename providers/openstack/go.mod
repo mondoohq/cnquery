@@ -1,6 +1,6 @@
-module go.mondoo.com/mql/v13/providers/openstack
+module go.mondoo.com/mql/providers/openstack
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
@@ -9,7 +9,7 @@ require (
 	github.com/gophercloud/utils/v2 v2.0.0-20260626221802-4ae35253ac13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

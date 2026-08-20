@@ -13,9 +13,9 @@ import (
 	rdsclient "github.com/alibabacloud-go/rds-20140815/v16/client"
 	tea "github.com/alibabacloud-go/tea/tea"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/alicloud/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/alicloud/connection"
 )
 
 // rdsParseTime parses an RFC3339 timestamp returned by the RDS API, returning

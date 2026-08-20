@@ -8,8 +8,8 @@ import (
 	"sort"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
 type query struct {

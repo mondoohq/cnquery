@@ -11,7 +11,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/aws/connection"
+	"go.mondoo.com/mql/providers/aws/connection"
 )
 
 // regionalConcurrency bounds how many regions one lister queries at a time.

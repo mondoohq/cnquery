@@ -17,7 +17,7 @@ import (
 
 	"github.com/coreos/go-systemd/unit"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 var (

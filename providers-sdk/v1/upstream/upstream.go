@@ -11,9 +11,9 @@ import (
 
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/utils/multierr"
-	rangerUtils "go.mondoo.com/mql/v13/utils/ranger"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/utils/multierr"
+	rangerUtils "go.mondoo.com/mql/utils/ranger"
 	"go.mondoo.com/ranger-rpc"
 	guard_cert_auth "go.mondoo.com/ranger-rpc/plugins/authentication/cert"
 	"go.mondoo.com/ranger-rpc/plugins/authentication/statictoken"

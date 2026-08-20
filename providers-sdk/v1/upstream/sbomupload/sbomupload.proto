@@ -15,7 +15,7 @@ import "sbom/mql_sbom.proto";
 
 // The go_package path exceeds 80 chars; it is fixed and cannot be shortened.
 // protolint:disable:next MAX_LINE_LENGTH
-option go_package = "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/sbomupload";
+option go_package = "go.mondoo.com/mql/providers-sdk/v1/upstream/sbomupload";
 
 // Service to handle SBOM data.
 service Sbom {

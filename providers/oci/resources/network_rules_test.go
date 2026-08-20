@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 )
 
 // The rule structs reach MQL as dicts via convert.JsonToDictSlice, so their

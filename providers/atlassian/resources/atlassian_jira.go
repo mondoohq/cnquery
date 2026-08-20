@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/atlassian/connection/jira"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/atlassian/connection/jira"
+	"go.mondoo.com/mql/types"
 )
 
 const (

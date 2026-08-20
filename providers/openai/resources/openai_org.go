@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v3"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 func (r *mqlOpenai) users() ([]any, error) {

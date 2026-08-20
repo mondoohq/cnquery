@@ -13,8 +13,8 @@ import (
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
 	"github.com/DataDog/datadog-api-client-go/v2/api/datadogV2"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/datadog/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/datadog/connection"
 )
 
 // --- Sensitive Data Scanner Groups ---

@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/rust"
+	"go.mondoo.com/mql/providers/os/resources/languages/rust"
 )
 
 // dependsOnRefs resolves a Cargo package's `dependencies` to the refs (purls) of

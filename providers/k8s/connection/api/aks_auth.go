@@ -10,10 +10,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/aksauth"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/azauth"
-	"go.mondoo.com/mql/v13/providers/k8s/connection/shared"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/util/aksauth"
+	"go.mondoo.com/mql/providers-sdk/v1/util/azauth"
+	"go.mondoo.com/mql/providers/k8s/connection/shared"
 	"k8s.io/client-go/rest"
 )
 

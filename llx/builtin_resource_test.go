@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/exec"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/exec"
+	"go.mondoo.com/mql/providers-sdk/v1/testutils"
 )
 
 func TestResourceMapV2(t *testing.T) {

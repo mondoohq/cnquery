@@ -6,10 +6,10 @@ package plugin
 import (
 	"errors"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 type Runtime struct {

@@ -6,8 +6,8 @@ package resources
 import (
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/types"
 )
 
 // aclUser is the parsed form of one ACL LIST line.

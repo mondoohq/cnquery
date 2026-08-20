@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 func TestMultiErr(t *testing.T) {

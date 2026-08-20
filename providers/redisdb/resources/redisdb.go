@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/redisdb/connection"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/redisdb/connection"
 )
 
 func (r *mqlRedisdb) id() (string, error) {

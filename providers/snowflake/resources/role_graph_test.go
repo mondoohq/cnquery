@@ -11,7 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/types"
 )
 
 // edgesFrom turns a static adjacency map into an edgeFunc.

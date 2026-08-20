@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/providers/os/resources/languages/javascript"
 )
 
 // scopeOf maps an npm lock package entry to a languages package scope, from

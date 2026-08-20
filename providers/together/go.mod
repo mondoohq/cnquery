@@ -1,13 +1,13 @@
-module go.mondoo.com/mql/v13/providers/together
+module go.mondoo.com/mql/providers/together
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
 require (
 	github.com/stretchr/testify v1.12.0
 	github.com/togethercomputer/together-go v0.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

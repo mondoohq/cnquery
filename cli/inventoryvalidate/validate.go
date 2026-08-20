@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"sort"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // Severity classifies a finding. Unknown option keys and uninstalled

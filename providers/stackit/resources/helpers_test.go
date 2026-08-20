@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/stackitcloud/stackit-sdk-go/core/oapierror"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 func TestTimeOrNil(t *testing.T) {

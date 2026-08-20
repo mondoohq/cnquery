@@ -8,7 +8,7 @@ package windows
 import (
 	wmi "github.com/StackExchange/wmi"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"golang.org/x/sys/windows/registry"
 )
 

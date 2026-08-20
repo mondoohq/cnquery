@@ -1,6 +1,6 @@
-module go.mondoo.com/mql/v13/providers/opcua
+module go.mondoo.com/mql/providers/opcua
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
@@ -8,7 +8,7 @@ require (
 	github.com/gopcua/opcua v0.9.1
 	github.com/mozillazg/go-slugify v0.2.0
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 )
 
 require (

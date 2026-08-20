@@ -8,8 +8,8 @@ import (
 	"io"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/javascript"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/providers/os/resources/languages/javascript"
 )
 
 // stripJSONC removes trailing commas before } and ] to convert JSONC to

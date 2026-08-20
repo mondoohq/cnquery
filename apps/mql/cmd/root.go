@@ -13,11 +13,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 	"github.com/spf13/viper"
-	"go.mondoo.com/mql/v13/cli/config"
-	cli_errors "go.mondoo.com/mql/v13/cli/errors"
-	cliproviders "go.mondoo.com/mql/v13/cli/providers"
-	"go.mondoo.com/mql/v13/cli/theme"
-	"go.mondoo.com/mql/v13/logger"
+	"go.mondoo.com/mql/cli/config"
+	cli_errors "go.mondoo.com/mql/cli/errors"
+	cliproviders "go.mondoo.com/mql/cli/providers"
+	"go.mondoo.com/mql/cli/theme"
+	"go.mondoo.com/mql/logger"
 )
 
 const (

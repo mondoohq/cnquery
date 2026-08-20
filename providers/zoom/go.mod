@@ -1,13 +1,13 @@
-module go.mondoo.com/mql/v13/providers/zoom
+module go.mondoo.com/mql/providers/zoom
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
 require (
 	github.com/cockroachdb/errors v1.14.0
 	github.com/rs/zerolog v1.35.1
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	golang.org/x/oauth2 v0.36.0
 )
 

@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/mql/v13/checksums"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/checksums"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/types"
 )
 
 // rsyslogConfPaths maps platform names to their rsyslog.conf location.

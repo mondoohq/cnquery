@@ -44,7 +44,7 @@ Read the existing discovery logic thoroughly. Understand:
 Modify the `Discover()` function to check for `OptionStagedDiscovery` and route to stage-specific functions. The legacy path MUST remain unchanged — older clients that don't set the flag must continue working.
 
 ```go
-import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+import "go.mondoo.com/mql/providers-sdk/v1/plugin"
 
 func Discover(runtime *plugin.Runtime, ...) (*inventory.Inventory, error) {
     conn := runtime.Connection.(YourConnection)

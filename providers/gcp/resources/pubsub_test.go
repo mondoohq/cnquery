@@ -9,7 +9,7 @@ import (
 
 	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 

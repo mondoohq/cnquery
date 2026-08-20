@@ -11,9 +11,9 @@ import (
 
 	documentai "cloud.google.com/go/documentai/apiv1"
 	"cloud.google.com/go/documentai/apiv1/documentaipb"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/gcp/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/gcp/connection"
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"

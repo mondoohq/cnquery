@@ -8,7 +8,7 @@ import (
 
 	network "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // lowerSet folds a list of ARM resource ids for comparison. ARM resource ids are

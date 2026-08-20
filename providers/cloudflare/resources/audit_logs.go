@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/cloudflare/connection"
 )
 
 // auditLogEntry mirrors an account audit-log entry, decoded via the client's

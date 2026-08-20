@@ -15,9 +15,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/logger"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/logger"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream"
 )
 
 /*

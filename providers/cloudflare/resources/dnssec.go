@@ -7,9 +7,9 @@ import (
 
 	cloudflare "github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/dns"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/cloudflare/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/cloudflare/connection"
 )
 
 func (c *mqlCloudflareZone) dnssec() (*mqlCloudflareZoneDnssec, error) {

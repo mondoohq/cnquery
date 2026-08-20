@@ -1,6 +1,6 @@
-module go.mondoo.com/mql/v13/providers/snowflake
+module go.mondoo.com/mql/providers/snowflake
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 // thrift v0.23.0 fails to build on 32-bit targets (linux/386, linux/arm/v7):
 // framed_transport.go:206 uses math.MaxUint32, which overflows int on 32-bit.
@@ -14,7 +14,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.19.1
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/crypto v0.55.0
 )

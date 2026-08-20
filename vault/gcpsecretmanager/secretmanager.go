@@ -11,8 +11,8 @@ import (
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	secretmanagerpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 // https://cloud.google.com/secret-manager

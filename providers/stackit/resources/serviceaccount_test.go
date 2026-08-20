@@ -8,8 +8,8 @@ import (
 	"time"
 
 	serviceaccount "github.com/stackitcloud/stackit-sdk-go/services/serviceaccount/v2api"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/types"
 )
 
 // assertDictSerializable asserts that a []dict payload (a slice of

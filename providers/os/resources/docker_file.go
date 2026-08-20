@@ -14,13 +14,13 @@ import (
 	"github.com/moby/buildkit/frontend/dockerfile/linter"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/docker"
-	"go.mondoo.com/mql/v13/providers/os/connection/local"
-	"go.mondoo.com/mql/v13/providers/os/connection/ssh"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/docker"
+	"go.mondoo.com/mql/providers/os/connection/local"
+	"go.mondoo.com/mql/providers/os/connection/ssh"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 func initDockerFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {

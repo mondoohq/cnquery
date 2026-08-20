@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/health"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/upstream/health"
 )
 
 type executionManager struct {

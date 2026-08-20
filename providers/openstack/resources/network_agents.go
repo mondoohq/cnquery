@@ -6,7 +6,7 @@ package resources
 import (
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/agents"
 	"github.com/gophercloud/gophercloud/v2/openstack/networking/v2/extensions/taas/tapmirrors"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // ---- openstack.network.agent ----

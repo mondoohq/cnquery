@@ -6,7 +6,7 @@ package docker_engine
 import (
 	"github.com/cockroachdb/errors"
 	"github.com/moby/moby/client"
-	"go.mondoo.com/mql/v13/providers/os/connection/dockerclient"
+	"go.mondoo.com/mql/providers/os/connection/dockerclient"
 )
 
 // TODO: this implementation needs to be merged with motorcloud/docker

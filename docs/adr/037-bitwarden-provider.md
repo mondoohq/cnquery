@@ -76,7 +76,7 @@ providers/bitwarden/
 
 ```lr
 option provider = "go.mondoo.com/mql/providers/bitwarden"
-option go_package = "go.mondoo.com/mql/v13/providers/bitwarden/resources"
+option go_package = "go.mondoo.com/mql/providers/bitwarden/resources"
 
 // Bitwarden organization
 //
@@ -282,10 +282,10 @@ import (
     "errors"
     "os"
 
-    "go.mondoo.com/mql/v13/providers/bitwarden/openapi"
-    "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-    "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-    "go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+    "go.mondoo.com/mql/providers/bitwarden/openapi"
+    "go.mondoo.com/mql/providers-sdk/v1/inventory"
+    "go.mondoo.com/mql/providers-sdk/v1/plugin"
+    "go.mondoo.com/mql/providers-sdk/v1/vault"
     "golang.org/x/oauth2/clientcredentials"
 )
 

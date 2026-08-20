@@ -4,8 +4,8 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/ipinfo/provider"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/ipinfo/provider"
 )
 
 var Config = plugin.Provider{

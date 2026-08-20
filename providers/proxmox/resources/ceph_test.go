@@ -6,7 +6,7 @@ package resources
 import (
 	"testing"
 
-	"go.mondoo.com/mql/v13/providers/proxmox/connection"
+	"go.mondoo.com/mql/providers/proxmox/connection"
 )
 
 func TestCephDataPools(t *testing.T) {

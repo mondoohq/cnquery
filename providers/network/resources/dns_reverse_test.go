@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/miekg/dns"
-	"go.mondoo.com/mql/v13/providers/network/resources/dnsshake"
+	"go.mondoo.com/mql/providers/network/resources/dnsshake"
 )
 
 // TestAddressesFromParams covers the params-derived path still used by the

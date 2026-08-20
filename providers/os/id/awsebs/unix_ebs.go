@@ -11,7 +11,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/id/hostname"
+	"go.mondoo.com/mql/providers/os/id/hostname"
 )
 
 // Compiled once: applied to every line of the metadata and lsblk output.

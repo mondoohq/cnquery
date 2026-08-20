@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
+	"go.mondoo.com/mql/providers/activedirectory/connection"
 )
 
 // aceEntry represents a parsed ACCESS_ALLOWED_ACE from a Windows

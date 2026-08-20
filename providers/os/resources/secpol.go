@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
-	"go.mondoo.com/mql/v13/providers/os/resources/windows"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 type mqlSecpolInternal struct {

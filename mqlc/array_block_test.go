@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/mqlc"
 )
 
 // TestCompiler_ArrayLiteralWithBlock covers an array literal whose elements are

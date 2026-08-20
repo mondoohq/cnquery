@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/sbom"
+	"go.mondoo.com/mql/sbom"
 )
 
 // graphBom builds a tiny two-package SBOM with a dependency edge and a dev-scoped

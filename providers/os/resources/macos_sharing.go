@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // systemProfilerSharingCmd populates the unified Sharing panel view —

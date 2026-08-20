@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"time"
 
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/sortx"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/sortx"
 )
 
 func intKeys(m map[int]any) []int {

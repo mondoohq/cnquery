@@ -6,7 +6,7 @@ package resources
 import (
 	"encoding/json"
 	"errors"
-	"go.mondoo.com/mql/v13/providers/artifactory/connection"
+	"go.mondoo.com/mql/providers/artifactory/connection"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,7 +15,7 @@ import (
 	"sync"
 	"testing"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // These predicates are what a policy reads. Each one turns several raw API

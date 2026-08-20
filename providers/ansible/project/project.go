@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.mondoo.com/mql/v13/providers/ansible/play"
+	"go.mondoo.com/mql/providers/ansible/play"
 	"gopkg.in/yaml.v3"
 )
 

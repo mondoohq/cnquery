@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/activedirectory/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // pkiObjectClass picks the most specific objectClass value from a multi-valued

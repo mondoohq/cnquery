@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"go.mondoo.com/mql/v13/providers/os/resources/languages"
-	"go.mondoo.com/mql/v13/providers/os/resources/languages/php"
+	"go.mondoo.com/mql/providers/os/resources/languages"
+	"go.mondoo.com/mql/providers/os/resources/languages/php"
 )
 
 var (

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/vercel/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/vercel/connection"
+	"go.mondoo.com/mql/types"
 )
 
 func (r *mqlVercel) id() (string, error) {

@@ -8,10 +8,10 @@ import (
 	"maps"
 
 	"github.com/digitalocean/godo"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/digitalocean/connection"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/digitalocean/connection"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // Discover expands a DigitalOcean account connection into the specific

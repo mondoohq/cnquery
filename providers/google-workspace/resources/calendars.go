@@ -4,8 +4,8 @@
 package resources
 
 import (
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/google-workspace/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/google-workspace/connection"
 	"google.golang.org/api/calendar/v3"
 )
 

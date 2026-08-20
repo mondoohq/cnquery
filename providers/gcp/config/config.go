@@ -4,12 +4,12 @@
 package config
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/gcp/connection"
-	"go.mondoo.com/mql/v13/providers/gcp/connection/gcpinstancesnapshot"
-	"go.mondoo.com/mql/v13/providers/gcp/provider"
-	"go.mondoo.com/mql/v13/providers/gcp/resources"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/gcp/connection"
+	"go.mondoo.com/mql/providers/gcp/connection/gcpinstancesnapshot"
+	"go.mondoo.com/mql/providers/gcp/provider"
+	"go.mondoo.com/mql/providers/gcp/resources"
 )
 
 var Config = plugin.Provider{

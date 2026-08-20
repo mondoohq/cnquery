@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers/artifactory/connection"
+	"go.mondoo.com/mql/providers/artifactory/connection"
 )
 
 // SystemInfo identifies the instance a scan connected to.

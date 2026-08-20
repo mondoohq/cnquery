@@ -4,7 +4,7 @@
 package resources
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	discoveryv1 "k8s.io/api/discovery/v1"
 )
 

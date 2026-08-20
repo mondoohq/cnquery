@@ -9,12 +9,12 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/packages"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/packages"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 var PKG_IDENTIFIER = regexp.MustCompile(`^(.*):\/\/(.*)\/(.*)\/(.*)$`)

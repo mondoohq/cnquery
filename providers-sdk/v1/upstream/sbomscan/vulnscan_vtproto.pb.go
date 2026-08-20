@@ -7,8 +7,8 @@ package sbomscan
 import (
 	fmt "fmt"
 	protohelpers "github.com/planetscale/vtprotobuf/protohelpers"
-	fex "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/fex"
-	sbom "go.mondoo.com/mql/v13/sbom"
+	fex "go.mondoo.com/mql/providers-sdk/v1/upstream/fex"
+	sbom "go.mondoo.com/mql/sbom"
 	proto "google.golang.org/protobuf/proto"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"

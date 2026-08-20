@@ -9,9 +9,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
-	"go.mondoo.com/mql/v13/providers/os/resources/windows"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 type mqlWindowsTpmInternal struct {

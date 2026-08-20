@@ -8,11 +8,11 @@ import (
 	"fmt"
 
 	"github.com/auth0/go-auth0/management"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/auth0/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/auth0/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // users lists the accounts held in the tenant's database connections.

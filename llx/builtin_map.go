@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/types"
 )
 
 // mapFunctions are all the handlers for builtin array methods

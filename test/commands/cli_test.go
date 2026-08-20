@@ -14,7 +14,7 @@ import (
 
 	"github.com/google/go-cmdtest"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/test"
+	"go.mondoo.com/mql/test"
 )
 
 var once sync.Once

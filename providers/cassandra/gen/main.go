@@ -4,8 +4,8 @@
 package main
 
 import (
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin/gen"
-	"go.mondoo.com/mql/v13/providers/cassandra/config"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin/gen"
+	"go.mondoo.com/mql/providers/cassandra/config"
 )
 
 func main() {

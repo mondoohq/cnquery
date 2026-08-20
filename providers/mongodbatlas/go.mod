@@ -1,12 +1,12 @@
-module go.mondoo.com/mql/v13/providers/mongodbatlas
+module go.mondoo.com/mql/providers/mongodbatlas
 
-replace go.mondoo.com/mql/v13 => ../..
+replace go.mondoo.com/mql => ../..
 
 go 1.26.6
 
 require (
 	github.com/stretchr/testify v1.12.0
-	go.mondoo.com/mql/v13 v13.35.0
+	go.mondoo.com/mql v0.0.0-00010101000000-000000000000
 	go.mongodb.org/atlas-sdk/v20250312023 v20250312023.1.0
 )
 

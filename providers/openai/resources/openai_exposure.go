@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/openai/openai-go/v3"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 )
 
 // certificateArgs builds the resource args for an openai.certificate. The same

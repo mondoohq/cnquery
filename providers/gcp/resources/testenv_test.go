@@ -9,12 +9,12 @@ import (
 	"net/url"
 	"testing"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/gcp/connection"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/gcp/connection"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 // testProjectId is the project every fixture in this package is scoped to.

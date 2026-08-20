@@ -15,7 +15,7 @@ import (
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/types"
-	"go.mondoo.com/mql/v13/mrn"
+	"go.mondoo.com/mql/mrn"
 )
 
 const (

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 option provider = "go.mondoo.com/mql/providers/mistral"
-option go_package = "go.mondoo.com/mql/v13/providers/mistral/resources"
+option go_package = "go.mondoo.com/mql/providers/mistral/resources"
 
 // Mistral AI workspace
 //

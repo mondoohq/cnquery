@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"testing"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/types"
 )
 
 // The checksum pass runs over every row of every scan, on the client (C0

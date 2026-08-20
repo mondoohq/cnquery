@@ -7,9 +7,9 @@ import (
 	"sort"
 	"strconv"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/opensearch/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/opensearch/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // osRole is one role from the security roles API.

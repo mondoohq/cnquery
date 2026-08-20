@@ -10,8 +10,8 @@ import (
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers/activedirectory/connection"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers/activedirectory/connection"
 )
 
 // gpLinkEntry represents a single parsed entry from an AD gPLink attribute.

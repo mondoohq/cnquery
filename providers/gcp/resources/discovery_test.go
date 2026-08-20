@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	inventoryv1 "go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	inventoryv1 "go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

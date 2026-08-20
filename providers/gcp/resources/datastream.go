@@ -10,11 +10,11 @@ import (
 
 	datastream "cloud.google.com/go/datastream/apiv1"
 	"cloud.google.com/go/datastream/apiv1/datastreampb"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/gcp/connection"
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/gcp/connection"
+	"go.mondoo.com/mql/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )

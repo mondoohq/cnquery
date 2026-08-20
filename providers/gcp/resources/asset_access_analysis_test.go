@@ -8,7 +8,7 @@ import (
 
 	"cloud.google.com/go/asset/apiv1/assetpb"
 	"cloud.google.com/go/iam/apiv1/iampb"
-	"go.mondoo.com/mql/v13/llx"
+	"go.mondoo.com/mql/llx"
 	expr "google.golang.org/genproto/googleapis/type/expr"
 )
 

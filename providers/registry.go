@@ -15,7 +15,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/utils/httpx"
+	"go.mondoo.com/mql/utils/httpx"
 	"golang.org/x/sync/singleflight"
 )
 

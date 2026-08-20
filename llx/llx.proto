@@ -5,7 +5,7 @@ syntax = "proto3";
 
 package mql.llx;
 
-option go_package = "go.mondoo.com/mql/v13/llx";
+option go_package = "go.mondoo.com/mql/llx";
 
 message Primitive {
   string type = 1;

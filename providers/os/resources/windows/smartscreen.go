@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
 
 // Microsoft Defender SmartScreen is configured entirely through policy registry

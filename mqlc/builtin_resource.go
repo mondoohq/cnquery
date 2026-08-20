@@ -8,11 +8,11 @@ import (
 	"strconv"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc/parser"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc/parser"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, call *parser.Call) (types.Type, error) {

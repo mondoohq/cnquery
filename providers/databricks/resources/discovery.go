@@ -9,10 +9,10 @@ import (
 
 	databricks "github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/databricks/connection"
-	"go.mondoo.com/mql/v13/utils/stringx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/databricks/connection"
+	"go.mondoo.com/mql/utils/stringx"
 )
 
 // Discover enumerates the account's workspaces and emits each as a child asset

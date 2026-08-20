@@ -14,10 +14,10 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
+	"go.mondoo.com/mql/utils/multierr"
 )
 
 const defaultIMDSBaseURL = "http://169.254.169.254"

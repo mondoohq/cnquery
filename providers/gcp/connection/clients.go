@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/vault"
+	"go.mondoo.com/mql/providers-sdk/v1/vault"
 	"golang.org/x/oauth2"
 	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/option"

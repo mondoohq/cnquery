@@ -14,14 +14,14 @@ import (
 	"strings"
 
 	"github.com/miekg/dns"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/util/convert"
-	"go.mondoo.com/mql/v13/providers/network/connection"
-	"go.mondoo.com/mql/v13/providers/network/resources/dnsshake"
-	"go.mondoo.com/mql/v13/providers/network/resources/domain"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/sortx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
+	"go.mondoo.com/mql/providers/network/connection"
+	"go.mondoo.com/mql/providers/network/resources/dnsshake"
+	"go.mondoo.com/mql/providers/network/resources/domain"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/sortx"
 )
 
 func (d *mqlDomainName) id() (string, error) {

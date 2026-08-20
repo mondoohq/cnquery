@@ -682,7 +682,7 @@ const file_vault_proto_rawDesc = "" +
 	"\x05About\x12\x1b.cnquery.providers.v1.Empty\x1a\x1f.cnquery.providers.v1.VaultInfo\x12C\n" +
 	"\x03Get\x12\x1e.cnquery.providers.v1.SecretID\x1a\x1c.cnquery.providers.v1.Secret\x12C\n" +
 	"\x03Set\x12\x1c.cnquery.providers.v1.Secret\x1a\x1e.cnquery.providers.v1.SecretID\x12E\n" +
-	"\x06Delete\x12\x1e.cnquery.providers.v1.SecretID\x1a\x1b.cnquery.providers.v1.EmptyB.Z,go.mondoo.com/mql/v13/providers-sdk/v1/vaultb\x06proto3"
+	"\x06Delete\x12\x1e.cnquery.providers.v1.SecretID\x1a\x1b.cnquery.providers.v1.EmptyB*Z(go.mondoo.com/mql/providers-sdk/v1/vaultb\x06proto3"
 
 var (
 	file_vault_proto_rawDescOnce sync.Once

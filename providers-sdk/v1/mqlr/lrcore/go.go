@@ -13,8 +13,8 @@ import (
 	"strings"
 	"text/template"
 
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/multierr"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/multierr"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -122,9 +122,9 @@ package resources
 import (
 	"errors"%s
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/types"%s
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/types"%s
 )
 `
 

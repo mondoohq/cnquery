@@ -15,12 +15,12 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	"go.mondoo.com/mql/v13/providers/os/connection/ssh/cat"
-	"go.mondoo.com/mql/v13/providers/os/registry"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/ssh/cat"
+	"go.mondoo.com/mql/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
 
 type LocalConnection struct {

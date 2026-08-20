@@ -5,8 +5,8 @@ package resources
 
 import (
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/team"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // id returns a cache key composed of the owning member's ID and the session

@@ -5,8 +5,8 @@ package resources
 
 import (
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 // mockConn implements shared.Connection with only the Asset() method populated.

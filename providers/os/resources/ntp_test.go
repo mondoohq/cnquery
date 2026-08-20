@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/providers-sdk/v1/testutils"
 )
 
 func TestResource_NtpConf(t *testing.T) {

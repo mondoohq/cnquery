@@ -31,7 +31,7 @@ builds:
       - -tags="production netgo"
     ldflags:
       - "-extldflags=-static"
-      - -s -w -X go.mondoo.com/mql/v13.Version={{.Version}} -X go.mondoo.com/mql/v13.Build={{.ShortCommit}} -X go.mondoo.com/mql/v13.Date={{.Date}}
+      - -s -w -X go.mondoo.com/mql.Version={{.Version}} -X go.mondoo.com/mql.Build={{.ShortCommit}} -X go.mondoo.com/mql.Date={{.Date}}
   - id: macos
     main: ./apps/mql/mql.go
     binary: mql
@@ -43,7 +43,7 @@ builds:
     flags: -tags production
     ldflags:
       # clang + macos does not support static: - -extldflags "-static"
-      - -s -w -X go.mondoo.com/mql/v13.Version={{.Version}} -X go.mondoo.com/mql/v13.Build={{.ShortCommit}} -X go.mondoo.com/mql/v13.Date={{.Date}}
+      - -s -w -X go.mondoo.com/mql.Version={{.Version}} -X go.mondoo.com/mql.Build={{.ShortCommit}} -X go.mondoo.com/mql.Date={{.Date}}
     hooks:
       post:
         - cmd: /tmp/quill sign-and-notarize "{{ .Path }}" -vv || true
@@ -61,7 +61,7 @@ builds:
     flags: -tags production -buildmode exe
     ldflags:
       - "-extldflags -static"
-      - -s -w -X go.mondoo.com/mql/v13.Version={{.Version}} -X go.mondoo.com/mql/v13.Build={{.ShortCommit}} -X go.mondoo.com/mql/v13.Date={{.Date}}
+      - -s -w -X go.mondoo.com/mql.Version={{.Version}} -X go.mondoo.com/mql.Build={{.ShortCommit}} -X go.mondoo.com/mql.Date={{.Date}}
     hooks:
       post:
         - cmd: jsign --storetype TRUSTEDSIGNING --keystore {{ .Env.TSIGN_AZURE_ENDPOINT }} --storepass {{ .Env.TSIGN_ACCESS_TOKEN }} --alias {{ .Env.TSIGN_ACCOUNT_NAME }}/{{ .Env.TSIGN_CERT_PROFILE_NAME }} '{{ .Path }}'

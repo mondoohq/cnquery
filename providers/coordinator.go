@@ -15,12 +15,12 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/v13/logger"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/recording"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
-	coreconf "go.mondoo.com/mql/v13/providers/core/config"
+	"go.mondoo.com/mql/logger"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/recording"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
+	coreconf "go.mondoo.com/mql/providers/core/config"
 )
 
 //go:generate mockgen -source=./coordinator.go -destination=./mock_coordinator.go -package=providers

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/resources/nfs"
+	"go.mondoo.com/mql/providers/os/resources/nfs"
 )
 
 func TestLoadExports_LinuxIncludesExportsDFragments(t *testing.T) {

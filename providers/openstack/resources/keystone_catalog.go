@@ -10,8 +10,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/regions"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/services"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/trusts"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // resolveUser resolves a Keystone user by ID into a typed reference, marking

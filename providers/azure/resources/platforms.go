@@ -3,7 +3,7 @@
 
 package resources
 
-import "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+import "go.mondoo.com/mql/providers-sdk/v1/plugin"
 
 // Platforms is the static catalog of platforms the Azure provider can emit
 // during discovery: the subscription root plus one entry per discoverable Azure

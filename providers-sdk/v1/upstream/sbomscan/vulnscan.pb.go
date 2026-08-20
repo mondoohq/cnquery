@@ -21,8 +21,8 @@
 package sbomscan
 
 import (
-	fex "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/fex"
-	sbom "go.mondoo.com/mql/v13/sbom"
+	fex "go.mondoo.com/mql/providers-sdk/v1/upstream/fex"
+	sbom "go.mondoo.com/mql/sbom"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -150,7 +150,7 @@ const file_vulnscan_proto_rawDesc = "" +
 	"\x18ScanUploadedSbomResponse\x123\n" +
 	"\x03vex\x18\x02 \x03(\v2!.mql.fex.v1.VulnerabilityExchangeR\x03vex2}\n" +
 	"\x10ExtendedVulnMgmt\x12i\n" +
-	"\x10ScanUploadedSbom\x12(.mql.sbomscan.v1.ScanUploadedSbomRequest\x1a).mql.sbomscan.v1.ScanUploadedSbomResponse\"\x00B:Z8go.mondoo.com/mql/v13/providers-sdk/v1/upstream/sbomscanb\x06proto3"
+	"\x10ScanUploadedSbom\x12(.mql.sbomscan.v1.ScanUploadedSbomRequest\x1a).mql.sbomscan.v1.ScanUploadedSbomResponse\"\x00B6Z4go.mondoo.com/mql/providers-sdk/v1/upstream/sbomscanb\x06proto3"
 
 var (
 	file_vulnscan_proto_rawDescOnce sync.Once

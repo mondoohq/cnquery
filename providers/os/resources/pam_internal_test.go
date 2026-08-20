@@ -10,12 +10,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/os/connection/mock"
-	"go.mondoo.com/mql/v13/providers/os/resources/filesfind"
-	"go.mondoo.com/mql/v13/utils/syncx"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/providers/os/resources/filesfind"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 // newPamRuntimeWithFiles builds a runtime backed by a mock filesystem whose

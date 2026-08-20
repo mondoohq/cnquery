@@ -12,8 +12,8 @@ import (
 	observability "github.com/stackitcloud/stackit-sdk-go/services/observability/v1api"
 	postgresflex "github.com/stackitcloud/stackit-sdk-go/services/postgresflex/v2api"
 	sqlserverflex "github.com/stackitcloud/stackit-sdk-go/services/sqlserverflex/v2api"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // ------------------------- Postgres Flex -------------------------

@@ -9,7 +9,7 @@ import (
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 // A panic in a provider accessor is unrecoverable: the executor evaluates query

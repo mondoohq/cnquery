@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/types"
 )
 
 func TestSplitCommaList(t *testing.T) {

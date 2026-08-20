@@ -7,7 +7,7 @@ import (
 	"errors"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // Compartment-shaped helpers used by listers. The fan-out itself lives in

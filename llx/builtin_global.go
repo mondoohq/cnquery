@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.mondoo.com/mql/v13/types"
+	"go.mondoo.com/mql/types"
 )
 
 // handleGlobal takes a global function and returns a handler if found.

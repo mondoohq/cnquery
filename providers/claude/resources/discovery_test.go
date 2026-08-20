@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/v13/providers/claude/connection"
+	"go.mondoo.com/mql/providers/claude/connection"
 )
 
 func TestHandleTargets(t *testing.T) {

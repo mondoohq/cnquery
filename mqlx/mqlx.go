@@ -43,10 +43,10 @@ import (
 	"sync"
 
 	"github.com/cockroachdb/errors"
-	mql "go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/providers"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/resources"
+	mql "go.mondoo.com/mql"
+	"go.mondoo.com/mql/providers"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
 // Env is the environment for compiling and evaluating MQL. It carries the
