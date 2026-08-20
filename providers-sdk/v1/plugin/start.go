@@ -39,6 +39,17 @@ type Provider struct {
 	// hardcoding name/family/kind/runtime inline.
 	Platforms []*PlatformInfo `json:",omitempty"`
 	Maturity  string          `json:",omitempty"`
+	// DefaultParallelism is how many of this provider's assets may be scanned
+	// concurrently when the user did not ask for a specific number. Zero (the
+	// default) means the provider has not opted in and its assets are scanned
+	// one at a time.
+	//
+	// Declare the number the provider's backend can sustain -- its API rate
+	// limits, its throttling behavior, the blast radius of hitting one account
+	// or cluster from several assets at once. The scanner caps whatever is
+	// declared here by the CPUs available on the machine, so this is a
+	// statement about the target, not about the host running the scan.
+	DefaultParallelism int `json:",omitempty"`
 }
 
 // PlatformInfo is the static, pre-declarable description of one platform a

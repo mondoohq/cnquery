@@ -20,6 +20,9 @@ var Config = plugin.Provider{
 		provider.ConnectionType,
 		string(gcpinstancesnapshot.SnapshotConnectionType),
 	},
+	// Quotas are per project, and an organization scan spreads its calls over
+	// separate projects.
+	DefaultParallelism: 8,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "gcp",

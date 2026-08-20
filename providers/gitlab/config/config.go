@@ -18,7 +18,11 @@ var Config = plugin.Provider{
 		provider.GitlabGroupConnection,
 		provider.GitlabProjectConnection,
 	},
-	Platforms: provider.Platforms,
+	// Held low by gitlab.com's request rate limit. The IaC targets clone each
+	// repository during connect, which the scanner still does one at a time, so
+	// a higher number would not buy much there either.
+	DefaultParallelism: 4,
+	Platforms:          provider.Platforms,
 	Connectors: []plugin.Connector{
 		{
 			Name:  "gitlab",
