@@ -197,7 +197,9 @@ func GetVolumeInfoForInstance(instanceinfo *types.Instance) *string {
 		}
 	}
 
-	// No RootDeviceName to match on. A single EBS volume is unambiguous.
+	// Either the instance reported no RootDeviceName, or it named a device
+	// that carries no EBS volume. A single EBS volume is unambiguous in
+	// both cases.
 	if len(ebsMappings) == 1 {
 		return ebsMappings[0].Ebs.VolumeId
 	}
