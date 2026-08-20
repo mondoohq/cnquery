@@ -133,6 +133,7 @@ aws.apigateway.restapi.stages 11.15.2
 aws.apigateway.restapi.tags 11.15.2
 aws.apigateway.restapi.version 11.15.2
 aws.apigateway.stage 11.15.2
+aws.apigateway.stage.accessLogSettings 13.53.4
 aws.apigateway.stage.arn 11.15.2
 aws.apigateway.stage.cacheClusterEnabled 11.15.2
 aws.apigateway.stage.cacheClusterSize 11.15.2

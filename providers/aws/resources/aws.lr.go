@@ -21527,6 +21527,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigateway.stage.cacheDataEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetCacheDataEncrypted()).ToDataRes(types.Bool)
 	},
+	"aws.apigateway.stage.accessLogSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStage).GetAccessLogSettings()).ToDataRes(types.Dict)
+	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetClientCertificateId()).ToDataRes(types.String)
 	},
@@ -60634,6 +60637,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.apigateway.stage.cacheDataEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayStage).CacheDataEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.stage.accessLogSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStage).AccessLogSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -146103,6 +146110,7 @@ type mqlAwsApigatewayStage struct {
 	CacheClusterSize     plugin.TValue[string]
 	CacheClusterStatus   plugin.TValue[string]
 	CacheDataEncrypted   plugin.TValue[bool]
+	AccessLogSettings    plugin.TValue[any]
 	ClientCertificateId  plugin.TValue[string]
 	WebAcl               plugin.TValue[*mqlAwsWafAcl]
 	CreatedAt            plugin.TValue[*time.Time]
@@ -146187,6 +146195,10 @@ func (c *mqlAwsApigatewayStage) GetCacheClusterStatus() *plugin.TValue[string] {
 
 func (c *mqlAwsApigatewayStage) GetCacheDataEncrypted() *plugin.TValue[bool] {
 	return &c.CacheDataEncrypted
+}
+
+func (c *mqlAwsApigatewayStage) GetAccessLogSettings() *plugin.TValue[any] {
+	return &c.AccessLogSettings
 }
 
 func (c *mqlAwsApigatewayStage) GetClientCertificateId() *plugin.TValue[string] {
