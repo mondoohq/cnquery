@@ -1,7 +1,12 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package config
+// Package awsssm loads mql/cnspec configuration from AWS SSM Parameter Store
+// for config paths prefixed with "aws-ssm-ps://". It depends on the AWS SDK,
+// so it is a separate package that registers itself with cli/config from
+// init(); blank-import it from a binary to enable AWS SSM config loading. This
+// keeps the AWS SDK out of cli/config's import graph.
+package awsssm
 
 import (
 	"context"
@@ -11,16 +16,21 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cockroachdb/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	cliconfig "go.mondoo.com/mql/v13/cli/config"
 )
 
 const AWS_SSM_PARAMETERSTORE_PREFIX = "aws-ssm-ps://"
 
-// loads the configuration from aws ssm parameter store
+func init() {
+	cliconfig.RegisterRemoteConfigLoader(AWS_SSM_PARAMETERSTORE_PREFIX, loadAwsSSMParameterStore)
+}
+
+// loadAwsSSMParameterStore loads the configuration from aws ssm parameter store
 func loadAwsSSMParameterStore(key string) error {
 	viper.RemoteConfig = &awsSSMParamConfigFactory{}
 	viper.SupportedRemoteProviders = []string{"aws-ssm-ps"}
@@ -48,7 +58,7 @@ func (a *awsSSMParamConfigFactory) Get(rp viper.RemoteProvider) (io.Reader, erro
 	}
 	ctx := context.Background()
 
-	cfg, err := config.LoadDefaultConfig(ctx)
+	cfg, err := awsconfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, err
 	}

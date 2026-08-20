@@ -17,6 +17,17 @@ import (
 	// self-register with the vault registry. The in-memory backend is always
 	// available via the SDK.
 	_ "go.mondoo.com/mql/v13/vault/register"
+
+	// Link in the cloud token providers (AWS, GCP, Azure, GitHub) so they
+	// self-register for external token exchange (workload identity
+	// federation). They depend on cloud SDKs, so upstream does not import
+	// them directly; the binary opts in here.
+	_ "go.mondoo.com/mql/v13/providers-sdk/v1/upstream/tokenauth"
+
+	// Link in the AWS SSM Parameter Store config loader so "aws-ssm-ps://"
+	// config paths work. It depends on the AWS SDK, so cli/config does not
+	// import it directly; the binary opts in here.
+	_ "go.mondoo.com/mql/v13/cli/config/awsssm"
 )
 
 func main() {

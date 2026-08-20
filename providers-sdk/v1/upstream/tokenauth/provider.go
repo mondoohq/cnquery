@@ -4,15 +4,18 @@
 package tokenauth
 
 import (
-	"context"
 	"fmt"
 	"strings"
+
+	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream"
 )
 
 // TokenProvider fetches an identity token from a cloud provider.
-type TokenProvider interface {
-	GetToken(ctx context.Context, audience string) (string, error)
-}
+//
+// It is an alias for upstream.TokenProvider: this package implements the
+// cloud-specific providers (which pull in cloud SDKs) and registers them with
+// upstream from init(), so upstream itself stays free of those dependencies.
+type TokenProvider = upstream.TokenProvider
 
 // providers maps issuer URI substrings to their TokenProvider implementation.
 var providers = map[string]TokenProvider{
@@ -21,6 +24,13 @@ var providers = map[string]TokenProvider{
 	"token.actions.githubusercontent.com": &GitHubTokenProvider{},
 	"login.microsoftonline.com":           &AzureTokenProvider{},
 	"sts.windows.net":                     &AzureTokenProvider{},
+}
+
+// init registers Resolve with upstream so external token exchange can find the
+// cloud token providers without upstream importing this package (and its cloud
+// SDKs). Binaries enable token exchange by blank-importing this package.
+func init() {
+	upstream.RegisterTokenResolver(Resolve)
 }
 
 // Resolve returns the TokenProvider matching the given issuer URI.

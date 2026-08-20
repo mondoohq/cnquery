@@ -15,7 +15,6 @@ import (
 	"os"
 	"time"
 
-	"go.mondoo.com/mql/v13/providers-sdk/v1/upstream/tokenauth"
 	"go.mondoo.com/mql/v13/providers/os/connection/ssh/signers"
 	"go.mondoo.com/ranger-rpc"
 	"golang.org/x/crypto/ssh"
@@ -66,7 +65,7 @@ func ExchangeExternalToken(apiEndpoint, audience, issuerURI, jwtToken string, to
 
 	if jwtToken == "" {
 		// Try to resolve a token provider from the issuer URI
-		provider, err := tokenauth.Resolve(issuerURI)
+		provider, err := resolveTokenProvider(issuerURI)
 		if err != nil {
 			return nil, err
 		}
