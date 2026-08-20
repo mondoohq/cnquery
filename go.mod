@@ -125,7 +125,6 @@ require (
 require (
 	github.com/containerd/containerd v1.7.34
 	github.com/containerd/containerd/api v1.10.0
-	github.com/containerd/platforms v1.0.0-rc.2
 	github.com/moby/moby/api v1.55.0
 	github.com/moby/moby/client v0.5.1
 	github.com/opencontainers/go-digest v1.0.0
