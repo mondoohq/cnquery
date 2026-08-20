@@ -27,9 +27,9 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	tarconn "go.mondoo.com/mql/v13/providers/os/connection/tar"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	tarconn "go.mondoo.com/mql/providers/os/connection/tar"
 )
 
 func TestRuntimeImageConnectionExportsContainerdImage(t *testing.T) {
