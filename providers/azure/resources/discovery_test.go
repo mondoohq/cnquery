@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"bytes"
 	"errors"
 	"slices"
 	"strings"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -21,9 +24,7 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoverySubscriptions,
 		DiscoveryInstancesApi,
 		DiscoverySqlServers,
-		DiscoveryPostgresServers,
 		DiscoveryPostgresFlexibleServers,
-		DiscoveryMySqlServers,
 		DiscoveryMySqlFlexibleServers,
 		DiscoveryAksClusters,
 		DiscoveryAppServiceApps,
@@ -55,9 +56,7 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoverySubscriptions,
 		DiscoveryInstancesApi,
 		DiscoverySqlServers,
-		DiscoveryPostgresServers,
 		DiscoveryPostgresFlexibleServers,
-		DiscoveryMySqlServers,
 		DiscoveryMySqlFlexibleServers,
 		DiscoveryAksClusters,
 		DiscoveryAppServiceApps,
@@ -111,13 +110,13 @@ func TestGetDiscoveryTargets(t *testing.T) {
 		},
 		{
 			name:    "auto with extras",
-			targets: []string{"auto", "postgres-servers", "keyvaults-vaults"},
-			want:    append(slices.Clone(Auto), DiscoveryPostgresServers, DiscoveryKeyVaults),
+			targets: []string{"auto", "cosmosdb", "keyvaults-vaults"},
+			want:    append(slices.Clone(Auto), DiscoveryCosmosDb, DiscoveryKeyVaults),
 		},
 		{
 			name:    "explicit targets",
-			targets: []string{"postgres-servers", "keyvaults-vaults", "instances"},
-			want:    []string{DiscoveryPostgresServers, DiscoveryKeyVaults, DiscoveryInstances},
+			targets: []string{"cosmosdb", "keyvaults-vaults", "instances"},
+			want:    []string{DiscoveryCosmosDb, DiscoveryKeyVaults, DiscoveryInstances},
 		},
 	}
 
@@ -420,4 +419,80 @@ func TestGetDiscoveryTargetsSurvivesCloning(t *testing.T) {
 		"a subscription must resolve the same targets as the tenant it came from")
 	require.Contains(t, getDiscoveryTargets(child), DiscoveryKeyVaults,
 		"auto must still expand to the API resource targets after cloning")
+}
+
+// The retired Single Server targets are still accepted so an existing inventory
+// keeps parsing, but nothing discovers them any more. A target that matches no
+// resource is indistinguishable from a successful scan of an empty estate, so
+// the warning is the only signal the user gets -- assert it actually fires.
+func TestRetiredDiscoveryTargetsWarn(t *testing.T) {
+	cases := []struct {
+		name        string
+		targets     []string
+		wantWarn    bool
+		wantMatches []string
+	}{
+		{
+			name:        "retired mysql target warns and names its replacement",
+			targets:     []string{"mysql-servers"},
+			wantWarn:    true,
+			wantMatches: []string{"mysql-servers", DiscoveryMySqlFlexibleServers},
+		},
+		{
+			name:        "retired postgres target warns and names its replacement",
+			targets:     []string{"postgres-servers"},
+			wantWarn:    true,
+			wantMatches: []string{"postgres-servers", DiscoveryPostgresFlexibleServers},
+		},
+		{
+			name:     "current targets stay quiet",
+			targets:  []string{DiscoveryMySqlFlexibleServers, DiscoveryPostgresFlexibleServers, DiscoveryKeyVaults},
+			wantWarn: false,
+		},
+		{
+			name:     "auto stays quiet",
+			targets:  []string{DiscoveryAuto},
+			wantWarn: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			original := log.Logger
+			log.Logger = zerolog.New(&buf)
+			defer func() { log.Logger = original }()
+
+			getDiscoveryTargets(&inventory.Config{
+				Discover: &inventory.Discovery{Targets: tc.targets},
+			})
+
+			out := buf.String()
+			if !tc.wantWarn {
+				require.NotContains(t, out, "retired")
+				return
+			}
+			require.Contains(t, out, "retired")
+			for _, want := range tc.wantMatches {
+				require.Contains(t, out, want)
+			}
+		})
+	}
+}
+
+// The retired targets must be gone from the lists that drive an unqualified
+// scan, or "auto" keeps asking ARM for resource types that cannot exist.
+func TestRetiredTargetsAreNotDiscovered(t *testing.T) {
+	for retired := range retiredDiscoveryTargets {
+		require.NotContains(t, AllAPIResources, retired)
+		require.NotContains(t, Auto, retired)
+		require.NotContains(t, All, retired)
+		for _, spec := range genericDiscoverySpecs {
+			require.NotEqual(t, retired, spec.discoveryTarget)
+		}
+	}
+	for _, spec := range genericDiscoverySpecs {
+		require.NotEqual(t, "Microsoft.DBforMySQL/servers", spec.armType)
+		require.NotEqual(t, "Microsoft.DBforPostgreSQL/servers", spec.armType)
+	}
 }
