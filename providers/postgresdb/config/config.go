@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "postgresdb",
 	ID:              "go.mondoo.com/mql/v13/providers/postgresdb",
-	Version:         "13.0.3",
+	Version:         "13.0.4",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

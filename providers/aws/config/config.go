@@ -15,7 +15,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "aws",
 	ID:              "go.mondoo.com/cnquery/v9/providers/aws",
-	Version:         "13.53.3",
+	Version:         "13.53.4",
 	ConnectionTypes: []string{provider.DefaultConnectionType, string(awsec2ebsconn.EBSConnectionType)},
 	// Throttling is per service and per region, and an organization scan spreads
 	// its calls over separate accounts, so the limits are rarely the binding

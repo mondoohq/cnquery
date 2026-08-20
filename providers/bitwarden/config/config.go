@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "bitwarden",
 	ID:              "go.mondoo.com/mql/providers/bitwarden",
-	Version:         "13.0.0",
+	Version:         "13.0.1",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{

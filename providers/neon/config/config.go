@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "neon",
 	ID:              "go.mondoo.com/mql/providers/neon",
-	Version:         "13.1.0",
+	Version:         "13.1.1",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

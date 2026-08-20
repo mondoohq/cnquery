@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "keycloak",
 	ID:              "go.mondoo.com/mql/providers/keycloak",
-	Version:         "13.0.0",
+	Version:         "13.0.1",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
 	Connectors: []plugin.Connector{

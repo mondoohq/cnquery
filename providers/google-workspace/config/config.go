@@ -12,7 +12,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "google-workspace",
 	ID:              "go.mondoo.com/cnquery/v9/providers/google-workspace",
-	Version:         "13.3.4",
+	Version:         "13.3.5",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       provider.Platforms,
 	Connectors: []plugin.Connector{

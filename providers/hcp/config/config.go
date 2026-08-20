@@ -13,7 +13,7 @@ import (
 var Config = plugin.Provider{
 	Name:      "hcp",
 	ID:        "go.mondoo.com/mql/providers/hcp",
-	Version:   "13.0.5",
+	Version:   "13.0.6",
 	Platforms: connection.Platforms,
 	ConnectionTypes: []string{
 		provider.DefaultConnectionType,

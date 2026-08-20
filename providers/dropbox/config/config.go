@@ -14,7 +14,7 @@ import (
 var Config = plugin.Provider{
 	Name:            "dropbox",
 	ID:              "go.mondoo.com/mql/providers/dropbox",
-	Version:         "13.0.1",
+	Version:         "13.0.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Connectors: []plugin.Connector{
 		{
