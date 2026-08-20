@@ -638,6 +638,7 @@ func (r *mqlClaude) userProfiles() ([]interface{}, error) {
 			"name":         llx.StringData(p.Name),
 			"externalId":   llx.StringData(p.ExternalID),
 			"relationship": llx.StringData(string(p.Relationship)),
+			"accessType":   claudeAccessType(p.AccessType),
 			"createdAt":    llx.TimeData(p.CreatedAt),
 			"updatedAt":    llx.TimeData(p.UpdatedAt),
 			"type":         llx.StringData(string(p.Type)),
@@ -652,4 +653,15 @@ func (r *mqlClaude) userProfiles() ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+// claudeAccessType maps a profile's access type into MQL data, reporting null
+// when the API omits it. The field is optional on the profile payload, and an
+// empty string would read as a real access type that is neither `application`
+// nor `passthrough`.
+func claudeAccessType(t anthropic.BetaUserProfileAccessType) *llx.RawData {
+	if t == "" {
+		return llx.NilData
+	}
+	return llx.StringData(string(t))
 }

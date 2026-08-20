@@ -208,6 +208,7 @@ claude.skill.type 13.0.0
 claude.skill.updatedAt 13.0.0
 claude.skills 13.0.0
 claude.userProfile 13.0.0
+claude.userProfile.accessType 13.1.3
 claude.userProfile.createdAt 13.0.0
 claude.userProfile.externalId 13.0.0
 claude.userProfile.id 13.0.0
