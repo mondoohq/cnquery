@@ -16,7 +16,6 @@ import (
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"go.mondoo.com/mql/cli/config"
 	"go.mondoo.com/mql/logger"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -369,13 +368,12 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 	// Without a binary the exec below can only fail with an obscure
 	// fork/exec error, so catch schema-only installations here. With
 	// auto-update enabled, TryProviderUpdate above already completed such an
-	// installation, so this only triggers when auto-update is off.
-	// The disk is probed instead of trusting provider.HasBinary: that field
-	// is only populated by readProviderDir, so a Provider handed to the
-	// coordinator any other way (e.g. SetProviders) reads false even when
-	// the binary exists, and probing also reflects installs that happened
-	// after the provider list was cached.
-	if !config.ProbeFile(provider.binPath()) {
+	// installation, so this only fires when auto-update is off or the
+	// completing download failed (logged right above).
+	if !provider.HasBinary {
+		if update.Enabled {
+			return nil, errors.New("provider '" + provider.Name + "' is installed schema-only and completing its installation failed")
+		}
 		return nil, errors.New("provider '" + provider.Name + "' is installed schema-only and has no binary to run; install it fully or enable auto-update")
 	}
 

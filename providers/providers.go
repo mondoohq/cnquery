@@ -1051,10 +1051,8 @@ func TryProviderUpdate(provider *Provider, update UpdateProvidersConfig) (*Provi
 	// A schema-only installation has no binary to run. Whatever its version,
 	// complete it by installing the full package for that version. This check
 	// comes before any freshness check: a provider whose schema is current is
-	// still unusable without its binary. The disk is probed instead of
-	// trusting provider.HasBinary, which is only populated by readProviderDir
-	// and reads false on Provider values built any other way.
-	if !config.ProbeFile(provider.binPath()) {
+	// still unusable without its binary.
+	if !provider.HasBinary {
 		log.Info().
 			Str("version", provider.Version).
 			Msg("provider '" + provider.Name + "' is installed schema-only, downloading its binary")
