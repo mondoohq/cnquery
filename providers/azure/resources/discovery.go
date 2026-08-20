@@ -37,9 +37,7 @@ const (
 	// TODO: this probably needs some more work on the linking to its OS counterpart side
 	DiscoveryInstancesApi            = "instances-api"
 	DiscoverySqlServers              = "sql-servers"
-	DiscoveryPostgresServers         = "postgres-servers"
 	DiscoveryPostgresFlexibleServers = "postgres-flexible-servers"
-	DiscoveryMySqlServers            = "mysql-servers"
 	DiscoveryMySqlFlexibleServers    = "mysql-flexible-servers"
 	DiscoveryAksClusters             = "aks-clusters"
 	DiscoveryAppServiceApps          = "app-service-webapps"
@@ -99,9 +97,7 @@ var All = append(
 var AllAPIResources = []string{
 	DiscoveryInstancesApi,
 	DiscoverySqlServers,
-	DiscoveryPostgresServers,
 	DiscoveryPostgresFlexibleServers,
-	DiscoveryMySqlServers,
 	DiscoveryMySqlFlexibleServers,
 	DiscoveryAksClusters,
 	DiscoveryAppServiceApps,
@@ -160,9 +156,7 @@ func isWebAppKind(kind string) bool {
 
 var genericDiscoverySpecs = []genericDiscoverySpec{
 	{armType: "Microsoft.Sql/servers", discoveryTarget: DiscoverySqlServers, service: "sql", objectType: "server"},
-	{armType: "Microsoft.DBforMySQL/servers", discoveryTarget: DiscoveryMySqlServers, service: "mysql", objectType: "server"},
 	{armType: "Microsoft.DBforMySQL/flexibleServers", discoveryTarget: DiscoveryMySqlFlexibleServers, service: "mysql", objectType: "flexible-server"},
-	{armType: "Microsoft.DBforPostgreSQL/servers", discoveryTarget: DiscoveryPostgresServers, service: "postgresql", objectType: "server"},
 	{armType: "Microsoft.DBforPostgreSQL/flexibleServers", discoveryTarget: DiscoveryPostgresFlexibleServers, service: "postgresql", objectType: "flexible-server"},
 	{armType: "Microsoft.ContainerService/managedClusters", discoveryTarget: DiscoveryAksClusters, service: "aks", objectType: "cluster"},
 	// Microsoft.Web/sites is shared by web apps and function apps; disambiguate by kind.
@@ -221,8 +215,36 @@ func MondooAzureInstanceID(instanceID string) string {
 	return "//platformid.api.mondoo.app/runtime/azure" + strings.ToLower(instanceID)
 }
 
+// retiredDiscoveryTargets maps a discovery target for an Azure service that is
+// past retirement to the target that replaces it. Azure retired MySQL Single
+// Server on 2024-09-16 and PostgreSQL Single Server on 2025-03-28, so no
+// subscription holds one any more and nothing is left to discover. The names
+// stay accepted so an inventory that still lists them keeps working, but they
+// match no resource, and a target that matches nothing looks exactly like a
+// successful scan of an empty estate. Warn instead of discovering silently.
+//
+// FIXME: DEPRECATED, remove in v15.0 vv
+var retiredDiscoveryTargets = map[string]string{
+	"mysql-servers":    DiscoveryMySqlFlexibleServers,
+	"postgres-servers": DiscoveryPostgresFlexibleServers,
+}
+
+func warnRetiredDiscoveryTargets(targets []string) {
+	for _, t := range targets {
+		if replacement, ok := retiredDiscoveryTargets[t]; ok {
+			log.Warn().
+				Str("target", t).
+				Str("replacement", replacement).
+				Msg("this Azure service is retired and no longer discoverable, nothing will be discovered for this target")
+		}
+	}
+}
+
+// ^^
+
 func getDiscoveryTargets(config *inventory.Config) []string {
 	targets := config.Discover.Targets
+	warnRetiredDiscoveryTargets(targets)
 	if len(targets) == 0 {
 		return Auto
 	}
@@ -1069,16 +1091,10 @@ func getTitleFamily(azureObject azureObject) (azureObjectPlatformInfo, error) {
 			return azureObjectPlatformInfo{title: "Azure SQL Database Server", platform: "azure-sql-server"}, nil
 		}
 	case "postgresql":
-		if azureObject.objectType == "server" {
-			return azureObjectPlatformInfo{title: "Azure PostgreSQL Server", platform: "azure-postgresql-server"}, nil
-		}
 		if azureObject.objectType == "flexible-server" {
 			return azureObjectPlatformInfo{title: "Azure PostgreSQL Flexible Server", platform: "azure-postgresql-flexible-server"}, nil
 		}
 	case "mysql":
-		if azureObject.objectType == "server" {
-			return azureObjectPlatformInfo{title: "Azure MySQL Server", platform: "azure-mysql-server"}, nil
-		}
 		if azureObject.objectType == "flexible-server" {
 			return azureObjectPlatformInfo{title: "Azure MySQL Flexible Server", platform: "azure-mysql-flexible-server"}, nil
 		}
