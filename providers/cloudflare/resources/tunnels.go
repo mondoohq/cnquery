@@ -95,14 +95,18 @@ func tunnelConnections(runtime *plugin.Runtime, conn *connection.CloudflareConne
 			tc := client.Conns[j]
 
 			connRes, err := NewResource(runtime, "cloudflare.tunnel.connection", map[string]*llx.RawData{
-				"__id":               llx.StringData(fmt.Sprintf("tunnelConn@%s@%s", tunnelID, tc.ID)),
-				"id":                 llx.StringData(tc.ID),
-				"coloName":           llx.StringData(tc.ColoName),
-				"clientId":           llx.StringData(tc.ClientID),
-				"clientVersion":      llx.StringData(tc.ClientVersion),
-				"openedAt":           timeOrNil(tc.OpenedAt),
-				"originIp":           llx.StringData(tc.OriginIP),
-				"isPendingReconnect": llx.BoolData(tc.IsPendingReconnect),
+				"__id":          llx.StringData(fmt.Sprintf("tunnelConn@%s@%s", tunnelID, tc.ID)),
+				"id":            llx.StringData(tc.ID),
+				"coloName":      llx.StringData(tc.ColoName),
+				"clientId":      llx.StringData(tc.ClientID),
+				"clientVersion": llx.StringData(tc.ClientVersion),
+				"openedAt":      timeOrNil(tc.OpenedAt),
+				"originIp":      llx.StringData(tc.OriginIP),
+				// Cloudflare dropped is_pending_reconnect from the tunnel
+				// connections API, so there is nothing to read. Report null
+				// rather than false, which would claim the connection is
+				// actively serving traffic.
+				"isPendingReconnect": llx.NilData,
 			})
 			if err != nil {
 				return nil, err

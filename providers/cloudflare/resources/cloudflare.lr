@@ -1106,7 +1106,11 @@ private cloudflare.tunnel.connection @defaults("id coloName") {
 	// Origin IP address
 	originIp string
 	// Whether the connection is pending reconnect
-	isPendingReconnect bool
+	//
+	// Always null. Cloudflare removed this value from the tunnel connections
+	// API, so it can no longer be read. Retained for backwards compatibility
+	// and will be removed in the next major release.
+	isPendingReconnect @maturity("deprecated") bool
 }
 
 // Cloudflare tunnel route
