@@ -7943,15 +7943,20 @@ private azure.subscription.sqlService.database.geoBackupPolicy @defaults("state"
 // Azure Database for PostgreSQL
 //
 // Managed PostgreSQL databases in a subscription, covering both the current
-// Flexible Server deployment model (flexibleServers) and the earlier Single
-// Server model (servers) that Azure is retiring. Use it to enumerate every
+// Flexible Server deployment model (flexibleServers) and the retired Single
+// Server model (servers). Use it to enumerate every
 // managed PostgreSQL instance and audit their network exposure,
 // authentication mode, encryption, and backup posture.
 private azure.subscription.postgreSqlService {
   // Subscription identifier
   subscriptionId string
-  // List of PostgreSQL servers
-  servers() []azure.subscription.postgreSqlService.server
+  // PostgreSQL Single Servers
+  //
+  // Deprecated in favor of flexibleServers. Azure retired PostgreSQL Single
+  // Server on 2025-03-28, so this list is empty on any current subscription
+  // and an assertion made over it passes without checking anything. Will be
+  // removed in the next major release.
+  servers() @maturity("deprecated") []azure.subscription.postgreSqlService.server
   // List of PostgreSQL flexible servers
   flexibleServers() []azure.subscription.postgreSqlService.flexibleServer
 }
@@ -8124,12 +8129,14 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
 
 // Azure Database for PostgreSQL server
 //
-// PostgreSQL Single Server instance, the earlier managed-PostgreSQL
-// deployment model that Azure is retiring in favor of Flexible Server.
-// Reports SSL enforcement, minimum TLS version, infrastructure (double)
-// encryption, public network access, firewall rules, and backup
-// configuration for auditing legacy servers still in production.
-private azure.subscription.postgreSqlService.server @defaults("id name location") {
+// Deprecated in favor of azure.subscription.postgreSqlService.flexibleServer.
+// PostgreSQL Single Server instance, the earlier managed-PostgreSQL deployment
+// model. Azure retired it on 2025-03-28, so no current subscription returns
+// one and every field below is unreachable in practice. Reports SSL
+// enforcement, minimum TLS version, infrastructure (double) encryption, public
+// network access, firewall rules, and backup configuration. Will be removed in
+// the next major release.
+private azure.subscription.postgreSqlService.server @defaults("id name location") @maturity("deprecated") {
   // PostgreSQL server ID
   id string
   // PostgreSQL server name
@@ -8354,17 +8361,34 @@ private azure.subscription.sqlService.managedInstance.database @defaults("name s
 }
 
 // Azure Database for MySQL
+//
+// Managed MySQL databases in a subscription, covering both the current
+// Flexible Server deployment model (flexibleServers) and the retired Single
+// Server model (servers). Use it to enumerate every managed MySQL instance and
+// audit their network exposure, encryption, and backup posture.
 private azure.subscription.mySqlService {
   // Subscription identifier
   subscriptionId string
-  // List of MySQL servers
-  servers() []azure.subscription.mySqlService.server
+  // MySQL Single Servers
+  //
+  // Deprecated in favor of flexibleServers. Azure retired MySQL Single Server
+  // on 2024-09-16, so this list is empty on any current subscription and an
+  // assertion made over it passes without checking anything. Will be removed
+  // in the next major release.
+  servers() @maturity("deprecated") []azure.subscription.mySqlService.server
   // List of Flexible MySQL servers
   flexibleServers() []azure.subscription.mySqlService.flexibleServer
 }
 
 // Azure Database for MySQL server
-private azure.subscription.mySqlService.server @defaults("id name location") {
+//
+// Deprecated in favor of azure.subscription.mySqlService.flexibleServer. MySQL
+// Single Server instance, the earlier managed-MySQL deployment model. Azure
+// retired it on 2024-09-16, so no current subscription returns one and every
+// field below is unreachable in practice. Reports SSL enforcement, minimum TLS
+// version, infrastructure (double) encryption, public network access, firewall
+// rules, and backup configuration. Will be removed in the next major release.
+private azure.subscription.mySqlService.server @defaults("id name location") @maturity("deprecated") {
   // MySQL server ID
   id string
   // MySQL server name
@@ -9555,8 +9579,13 @@ private azure.subscription.keyVaultService.secret @defaults("id secretName") {
 private azure.subscription.monitorService {
   // Subscription identifier
   subscriptionId string
-  // List of log profiles
-  logProfiles() []azure.subscription.monitorService.logprofile
+  // Log profiles
+  //
+  // Deprecated in favor of diagnosticSettings. Azure retired log profiles on
+  // 2023-09-01, so this list is empty on any current subscription and an
+  // assertion made over it passes without checking anything. Will be removed
+  // in the next major release.
+  logProfiles() @maturity("deprecated") []azure.subscription.monitorService.logprofile
   // List of diagnostic settings for the subscription
   diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
   // Application insights for the subscription
@@ -9861,7 +9890,13 @@ private azure.subscription.monitorService.activityLog.entry @defaults("operation
 }
 
 // Azure Monitor log profile
-private azure.subscription.monitorService.logprofile @defaults("id name location") {
+//
+// Deprecated in favor of azure.subscription.monitorService.diagnosticsetting.
+// Log profiles were the earlier way to export subscription activity logs to a
+// storage account, an event hub, or Log Analytics. Azure retired them on
+// 2023-09-01, so no current subscription returns one and every field below is
+// unreachable in practice. Will be removed in the next major release.
+private azure.subscription.monitorService.logprofile @defaults("id name location") @maturity("deprecated") {
   // Log profile ID
   id string
   // Log profile name
