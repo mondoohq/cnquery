@@ -394,12 +394,12 @@ func createEventHubRawData(eh *armeventhub.Eventhub) map[string]*llx.RawData {
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
-	ctx := context.Background()
-	token := conn.Token()
-	id := a.Id.Data
+	conn, err := azureConn(a.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
 
-	resourceID, err := ParseResourceID(id)
+	resourceID, err := ParseResourceID(a.Id.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -409,68 +409,50 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 		return nil, err
 	}
 
-	ehName := a.Name.Data
-
-	client, err := armeventhub.NewConsumerGroupsClient(resourceID.SubscriptionID, token, &arm.ClientOptions{
+	client, err := armeventhub.NewConsumerGroupsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
 		ClientOptions: conn.ClientOptions(),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	pager := client.NewListByEventHubPager(resourceID.ResourceGroup, nsName, ehName, nil)
-	var res []any
+	return listPaged(a.MqlRuntime, &a.ConsumerGroups, "event hub consumer groups",
+		client.NewListByEventHubPager(resourceID.ResourceGroup, nsName, a.Name.Data, nil),
+		func(page armeventhub.ConsumerGroupsClientListByEventHubResponse) []*armeventhub.ConsumerGroup {
+			return page.Value
+		},
+		createConsumerGroup,
+	)
+}
 
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, cg := range page.Value {
-			if cg == nil {
-				continue
-			}
-
-			var userMetadata string
-			var creationTime *time.Time
-			if cg.Properties != nil {
-				creationTime = cg.Properties.CreatedAt
-				if cg.Properties.UserMetadata != nil {
-					userMetadata = *cg.Properties.UserMetadata
-				}
-			}
-
-			mqlCg, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.eventHub.consumerGroup", map[string]*llx.RawData{
-				"id":           llx.StringDataPtr(cg.ID),
-				"name":         llx.StringDataPtr(cg.Name),
-				"userMetadata": llx.StringData(userMetadata),
-				"creationTime": llx.TimeDataPtr(creationTime),
-			})
-			if err != nil {
-				return nil, err
-			}
-			sysData, err := convert.JsonToDict(cg.SystemData)
-			if err != nil {
-				return nil, err
-			}
-			mqlCg.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).cacheSystemData = sysData
-			res = append(res, mqlCg)
+// createConsumerGroup builds the MQL resource for one consumer group of an event hub.
+func createConsumerGroup(runtime *plugin.Runtime, cg *armeventhub.ConsumerGroup) (plugin.Resource, error) {
+	var userMetadata string
+	var creationTime *time.Time
+	if cg.Properties != nil {
+		creationTime = cg.Properties.CreatedAt
+		if cg.Properties.UserMetadata != nil {
+			userMetadata = *cg.Properties.UserMetadata
 		}
 	}
 
-	return res, nil
-}
-
-// networkRuleSet fetches the namespace-level network rule set.
-func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRuleSet() (any, error) {
-	props, err := a.fetchNetworkRuleSetProperties()
+	mqlCg, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace.eventHub.consumerGroup", map[string]*llx.RawData{
+		"id":           llx.StringDataPtr(cg.ID),
+		"name":         llx.StringDataPtr(cg.Name),
+		"userMetadata": llx.StringData(userMetadata),
+		"creationTime": llx.TimeDataPtr(creationTime),
+	})
 	if err != nil {
 		return nil, err
 	}
-	if props == nil {
-		return nil, nil
+
+	sysData, err := convert.JsonToDict(cg.SystemData)
+	if err != nil {
+		return nil, err
 	}
-	return convert.JsonToDict(props)
+	mqlCg.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).cacheSystemData = sysData
+
+	return mqlCg, nil
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules, error) {
