@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 // parseFipsEnabled interprets the content of /proc/sys/crypto/fips_enabled.
