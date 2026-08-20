@@ -18,7 +18,8 @@ func licenseBom() *Sbom {
 		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
 		Asset:     &Asset{Name: "test-asset", Platform: &Platform{Name: "linux", Version: "1"}},
 		Packages: []*Package{
-			{Name: "plain-id", Version: "1.0.0", Purl: "pkg:npm/plain-id@1.0.0", License: "MIT"},
+			{Name: "plain-id", Version: "1.0.0", Purl: "pkg:npm/plain-id@1.0.0", License: "MIT",
+				Description: "a plain MIT-licensed package"},
 			{Name: "expression", Version: "1.0.0", Purl: "pkg:npm/expression@1.0.0", License: "MIT OR Apache-2.0"},
 			{Name: "with-exception", Version: "1.0.0", Purl: "pkg:npm/with-exception@1.0.0",
 				License: "GPL-2.0-only WITH Classpath-exception-2.0"},
@@ -48,8 +49,9 @@ func renderTo(t *testing.T, format string) string {
 func TestCycloneDXEmitsLicenses(t *testing.T) {
 	var doc struct {
 		Components []struct {
-			Name     string `json:"name"`
-			Licenses []struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Licenses    []struct {
 				Expression string `json:"expression"`
 				License    *struct {
 					ID   string `json:"id"`
@@ -83,6 +85,10 @@ func TestCycloneDXEmitsLicenses(t *testing.T) {
 	// A bare SPDX identifier goes in license.id.
 	if ls := get("plain-id"); len(ls) != 1 || ls[0].License == nil || ls[0].License.ID != "MIT" {
 		t.Errorf("plain-id licenses = %+v, want license.id MIT", ls)
+	}
+	// The component description is carried through (it was previously dropped).
+	if got := doc.Components[byName["plain-id"]].Description; got != "a plain MIT-licensed package" {
+		t.Errorf("plain-id description = %q, want it carried through", got)
 	}
 	// An expression goes in expression, never in id.
 	for _, name := range []string{"expression", "with-exception"} {

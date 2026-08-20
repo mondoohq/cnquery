@@ -121,7 +121,7 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		// The SPDX specification requires NOASSERTION rather than an empty value
 		// for the license and copyright fields. An empty string is not valid
 		// SPDX, and a strict consumer may reject the whole document over it.
-		declared := spdxLicenseValue(pkg.License)
+		declared := spdxNoAssertion(pkg.License)
 		doc.Packages = append(doc.Packages, &spdx.Package{
 			PackageSPDXIdentifier:  id,
 			PackageName:            pkg.Name,
@@ -352,9 +352,6 @@ func spdxNoAssertion(v string) string {
 	}
 	return v
 }
-
-// spdxLicenseValue renders a license for an SPDX license field.
-func spdxLicenseValue(license string) string { return spdxNoAssertion(license) }
 
 const spdxNoAssertionValue = "NOASSERTION"
 
