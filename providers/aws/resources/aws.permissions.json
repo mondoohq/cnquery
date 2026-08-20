@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.53.3",
-  "generated_at": "2026-08-20T09:20:11-07:00",
+  "generated_at": "2026-08-20T13:29:18-07:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -92,6 +92,7 @@
     "bedrock-agentcore:GetCodeInterpreter",
     "bedrock-agentcore:GetGateway",
     "bedrock-agentcore:GetGatewayTarget",
+    "bedrock-agentcore:GetMemory",
     "bedrock-agentcore:ListAgentRuntimeEndpoints",
     "bedrock-agentcore:ListAgentRuntimes",
     "bedrock-agentcore:ListApiKeyCredentialProviders",
@@ -1577,6 +1578,12 @@
       "permission": "bedrock-agentcore:GetGatewayTarget",
       "service": "bedrock-agentcore",
       "action": "GetGatewayTarget",
+      "source_file": "aws_bedrock_agentcore.go"
+    },
+    {
+      "permission": "bedrock-agentcore:GetMemory",
+      "service": "bedrock-agentcore",
+      "action": "GetMemory",
       "source_file": "aws_bedrock_agentcore.go"
     },
     {

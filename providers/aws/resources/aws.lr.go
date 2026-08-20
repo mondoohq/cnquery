@@ -929,6 +929,7 @@ const (
 	ResourceAwsBedrockAgentCoreRuntime                                          string = "aws.bedrock.agentCore.runtime"
 	ResourceAwsBedrockAgentCoreRuntimeEndpoint                                  string = "aws.bedrock.agentCore.runtimeEndpoint"
 	ResourceAwsBedrockAgentCoreMemory                                           string = "aws.bedrock.agentCore.memory"
+	ResourceAwsBedrockAgentCoreMemoryNamespaceKey                               string = "aws.bedrock.agentCore.memory.namespaceKey"
 	ResourceAwsBedrockAgentCoreBrowser                                          string = "aws.bedrock.agentCore.browser"
 	ResourceAwsBedrockAgentCoreCodeInterpreter                                  string = "aws.bedrock.agentCore.codeInterpreter"
 	ResourceAwsBedrockAgentCoreFilesystemConfiguration                          string = "aws.bedrock.agentCore.filesystemConfiguration"
@@ -4650,6 +4651,10 @@ func init() {
 		"aws.bedrock.agentCore.memory": {
 			// to override args, implement: initAwsBedrockAgentCoreMemory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsBedrockAgentCoreMemory,
+		},
+		"aws.bedrock.agentCore.memory.namespaceKey": {
+			// to override args, implement: initAwsBedrockAgentCoreMemoryNamespaceKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsBedrockAgentCoreMemoryNamespaceKey,
 		},
 		"aws.bedrock.agentCore.browser": {
 			// to override args, implement: initAwsBedrockAgentCoreBrowser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -19945,6 +19950,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.cluster.snapshotScheduleIdentifier": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetSnapshotScheduleIdentifier()).ToDataRes(types.String)
 	},
+	"aws.redshift.cluster.systemTablePublishingEnabledAll": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSystemTablePublishingEnabledAll()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.systemTablePublishingGranularity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSystemTablePublishingGranularity()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.systemTablePublishingNamespace": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSystemTablePublishingNamespace()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.systemTablePublishingTables": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSystemTablePublishingTables()).ToDataRes(types.Array(types.String))
+	},
+	"aws.redshift.cluster.systemTablePublishingLastIngestionTimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetSystemTablePublishingLastIngestionTimes()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.redshift.cluster.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetSnapshots()).ToDataRes(types.Array(types.Resource("aws.redshift.snapshot")))
 	},
@@ -25464,6 +25484,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.cluster.certificateAuthority": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetCertificateAuthority()).ToDataRes(types.String)
+	},
+	"aws.eks.cluster.activeCertificateAuthorityId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetActiveCertificateAuthorityId()).ToDataRes(types.String)
+	},
+	"aws.eks.cluster.activeCertificateAuthorityActivatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetActiveCertificateAuthorityActivatedBy()).ToDataRes(types.String)
 	},
 	"aws.eks.cluster.insights": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetInsights()).ToDataRes(types.Array(types.Resource("aws.eks.insight")))
@@ -31111,6 +31137,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.batch.computeEnvironment.computeResourceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchComputeEnvironment).GetComputeResourceType()).ToDataRes(types.String)
 	},
+	"aws.batch.computeEnvironment.containerInsights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetContainerInsights()).ToDataRes(types.String)
+	},
+	"aws.batch.computeEnvironment.capacityTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBatchComputeEnvironment).GetCapacityTags()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"aws.batch.computeEnvironment.instanceTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBatchComputeEnvironment).GetInstanceTypes()).ToDataRes(types.Array(types.String))
 	},
@@ -34621,11 +34653,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.bedrock.agentCore.memory.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreMemory).GetStatus()).ToDataRes(types.String)
 	},
+	"aws.bedrock.agentCore.memory.namespaceKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreMemory).GetNamespaceKeys()).ToDataRes(types.Array(types.Resource("aws.bedrock.agentCore.memory.namespaceKey")))
+	},
 	"aws.bedrock.agentCore.memory.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreMemory).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"aws.bedrock.agentCore.memory.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreMemory).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.bedrock.agentCore.memory.namespaceKey.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreMemoryNamespaceKey).GetKey()).ToDataRes(types.String)
+	},
+	"aws.bedrock.agentCore.memory.namespaceKey.allowedValues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreMemoryNamespaceKey).GetAllowedValues()).ToDataRes(types.Array(types.String))
+	},
+	"aws.bedrock.agentCore.memory.namespaceKey.regexPattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsBedrockAgentCoreMemoryNamespaceKey).GetRegexPattern()).ToDataRes(types.String)
 	},
 	"aws.bedrock.agentCore.browser.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsBedrockAgentCoreBrowser).GetId()).ToDataRes(types.String)
@@ -36382,6 +36426,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.directconnect.connection.awsDevice": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnectConnection).GetAwsDevice()).ToDataRes(types.String)
 	},
+	"aws.directconnect.connection.prefixPoolSizeIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetPrefixPoolSizeIpv4()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.connection.prefixPoolSizeIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetPrefixPoolSizeIpv6()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.connection.prefixPoolUnallocatedCountIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetPrefixPoolUnallocatedCountIpv4()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.connection.prefixPoolUnallocatedCountIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectConnection).GetPrefixPoolUnallocatedCountIpv6()).ToDataRes(types.Int)
+	},
 	"aws.directconnect.connection.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnectConnection).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -36448,6 +36504,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.directconnect.virtualInterface.siteLinkEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnectVirtualInterface).GetSiteLinkEnabled()).ToDataRes(types.Bool)
 	},
+	"aws.directconnect.virtualInterface.prefixPoolAllocatedCountIpv4": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetPrefixPoolAllocatedCountIpv4()).ToDataRes(types.Int)
+	},
+	"aws.directconnect.virtualInterface.prefixPoolAllocatedCountIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectVirtualInterface).GetPrefixPoolAllocatedCountIpv6()).ToDataRes(types.Int)
+	},
 	"aws.directconnect.virtualInterface.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnectVirtualInterface).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -36468,6 +36530,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.directconnect.gateway.stateChangeError": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsDirectconnectGateway).GetStateChangeError()).ToDataRes(types.String)
+	},
+	"aws.directconnect.gateway.totalPrefixPoolAllocations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsDirectconnectGateway).GetTotalPrefixPoolAllocations()).ToDataRes(types.Int)
 	},
 }
 
@@ -58381,6 +58446,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRedshiftCluster).SnapshotScheduleIdentifier, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.redshift.cluster.systemTablePublishingEnabledAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SystemTablePublishingEnabledAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.systemTablePublishingGranularity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SystemTablePublishingGranularity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.systemTablePublishingNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SystemTablePublishingNamespace, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.systemTablePublishingTables": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SystemTablePublishingTables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.systemTablePublishingLastIngestionTimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).SystemTablePublishingLastIngestionTimes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.redshift.cluster.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -66371,6 +66456,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eks.cluster.certificateAuthority": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).CertificateAuthority, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.activeCertificateAuthorityId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ActiveCertificateAuthorityId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.activeCertificateAuthorityActivatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ActiveCertificateAuthorityActivatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.insights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74561,6 +74654,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBatchComputeEnvironment).ComputeResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.batch.computeEnvironment.containerInsights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).ContainerInsights, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.batch.computeEnvironment.capacityTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBatchComputeEnvironment).CapacityTags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.batch.computeEnvironment.instanceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBatchComputeEnvironment).InstanceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -79657,12 +79758,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsBedrockAgentCoreMemory).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.bedrock.agentCore.memory.namespaceKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreMemory).NamespaceKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.bedrock.agentCore.memory.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreMemory).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.memory.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsBedrockAgentCoreMemory).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.memory.namespaceKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreMemoryNamespaceKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.bedrock.agentCore.memory.namespaceKey.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreMemoryNamespaceKey).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.memory.namespaceKey.allowedValues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreMemoryNamespaceKey).AllowedValues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.bedrock.agentCore.memory.namespaceKey.regexPattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsBedrockAgentCoreMemoryNamespaceKey).RegexPattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.bedrock.agentCore.browser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -82253,6 +82374,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDirectconnectConnection).AwsDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.directconnect.connection.prefixPoolSizeIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).PrefixPoolSizeIpv4, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.prefixPoolSizeIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).PrefixPoolSizeIpv6, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.prefixPoolUnallocatedCountIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).PrefixPoolUnallocatedCountIpv4, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.connection.prefixPoolUnallocatedCountIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectConnection).PrefixPoolUnallocatedCountIpv6, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.directconnect.connection.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectconnectConnection).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -82345,6 +82482,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsDirectconnectVirtualInterface).SiteLinkEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"aws.directconnect.virtualInterface.prefixPoolAllocatedCountIpv4": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).PrefixPoolAllocatedCountIpv4, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.virtualInterface.prefixPoolAllocatedCountIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectVirtualInterface).PrefixPoolAllocatedCountIpv6, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.directconnect.virtualInterface.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectconnectVirtualInterface).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -82375,6 +82520,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.directconnect.gateway.stateChangeError": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsDirectconnectGateway).StateChangeError, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.directconnect.gateway.totalPrefixPoolAllocations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsDirectconnectGateway).TotalPrefixPoolAllocations, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 }
@@ -140289,70 +140438,75 @@ type mqlAwsRedshiftCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsRedshiftClusterInternal
-	AllowVersionUpgrade                plugin.TValue[bool]
-	Arn                                plugin.TValue[string]
-	AutomatedSnapshotRetentionPeriod   plugin.TValue[int64]
-	AvailabilityZone                   plugin.TValue[string]
-	ClusterParameterGroupNames         plugin.TValue[[]any]
-	ClusterRevisionNumber              plugin.TValue[string]
-	ClusterStatus                      plugin.TValue[string]
-	ClusterSubnetGroupName             plugin.TValue[string]
-	ClusterVersion                     plugin.TValue[string]
-	CreatedAt                          plugin.TValue[*time.Time]
-	DbName                             plugin.TValue[string]
-	Encrypted                          plugin.TValue[bool]
-	KmsKey                             plugin.TValue[*mqlAwsKmsKey]
-	EnhancedVpcRouting                 plugin.TValue[bool]
-	Logging                            plugin.TValue[any]
-	MasterUsername                     plugin.TValue[string]
-	Name                               plugin.TValue[string]
-	NextMaintenanceWindowStartTime     plugin.TValue[*time.Time]
-	NodeType                           plugin.TValue[string]
-	NumberOfNodes                      plugin.TValue[int64]
-	Parameters                         plugin.TValue[[]any]
-	PreferredMaintenanceWindow         plugin.TValue[string]
-	PubliclyAccessible                 plugin.TValue[bool]
-	EndpointAddress                    plugin.TValue[string]
-	EndpointPort                       plugin.TValue[int64]
-	EndpointVpcEndpoints               plugin.TValue[[]any]
-	Region                             plugin.TValue[string]
-	Tags                               plugin.TValue[map[string]any]
-	Vpc                                plugin.TValue[*mqlAwsVpc]
-	ClusterAvailabilityStatus          plugin.TValue[string]
-	TotalStorageCapacityInMegaBytes    plugin.TValue[int64]
-	MaintenanceTrackName               plugin.TValue[string]
-	HsmStatus                          plugin.TValue[any]
-	ModifyStatus                       plugin.TValue[string]
-	MultiAZ                            plugin.TValue[bool]
-	ManualSnapshotRetentionPeriod      plugin.TValue[int64]
-	IpAddressType                      plugin.TValue[string]
-	MasterPasswordSecretKmsKey         plugin.TValue[*mqlAwsKmsKey]
-	SnapshotScheduleIdentifier         plugin.TValue[string]
-	Snapshots                          plugin.TValue[[]any]
-	RestoredFromSnapshot               plugin.TValue[bool]
-	RestoreStatus                      plugin.TValue[string]
-	RestoreProgressPercent             plugin.TValue[float64]
-	IamRoles                           plugin.TValue[[]any]
-	DefaultIamRole                     plugin.TValue[*mqlAwsIamRole]
-	MasterPasswordSecret               plugin.TValue[*mqlAwsSecretsmanagerSecret]
-	ManagedBy                          plugin.TValue[string]
-	CloudformationStack                plugin.TValue[*mqlAwsCloudformationStack]
-	ClusterNamespaceArn                plugin.TValue[string]
-	CrossRegionSnapshotCopyEnabled     plugin.TValue[bool]
-	SnapshotCopyDestinationRegion      plugin.TValue[string]
-	SnapshotCopyRetentionPeriod        plugin.TValue[int64]
-	SnapshotCopyManualRetentionPeriod  plugin.TValue[int64]
-	SnapshotCopyGrantName              plugin.TValue[string]
-	ExpectedNextSnapshotScheduleAt     plugin.TValue[*time.Time]
-	ExpectedNextSnapshotScheduleStatus plugin.TValue[string]
-	SnapshotScheduleState              plugin.TValue[string]
-	SecurityGroups                     plugin.TValue[[]any]
-	Exposure                           plugin.TValue[*mqlAwsNetworkExposure]
-	CustomDomainName                   plugin.TValue[string]
-	CustomDomainCertificate            plugin.TValue[*mqlAwsAcmCertificate]
-	CustomDomainCertificateExpiresAt   plugin.TValue[*time.Time]
-	AvailabilityZoneRelocationStatus   plugin.TValue[string]
-	ElasticIp                          plugin.TValue[string]
+	AllowVersionUpgrade                     plugin.TValue[bool]
+	Arn                                     plugin.TValue[string]
+	AutomatedSnapshotRetentionPeriod        plugin.TValue[int64]
+	AvailabilityZone                        plugin.TValue[string]
+	ClusterParameterGroupNames              plugin.TValue[[]any]
+	ClusterRevisionNumber                   plugin.TValue[string]
+	ClusterStatus                           plugin.TValue[string]
+	ClusterSubnetGroupName                  plugin.TValue[string]
+	ClusterVersion                          plugin.TValue[string]
+	CreatedAt                               plugin.TValue[*time.Time]
+	DbName                                  plugin.TValue[string]
+	Encrypted                               plugin.TValue[bool]
+	KmsKey                                  plugin.TValue[*mqlAwsKmsKey]
+	EnhancedVpcRouting                      plugin.TValue[bool]
+	Logging                                 plugin.TValue[any]
+	MasterUsername                          plugin.TValue[string]
+	Name                                    plugin.TValue[string]
+	NextMaintenanceWindowStartTime          plugin.TValue[*time.Time]
+	NodeType                                plugin.TValue[string]
+	NumberOfNodes                           plugin.TValue[int64]
+	Parameters                              plugin.TValue[[]any]
+	PreferredMaintenanceWindow              plugin.TValue[string]
+	PubliclyAccessible                      plugin.TValue[bool]
+	EndpointAddress                         plugin.TValue[string]
+	EndpointPort                            plugin.TValue[int64]
+	EndpointVpcEndpoints                    plugin.TValue[[]any]
+	Region                                  plugin.TValue[string]
+	Tags                                    plugin.TValue[map[string]any]
+	Vpc                                     plugin.TValue[*mqlAwsVpc]
+	ClusterAvailabilityStatus               plugin.TValue[string]
+	TotalStorageCapacityInMegaBytes         plugin.TValue[int64]
+	MaintenanceTrackName                    plugin.TValue[string]
+	HsmStatus                               plugin.TValue[any]
+	ModifyStatus                            plugin.TValue[string]
+	MultiAZ                                 plugin.TValue[bool]
+	ManualSnapshotRetentionPeriod           plugin.TValue[int64]
+	IpAddressType                           plugin.TValue[string]
+	MasterPasswordSecretKmsKey              plugin.TValue[*mqlAwsKmsKey]
+	SnapshotScheduleIdentifier              plugin.TValue[string]
+	SystemTablePublishingEnabledAll         plugin.TValue[bool]
+	SystemTablePublishingGranularity        plugin.TValue[string]
+	SystemTablePublishingNamespace          plugin.TValue[string]
+	SystemTablePublishingTables             plugin.TValue[[]any]
+	SystemTablePublishingLastIngestionTimes plugin.TValue[map[string]any]
+	Snapshots                               plugin.TValue[[]any]
+	RestoredFromSnapshot                    plugin.TValue[bool]
+	RestoreStatus                           plugin.TValue[string]
+	RestoreProgressPercent                  plugin.TValue[float64]
+	IamRoles                                plugin.TValue[[]any]
+	DefaultIamRole                          plugin.TValue[*mqlAwsIamRole]
+	MasterPasswordSecret                    plugin.TValue[*mqlAwsSecretsmanagerSecret]
+	ManagedBy                               plugin.TValue[string]
+	CloudformationStack                     plugin.TValue[*mqlAwsCloudformationStack]
+	ClusterNamespaceArn                     plugin.TValue[string]
+	CrossRegionSnapshotCopyEnabled          plugin.TValue[bool]
+	SnapshotCopyDestinationRegion           plugin.TValue[string]
+	SnapshotCopyRetentionPeriod             plugin.TValue[int64]
+	SnapshotCopyManualRetentionPeriod       plugin.TValue[int64]
+	SnapshotCopyGrantName                   plugin.TValue[string]
+	ExpectedNextSnapshotScheduleAt          plugin.TValue[*time.Time]
+	ExpectedNextSnapshotScheduleStatus      plugin.TValue[string]
+	SnapshotScheduleState                   plugin.TValue[string]
+	SecurityGroups                          plugin.TValue[[]any]
+	Exposure                                plugin.TValue[*mqlAwsNetworkExposure]
+	CustomDomainName                        plugin.TValue[string]
+	CustomDomainCertificate                 plugin.TValue[*mqlAwsAcmCertificate]
+	CustomDomainCertificateExpiresAt        plugin.TValue[*time.Time]
+	AvailabilityZoneRelocationStatus        plugin.TValue[string]
+	ElasticIp                               plugin.TValue[string]
 }
 
 // createAwsRedshiftCluster creates a new instance of this resource
@@ -140586,6 +140740,26 @@ func (c *mqlAwsRedshiftCluster) GetMasterPasswordSecretKmsKey() *plugin.TValue[*
 
 func (c *mqlAwsRedshiftCluster) GetSnapshotScheduleIdentifier() *plugin.TValue[string] {
 	return &c.SnapshotScheduleIdentifier
+}
+
+func (c *mqlAwsRedshiftCluster) GetSystemTablePublishingEnabledAll() *plugin.TValue[bool] {
+	return &c.SystemTablePublishingEnabledAll
+}
+
+func (c *mqlAwsRedshiftCluster) GetSystemTablePublishingGranularity() *plugin.TValue[string] {
+	return &c.SystemTablePublishingGranularity
+}
+
+func (c *mqlAwsRedshiftCluster) GetSystemTablePublishingNamespace() *plugin.TValue[string] {
+	return &c.SystemTablePublishingNamespace
+}
+
+func (c *mqlAwsRedshiftCluster) GetSystemTablePublishingTables() *plugin.TValue[[]any] {
+	return &c.SystemTablePublishingTables
+}
+
+func (c *mqlAwsRedshiftCluster) GetSystemTablePublishingLastIngestionTimes() *plugin.TValue[map[string]any] {
+	return &c.SystemTablePublishingLastIngestionTimes
 }
 
 func (c *mqlAwsRedshiftCluster) GetSnapshots() *plugin.TValue[[]any] {
@@ -160081,49 +160255,51 @@ type mqlAwsEksCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEksClusterInternal
-	Name                    plugin.TValue[string]
-	Arn                     plugin.TValue[string]
-	Region                  plugin.TValue[string]
-	Tags                    plugin.TValue[map[string]any]
-	CloudformationStack     plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy               plugin.TValue[string]
-	Endpoint                plugin.TValue[string]
-	Version                 plugin.TValue[string]
-	PlatformVersion         plugin.TValue[string]
-	Status                  plugin.TValue[string]
-	EncryptionKmsKey        plugin.TValue[*mqlAwsKmsKey]
-	EncryptionResources     plugin.TValue[[]any]
-	Logging                 plugin.TValue[any]
-	NetworkConfig           plugin.TValue[any]
-	ControlPlaneEgressMode  plugin.TValue[string]
-	CreatedAt               plugin.TValue[*time.Time]
-	NodeGroups              plugin.TValue[[]any]
-	Addons                  plugin.TValue[[]any]
-	IamRole                 plugin.TValue[*mqlAwsIamRole]
-	SupportType             plugin.TValue[string]
-	AuthenticationMode      plugin.TValue[string]
-	DeletionProtection      plugin.TValue[bool]
-	EndpointPublicAccess    plugin.TValue[bool]
-	EndpointPrivateAccess   plugin.TValue[bool]
-	PublicAccessCidrs       plugin.TValue[[]any]
-	Exposure                plugin.TValue[*mqlAwsNetworkExposure]
-	AccessEntries           plugin.TValue[[]any]
-	FargateProfiles         plugin.TValue[[]any]
-	PodIdentityAssociations plugin.TValue[[]any]
-	IdentityProviderConfigs plugin.TValue[[]any]
-	Vpc                     plugin.TValue[*mqlAwsVpc]
-	ClusterSubnets          plugin.TValue[[]any]
-	ClusterSecurityGroups   plugin.TValue[[]any]
-	ClusterSecurityGroup    plugin.TValue[*mqlAwsEc2Securitygroup]
-	Health                  plugin.TValue[any]
-	CertificateAuthority    plugin.TValue[string]
-	Insights                plugin.TValue[[]any]
-	AvailableAddonVersions  plugin.TValue[[]any]
-	UpgradePolicy           plugin.TValue[any]
-	ZonalShiftConfig        plugin.TValue[any]
-	ComputeConfig           plugin.TValue[any]
-	StorageConfig           plugin.TValue[any]
-	RemoteNetworkConfig     plugin.TValue[any]
+	Name                                  plugin.TValue[string]
+	Arn                                   plugin.TValue[string]
+	Region                                plugin.TValue[string]
+	Tags                                  plugin.TValue[map[string]any]
+	CloudformationStack                   plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                             plugin.TValue[string]
+	Endpoint                              plugin.TValue[string]
+	Version                               plugin.TValue[string]
+	PlatformVersion                       plugin.TValue[string]
+	Status                                plugin.TValue[string]
+	EncryptionKmsKey                      plugin.TValue[*mqlAwsKmsKey]
+	EncryptionResources                   plugin.TValue[[]any]
+	Logging                               plugin.TValue[any]
+	NetworkConfig                         plugin.TValue[any]
+	ControlPlaneEgressMode                plugin.TValue[string]
+	CreatedAt                             plugin.TValue[*time.Time]
+	NodeGroups                            plugin.TValue[[]any]
+	Addons                                plugin.TValue[[]any]
+	IamRole                               plugin.TValue[*mqlAwsIamRole]
+	SupportType                           plugin.TValue[string]
+	AuthenticationMode                    plugin.TValue[string]
+	DeletionProtection                    plugin.TValue[bool]
+	EndpointPublicAccess                  plugin.TValue[bool]
+	EndpointPrivateAccess                 plugin.TValue[bool]
+	PublicAccessCidrs                     plugin.TValue[[]any]
+	Exposure                              plugin.TValue[*mqlAwsNetworkExposure]
+	AccessEntries                         plugin.TValue[[]any]
+	FargateProfiles                       plugin.TValue[[]any]
+	PodIdentityAssociations               plugin.TValue[[]any]
+	IdentityProviderConfigs               plugin.TValue[[]any]
+	Vpc                                   plugin.TValue[*mqlAwsVpc]
+	ClusterSubnets                        plugin.TValue[[]any]
+	ClusterSecurityGroups                 plugin.TValue[[]any]
+	ClusterSecurityGroup                  plugin.TValue[*mqlAwsEc2Securitygroup]
+	Health                                plugin.TValue[any]
+	CertificateAuthority                  plugin.TValue[string]
+	ActiveCertificateAuthorityId          plugin.TValue[string]
+	ActiveCertificateAuthorityActivatedBy plugin.TValue[string]
+	Insights                              plugin.TValue[[]any]
+	AvailableAddonVersions                plugin.TValue[[]any]
+	UpgradePolicy                         plugin.TValue[any]
+	ZonalShiftConfig                      plugin.TValue[any]
+	ComputeConfig                         plugin.TValue[any]
+	StorageConfig                         plugin.TValue[any]
+	RemoteNetworkConfig                   plugin.TValue[any]
 }
 
 // createAwsEksCluster creates a new instance of this resource
@@ -160510,6 +160686,18 @@ func (c *mqlAwsEksCluster) GetHealth() *plugin.TValue[any] {
 func (c *mqlAwsEksCluster) GetCertificateAuthority() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.CertificateAuthority, func() (string, error) {
 		return c.certificateAuthority()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetActiveCertificateAuthorityId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ActiveCertificateAuthorityId, func() (string, error) {
+		return c.activeCertificateAuthorityId()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetActiveCertificateAuthorityActivatedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ActiveCertificateAuthorityActivatedBy, func() (string, error) {
+		return c.activeCertificateAuthorityActivatedBy()
 	})
 }
 
@@ -181178,6 +181366,8 @@ type mqlAwsBatchComputeEnvironment struct {
 	MinVcpus                         plugin.TValue[int64]
 	DesiredVcpus                     plugin.TValue[int64]
 	ComputeResourceType              plugin.TValue[string]
+	ContainerInsights                plugin.TValue[string]
+	CapacityTags                     plugin.TValue[map[string]any]
 	InstanceTypes                    plugin.TValue[[]any]
 	AllocationStrategy               plugin.TValue[string]
 	Subnets                          plugin.TValue[[]any]
@@ -181303,6 +181493,18 @@ func (c *mqlAwsBatchComputeEnvironment) GetDesiredVcpus() *plugin.TValue[int64] 
 func (c *mqlAwsBatchComputeEnvironment) GetComputeResourceType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ComputeResourceType, func() (string, error) {
 		return c.computeResourceType()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetContainerInsights() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ContainerInsights, func() (string, error) {
+		return c.containerInsights()
+	})
+}
+
+func (c *mqlAwsBatchComputeEnvironment) GetCapacityTags() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.CapacityTags, func() (map[string]any, error) {
+		return c.capacityTags()
 	})
 }
 
@@ -194187,13 +194389,14 @@ func (c *mqlAwsBedrockAgentCoreRuntimeEndpoint) GetUpdatedAt() *plugin.TValue[*t
 type mqlAwsBedrockAgentCoreMemory struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsBedrockAgentCoreMemoryInternal it will be used here
-	Id        plugin.TValue[string]
-	Arn       plugin.TValue[string]
-	Region    plugin.TValue[string]
-	Status    plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	mqlAwsBedrockAgentCoreMemoryInternal
+	Id            plugin.TValue[string]
+	Arn           plugin.TValue[string]
+	Region        plugin.TValue[string]
+	Status        plugin.TValue[string]
+	NamespaceKeys plugin.TValue[[]any]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
 }
 
 // createAwsBedrockAgentCoreMemory creates a new instance of this resource
@@ -194249,12 +194452,82 @@ func (c *mqlAwsBedrockAgentCoreMemory) GetStatus() *plugin.TValue[string] {
 	return &c.Status
 }
 
+func (c *mqlAwsBedrockAgentCoreMemory) GetNamespaceKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NamespaceKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.bedrock.agentCore.memory", c.__id, "namespaceKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.namespaceKeys()
+	})
+}
+
 func (c *mqlAwsBedrockAgentCoreMemory) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
 func (c *mqlAwsBedrockAgentCoreMemory) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+// mqlAwsBedrockAgentCoreMemoryNamespaceKey for the aws.bedrock.agentCore.memory.namespaceKey resource
+type mqlAwsBedrockAgentCoreMemoryNamespaceKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsBedrockAgentCoreMemoryNamespaceKeyInternal it will be used here
+	Key           plugin.TValue[string]
+	AllowedValues plugin.TValue[[]any]
+	RegexPattern  plugin.TValue[string]
+}
+
+// createAwsBedrockAgentCoreMemoryNamespaceKey creates a new instance of this resource
+func createAwsBedrockAgentCoreMemoryNamespaceKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsBedrockAgentCoreMemoryNamespaceKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.bedrock.agentCore.memory.namespaceKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsBedrockAgentCoreMemoryNamespaceKey) MqlName() string {
+	return "aws.bedrock.agentCore.memory.namespaceKey"
+}
+
+func (c *mqlAwsBedrockAgentCoreMemoryNamespaceKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsBedrockAgentCoreMemoryNamespaceKey) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlAwsBedrockAgentCoreMemoryNamespaceKey) GetAllowedValues() *plugin.TValue[[]any] {
+	return &c.AllowedValues
+}
+
+func (c *mqlAwsBedrockAgentCoreMemoryNamespaceKey) GetRegexPattern() *plugin.TValue[string] {
+	return &c.RegexPattern
 }
 
 // mqlAwsBedrockAgentCoreBrowser for the aws.bedrock.agentCore.browser resource
@@ -201100,25 +201373,29 @@ type mqlAwsDirectconnectConnection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsDirectconnectConnectionInternal it will be used here
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	State                plugin.TValue[string]
-	Location             plugin.TValue[string]
-	Bandwidth            plugin.TValue[string]
-	Vlan                 plugin.TValue[int64]
-	Region               plugin.TValue[string]
-	OwnerAccount         plugin.TValue[string]
-	PartnerName          plugin.TValue[string]
-	ProviderName         plugin.TValue[string]
-	MacSecCapable        plugin.TValue[bool]
-	EncryptionMode       plugin.TValue[string]
-	PortEncryptionStatus plugin.TValue[string]
-	JumboFrameCapable    plugin.TValue[bool]
-	HasLogicalRedundancy plugin.TValue[string]
-	LagId                plugin.TValue[string]
-	AwsDevice            plugin.TValue[string]
-	Tags                 plugin.TValue[map[string]any]
-	VirtualInterfaces    plugin.TValue[[]any]
+	Id                             plugin.TValue[string]
+	Name                           plugin.TValue[string]
+	State                          plugin.TValue[string]
+	Location                       plugin.TValue[string]
+	Bandwidth                      plugin.TValue[string]
+	Vlan                           plugin.TValue[int64]
+	Region                         plugin.TValue[string]
+	OwnerAccount                   plugin.TValue[string]
+	PartnerName                    plugin.TValue[string]
+	ProviderName                   plugin.TValue[string]
+	MacSecCapable                  plugin.TValue[bool]
+	EncryptionMode                 plugin.TValue[string]
+	PortEncryptionStatus           plugin.TValue[string]
+	JumboFrameCapable              plugin.TValue[bool]
+	HasLogicalRedundancy           plugin.TValue[string]
+	LagId                          plugin.TValue[string]
+	AwsDevice                      plugin.TValue[string]
+	PrefixPoolSizeIpv4             plugin.TValue[int64]
+	PrefixPoolSizeIpv6             plugin.TValue[int64]
+	PrefixPoolUnallocatedCountIpv4 plugin.TValue[int64]
+	PrefixPoolUnallocatedCountIpv6 plugin.TValue[int64]
+	Tags                           plugin.TValue[map[string]any]
+	VirtualInterfaces              plugin.TValue[[]any]
 }
 
 // createAwsDirectconnectConnection creates a new instance of this resource
@@ -201226,6 +201503,22 @@ func (c *mqlAwsDirectconnectConnection) GetAwsDevice() *plugin.TValue[string] {
 	return &c.AwsDevice
 }
 
+func (c *mqlAwsDirectconnectConnection) GetPrefixPoolSizeIpv4() *plugin.TValue[int64] {
+	return &c.PrefixPoolSizeIpv4
+}
+
+func (c *mqlAwsDirectconnectConnection) GetPrefixPoolSizeIpv6() *plugin.TValue[int64] {
+	return &c.PrefixPoolSizeIpv6
+}
+
+func (c *mqlAwsDirectconnectConnection) GetPrefixPoolUnallocatedCountIpv4() *plugin.TValue[int64] {
+	return &c.PrefixPoolUnallocatedCountIpv4
+}
+
+func (c *mqlAwsDirectconnectConnection) GetPrefixPoolUnallocatedCountIpv6() *plugin.TValue[int64] {
+	return &c.PrefixPoolUnallocatedCountIpv6
+}
+
 func (c *mqlAwsDirectconnectConnection) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -201251,27 +201544,29 @@ type mqlAwsDirectconnectVirtualInterface struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsDirectconnectVirtualInterfaceInternal
-	Id                  plugin.TValue[string]
-	Name                plugin.TValue[string]
-	Type                plugin.TValue[string]
-	State               plugin.TValue[string]
-	Vlan                plugin.TValue[int64]
-	Region              plugin.TValue[string]
-	OwnerAccount        plugin.TValue[string]
-	Connection          plugin.TValue[*mqlAwsDirectconnectConnection]
-	Asn                 plugin.TValue[int64]
-	AmazonSideAsn       plugin.TValue[int64]
-	AddressFamily       plugin.TValue[string]
-	AmazonAddress       plugin.TValue[string]
-	CustomerAddress     plugin.TValue[string]
-	BgpPeers            plugin.TValue[[]any]
-	RouteFilterPrefixes plugin.TValue[[]any]
-	Gateway             plugin.TValue[*mqlAwsDirectconnectGateway]
-	VirtualGateway      plugin.TValue[*mqlAwsVpcVpnGateway]
-	Mtu                 plugin.TValue[int64]
-	JumboFrameCapable   plugin.TValue[bool]
-	SiteLinkEnabled     plugin.TValue[bool]
-	Tags                plugin.TValue[map[string]any]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Type                         plugin.TValue[string]
+	State                        plugin.TValue[string]
+	Vlan                         plugin.TValue[int64]
+	Region                       plugin.TValue[string]
+	OwnerAccount                 plugin.TValue[string]
+	Connection                   plugin.TValue[*mqlAwsDirectconnectConnection]
+	Asn                          plugin.TValue[int64]
+	AmazonSideAsn                plugin.TValue[int64]
+	AddressFamily                plugin.TValue[string]
+	AmazonAddress                plugin.TValue[string]
+	CustomerAddress              plugin.TValue[string]
+	BgpPeers                     plugin.TValue[[]any]
+	RouteFilterPrefixes          plugin.TValue[[]any]
+	Gateway                      plugin.TValue[*mqlAwsDirectconnectGateway]
+	VirtualGateway               plugin.TValue[*mqlAwsVpcVpnGateway]
+	Mtu                          plugin.TValue[int64]
+	JumboFrameCapable            plugin.TValue[bool]
+	SiteLinkEnabled              plugin.TValue[bool]
+	PrefixPoolAllocatedCountIpv4 plugin.TValue[int64]
+	PrefixPoolAllocatedCountIpv6 plugin.TValue[int64]
+	Tags                         plugin.TValue[map[string]any]
 }
 
 // createAwsDirectconnectVirtualInterface creates a new instance of this resource
@@ -201427,6 +201722,14 @@ func (c *mqlAwsDirectconnectVirtualInterface) GetSiteLinkEnabled() *plugin.TValu
 	return &c.SiteLinkEnabled
 }
 
+func (c *mqlAwsDirectconnectVirtualInterface) GetPrefixPoolAllocatedCountIpv4() *plugin.TValue[int64] {
+	return &c.PrefixPoolAllocatedCountIpv4
+}
+
+func (c *mqlAwsDirectconnectVirtualInterface) GetPrefixPoolAllocatedCountIpv6() *plugin.TValue[int64] {
+	return &c.PrefixPoolAllocatedCountIpv6
+}
+
 func (c *mqlAwsDirectconnectVirtualInterface) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -201436,12 +201739,13 @@ type mqlAwsDirectconnectGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsDirectconnectGatewayInternal it will be used here
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	State            plugin.TValue[string]
-	AmazonSideAsn    plugin.TValue[int64]
-	OwnerAccount     plugin.TValue[string]
-	StateChangeError plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	State                      plugin.TValue[string]
+	AmazonSideAsn              plugin.TValue[int64]
+	OwnerAccount               plugin.TValue[string]
+	StateChangeError           plugin.TValue[string]
+	TotalPrefixPoolAllocations plugin.TValue[int64]
 }
 
 // createAwsDirectconnectGateway creates a new instance of this resource
@@ -201503,4 +201807,8 @@ func (c *mqlAwsDirectconnectGateway) GetOwnerAccount() *plugin.TValue[string] {
 
 func (c *mqlAwsDirectconnectGateway) GetStateChangeError() *plugin.TValue[string] {
 	return &c.StateChangeError
+}
+
+func (c *mqlAwsDirectconnectGateway) GetTotalPrefixPoolAllocations() *plugin.TValue[int64] {
+	return &c.TotalPrefixPoolAllocations
 }
