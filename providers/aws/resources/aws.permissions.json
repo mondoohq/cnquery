@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.53.3",
-  "generated_at": "2026-08-20T18:38:52+03:00",
+  "generated_at": "2026-08-20T09:20:11-07:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -542,6 +542,7 @@
     "iam:ListInstanceProfiles",
     "iam:ListMFADevices",
     "iam:ListOpenIDConnectProviders",
+    "iam:ListOrganizationsFeatures",
     "iam:ListPolicies",
     "iam:ListPolicyVersions",
     "iam:ListRolePolicies",
@@ -669,6 +670,7 @@
     "organizations:DescribeOrganization",
     "organizations:DescribePolicy",
     "organizations:DescribeResourcePolicy",
+    "organizations:ListAWSServiceAccessForOrganization",
     "organizations:ListAccounts",
     "organizations:ListDelegatedAdministrators",
     "organizations:ListDelegatedServicesForAccount",
@@ -4380,6 +4382,12 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:ListOrganizationsFeatures",
+      "service": "iam",
+      "action": "ListOrganizationsFeatures",
+      "source_file": "aws_organizations_root_access.go"
+    },
+    {
       "permission": "iam:ListPolicies",
       "service": "iam",
       "action": "ListPolicies",
@@ -5146,6 +5154,12 @@
       "service": "organizations",
       "action": "DescribeResourcePolicy",
       "source_file": "aws_organizations_resource_policy.go"
+    },
+    {
+      "permission": "organizations:ListAWSServiceAccessForOrganization",
+      "service": "organizations",
+      "action": "ListAWSServiceAccessForOrganization",
+      "source_file": "aws_organizations_root_access.go"
     },
     {
       "permission": "organizations:ListAccounts",
