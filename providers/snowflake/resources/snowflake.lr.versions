@@ -119,9 +119,11 @@ snowflake.authenticationPolicy.name 13.2.7
 snowflake.authenticationPolicy.options 13.2.7
 snowflake.authenticationPolicy.owner 13.2.7
 snowflake.authenticationPolicy.ownerRoleType 13.2.7
+snowflake.authenticationPolicy.patPolicy 13.6.1
 snowflake.authenticationPolicy.schemaName 13.2.7
 snowflake.authenticationPolicy.securityIntegrationRefs 13.3.7
 snowflake.authenticationPolicy.securityIntegrations 13.2.7
+snowflake.authenticationPolicy.workloadIdentityPolicy 13.6.1
 snowflake.connection 13.3.7
 snowflake.connection.accountLocator 13.3.7
 snowflake.connection.accountName 13.3.7

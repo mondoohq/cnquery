@@ -1114,6 +1114,35 @@ snowflake.authenticationPolicy @defaults("name mfaEnrollment") {
   securityIntegrations() []string
   // Security integrations permitted by this policy
   securityIntegrationRefs() []snowflake.securityIntegration
+  // Programmatic access token rules
+  //
+  // The PAT_POLICY value from DESCRIBE AUTHENTICATION POLICY, as a map keyed by
+  // sub-parameter name. DEFAULT_EXPIRY_IN_DAYS and MAX_EXPIRY_IN_DAYS are
+  // numbers; NETWORK_POLICY_EVALUATION is ENFORCED_REQUIRED,
+  // ENFORCED_NOT_REQUIRED or NOT_ENFORCED;
+  // REQUIRE_ROLE_RESTRICTION_FOR_SERVICE_USERS and
+  // REQUIRE_ROLE_RESTRICTION_FOR_PERSON_USERS are booleans; BLOCKED_ROLES_LIST
+  // is a list of role names a token may never assume. Together these decide
+  // whether a programmatic access token is bounded in lifetime, whether it is
+  // usable from any network, and what it may act as, for example
+  // `patPolicy["NETWORK_POLICY_EVALUATION"] == "ENFORCED_REQUIRED"` or
+  // `patPolicy["MAX_EXPIRY_IN_DAYS"] <= 90`. Empty on a policy that sets no
+  // token rules, and on a Snowflake version that does not report the property.
+  patPolicy() dict
+  // Workload identity federation rules
+  //
+  // The WORKLOAD_IDENTITY_POLICY value from DESCRIBE AUTHENTICATION POLICY, as a
+  // map keyed by sub-parameter name: ALLOWED_PROVIDERS (any of ALL, AWS, AZURE,
+  // GCP, OIDC), ALLOWED_AWS_ACCOUNTS, ALLOWED_AWS_PARTITIONS,
+  // ALLOWED_AZURE_ISSUERS and ALLOWED_OIDC_ISSUERS. These decide which external
+  // identities may federate into the account at all. Every value is a list of
+  // strings, so an account id keeps its leading zeros. A sub-parameter that
+  // places no restriction reports the single member ALL rather than an empty
+  // list, so an unrestricted policy reads as
+  // `workloadIdentityPolicy["ALLOWED_PROVIDERS"].contains("ALL")`. Empty on a
+  // policy that carries no workload identity rules, and on a Snowflake version
+  // that does not report the property.
+  workloadIdentityPolicy() dict
 }
 
 // Snowflake Masking Policy
