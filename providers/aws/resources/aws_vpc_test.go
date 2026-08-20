@@ -688,3 +688,48 @@ func TestVgwTelemetryKeyIsScopedToItsConnection(t *testing.T) {
 		assert.NotEqual(t, got[0], got[1])
 	})
 }
+
+// TestNatgatewayAddressKeyIsSetAtCreation pins that a NAT gateway address is
+// keyed by its ENI, not just its private IP.
+//
+// The key helper was always correct; what was broken is that id() reads it from
+// cacheNetworkInterfaceId, which the creator assigns *after* CreateResource has
+// already computed the key. So the ENI was always empty at the moment it
+// mattered, every address keyed on its private IP alone, and two VPCs built
+// from the same CIDR plan aliased onto one row — with the post-construction
+// writes then racing on the shared object.
+func TestNatgatewayAddressKeyIsSetAtCreation(t *testing.T) {
+	// A fresh runtime per gateway: these all describe different gateways, and a
+	// shared runtime would legitimately return the first one from cache.
+	newAddress := func(natGatewayId, eni, privateIp string) *mqlAwsVpcNatgatewayAddress {
+		runtime := testRuntime()
+		gw := ec2types.NatGateway{
+			NatGatewayId: aws.String(natGatewayId),
+			NatGatewayAddresses: []ec2types.NatGatewayAddress{{
+				NetworkInterfaceId: aws.String(eni),
+				PrivateIp:          aws.String(privateIp),
+			}},
+		}
+		nat, err := newMqlAwsVpcNatgateway(runtime, "us-east-1", gw)
+		require.NoError(t, err)
+		require.Len(t, nat.Addresses.Data, 1)
+		return nat.Addresses.Data[0].(*mqlAwsVpcNatgatewayAddress)
+	}
+
+	t.Run("the eni reaches the cache key", func(t *testing.T) {
+		addr := newAddress("nat-0aaaaaaaaaaaaaaaa", "eni-0aaaaaaaaaaaaaaaa", "10.0.1.10")
+		assert.Equal(t, "eni-0aaaaaaaaaaaaaaaa/10.0.1.10", addr.MqlID(),
+			"the key must carry the ENI, which id() could never see")
+	})
+
+	t.Run("two vpcs with the same private ip do not alias", func(t *testing.T) {
+		first := newAddress("nat-0aaaaaaaaaaaaaaaa", "eni-0aaaaaaaaaaaaaaaa", "10.0.1.10")
+		second := newAddress("nat-0bbbbbbbbbbbbbbbb", "eni-0bbbbbbbbbbbbbbbb", "10.0.1.10")
+		assert.NotEqual(t, first.MqlID(), second.MqlID())
+	})
+
+	t.Run("an address with no eni still keys on its private ip", func(t *testing.T) {
+		addr := newAddress("nat-0ccccccccccccccccc", "", "10.0.1.10")
+		assert.Equal(t, "/10.0.1.10", addr.MqlID())
+	})
+}

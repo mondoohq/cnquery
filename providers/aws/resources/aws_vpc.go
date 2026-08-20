@@ -226,6 +226,10 @@ func natgatewayAddressCacheKey(networkInterfaceId, privateIp string) string {
 	return networkInterfaceId + "/" + privateIp
 }
 
+// id is a fallback only. The key that matters is passed as __id by the creator,
+// because cacheNetworkInterfaceId is assigned after CreateResource returns and
+// so is always empty by the time this runs - which left every address keyed on
+// its private IP alone, and two VPCs built from the same CIDR plan alias.
 func (a *mqlAwsVpcNatgatewayAddress) id() (string, error) {
 	return natgatewayAddressCacheKey(a.cacheNetworkInterfaceId, a.PrivateIp.Data), nil
 }
@@ -344,6 +348,8 @@ func newMqlAwsVpcNatgateway(runtime *plugin.Runtime, region string, gw vpctypes.
 	for _, address := range gw.NatGatewayAddresses {
 		mqlAddr, err := CreateResource(runtime, ResourceAwsVpcNatgatewayAddress,
 			map[string]*llx.RawData{
+				"__id": llx.StringData(natgatewayAddressCacheKey(
+					convert.ToValue(address.NetworkInterfaceId), convert.ToValue(address.PrivateIp))),
 				"allocationId": llx.StringDataPtr(address.AllocationId),
 				"privateIp":    llx.StringDataPtr(address.PrivateIp),
 				"isPrimary":    llx.BoolDataPtr(address.IsPrimary),
