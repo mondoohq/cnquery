@@ -333,3 +333,51 @@ exit
 	assert.Equal(t, "10.50.0.0/16", instances[0].Neighbors[0].ListenRange)
 	assert.True(t, instances[0].Neighbors[0].IsPeerGroup)
 }
+
+func TestNeighbors_NegatedSettingsClearPreviousValues(t *testing.T) {
+	src := `hostname x
+router bgp 65100
+ neighbor GROUP peer-group
+ neighbor PEER peer-group GROUP
+ address-family ipv4 unicast
+  neighbor PEER activate
+  neighbor PEER route-map rm-in in
+  neighbor PEER route-map rm-out out
+  neighbor PEER prefix-list pl-in in
+  neighbor PEER prefix-list pl-out out
+  neighbor PEER filter-list fl-in in
+  neighbor PEER filter-list fl-out out
+  neighbor PEER maximum-prefix 100
+  no neighbor PEER route-map rm-in in
+  no neighbor PEER route-map rm-out out
+  no neighbor PEER prefix-list pl-in in
+  no neighbor PEER prefix-list pl-out out
+  no neighbor PEER filter-list fl-in in
+  no neighbor PEER filter-list fl-out out
+  no neighbor PEER maximum-prefix
+ exit-address-family
+ no neighbor GROUP peer-group
+ no neighbor PEER peer-group GROUP
+exit
+`
+	cfg, err := Parse("inline.conf", strings.NewReader(src))
+	require.NoError(t, err)
+	require.Len(t, cfg.BGPInstances(), 1)
+
+	neighbors := cfg.BGPInstances()[0].Neighbors
+	group := neighborByName(neighbors, "GROUP")
+	require.NotNil(t, group)
+	assert.False(t, group.IsPeerGroup)
+
+	peer := neighborByName(neighbors, "PEER")
+	require.NotNil(t, peer)
+	assert.Empty(t, peer.PeerGroup)
+	require.Len(t, peer.AddressFamilies, 1)
+	assert.Empty(t, peer.RouteMapsIn)
+	assert.Empty(t, peer.RouteMapsOut)
+	assert.Empty(t, peer.PrefixListsIn)
+	assert.Empty(t, peer.PrefixListsOut)
+	assert.Empty(t, peer.FilterListsIn)
+	assert.Empty(t, peer.FilterListsOut)
+	assert.Zero(t, peer.AddressFamilies[0].MaximumPrefix)
+}

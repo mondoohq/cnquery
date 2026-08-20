@@ -376,20 +376,34 @@ func applyNeighborLine(set *neighborSet, d *Directive) {
 
 	switch rest[0] {
 	case "interface":
-		n.Interface = true
+		n.Interface = !d.Negated
 		// `neighbor <if> interface remote-as <asn>` and
 		// `neighbor <if> interface peer-group <name>`.
 		if v := argAfter(rest, "remote-as"); v != "" {
-			n.setRemoteAs(v)
+			if !d.Negated {
+				n.setRemoteAs(v)
+			}
 		}
 		if v := argAfter(rest, "peer-group"); v != "" {
-			n.PeerGroup = v
+			if d.Negated {
+				if n.PeerGroup == v {
+					n.PeerGroup = ""
+				}
+			} else {
+				n.PeerGroup = v
+			}
 		}
 	case "peer-group":
 		if len(rest) == 1 {
-			n.IsPeerGroup = true
+			n.IsPeerGroup = !d.Negated
 		} else {
-			n.PeerGroup = rest[1]
+			if d.Negated {
+				if n.PeerGroup == rest[1] {
+					n.PeerGroup = ""
+				}
+			} else {
+				n.PeerGroup = rest[1]
+			}
 		}
 	case "remote-as":
 		if len(rest) > 1 {
@@ -539,29 +553,67 @@ func applyNeighborAddressFamilyLine(set *neighborSet, afi, safi string, d *Direc
 		// `neighbor <n> route-map <name> in|out`
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				naf.RouteMapIn = rest[1]
+				if d.Negated {
+					if naf.RouteMapIn == rest[1] {
+						naf.RouteMapIn = ""
+					}
+				} else {
+					naf.RouteMapIn = rest[1]
+				}
 			} else {
-				naf.RouteMapOut = rest[1]
+				if d.Negated {
+					if naf.RouteMapOut == rest[1] {
+						naf.RouteMapOut = ""
+					}
+				} else {
+					naf.RouteMapOut = rest[1]
+				}
 			}
 		}
 	case "prefix-list":
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				naf.PrefixListIn = rest[1]
+				if d.Negated {
+					if naf.PrefixListIn == rest[1] {
+						naf.PrefixListIn = ""
+					}
+				} else {
+					naf.PrefixListIn = rest[1]
+				}
 			} else {
-				naf.PrefixListOut = rest[1]
+				if d.Negated {
+					if naf.PrefixListOut == rest[1] {
+						naf.PrefixListOut = ""
+					}
+				} else {
+					naf.PrefixListOut = rest[1]
+				}
 			}
 		}
 	case "filter-list":
 		if len(rest) >= 3 {
 			if rest[2] == "in" {
-				naf.FilterListIn = rest[1]
+				if d.Negated {
+					if naf.FilterListIn == rest[1] {
+						naf.FilterListIn = ""
+					}
+				} else {
+					naf.FilterListIn = rest[1]
+				}
 			} else {
-				naf.FilterListOut = rest[1]
+				if d.Negated {
+					if naf.FilterListOut == rest[1] {
+						naf.FilterListOut = ""
+					}
+				} else {
+					naf.FilterListOut = rest[1]
+				}
 			}
 		}
 	case "maximum-prefix":
-		if len(rest) > 1 {
+		if d.Negated {
+			naf.MaximumPrefix = 0
+		} else if len(rest) > 1 {
 			naf.MaximumPrefix, _ = strconv.ParseInt(rest[1], 10, 64)
 		}
 	case "route-reflector-client":
