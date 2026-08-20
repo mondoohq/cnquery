@@ -1,7 +1,7 @@
 {
   "provider": "aws",
   "version": "13.53.3",
-  "generated_at": "2026-08-19T15:36:50-07:00",
+  "generated_at": "2026-08-20T18:38:52+03:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
@@ -668,6 +668,7 @@
     "organizations:DescribeEffectivePolicy",
     "organizations:DescribeOrganization",
     "organizations:DescribePolicy",
+    "organizations:DescribeResourcePolicy",
     "organizations:ListAccounts",
     "organizations:ListDelegatedAdministrators",
     "organizations:ListDelegatedServicesForAccount",
@@ -5139,6 +5140,12 @@
       "service": "organizations",
       "action": "DescribePolicy",
       "source_file": "aws_organizations_policy.go"
+    },
+    {
+      "permission": "organizations:DescribeResourcePolicy",
+      "service": "organizations",
+      "action": "DescribeResourcePolicy",
+      "source_file": "aws_organizations_resource_policy.go"
     },
     {
       "permission": "organizations:ListAccounts",
