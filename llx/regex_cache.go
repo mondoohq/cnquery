@@ -31,8 +31,9 @@ func compiledRegex(pattern string) *regexp.Regexp {
 
 	r := regexp.MustCompile(pattern)
 
-	// Stop storing once the cache is full. Entries are never evicted, so the cache holds at
-	// most regexCacheMax patterns for the life of the process.
+	// Stop storing once the cache is full. The check is intentionally lock-free. Concurrent
+	// callers can pass it before LoadOrStore updates the counter, so the cache holds
+	// approximately regexCacheMax patterns for the life of the process.
 	if regexCacheLen.Load() < regexCacheMax {
 		if _, loaded := regexCache.LoadOrStore(pattern, r); !loaded {
 			regexCacheLen.Add(1)
