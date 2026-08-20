@@ -1237,8 +1237,8 @@ snowflake.authenticationPolicy @defaults("name mfaEnrollment") {
   comment string
   // Comma-separated list of policy options reported by SHOW
   options string
-  // When the policy was created (Snowflake-formatted string)
-  createdAt string
+  // When the authentication policy was created
+  createdAt time
   // Permitted authentication methods (one or more of ALL, SAML, PASSWORD, OAUTH, KEYPAIR)
   authenticationMethods() []string
   // Permitted MFA authentication methods (one or more of ALL, SAML, PASSWORD)

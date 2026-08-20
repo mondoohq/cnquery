@@ -70,7 +70,7 @@ func newMqlSnowflakeAuthenticationPolicy(runtime *plugin.Runtime, policy sdk.Aut
 		"ownerRoleType": llx.StringData(policy.OwnerRoleType),
 		"comment":       llx.StringData(policy.Comment),
 		"options":       llx.StringData(policy.Options),
-		"createdAt":     llx.StringData(policy.CreatedOn),
+		"createdAt":     parseSnowflakeTime(policy.CreatedOn),
 	})
 	if err != nil {
 		return nil, err
