@@ -10934,8 +10934,12 @@ private azure.subscription.authorizationService {
   managedIdentities() []azure.subscription.managedIdentity
   // Deny assignments: read-only deny rules that block actions even for owners (e.g., managed-app deny on resources)
   denyAssignments() []azure.subscription.authorizationService.denyAssignment
-  // Classic (ASM) co-administrators: legacy admin grants that should normally be zero
-  classicAdministrators() []azure.subscription.authorizationService.classicAdministrator
+  // Classic (ASM) co-administrators
+  //
+  // Deprecated in favor of roleAssignments. Azure retired classic
+  // administrators on 2024-08-31 and converted the remaining grants to RBAC
+  // Owner assignments, so this list is always empty.
+  classicAdministrators() @maturity("deprecated") []azure.subscription.authorizationService.classicAdministrator
   // PIM role eligibility schedules: who is eligible to activate which privileged role
   roleEligibilitySchedules() []azure.subscription.authorizationService.roleEligibilitySchedule
   // PIM role assignment schedules: currently active (including time-bound) privileged role assignments
@@ -11145,10 +11149,12 @@ private azure.subscription.authorizationService.denyAssignment @defaults("name d
 //
 // Legacy co-administrator or service administrator grant from the classic
 // (Azure Service Management) deployment model. These grants predate role-based
-// access control and carry broad subscription-wide access, so on a hardened
-// subscription the count should normally be zero. Select by the administrator's
-// resource ID.
-private azure.subscription.authorizationService.classicAdministrator @defaults("emailAddress role") {
+// access control and carry broad subscription-wide access. Deprecated in favor
+// of azure.subscription.authorizationService.roleAssignment: Azure retired
+// classic administrators on 2024-08-31 and converted the remaining grants to
+// RBAC Owner assignments, so no subscription returns one. Select by the
+// administrator's resource ID. Will be removed in the next major release.
+private azure.subscription.authorizationService.classicAdministrator @defaults("emailAddress role") @maturity("deprecated") {
   // Classic administrator ID
   id string
   // Resource name (typically the email)
