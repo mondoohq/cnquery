@@ -6,8 +6,8 @@ go 1.26.6
 
 require (
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mondoo-go v0.0.0-20260820000712-4e5e7cf196db
-	go.mondoo.com/mql v0.0.0-20260820190415-38082fb86c23
+	go.mondoo.com/mondoo-go v0.0.0-20260821120618-ae51af2e4dae
+	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
 )
 
 require (

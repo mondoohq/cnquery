@@ -7,7 +7,7 @@ go 1.26.6
 require (
 	github.com/stretchr/testify v1.12.1
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
-	go.mondoo.com/mql v0.0.0-20260820190415-38082fb86c23
+	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
 )
 
 require (

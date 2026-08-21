@@ -8,9 +8,9 @@ require (
 	github.com/facebookincubator/nvdtools v0.1.5
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	github.com/vmware/govmomi v0.55.1
-	go.mondoo.com/mondoo-go v0.0.0-20260820000712-4e5e7cf196db
-	go.mondoo.com/mql v0.0.0-20260820190415-38082fb86c23
+	github.com/vmware/govmomi v0.56.0
+	go.mondoo.com/mondoo-go v0.0.0-20260821120618-ae51af2e4dae
+	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
 	golang.org/x/sync v0.22.0
 )
 
@@ -104,6 +104,7 @@ require (
 	google.golang.org/grpc v1.83.1 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )

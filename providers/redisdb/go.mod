@@ -6,7 +6,7 @@ go 1.26.6
 
 require (
 	github.com/redis/go-redis/v9 v9.22.0
-	go.mondoo.com/mql v0.0.0-20260820190415-38082fb86c23
+	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
 	go.mondoo.com/ranger-rpc v0.8.1
 )
 

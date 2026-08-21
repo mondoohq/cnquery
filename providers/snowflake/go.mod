@@ -14,7 +14,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.19.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260820190415-38082fb86c23
+	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/crypto v0.55.0
 )
