@@ -24,6 +24,38 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+      # Sparse-checkout the scripts dir from main first, so we can run
+      # determine-provider-release-base.sh to pick the target branch
+      # before doing the full checkout. Pinned to main because on the
+      # release event github.ref is the release tag (e.g. v13.35.1),
+      # and the v13 branch's tag may predate this script's existence.
+      - name: Sparse-checkout scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          sparse-checkout: '.github/scripts'
+          sparse-checkout-cone-mode: false
+      # Route the provider-bump PR by comparing the release major to the
+      # major in main's go.mod. Matching -> base=main; different ->
+      # base=v{release_major} (e.g. a v13.35.1 tag while main is on v14
+      # opens the PR against v13, not main). For workflow_dispatch (no
+      # release event) fall back to main.
+      # Logic lives in .github/scripts/determine-provider-release-base.sh
+      # and is unit-tested in .github/scripts/tests/.
+      - name: Determine base branch
+        id: base
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$TAG_NAME" ]; then
+            BASE=main
+          else
+            BASE=$(.github/scripts/determine-provider-release-base.sh "$TAG_NAME")
+          fi
+          echo "tag=${TAG_NAME:-<empty>} -> base=$BASE"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
       # https://github.com/peter-evans/create-pull-request/issues/48
       # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
       # tl;dr:
@@ -34,6 +66,7 @@ jobs:
         with:
           ssh-key: ${{ secrets.CNQUERY_DEPLOY_KEY_PRIV }}
           fetch-depth: 0
+          ref: ${{ steps.base.outputs.base }}
 
       - name: Import environment variables from file
         run: cat ".github/env" >> $GITHUB_ENV
@@ -122,7 +155,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          base: main
+          base: ${{ steps.base.outputs.base }}
           labels: providers
           committer: "Mondoo Tools <tools@mondoo.com>"
           author: "Mondoo Tools <tools@mondoo.com>"
