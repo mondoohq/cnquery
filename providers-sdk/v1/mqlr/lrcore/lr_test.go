@@ -771,3 +771,83 @@ func TestGetDuplicates(t *testing.T) {
 	dups := lr.GetDuplicates()
 	assert.Equal(t, []string{"res1.res2"}, dups)
 }
+
+func TestSchemaDependencyID(t *testing.T) {
+	// The peer's go_package and its provider ID are deliberately different
+	// here. They are identical for every provider in the tree, so a fixture
+	// where they agree cannot tell a correct implementation from one that
+	// derives the dependency ID from go_package.
+	const peer = `
+option provider = "go.mondoo.com/mql/providers/network"
+option go_package = "go.example.com/some/other/path/resources"
+
+network {
+  ip string
+}
+`
+	const consumer = `
+import "../../network/resources/network.lr"
+
+option provider = "go.mondoo.com/mql/providers/os"
+option go_package = "go.mondoo.com/mql/providers/os/resources"
+
+os.host {
+  addr network
+}
+`
+
+	files := map[string]string{
+		"providers/os/resources/os.lr":           consumer,
+		"providers/network/resources/network.lr": peer,
+	}
+
+	res, err := Resolve("providers/os/resources/os.lr", func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+	require.NoError(t, err)
+
+	schema, err := Schema(res)
+	require.NoError(t, err)
+
+	dep, ok := schema.Dependencies["network"]
+	require.True(t, ok, "expected a dependency on the imported provider")
+	assert.Equal(t, "network", dep.Name)
+	// Must be the peer's `option provider`, NOT its go_package. Recording the
+	// go_package here yields a string no provider answers to, which the
+	// runtime's name-based fallback then silently papers over.
+	assert.Equal(t, "go.mondoo.com/mql/providers/network", dep.Id)
+}
+
+func TestSchemaDependencyRequiresProviderOption(t *testing.T) {
+	// An import with no `option provider` cannot be identified at runtime, so
+	// resolution must fail loudly rather than record an empty ID.
+	files := map[string]string{
+		"providers/os/resources/os.lr": `
+import "../../network/resources/network.lr"
+
+option provider = "go.mondoo.com/mql/providers/os"
+option go_package = "go.mondoo.com/mql/providers/os/resources"
+
+os.host {
+  addr network
+}
+`,
+		"providers/network/resources/network.lr": `
+option go_package = "go.mondoo.com/mql/providers/network/resources"
+
+network {
+  ip string
+}
+`,
+	}
+
+	_, err := Resolve("providers/os/resources/os.lr", func(path string) ([]byte, error) {
+		raw, ok := files[path]
+		require.Truef(t, ok, "unexpected read of %q", path)
+		return []byte(raw), nil
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "provider")
+}

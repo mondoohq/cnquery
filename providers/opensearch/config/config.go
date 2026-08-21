@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "opensearch",
-	ID:              "go.mondoo.com/mql/v13/providers/opensearch",
+	ID:              "go.mondoo.com/mql/providers/opensearch",
 	Version:         "13.0.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

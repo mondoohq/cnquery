@@ -21,7 +21,7 @@ func testProviders() Providers {
 		return &Provider{
 			Provider: &plugin.Provider{
 				Name:               name,
-				ID:                 "go.mondoo.com/cnquery/v9/providers/" + name,
+				ID:                 "go.mondoo.com/mql/providers/" + name,
 				ConnectionTypes:    connTypes,
 				DefaultParallelism: parallelism,
 			},
@@ -167,7 +167,7 @@ func TestResolveParallelismToleratesNilEntries(t *testing.T) {
 func TestDefaultParallelismSurvivesTheDescriptor(t *testing.T) {
 	data, err := json.Marshal(&plugin.Provider{
 		Name:               "gitlab",
-		ID:                 "go.mondoo.com/cnquery/v9/providers/gitlab",
+		ID:                 "go.mondoo.com/mql/providers/gitlab",
 		ConnectionTypes:    []string{"gitlab"},
 		DefaultParallelism: 4,
 	})
@@ -184,6 +184,9 @@ func TestDefaultParallelismSurvivesTheDescriptor(t *testing.T) {
 // resolves to sequential scanning rather than to a surprise default.
 func TestDefaultParallelismAbsentFromOlderDescriptor(t *testing.T) {
 	var decoded plugin.Provider
+	// The versioned ID is intentional: this descriptor stands in for a
+	// provider built before the field existed, which is also before provider
+	// IDs became version-less. Do not "fix" it to the current form.
 	require.NoError(t, json.Unmarshal([]byte(`{
 		"Name": "gitlab",
 		"ID": "go.mondoo.com/cnquery/v9/providers/gitlab",

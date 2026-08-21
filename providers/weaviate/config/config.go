@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "weaviate",
-	ID:              "go.mondoo.com/mql/v13/providers/weaviate",
+	ID:              "go.mondoo.com/mql/providers/weaviate",
 	Version:         "13.0.3",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

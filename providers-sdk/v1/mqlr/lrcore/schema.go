@@ -28,7 +28,7 @@ func Schema(ast *LR) (*resources.Schema, error) {
 	for dep := range ast.imports {
 		if !strings.HasSuffix(provider, dep) && dep != "core" {
 			res.Dependencies[dep] = &resources.ProviderInfo{
-				Id:   strings.TrimSuffix(ast.packPaths[dep], "/resources"),
+				Id:   ast.packProviders[dep],
 				Name: dep,
 			}
 		}

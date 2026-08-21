@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "clickhousedb",
-	ID:              "go.mondoo.com/mql/v13/providers/clickhousedb",
+	ID:              "go.mondoo.com/mql/providers/clickhousedb",
 	Version:         "13.0.1",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

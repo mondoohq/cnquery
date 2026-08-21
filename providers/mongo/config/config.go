@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "mongo",
-	ID:              "go.mondoo.com/mql/v13/providers/mongo",
+	ID:              "go.mondoo.com/mql/providers/mongo",
 	Version:         "13.1.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

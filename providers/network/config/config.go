@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "network",
-	ID:              "go.mondoo.com/cnquery/v9/providers/network",
+	ID:              "go.mondoo.com/mql/providers/network",
 	Version:         "13.3.0",
 	ConnectionTypes: []string{provider.HostConnectionType},
 	Platforms:       provider.Platforms,
@@ -20,20 +20,6 @@ var Config = plugin.Provider{
 	// unrelated targets, with no shared rate limit to trip, so this is the
 	// highest default we hand out.
 	DefaultParallelism: 10,
-	CrossProviderTypes: []string{
-		"go.mondoo.com/mql/providers/os",
-		"go.mondoo.com/mql/providers/k8s",
-		"go.mondoo.com/mql/providers/aws",
-		"go.mondoo.com/mql/providers/networkdiscovery",
-		// FIXME: DEPRECATED, remove in v12.0 vv
-		// Until v10 providers had a version indication in their ID. With v10
-		// this is no longer the case. Once we get far enough away from legacy
-		// version support, we can safely remove this.
-		"go.mondoo.com/mql/providers/os",
-		"go.mondoo.com/mql/providers/k8s",
-		"go.mondoo.com/mql/providers/aws",
-		// ^^
-	},
 	Connectors: []plugin.Connector{
 		{
 			Name:  "host",

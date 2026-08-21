@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "elasticsearch",
-	ID:              "go.mondoo.com/mql/v13/providers/elasticsearch",
+	ID:              "go.mondoo.com/mql/providers/elasticsearch",
 	Version:         "13.0.2",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

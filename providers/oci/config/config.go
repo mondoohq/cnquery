@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "oci",
-	ID:              "go.mondoo.com/cnquery/v9/providers/oci",
+	ID:              "go.mondoo.com/mql/providers/oci",
 	Version:         "13.21.0",
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       resources.Platforms,

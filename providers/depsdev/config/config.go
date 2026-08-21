@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "depsdev",
-	ID:              "go.mondoo.com/mql/v13/providers/depsdev",
+	ID:              "go.mondoo.com/mql/providers/depsdev",
 	Version:         "13.1.9",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

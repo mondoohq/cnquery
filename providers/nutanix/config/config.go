@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "nutanix",
-	ID:              "go.mondoo.com/mql/v13/providers/nutanix",
+	ID:              "go.mondoo.com/mql/providers/nutanix",
 	Version:         "13.4.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

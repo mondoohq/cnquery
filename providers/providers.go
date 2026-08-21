@@ -402,7 +402,7 @@ func (e *ProviderNotFoundError) Error() string {
 
 // EnsureProvider makes sure that a given provider exists and returns it.
 // You can supply providers either via:
-//  1. providerID, which universally identifies it, e.g. "go.mondoo.com/mql/v13/providers/os"
+//  1. providerID, which universally identifies it, e.g. "go.mondoo.com/mql/providers/os"
 //  2. connectorName, which is what you see in the CLI e.g. "local", "ssh", ...
 //  3. connectorType, which is how assets define the connector type when
 //     they are moved between discovery and execution, e.g. "registry-image".
