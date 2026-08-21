@@ -25,6 +25,7 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 
 	res.imports = make(map[string]map[string]struct{})
 	res.packPaths = map[string]string{}
+	res.packProviders = map[string]string{}
 	importMap := map[string]map[string]*Resource{
 		"": {},
 	}
@@ -63,6 +64,17 @@ func Resolve(filePath string, readFile func(path string) ([]byte, error)) (*LR, 
 			return nil, errors.New("cannot find name of the go package in " + importPath + " - make sure you set the go_package name")
 		}
 		res.packPaths[packName] = goPkg
+
+		// The peer's provider ID is what identifies it at runtime, so it has to
+		// come from its own `option provider` rather than being derived from
+		// go_package. The two happen to be equal today, which is exactly why
+		// this must be read explicitly: a derived value would keep looking
+		// correct right up until they diverge, and nothing would catch it.
+		providerID := childLR.Options["provider"]
+		if providerID == "" {
+			return nil, errors.New("cannot find the provider ID in " + importPath + " - make sure you set the provider option")
+		}
+		res.packProviders[packName] = providerID
 	}
 
 	res.aliases = map[string]*Resource{}

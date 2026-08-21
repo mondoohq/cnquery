@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "shodan",
-	ID:              "go.mondoo.com/mql/v13/providers/shodan",
+	ID:              "go.mondoo.com/mql/providers/shodan",
 	Version:         "13.2.12",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,

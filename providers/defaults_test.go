@@ -6,6 +6,7 @@ package providers
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,3 +87,79 @@ func TestDefaultProvidersIncludesExternalProviders(t *testing.T) {
 			"externally published provider %q is missing from DefaultProviders; it must be added by hand (the generator only sees local provider directories)", name)
 	}
 }
+
+// TestProviderIDsAreConsistent guards the invariant that a provider's ID is
+// declared identically in all three places that carry it:
+//
+//  1. providers/<name>/config/config.go   — the ID the binary reports
+//  2. providers/<name>/resources/<name>.lr — `option provider`, which becomes
+//     the "provider" key on every resource in the generated schema
+//  3. providers/defaults.go               — the air-gapped fallback entry
+//
+// Nothing else enforces this, and a mismatch is a *silent runtime* failure
+// rather than a build error: resource routing compares the schema's provider
+// string against the running provider's ID (see Runtime.lookupResourceProvider),
+// so a config.go edit without the matching .lr edit makes every resource in
+// that provider fail to resolve with "incorrect provider for asset". A stale
+// defaults.go entry instead breaks on-demand install, which Lookup's
+// name-based fallback then masks until the name no longer matches either.
+//
+// Fix a failure by aligning the three declarations, then running:
+//
+//	make providers/defaults
+func TestProviderIDsAreConsistent(t *testing.T) {
+	entries, err := os.ReadDir(".")
+	assert.NoError(t, err)
+
+	checked := 0
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+
+		configPath := filepath.Join(name, "config", "config.go")
+		raw, err := os.ReadFile(configPath)
+		if err != nil {
+			continue // not a provider directory
+		}
+
+		m := providerConfigIDRe.FindSubmatch(raw)
+		if m == nil {
+			continue // no ID declared (e.g. a provider still being scaffolded)
+		}
+		configID := string(m[1])
+		checked++
+
+		t.Run(name, func(t *testing.T) {
+			// Providers are addressed by a version-less ID in the mql
+			// namespace. This is what apps/provider-scaffold emits; pinning it
+			// keeps a versioned or cnquery-namespaced ID from creeping back in.
+			assert.Equalf(t, "go.mondoo.com/mql/providers/"+name, configID,
+				"%s declares an unexpected provider ID", configPath)
+
+			if p, ok := DefaultProviders[name]; ok {
+				assert.Equalf(t, configID, p.ID,
+					"defaults.go entry for %q disagrees with %s; run `make providers/defaults`", name, configPath)
+			}
+
+			lrs, err := filepath.Glob(filepath.Join(name, "resources", "*.lr"))
+			assert.NoError(t, err)
+			for _, lr := range lrs {
+				lrRaw, err := os.ReadFile(lr)
+				assert.NoError(t, err)
+				for _, om := range lrOptionProviderRe.FindAllSubmatch(lrRaw, -1) {
+					assert.Equalf(t, configID, string(om[1]),
+						"`option provider` in %s disagrees with %s; resources would fail to route at runtime", lr, configPath)
+				}
+			}
+		})
+	}
+
+	assert.NotZero(t, checked, "no provider configs were discovered; the directory scan is likely broken")
+}
+
+var (
+	providerConfigIDRe = regexp.MustCompile(`(?m)^\s*ID:\s*"([^"]+)"`)
+	lrOptionProviderRe = regexp.MustCompile(`(?m)^\s*option\s+provider\s*=\s*"([^"]+)"`)
+)

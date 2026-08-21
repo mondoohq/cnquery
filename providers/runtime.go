@@ -993,7 +993,19 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		"go.mondoo.com/mql/providers/ai",
 		"go.mondoo.com/mql/providers/ipinfo",
 		"go.mondoo.com/mql/providers/yara",
-		// FIXME: DEPRECATED, remove in v14.0 vv
+		// DEPRECATED, remove in v15.0 vv
+		// As of v14 every shipped provider uses the version-less
+		// "go.mondoo.com/mql/providers/<name>" form above, so nothing built from
+		// this tree matches the two blocks below any more. They are NOT dead: a
+		// provider is installed and versioned independently of the engine, so a
+		// v14+ engine routinely runs against provider binaries released before
+		// the ID change, which still report their old IDs from their own
+		// <name>.json. Deleting these entries breaks cross-provider calls for
+		// those users, silently -- the failure surfaces only as "incorrect
+		// provider for asset" at the gate below.
+		//
+		// ADR 042 retires this whitelist wholesale in v15, replacing it with
+		// consumer-declared dependencies. Until then, keep every entry.
 		"go.mondoo.com/cnquery/providers/core",
 		"go.mondoo.com/cnquery/providers/network",
 		"go.mondoo.com/cnquery/providers/os",
@@ -1003,12 +1015,10 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 		"go.mondoo.com/cnquery/providers/ai",
 		"go.mondoo.com/cnquery/providers/ipinfo",
 		"go.mondoo.com/cnquery/providers/yara",
-		// FIXME: DEPRECATED, remove in v12.0 vv
 		// Providers traditionally had a version indication in their ID. With v10
 		// this is no longer necessary (but still supported due to a bug,
-		// see https://github.com/mondoohq/mql/pull/3053).
-		// Once we get far enough away from legacy
-		// version support, we can safely remove this.
+		// see https://github.com/mondoohq/mql/pull/3053). This block covers the
+		// last providers to carry one; same v15 removal as the block above.
 		"go.mondoo.com/cnquery/v9/providers/core",
 		"go.mondoo.com/cnquery/v9/providers/network",
 		"go.mondoo.com/cnquery/v9/providers/os",

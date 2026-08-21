@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "helm",
-	ID:              "go.mondoo.com/mql/v13/providers/helm",
+	ID:              "go.mondoo.com/mql/providers/helm",
 	Version:         "13.3.13",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},

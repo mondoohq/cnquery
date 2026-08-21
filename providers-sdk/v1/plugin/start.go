@@ -20,19 +20,8 @@ type Provider struct {
 	ID              string
 	Version         string
 	ConnectionTypes []string
-	// CrossProviderTypes are asset providers that already
-	// have a primary provider set, but which may need to use
-	// resources from a different provider. For example:
-	// The primary provider of an asset may be the "os" provider.
-	// However, it now wants to use resources from the "network" provider.
-	// The "network" provider can indicate that it also supports
-	// assets from the "os" provider.
-	// TODO: This is only a hotfix and will be solved by
-	// each provider creating an asset object when it tries to
-	// call out.
-	CrossProviderTypes []string
-	Connectors         []Connector
-	AssetUrlTrees      []*inventory.AssetUrlBranch
+	Connectors      []Connector
+	AssetUrlTrees   []*inventory.AssetUrlBranch
 	// Platforms is the static catalog of platforms this provider can emit. It
 	// lets users see the supported platforms ahead of running, and lets the
 	// runtime construct platforms from a pre-defined descriptor instead of

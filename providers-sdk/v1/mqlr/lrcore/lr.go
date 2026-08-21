@@ -80,7 +80,12 @@ type LR struct {
 	Resources []*Resource    `{ @@ }`
 	imports   map[string]map[string]struct{}
 	packPaths map[string]string
-	aliases   map[string]*Resource
+	// packProviders maps an import's pack name to the provider ID that import
+	// declares via `option provider`. This is the peer's *runtime* identity and
+	// is what Schema.Dependencies must record; packPaths holds its Go package
+	// path, which is a build-time concern and not interchangeable.
+	packProviders map[string]string
+	aliases       map[string]*Resource
 }
 
 // Resource in LR

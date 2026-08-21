@@ -12,7 +12,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "kustomize",
-	ID:              "go.mondoo.com/mql/v13/providers/kustomize",
+	ID:              "go.mondoo.com/mql/providers/kustomize",
 	Version:         "13.1.15",
 	Maturity:        resources.MaturityExperimental,
 	ConnectionTypes: []string{provider.DefaultConnectionType},

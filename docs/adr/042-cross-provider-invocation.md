@@ -94,31 +94,41 @@ whether it may participate in cross-calling is decided by a constant in a
 *different* module (core). Adding a cross-callable provider means editing core
 and re-releasing it.
 
-Worse, the list's own `FIXME: DEPRECATED` markers are inverted. Of the nine
-whitelisted providers, only `core` matches the current
+Worse, when this ADR was written the list's own `FIXME: DEPRECATED` markers were
+inverted. Of the nine whitelisted providers, only `core` matched the
 `go.mondoo.com/mql/providers/*` block. `network`, `os`, `ms365`, and `azure`
-match **only** the block marked "remove in v12.0"; `networkdiscovery`, `ai`,
-`ipinfo`, and `yara` match **only** the block marked "remove in v14.0". Eight
-of nine are kept alive exclusively by entries scheduled for deletion, and
-honoring the v14 marker would break four providers outright. The module path is
-not a usable identity here — see the Decision.
+matched **only** the block marked "remove in v12.0"; `networkdiscovery`, `ai`,
+`ipinfo`, and `yara` matched **only** the block marked "remove in v14.0". Eight
+of nine were kept alive exclusively by entries scheduled for deletion, and
+honoring the v14 marker would have broken four providers outright. The module
+path is not a usable identity here — see the Decision.
 
-**2. The half-built parallel mechanism.** `Provider.CrossProviderTypes`
-(`providers-sdk/v1/plugin/start.go:33`) lets a provider declare asset
-connection types it is willing to serve resources for. Its own doc comment
-calls it "only a hotfix." It is **read by nothing** — four occurrences exist
-repo-wide: the struct field, its comment, and two declaration sites
-(`providers/network/config/config.go:19` and `providers/defaults.go:1359`). Both
-declarations are also wrong. `network` names three IDs no provider has
-(`go.mondoo.com/mql/providers/{os,k8s,aws}`; the real IDs are
-`cnquery/v9/…`), followed by a "DEPRECATED" block that is a byte-identical
-duplicate of the first three. The `defaults.go` entry is a hand-edit in a
-generated file that `providerTemplate`
-(`providers-sdk/v1/util/defaults/defaults.go:99-111`) silently drops on the
-next regeneration.
+Two things have since changed. The v14 provider-ID change moved every shipped
+provider onto the version-less `go.mondoo.com/mql/providers/*` block, so all
+nine now match the non-deprecated entries; and both legacy blocks were retagged
+to v15 to match this ADR's timeline. They are still required — a v14+ engine
+routinely runs against provider binaries released before the ID change, which
+report their old IDs — so they retire with the whitelist itself, not before.
 
-It rotted because nothing read it *and* nothing checked it. The second half is
-the fixable one.
+**2. The half-built parallel mechanism.** *(Removed in v14, ahead of the rest of
+this ADR.)* `Provider.CrossProviderTypes` let a provider declare asset
+connection types it was willing to serve resources for. Its own doc comment
+called it "only a hotfix." It was **read by nothing** — the struct field, its
+comment, and three declaration sites (`providers/network/config/config.go`,
+`providers/defaults.go`, and the enterprise repo's `networkdiscovery`). Every
+declaration was also wrong: `network` named three IDs no provider had, followed
+by a "DEPRECATED" block that a module-path sweep had rewritten into a
+byte-identical duplicate of the first three, and the `defaults.go` entry was a
+hand-edit in a generated file that `providerTemplate`
+(`providers-sdk/v1/util/defaults/defaults.go`) silently drops on the next
+regeneration.
+
+It rotted because nothing read it *and* nothing checked it. Deleting it was
+independent of the rest of this ADR, so it went with the provider-ID change
+rather than shipping one more release of a field naming providers that do not
+exist. The "nothing checked it" half is now covered by
+`TestProviderIDsAreConsistent` (`providers/defaults_test.go`), which pins
+`config.go` `ID` against `option provider` and the `defaults.go` entry.
 
 ### Cross-calling is a dependency, not a permission
 
@@ -179,7 +189,7 @@ Two declarations, checked against each other.
 **In the `.lr`, for the build:**
 
 ```
-option provider = "go.mondoo.com/cnquery/v9/providers/os"
+option provider = "go.mondoo.com/mql/providers/os"
 import network
 
 os.rootCertificates {
@@ -210,7 +220,7 @@ where resolution plugs in.
 Where two providers share a name, the import binds a local alias:
 
 ```
-import nw1 from 'go.mondoo.com/cnquery/v9/providers/network'
+import nw1 from 'go.mondoo.com/mql/providers/network'
 ```
 
 Usage is then normal (`nw1.certificate`). An import name that collides with a
@@ -222,7 +232,7 @@ collision exists today across the seven current importer/import pairs.
 
 ```go
 Requires: []plugin.ProviderDep{
-    {ID: "go.mondoo.com/cnquery/v9/providers/network", Name: "network", MinVersion: "13.3.0"},
+    {ID: "go.mondoo.com/mql/providers/network", Name: "network", MinVersion: "13.3.0"},
 }
 ```
 
@@ -247,21 +257,37 @@ and the same holds for any peer used only from Go.
 
 #### Fix the dependency ID while we are here
 
-`Schema.Dependencies` already exists and is already derived from imports, but the
-`Id` it records is wrong. `lrcore/schema.go:30` builds it as
-`strings.TrimSuffix(ast.packPaths[dep], "/resources")` — the peer's **Go package
-path**, not its provider ID:
+**Status: done.** Landed ahead of the rest of this ADR, alongside the v14
+provider-ID change, for the reason given below.
 
-| source | value |
+`Schema.Dependencies` already existed and was already derived from imports, but
+the `Id` it recorded was wrong. `lrcore/schema.go` built it as
+`strings.TrimSuffix(ast.packPaths[dep], "/resources")` — the peer's **Go package
+path**, not its provider ID. When this ADR was written the two differed:
+
+| source | value (pre-v14) |
 |---|---|
 | `network.lr` `option provider` | `go.mondoo.com/cnquery/v9/providers/network` |
 | `network/config/config.go` `ID` | `go.mondoo.com/cnquery/v9/providers/network` |
 | `os.resources.json` → `dependencies.network.id` | `go.mondoo.com/mql/v13/providers/network` |
 
-The one field that exists to name a peer at runtime holds a string no provider
-answers to. It must read `option provider`. This is also the proof that the
-`.lr` carries everything the build phase needs to hand off — including the
-runtime identity.
+The one field that exists to name a peer at runtime held a string no provider
+answered to, and `Lookup`'s name-based fallback silently absorbed it on every
+run.
+
+It now reads the peer's `option provider`, captured during import resolution as
+`LR.packProviders`. This is also the proof that the `.lr` carries everything the
+build phase needs to hand off — including the runtime identity.
+
+**Why it could not wait for the rest of this ADR.** The v14 change that made
+every provider ID version-less also made `go_package` minus `/resources` and
+`option provider` byte-identical for all 81 providers. The wrong derivation
+therefore started returning the right answer, and the bug became invisible —
+undetectable by inspection and untestable against real providers, while still
+being one divergence away from returning garbage again. The fix is pinned by
+`TestSchemaDependencyID` in `lrcore/lr_test.go`, whose fixture deliberately
+gives the peer a `go_package` unrelated to its provider ID so the assertion
+cannot pass on the derived value.
 
 ### Version constraints
 
@@ -359,12 +385,14 @@ func (r *Runtime) allowsCrossCall(owner string, resource string) (declared bool,
 once `Requires` declares that ID and the build verifies it against the peer's
 `.lr`, gate matching is an exact comparison with no normalization.
 
-This is only true after the fix. Today a third string is in play — the
+This holds as of v14. Before the fix a third string was in play — the
 `packPaths`-derived `go.mondoo.com/mql/v13/providers/network` in
-`Schema.Dependencies` — which matches neither of the other two. Reading
-`option provider` collapses the three to one, which is what makes ID viable as
+`Schema.Dependencies` — which matched neither of the other two. Reading
+`option provider` collapsed the three to one, which is what makes ID viable as
 the key instead of falling back to `Name`. `Name` is still carried, because
-installation resolves by name (`Install(upstream.Name, …)`), not by ID.
+installation resolves by name (`Install(upstream.Name, …)`), not by ID — and
+because it is what lets a v14+ engine resolve a dependency declared by a
+provider built before the ID change.
 
 The legacy whitelist keeps its own ad-hoc string matching for the v14 union
 window, and is deleted with it.
@@ -393,7 +421,7 @@ $ mql run local -c "ipinfo.city"
 ipinfo.city: "Los Angeles"
 
 $ mql run local -c "aws.regions"
-incorrect provider for asset, not adding go.mondoo.com/cnquery/v9/providers/aws
+incorrect provider for asset, not adding go.mondoo.com/mql/providers/aws
 ```
 
 Both run against the same `local` (os) asset and take the same path —
@@ -450,7 +478,9 @@ because it is unenforceable without the declaration form defined above.
   everything today, the predicate is **log-only**. This surfaces every missing
   declaration without breaking a single user.
 - **v15:** undeclared cross-provider calls no longer resolve, on both paths. The
-  whitelist and `CrossProviderTypes` are deleted.
+  whitelist is deleted, including both legacy-ID blocks. (`CrossProviderTypes`
+  is already gone — it went with the v14 provider-ID change, since nothing read
+  it and keeping it bought nothing.)
 - **Stays legal in both:** providers **extending** each other's resources with
   new fields, and any call covered by a declaration — a peer import (population
   1, this ADR), a root extension (population 2, via ADR 031), or a typed field

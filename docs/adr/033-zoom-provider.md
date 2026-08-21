@@ -72,7 +72,7 @@ providers/zoom/
 ## Resource Schema (`zoom.lr`)
 
 ```lr
-option provider = "go.mondoo.com/mql/v13/providers/zoom"
+option provider = "go.mondoo.com/mql/providers/zoom"
 option go_package = "go.mondoo.com/mql/providers/zoom/resources"
 
 // Zoom account

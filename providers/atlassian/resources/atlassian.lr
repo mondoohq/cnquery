@@ -1,7 +1,7 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-option provider = "go.mondoo.com/cnquery/v9/providers/atlassian"
+option provider = "go.mondoo.com/mql/providers/atlassian"
 option go_package = "go.mondoo.com/mql/providers/atlassian/resources"
 
 // Atlassian SCIM (System for Cross-domain Identity Management) directory

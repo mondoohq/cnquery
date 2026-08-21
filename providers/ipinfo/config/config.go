@@ -10,7 +10,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "ipinfo",
-	ID:              "go.mondoo.com/cnquery/providers/ipinfo",
+	ID:              "go.mondoo.com/mql/providers/ipinfo",
 	Version:         "13.0.28",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       provider.Platforms,

@@ -11,7 +11,7 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "mssql",
-	ID:              "go.mondoo.com/mql/v13/providers/mssql",
+	ID:              "go.mondoo.com/mql/providers/mssql",
 	Version:         "13.1.0",
 	ConnectionTypes: []string{provider.DefaultConnectionType},
 	Platforms:       connection.Platforms,
