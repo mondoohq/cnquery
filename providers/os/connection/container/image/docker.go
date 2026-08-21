@@ -47,7 +47,17 @@ func LoadImageFromDockerEngine(sha string, disableBuffer bool) (v1.Image, error)
 	if err != nil {
 		return nil, err
 	}
-	opts := []daemon.Option{daemon.WithClient(dc)}
+	// Buffer the `docker save` stream to a temporary file, not to memory.
+	//
+	// daemon.Image defaults to the in-memory opener, which reads the whole save
+	// stream with io.ReadAll and keeps it alive for the lifetime of the image.
+	// That single []byte holds the complete image, so the provider process grows
+	// with the image and the Go heap target doubles it again. A 847 MB image cost
+	// about 2.2 GB of peak RSS, which the container runtime turns into an OOM kill.
+	//
+	// The file-backed opener still runs exactly one `docker save`, so it does not
+	// pay the repeated-save cost of the unbuffered opener.
+	opts := []daemon.Option{daemon.WithClient(dc), daemon.WithFileBufferedOpener()}
 	if disableBuffer {
 		opts = append(opts, daemon.WithUnbufferedOpener())
 	}

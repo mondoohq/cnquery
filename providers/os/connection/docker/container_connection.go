@@ -284,9 +284,6 @@ func NewContainerImageConnection(id uint32, conf *inventory.Config, asset *inven
 
 	// This is the image id that is used to pull the image from the registry.
 	log.Debug().Msg("found docker engine image " + labelImageId)
-	if ii.Size > 1024 && !disableInmemoryCache { // > 1GB
-		log.Warn().Int64("size", ii.Size).Msg("Because the image is larger than 1 GB, this task will require a lot of memory. Consider disabling the in-memory cache by adding this flag to the command: `--disable-cache=true`")
-	}
 
 	identifier := containerid.MondooContainerImageID(labelImageId)
 
