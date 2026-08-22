@@ -12,7 +12,7 @@ require (
 	github.com/alibabacloud-go/cloudsso-20210515 v1.6.2
 	github.com/alibabacloud-go/config-20200907/v4 v4.2.3
 	github.com/alibabacloud-go/cr-20181201/v3 v3.2.2
-	github.com/alibabacloud-go/cs-20151215/v8 v8.1.0
+	github.com/alibabacloud-go/cs-20151215/v8 v8.1.1
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.4
 	github.com/alibabacloud-go/ddoscoo-20200101/v5 v5.0.2
 	github.com/alibabacloud-go/dds-20151201/v10 v10.4.2
@@ -34,12 +34,12 @@ require (
 	github.com/alibabacloud-go/sts-20150401/v2 v2.1.0
 	github.com/alibabacloud-go/tea v1.5.3
 	github.com/alibabacloud-go/vpc-20160428/v7 v7.2.5
-	github.com/alibabacloud-go/waf-openapi-20211001/v7 v7.8.4
+	github.com/alibabacloud-go/waf-openapi-20211001/v7 v7.8.5
 	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.5.3
 	github.com/aliyun/credentials-go v1.4.13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260820182715-5deab6be33f3
+	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
 )
 
 require (

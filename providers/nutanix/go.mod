@@ -32,7 +32,7 @@ require (
 	// pin v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4 v4.0.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260820190415-38082fb86c23
+	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
 )
 
 require (
