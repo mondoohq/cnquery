@@ -17,7 +17,7 @@ var Config = plugin.Provider{
 	ConnectionTypes: []string{provider.ConnectionType},
 	Platforms:       resources.Platforms,
 	// The client-go rate limiter is already raised well above its defaults, so
-	// concurrent asset scans reach the API server rather than queueing locally.
+	// concurrent asset scans reach the API server rather than queuing locally.
 	// Kept at 8 so a small control plane's API Priority and Fairness has room.
 	DefaultParallelism: 8,
 	Connectors: []plugin.Connector{

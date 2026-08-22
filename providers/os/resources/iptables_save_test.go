@@ -12,7 +12,7 @@ import (
 )
 
 // requireRule fetches one rule from the parsed dump or fails the test loudly.
-// Centralised so individual test cases stay focused on what they actually assert.
+// Centralized so individual test cases stay focused on what they actually assert.
 func requireRule(t *testing.T, dump *SavedDump, table, chain string, idx int) SavedRule {
 	t.Helper()
 	for _, tbl := range dump.Tables {

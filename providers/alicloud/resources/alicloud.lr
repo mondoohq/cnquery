@@ -2688,7 +2688,7 @@ alicloud.slb.acl @defaults("aclName aclId addressIPVersion entryCount") {
 //
 // A single Classic Load Balancer instance, keyed by loadBalancerId (for
 // example lb-bp1b6c719dfa08ex). Exposes the instance addressing and network
-// placement, the internet or intranet exposure signalled by addressType, the
+// placement, the internet or intranet exposure signaled by addressType, the
 // billing and specification settings, the deletion and modification
 // protection flags, and the configured listeners and backend servers.
 alicloud.slb.loadBalancer {

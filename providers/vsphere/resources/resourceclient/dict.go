@@ -22,10 +22,10 @@ type camelCaseMarshaller struct {
 }
 
 func (c camelCaseMarshaller) MarshalJSON() ([]byte, error) {
-	marshalled, err := json.Marshal(c.Value)
+	marshaled, err := json.Marshal(c.Value)
 
 	converted := keyMatchRegex.ReplaceAllFunc(
-		marshalled,
+		marshaled,
 		func(match []byte) []byte {
 			// empty keys are valid JSON, only lowercase if we do not have an empty key.
 			if len(match) > 2 {

@@ -105,7 +105,7 @@ func TestPerRegionGapUsesBareServiceName(t *testing.T) {
 }
 
 // One bad region must not discard the regions that answered. This is the
-// behaviour change from the old fan-out, which returned the error and dropped
+// behavior change from the old fan-out, which returned the error and dropped
 // every collected result.
 func TestPerRegionKeepsPartialResults(t *testing.T) {
 	conn := testConn("us-east-1", "eu-west-1", "ap-south-1")

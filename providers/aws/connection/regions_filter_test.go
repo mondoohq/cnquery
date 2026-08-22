@@ -118,7 +118,7 @@ func TestUnknownRegions(t *testing.T) {
 func TestUnknownRegionsWithNoEnabledListRejectsEverything(t *testing.T) {
 	// unknownRegions itself reports all of them; Regions() is what decides not to
 	// call it when the enabled list could not be determined. Pin the raw
-	// behaviour so that decision stays deliberate.
+	// behavior so that decision stays deliberate.
 	got := unknownRegions([]string{"us-east-1"}, nil)
 	assert.Equal(t, []string{"us-east-1"}, got,
 		"with no enabled list everything looks unknown, which is why the caller "+

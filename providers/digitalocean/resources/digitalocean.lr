@@ -1986,9 +1986,9 @@ digitalocean.team @defaults("name status memberCount") {
 //
 // Cross-resource label used to group droplets, volumes, load balancers,
 // databases, and reserved IPs. Auditing tags helps confirm that assets
-// are consistently labelled for cost allocation, access control, and
+// are consistently labeled for cost allocation, access control, and
 // automation. The `resourceCount` field reports how many resources are
-// currently labelled with the tag.
+// currently labeled with the tag.
 digitalocean.tag @defaults("name") {
   // Tag name
   name string

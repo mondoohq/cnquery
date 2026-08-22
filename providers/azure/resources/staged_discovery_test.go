@@ -333,7 +333,7 @@ func TestTenantStageAssets_UntaggedSubscriptionNeedsNoFetch(t *testing.T) {
 
 	// The marker is what stops stage 2 reading that empty set as "not fetched yet".
 	assert.True(t, builtByTenantStage(cfg),
-		"an untagged subscription must still be recognised as resolved by stage 1")
+		"an untagged subscription must still be recognized as resolved by stage 1")
 }
 
 // Nothing beyond the ids is needed here, so the record must not be fetched.

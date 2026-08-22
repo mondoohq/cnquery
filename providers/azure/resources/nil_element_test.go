@@ -17,7 +17,7 @@ import (
 // entire scan rather than the one resource that carried it. Each conversion below
 // walked a slice of optional pointers without a guard, and each had a guarded
 // sibling walking the same kind of data -- so the guard was an omission, not a
-// judgement that the element could not be nil.
+// judgment that the element could not be nil.
 
 // azureSecurityRuleToMql walked Properties.DestinationPortRanges twice: once
 // bare, to expand each range into from/to ports, and once with an `if p != nil`

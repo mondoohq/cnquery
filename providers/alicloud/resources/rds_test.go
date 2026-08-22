@@ -13,7 +13,7 @@ import (
 
 // TestRdsStatusEnabled covers the on/off classifier shared by the TDE and SQL
 // Explorer readers. The two APIs spell the same state differently (Enabled vs
-// Enable), and every unrecognised value has to read as off: a status that
+// Enable), and every unrecognized value has to read as off: a status that
 // silently became true would report encryption or auditing on an instance that
 // has neither.
 func TestRdsStatusEnabled(t *testing.T) {
@@ -30,7 +30,7 @@ func TestRdsStatusEnabled(t *testing.T) {
 		{"surrounding space", tea.String("  Enable  "), true},
 		{"disabled", tea.String("Disabled"), false},
 		{"disable", tea.String("Disable"), false},
-		{"unrecognised value is off", tea.String("Pending"), false},
+		{"unrecognized value is off", tea.String("Pending"), false},
 		{"substring must not match", tea.String("NotEnabled"), false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

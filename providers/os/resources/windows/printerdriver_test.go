@@ -107,10 +107,10 @@ func TestPurlKeepsVendorsApart(t *testing.T) {
 	assert.NotEqual(t, ricoh.Purl(), brother.Purl(), "same driver name, different vendors")
 }
 
-// TestVendorTokenNormalisesCorporateSuffixes: the spooler reports the
+// TestVendorTokenNormalizesCorporateSuffixes: the spooler reports the
 // manufacturer as the INF spells it, which carries corporate suffixes the
 // vendor's advisories do not.
-func TestVendorTokenNormalisesCorporateSuffixes(t *testing.T) {
+func TestVendorTokenNormalizesCorporateSuffixes(t *testing.T) {
 	for _, in := range []string{"RICOH", "Ricoh", "Ricoh Company, Ltd.", "RICOH COMPANY, LTD."} {
 		assert.Equal(t, "ricoh", VendorToken(in), "input %q", in)
 	}

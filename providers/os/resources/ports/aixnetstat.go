@@ -16,7 +16,7 @@ import (
 // and is empty for UDP, which AIX reports without a state column because UDP is
 // stateless. The caller maps it onto the canonical state vocabulary.
 type AixPort struct {
-	// Protocol as AIX reports it, normalised to an address family suffix:
+	// Protocol as AIX reports it, normalized to an address family suffix:
 	// tcp4 | tcp6 | udp4 | udp6.
 	Protocol      string
 	LocalAddress  string
@@ -95,7 +95,7 @@ func ParseAixNetstat(r io.Reader) ([]AixPort, error) {
 	return res, nil
 }
 
-// findAixProto locates the protocol column in a netstat row and normalises the
+// findAixProto locates the protocol column in a netstat row and normalizes the
 // protocol to an address family suffix. The column is found by pattern rather
 // than by index because `netstat -Aan` prefixes every row with a PCB address
 // while `netstat -an` does not.
@@ -125,7 +125,7 @@ func findAixProto(fields []string) (int, string, bool) {
 // rows too, where it means every v6 interface rather than every v4 one.
 //
 // The separator is the LAST dot, so IPv4 (`10.10.20.15.22`) and IPv6
-// (`2001:db8::15.443`) both split correctly. Wildcards are normalised to the
+// (`2001:db8::15.443`) both split correctly. Wildcards are normalized to the
 // forms the other platforms emit, so a consumer comparing addresses across
 // platforms does not have to special-case AIX:
 //

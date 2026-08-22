@@ -57,7 +57,7 @@ func TestStatementsAllowPublic(t *testing.T) {
 	// A condition on a source-scoping key makes a wildcard grant private.
 	scopingCondition := map[string]any{"StringEquals": map[string]any{"aws:PrincipalOrgID": "o-123"}}
 	// A condition that does NOT scope the principal (region) leaves the grant
-	// effectively public — this is the behaviour shared with allowsPublicAccess.
+	// effectively public — this is the behavior shared with allowsPublicAccess.
 	regionCondition := map[string]any{"StringEquals": map[string]any{"aws:RequestedRegion": "us-east-1"}}
 	// The AWS-generated default SNS topic policy: a wildcard principal pinned to
 	// the owning account with aws:SourceOwner. Every default topic carries it.

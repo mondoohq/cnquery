@@ -54,7 +54,7 @@ func TestSecureSignInSessionDict(t *testing.T) {
 
 // The field is declared `dict` in the .lr, so whatever it holds has to survive
 // conversion to an llx primitive. A dict carrying a resource (the previous
-// behaviour) fails here with "unsupported child type", which is why every
+// behavior) fails here with "unsupported child type", which is why every
 // policy that set the control errored on read.
 func TestSecureSignInSessionDictIsJSONNative(t *testing.T) {
 	control := models.NewSecureSignInSessionControl()

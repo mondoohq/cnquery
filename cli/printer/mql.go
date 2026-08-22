@@ -357,7 +357,7 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 
 	var res strings.Builder
 
-	// we need to separate entries that are unlabelled (eg part of an assertion)
+	// we need to separate entries that are unlabeled (eg part of an assertion)
 	labeledKeys := []string{}
 	keys := sortx.Keys(data)
 	for i := range keys {

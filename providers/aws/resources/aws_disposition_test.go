@@ -112,7 +112,7 @@ func TestClassifyMacieConfigScopeToleratesBareNotFound(t *testing.T) {
 	require.Equal(t, dispositionEmpty, classifyError("macie2/config", err))
 }
 
-// ...but a list endpoint gets no such licence. A not-found from ListFindings
+// ...but a list endpoint gets no such license. A not-found from ListFindings
 // is a resource that vanished mid-read, and swallowing it would report a
 // partial listing as a complete one.
 func TestClassifyMacieListDoesNotSwallowBareNotFound(t *testing.T) {
@@ -144,7 +144,7 @@ func TestClassifyScopeInheritsServiceRules(t *testing.T) {
 
 // The not-enabled wording still reads as empty on the list endpoints, which is
 // the whole point of keeping that rule on the bare service.
-func TestClassifyMacieListStillHonoursNotEnabled(t *testing.T) {
+func TestClassifyMacieListStillHonorsNotEnabled(t *testing.T) {
 	err := apiErr("ResourceNotFoundException", "Amazon Macie isn't enabled for your account")
 	require.Equal(t, dispositionEmpty, classifyError("macie2", err))
 }
@@ -161,7 +161,7 @@ func TestClassifyServiceRulesAreScoped(t *testing.T) {
 	err := apiErr("AccessDeniedException", "Macie is not enabled")
 	require.Equal(t, dispositionEmpty, classifyError("macie2", err))
 	require.Equal(t, dispositionUnreadable, classifyError("rds", err),
-		"another service's not-enabled wording must not be honoured here")
+		"another service's not-enabled wording must not be honored here")
 }
 
 func TestClassifySecurityLakeNotEnabled(t *testing.T) {

@@ -106,7 +106,7 @@ func TestOciZprEnforced(t *testing.T) {
 	}
 }
 
-// serviceError is the shape common.IsServiceError recognises, so the classifier
+// serviceError is the shape common.IsServiceError recognizes, so the classifier
 // can be exercised without reaching the API.
 type serviceError struct {
 	status int

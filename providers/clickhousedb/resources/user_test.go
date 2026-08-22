@@ -47,7 +47,7 @@ func TestAllowsAnyHost(t *testing.T) {
 
 // TestStringList covers the two shapes system.users.auth_type actually takes:
 // a scalar Enum8 up to the 24.8 LTS line, and an Array(Enum8) from 25.x. The
-// error cases matter as much as the happy ones -- an unrecognised shape read as
+// error cases matter as much as the happy ones -- an unrecognized shape read as
 // an empty list would make requiresCredential report a password-less account as
 // requiring a credential.
 func TestStringList(t *testing.T) {

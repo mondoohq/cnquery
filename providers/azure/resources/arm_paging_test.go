@@ -166,7 +166,7 @@ func TestFetchArmPagesPropagatesTokenErrors(t *testing.T) {
 	require.Error(t, fetchArmPages(context.Background(), badToken, srv.URL, "things", collectPages(&got)))
 }
 
-func TestFetchArmPagesHonoursContextCancellation(t *testing.T) {
+func TestFetchArmPagesHonorsContextCancellation(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"value":[]}`)
 	}))

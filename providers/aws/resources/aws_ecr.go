@@ -608,7 +608,7 @@ func buildEcrPublicRepositoryResource(runtime *plugin.Runtime, r ecrpublic_types
 			// RepositoryArn, RepositoryName and RepositoryUri.
 			//
 			// imageScanOnPush and encryptionType are reported as platform
-			// behaviour and both fail safe (no scan-on-push flags the
+			// behavior and both fail safe (no scan-on-push flags the
 			// repository; AES256 matches ECR Public's at-rest encryption).
 			//
 			// imageTagMutability was not: ECR Public has no tag-mutability

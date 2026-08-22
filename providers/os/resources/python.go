@@ -547,7 +547,7 @@ var pythonManifestFiles = []struct {
 
 // collectPythonManifestPackages scans a directory for Python source manifest
 // files (lock files and requirements.txt) and returns packages found in them.
-// It prioritises lock files over requirements.txt to avoid duplicates.
+// It prioritizes lock files over requirements.txt to avoid duplicates.
 func collectPythonManifestPackages(fs afero.Fs, dir string) []python.PackageDetails {
 	afs := &afero.Afero{Fs: fs}
 

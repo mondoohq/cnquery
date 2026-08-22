@@ -91,7 +91,7 @@ func TestCsGrantID(t *testing.T) {
 		assert.NotEqual(t, a, b)
 	})
 
-	t.Run("an empty component does not let its neighbours merge", func(t *testing.T) {
+	t.Run("an empty component does not let its neighbors merge", func(t *testing.T) {
 		a := csGrantID("281", "cluster", "c1a2b3", "", "admin")
 		b := csGrantID("281", "cluster", "c1a2b3", "admin", "")
 		assert.NotEqual(t, a, b)

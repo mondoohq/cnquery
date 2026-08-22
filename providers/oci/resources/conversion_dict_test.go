@@ -44,7 +44,7 @@ func TestDictSlice(t *testing.T) {
 		assert.Equal(t, "GetSecretBundle", entry["apiName"])
 	})
 
-	t.Run("this is the behaviour convert.JsonToDictSlice does not have", func(t *testing.T) {
+	t.Run("this is the behavior convert.JsonToDictSlice does not have", func(t *testing.T) {
 		// Pinning the difference rather than describing it: encoding/json sets
 		// a slice to nil for a JSON null, so the empty slice the converter
 		// starts with does not survive a nil input. Should that ever change

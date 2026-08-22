@@ -112,7 +112,7 @@ func TestIsOktaFeatureUnavailableLicensing(t *testing.T) {
 			"a dead token must not be reported as an org with nothing configured")
 	})
 
-	t.Run("unlabelled 401 stays an error", func(t *testing.T) {
+	t.Run("unlabeled 401 stays an error", func(t *testing.T) {
 		resp, err := oktaCall(t, stubRoundTripper{status: http.StatusUnauthorized, body: `{}`})
 		require.Error(t, err)
 		assert.False(t, isOktaFeatureUnavailable(resp, err))

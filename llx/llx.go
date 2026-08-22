@@ -926,7 +926,7 @@ func (e *blockExecutor) runRef(ref uint64) (*RawData, uint64, error) {
 }
 
 // runChain starting at a ref of the code, follow it down and report
-// jever result it has at the end of its execution. this will register
+// whatever result it has at the end of its execution. this will register
 // async callbacks against referenced chunks too
 func (e *blockExecutor) runChain(start uint64) {
 	var res *RawData

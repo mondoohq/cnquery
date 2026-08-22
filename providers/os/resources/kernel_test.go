@@ -221,7 +221,7 @@ blacklist cramfs
 	}
 }
 
-// TestStripModprobeComment guards the modprobe-flavoured comment stripper
+// TestStripModprobeComment guards the modprobe-flavored comment stripper
 // against drift toward rsyslog's quote-aware shape — modprobe has no
 // string literals, so `#` always introduces a comment.
 func TestStripModprobeComment(t *testing.T) {

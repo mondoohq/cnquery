@@ -132,7 +132,7 @@ func NewGcpSnapshotConnection(id uint32, conf *inventory.Config, asset *inventor
 			// search for the latest snapshot for this machine
 			snapshotUrl, created, err := sc.searchLatestSnapshot(target.ProjectID, instanceInfo.BootDiskSourceURL)
 			if status.Code(err) == codes.NotFound {
-				// expected behaviour if no snapshot exists, we fall back to cloning the disk
+				// expected behavior if no snapshot exists, we fall back to cloning the disk
 				log.Debug().Msg("no snapshot found, cloning disk from instance")
 			} else if err != nil {
 				// real error occurred, we abort

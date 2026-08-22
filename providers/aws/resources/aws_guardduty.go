@@ -899,7 +899,7 @@ func (a *mqlAwsGuarddutyDetectorMember) id() (string, error) {
 // on "2023-01-19T20:31:32.152Z" it read the leading "2023", reported no error,
 // and produced 1970-01-01T00:33:43Z for every member.
 //
-// Epoch input is still accepted so the behaviour is a superset of both
+// Epoch input is still accepted so the behavior is a superset of both
 // readings, since the SDK types the field as an opaque *string.
 func parseGuardDutyTimestamp(s *string) *time.Time {
 	if s == nil || *s == "" {

@@ -256,7 +256,7 @@ func newPipeFilterCriteria(runtime *plugin.Runtime, parentArn string, fc *pipes_
 // ----- ARN-prefix dispatch -----
 
 // pipeResolveArn returns a typed mql resource for a known AWS ARN prefix, or
-// nil if the ARN is empty or unrecognised. The caller is responsible for
+// nil if the ARN is empty or unrecognized. The caller is responsible for
 // setting StateIsNull|StateIsSet on its field when nil is returned.
 func pipeResolveArn(runtime *plugin.Runtime, arnVal string) (plugin.Resource, error) {
 	arnVal = strings.TrimSpace(arnVal)

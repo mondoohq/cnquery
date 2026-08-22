@@ -16,10 +16,10 @@ import (
 )
 
 // Conf is the flattened result of parsing postgresql.conf (and its include
-// fragments). Last-write-wins semantics match PostgreSQL's own behaviour.
+// fragments). Last-write-wins semantics match PostgreSQL's own behavior.
 type Conf struct {
 	// Params is the effective key->value map across the main file and all
-	// included fragments. Keys are normalised to lowercase to match
+	// included fragments. Keys are normalized to lowercase to match
 	// PostgreSQL's case-insensitive parameter names.
 	Params map[string]string
 	// Files lists every file that contributed (main + includes, in load
@@ -36,7 +36,7 @@ type FileReader func(path string) (string, error)
 // GlobExpander expands a single shell-style glob pattern into a list of file
 // paths. PostgreSQL itself does not glob include directives — but providing
 // this hook lets the caller resolve `include_dir 'conf.d'` by reading the
-// directory listing. The default behaviour (when this is nil) treats
+// directory listing. The default behavior (when this is nil) treats
 // include_dir's argument as a literal path with no globbing.
 type GlobExpander func(pattern string) ([]string, error)
 
@@ -230,7 +230,7 @@ func SplitListParam(value string) []string {
 }
 
 // IsTruthy returns whether a postgresql.conf value is one of the truthy
-// tokens PostgreSQL recognises (on, true, yes, 1) — case-insensitive.
+// tokens PostgreSQL recognizes (on, true, yes, 1) — case-insensitive.
 func IsTruthy(value string) bool {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "on", "true", "yes", "1":

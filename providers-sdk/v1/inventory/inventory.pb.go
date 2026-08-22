@@ -190,7 +190,7 @@ type Asset struct {
 	Fqdn       string `protobuf:"bytes,37,opt,name=fqdn,proto3" json:"fqdn,omitempty"`
 	TraceId    string `protobuf:"bytes,38,opt,name=trace_id,json=traceId,proto3" json:"trace_id,omitempty"`
 	// Resource-anchored relationships to other assets (ADR 030). Each edge
-	// names the counterparty asset and the resource on it that anchors the edge.
+	// names the counterpart asset and the resource on it that anchors the edge.
 	Relationships []*AssetRelationship `protobuf:"bytes,39,rep,name=relationships,proto3" json:"relationships,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -361,7 +361,7 @@ func (x *Asset) GetRelationships() []*AssetRelationship {
 
 // AssetRelationship is a directed, resource-anchored edge to another asset. An
 // edge has two ends, and the anchor resource is meaningless without the asset
-// that owns it, so the message names both: the counterparty `asset` (a full
+// that owns it, so the message names both: the counterpart `asset` (a full
 // Asset, like `related_assets`, so identity is unrestricted) and the resource
 // on that asset that anchors the relationship. See ADR 030.
 type AssetRelationship struct {

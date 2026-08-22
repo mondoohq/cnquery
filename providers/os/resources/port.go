@@ -811,7 +811,7 @@ var aixTcpStates = map[string]string{
 }
 
 // aixPortState translates one AIX netstat state token. An empty token stays
-// empty (UDP rows, which carry no state), and anything unrecognised becomes
+// empty (UDP rows, which carry no state), and anything unrecognized becomes
 // "unknown" rather than a state string invented outside TCP_STATES.
 func aixPortState(raw string) string {
 	if raw == "" {

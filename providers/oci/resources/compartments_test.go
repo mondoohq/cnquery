@@ -116,7 +116,7 @@ func TestOciDedupeByID(t *testing.T) {
 
 	t.Run("a non-resource element passes through untouched", func(t *testing.T) {
 		// Nothing in the provider does this today, but dropping an element the
-		// helper does not recognise would be a silent data loss of its own.
+		// helper does not recognize would be a silent data loss of its own.
 		assert.Equal(t, []any{"raw", "raw"}, ociDedupeByID([]any{"raw", "raw"}))
 	})
 }

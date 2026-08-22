@@ -94,7 +94,7 @@ func TestHasWildcardRepository(t *testing.T) {
 		t.Error("a named repository list was reported as a wildcard")
 	}
 	if !hasWildcardRepository([]string{"example-docker", "ANY REMOTE"}) {
-		t.Error("a wildcard key was not recognised")
+		t.Error("a wildcard key was not recognized")
 	}
 	if hasWildcardRepository(nil) {
 		t.Error("an empty list was reported as a wildcard")
@@ -140,7 +140,7 @@ func TestSplitScopeAndGrantsAdmin(t *testing.T) {
 		t.Error("a group-scoped token was reported as an administrator token")
 	}
 	if !grantsAdmin(splitScope("applied-permissions/admin")) {
-		t.Error("an admin-scoped token was not recognised")
+		t.Error("an admin-scoped token was not recognized")
 	}
 	if !grantsAdmin(splitScope("APPLIED-PERMISSIONS/ADMIN")) {
 		t.Error("grantsAdmin ignored case")
@@ -404,7 +404,7 @@ func TestDetailLoadedFlagIsRaceFree(t *testing.T) {
 	}
 }
 
-// A class wildcard this provider does not recognise would make a grant read as
+// A class wildcard this provider does not recognize would make a grant read as
 // covering nothing, which is the dangerous direction. Every class the instance
 // can name is covered.
 func TestScopeCoversRepositoryHandlesEveryClassWildcard(t *testing.T) {
@@ -429,13 +429,13 @@ func TestScopeCoversRepositoryHandlesEveryClassWildcard(t *testing.T) {
 				t.Errorf("%q covered a repository of another type", tt.wildcard)
 			}
 			if !hasWildcardRepository(repositories) {
-				t.Errorf("%q was not recognised as a wildcard", tt.wildcard)
+				t.Errorf("%q was not recognized as a wildcard", tt.wildcard)
 			}
 		})
 	}
 }
 
-// Surrounding space and case must not change whether a wildcard is recognised.
+// Surrounding space and case must not change whether a wildcard is recognized.
 func TestScopeWildcardsIgnoreCaseAndSpace(t *testing.T) {
 	for _, entry := range []string{" any local ", "Any Local", "ANY LOCAL"} {
 		if !scopeCoversRepository([]string{entry}, "example-repo", "local") {
@@ -603,7 +603,7 @@ func TestUsesEncryptedLdapTransport(t *testing.T) {
 // always set, but on a watch resource entry it is null on a wildcard. It walks
 // the schema and the code together, so a field added later cannot quietly
 // break the promise.
-func TestSchemaNullPromisesAreHonoured(t *testing.T) {
+func TestSchemaNullPromisesAreHonored(t *testing.T) {
 	promised := schemaNullPromises(t)
 	if len(promised) == 0 {
 		t.Fatal("no field promises null; the schema scan is broken")
@@ -822,12 +822,12 @@ func TestWatchResourceRepositoryKey(t *testing.T) {
 func TestWatchWildcardTypes(t *testing.T) {
 	for _, typ := range []string{"all-repos", "all-builds", "all-releaseBundles", "all-releaseBundlesV2", "all-projects"} {
 		if !watchWildcardTypes[typ] {
-			t.Errorf("%q is not recognised as a wildcard", typ)
+			t.Errorf("%q is not recognized as a wildcard", typ)
 		}
 	}
 	for _, typ := range []string{"repository", "build", "releaseBundle", "project", ""} {
 		if watchWildcardTypes[typ] {
-			t.Errorf("%q was recognised as a wildcard", typ)
+			t.Errorf("%q was recognized as a wildcard", typ)
 		}
 	}
 }

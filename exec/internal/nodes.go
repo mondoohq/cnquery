@@ -12,7 +12,7 @@ import (
 const (
 	// ExecutionQueryNodeType represents a node that will execute
 	// a query. It can be notified by datapoint nodes, representing
-	// its dependant properties
+	// its dependent properties
 	ExecutionQueryNodeType NodeType = "execution_query"
 	// DatapointNodeType represents a node that is a datapoint/entrypoint.
 	// These nodes are implicitly notified when results are received from
@@ -27,7 +27,7 @@ const (
 	// information is sourced from the resolved policy. Nodes of this type are
 	// notified by datapoints to indicate collection of data, reporting query
 	// nodes to be notified of query scores, and other reporting job nodes to
-	// be notified of scores of dependant reporting jobs
+	// be notified of scores of dependent reporting jobs
 	ReportingJobNodeType NodeType = "reporting_job"
 	// DatapointCollectorNodeType represents a sink for datapoints in the graph.
 	// There is only one of these nodes in the graph, and it can only be notified

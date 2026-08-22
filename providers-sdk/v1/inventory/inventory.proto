@@ -88,13 +88,13 @@ message Asset {
   string trace_id = 38;
 
   // Resource-anchored relationships to other assets (ADR 030). Each edge
-  // names the counterparty asset and the resource on it that anchors the edge.
+  // names the counterpart asset and the resource on it that anchors the edge.
   repeated AssetRelationship relationships = 39;
 }
 
 // AssetRelationship is a directed, resource-anchored edge to another asset. An
 // edge has two ends, and the anchor resource is meaningless without the asset
-// that owns it, so the message names both: the counterparty `asset` (a full
+// that owns it, so the message names both: the counterpart `asset` (a full
 // Asset, like `related_assets`, so identity is unrestricted) and the resource
 // on that asset that anchors the relationship. See ADR 030.
 message AssetRelationship {
@@ -207,7 +207,7 @@ message Platform {
   map<string, string> metadata = 23;
 }
 
-// NOTE: the k8s types are apache 2 licenced and copied from
+// NOTE: the k8s types are apache 2 licensed and copied from
 // https://github.com/kubernetes/apimachinery
 
 // TypeMeta describes an individual object in an API response or request

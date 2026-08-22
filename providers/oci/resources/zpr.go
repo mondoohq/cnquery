@@ -620,7 +620,7 @@ func ociSecurityAttributeNamespacesFor(conn *connection.OciConnection) ([]securi
 // security attributes.
 //
 // Both halves are required. A tenancy with ZPR switched off enforces nothing
-// however its resources are labelled, and an attribute from an audit-mode
+// however its resources are labeled, and an attribute from an audit-mode
 // namespace is evaluated and then ignored. Only a resource carrying at least
 // one attribute from an enforcing namespace, in an onboarded tenancy, is
 // subject to a ZPR verdict.

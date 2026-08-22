@@ -229,7 +229,7 @@ func TestOciCompartmentRef(t *testing.T) {
 	})
 
 	t.Run("a nil compartment id falls through to the direct read", func(t *testing.T) {
-		// A list entry with no compartment id keeps the behaviour it had: the
+		// A list entry with no compartment id keeps the behavior it had: the
 		// direct read decides what an id-less compartment resolves to, which
 		// is a resource whose id is null rather than an error.
 		got, err := compartmentRef(testRuntime(), func(string) (*identity.Compartment, error) {

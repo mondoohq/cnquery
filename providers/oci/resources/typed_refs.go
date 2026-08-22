@@ -108,7 +108,7 @@ func resolveRef[T plugin.Resource](runtime *plugin.Runtime, resourceName, id str
 // resolveRef would send it to an init that cannot find it and surface a
 // not-found error on a field whose honest answer is "nothing is referenced
 // here". Callers whose upstream field carries such placeholders wrap the id in
-// this; the rest pass the id straight through, which is the behaviour those
+// this; the rest pass the id straight through, which is the behavior those
 // accessors already had.
 func ocidOrEmpty(id string) string {
 	if !isOcid(id) {
@@ -224,7 +224,7 @@ func resolveOciCompartment(runtime *plugin.Runtime, id string, field *plugin.TVa
 //
 // The fallback stays for the OCIDs the tree cannot cover: a compartment in
 // another tenancy, or one deleted between the listing and the read. Those keep
-// the direct read, including its behaviour of reporting an unreadable
+// the direct read, including its behavior of reporting an unreadable
 // compartment by id with the rest of its fields null.
 func resolveCompartment(runtime *plugin.Runtime, lookup compartmentLookup, id string, field *plugin.TValue[*mqlOciCompartment]) (*mqlOciCompartment, error) {
 	// resolveRef owns the null marking for an absent reference, and the empty

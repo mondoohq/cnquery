@@ -463,7 +463,7 @@ func setConnector(provider *plugin.Provider, connector *plugin.Connector, run fu
 
 		log.Debug().Msg("using provider " + provider.Name + " with connector " + connector.Name)
 
-		// this is the builtin ask-password flag. we should eventually remove this in favour
+		// this is the builtin ask-password flag. we should eventually remove this in favor
 		// of an explicit ask-password flag on the provider connector that is marked with AskInput
 		askPass, err := cc.Flags().GetBool("ask-pass")
 		if err == nil && askPass {

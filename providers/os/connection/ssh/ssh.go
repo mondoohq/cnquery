@@ -597,7 +597,7 @@ func serverSupportsHybridKEX(addr string) (bool, error) {
 }
 
 // prepareConnection determines the auth methods required for a ssh connection and also prepares any other
-// pre-conditions for the connection like tunnelling the connection via AWS SSM session
+// pre-conditions for the connection like tunneling the connection via AWS SSM session
 func prepareConnection(conf *inventory.Config) ([]ssh.AuthMethod, []io.Closer, error) {
 	auths := []ssh.AuthMethod{}
 	closer := []io.Closer{}

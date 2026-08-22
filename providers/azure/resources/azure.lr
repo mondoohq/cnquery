@@ -20152,7 +20152,7 @@ private azure.subscription.dataProtectionService {
 //
 // Vault of the Data Protection resource provider, holding backups of disks,
 // blobs, database workloads, and Kubernetes clusters. This is a different
-// service from the Recovery Services vault modelled as
+// service from the Recovery Services vault modeled as
 // `azure.subscription.recoveryServicesService.vault`, and a subscription can
 // hold both.
 //
@@ -20338,7 +20338,7 @@ private azure.subscription.fileSharesService {
 //
 // File share of the Microsoft.FileShares resource provider, a standalone
 // resource rather than a share hosted inside a storage account. The classic
-// kind, which lives under a storage account, is modelled separately as
+// kind, which lives under a storage account, is modeled separately as
 // `azure.subscription.storageService.account.fileShare`, and a subscription
 // can hold both.
 //

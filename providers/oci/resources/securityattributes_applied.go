@@ -15,12 +15,12 @@ import (
 
 // The resolved form of a resource's security attributes.
 //
-// Every resource that can be labelled reports the labelling twice: once as the
+// Every resource that can be labeled reports the labeling twice: once as the
 // raw `securityAttributes` map, which is cheap and matches how definedTags is
-// modelled everywhere else in this provider, and once through this accessor,
-// which joins each labelling to the namespace and definition behind it.
+// modeled everywhere else in this provider, and once through this accessor,
+// which joins each labeling to the namespace and definition behind it.
 //
-// The join is what makes the labelling answerable. A map tells you an instance
+// The join is what makes the labeling answerable. A map tells you an instance
 // carries `zpr-prod.tier = db`; it cannot tell you whether the `zpr-prod`
 // namespace enforces that or merely audits it, and those two are the difference
 // between a control and a report. That fact lives on the namespace, so reaching
@@ -29,7 +29,7 @@ import (
 // ociAppliedSecurityAttributes builds the resolved attribute rows for one
 // resource from its raw securityAttributes map.
 //
-// parentID is the labelled resource's own id, used only to key the rows in the
+// parentID is the labeled resource's own id, used only to key the rows in the
 // runtime cache. It is not exposed: a row is identified by which resource it
 // sits on plus its namespace and name, which is a composite with no meaning
 // outside this provider.
@@ -46,7 +46,7 @@ func ociAppliedSecurityAttributes(
 	state := ociZprStateFor(conn)
 
 	// Namespaces are iterated in sorted order so a resource's rows keep a
-	// stable order between scans. Go map iteration is randomised, and an
+	// stable order between scans. Go map iteration is randomized, and an
 	// unstable order shows up as spurious diffs in scan output.
 	namespaces := make([]string, 0, len(attributes))
 	for namespace := range attributes {
@@ -101,7 +101,7 @@ func tagValueString(value any) string {
 	return fmt.Sprint(value)
 }
 
-// namespace resolves the namespace this labelling belongs to.
+// namespace resolves the namespace this labeling belongs to.
 //
 // Resolved by scanning the tenancy's namespace collection rather than through
 // NewResource: a NewResource call runs the target's init before the runtime
@@ -125,13 +125,13 @@ func (o *mqlOciSecurityAttributesApplied) namespace() (*mqlOciSecurityAttributes
 	}
 
 	// A namespace the caller cannot list, or one deleted since the resource was
-	// labelled, leaves the labelling in place with nothing behind it. Null is
+	// labeled, leaves the labeling in place with nothing behind it. Null is
 	// the honest answer.
 	o.Namespace.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
 
-// attribute resolves the definition behind this labelling, which carries the
+// attribute resolves the definition behind this labeling, which carries the
 // validator that decides which values are accepted.
 func (o *mqlOciSecurityAttributesApplied) attribute() (*mqlOciSecurityAttributesAttribute, error) {
 	obj, err := CreateResource(o.MqlRuntime, "oci.securityAttributes", nil)

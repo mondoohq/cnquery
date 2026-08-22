@@ -1375,7 +1375,7 @@ private oci.compute.instance @defaults("name") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Whether the instance's security attributes have finished applying
@@ -1586,7 +1586,7 @@ private oci.compute.vnic @defaults("name") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (PROVISIONING, AVAILABLE, TERMINATING, TERMINATED)
@@ -1863,7 +1863,7 @@ private oci.network.vcn @defaults("name") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Default DHCP options OCID for the VCN
@@ -3322,7 +3322,7 @@ private oci.fileStorage.mountTarget @defaults("name state availabilityDomain") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Free-form tags for resource management
@@ -4734,7 +4734,7 @@ private oci.loadBalancer.loadBalancer @defaults("name") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Load balancer listeners
@@ -5203,7 +5203,7 @@ private oci.networkLoadBalancer.loadBalancer @defaults("name isPrivate state") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Lifecycle state (CREATING, UPDATING, ACTIVE, FAILED, DELETING, DELETED)
@@ -6679,7 +6679,7 @@ private oci.networkFirewall.firewall @defaults("name") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Overall firewall health status
@@ -7193,7 +7193,7 @@ private oci.oke.cluster @defaults("name") {
   //
   // Each entry is OCI_VCN_IP_NATIVE, where pods take VCN addresses and are
   // governed by network security groups directly, or FLANNEL_OVERLAY, where
-  // pod traffic is tunnelled and invisible to VCN rules.
+  // pod traffic is tunneled and invisible to VCN rules.
   podNetworkTypes []string
   // Subnets the cluster provisions service load balancers into
   serviceLbSubnets() []oci.network.subnet
@@ -7269,7 +7269,7 @@ private oci.oke.cluster @defaults("name") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
 }
@@ -8043,7 +8043,7 @@ private oci.database.dbSystem @defaults("name") {
   securityAttributes @maturity("deprecated") map[string]dict
   // Security attributes applied to this resource, resolved
   //
-  // Each labelling as a row carrying its namespace, its definition and whether
+  // Each labeling as a row carrying its namespace, its definition and whether
   // that namespace enforces or only audits.
   appliedSecurityAttributes() []oci.securityAttributes.applied
   // Patching and maintenance schedule
@@ -10714,7 +10714,7 @@ private oci.zpr.configuration @defaults("zprStatus state") {
 // The vocabulary Zero Trust Packet Routing policies are written against.
 // Namespaces group attribute definitions and carry the mode that decides
 // whether their attributes are enforced or only audited; the attributes
-// themselves are the keys resources are labelled with.
+// themselves are the keys resources are labeled with.
 oci.securityAttributes {
   // Security attribute namespaces in the tenancy
   namespaces() []oci.securityAttributes.namespace
@@ -10724,9 +10724,9 @@ oci.securityAttributes {
 
 // Security attribute applied to a resource
 //
-// One namespace/name/value labelling on a single resource, resolved against
+// One namespace/name/value labeling on a single resource, resolved against
 // the namespace and attribute definition that give it meaning. `isEnforcing`
-// reports whether the labelling constrains traffic or only records it, so a
+// reports whether the labeling constrains traffic or only records it, so a
 // query can separate resources Zero Trust Packet Routing governs from those
 // merely tagged. For example
 // `oci.compute.instances.where(appliedSecurityAttributes.any(isEnforcing))`.

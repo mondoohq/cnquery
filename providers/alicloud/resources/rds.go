@@ -35,7 +35,7 @@ func rdsParseTime(s *string) *time.Time {
 // RDS APIs are not consistent about the spelling: TDE reports Enabled, SQL
 // Explorer reports Enable, and both have been seen with surrounding space.
 // Anything else, including a nil or empty value, counts as off so a "must be
-// enabled" check fails rather than passing on a value nobody recognised.
+// enabled" check fails rather than passing on a value nobody recognized.
 func rdsStatusEnabled(status *string) bool {
 	if status == nil {
 		return false
@@ -563,7 +563,7 @@ func (r *mqlAlicloudRdsInstance) sqlAuditRetentionDays() (int64, error) {
 // parameters returns the parameter values in effect on the running instance,
 // keyed by parameter name. A fetch error is propagated rather than reported as
 // an empty map: an empty map reads as "the parameter is unset", which is a
-// legitimate answer, and would let a check on log_connections pass judgement on
+// legitimate answer, and would let a check on log_connections pass judgment on
 // an instance whose parameters were never read.
 func (r *mqlAlicloudRdsInstance) parameters() (map[string]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)

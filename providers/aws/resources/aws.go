@@ -337,7 +337,7 @@ func IsMacieNotEnabledError(err error) bool {
 // the curly one. A guard written with a plain apostrophe - which is what
 // anyone typing the message back out produces - never matches it, and the
 // service-not-enabled case it exists to absorb is reported as a failure
-// instead. Normalising once is cheaper than getting the byte right at every
+// instead. Normalizing once is cheaper than getting the byte right at every
 // call site, and survives AWS changing its mind about quote style.
 func awsNormalizeApostrophes(s string) string {
 	return strings.ReplaceAll(s, "’", "'")

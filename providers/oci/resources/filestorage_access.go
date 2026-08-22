@@ -937,7 +937,7 @@ func (o *mqlOciFileStorage) outboundConnectors() ([]any, error) {
 // ociOutboundConnectorFields flattens one member of the OutboundConnectorSummary
 // union into resource fields.
 //
-// LDAPBIND is the only member the service offers today. An unrecognised member
+// LDAPBIND is the only member the service offers today. An unrecognized member
 // is an error rather than a skip: a mount target's identity mapping points at
 // a connector by OCID, so dropping one would leave that reference resolving to
 // nothing and the mapping reading as unconfigured.

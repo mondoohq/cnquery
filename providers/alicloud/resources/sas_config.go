@@ -51,7 +51,7 @@ func sasNoticeChannels(route *int32) []any {
 }
 
 // sasSwitchEnabled reads the on/off switch the vulnerability scan settings use.
-// Only "on" counts; an absent or unrecognised value reads as off so a type
+// Only "on" counts; an absent or unrecognized value reads as off so a type
 // nobody could read fails a "scanning is enabled" check rather than passing it.
 func sasSwitchEnabled(value *string) bool {
 	return strings.EqualFold(strings.TrimSpace(tea.StringValue(value)), "on")

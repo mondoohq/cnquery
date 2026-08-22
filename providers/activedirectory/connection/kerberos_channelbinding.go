@@ -200,12 +200,12 @@ func (c *channelBindingGSSAPIClient) newAPREQMechToken(tkt messages.Ticket, sess
 
 	oidBytes, err := asn1.Marshal(gssapi.OIDKRB5.OID())
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling krb5 OID: %w", err)
+		return nil, fmt.Errorf("error marshaling krb5 OID: %w", err)
 	}
 	tokID, _ := hex.DecodeString(gssTokIDKRB5APREQ)
 	apReqBytes, err := apReq.Marshal()
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling AP_REQ: %w", err)
+		return nil, fmt.Errorf("error marshaling AP_REQ: %w", err)
 	}
 
 	b := append(oidBytes, tokID...)

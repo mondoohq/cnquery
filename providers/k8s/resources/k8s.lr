@@ -5179,7 +5179,7 @@ private k8s.deviceclass @defaults("name created") {
 // pool, selected by name. The driver, poolName and nodeName fields report who
 // published the slice and where the devices live, and node resolves the owning
 // node. The devices field lists each device with its attributes and capacity,
-// which is what makes the realised hardware inventory (for example the PCI
+// which is what makes the realized hardware inventory (for example the PCI
 // address and physical function of an SR-IOV virtual function) queryable
 // rather than opaque. A pool split across several slices is complete only when
 // poolResourceSliceCount slices carry the same poolGeneration.
@@ -5247,7 +5247,7 @@ private k8s.resourceslice @defaults("name driver nodeName deviceCount") {
 // allocatedDevices and reservedFor report what the scheduler actually bound
 // and which pods may use it. The deviceStatuses field carries the driver's
 // report about each prepared device, including the interface name, IP
-// addresses, and hardware address of a network device, so realised attachment
+// addresses, and hardware address of a network device, so realized attachment
 // state can be compared against intent. usesAdminAccess marks a claim that
 // took a device in the privileged administrative mode.
 private k8s.resourceclaim @defaults("namespace name allocated created") {
@@ -5311,7 +5311,7 @@ private k8s.resourceclaim @defaults("namespace name allocated created") {
   //
   // Each entry has `driver`, `pool`, `device`, `shareID`, `conditions`, and
   // `networkData` with `interfaceName`, `ips`, and `hardwareAddress`. This is
-  // the realised device state on the node, not the request.
+  // the realized device state on the node, not the request.
   deviceStatuses []dict
 }
 

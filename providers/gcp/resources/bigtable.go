@@ -26,7 +26,7 @@ import (
 // an error in case of some locations are unavailable").
 //
 // It is a plain struct with no GRPCStatus(), so status.FromError does not
-// recognise it and isSkippable returns false -- the callers therefore took
+// recognize it and isSkippable returns false -- the callers therefore took
 // the hard-error path and threw away the instances, clusters or backups the SDK
 // had just handed them. A transient blip in one region emptied the whole
 // Bigtable inventory.

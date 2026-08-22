@@ -16,7 +16,7 @@ import (
 // ociCidrIsAny reports whether a CIDR string admits any address — the IPv4
 // default route 0.0.0.0/0 or the IPv6 default route ::/0. Surrounding
 // whitespace is tolerated. The prefix is parsed rather than string-compared so
-// a non-canonical spelling of the default route is still recognised.
+// a non-canonical spelling of the default route is still recognized.
 func ociCidrIsAny(cidr string) bool {
 	p, err := netip.ParsePrefix(strings.TrimSpace(cidr))
 	if err != nil {

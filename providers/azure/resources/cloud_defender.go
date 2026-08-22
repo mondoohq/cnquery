@@ -216,7 +216,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forServers() (*mqlAzureSubscr
 	if err != nil {
 		return nil, err
 	}
-	serverVASetings, err := getServerVulnAssessmentSettings(ctx, armConn)
+	serverVASettings, err := getServerVulnAssessmentSettings(ctx, armConn)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forServers() (*mqlAzureSubscr
 			vulnToolName = "Microsoft Defender for Cloud integrated Qualys scanner"
 		}
 	}
-	if mdvmVulnerabilityAssessmentEnabled(serverVASetings.Settings) {
+	if mdvmVulnerabilityAssessmentEnabled(serverVASettings.Settings) {
 		args["enabled"] = llx.BoolData(true)
 		vulnToolName = "Microsoft Defender vulnerability management"
 	}
@@ -522,7 +522,7 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forContainers() (*mqlAzureSub
 	}
 
 	args := commonPricingArgs(containersPricing.Properties, ResourceAzureSubscriptionCloudDefenderServiceDefenderForContainers, subId)
-	// Either cluster flavour counts. There are two policy definitions per
+	// Either cluster flavor counts. There are two policy definitions per
 	// component -- one for Arc-enabled Kubernetes, one for AKS -- and a
 	// subscription that runs only AKS, which is the common case, will never have
 	// the Arc policy assigned. Both constants used to hold the Arc GUID, so this

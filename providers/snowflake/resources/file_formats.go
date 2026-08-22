@@ -128,7 +128,7 @@ func fileFormatOptionsToDict(formatType sdk.FileFormatType, opts sdk.FileFormatT
 
 // sqlTagName returns the Snowflake option name carried in an SDK sql struct
 // tag. Every such tag currently holds a bare option name (for example
-// "SKIP_HEADER"), but the neighbouring ddl tags in the same structs are
+// "SKIP_HEADER"), but the neighboring ddl tags in the same structs are
 // comma-separated lists, so anything after a comma is dropped rather than
 // trusted: a future SDK release that adopts that convention here would
 // otherwise turn the option name into a wrong dict key without failing.

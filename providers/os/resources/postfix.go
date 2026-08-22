@@ -103,7 +103,7 @@ func (p *mqlPostfix) params() (map[string]any, error) {
 
 // postconfParams runs `postconf` and returns the effective parameters. The
 // second return is false (without an error) when postconf is unavailable or
-// exits non-zero, signalling the caller to fall back to main.cf.
+// exits non-zero, signaling the caller to fall back to main.cf.
 func (p *mqlPostfix) postconfParams() (map[string]any, bool, error) {
 	mainCf := p.GetMainCfPath()
 	if mainCf.Error != nil {

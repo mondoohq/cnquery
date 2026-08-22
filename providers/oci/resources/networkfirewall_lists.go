@@ -393,7 +393,7 @@ func (o *mqlOciNetworkFirewallPolicy) applications() ([]any, error) {
 //
 // Both current members describe an ICMP message, differing only in the protocol
 // they belong to, so the discriminator is carried as a `type` field rather than
-// each becoming its own resource. Returning nil for an unrecognised member drops
+// each becoming its own resource. Returning nil for an unrecognized member drops
 // it rather than reporting it as an ICMP application with zeroed codes.
 //
 // This union is the one the sibling drift tests cannot cover: the SDK gives it

@@ -37,7 +37,7 @@ type OciConnection struct {
 	// Nearly every resource in the provider reports the compartment it lives
 	// in, so the lookup runs once per resource rather than once per scan; a
 	// walk of the list per lookup would be O(resources x compartments).
-	// compartmentFetchErr holds the last tree fetch failure, honoured for
+	// compartmentFetchErr holds the last tree fetch failure, honored for
 	// compartmentFetchRetryAfter so a throttled Identity API is retried a
 	// handful of times per scan rather than once per resource. See
 	// GetCompartments for why the failure is held briefly instead of forever.

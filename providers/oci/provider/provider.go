@@ -146,7 +146,7 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 // It has to be kept in step with connection.DiscoveryFiltersFromOpts: a key
 // missing from this list never reaches the connection, so the flag parses
 // cleanly, the scan runs, and the filter is simply not applied. Anything
-// unrecognised is warned about rather than dropped in silence, because the
+// unrecognized is warned about rather than dropped in silence, because the
 // failure is otherwise indistinguishable from a filter that matched everything.
 var filterKeyPrefixes = []string{
 	"regions",
@@ -157,7 +157,7 @@ var filterKeyPrefixes = []string{
 	"exclude:tag:",
 }
 
-// parseFilters pulls the recognised --filters entries out of the raw flags.
+// parseFilters pulls the recognized --filters entries out of the raw flags.
 func parseFilters(flags map[string]*llx.Primitive) map[string]string {
 	res := map[string]string{}
 

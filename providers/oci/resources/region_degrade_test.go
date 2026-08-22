@@ -78,7 +78,7 @@ func TestOciRunRegionPool(t *testing.T) {
 		})
 	}
 	// A region where the service has no endpoint. This is what
-	// ociRegionServiceUnavailable recognises, and the only thing the pool is
+	// ociRegionServiceUnavailable recognizes, and the only thing the pool is
 	// allowed to skip.
 	unavailable := func() *jobpool.Job {
 		return jobpool.NewJob(func() (jobpool.JobResult, error) {

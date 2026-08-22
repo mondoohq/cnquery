@@ -33,7 +33,7 @@ func (m *ApiExtension) GetSecurityNotificationEmails(ctx context.Context, orgId 
 	// we need to split the orgId into orgName and domain because this API uses a different domain
 	orgName, domain, found := strings.Cut(orgId, ".")
 	if !found {
-		return nil, errors.New("cound not determine orgName and domain from orgId " + orgId)
+		return nil, errors.New("could not determine orgName and domain from orgId " + orgId)
 	}
 	url := fmt.Sprintf("https://%s-admin.%s/api/internal/org/settings/security-notification-settings", orgName, domain)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

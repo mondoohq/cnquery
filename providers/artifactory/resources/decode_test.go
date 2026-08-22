@@ -298,7 +298,7 @@ func TestTokenRecordDecodes(t *testing.T) {
 		t.Error("an absent expiry produced a timestamp")
 	}
 	if !grantsAdmin(splitScope(second.Scope)) {
-		t.Error("an admin-scoped token was not recognised")
+		t.Error("an admin-scoped token was not recognized")
 	}
 }
 

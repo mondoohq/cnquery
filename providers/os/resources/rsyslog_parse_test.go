@@ -150,7 +150,7 @@ func TestParseKVArgs(t *testing.T) {
 			map[string]any{"type": "imtcp", "port": "514", "ruleset": "net"},
 		},
 		{
-			"key case-normalised",
+			"key case-normalized",
 			`StreamDriver.Mode="1"`,
 			map[string]any{"streamdriver.mode": "1"},
 		},

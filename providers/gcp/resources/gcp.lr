@@ -1803,7 +1803,7 @@ gcp.project.computeService.instance @defaults("name id") {
   // instance's lifecycle behavior, `provisioningModel` and
   // `instanceTerminationAction` for how the instance is provisioned and what
   // happens when capacity is reclaimed, `gracefulShutdown` (whether the guest
-  // is signalled before termination, and the `maxDuration` it is given), and
+  // is signaled before termination, and the `maxDuration` it is given), and
   // `preemptionNoticeDuration`, how much warning a Spot VM receives before the
   // ACPI G2 soft-off signal fires.
   scheduling dict

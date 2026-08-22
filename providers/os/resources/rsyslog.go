@@ -167,7 +167,7 @@ func countUnquotedParens(line string) int {
 }
 
 // stripRsyslogComment removes everything from the first unquoted `#` to
-// end-of-line, mirroring rsyslog's own lexer behaviour. Quotes can be
+// end-of-line, mirroring rsyslog's own lexer behavior. Quotes can be
 // double or single.
 func stripRsyslogComment(line string) string {
 	inDouble, inSingle := false, false
@@ -298,7 +298,7 @@ func (s *mqlRsyslogConf) files(path string) ([]any, error) {
 	//
 	// No depth bound here: distro packages drop fragments directly into
 	// `<conf>.d/` (no subdirs in practice), and this matches the original
-	// behaviour of the resource — narrowing it now would silently change
+	// behavior of the resource — narrowing it now would silently change
 	// the file list for callers relying on it.
 	confD := path[0:len(path)-5] + ".d"
 	o, err := CreateResource(s.MqlRuntime, "files.find", map[string]*llx.RawData{
@@ -381,7 +381,7 @@ func (s *mqlRsyslogConf) expandIncludePattern(parentDir, pattern string) ([]stri
 // single result without any filesystem access); a glob segment lists the
 // immediate subdirectories of each current path and keeps the ones whose
 // name matches. Paths naming a directory that doesn't exist simply drop out,
-// mirroring glob(3)'s "no match" behaviour.
+// mirroring glob(3)'s "no match" behavior.
 func (s *mqlRsyslogConf) resolveIncludeDirs(dir string) ([]string, error) {
 	paths := []string{"/"}
 	for _, seg := range strings.Split(dir, "/") {

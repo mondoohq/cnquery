@@ -1681,7 +1681,7 @@ private vsphere.vmknic @defaults("name portGroupName tcpipStack") {
   ipv4 []dict
   // Per-IPv6 address records (Address, PrefixLength, Type: autoconf / DHCP / static / linklayer). One entry per assigned address.
   ipv6 []dict
-  // Optional ESXi-managed tag list on the VMkernel NIC; rarely populated, useful for vendor-specific labelling.
+  // Optional ESXi-managed tag list on the VMkernel NIC; rarely populated, useful for vendor-specific labeling.
   tags []string
   // MAC address of the VMkernel NIC
   mac string
