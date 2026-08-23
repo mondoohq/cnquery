@@ -108,69 +108,90 @@ dereference optional.
 
 ### 1. The rule
 
-> **A null value is fine. A null receiver is not.**
+> **Every link in a chain must resolve. `?` after a link waives that link.**
 
-- An expression may evaluate to null. `a.b` where `b` is genuinely absent is null,
-  and that is a correct, reportable answer.
-- Reading *through* a null — using it as the receiver of a further access — is an
-  error in strict mode, attributed to the exact link that was null.
-- `?` immediately before the access marks that access optional. An optional access
-  on a null receiver short-circuits **the remainder of the chain** to null,
-  without error.
+A link **fails to resolve** when:
 
-Concretely, with `b == null`:
+- its receiver is null — whatever made it null, and
+- for a map or dict, the key it names is absent.
 
-| Expression | Non-strict (today, unchanged) | Strict |
-|---|---|---|
-| `a.b` | null | null |
-| `a.b.c` | null | error: `b` is null in `a.b.c` |
-| `a.b?.c` | null | null |
-| `a["b"]` | null | null |
-| `a["b"].c` | null | error |
-| `a["b"]?.c` | null | null |
-| `a?.b.c` (`a` null) | null | null — `?` short-circuits the whole tail |
-| `a?.b.c` (`a` set, `b` null) | null | error — `?` guarded `a`, not `b` |
+A link **resolves to null** when the lookup succeeded but the value is null. That
+is a legal outcome, and it is the whole of the field/map distinction:
 
-The last two rows are JavaScript optional-chaining semantics, deliberately: `?`
-guards the value to its left and, when it fires, abandons the rest of the chain.
-Guarding two links takes two marks (`a?.b?.c`). This is the behavior users already
-have in their fingers, and it is the only variant in which `?` stays cheap to
-write on deep chains.
+- **A field always resolves.** A field is declared, so asking for it is never a
+  claim that might be false; the type says what comes back, and if that is null
+  the field resolved to null. Reading it is fine, reading *through* it is not.
+- **A map key lookup may fail to resolve.** Naming a key is a claim that the key
+  exists, and only the author knows whether they meant it. In strict mode an
+  absent key is an error **at the lookup**; in non-strict mode it is null.
 
-**This rule does not rescue the case [#7079][pr7079] reverted, and should not
-pretend to.** `dict["domain"]["key"]` with `domain` absent is a null *produced* by
-the first read and *dereferenced* by the second, so in strict mode it errors —
-exactly as it did between [#6633][pr6633] and [#7079][pr7079]. The difference is
-that it now only errors for content that opted in, and `dict["domain"]?["key"]` is
-available to say the key is genuinely optional. Carving out "a missing map key is
-not itself an error" (below) keeps the terminal read legal, but it cannot make a
-null receiver safe without giving up the whole point.
+That asymmetry is the point, and it is what makes `params.PermitRootLogn == "no"`
+behave correctly: the typo is a claim about a key that is not there, so the lookup
+errors and the comparison never runs. A genuinely null field compared the same way
+still yields `false`, because a null field is a value the provider actually
+reported, not a mistake in the query.
+
+**`?` sits after the link it guards, and pulls double duty.** It waives both
+failure modes of that link *and* short-circuits the chain if the link yields null,
+so the author never has to know which of the two they are guarding against:
+
+| Situation | Non-strict | Strict | Guard |
+|---|---|---|---|
+| `m.k`, key absent (terminal) | null | error at `.k` | `m.k?` |
+| `m.k == "no"`, key absent | false | error at `.k` | `m.k? == "no"` |
+| `m.k.c`, key absent | null | error at `.k` | `m.k?.c` |
+| `m.k.c`, key present, value null | null | error at `.c` | `m.k?.c` |
+| `a.f`, field null (terminal) | null | null | — |
+| `a.f == "no"`, field null | false | false | — |
+| `a.f.c`, field null | null | error at `.c` | `a.f?.c` |
+| `a.f.c`, `a` null | null | error at `.f` | `a?.f.c` |
+
+Rows three and four are the double duty: one guard, two causes, same position. The
+mark always attaches to the link on its left — `a?.f` guards `a`, `m.k?` guards the
+`k` lookup — which is also how `a?.b` already reads in JavaScript. Guarding two
+links takes two marks (`a?.f?.c`), and when a guard fires it abandons the rest of
+the chain, so `a?.f.c` yields null rather than continuing on to fail at `.c`.
+
+Note `m.k? == "no"` in row two: a trailing `?` with no following link is a valid
+and necessary spelling, and it is the escape hatch for a key the author knows may
+be absent. The parser does not support it today — `parseOperand` consumes the `?`
+and then drops it when the next token is not `.` (`mqlc/parser/parser.go:528-536`),
+and `parseOperation` swallows a `?` in operator position outright (`:730-732`).
+
+**Relationship to [#6633][pr6633].** That PR treated an absent key as producing
+null and raised the error one link later, at the dereference
+(`cannot access field "b", parent element is null`). This ADR moves the error to
+the lookup, which is what catches the terminal typo — [#6633][pr6633]'s placement
+cannot, because a terminal lookup has no following link to raise it. Guard
+placement is unchanged from [#6633][pr6633]: `params.d?.b` still works, and now
+`params.d?` does too.
 
 ### 2. What counts as a dereference
 
-Strict mode applies to every operation that reads through a receiver:
+The rule applies to every operation that reads through a receiver, not just field
+and key access:
 
 - **Resource field access** — `x.field`, compiled at `mqlc/mqlc.go:1084-1095`, run
   by `runResourceFunction`.
-- **Index access** — `x[k]` on dicts, typed maps, and arrays, plus the bare-word
-  sugar `json.params.A.B` that the compiler rewrites into `["A"]["B"]`
-  (`mqlc/mqlc.go:1578-1592`).
-- **Block binding** — `x { … }`, where a null `x` currently yields an empty block
-  result.
-- **Implicit array mapping** — `xs.field` over a null `xs`. Note that a *non-null*
-  list whose elements produce nulls is unaffected: those are produced values, not
-  receivers.
+- **Block binding** — `x { … }`. A null `x` yields null without running the block
+  today (`llx/llx.go:594-596`); in strict mode it errors, and `x? { … }` is the
+  guard. Nothing about blocks is special here — the block-open is the dereference,
+  the same way `.field` is.
+- **Implicit array mapping** — `xs.field` over a null `xs`. A *non-null* list whose
+  elements produce nulls is unaffected: those are produced values, not receivers.
 - **Builtin methods on a null receiver** — `x.length`, `x.all(…)`, `x.contains(…)`,
   the comparison helpers. These are the 104 `bind.Value == nil` sites, and strict
-  mode replaces their individual folklore with the single rule above.
+  mode answers them with the rule above instead of per-site judgment.
 
-Two things explicitly stay as they are:
-
-- **A missing map key is not an error.** `a["nope"]` reads successfully and
-  produces null; the key set is not statically known and demanding `?` on every
-  map read would be unusable. Only `a["nope"].c` errors.
-- **Array index out of bounds is already an error** in both modes
-  (`llx/builtin_array.go:87-95`). Strict mode does not change it.
+**Arrays are left inconsistent, deliberately.** An out-of-range `xs[9]` errors at
+the lookup already, in both modes (`llx/builtin_array.go:87-95`). Under §1 an
+absent map key now does the same — but only in strict mode. So the two converge
+under strict and stay split under non-strict, where a missing key is null and a
+missing index is an error. Arrays are effectively always strict on this point, and
+`?` has no defined effect on an index. Whether they should soften to match maps is
+genuinely unclear (the current behavior may well be the more useful one) and is
+**not being settled in this iteration**. Recorded so the inconsistency is a known
+position rather than an oversight.
 
 ### 3. Out of scope for this ADR
 
@@ -180,7 +201,13 @@ Strict mode governs **access chains only**. It does not touch:
   a genuine false-green source (already flagged in `CLAUDE.md §5`). It is a
   separate change with a much larger blast radius on existing content, and strict
   chains remove a large share of the nulls that feed it. Tracked as a follow-up.
-- **Comparison against null.** `nonNilDataOpV2` returning `false` stays.
+- **Comparison against a null *field*.** `nonNilDataOpV2` returning `false` stays.
+  `a.f == "no"` with a null `f` is still silently false, and under §1 that is
+  correct rather than a gap: the field resolved, the provider reported null, and
+  nothing in the query was wrong. The mistyped-*key* version of this,
+  `params.PermitRootLogn == "no"`, is caught — see §1. Whether a null field should
+  also make a comparison loud is the deferred question, and it belongs with the
+  boolean-logic work above, not here.
 - **Provider-side null production.** Whether `Is400AccessDeniedError` *should*
   yield null instead of an error is a provider question. Strict mode changes what
   happens downstream of that null, not the decision to emit it — and by making the
@@ -314,34 +341,89 @@ a single `optional` bit.
 
 ## Phased plan
 
-1. **Wire `?` through, no behavior change.** Add `Nullability` to the proto and to
-   `Function.checksumV2`; add `IsConditional` to the bracket-accessor AST node
-   (`mqlc/parser/parser.go:614-618`, which drops it today, so `a?["b"]` does not
-   work); thread the flag into `compileBoundIdentifier` (`mqlc/mqlc.go:1017`) and
-   the array/block paths. Emit `OPTIONAL` where the author wrote `?`, `UNSET`
-   everywhere else. Runtime honors `OPTIONAL` by short-circuiting the tail — what
-   it does today anyway — so this phase is observably a no-op and lands the wire
-   change early.
-2. **Unify the nil handling.** The 104 `bind.Value == nil` branches each decide for
+1. **Fix the parser so every `?` position survives.** Three gaps, all of them
+   spellings §1 needs:
+   - `m?["k"]` and `x? { … }` — the loop resets `isConditional` on any token that
+     is not `?` or `.` (`mqlc/parser/parser.go:528-531`), and the `[` and `{` cases
+     never read it (`:596-618`, `:620`), so both parse and silently drop the mark.
+   - `m.k?` trailing, including `m.k? == "no"` — `parseOperand` consumes the `?`
+     and discards it when no `.` follows, and `parseOperation` swallows a `?` in
+     operator position (`:730-732`). This is the escape hatch for a knowingly
+     optional key, so it is not optional itself.
+   - The mark binds to the link on its **left**, while the parser records it on the
+     call to its right (`Call.IsConditional`). Either shift it at parse time or
+     shift it in the compiler, but pick one and write it down.
+2. **Add `Nullability` to the proto and to `Function.checksumV2`**, and thread the
+   flag into `compileBoundIdentifier` (`mqlc/mqlc.go:1017`), the accessor paths, and
+   the block path. Emit `OPTIONAL` where the author marked, `UNSET` everywhere else.
+   No `REQUIRED` yet, so this is observably a no-op and lands the wire change early.
+3. **Unify the nil handling.** The 104 `bind.Value == nil` branches each decide for
    themselves; a mode switch cannot sit on top of that. Collapse them into one
    decision point ahead of dispatch, reproducing today's behavior exactly, as a
-   pure refactor with no semantic change. This is the prerequisite for step 3 and
-   the largest piece of work in the plan.
-3. **Implement `REQUIRED` in the VM**, at the decision point step 2 created, plus
-   `runResourceFunction`. Non-strict compilations never emit `REQUIRED`, so nothing
-   changes for existing content.
-4. **Add the strictness knob to `CompilerConfig`** and the tri-state `strict` key
+   pure refactor with no semantic change. Prerequisite for step 4 and the largest
+   piece of work in the plan.
+4. **Implement `REQUIRED` in the VM.** Two checks, because §1 has two failure
+   modes: a null receiver at the decision point step 3 created (plus
+   `runResourceFunction`), and an absent key inside `mapGetIndex`/`dictGetIndex` —
+   which is where [#7079][pr7079] removed exactly this branch, so the shape is
+   already known. Non-strict compilations never emit `REQUIRED`, so nothing changes
+   for existing content.
+5. **Make the short-circuit real.** This is the piece with genuine implementation
+   risk and it should not be waved past. Today an `OPTIONAL` link needs no
+   machinery, because a null simply propagates step by step and lands as null. Once
+   `REQUIRED` exists, that stops working: in `a?.f.c` a null `a` must skip `.f` and
+   `.c` rather than let the `REQUIRED` `.f` error — JavaScript throws here only when
+   the guard is absent, and so must we. Marking the whole tail `OPTIONAL` at compile
+   time is the tempting shortcut and it is wrong: it would also swallow a null `f`
+   in `a?.f.c`, which must still error. So the executor has to short-circuit for
+   real, delivering null to the entrypoint instead of walking `e.calls`. Blocks and
+   array mapping are where "the rest of the chain" gets hard to define; settle that
+   before committing to the approach.
+6. **Add the strictness knob to `CompilerConfig`** and the tri-state `strict` key
    to `CommonOpts`, with the content-then-config precedence rule. Shell, `mql run`,
    and `mqlx` pick up the config default; cnspec wires the policy declaration.
-5. **Add the min-version gate.** Populate and enforce `min_mondoo_version` for
+7. **Add the min-version gate.** Populate and enforce `min_mondoo_version` for
    bundles containing `REQUIRED` chunks.
-6. **Lint for an explicit mode.** In v14 every policy must state strict or
+8. **Lint for an explicit mode.** In v14 every policy must state strict or
    non-strict; the linter fails an unstated one. Pair it with a diagnostic pass
    that reports each unguarded dereference in a policy about to go strict, so
    authors can find the chains that need `?` before flipping.
-7. **Later, and separately: streamline.** Reducing the ceremony and eventually
+9. **Later, and separately: streamline.** Reducing the ceremony and eventually
    retiring non-strict is explicitly future work, gated on evidence from real v14
    policy runs rather than on a release date.
+
+## Caveat: replaying non-strict recordings
+
+A recording stores **resource fields**, keyed by resource, id, and field name,
+holding the whole `RawData` value (`providers-sdk/v1/recording/recording.go:405-443`
+and `:514-529`). That shape decides how faithfully strict mode can replay, and it
+treats the two causes of a null receiver (§1) differently:
+
+- **Map keys replay correctly.** A key is not a recorded unit; the map or dict is
+  recorded whole, as one field value. An absent key is therefore genuinely absent
+  from the recording, and a strict replay errors at the lookup exactly as a live
+  strict run would. The concern that a recording would have "invented" a null for a
+  missing key does not apply — there was never a per-key entry to invent one in.
+- **Field nulls lose their provenance, and this is the caveat.** A field recorded
+  as null could have been legitimately null, or a provider call that failed and
+  degraded to null (`Is400AccessDeniedError` and the ~3,500 `StateIsNull` sites).
+  The recording keeps the value and drops the reason, so a strict replay cannot
+  tell the two apart and treats both as a null receiver. Note that live execution
+  cannot tell them apart either — the collapse happens in the provider, not in the
+  recording — so replay is no worse than the original run. It is documented here
+  because it looks like a recording defect and is not one.
+
+The practical consequence is narrower than it first appears: a recording captured
+non-strict and replayed strict will **error where the capture succeeded**. The
+underlying data is identical; only the interpretation changed. Anyone diffing a
+strict replay against its non-strict capture should expect that, and it is not a
+regression.
+
+One genuine gap remains, and it is not strict-specific: a recording only contains
+fields that were actually *requested* during capture, and a non-strict run
+short-circuits. `a.f.c` with `f` null never requests `c`, so `c` is absent from the
+recording, and a later query that needs it finds nothing. That is ordinary
+recording incompleteness, which strict mode neither causes nor fixes.
 
 ## Consequences
 
@@ -359,6 +441,9 @@ a single `optional` bit.
 
 **Costs and risks:**
 
+- **A mistyped key becomes an error instead of a silent `false`.** This is the
+  case strict mode most needs to catch, and it is only catchable because the
+  lookup errors rather than the dereference (§1).
 - **A policy that opts in breaks loudly**, including the dict chains
   [#7079][pr7079] deferred. That is what opting in means, and it is why the
   diagnostic pass in step 6 exists: an author should see every unguarded
@@ -383,21 +468,18 @@ a single `optional` bit.
 
 ## Open questions
 
-- **Should `.lr` declare field nullability?** If it did, the compiler could reject
-  `?` on a non-nullable field and demand it on a nullable one, turning strict mode
-  from a runtime rule into a static check. That is a much larger schema project
-  (~3,500 `StateIsNull` sites would need auditing) and should not gate this ADR,
-  but strict mode is the thing that would make it pay off.
-- **Is there a guard for value production, not just dereference?** `xs[9]` out of
-  bounds and a future "missing map key is an error" mode would both want a
-  postfix form. No syntax is proposed here; `?` deliberately guards only the
-  dereference to its left.
-- **What does `?` mean inside a block?** `a { b.c }` binds `a` to `_`. If `a` is
-  null the block does not run at all today; strict mode should error, but whether
-  `a? { … }` is the right spelling for the guard needs a call.
-- **Recordings.** A recording captured in non-strict mode contains nulls that a
-  strict replay would now error on. Replay of old recordings against strict
-  bundles needs a defined answer.
+- **Should `.lr` declare field nullability?** §1 rests on "a field should hold a
+  valid value of its declared type, and null is not one unless the type says so" —
+  but no type in the schema says so today, so the rule is a convention the compiler
+  cannot check. If `.lr` carried it, the compiler could reject a pointless `?` and
+  demand a missing one, turning strict mode from a runtime rule into a static
+  check. Large schema project (~3,500 `StateIsNull` sites to audit); should not
+  gate this ADR, but strict mode is what would make it pay off.
+- **Do arrays ever converge with maps?** An out-of-range index errors in both
+  modes today, so arrays are already strict on a point where maps are about to
+  become strict only on opt-in (§2). Softening arrays to match would need a guard
+  spelling for the index itself, and it is not obvious the current behavior is even
+  wrong. Left open, explicitly not addressed in this iteration.
 
 ## Alternatives considered
 
