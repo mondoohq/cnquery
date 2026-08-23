@@ -178,3 +178,19 @@ func jsonResponse(w http.ResponseWriter, body string) {
 // boolPtr returns a pointer to v, for table tests that distinguish an absent
 // value from an explicit false.
 func boolPtr(v bool) *bool { return &v }
+
+// pagedFixture serves a fixture on the first page and an empty result on every
+// later page. cloudflare-go's V4 page paginator stops only when a page comes
+// back empty, so a handler that ignores `page` and always returns the same
+// fixture makes the auto-pager loop forever.
+func pagedFixture(name string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := r.URL.Query().Get("page")
+		if page != "" && page != "1" {
+			jsonResponse(w, `{"success":true,"errors":[],"messages":[],"result":[],`+
+				`"result_info":{"page":2,"per_page":100,"count":0,"total_count":0,"total_pages":1}}`)
+			return
+		}
+		jsonResponse(w, loadFixture(name))
+	}
+}

@@ -76,6 +76,9 @@ const (
 	ResourceCloudflareZoneWafRule                                     string = "cloudflare.zone.wafRule"
 	ResourceCloudflareZoneWafRuleOverride                             string = "cloudflare.zone.wafRule.override"
 	ResourceCloudflareZoneWafRuleCategoryOverride                     string = "cloudflare.zone.wafRule.categoryOverride"
+	ResourceCloudflareIpAccessRule                                    string = "cloudflare.ipAccessRule"
+	ResourceCloudflareZoneLockdown                                    string = "cloudflare.zone.lockdown"
+	ResourceCloudflareZoneHold                                        string = "cloudflare.zone.hold"
 	ResourceCloudflareZoneEmailRouting                                string = "cloudflare.zone.emailRouting"
 	ResourceCloudflareWorkersSecret                                   string = "cloudflare.workers.secret"
 	ResourceCloudflarePagesEnvVar                                     string = "cloudflare.pages.envVar"
@@ -342,6 +345,18 @@ func init() {
 			// to override args, implement: initCloudflareZoneWafRuleCategoryOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareZoneWafRuleCategoryOverride,
 		},
+		"cloudflare.ipAccessRule": {
+			// to override args, implement: initCloudflareIpAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareIpAccessRule,
+		},
+		"cloudflare.zone.lockdown": {
+			// to override args, implement: initCloudflareZoneLockdown(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneLockdown,
+		},
+		"cloudflare.zone.hold": {
+			// to override args, implement: initCloudflareZoneHold(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneHold,
+		},
 		"cloudflare.zone.emailRouting": {
 			// to override args, implement: initCloudflareZoneEmailRouting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareZoneEmailRouting,
@@ -607,6 +622,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.precursor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZone).GetPrecursor()).ToDataRes(types.Resource("cloudflare.zone.precursor"))
 	},
+	"cloudflare.zone.ipAccessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetIpAccessRules()).ToDataRes(types.Array(types.Resource("cloudflare.ipAccessRule")))
+	},
+	"cloudflare.zone.lockdowns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetLockdowns()).ToDataRes(types.Array(types.Resource("cloudflare.zone.lockdown")))
+	},
+	"cloudflare.zone.hold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetHold()).ToDataRes(types.Resource("cloudflare.zone.hold"))
+	},
 	"cloudflare.zone.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneAccount).GetId()).ToDataRes(types.String)
 	},
@@ -837,6 +861,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.account.logExplorerDatasets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccount).GetLogExplorerDatasets()).ToDataRes(types.Array(types.Resource("cloudflare.logExplorerDataset")))
+	},
+	"cloudflare.account.ipAccessRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetIpAccessRules()).ToDataRes(types.Array(types.Resource("cloudflare.ipAccessRule")))
 	},
 	"cloudflare.apiToken.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareApiToken).GetId()).ToDataRes(types.String)
@@ -2209,6 +2236,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.wafRule.categoryOverride.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneWafRuleCategoryOverride).GetEnabled()).ToDataRes(types.Bool)
 	},
+	"cloudflare.ipAccessRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.ipAccessRule.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetMode()).ToDataRes(types.String)
+	},
+	"cloudflare.ipAccessRule.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetTarget()).ToDataRes(types.String)
+	},
+	"cloudflare.ipAccessRule.value": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetValue()).ToDataRes(types.String)
+	},
+	"cloudflare.ipAccessRule.notes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetNotes()).ToDataRes(types.String)
+	},
+	"cloudflare.ipAccessRule.scopeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetScopeType()).ToDataRes(types.String)
+	},
+	"cloudflare.ipAccessRule.allowedModes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetAllowedModes()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.ipAccessRule.createdOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetCreatedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.ipAccessRule.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareIpAccessRule).GetModifiedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.lockdown.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneLockdown).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.lockdown.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneLockdown).GetDescription()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.lockdown.paused": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneLockdown).GetPaused()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.lockdown.urls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneLockdown).GetUrls()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.lockdown.configurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneLockdown).GetConfigurations()).ToDataRes(types.Array(types.Dict))
+	},
+	"cloudflare.zone.lockdown.createdOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneLockdown).GetCreatedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.lockdown.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneLockdown).GetModifiedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.hold.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneHold).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.hold.holdAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneHold).GetHoldAfter()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.hold.includeSubdomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneHold).GetIncludeSubdomains()).ToDataRes(types.String)
+	},
 	"cloudflare.zone.emailRouting.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneEmailRouting).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -2726,6 +2810,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZone).Precursor, ok = plugin.RawToTValue[*mqlCloudflareZonePrecursor](v.Value, v.Error)
 		return
 	},
+	"cloudflare.zone.ipAccessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).IpAccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdowns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).Lockdowns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.hold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).Hold, ok = plugin.RawToTValue[*mqlCloudflareZoneHold](v.Value, v.Error)
+		return
+	},
 	"cloudflare.zone.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneAccount).__id, ok = v.Value.(string)
 		return
@@ -3064,6 +3160,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.account.logExplorerDatasets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccount).LogExplorerDatasets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.account.ipAccessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).IpAccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"cloudflare.apiToken.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5094,6 +5194,94 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZoneWafRuleCategoryOverride).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"cloudflare.ipAccessRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.ipAccessRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.value": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).Value, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.notes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).Notes, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.scopeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).ScopeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.allowedModes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).AllowedModes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.createdOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).CreatedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.ipAccessRule.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareIpAccessRule).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdown.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.lockdown.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdown.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdown.paused": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).Paused, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdown.urls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).Urls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdown.configurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).Configurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdown.createdOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).CreatedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.lockdown.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneLockdown).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.hold.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneHold).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.hold.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneHold).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.hold.holdAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneHold).HoldAfter, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.hold.includeSubdomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneHold).IncludeSubdomains, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"cloudflare.zone.emailRouting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneEmailRouting).__id, ok = v.Value.(string)
 		return
@@ -5793,6 +5981,9 @@ type mqlCloudflareZone struct {
 	AiSecurity               plugin.TValue[*mqlCloudflareZoneAiSecurity]
 	AiAudit                  plugin.TValue[*mqlCloudflareZoneAiAudit]
 	Precursor                plugin.TValue[*mqlCloudflareZonePrecursor]
+	IpAccessRules            plugin.TValue[[]any]
+	Lockdowns                plugin.TValue[[]any]
+	Hold                     plugin.TValue[*mqlCloudflareZoneHold]
 }
 
 // createCloudflareZone creates a new instance of this resource
@@ -6257,6 +6448,54 @@ func (c *mqlCloudflareZone) GetPrecursor() *plugin.TValue[*mqlCloudflareZonePrec
 		}
 
 		return c.precursor()
+	})
+}
+
+func (c *mqlCloudflareZone) GetIpAccessRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpAccessRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "ipAccessRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipAccessRules()
+	})
+}
+
+func (c *mqlCloudflareZone) GetLockdowns() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Lockdowns, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "lockdowns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.lockdowns()
+	})
+}
+
+func (c *mqlCloudflareZone) GetHold() *plugin.TValue[*mqlCloudflareZoneHold] {
+	return plugin.GetOrCompute[*mqlCloudflareZoneHold](&c.Hold, func() (*mqlCloudflareZoneHold, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "hold")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareZoneHold), nil
+			}
+		}
+
+		return c.hold()
 	})
 }
 
@@ -6884,6 +7123,7 @@ type mqlCloudflareAccount struct {
 	TunnelVirtualNetworks plugin.TValue[[]any]
 	TurnstileWidgets      plugin.TValue[[]any]
 	LogExplorerDatasets   plugin.TValue[[]any]
+	IpAccessRules         plugin.TValue[[]any]
 }
 
 // createCloudflareAccount creates a new instance of this resource
@@ -7164,6 +7404,22 @@ func (c *mqlCloudflareAccount) GetLogExplorerDatasets() *plugin.TValue[[]any] {
 		}
 
 		return c.logExplorerDatasets()
+	})
+}
+
+func (c *mqlCloudflareAccount) GetIpAccessRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpAccessRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "ipAccessRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipAccessRules()
 	})
 }
 
@@ -11895,6 +12151,218 @@ func (c *mqlCloudflareZoneWafRuleCategoryOverride) GetAction() *plugin.TValue[st
 
 func (c *mqlCloudflareZoneWafRuleCategoryOverride) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+// mqlCloudflareIpAccessRule for the cloudflare.ipAccessRule resource
+type mqlCloudflareIpAccessRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareIpAccessRuleInternal it will be used here
+	Id           plugin.TValue[string]
+	Mode         plugin.TValue[string]
+	Target       plugin.TValue[string]
+	Value        plugin.TValue[string]
+	Notes        plugin.TValue[string]
+	ScopeType    plugin.TValue[string]
+	AllowedModes plugin.TValue[[]any]
+	CreatedOn    plugin.TValue[*time.Time]
+	ModifiedOn   plugin.TValue[*time.Time]
+}
+
+// createCloudflareIpAccessRule creates a new instance of this resource
+func createCloudflareIpAccessRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareIpAccessRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.ipAccessRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareIpAccessRule) MqlName() string {
+	return "cloudflare.ipAccessRule"
+}
+
+func (c *mqlCloudflareIpAccessRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareIpAccessRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareIpAccessRule) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlCloudflareIpAccessRule) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlCloudflareIpAccessRule) GetValue() *plugin.TValue[string] {
+	return &c.Value
+}
+
+func (c *mqlCloudflareIpAccessRule) GetNotes() *plugin.TValue[string] {
+	return &c.Notes
+}
+
+func (c *mqlCloudflareIpAccessRule) GetScopeType() *plugin.TValue[string] {
+	return &c.ScopeType
+}
+
+func (c *mqlCloudflareIpAccessRule) GetAllowedModes() *plugin.TValue[[]any] {
+	return &c.AllowedModes
+}
+
+func (c *mqlCloudflareIpAccessRule) GetCreatedOn() *plugin.TValue[*time.Time] {
+	return &c.CreatedOn
+}
+
+func (c *mqlCloudflareIpAccessRule) GetModifiedOn() *plugin.TValue[*time.Time] {
+	return &c.ModifiedOn
+}
+
+// mqlCloudflareZoneLockdown for the cloudflare.zone.lockdown resource
+type mqlCloudflareZoneLockdown struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneLockdownInternal it will be used here
+	Id             plugin.TValue[string]
+	Description    plugin.TValue[string]
+	Paused         plugin.TValue[bool]
+	Urls           plugin.TValue[[]any]
+	Configurations plugin.TValue[[]any]
+	CreatedOn      plugin.TValue[*time.Time]
+	ModifiedOn     plugin.TValue[*time.Time]
+}
+
+// createCloudflareZoneLockdown creates a new instance of this resource
+func createCloudflareZoneLockdown(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneLockdown{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.lockdown", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneLockdown) MqlName() string {
+	return "cloudflare.zone.lockdown"
+}
+
+func (c *mqlCloudflareZoneLockdown) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneLockdown) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareZoneLockdown) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlCloudflareZoneLockdown) GetPaused() *plugin.TValue[bool] {
+	return &c.Paused
+}
+
+func (c *mqlCloudflareZoneLockdown) GetUrls() *plugin.TValue[[]any] {
+	return &c.Urls
+}
+
+func (c *mqlCloudflareZoneLockdown) GetConfigurations() *plugin.TValue[[]any] {
+	return &c.Configurations
+}
+
+func (c *mqlCloudflareZoneLockdown) GetCreatedOn() *plugin.TValue[*time.Time] {
+	return &c.CreatedOn
+}
+
+func (c *mqlCloudflareZoneLockdown) GetModifiedOn() *plugin.TValue[*time.Time] {
+	return &c.ModifiedOn
+}
+
+// mqlCloudflareZoneHold for the cloudflare.zone.hold resource
+type mqlCloudflareZoneHold struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneHoldInternal it will be used here
+	Enabled           plugin.TValue[bool]
+	HoldAfter         plugin.TValue[*time.Time]
+	IncludeSubdomains plugin.TValue[string]
+}
+
+// createCloudflareZoneHold creates a new instance of this resource
+func createCloudflareZoneHold(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneHold{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.hold", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneHold) MqlName() string {
+	return "cloudflare.zone.hold"
+}
+
+func (c *mqlCloudflareZoneHold) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneHold) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareZoneHold) GetHoldAfter() *plugin.TValue[*time.Time] {
+	return &c.HoldAfter
+}
+
+func (c *mqlCloudflareZoneHold) GetIncludeSubdomains() *plugin.TValue[string] {
+	return &c.IncludeSubdomains
 }
 
 // mqlCloudflareZoneEmailRouting for the cloudflare.zone.emailRouting resource

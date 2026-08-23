@@ -118,6 +118,17 @@ private cloudflare.zone @defaults("name account.name") {
 	aiAudit() cloudflare.zone.aiAudit
 	// Precursor request-enforcement configuration for the zone
 	precursor() cloudflare.zone.precursor
+	// IP Access rules that apply to the zone
+	//
+	// The IP, IP range, ASN, and country rules evaluated ahead of the WAF for
+	// this zone, including any inherited from the account. A rule in
+	// `whitelist` mode exempts its source from the WAF, rate limiting, and the
+	// zone's security level entirely.
+	ipAccessRules() []cloudflare.ipAccessRule
+	// Zone Lockdown rules restricting URLs to named addresses
+	lockdowns() []cloudflare.zone.lockdown
+	// Registrar hold preventing the zone from being added to another account
+	hold() cloudflare.zone.hold
 }
 
 // Cloudflare account
@@ -413,6 +424,14 @@ private cloudflare.account @defaults("name") {
 	// and whether deletion protection is on, which is what stops retained
 	// logs from being removed while an investigation is open.
 	logExplorerDatasets() []cloudflare.logExplorerDataset
+
+	// Account-wide IP Access rules
+	//
+	// The IP, IP range, ASN, and country rules the account applies across all
+	// of its zones. A rule in `whitelist` mode exempts its source from the
+	// WAF, rate limiting, and the security level of every zone the account
+	// owns, so one entry can undo the firewall posture of the whole estate.
+	ipAccessRules() []cloudflare.ipAccessRule
 }
 
 // Cloudflare API Token
@@ -1975,6 +1994,104 @@ private cloudflare.zone.wafRule.categoryOverride @defaults("category action enab
 	// False removes every rule of the category from evaluation. Null when the
 	// override changes only the action.
 	enabled bool
+}
+
+// IP Access rule
+//
+// Rule evaluated ahead of the WAF that matches a request by its source: a single
+// IP, an IP range, an autonomous system number, or a country. The `mode` field
+// carries the verdict. The dangerous value is `whitelist`: a source allowed
+// there bypasses the WAF, rate limiting, and the zone's security level entirely,
+// so a stale allowlist entry for an office range or a cloud provider's ASN is an
+// unfiltered path to the origin. Rules exist at both zone and account scope, and
+// `scopeType` reports which one a rule came from.
+private cloudflare.ipAccessRule @defaults("mode target value notes") {
+	// Rule identifier
+	id string
+	// Action applied to a matching request
+	//
+	// One of block, challenge, whitelist, js_challenge, or managed_challenge.
+	// The value whitelist exempts the source from the WAF, rate limiting, and
+	// the security level rather than allowing it through a single check.
+	mode string
+	// What the rule matches on
+	//
+	// One of ip, ip6, ip_range, asn, or country.
+	target string
+	// Value matched against the request source
+	//
+	// An IP address, a CIDR range, an AS number, or a two-letter ISO-3166-1
+	// alpha-2 country code, according to `target`.
+	value string
+	// Summary recorded with the rule
+	notes string
+	// Scope the rule was defined at
+	//
+	// Either user or organization. An organization rule is defined on the
+	// account and applies to every zone it owns.
+	scopeType string
+	// Actions the rule is allowed to take
+	allowedModes []string
+	// Time the rule was created
+	createdOn time
+	// Time the rule was last modified
+	modifiedOn time
+}
+
+// Zone Lockdown rule
+//
+// Rule restricting a set of URLs to named IP addresses and ranges, used to pin
+// administrative paths such as /wp-admin or a staging host to office addresses.
+// A lockdown with `paused` true is defined but not enforced, and a
+// `configurations` list that has drifted from the addresses actually in use
+// leaves the URLs in `urls` reachable from anywhere with no other signal that
+// anything changed.
+private cloudflare.zone.lockdown @defaults("description paused urls") {
+	// Lockdown rule identifier
+	id string
+	// Summary recorded with the rule
+	description string
+	// Whether the rule is defined but not enforced
+	//
+	// True means the URLs are open to every source while the rule stays in
+	// the configuration looking like a control.
+	paused bool
+	// URL patterns the rule restricts
+	//
+	// Simple wildcard patterns, for example `example.com/wp-admin*`.
+	urls []string
+	// Addresses permitted to reach the restricted URLs
+	//
+	// Each entry is `{target, value}`, where `target` is `ip` or `ip_range`
+	// and `value` is the address or CIDR block.
+	configurations []dict
+	// Time the rule was created
+	createdOn time
+	// Time the rule was last modified
+	modifiedOn time
+}
+
+// Registrar hold on a zone
+//
+// Hold that stops the zone from being added to any Cloudflare account after it
+// is removed from this one. Without a hold, deleting a zone frees the domain for
+// anyone to re-add and start serving, which is the standard takeover path for a
+// Cloudflare-fronted domain. Reported as null when the hold state cannot be
+// read, so an unreadable zone is never reported as one with no hold.
+private cloudflare.zone.hold @defaults("enabled includeSubdomains") {
+	// Whether a hold is in force on the zone
+	enabled bool
+	// Time the hold takes effect
+	//
+	// Null when the hold is already in force or none is scheduled. A hold with
+	// a future date is not protecting the zone yet.
+	holdAfter time
+	// Whether the hold also covers subdomains of the zone
+	//
+	// Reported as the API does, a string rather than a boolean. Without it a
+	// hold on the apex still leaves every subdomain free to be claimed in
+	// another account.
+	includeSubdomains string
 }
 
 // Cloudflare email-routing configuration
