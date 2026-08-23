@@ -21,6 +21,14 @@ type mqlVllmEndpointInternal struct {
 	obs  connection.EndpointObservation
 }
 
+// mqlVllmModelInternal carries the permission array from the /v1/models
+// response that produced the model, so reading vllm.model.permissions does not
+// re-list the models.
+type mqlVllmModelInternal struct {
+	once            sync.Once
+	permissionCards []connection.ModelPermission
+}
+
 func (r *mqlVllm) id() (string, error) {
 	conn, err := vllmConnection(r.MqlRuntime)
 	if err != nil {
@@ -116,10 +124,20 @@ func (r *mqlVllm) models() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		if m, ok := mqlModel.(*mqlVllmModel); ok {
+			primed := c.Permission
+			m.once.Do(func() {
+				m.permissionCards = primed
+			})
+		}
 		res = append(res, mqlModel)
 	}
 
 	return res, nil
+}
+
+func (m *mqlVllmModel) permissions() ([]any, error) {
+	return modelPermissionResources(m.MqlRuntime, m.Id.Data, m.permissionCards)
 }
 
 // modelCreatedTime converts a vLLM model card's Unix creation timestamp into a
@@ -285,6 +303,54 @@ func (s *mqlVllmServer) usesTls() (bool, error) {
 	return conn.UsesTLS(), nil
 }
 
+func (s *mqlVllmServer) anonymousInferenceAllowed() (bool, error) {
+	observations, err := allEndpointObservations(s.MqlRuntime)
+	if err != nil {
+		return false, err
+	}
+	allowed, known := connection.AnyAnonymousAccessible(observations, connection.AnonymousInferencePaths...)
+	if !known {
+		return nullBool(&s.AnonymousInferenceAllowed)
+	}
+	return allowed, nil
+}
+
+func (s *mqlVllmServer) apiKeyRequired() (bool, error) {
+	observations, err := allEndpointObservations(s.MqlRuntime)
+	if err != nil {
+		return false, err
+	}
+	required, known := connection.AnyRequiresAuth(observations, connection.AnonymousInferencePaths...)
+	if !known {
+		return nullBool(&s.ApiKeyRequired)
+	}
+	return required, nil
+}
+
+func (s *mqlVllmServer) runtimeLoraUpdatingEnabled() (bool, error) {
+	observations, err := allEndpointObservations(s.MqlRuntime)
+	if err != nil {
+		return false, err
+	}
+	present, known := connection.AnyRoutePresent(observations, connection.LoRAAdapterPaths...)
+	if !known {
+		return nullBool(&s.RuntimeLoraUpdatingEnabled)
+	}
+	return present, nil
+}
+
+func (s *mqlVllmServer) storedResponsesExposed() (bool, error) {
+	conn, err := vllmConnection(s.MqlRuntime)
+	if err != nil {
+		return false, err
+	}
+	obs, err := conn.StoredResponses(context.Background())
+	if err != nil || !obs.Known {
+		return nullBool(&s.StoredResponsesExposed)
+	}
+	return obs.Readable, nil
+}
+
 func initVllmEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if _, ok := args["path"]; !ok {
 		return nil, nil, errors.New("vllm.endpoint requires path")
@@ -443,6 +509,38 @@ func (m *mqlVllmMetrics) loadTrackingVisible() (bool, error) {
 	return accessible, nil
 }
 
+func (m *mqlVllmMetrics) exposedModelNames() ([]any, error) {
+	snapshot := metricsSnapshot(m.MqlRuntime)
+	if snapshot == nil || !snapshot.Fetched {
+		return stringListField(&m.ExposedModelNames, nil)
+	}
+	return stringListField(&m.ExposedModelNames, snapshot.ModelNames)
+}
+
+func (m *mqlVllmMetrics) exposedLoraAdapters() ([]any, error) {
+	snapshot := metricsSnapshot(m.MqlRuntime)
+	if snapshot == nil || !snapshot.Fetched {
+		return stringListField(&m.ExposedLoraAdapters, nil)
+	}
+	return stringListField(&m.ExposedLoraAdapters, snapshot.LoraAdapters)
+}
+
+// metricsSnapshot reads the anonymous Prometheus scrape, or nil when the
+// endpoint could not be scraped. A failed scrape means the labels were never
+// observed, so callers render null rather than an empty list that would read
+// as "nothing is disclosed".
+func metricsSnapshot(runtime *plugin.Runtime) *connection.MetricsSnapshot {
+	conn, err := vllmConnection(runtime)
+	if err != nil {
+		return nil
+	}
+	snapshot, err := conn.MetricsSnapshot(context.Background())
+	if err != nil {
+		return nil
+	}
+	return snapshot
+}
+
 func vllmConnection(runtime *plugin.Runtime) (*connection.VllmConnection, error) {
 	conn, ok := runtime.Connection.(*connection.VllmConnection)
 	if !ok {
@@ -461,16 +559,20 @@ func endpointAnonymousAccessibleKnown(runtime *plugin.Runtime, method string, pa
 }
 
 func categoryAnonymousAccessibleKnown(runtime *plugin.Runtime, category string) (bool, bool, error) {
-	conn, err := vllmConnection(runtime)
-	if err != nil {
-		return false, false, err
-	}
-	observations, err := conn.EndpointObservations(context.Background())
+	observations, err := allEndpointObservations(runtime)
 	if err != nil {
 		return false, false, err
 	}
 	accessible, known := connection.CategoryAnonymousAccessible(observations, category)
 	return accessible, known, nil
+}
+
+func allEndpointObservations(runtime *plugin.Runtime) ([]connection.EndpointObservation, error) {
+	conn, err := vllmConnection(runtime)
+	if err != nil {
+		return nil, err
+	}
+	return conn.EndpointObservations(context.Background())
 }
 
 func endpointObservation(runtime *plugin.Runtime, method string, path string) (connection.EndpointObservation, error) {
