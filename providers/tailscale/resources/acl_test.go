@@ -121,6 +121,7 @@ func TestFlattenAutoApprovers(t *testing.T) {
 		in            *tsclient.ACLAutoApprovers
 		wantExitNodes []any
 		wantRoutes    map[string]any
+		wantServices  map[string]any
 	}{
 		{
 			// A policy with no autoApprovers block must read as "nothing is
@@ -129,12 +130,14 @@ func TestFlattenAutoApprovers(t *testing.T) {
 			in:            nil,
 			wantExitNodes: []any{},
 			wantRoutes:    map[string]any{},
+			wantServices:  map[string]any{},
 		},
 		{
 			name:          "empty block",
 			in:            &tsclient.ACLAutoApprovers{},
 			wantExitNodes: []any{},
 			wantRoutes:    map[string]any{},
+			wantServices:  map[string]any{},
 		},
 		{
 			name: "exit nodes only",
@@ -143,6 +146,7 @@ func TestFlattenAutoApprovers(t *testing.T) {
 			},
 			wantExitNodes: []any{"tag:exit", "group:admins"},
 			wantRoutes:    map[string]any{},
+			wantServices:  map[string]any{},
 		},
 		{
 			name: "routes and exit nodes",
@@ -158,14 +162,54 @@ func TestFlattenAutoApprovers(t *testing.T) {
 				"10.0.0.0/8":     []any{"group:eng", "tag:router"},
 				"192.168.0.0/16": []any{},
 			},
+			wantServices: map[string]any{},
+		},
+		{
+			// The services bucket names who may stand up a tailnet service
+			// under its stable VIP with no administrator approving the
+			// advertisement. It has to survive the flatten alongside the
+			// other two buckets rather than being dropped.
+			name: "services alongside routes and exit nodes",
+			in: &tsclient.ACLAutoApprovers{
+				ExitNode: []string{"tag:exit"},
+				Routes: map[string][]string{
+					"10.0.0.0/8": {"group:eng"},
+				},
+				Services: map[string][]string{
+					"svc:web":     {"tag:frontend", "group:eng"},
+					"svc:noowner": {},
+				},
+			},
+			wantExitNodes: []any{"tag:exit"},
+			wantRoutes: map[string]any{
+				"10.0.0.0/8": []any{"group:eng"},
+			},
+			wantServices: map[string]any{
+				"svc:web":     []any{"tag:frontend", "group:eng"},
+				"svc:noowner": []any{},
+			},
+		},
+		{
+			// A policy that auto-approves services but nothing else must not
+			// read as "nothing is auto-approved".
+			name: "services only",
+			in: &tsclient.ACLAutoApprovers{
+				Services: map[string][]string{"svc:vpn": {"autogroup:admin"}},
+			},
+			wantExitNodes: []any{},
+			wantRoutes:    map[string]any{},
+			wantServices: map[string]any{
+				"svc:vpn": []any{"autogroup:admin"},
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			exitNodes, routes := flattenAutoApprovers(tc.in)
+			exitNodes, routes, services := flattenAutoApprovers(tc.in)
 			assert.Equal(t, tc.wantExitNodes, exitNodes)
 			assert.Equal(t, tc.wantRoutes, routes)
+			assert.Equal(t, tc.wantServices, services)
 		})
 	}
 }

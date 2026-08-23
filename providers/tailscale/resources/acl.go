@@ -34,32 +34,28 @@ func (a *mqlTailscaleAclPolicy) id() (string, error) {
 }
 
 // flattenAutoApprovers splits a policy's auto-approver block into the exit-node
-// list and the route-to-owners map the resource exposes. A policy with no
-// autoApprovers section yields empty values rather than nulls, so a query
-// asserting that nothing is auto-approved reads false instead of passing on a
-// null comparison.
-func flattenAutoApprovers(autoApprovers *tsclient.ACLAutoApprovers) (exitNodes []any, routes map[string]any) {
+// list and the route-to-owners and service-to-owners maps the resource exposes.
+// A policy with no autoApprovers section yields empty values rather than nulls,
+// so a query asserting that nothing is auto-approved reads false instead of
+// passing on a null comparison.
+func flattenAutoApprovers(autoApprovers *tsclient.ACLAutoApprovers) (exitNodes []any, routes, services map[string]any) {
 	exitNodes = []any{}
 	routes = map[string]any{}
+	services = map[string]any{}
 	if autoApprovers == nil {
-		return exitNodes, routes
+		return exitNodes, routes, services
 	}
 
 	for _, v := range autoApprovers.ExitNode {
 		exitNodes = append(exitNodes, v)
 	}
-	for k, owners := range autoApprovers.Routes {
-		arr := make([]any, 0, len(owners))
-		for _, owner := range owners {
-			arr = append(arr, owner)
-		}
-		routes[k] = arr
-	}
-	return exitNodes, routes
+	return exitNodes,
+		stringSliceMapToAny(autoApprovers.Routes),
+		stringSliceMapToAny(autoApprovers.Services)
 }
 
 func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, acl *tsclient.ACL) (plugin.Resource, error) {
-	autoApproverExitNodes, autoApproverRoutes := flattenAutoApprovers(acl.AutoApprovers)
+	autoApproverExitNodes, autoApproverRoutes, autoApproverServices := flattenAutoApprovers(acl.AutoApprovers)
 
 	acls, err := structSliceToDictSlice(acl.ACLs)
 	if err != nil {
@@ -106,6 +102,7 @@ func createTailscaleAclPolicyResource(runtime *plugin.Runtime, tailnet string, a
 		"nodeAttrs":              llx.ArrayData(nodeAttrs, types.Dict),
 		"autoApproverExitNodes":  llx.ArrayData(autoApproverExitNodes, types.String),
 		"autoApproverRoutes":     llx.MapData(autoApproverRoutes, types.Array(types.String)),
+		"autoApproverServices":   llx.MapData(autoApproverServices, types.Array(types.String)),
 		"defaultSourcePosture":   llx.ArrayData(stringSliceToAny(acl.DefaultSourcePosture), types.String),
 		"postures":               llx.MapData(stringSliceMapToAny(acl.Postures), types.Array(types.String)),
 		"disableIPv4":            llx.BoolData(acl.DisableIPv4),

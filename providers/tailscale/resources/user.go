@@ -52,8 +52,8 @@ func createTailscaleUserResource(runtime *plugin.Runtime, user *tsclient.User) (
 		"role":               llx.StringData(string(user.Role)),
 		"status":             llx.StringData(string(user.Status)),
 		"deviceCount":        llx.IntData(user.DeviceCount),
-		"createdAt":          llx.TimeData(user.Created),
-		"lastSeenAt":         llx.TimeData(user.LastSeen),
+		"createdAt":          llx.TimeDataPtr(optionalTimeValue(user.Created)),
+		"lastSeenAt":         llx.TimeDataPtr(optionalTimeValue(user.LastSeen)),
 		"currentlyConnected": llx.BoolData(user.CurrentlyConnected),
 	})
 }

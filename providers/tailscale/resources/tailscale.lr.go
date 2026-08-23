@@ -388,6 +388,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"tailscale.aclPolicy.autoApproverRoutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAclPolicy).GetAutoApproverRoutes()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
+	"tailscale.aclPolicy.autoApproverServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAclPolicy).GetAutoApproverServices()).ToDataRes(types.Map(types.String, types.Array(types.String)))
+	},
 	"tailscale.aclPolicy.defaultSourcePosture": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAclPolicy).GetDefaultSourcePosture()).ToDataRes(types.Array(types.String))
 	},
@@ -450,6 +453,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"tailscale.authKey.hasExpiration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAuthKey).GetHasExpiration()).ToDataRes(types.Bool)
+	},
+	"tailscale.authKey.isExpired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTailscaleAuthKey).GetIsExpired()).ToDataRes(types.Bool)
 	},
 	"tailscale.authKey.revoked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTailscaleAuthKey).GetRevoked()).ToDataRes(types.Time)
@@ -915,6 +921,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlTailscaleAclPolicy).AutoApproverRoutes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"tailscale.aclPolicy.autoApproverServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAclPolicy).AutoApproverServices, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"tailscale.aclPolicy.defaultSourcePosture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscaleAclPolicy).DefaultSourcePosture, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1001,6 +1011,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"tailscale.authKey.hasExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTailscaleAuthKey).HasExpiration, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"tailscale.authKey.isExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTailscaleAuthKey).IsExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"tailscale.authKey.revoked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1813,6 +1827,7 @@ type mqlTailscaleAclPolicy struct {
 	NodeAttrs              plugin.TValue[[]any]
 	AutoApproverExitNodes  plugin.TValue[[]any]
 	AutoApproverRoutes     plugin.TValue[map[string]any]
+	AutoApproverServices   plugin.TValue[map[string]any]
 	DefaultSourcePosture   plugin.TValue[[]any]
 	Postures               plugin.TValue[map[string]any]
 	DisableIPv4            plugin.TValue[bool]
@@ -1919,6 +1934,10 @@ func (c *mqlTailscaleAclPolicy) GetAutoApproverRoutes() *plugin.TValue[map[strin
 	return &c.AutoApproverRoutes
 }
 
+func (c *mqlTailscaleAclPolicy) GetAutoApproverServices() *plugin.TValue[map[string]any] {
+	return &c.AutoApproverServices
+}
+
 func (c *mqlTailscaleAclPolicy) GetDefaultSourcePosture() *plugin.TValue[[]any] {
 	return &c.DefaultSourcePosture
 }
@@ -1968,6 +1987,7 @@ type mqlTailscaleAuthKey struct {
 	Updated          plugin.TValue[*time.Time]
 	Expires          plugin.TValue[*time.Time]
 	HasExpiration    plugin.TValue[bool]
+	IsExpired        plugin.TValue[bool]
 	Revoked          plugin.TValue[*time.Time]
 	IsRevoked        plugin.TValue[bool]
 	Invalid          plugin.TValue[bool]
@@ -2081,6 +2101,12 @@ func (c *mqlTailscaleAuthKey) GetExpires() *plugin.TValue[*time.Time] {
 func (c *mqlTailscaleAuthKey) GetHasExpiration() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.HasExpiration, func() (bool, error) {
 		return c.hasExpiration()
+	})
+}
+
+func (c *mqlTailscaleAuthKey) GetIsExpired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsExpired, func() (bool, error) {
+		return c.isExpired()
 	})
 }
 

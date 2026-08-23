@@ -27,8 +27,24 @@ func timeIsSet(t *time.Time) bool {
 	return t != nil && !t.IsZero()
 }
 
+// optionalTimeValue reports a Tailscale timestamp for MQL, returning nil when
+// the API left it unset.
+//
+// Tailscale spells an absent timestamp as the Go zero instant rather than as
+// JSON null, and several of the timestamps it returns carry meaning when
+// absent: `expires` is unset on a key that never expires, and `revoked` is
+// unset on a key that has not been revoked. Passing the zero instant through
+// would date those keys to the year 1, so a query comparing the timestamp
+// against the current time would read "never expires" as "expired long ago".
+func optionalTimeValue(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
 // hasExpiration reports whether the key has an expiration set. A key with no
-// expiration carries the zero time in `expires`.
+// expiration carries no value in `expires`.
 func (r *mqlTailscaleAuthKey) hasExpiration() (bool, error) {
 	if r.Expires.Error != nil {
 		return false, r.Expires.Error
@@ -37,12 +53,28 @@ func (r *mqlTailscaleAuthKey) hasExpiration() (bool, error) {
 }
 
 // isRevoked reports whether the key has been revoked. A key that has not been
-// revoked carries the zero time in `revoked`.
+// revoked carries no value in `revoked`.
 func (r *mqlTailscaleAuthKey) isRevoked() (bool, error) {
 	if r.Revoked.Error != nil {
 		return false, r.Revoked.Error
 	}
 	return timeIsSet(r.Revoked.Data), nil
+}
+
+// isExpired reports whether the key is past its expiration time.
+//
+// A key with no expiration never expires, so it reports false. That reads like
+// the safe answer and is not one: a key that never expires is the longest-lived
+// credential the tailnet can hold. `hasExpiration` is what separates it from a
+// key that is merely still inside its window.
+func (r *mqlTailscaleAuthKey) isExpired() (bool, error) {
+	if r.Expires.Error != nil {
+		return false, r.Expires.Error
+	}
+	if !timeIsSet(r.Expires.Data) {
+		return false, nil
+	}
+	return r.Expires.Data.Before(time.Now()), nil
 }
 
 func initTailscaleAuthKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -103,10 +135,10 @@ func createTailscaleAuthKeyResource(runtime *plugin.Runtime, key *tsclient.Key) 
 		"issuer":           llx.StringData(key.Issuer),
 		"subject":          llx.StringData(key.Subject),
 		"customClaimRules": llx.MapData(claimRules, types.String),
-		"created":          llx.TimeData(key.Created),
-		"updated":          llx.TimeData(key.Updated),
-		"expires":          llx.TimeData(key.Expires),
-		"revoked":          llx.TimeData(key.Revoked),
+		"created":          llx.TimeDataPtr(optionalTimeValue(key.Created)),
+		"updated":          llx.TimeDataPtr(optionalTimeValue(key.Updated)),
+		"expires":          llx.TimeDataPtr(optionalTimeValue(key.Expires)),
+		"revoked":          llx.TimeDataPtr(optionalTimeValue(key.Revoked)),
 		"invalid":          llx.BoolData(key.Invalid),
 		"reusable":         llx.BoolData(caps.Reusable),
 		"ephemeral":        llx.BoolData(caps.Ephemeral),

@@ -58,16 +58,13 @@ func initTailscaleDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 // device connected to the coordination server), an empty string (`created` on a
 // device that has none, such as the hello service), and the zero instant
 // (`expires` on a device whose key never expires). The SDK folds the latter two
-// into the Go zero time, so absence has to be recognized here.
-//
-// Reporting the zero instant instead of null would date those devices to the
-// year 1, and a query for devices whose key has expired (`expiresAt <
-// time.now`) would then match every device whose key is set never to expire.
+// into the Go zero time, which optionalTimeValue recognizes; only the nil
+// pointer is specific to the device field set.
 func optionalTime(t *tsclient.Time) *time.Time {
-	if t == nil || t.IsZero() {
+	if t == nil {
 		return nil
 	}
-	return &t.Time
+	return optionalTimeValue(t.Time)
 }
 
 func createTailscaleDeviceResource(runtime *plugin.Runtime, device *tsclient.Device) (plugin.Resource, error) {
