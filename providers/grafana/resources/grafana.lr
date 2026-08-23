@@ -9,11 +9,11 @@ option go_package = "go.mondoo.com/mql/providers/grafana/resources"
 // Grafana instance queried through its HTTP API: organization details,
 // human users with their roles and MFA / external-auth status, service
 // accounts and their tokens, configured datasources, alerting contact
-// points, the notification-policy routing tree, legacy API keys, RBAC
-// roles, and SSO settings (with a focused view of SAML configuration).
-// This is the surface auditors use to find weak datasource credentials,
-// missing MFA, expired or broad-scope tokens, deprecated API keys, and
-// permissive SSO configuration.
+// points, the notification-policy routing tree, RBAC roles, and SSO
+// settings (with a focused view of SAML configuration). This is the
+// surface auditors use to find weak datasource credentials, missing
+// MFA, expired, revoked, or broad-scope tokens, and permissive SSO
+// configuration.
 grafana {
   // Organization details
   organization() grafana.organization
@@ -128,7 +128,12 @@ grafana.serviceAccount @defaults("id name role") {
 // is configured), while the derived `hasExpiration` and `isExpired`
 // predicates and the `secondsUntilExpiration` countdown let audits flag
 // non-expiring or already-expired credentials that should be rotated or
-// revoked.
+// revoked. The `isRevoked` predicate separates credentials that no
+// longer authenticate from live ones, so a revocation can be confirmed
+// rather than assumed, and `lastUsedAt` records the most recent time the
+// token authenticated (null when it has never been used), which
+// identifies dormant credentials worth removing. The `serviceAccount`
+// field resolves to the account a token authenticates as.
 grafana.serviceAccountToken @defaults("id name") {
   // Token ID
   id int
@@ -146,6 +151,12 @@ grafana.serviceAccountToken @defaults("id name") {
   secondsUntilExpiration float
   // Whether the token is expired
   isExpired bool
+  // Whether the token has been revoked and no longer authenticates
+  isRevoked bool
+  // Timestamp when the token was last used to authenticate (null if never used)
+  lastUsedAt time
+  // Service account this token authenticates as
+  serviceAccount() grafana.serviceAccount
 }
 
 // Grafana datasource

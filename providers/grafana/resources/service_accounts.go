@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/grafana/connection"
 )
 
@@ -36,11 +38,16 @@ type grafanaServiceAccountsResponse struct {
 }
 
 // grafanaTokenJSON mirrors one element of the /api/serviceaccounts/{id}/tokens response.
+//
+// LastUsedAt is a pointer because Grafana sends null for a token that has
+// never authenticated; that has to stay distinct from a real timestamp, so
+// the field is reported as null rather than as the zero time.
 type grafanaTokenJSON struct {
 	ID                    int     `json:"id"`
 	Name                  string  `json:"name"`
 	Created               string  `json:"created"`
 	Expiration            string  `json:"expiration"`
+	LastUsedAt            *string `json:"lastUsedAt"`
 	HasExpired            bool    `json:"hasExpired"`
 	SecondsTillExpiration float64 `json:"secondsUntilExpiration"`
 	IsRevoked             bool    `json:"isRevoked"`
@@ -208,6 +215,13 @@ func (g *mqlGrafanaServiceAccount) tokens() ([]interface{}, error) {
 			secondsUntilExp = 0
 		}
 
+		// A token that has never authenticated comes back either as a null
+		// lastUsedAt or as the same "0001-01-01T00:00:00Z" sentinel Grafana
+		// uses elsewhere. Both must read as null: reporting the zero time
+		// would date a never-used credential to year 1 rather than saying
+		// nothing is known about its use.
+		lastUsedAt := parseGrafanaTimePtr(tok.LastUsedAt)
+
 		res, err := CreateResource(g.MqlRuntime, "grafana.serviceAccountToken", map[string]*llx.RawData{
 			"id":                     llx.IntData(int64(tok.ID)),
 			"serviceAccountId":       llx.IntData(saID),
@@ -217,6 +231,8 @@ func (g *mqlGrafanaServiceAccount) tokens() ([]interface{}, error) {
 			"hasExpiration":          llx.BoolData(hasExpiration),
 			"secondsUntilExpiration": llx.FloatData(secondsUntilExp),
 			"isExpired":              llx.BoolData(tok.HasExpired),
+			"isRevoked":              llx.BoolData(tok.IsRevoked),
+			"lastUsedAt":             llx.TimeDataPtr(lastUsedAt),
 		})
 		if err != nil {
 			return nil, err
@@ -224,6 +240,58 @@ func (g *mqlGrafanaServiceAccount) tokens() ([]interface{}, error) {
 		list = append(list, res)
 	}
 	return list, nil
+}
+
+// parseGrafanaTimePtr converts an optional Grafana timestamp into a time
+// pointer, mapping both a missing value and Grafana's zero-time sentinel to
+// nil so the field is reported as null.
+func parseGrafanaTimePtr(s *string) *time.Time {
+	if s == nil {
+		return nil
+	}
+	t := parseGrafanaTime(*s)
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
+// serviceAccount resolves the token's serviceAccountId to the service account
+// it authenticates as.
+//
+// The lookup scans the service-account list already resolved on the grafana
+// resource instead of calling NewResource per token. NewResource runs the
+// target resource's init before the runtime cache is consulted, which would
+// turn one list request into one request per token; grafana.serviceAccounts is
+// memoized on the singleton, so scanning it costs nothing beyond the list
+// every token walk has already paid for.
+func (t *mqlGrafanaServiceAccountToken) serviceAccount() (*mqlGrafanaServiceAccount, error) {
+	res, err := CreateResource(t.MqlRuntime, "grafana", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+
+	accounts := res.(*mqlGrafana).GetServiceAccounts()
+	if accounts.Error != nil {
+		return nil, accounts.Error
+	}
+
+	saID := t.ServiceAccountId.Data
+	for _, raw := range accounts.Data {
+		sa, ok := raw.(*mqlGrafanaServiceAccount)
+		if !ok {
+			continue
+		}
+		if sa.Id.Data == saID {
+			return sa, nil
+		}
+	}
+
+	// The account the token belongs to is no longer listed (deleted between
+	// calls, or hidden by permissions). Mark the field resolved-and-null so the
+	// runtime does not treat it as unset.
+	t.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }
 
 func (t *mqlGrafanaServiceAccountToken) id() (string, error) {

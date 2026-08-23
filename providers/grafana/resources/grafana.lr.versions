@@ -83,8 +83,11 @@ grafana.serviceAccountToken.expiration 13.0.1
 grafana.serviceAccountToken.hasExpiration 13.0.1
 grafana.serviceAccountToken.id 13.0.1
 grafana.serviceAccountToken.isExpired 13.0.1
+grafana.serviceAccountToken.isRevoked 13.1.22
+grafana.serviceAccountToken.lastUsedAt 13.1.22
 grafana.serviceAccountToken.name 13.0.1
 grafana.serviceAccountToken.secondsUntilExpiration 13.0.1
+grafana.serviceAccountToken.serviceAccount 13.1.22
 grafana.serviceAccountToken.serviceAccountId 13.0.1
 grafana.serviceAccounts 13.0.1
 grafana.ssoSettings 13.0.5
