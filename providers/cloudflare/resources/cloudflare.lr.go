@@ -54,6 +54,8 @@ const (
 	ResourceCloudflareOneDevicePostureRule                            string = "cloudflare.one.devicePostureRule"
 	ResourceCloudflareOneDevicePostureIntegration                     string = "cloudflare.one.devicePostureIntegration"
 	ResourceCloudflareTunnel                                          string = "cloudflare.tunnel"
+	ResourceCloudflareTunnelConfiguration                             string = "cloudflare.tunnel.configuration"
+	ResourceCloudflareTunnelIngressRule                               string = "cloudflare.tunnel.ingressRule"
 	ResourceCloudflareTunnelConnection                                string = "cloudflare.tunnel.connection"
 	ResourceCloudflareTunnelRoute                                     string = "cloudflare.tunnel.route"
 	ResourceCloudflareTunnelVirtualNetwork                            string = "cloudflare.tunnel.virtualNetwork"
@@ -256,6 +258,14 @@ func init() {
 		"cloudflare.tunnel": {
 			// to override args, implement: initCloudflareTunnel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareTunnel,
+		},
+		"cloudflare.tunnel.configuration": {
+			// to override args, implement: initCloudflareTunnelConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareTunnelConfiguration,
+		},
+		"cloudflare.tunnel.ingressRule": {
+			// to override args, implement: initCloudflareTunnelIngressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareTunnelIngressRule,
 		},
 		"cloudflare.tunnel.connection": {
 			// to override args, implement: initCloudflareTunnelConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1626,6 +1636,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.tunnel.connections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareTunnel).GetConnections()).ToDataRes(types.Array(types.Resource("cloudflare.tunnel.connection")))
+	},
+	"cloudflare.tunnel.configuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnel).GetConfiguration()).ToDataRes(types.Resource("cloudflare.tunnel.configuration"))
+	},
+	"cloudflare.tunnel.configuration.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetSource()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.configuration.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetVersion()).ToDataRes(types.Int)
+	},
+	"cloudflare.tunnel.configuration.ingress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetIngress()).ToDataRes(types.Array(types.Resource("cloudflare.tunnel.ingressRule")))
+	},
+	"cloudflare.tunnel.configuration.originNoTlsVerify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetOriginNoTlsVerify()).ToDataRes(types.Bool)
+	},
+	"cloudflare.tunnel.configuration.originCaPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetOriginCaPool()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.configuration.originServerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetOriginServerName()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.configuration.originHttp2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetOriginHttp2()).ToDataRes(types.Bool)
+	},
+	"cloudflare.tunnel.configuration.originProxyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetOriginProxyType()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.configuration.warpRoutingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelConfiguration).GetWarpRoutingEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.tunnel.ingressRule.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetHostname()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.ingressRule.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetPath()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.ingressRule.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetService()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.ingressRule.noTlsVerify": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetNoTlsVerify()).ToDataRes(types.Bool)
+	},
+	"cloudflare.tunnel.ingressRule.caPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetCaPool()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.ingressRule.originServerName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetOriginServerName()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.ingressRule.httpHostHeader": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetHttpHostHeader()).ToDataRes(types.String)
+	},
+	"cloudflare.tunnel.ingressRule.http2Origin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetHttp2Origin()).ToDataRes(types.Bool)
+	},
+	"cloudflare.tunnel.ingressRule.accessRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareTunnelIngressRule).GetAccessRequired()).ToDataRes(types.Bool)
 	},
 	"cloudflare.tunnel.connection.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareTunnelConnection).GetId()).ToDataRes(types.String)
@@ -4313,6 +4380,90 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.tunnel.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareTunnel).Connections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnel).Configuration, ok = plugin.RawToTValue[*mqlCloudflareTunnelConfiguration](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.tunnel.configuration.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).Version, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.ingress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).Ingress, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.originNoTlsVerify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).OriginNoTlsVerify, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.originCaPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).OriginCaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.originServerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).OriginServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.originHttp2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).OriginHttp2, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.originProxyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).OriginProxyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.configuration.warpRoutingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelConfiguration).WarpRoutingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.noTlsVerify": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).NoTlsVerify, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.caPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).CaPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.originServerName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).OriginServerName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.httpHostHeader": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).HttpHostHeader, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.http2Origin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).Http2Origin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.tunnel.ingressRule.accessRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareTunnelIngressRule).AccessRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cloudflare.tunnel.connection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10114,15 +10265,16 @@ func (c *mqlCloudflareOneDevicePostureIntegration) GetInterval() *plugin.TValue[
 type mqlCloudflareTunnel struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCloudflareTunnelInternal it will be used here
-	Id           plugin.TValue[string]
-	Name         plugin.TValue[string]
-	TunnelType   plugin.TValue[string]
-	Status       plugin.TValue[string]
-	RemoteConfig plugin.TValue[bool]
-	CreatedAt    plugin.TValue[*time.Time]
-	DeletedAt    plugin.TValue[*time.Time]
-	Connections  plugin.TValue[[]any]
+	mqlCloudflareTunnelInternal
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	TunnelType    plugin.TValue[string]
+	Status        plugin.TValue[string]
+	RemoteConfig  plugin.TValue[bool]
+	CreatedAt     plugin.TValue[*time.Time]
+	DeletedAt     plugin.TValue[*time.Time]
+	Connections   plugin.TValue[[]any]
+	Configuration plugin.TValue[*mqlCloudflareTunnelConfiguration]
 }
 
 // createCloudflareTunnel creates a new instance of this resource
@@ -10192,6 +10344,190 @@ func (c *mqlCloudflareTunnel) GetDeletedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlCloudflareTunnel) GetConnections() *plugin.TValue[[]any] {
 	return &c.Connections
+}
+
+func (c *mqlCloudflareTunnel) GetConfiguration() *plugin.TValue[*mqlCloudflareTunnelConfiguration] {
+	return plugin.GetOrCompute[*mqlCloudflareTunnelConfiguration](&c.Configuration, func() (*mqlCloudflareTunnelConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.tunnel", c.__id, "configuration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareTunnelConfiguration), nil
+			}
+		}
+
+		return c.configuration()
+	})
+}
+
+// mqlCloudflareTunnelConfiguration for the cloudflare.tunnel.configuration resource
+type mqlCloudflareTunnelConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareTunnelConfigurationInternal it will be used here
+	Source             plugin.TValue[string]
+	Version            plugin.TValue[int64]
+	Ingress            plugin.TValue[[]any]
+	OriginNoTlsVerify  plugin.TValue[bool]
+	OriginCaPool       plugin.TValue[string]
+	OriginServerName   plugin.TValue[string]
+	OriginHttp2        plugin.TValue[bool]
+	OriginProxyType    plugin.TValue[string]
+	WarpRoutingEnabled plugin.TValue[bool]
+}
+
+// createCloudflareTunnelConfiguration creates a new instance of this resource
+func createCloudflareTunnelConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareTunnelConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.tunnel.configuration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareTunnelConfiguration) MqlName() string {
+	return "cloudflare.tunnel.configuration"
+}
+
+func (c *mqlCloudflareTunnelConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetVersion() *plugin.TValue[int64] {
+	return &c.Version
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetIngress() *plugin.TValue[[]any] {
+	return &c.Ingress
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetOriginNoTlsVerify() *plugin.TValue[bool] {
+	return &c.OriginNoTlsVerify
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetOriginCaPool() *plugin.TValue[string] {
+	return &c.OriginCaPool
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetOriginServerName() *plugin.TValue[string] {
+	return &c.OriginServerName
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetOriginHttp2() *plugin.TValue[bool] {
+	return &c.OriginHttp2
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetOriginProxyType() *plugin.TValue[string] {
+	return &c.OriginProxyType
+}
+
+func (c *mqlCloudflareTunnelConfiguration) GetWarpRoutingEnabled() *plugin.TValue[bool] {
+	return &c.WarpRoutingEnabled
+}
+
+// mqlCloudflareTunnelIngressRule for the cloudflare.tunnel.ingressRule resource
+type mqlCloudflareTunnelIngressRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareTunnelIngressRuleInternal it will be used here
+	Hostname         plugin.TValue[string]
+	Path             plugin.TValue[string]
+	Service          plugin.TValue[string]
+	NoTlsVerify      plugin.TValue[bool]
+	CaPool           plugin.TValue[string]
+	OriginServerName plugin.TValue[string]
+	HttpHostHeader   plugin.TValue[string]
+	Http2Origin      plugin.TValue[bool]
+	AccessRequired   plugin.TValue[bool]
+}
+
+// createCloudflareTunnelIngressRule creates a new instance of this resource
+func createCloudflareTunnelIngressRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareTunnelIngressRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.tunnel.ingressRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareTunnelIngressRule) MqlName() string {
+	return "cloudflare.tunnel.ingressRule"
+}
+
+func (c *mqlCloudflareTunnelIngressRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetNoTlsVerify() *plugin.TValue[bool] {
+	return &c.NoTlsVerify
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetCaPool() *plugin.TValue[string] {
+	return &c.CaPool
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetOriginServerName() *plugin.TValue[string] {
+	return &c.OriginServerName
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetHttpHostHeader() *plugin.TValue[string] {
+	return &c.HttpHostHeader
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetHttp2Origin() *plugin.TValue[bool] {
+	return &c.Http2Origin
+}
+
+func (c *mqlCloudflareTunnelIngressRule) GetAccessRequired() *plugin.TValue[bool] {
+	return &c.AccessRequired
 }
 
 // mqlCloudflareTunnelConnection for the cloudflare.tunnel.connection resource

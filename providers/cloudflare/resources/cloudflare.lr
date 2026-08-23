@@ -1332,6 +1332,114 @@ private cloudflare.tunnel @defaults("name status") {
 	deletedAt time
 	// Active connections for this tunnel
 	connections []cloudflare.tunnel.connection
+	// Ingress rules and origin connection settings for the tunnel
+	//
+	// The authoritative map of which internal services the tunnel publishes,
+	// and how cloudflared connects to each of them. Available only for a
+	// remotely managed cloudflared tunnel; a locally managed one keeps its
+	// configuration in a YAML file on the connector host and reports null here.
+	configuration() cloudflare.tunnel.configuration
+}
+
+// Cloudflare tunnel ingress configuration
+//
+// Configuration a remotely managed Cloudflare Tunnel runs on: the `ingress`
+// rules that decide which public hostname reaches which internal service, and
+// the origin connection settings cloudflared applies when it does. The ingress
+// list is the authoritative inventory of what a tunnel exposes, and
+// `originNoTlsVerify` reports whether cloudflared validates the origin's
+// certificate on the leg between the connector and the service, which is the
+// half of the path Cloudflare's edge certificate says nothing about.
+//
+// Reported as null for a locally managed tunnel, whose configuration lives in a
+// YAML file on the connector host and is not readable through the API.
+private cloudflare.tunnel.configuration @defaults("source ingress") {
+	// Where the tunnel's configuration is managed
+	//
+	// Either cloudflare, meaning the configuration is held in the Zero Trust
+	// dashboard and readable here, or local, meaning it lives in a YAML file
+	// on the connector host.
+	source string
+	// Version of the tunnel configuration
+	version int
+	// Public hostname to internal service mappings
+	ingress []cloudflare.tunnel.ingressRule
+
+	// Whether cloudflared skips validating the origin's TLS certificate by default
+	//
+	// True disables certificate validation on the connector-to-origin leg for
+	// every ingress rule that does not override it, so that leg is encrypted
+	// but unauthenticated. Null when the configuration does not set it.
+	originNoTlsVerify bool
+	// Path on the connector host to the CA bundle validating the origin certificate
+	//
+	// Set when the origin presents a certificate that Cloudflare does not
+	// chain to. Empty when the default trust store is used.
+	originCaPool string
+	// Hostname cloudflared expects on the origin's certificate
+	originServerName string
+	// Whether cloudflared connects to the origin over HTTP/2
+	//
+	// Null when the configuration does not set it.
+	originHttp2 bool
+	// Proxy cloudflared starts when translating HTTP traffic into TCP
+	//
+	// Empty for the regular proxy, or socks for a SOCKS5 proxy used to reach
+	// arbitrary destinations through the tunnel.
+	originProxyType string
+
+	// Whether private network routing is on for the tunnel
+	//
+	// True means WARP clients can reach the CIDR ranges routed through this
+	// tunnel directly, in addition to any public hostnames in `ingress`. Null
+	// when the configuration does not report it.
+	warpRoutingEnabled bool
+}
+
+// Cloudflare tunnel ingress rule
+//
+// One mapping in a tunnel's ingress list, from a public hostname and path to the
+// internal service that answers it. The `service` field names the destination as
+// a protocol and address, for example http://10.0.0.5:8080, ssh://10.0.0.6:22,
+// or rdp://10.0.0.7:3389, and is what shows how deep into a private network a
+// public hostname reaches. Rules are evaluated in order, and the last rule of a
+// tunnel is normally a catch-all with no hostname.
+private cloudflare.tunnel.ingressRule @defaults("hostname path service") {
+	// Public hostname routed by this rule
+	//
+	// Empty on the catch-all rule that ends every ingress list.
+	hostname string
+	// Path prefix this rule matches within the hostname
+	//
+	// Empty when the rule matches every path of the hostname.
+	path string
+	// Protocol and address of the internal service that answers
+	//
+	// For example http://10.0.0.5:8080, https://internal.local, ssh://10.0.0.6:22,
+	// or an http_status:404 response instead of a destination.
+	service string
+
+	// Whether cloudflared skips validating this origin's TLS certificate
+	//
+	// True leaves the connector-to-origin leg encrypted but unauthenticated,
+	// so anything that can answer at the address is accepted as the origin.
+	// Null when the rule does not override the tunnel-wide setting.
+	noTlsVerify bool
+	// Path on the connector host to the CA bundle validating this origin's certificate
+	caPool string
+	// Hostname cloudflared expects on this origin's certificate
+	originServerName string
+	// Host header cloudflared sends to this origin
+	httpHostHeader string
+	// Whether cloudflared reaches this origin over HTTP/2
+	//
+	// Null when the rule does not override the tunnel-wide setting.
+	http2Origin bool
+	// Whether cloudflared validates the Cf-Access-Jwt-Assertion header on requests to this origin
+	//
+	// False means a request that reaches the connector by any other route is
+	// served without an Access check. Null when the rule does not configure it.
+	accessRequired bool
 }
 
 // Cloudflare tunnel connection
