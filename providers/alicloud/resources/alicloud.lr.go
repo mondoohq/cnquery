@@ -111,6 +111,8 @@ const (
 	ResourceAlicloudWafInstance                  string = "alicloud.waf.instance"
 	ResourceAlicloudWafDefenseResource           string = "alicloud.waf.defenseResource"
 	ResourceAlicloudWafDomain                    string = "alicloud.waf.domain"
+	ResourceAlicloudWafDefenseTemplate           string = "alicloud.waf.defenseTemplate"
+	ResourceAlicloudWafDefenseRule               string = "alicloud.waf.defenseRule"
 	ResourceAlicloudCloudFirewall                string = "alicloud.cloudFirewall"
 	ResourceAlicloudCloudFirewallControlPolicy   string = "alicloud.cloudFirewall.controlPolicy"
 	ResourceAlicloudAntiddos                     string = "alicloud.antiddos"
@@ -535,6 +537,14 @@ func init() {
 		"alicloud.waf.domain": {
 			// to override args, implement: initAlicloudWafDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudWafDomain,
+		},
+		"alicloud.waf.defenseTemplate": {
+			// to override args, implement: initAlicloudWafDefenseTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudWafDefenseTemplate,
+		},
+		"alicloud.waf.defenseRule": {
+			// to override args, implement: initAlicloudWafDefenseRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudWafDefenseRule,
 		},
 		"alicloud.cloudFirewall": {
 			// to override args, implement: initAlicloudCloudFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4960,6 +4970,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.waf.instance.domains": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudWafInstance).GetDomains()).ToDataRes(types.Array(types.Resource("alicloud.waf.domain")))
 	},
+	"alicloud.waf.instance.defenseTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafInstance).GetDefenseTemplates()).ToDataRes(types.Array(types.Resource("alicloud.waf.defenseTemplate")))
+	},
 	"alicloud.waf.instance.logDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudWafInstance).GetLogDeliveryEnabled()).ToDataRes(types.Bool)
 	},
@@ -4996,6 +5009,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.waf.defenseResource.logDeliveryEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudWafDefenseResource).GetLogDeliveryEnabled()).ToDataRes(types.Bool)
 	},
+	"alicloud.waf.defenseResource.templates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetTemplates()).ToDataRes(types.Array(types.Resource("alicloud.waf.defenseTemplate")))
+	},
+	"alicloud.waf.defenseResource.enabledDefenseScenes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetEnabledDefenseScenes()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.waf.defenseResource.protectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseResource).GetProtectionEnabled()).ToDataRes(types.Bool)
+	},
 	"alicloud.waf.domain.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudWafDomain).GetRegionId()).ToDataRes(types.String)
 	},
@@ -5031,6 +5053,96 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.waf.domain.certExpireTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudWafDomain).GetCertExpireTime()).ToDataRes(types.Time)
+	},
+	"alicloud.waf.defenseTemplate.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.templateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetTemplateId()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.defenseTemplate.templateName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetTemplateName()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.templateType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetTemplateType()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.templateOrigin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetTemplateOrigin()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.defenseScene": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetDefenseScene()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.defenseSubScene": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetDefenseSubScene()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseTemplate.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.defenseTemplate.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.waf.defenseTemplate.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.waf.defenseTemplate.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseTemplate).GetRules()).ToDataRes(types.Array(types.Resource("alicloud.waf.defenseRule")))
+	},
+	"alicloud.waf.defenseRule.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.templateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetTemplateId()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.defenseRule.ruleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetRuleId()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.defenseRule.ruleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetRuleName()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.ruleType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetRuleType()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.defenseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetDefenseType()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.defenseScene": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetDefenseScene()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.defenseOrigin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetDefenseOrigin()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetAction()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.config": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetConfig()).ToDataRes(types.Dict)
+	},
+	"alicloud.waf.defenseRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.resource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetResource()).ToDataRes(types.String)
+	},
+	"alicloud.waf.defenseRule.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetStatus()).ToDataRes(types.Int)
+	},
+	"alicloud.waf.defenseRule.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.waf.defenseRule.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.waf.defenseRule.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudWafDefenseRule).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"alicloud.cloudFirewall.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCloudFirewall).GetEnabled()).ToDataRes(types.Bool)
@@ -12350,6 +12462,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudWafInstance).Domains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.waf.instance.defenseTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafInstance).DefenseTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.waf.instance.logDeliveryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudWafInstance).LogDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -12402,6 +12518,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudWafDefenseResource).LogDeliveryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"alicloud.waf.defenseResource.templates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).Templates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.enabledDefenseScenes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).EnabledDefenseScenes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseResource.protectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseResource).ProtectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"alicloud.waf.domain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudWafDomain).__id, ok = v.Value.(string)
 		return
@@ -12452,6 +12580,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.waf.domain.certExpireTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudWafDomain).CertExpireTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.waf.defenseTemplate.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.templateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).TemplateId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.templateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).TemplateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.templateType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).TemplateType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.templateOrigin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).TemplateOrigin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.defenseScene": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).DefenseScene, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.defenseSubScene": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).DefenseSubScene, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).Status, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseTemplate.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseTemplate).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.waf.defenseRule.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.templateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).TemplateId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.ruleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).RuleId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.ruleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).RuleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.ruleType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).RuleType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.defenseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).DefenseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.defenseScene": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).DefenseScene, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.defenseOrigin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).DefenseOrigin, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.config": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).Config, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.resource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).Resource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).Status, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.waf.defenseRule.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudWafDefenseRule).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.cloudFirewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28377,6 +28633,7 @@ type mqlAlicloudWafInstance struct {
 	EndTime            plugin.TValue[*time.Time]
 	DefenseResources   plugin.TValue[[]any]
 	Domains            plugin.TValue[[]any]
+	DefenseTemplates   plugin.TValue[[]any]
 	LogDeliveryEnabled plugin.TValue[bool]
 	LogStatus          plugin.TValue[string]
 	LogRegionId        plugin.TValue[string]
@@ -28483,6 +28740,22 @@ func (c *mqlAlicloudWafInstance) GetDomains() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAlicloudWafInstance) GetDefenseTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefenseTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.waf.instance", c.__id, "defenseTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defenseTemplates()
+	})
+}
+
 func (c *mqlAlicloudWafInstance) GetLogDeliveryEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.LogDeliveryEnabled, func() (bool, error) {
 		return c.logDeliveryEnabled()
@@ -28506,15 +28779,18 @@ type mqlAlicloudWafDefenseResource struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudWafDefenseResourceInternal
-	RegionId           plugin.TValue[string]
-	InstanceId         plugin.TValue[string]
-	Resource           plugin.TValue[string]
-	Product            plugin.TValue[string]
-	Pattern            plugin.TValue[string]
-	ResourceStatus     plugin.TValue[string]
-	ResourceGroup      plugin.TValue[string]
-	CreateTime         plugin.TValue[*time.Time]
-	LogDeliveryEnabled plugin.TValue[bool]
+	RegionId             plugin.TValue[string]
+	InstanceId           plugin.TValue[string]
+	Resource             plugin.TValue[string]
+	Product              plugin.TValue[string]
+	Pattern              plugin.TValue[string]
+	ResourceStatus       plugin.TValue[string]
+	ResourceGroup        plugin.TValue[string]
+	CreateTime           plugin.TValue[*time.Time]
+	LogDeliveryEnabled   plugin.TValue[bool]
+	Templates            plugin.TValue[[]any]
+	EnabledDefenseScenes plugin.TValue[[]any]
+	ProtectionEnabled    plugin.TValue[bool]
 }
 
 // createAlicloudWafDefenseResource creates a new instance of this resource
@@ -28584,6 +28860,34 @@ func (c *mqlAlicloudWafDefenseResource) GetCreateTime() *plugin.TValue[*time.Tim
 func (c *mqlAlicloudWafDefenseResource) GetLogDeliveryEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.LogDeliveryEnabled, func() (bool, error) {
 		return c.logDeliveryEnabled()
+	})
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Templates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.waf.defenseResource", c.__id, "templates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.templates()
+	})
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetEnabledDefenseScenes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EnabledDefenseScenes, func() ([]any, error) {
+		return c.enabledDefenseScenes()
+	})
+}
+
+func (c *mqlAlicloudWafDefenseResource) GetProtectionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ProtectionEnabled, func() (bool, error) {
+		return c.protectionEnabled()
 	})
 }
 
@@ -28697,6 +29001,256 @@ func (c *mqlAlicloudWafDomain) GetCertExpireTime() *plugin.TValue[*time.Time] {
 	return plugin.GetOrCompute[*time.Time](&c.CertExpireTime, func() (*time.Time, error) {
 		return c.certExpireTime()
 	})
+}
+
+// mqlAlicloudWafDefenseTemplate for the alicloud.waf.defenseTemplate resource
+type mqlAlicloudWafDefenseTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudWafDefenseTemplateInternal
+	RegionId        plugin.TValue[string]
+	InstanceId      plugin.TValue[string]
+	TemplateId      plugin.TValue[int64]
+	TemplateName    plugin.TValue[string]
+	TemplateType    plugin.TValue[string]
+	TemplateOrigin  plugin.TValue[string]
+	DefenseScene    plugin.TValue[string]
+	DefenseSubScene plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Status          plugin.TValue[int64]
+	Enabled         plugin.TValue[bool]
+	UpdateTime      plugin.TValue[*time.Time]
+	Rules           plugin.TValue[[]any]
+}
+
+// createAlicloudWafDefenseTemplate creates a new instance of this resource
+func createAlicloudWafDefenseTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudWafDefenseTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.waf.defenseTemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) MqlName() string {
+	return "alicloud.waf.defenseTemplate"
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetTemplateId() *plugin.TValue[int64] {
+	return &c.TemplateId
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetTemplateName() *plugin.TValue[string] {
+	return &c.TemplateName
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetTemplateType() *plugin.TValue[string] {
+	return &c.TemplateType
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetTemplateOrigin() *plugin.TValue[string] {
+	return &c.TemplateOrigin
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetDefenseScene() *plugin.TValue[string] {
+	return &c.DefenseScene
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetDefenseSubScene() *plugin.TValue[string] {
+	return &c.DefenseSubScene
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetStatus() *plugin.TValue[int64] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlAlicloudWafDefenseTemplate) GetRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Rules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.waf.defenseTemplate", c.__id, "rules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.rules()
+	})
+}
+
+// mqlAlicloudWafDefenseRule for the alicloud.waf.defenseRule resource
+type mqlAlicloudWafDefenseRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudWafDefenseRuleInternal it will be used here
+	RegionId      plugin.TValue[string]
+	InstanceId    plugin.TValue[string]
+	TemplateId    plugin.TValue[int64]
+	RuleId        plugin.TValue[int64]
+	RuleName      plugin.TValue[string]
+	RuleType      plugin.TValue[string]
+	DefenseType   plugin.TValue[string]
+	DefenseScene  plugin.TValue[string]
+	DefenseOrigin plugin.TValue[string]
+	Action        plugin.TValue[string]
+	Config        plugin.TValue[any]
+	Description   plugin.TValue[string]
+	Resource      plugin.TValue[string]
+	Status        plugin.TValue[int64]
+	Enabled       plugin.TValue[bool]
+	CreateTime    plugin.TValue[*time.Time]
+	UpdateTime    plugin.TValue[*time.Time]
+}
+
+// createAlicloudWafDefenseRule creates a new instance of this resource
+func createAlicloudWafDefenseRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudWafDefenseRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.waf.defenseRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudWafDefenseRule) MqlName() string {
+	return "alicloud.waf.defenseRule"
+}
+
+func (c *mqlAlicloudWafDefenseRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetTemplateId() *plugin.TValue[int64] {
+	return &c.TemplateId
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetRuleId() *plugin.TValue[int64] {
+	return &c.RuleId
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetRuleName() *plugin.TValue[string] {
+	return &c.RuleName
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetRuleType() *plugin.TValue[string] {
+	return &c.RuleType
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetDefenseType() *plugin.TValue[string] {
+	return &c.DefenseType
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetDefenseScene() *plugin.TValue[string] {
+	return &c.DefenseScene
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetDefenseOrigin() *plugin.TValue[string] {
+	return &c.DefenseOrigin
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetConfig() *plugin.TValue[any] {
+	return &c.Config
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetResource() *plugin.TValue[string] {
+	return &c.Resource
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetStatus() *plugin.TValue[int64] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudWafDefenseRule) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
 }
 
 // mqlAlicloudCloudFirewall for the alicloud.cloudFirewall resource

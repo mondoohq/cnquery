@@ -4910,6 +4910,14 @@ alicloud.waf.instance {
   defenseResources() []alicloud.waf.defenseResource
   // CNAME-access domains protected by the instance
   domains() []alicloud.waf.domain
+  // Protection templates configured on the instance
+  //
+  // A template groups the rules for one protection scene (basic protection,
+  // HTTP flood protection, custom rules, and the rest) and carries its own
+  // enabled flag. An instance can have every template switched off while still
+  // reporting protected objects, so enumerate these to tell an onboarded asset
+  // from a defended one.
+  defenseTemplates() []alicloud.waf.defenseTemplate
   // Whether the instance is delivering its logs to Log Service
   //
   // True only while logStatus reports normal. A failed initialization and an
@@ -4960,6 +4968,25 @@ alicloud.waf.defenseResource {
   // instance as a whole, so an instance whose logStatus reads normal still
   // records nothing for an object left switched off.
   logDeliveryEnabled() bool
+  // Protection templates applied to the protected object
+  //
+  // Templates carry the rules WAF enforces for this object, one template per
+  // protection scene. An empty list means the object is onboarded to WAF but no
+  // protection module is bound to it.
+  templates() []alicloud.waf.defenseTemplate
+  // Protection scenes covered by an enabled template on this object
+  //
+  // Each entry is a defenseScene value such as waf_group (basic protection),
+  // cc (HTTP flood protection), or custom_acl (custom rules). A scene whose
+  // template is bound but switched off is not listed, because a disabled
+  // template inspects no traffic.
+  enabledDefenseScenes() []string
+  // Whether at least one enabled protection template is applied to the object
+  //
+  // False when the object is onboarded to WAF but every template bound to it is
+  // switched off, which is the case an onboarding check alone cannot see:
+  // traffic still flows through WAF, and nothing inspects it.
+  protectionEnabled() bool
 }
 
 // Web Application Firewall protected domain
@@ -4999,6 +5026,116 @@ alicloud.waf.domain {
   tls13Enabled() bool
   // Expiry time of the bound certificate, null when no certificate is configured
   certExpireTime() time
+}
+
+// Web Application Firewall protection template
+//
+// A single WAF 3.0 protection template, keyed by the owning instanceId and
+// templateId. A template holds the rules for one protection scene and carries
+// the switch that decides whether that scene inspects traffic at all. Exposes
+// the scene, the template origin and type, whether it is enabled, and the rules
+// it contains. Use it to find protected objects whose protection modules are
+// bound but switched off.
+alicloud.waf.defenseTemplate @defaults("templateName defenseScene templateType enabled") {
+  // Center region the template belongs to
+  regionId string
+  // ID of the WAF instance the template belongs to
+  instanceId string
+  // Template ID, used as the lookup key
+  templateId int
+  // Template name
+  templateName string
+  // Template type
+  //
+  // One of user_default (the account-wide default for the scene) or
+  // user_custom (a template bound to named protected objects).
+  templateType string
+  // Origin of the template, custom for a user-defined template
+  templateOrigin string
+  // Protection scene the template covers
+  //
+  // One of waf_group (basic protection), antiscan (scan protection),
+  // ip_blacklist, custom_acl (custom rules), whitelist, region_block (location
+  // blacklist), custom_response, cc (HTTP flood protection), tamperproof (web
+  // tamper proofing), dlp (data leak prevention), or bot_manager.
+  defenseScene string
+  // Sub-scene of the template
+  //
+  // Set only for bot management templates, where it is one of web, app, basic,
+  // or bot_custom_acl. Empty for every other scene.
+  defenseSubScene string
+  // Description of the template
+  description string
+  // Raw template status, 0 (disabled) or 1 (enabled)
+  status int
+  // Whether the template is enabled
+  //
+  // A disabled template is configured but inspects no traffic, so the scene it
+  // covers is unprotected on every object the template is bound to.
+  enabled bool
+  // Time the template was last modified
+  updateTime time
+  // Protection rules contained in the template
+  rules() []alicloud.waf.defenseRule
+}
+
+// Web Application Firewall protection rule
+//
+// A single rule inside a WAF 3.0 protection template, keyed by the owning
+// instanceId and ruleId. Exposes the rule scene, the action taken on a match,
+// the rule configuration, and whether the rule is enabled. Use it to confirm
+// that a protection template blocks rather than merely observes, and to find
+// rules left switched off.
+alicloud.waf.defenseRule @defaults("ruleName defenseScene action enabled") {
+  // Center region the rule belongs to
+  regionId string
+  // ID of the WAF instance the rule belongs to
+  instanceId string
+  // ID of the template the rule belongs to, 0 for a global or per-object rule
+  templateId int
+  // Rule ID, used as the lookup key
+  ruleId int
+  // Rule name
+  ruleName string
+  // Rule type
+  //
+  // One of whitelist (a rule that skips inspection) or defense (a rule that
+  // inspects). A whitelist rule widens what reaches the origin, so it deserves
+  // the same scrutiny as an allow rule in a firewall.
+  ruleType string
+  // Scope the rule was defined at
+  //
+  // One of template (a rule inside a protection template), resource (a rule
+  // bound to one protected object), or global.
+  defenseType string
+  // Protection scene the rule belongs to, for example custom_acl, cc, or ip_blacklist
+  defenseScene string
+  // Origin of the rule, custom for user-created or system for generated
+  defenseOrigin string
+  // Action taken when the rule matches
+  //
+  // For example block, monitor, or js (JavaScript challenge). A rule set to
+  // monitor records the match and lets the request through.
+  action string
+  // Rule configuration
+  //
+  // The condition and action detail of the rule, as returned by the API. The
+  // shape varies by defenseScene: a custom_acl rule carries its match
+  // conditions, an ip_blacklist rule carries its address list. Null when the
+  // configuration is not valid JSON.
+  config dict
+  // Description of the rule
+  description string
+  // Protected object the rule is bound to, empty for a template or global rule
+  resource string
+  // Raw rule status, 0 (disabled) or 1 (enabled)
+  status int
+  // Whether the rule is enabled
+  enabled bool
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  updateTime time
 }
 
 // Alibaba Cloud Cloud Firewall
