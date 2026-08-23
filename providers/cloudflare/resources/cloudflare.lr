@@ -1708,6 +1708,172 @@ private cloudflare.zone.wafRule @defaults("rulesetKind action description") {
 	version string
 	// Time the rule was last updated
 	lastUpdated time
+
+	// Whether a match on this rule is written to the security event log
+	//
+	// Null when the rule carries no logging block, which the API omits for
+	// rules where logging is not configurable. False means matches leave no
+	// entry in Security Events, so a block or a skip happens with no
+	// forensic trail behind it.
+	loggingEnabled bool
+
+	// Action the override substitutes for every rule of the deployed managed ruleset
+	//
+	// Set when the rule deploys a managed ruleset and overrides the action of
+	// every rule inside it, for example rewriting block to log so the ruleset
+	// still matches but no longer stops anything. Empty when the deployment
+	// carries no ruleset-wide action override.
+	overrideAction string
+
+	// Whether the override turns the deployed managed ruleset on or off as a whole
+	//
+	// False disables every rule of the managed ruleset while the deployment
+	// rule itself still reads enabled, which is one of the commonest ways a
+	// WAF is left in place but stops enforcing. Null when the deployment
+	// carries no ruleset-wide enable override.
+	overrideEnabled bool
+
+	// Sensitivity level the override applies to the deployed managed ruleset
+	//
+	// One of default, low, medium, high, or eoff. The value eoff turns the
+	// managed ruleset's detections off entirely.
+	overrideSensitivityLevel string
+
+	// Overrides applied to individual rules of the deployed managed ruleset
+	//
+	// Each entry names one rule of the managed ruleset and the action,
+	// enablement, score threshold, or sensitivity substituted for it. A rule
+	// disabled here no longer runs even though the managed ruleset it belongs
+	// to is deployed and enabled.
+	overriddenRules []cloudflare.zone.wafRule.override
+
+	// Overrides applied to whole categories of the deployed managed ruleset
+	//
+	// Each entry names one rule category (for example wordpress or joomla)
+	// and the action or enablement substituted for every rule tagged with it.
+	overriddenCategories []cloudflare.zone.wafRule.categoryOverride
+
+	// Phases a skip rule bypasses
+	//
+	// Set only on rules whose action is skip. Each entry names a ruleset
+	// phase (for example http_request_firewall_managed or http_ratelimit)
+	// that is not evaluated at all for a matching request.
+	skipPhases []string
+
+	// Security products a skip rule bypasses
+	//
+	// Set only on rules whose action is skip. Values include waf, uaBlock,
+	// bic, hot, securityLevel, rateLimit, and zoneLockdown. A skip rule
+	// naming waf turns the whole Web Application Firewall off for every
+	// request its expression matches.
+	skipProducts []string
+
+	// Managed rulesets a skip rule bypasses in full
+	//
+	// Set only on rules whose action is skip, and carries the identifiers of
+	// the managed rulesets that are skipped in their entirety.
+	skipRulesets []string
+
+	// Individual managed rules a skip rule bypasses
+	//
+	// Set only on rules whose action is skip. The dict maps a managed ruleset
+	// identifier to the list of rule identifiers within it that are skipped.
+	skipRules dict
+
+	// Requests allowed per counting period before mitigation starts
+	//
+	// Null on rules that carry no rate-limit configuration. Together with
+	// rateLimitPeriod this is the threshold a rate-limit rule enforces.
+	rateLimitRequestsPerPeriod int
+
+	// Rate-limit counting window in seconds
+	//
+	// One of 10, 60, 600, 3600, or 86400. Null on rules that carry no
+	// rate-limit configuration.
+	rateLimitPeriod int
+
+	// Fields the rate-limit counter groups requests by
+	//
+	// For example ip.src or cf.colo.id. A counter keyed on a field an
+	// attacker controls, or keyed so broadly that unrelated clients share a
+	// bucket, does not hold in practice.
+	rateLimitCharacteristics []string
+
+	// Seconds a rate-limit mitigation stays in force once the threshold is crossed
+	//
+	// Null on rules that carry no rate-limit configuration.
+	rateLimitMitigationTimeout int
+
+	// Expression selecting which requests the rate-limit counter counts
+	//
+	// When set, requests are counted only while this expression matches, which
+	// can be narrower than the rule's own expression. Empty when the rule
+	// counts every request it matches.
+	rateLimitCountingExpression string
+
+	// Whether the rate limit counts only requests that reached the origin
+	//
+	// True means cached responses are not counted, so the threshold applies to
+	// origin load rather than to total request volume. Null on rules that carry
+	// no rate-limit configuration.
+	rateLimitRequestsToOrigin bool
+}
+
+// Override applied to one rule of a deployed managed ruleset
+//
+// Substitution the deploying rule makes for a single rule of the managed
+// ruleset it deploys, selected by `ruleId`. A managed ruleset can be deployed
+// and enabled while individual rules inside it are turned off or downgraded to
+// log through these entries, so the ruleset reads as active while specific
+// detections no longer stop anything.
+private cloudflare.zone.wafRule.override @defaults("ruleId action enabled") {
+	// Identifier of the managed rule this override applies to
+	ruleId string
+	// Action substituted for the rule
+	//
+	// For example block, log, challenge, or managed_challenge. Empty when the
+	// override changes only the rule's enablement or scoring.
+	action string
+	// Whether the rule is turned on
+	//
+	// False takes the rule out of evaluation entirely. Null when the override
+	// changes only the action, score threshold, or sensitivity.
+	enabled bool
+	// Score threshold substituted for the rule
+	//
+	// Null when the override does not change scoring. A raised threshold
+	// makes the rule match less often.
+	scoreThreshold int
+	// Sensitivity level substituted for the rule
+	//
+	// One of default, low, medium, high, or eoff. The value eoff turns the
+	// rule's detections off entirely. Empty when the override does not change
+	// sensitivity.
+	sensitivityLevel string
+	// Rule status reported alongside the override
+	sensitivityStatus string
+}
+
+// Override applied to one category of a deployed managed ruleset
+//
+// Substitution the deploying rule makes for every rule of the managed ruleset
+// tagged with a given category, selected by `category`. Disabling a category
+// removes a whole class of detections while the managed ruleset itself stays
+// deployed.
+private cloudflare.zone.wafRule.categoryOverride @defaults("category action enabled") {
+	// Rule category this override applies to
+	//
+	// For example wordpress, joomla, or drupal.
+	category string
+	// Action substituted for every rule in the category
+	//
+	// Empty when the override changes only enablement.
+	action string
+	// Whether the rules in the category are turned on
+	//
+	// False removes every rule of the category from evaluation. Null when the
+	// override changes only the action.
+	enabled bool
 }
 
 // Cloudflare email-routing configuration

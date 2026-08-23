@@ -174,3 +174,7 @@ func jsonResponse(w http.ResponseWriter, body string) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, body)
 }
+
+// boolPtr returns a pointer to v, for table tests that distinguish an absent
+// value from an explicit false.
+func boolPtr(v bool) *bool { return &v }

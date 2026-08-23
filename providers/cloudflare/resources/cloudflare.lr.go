@@ -73,6 +73,8 @@ const (
 	ResourceCloudflareZoneDnssec                                      string = "cloudflare.zone.dnssec"
 	ResourceCloudflareZoneRateLimitRule                               string = "cloudflare.zone.rateLimitRule"
 	ResourceCloudflareZoneWafRule                                     string = "cloudflare.zone.wafRule"
+	ResourceCloudflareZoneWafRuleOverride                             string = "cloudflare.zone.wafRule.override"
+	ResourceCloudflareZoneWafRuleCategoryOverride                     string = "cloudflare.zone.wafRule.categoryOverride"
 	ResourceCloudflareZoneEmailRouting                                string = "cloudflare.zone.emailRouting"
 	ResourceCloudflareWorkersSecret                                   string = "cloudflare.workers.secret"
 	ResourceCloudflarePagesEnvVar                                     string = "cloudflare.pages.envVar"
@@ -326,6 +328,14 @@ func init() {
 		"cloudflare.zone.wafRule": {
 			// to override args, implement: initCloudflareZoneWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareZoneWafRule,
+		},
+		"cloudflare.zone.wafRule.override": {
+			// to override args, implement: initCloudflareZoneWafRuleOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneWafRuleOverride,
+		},
+		"cloudflare.zone.wafRule.categoryOverride": {
+			// to override args, implement: initCloudflareZoneWafRuleCategoryOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneWafRuleCategoryOverride,
 		},
 		"cloudflare.zone.emailRouting": {
 			// to override args, implement: initCloudflareZoneEmailRouting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2058,6 +2068,81 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.zone.wafRule.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneWafRule).GetLastUpdated()).ToDataRes(types.Time)
+	},
+	"cloudflare.zone.wafRule.loggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.wafRule.overrideAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetOverrideAction()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.overrideEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetOverrideEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.wafRule.overrideSensitivityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetOverrideSensitivityLevel()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.overriddenRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetOverriddenRules()).ToDataRes(types.Array(types.Resource("cloudflare.zone.wafRule.override")))
+	},
+	"cloudflare.zone.wafRule.overriddenCategories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetOverriddenCategories()).ToDataRes(types.Array(types.Resource("cloudflare.zone.wafRule.categoryOverride")))
+	},
+	"cloudflare.zone.wafRule.skipPhases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetSkipPhases()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.wafRule.skipProducts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetSkipProducts()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.wafRule.skipRulesets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetSkipRulesets()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.wafRule.skipRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetSkipRules()).ToDataRes(types.Dict)
+	},
+	"cloudflare.zone.wafRule.rateLimitRequestsPerPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRateLimitRequestsPerPeriod()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.wafRule.rateLimitPeriod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRateLimitPeriod()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.wafRule.rateLimitCharacteristics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRateLimitCharacteristics()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.wafRule.rateLimitMitigationTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRateLimitMitigationTimeout()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.wafRule.rateLimitCountingExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRateLimitCountingExpression()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.rateLimitRequestsToOrigin": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRule).GetRateLimitRequestsToOrigin()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.wafRule.override.ruleId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleOverride).GetRuleId()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.override.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleOverride).GetAction()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.override.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleOverride).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.wafRule.override.scoreThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleOverride).GetScoreThreshold()).ToDataRes(types.Int)
+	},
+	"cloudflare.zone.wafRule.override.sensitivityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleOverride).GetSensitivityLevel()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.override.sensitivityStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleOverride).GetSensitivityStatus()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.categoryOverride.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleCategoryOverride).GetCategory()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.categoryOverride.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleCategoryOverride).GetAction()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.wafRule.categoryOverride.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWafRuleCategoryOverride).GetEnabled()).ToDataRes(types.Bool)
 	},
 	"cloudflare.zone.emailRouting.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneEmailRouting).GetEnabled()).ToDataRes(types.Bool)
@@ -4750,6 +4835,114 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.zone.wafRule.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneWafRule).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.loggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).LoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.overrideAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).OverrideAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.overrideEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).OverrideEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.overrideSensitivityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).OverrideSensitivityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.overriddenRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).OverriddenRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.overriddenCategories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).OverriddenCategories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.skipPhases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).SkipPhases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.skipProducts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).SkipProducts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.skipRulesets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).SkipRulesets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.skipRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).SkipRules, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rateLimitRequestsPerPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RateLimitRequestsPerPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rateLimitPeriod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RateLimitPeriod, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rateLimitCharacteristics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RateLimitCharacteristics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rateLimitMitigationTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RateLimitMitigationTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rateLimitCountingExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RateLimitCountingExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.rateLimitRequestsToOrigin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRule).RateLimitRequestsToOrigin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.override.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleOverride).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.wafRule.override.ruleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleOverride).RuleId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.override.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleOverride).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.override.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleOverride).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.override.scoreThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleOverride).ScoreThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.override.sensitivityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleOverride).SensitivityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.override.sensitivityStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleOverride).SensitivityStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.categoryOverride.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleCategoryOverride).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.wafRule.categoryOverride.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleCategoryOverride).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.categoryOverride.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleCategoryOverride).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.wafRule.categoryOverride.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWafRuleCategoryOverride).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.emailRouting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11097,19 +11290,35 @@ type mqlCloudflareZoneWafRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlCloudflareZoneWafRuleInternal it will be used here
-	Id             plugin.TValue[string]
-	RulesetId      plugin.TValue[string]
-	RulesetName    plugin.TValue[string]
-	RulesetKind    plugin.TValue[string]
-	RulesetPhase   plugin.TValue[string]
-	Action         plugin.TValue[string]
-	Expression     plugin.TValue[string]
-	Description    plugin.TValue[string]
-	Ref            plugin.TValue[string]
-	Enabled        plugin.TValue[bool]
-	ScoreThreshold plugin.TValue[int64]
-	Version        plugin.TValue[string]
-	LastUpdated    plugin.TValue[*time.Time]
+	Id                          plugin.TValue[string]
+	RulesetId                   plugin.TValue[string]
+	RulesetName                 plugin.TValue[string]
+	RulesetKind                 plugin.TValue[string]
+	RulesetPhase                plugin.TValue[string]
+	Action                      plugin.TValue[string]
+	Expression                  plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	Ref                         plugin.TValue[string]
+	Enabled                     plugin.TValue[bool]
+	ScoreThreshold              plugin.TValue[int64]
+	Version                     plugin.TValue[string]
+	LastUpdated                 plugin.TValue[*time.Time]
+	LoggingEnabled              plugin.TValue[bool]
+	OverrideAction              plugin.TValue[string]
+	OverrideEnabled             plugin.TValue[bool]
+	OverrideSensitivityLevel    plugin.TValue[string]
+	OverriddenRules             plugin.TValue[[]any]
+	OverriddenCategories        plugin.TValue[[]any]
+	SkipPhases                  plugin.TValue[[]any]
+	SkipProducts                plugin.TValue[[]any]
+	SkipRulesets                plugin.TValue[[]any]
+	SkipRules                   plugin.TValue[any]
+	RateLimitRequestsPerPeriod  plugin.TValue[int64]
+	RateLimitPeriod             plugin.TValue[int64]
+	RateLimitCharacteristics    plugin.TValue[[]any]
+	RateLimitMitigationTimeout  plugin.TValue[int64]
+	RateLimitCountingExpression plugin.TValue[string]
+	RateLimitRequestsToOrigin   plugin.TValue[bool]
 }
 
 // createCloudflareZoneWafRule creates a new instance of this resource
@@ -11199,6 +11408,193 @@ func (c *mqlCloudflareZoneWafRule) GetVersion() *plugin.TValue[string] {
 
 func (c *mqlCloudflareZoneWafRule) GetLastUpdated() *plugin.TValue[*time.Time] {
 	return &c.LastUpdated
+}
+
+func (c *mqlCloudflareZoneWafRule) GetLoggingEnabled() *plugin.TValue[bool] {
+	return &c.LoggingEnabled
+}
+
+func (c *mqlCloudflareZoneWafRule) GetOverrideAction() *plugin.TValue[string] {
+	return &c.OverrideAction
+}
+
+func (c *mqlCloudflareZoneWafRule) GetOverrideEnabled() *plugin.TValue[bool] {
+	return &c.OverrideEnabled
+}
+
+func (c *mqlCloudflareZoneWafRule) GetOverrideSensitivityLevel() *plugin.TValue[string] {
+	return &c.OverrideSensitivityLevel
+}
+
+func (c *mqlCloudflareZoneWafRule) GetOverriddenRules() *plugin.TValue[[]any] {
+	return &c.OverriddenRules
+}
+
+func (c *mqlCloudflareZoneWafRule) GetOverriddenCategories() *plugin.TValue[[]any] {
+	return &c.OverriddenCategories
+}
+
+func (c *mqlCloudflareZoneWafRule) GetSkipPhases() *plugin.TValue[[]any] {
+	return &c.SkipPhases
+}
+
+func (c *mqlCloudflareZoneWafRule) GetSkipProducts() *plugin.TValue[[]any] {
+	return &c.SkipProducts
+}
+
+func (c *mqlCloudflareZoneWafRule) GetSkipRulesets() *plugin.TValue[[]any] {
+	return &c.SkipRulesets
+}
+
+func (c *mqlCloudflareZoneWafRule) GetSkipRules() *plugin.TValue[any] {
+	return &c.SkipRules
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRateLimitRequestsPerPeriod() *plugin.TValue[int64] {
+	return &c.RateLimitRequestsPerPeriod
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRateLimitPeriod() *plugin.TValue[int64] {
+	return &c.RateLimitPeriod
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRateLimitCharacteristics() *plugin.TValue[[]any] {
+	return &c.RateLimitCharacteristics
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRateLimitMitigationTimeout() *plugin.TValue[int64] {
+	return &c.RateLimitMitigationTimeout
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRateLimitCountingExpression() *plugin.TValue[string] {
+	return &c.RateLimitCountingExpression
+}
+
+func (c *mqlCloudflareZoneWafRule) GetRateLimitRequestsToOrigin() *plugin.TValue[bool] {
+	return &c.RateLimitRequestsToOrigin
+}
+
+// mqlCloudflareZoneWafRuleOverride for the cloudflare.zone.wafRule.override resource
+type mqlCloudflareZoneWafRuleOverride struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneWafRuleOverrideInternal it will be used here
+	RuleId            plugin.TValue[string]
+	Action            plugin.TValue[string]
+	Enabled           plugin.TValue[bool]
+	ScoreThreshold    plugin.TValue[int64]
+	SensitivityLevel  plugin.TValue[string]
+	SensitivityStatus plugin.TValue[string]
+}
+
+// createCloudflareZoneWafRuleOverride creates a new instance of this resource
+func createCloudflareZoneWafRuleOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneWafRuleOverride{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.wafRule.override", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) MqlName() string {
+	return "cloudflare.zone.wafRule.override"
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) GetRuleId() *plugin.TValue[string] {
+	return &c.RuleId
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) GetScoreThreshold() *plugin.TValue[int64] {
+	return &c.ScoreThreshold
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) GetSensitivityLevel() *plugin.TValue[string] {
+	return &c.SensitivityLevel
+}
+
+func (c *mqlCloudflareZoneWafRuleOverride) GetSensitivityStatus() *plugin.TValue[string] {
+	return &c.SensitivityStatus
+}
+
+// mqlCloudflareZoneWafRuleCategoryOverride for the cloudflare.zone.wafRule.categoryOverride resource
+type mqlCloudflareZoneWafRuleCategoryOverride struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareZoneWafRuleCategoryOverrideInternal it will be used here
+	Category plugin.TValue[string]
+	Action   plugin.TValue[string]
+	Enabled  plugin.TValue[bool]
+}
+
+// createCloudflareZoneWafRuleCategoryOverride creates a new instance of this resource
+func createCloudflareZoneWafRuleCategoryOverride(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneWafRuleCategoryOverride{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.wafRule.categoryOverride", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneWafRuleCategoryOverride) MqlName() string {
+	return "cloudflare.zone.wafRule.categoryOverride"
+}
+
+func (c *mqlCloudflareZoneWafRuleCategoryOverride) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneWafRuleCategoryOverride) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlCloudflareZoneWafRuleCategoryOverride) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlCloudflareZoneWafRuleCategoryOverride) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
 }
 
 // mqlCloudflareZoneEmailRouting for the cloudflare.zone.emailRouting resource
