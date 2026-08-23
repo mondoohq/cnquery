@@ -510,11 +510,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.serverType.cpuType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServerType).GetCpuType()).ToDataRes(types.String)
 	},
+	"hetzner.serverType.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerType).GetCategory()).ToDataRes(types.String)
+	},
 	"hetzner.serverType.architecture": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServerType).GetArchitecture()).ToDataRes(types.String)
 	},
 	"hetzner.serverType.deprecated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServerType).GetDeprecated()).ToDataRes(types.Bool)
+	},
+	"hetzner.serverType.deprecation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerType).GetDeprecation()).ToDataRes(types.Dict)
+	},
+	"hetzner.serverType.includedTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerServerType).GetIncludedTraffic()).ToDataRes(types.Int)
 	},
 	"hetzner.serverType.locations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerServerType).GetLocations()).ToDataRes(types.Array(types.Resource("hetzner.serverType.location")))
@@ -1768,12 +1777,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerServerType).CpuType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"hetzner.serverType.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerType).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"hetzner.serverType.architecture": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServerType).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"hetzner.serverType.deprecated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerServerType).Deprecated, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"hetzner.serverType.deprecation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerType).Deprecation, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"hetzner.serverType.includedTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerServerType).IncludedTraffic, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"hetzner.serverType.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4184,17 +4205,20 @@ type mqlHetznerServerType struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlHetznerServerTypeInternal
-	Id           plugin.TValue[int64]
-	Name         plugin.TValue[string]
-	Description  plugin.TValue[string]
-	Cores        plugin.TValue[int64]
-	Memory       plugin.TValue[float64]
-	Disk         plugin.TValue[int64]
-	StorageType  plugin.TValue[string]
-	CpuType      plugin.TValue[string]
-	Architecture plugin.TValue[string]
-	Deprecated   plugin.TValue[bool]
-	Locations    plugin.TValue[[]any]
+	Id              plugin.TValue[int64]
+	Name            plugin.TValue[string]
+	Description     plugin.TValue[string]
+	Cores           plugin.TValue[int64]
+	Memory          plugin.TValue[float64]
+	Disk            plugin.TValue[int64]
+	StorageType     plugin.TValue[string]
+	CpuType         plugin.TValue[string]
+	Category        plugin.TValue[string]
+	Architecture    plugin.TValue[string]
+	Deprecated      plugin.TValue[bool]
+	Deprecation     plugin.TValue[any]
+	IncludedTraffic plugin.TValue[int64]
+	Locations       plugin.TValue[[]any]
 }
 
 // createHetznerServerType creates a new instance of this resource
@@ -4266,12 +4290,24 @@ func (c *mqlHetznerServerType) GetCpuType() *plugin.TValue[string] {
 	return &c.CpuType
 }
 
+func (c *mqlHetznerServerType) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
 func (c *mqlHetznerServerType) GetArchitecture() *plugin.TValue[string] {
 	return &c.Architecture
 }
 
 func (c *mqlHetznerServerType) GetDeprecated() *plugin.TValue[bool] {
 	return &c.Deprecated
+}
+
+func (c *mqlHetznerServerType) GetDeprecation() *plugin.TValue[any] {
+	return &c.Deprecation
+}
+
+func (c *mqlHetznerServerType) GetIncludedTraffic() *plugin.TValue[int64] {
+	return &c.IncludedTraffic
 }
 
 func (c *mqlHetznerServerType) GetLocations() *plugin.TValue[[]any] {

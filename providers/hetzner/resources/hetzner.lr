@@ -257,9 +257,9 @@ private hetzner.action @defaults("id command status finished") {
 // Hardware profile behind a Hetzner Cloud server: core count, memory,
 // disk, storage type (local or network), CPU type (shared or dedicated),
 // and CPU architecture (x86 or arm). Select a server type by its numeric
-// id, for example `hetzner.serverType(id: 22)`. The `deprecated` flag and
-// `locations` report where the type can still be provisioned and whether
-// Hetzner has scheduled it for removal.
+// id, for example `hetzner.serverType(id: 22)`. The `deprecated` flag,
+// `deprecation` schedule and `locations` report where the type can still be
+// provisioned and by when Hetzner will have withdrawn it.
 private hetzner.serverType @defaults("id name cores memory") {
   init(id? int)
   // Server type ID
@@ -278,10 +278,31 @@ private hetzner.serverType @defaults("id name cores memory") {
   storageType string
   // CPU type (shared, dedicated)
   cpuType string
+  // Server type category (shared-vcpu, dedicated-vcpu)
+  //
+  // Whether the physical CPU behind the server is shared with other tenants
+  // or reserved for this one. A CPU tenancy isolation assertion reads this
+  // rather than pattern-matching the type slug.
+  category string
   // Architecture (x86, arm)
   architecture string
   // Whether the server type is deprecated
   deprecated bool
+  // Deprecation schedule
+  //
+  // Empty when the server type is not deprecated. When present it carries
+  // `announced` (timestamp the deprecation was announced) and
+  // `unavailableAfter` (timestamp after which new servers of this type can no
+  // longer be created), which is what tells a fleet on a retiring type how
+  // long it has. The per-location schedule under locations reports the same
+  // facts where they differ by location.
+  deprecation dict
+  // Included monthly traffic in bytes
+  //
+  // Reports 0 for every server type after 2024-08-05, when Hetzner moved the
+  // included traffic allowance into per-location pricing and stopped
+  // publishing it on the type itself. Carried for inventory completeness.
+  includedTraffic int
   // Per-location availability and deprecation info
   locations() []hetzner.serverType.location
 }

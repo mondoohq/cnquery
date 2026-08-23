@@ -270,12 +270,15 @@ hetzner.server.status 13.0.1
 hetzner.server.volumes 13.0.1
 hetzner.serverType 13.0.1
 hetzner.serverType.architecture 13.0.1
+hetzner.serverType.category 13.7.8
 hetzner.serverType.cores 13.0.1
 hetzner.serverType.cpuType 13.0.1
 hetzner.serverType.deprecated 13.0.1
+hetzner.serverType.deprecation 13.7.8
 hetzner.serverType.description 13.0.1
 hetzner.serverType.disk 13.0.1
 hetzner.serverType.id 13.0.1
+hetzner.serverType.includedTraffic 13.7.8
 hetzner.serverType.location 13.0.1
 hetzner.serverType.location.available 13.0.1
 hetzner.serverType.location.deprecation 13.0.1
