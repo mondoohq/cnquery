@@ -109,6 +109,14 @@ mikrotik {
   loggingRules() []mikrotik.system.logging.rule
   // Logging actions that receive log entries
   loggingActions() []mikrotik.system.logging.action
+  // Neighbor discovery protocol settings
+  discoverySettings() mikrotik.ip.neighbor.settings
+  // MAC-based management server settings
+  macServer() mikrotik.tool.macServer
+  // IP Cloud dynamic DNS configuration
+  cloud() mikrotik.ip.cloud
+  // RoMON layer 2 management configuration
+  romon() mikrotik.tool.romon
 }
 
 // MikroTik system information
@@ -2021,4 +2029,117 @@ mikrotik.system.logging.action @defaults("name target remote") {
   diskFileCount int
   // Whether writing stops when the disk target is full
   diskStopOnFull bool
+}
+
+// MikroTik neighbor discovery settings
+//
+// Settings in `/ip/neighbor/discovery-settings` that control which interfaces
+// the device advertises itself on and which discovery protocols it speaks.
+// Discovery announces the device's identity, RouterOS version, board, and
+// addresses to anything on the same segment, so a discovery interface list of
+// `all` hands that inventory to every connected network including untrusted
+// ones. The protocols are the other half: LLDP and CDP reach beyond MikroTik
+// equipment, so leaving them on extends the announcement to any switch or
+// endpoint that listens.
+mikrotik.ip.neighbor.settings @defaults("discoverInterfaceList protocols") {
+  // Interface list the device runs discovery on
+  //
+  // A named interface list, or the literal all or none. With all, the device
+  // announces itself on every interface including untrusted segments.
+  discoverInterfaceList string
+  // Discovery protocols the device speaks
+  //
+  // For example mndp, cdp, or lldp. cdp and lldp reach equipment that is not
+  // MikroTik.
+  protocols []string
+  // VLAN advertised in the LLDP-MED network policy
+  lldpMedNetPolicyVlan string
+  // Whether LLDP advertises the MAC and PHY configuration
+  lldpMacPhyConfig bool
+  // Whether LLDP advertises VLAN information
+  lldpVlanInfo bool
+  // Whether LLDP advertises the maximum frame size
+  lldpMaxFrameSize bool
+}
+
+// MikroTik MAC server settings
+//
+// Layer 2 management settings read from `/tool/mac-server`, its `mac-winbox`
+// submenu, and its `ping` submenu. These paths bypass `/ip/service` entirely,
+// so everything `mikrotik.services` audits about which management protocols
+// are reachable says nothing about them: MAC-Telnet and MAC-Winbox answer on
+// the MAC layer, need no IP address on either end, and are unreachable by IP
+// firewall rules. An interface list of `all` therefore means management is
+// reachable from any connected segment.
+mikrotik.tool.macServer @defaults("allowedInterfaceList winboxAllowedInterfaceList pingEnabled") {
+  // Interface list MAC-Telnet answers on
+  //
+  // A named interface list, or the literal all or none.
+  allowedInterfaceList string
+  // Whether MAC-Telnet answers on every interface
+  //
+  // Null when the device did not report an interface list, which is the shape
+  // older RouterOS versions use for this menu.
+  macTelnetOnAllInterfaces bool
+  // Interface list MAC-Winbox answers on
+  //
+  // A named interface list, or the literal all or none.
+  winboxAllowedInterfaceList string
+  // Whether MAC-Winbox answers on every interface
+  //
+  // MAC-Winbox on every interface is unauthenticated-reachable management from
+  // any connected segment. Null when the device did not report an interface
+  // list.
+  macWinboxOnAllInterfaces bool
+  // Whether the device answers MAC-layer pings
+  pingEnabled bool
+}
+
+// MikroTik IP Cloud configuration
+//
+// MikroTik IP Cloud settings read from `/ip/cloud`. With DDNS enabled the
+// device reports its public address to MikroTik's servers and is published
+// under a stable `dnsName`, which turns a device behind a changing address
+// into one that is continuously locatable, and makes every management service
+// still reachable from the internet continuously reachable too. `updateTime`
+// additionally sources the device clock from the cloud service, which decides
+// whether certificate validity and log timestamps depend on it.
+mikrotik.ip.cloud @defaults("ddnsEnabled dnsName status") {
+  // Whether the device publishes its address through MikroTik DDNS
+  ddnsEnabled bool
+  // Interval between DDNS updates
+  ddnsUpdateInterval string
+  // Whether the device sets its clock from the cloud service
+  updateTime bool
+  // Public IPv4 address the device reported
+  publicAddress string
+  // Public IPv6 address the device reported
+  publicAddress6 string
+  // DNS name the device is published under
+  dnsName string
+  // Status of the last cloud update
+  status string
+  // Back To Home VPN state
+  backToHomeVpn string
+}
+
+// MikroTik RoMON configuration
+//
+// RoMON settings read from `/tool/romon`. RoMON tunnels management traffic
+// over layer 2 and forwards it between RoMON-speaking devices, so it reaches
+// past the segment the client is actually on and is not filtered by any IP
+// firewall rule. Access rests on the shared secret rather than on the device's
+// account and address restrictions, so `hasSecrets` is the difference between
+// a mesh anyone on the wire can join and one they cannot. The secret itself is
+// never read or exposed.
+mikrotik.tool.romon @defaults("enabled id hasSecrets") {
+  // Whether RoMON is enabled
+  enabled bool
+  // RoMON identifier of the device
+  id string
+  // Whether a RoMON secret is configured
+  //
+  // Without one, any RoMON-speaking device on the wire can join the mesh. The
+  // secret itself is never read or exposed.
+  hasSecrets bool
 }
