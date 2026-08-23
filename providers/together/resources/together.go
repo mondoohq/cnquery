@@ -8,6 +8,7 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	together "github.com/togethercomputer/together-go"
@@ -25,9 +26,88 @@ func (r *mqlTogether) id() (string, error) {
 	return "together", nil
 }
 
+// mqlTogetherInternal memoizes the /whoami response. Six identity fields are
+// backed by it and a query that reads more than one of them must not cost more
+// than one call.
+type mqlTogetherInternal struct {
+	whoamiOnce sync.Once
+	whoami     *together.WhoamiResponse
+	whoamiErr  error
+}
+
+// identity returns the account identity the API key actually authenticates as,
+// as reported by GET /whoami. It is fetched once per resource and reused.
+func (r *mqlTogether) identity() (*together.WhoamiResponse, error) {
+	r.whoamiOnce.Do(func() {
+		conn := togetherConn(r.MqlRuntime)
+		r.whoami, r.whoamiErr = conn.Client().Whoami(context.Background())
+		if r.whoamiErr == nil && r.whoami == nil {
+			r.whoamiErr = errors.New("together: /whoami returned no account identity")
+		}
+	})
+	return r.whoami, r.whoamiErr
+}
+
+// organization reports the organization the API key belongs to. It is read
+// back from /whoami: the value must describe the account the token resolves
+// to on the server, never a value the caller supplied on the command line.
 func (r *mqlTogether) organization() (string, error) {
-	conn := togetherConn(r.MqlRuntime)
-	return conn.Project(), nil
+	who, err := r.identity()
+	if err != nil {
+		return "", err
+	}
+	if who.OrganizationName != "" {
+		return who.OrganizationName, nil
+	}
+	return who.OrganizationID, nil
+}
+
+func (r *mqlTogether) organizationId() (string, error) {
+	who, err := r.identity()
+	if err != nil {
+		return "", err
+	}
+	return who.OrganizationID, nil
+}
+
+func (r *mqlTogether) organizationName() (string, error) {
+	who, err := r.identity()
+	if err != nil {
+		return "", err
+	}
+	return who.OrganizationName, nil
+}
+
+func (r *mqlTogether) projectId() (string, error) {
+	who, err := r.identity()
+	if err != nil {
+		return "", err
+	}
+	return who.ProjectID, nil
+}
+
+func (r *mqlTogether) projectName() (string, error) {
+	who, err := r.identity()
+	if err != nil {
+		return "", err
+	}
+	return who.ProjectName, nil
+}
+
+func (r *mqlTogether) apiKeyId() (string, error) {
+	who, err := r.identity()
+	if err != nil {
+		return "", err
+	}
+	return who.APIKeyID, nil
+}
+
+func (r *mqlTogether) userId() (string, error) {
+	who, err := r.identity()
+	if err != nil {
+		return "", err
+	}
+	return who.UserID, nil
 }
 
 func (r *mqlTogether) models() ([]interface{}, error) {

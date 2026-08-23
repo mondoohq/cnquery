@@ -12,11 +12,37 @@ option go_package = "go.mondoo.com/mql/providers/together/resources"
 // dedicated endpoint deployments, container deployments, uploaded
 // files, GPU compute clusters, cluster storage volumes, managed
 // secrets, batch inference jobs, evaluation jobs, and persistent
-// volumes. The project the account is scoped to is reported by the
-// organization field.
+// volumes. The organization and project the API key is scoped to are
+// reported by organization, organizationId, organizationName,
+// projectId, and projectName, all read back from the API rather than
+// taken from the connection settings.
 together @defaults("organization") @maturity("preview") {
-  // Project identifier the account connection is scoped to
+  // Organization the API key belongs to
+  //
+  // Human-readable name of the organization the API key authenticates
+  // as, reported by the account itself. Falls back to the organization
+  // identifier when the account carries no name. Use organizationId to
+  // key an audit on a stable identifier.
   organization() string
+  // Identifier of the organization that owns the project
+  organizationId() string
+  // Human-readable name of the organization that owns the project
+  organizationName() string
+  // Identifier of the project the API key is scoped to
+  projectId() string
+  // Human-readable name of the project the API key is scoped to
+  projectName() string
+  // Identifier of the API key that authenticated the connection
+  //
+  // Identifies which key a scan ran under, so a finding can be traced
+  // back to the credential that produced it and a key can be rotated
+  // or revoked by identifier without exposing the key material itself.
+  apiKeyId() string
+  // Identifier of the user the API key authenticates as
+  //
+  // Empty when the key is not tied to an individual user, as with a
+  // key issued to a service or to the organization itself.
+  userId() string
   // Available models in the Together AI catalog
   models() []together.model
   // Fine-tuning jobs

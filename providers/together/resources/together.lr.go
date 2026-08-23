@@ -156,6 +156,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"together.organization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTogether).GetOrganization()).ToDataRes(types.String)
 	},
+	"together.organizationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTogether).GetOrganizationId()).ToDataRes(types.String)
+	},
+	"together.organizationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTogether).GetOrganizationName()).ToDataRes(types.String)
+	},
+	"together.projectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTogether).GetProjectId()).ToDataRes(types.String)
+	},
+	"together.projectName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTogether).GetProjectName()).ToDataRes(types.String)
+	},
+	"together.apiKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTogether).GetApiKeyId()).ToDataRes(types.String)
+	},
+	"together.userId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlTogether).GetUserId()).ToDataRes(types.String)
+	},
 	"together.models": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlTogether).GetModels()).ToDataRes(types.Array(types.Resource("together.model")))
 	},
@@ -549,6 +567,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"together.organization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlTogether).Organization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"together.organizationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTogether).OrganizationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"together.organizationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTogether).OrganizationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"together.projectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTogether).ProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"together.projectName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTogether).ProjectName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"together.apiKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTogether).ApiKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"together.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlTogether).UserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"together.models": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1123,8 +1165,14 @@ func SetAllData(resource plugin.Resource, args map[string]*llx.RawData) error {
 type mqlTogether struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlTogetherInternal it will be used here
+	mqlTogetherInternal
 	Organization          plugin.TValue[string]
+	OrganizationId        plugin.TValue[string]
+	OrganizationName      plugin.TValue[string]
+	ProjectId             plugin.TValue[string]
+	ProjectName           plugin.TValue[string]
+	ApiKeyId              plugin.TValue[string]
+	UserId                plugin.TValue[string]
 	Models                plugin.TValue[[]any]
 	FineTunes             plugin.TValue[[]any]
 	Endpoints             plugin.TValue[[]any]
@@ -1178,6 +1226,42 @@ func (c *mqlTogether) MqlID() string {
 func (c *mqlTogether) GetOrganization() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Organization, func() (string, error) {
 		return c.organization()
+	})
+}
+
+func (c *mqlTogether) GetOrganizationId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OrganizationId, func() (string, error) {
+		return c.organizationId()
+	})
+}
+
+func (c *mqlTogether) GetOrganizationName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OrganizationName, func() (string, error) {
+		return c.organizationName()
+	})
+}
+
+func (c *mqlTogether) GetProjectId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProjectId, func() (string, error) {
+		return c.projectId()
+	})
+}
+
+func (c *mqlTogether) GetProjectName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ProjectName, func() (string, error) {
+		return c.projectName()
+	})
+}
+
+func (c *mqlTogether) GetApiKeyId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ApiKeyId, func() (string, error) {
+		return c.apiKeyId()
+	})
+}
+
+func (c *mqlTogether) GetUserId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.UserId, func() (string, error) {
+		return c.userId()
 	})
 }
 
