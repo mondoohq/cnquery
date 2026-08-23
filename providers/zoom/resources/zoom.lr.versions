@@ -52,6 +52,7 @@ zoom.user.id 13.0.0
 zoom.user.lastLoginTime 13.0.0
 zoom.user.lastName 13.0.0
 zoom.user.loginType 13.0.0
+zoom.user.loginTypes 13.0.1
 zoom.user.role 13.0.0
 zoom.user.roleId 13.0.0
 zoom.user.ssoLinked 13.0.0

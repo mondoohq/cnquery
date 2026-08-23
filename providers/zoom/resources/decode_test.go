@@ -19,14 +19,14 @@ import (
 func TestUserRecordDecodesFields(t *testing.T) {
 	const payload = `{
 		"id": "z9f8abc",
-		"email": "jane@acme.com",
+		"email": "jane@example.com",
 		"first_name": "Jane",
 		"last_name": "Doe",
 		"display_name": "Jane Doe",
 		"type": 2,
 		"status": "active",
 		"verified": 1,
-		"login_type": 100,
+		"login_types": [101],
 		"role_id": "0",
 		"group_ids": ["g1", "g2"],
 		"last_login_time": "2024-01-02T03:04:05Z",
@@ -41,8 +41,8 @@ func TestUserRecordDecodesFields(t *testing.T) {
 	if u.ID != "z9f8abc" {
 		t.Errorf("id: got %q, want %q", u.ID, "z9f8abc")
 	}
-	if u.Email != "jane@acme.com" {
-		t.Errorf("email: got %q, want %q", u.Email, "jane@acme.com")
+	if u.Email != "jane@example.com" {
+		t.Errorf("email: got %q, want %q", u.Email, "jane@example.com")
 	}
 	if u.Type != 2 {
 		t.Errorf("type: got %d, want 2", u.Type)
@@ -53,8 +53,12 @@ func TestUserRecordDecodesFields(t *testing.T) {
 	if u.Verified != 1 {
 		t.Errorf("verified: got %d, want 1", u.Verified)
 	}
-	if u.LoginType != 100 {
-		t.Errorf("loginType: got %d, want 100", u.LoginType)
+	// Zoom returns `login_types`, an array. Decoding the singular `login_type`
+	// the docs once described leaves this empty on every user, which makes
+	// ssoLinked false for every user and hands an auditor looking for accounts
+	// that bypass SSO the entire user list.
+	if len(u.LoginTypes) != 1 || u.LoginTypes[0] != 101 {
+		t.Errorf("loginTypes: got %v, want [101]", u.LoginTypes)
 	}
 	if u.RoleID != "0" {
 		t.Errorf("roleId: got %q, want %q", u.RoleID, "0")
@@ -71,7 +75,7 @@ func TestUserRecordDecodesFields(t *testing.T) {
 }
 
 func TestUserRecordAbsentTimestampsStayNil(t *testing.T) {
-	const payload = `{"id": "u1", "email": "a@b.com", "type": 1, "status": "pending"}`
+	const payload = `{"id": "u1", "email": "sam@example.com", "type": 1, "status": "pending"}`
 
 	var u connection.User
 	if err := json.Unmarshal([]byte(payload), &u); err != nil {
@@ -110,22 +114,55 @@ func TestUserVerified(t *testing.T) {
 
 func TestUserSsoLinked(t *testing.T) {
 	cases := []struct {
-		name      string
-		loginType int64
-		want      bool
+		name       string
+		loginTypes []int64
+		want       bool
 	}{
-		{"sso login type", 100, true},
-		{"google oauth", 1, false},
-		{"zero default", 0, false},
-		{"api login type", 99, false},
-		{"zoom work email", 101, false},
+		{"sso", []int64{101}, true},
+		{"sso alongside another method", []int64{1, 101}, true},
+		{"zoom work email is not sso", []int64{100}, false},
+		{"google oauth", []int64{1}, false},
+		{"facebook oauth is not the zero default", []int64{0}, false},
+		{"api user", []int64{99}, false},
+		{"no method reported", nil, false},
+		{"empty list", []int64{}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			u := &connection.User{LoginType: tc.loginType}
+			u := &connection.User{LoginTypes: tc.loginTypes}
 			if got := userSsoLinked(u); got != tc.want {
-				t.Errorf("userSsoLinked(%d): got %v, want %v", tc.loginType, got, tc.want)
+				t.Errorf("userSsoLinked(%v): got %v, want %v", tc.loginTypes, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestPrimaryLoginType(t *testing.T) {
+	// An absent sign-in method must stay null rather than becoming 0, which is
+	// a real login type (Facebook OAuth).
+	if got := primaryLoginType(&connection.User{}); got != nil {
+		t.Errorf("primaryLoginType(no methods): got %d, want nil", *got)
+	}
+	got := primaryLoginType(&connection.User{LoginTypes: []int64{101, 1}})
+	if got == nil || *got != 101 {
+		t.Errorf("primaryLoginType([101 1]): got %v, want 101", got)
+	}
+}
+
+// A user record that carries the singular `login_type` key the Zoom docs once
+// described must not populate loginTypes: the API does not send it, and
+// accepting it would hide the array decode regressing.
+func TestUserRecordIgnoresSingularLoginType(t *testing.T) {
+	const payload = `{"id": "u1", "email": "sam@example.com", "type": 2, "login_type": 101}`
+
+	var u connection.User
+	if err := json.Unmarshal([]byte(payload), &u); err != nil {
+		t.Fatalf("failed to decode user payload: %v", err)
+	}
+	if len(u.LoginTypes) != 0 {
+		t.Errorf("loginTypes: got %v, want empty", u.LoginTypes)
+	}
+	if userSsoLinked(&u) {
+		t.Error("ssoLinked: got true, want false")
 	}
 }

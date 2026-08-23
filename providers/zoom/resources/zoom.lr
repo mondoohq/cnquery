@@ -128,10 +128,19 @@ zoom.user @defaults("id email type") @maturity("experimental") {
   verified bool
   // Sign-in method
   //
-  // 1 (Google OAuth), 24 (Apple), 27 (Microsoft OAuth), 99 (API), 100
-  // (SSO), or 101 (Zoom Work Email), among others. Check the Zoom Users
-  // API docs for the current complete set.
-  loginType int
+  // Deprecated in favor of loginTypes. Reports the first of the user's
+  // sign-in methods, and is null when Zoom reports none, so a user with
+  // more than one is only partly described by it.
+  loginType @maturity("deprecated") int
+  // Sign-in methods
+  //
+  // 0 (Facebook OAuth), 1 (Google OAuth), 24 (Apple OAuth), 27 (Microsoft
+  // OAuth), 97 (mobile device), 98 (RingCentral OAuth), 99 (API user), 100
+  // (Zoom Work email), or 101 (single sign-on). In China, also 11 (phone
+  // number), 21 (WeChat), and 23 (Alipay). A user who signs in more than one
+  // way carries every method they have used. Check the Zoom Users API docs
+  // for the current complete set.
+  loginTypes []int
   // Whether the user authenticates through the account's SSO configuration
   ssoLinked bool
   // Timestamp of the user's last login

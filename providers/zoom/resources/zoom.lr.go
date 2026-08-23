@@ -216,6 +216,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"zoom.user.loginType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomUser).GetLoginType()).ToDataRes(types.Int)
 	},
+	"zoom.user.loginTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomUser).GetLoginTypes()).ToDataRes(types.Array(types.Int))
+	},
 	"zoom.user.ssoLinked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomUser).GetSsoLinked()).ToDataRes(types.Bool)
 	},
@@ -429,6 +432,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zoom.user.loginType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoomUser).LoginType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.user.loginTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomUser).LoginTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"zoom.user.ssoLinked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -851,6 +858,7 @@ type mqlZoomUser struct {
 	Status        plugin.TValue[string]
 	Verified      plugin.TValue[bool]
 	LoginType     plugin.TValue[int64]
+	LoginTypes    plugin.TValue[[]any]
 	SsoLinked     plugin.TValue[bool]
 	LastLoginTime plugin.TValue[*time.Time]
 	CreatedAt     plugin.TValue[*time.Time]
@@ -931,6 +939,10 @@ func (c *mqlZoomUser) GetVerified() *plugin.TValue[bool] {
 
 func (c *mqlZoomUser) GetLoginType() *plugin.TValue[int64] {
 	return &c.LoginType
+}
+
+func (c *mqlZoomUser) GetLoginTypes() *plugin.TValue[[]any] {
+	return &c.LoginTypes
 }
 
 func (c *mqlZoomUser) GetSsoLinked() *plugin.TValue[bool] {

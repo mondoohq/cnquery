@@ -90,8 +90,12 @@ type User struct {
 	Type        int64  `json:"type"`
 	Status      string `json:"status"`
 	// Verified is 0 or 1 (whether the user's email address is verified).
-	Verified      int        `json:"verified"`
-	LoginType     int64      `json:"login_type"`
+	Verified int `json:"verified"`
+	// LoginTypes is the user's sign-in methods. The Get a user and List users
+	// responses return `login_types`, an array of integers; the singular
+	// `login_type` the docs once described is a query parameter, not a
+	// response field.
+	LoginTypes    []int64    `json:"login_types"`
 	RoleID        string     `json:"role_id"`
 	GroupIDs      []string   `json:"group_ids"`
 	LastLoginTime *time.Time `json:"last_login_time"`
