@@ -53,6 +53,14 @@ const (
 	ResourceMikrotikSystemScript                 string = "mikrotik.system.script"
 	ResourceMikrotikSystemRouterboot             string = "mikrotik.system.routerboot"
 	ResourceMikrotikSystemUpdate                 string = "mikrotik.system.update"
+	ResourceMikrotikInterfaceL2tpServer          string = "mikrotik.interface.l2tpServer"
+	ResourceMikrotikInterfacePptpServer          string = "mikrotik.interface.pptpServer"
+	ResourceMikrotikInterfaceSstpServer          string = "mikrotik.interface.sstpServer"
+	ResourceMikrotikInterfaceOvpnServer          string = "mikrotik.interface.ovpnServer"
+	ResourceMikrotikIpIpsecProposal              string = "mikrotik.ip.ipsec.proposal"
+	ResourceMikrotikIpIpsecProfile               string = "mikrotik.ip.ipsec.profile"
+	ResourceMikrotikIpIpsecPeer                  string = "mikrotik.ip.ipsec.peer"
+	ResourceMikrotikIpIpsecIdentity              string = "mikrotik.ip.ipsec.identity"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -206,6 +214,38 @@ func init() {
 		"mikrotik.system.update": {
 			Init:   initMikrotikSystemUpdate,
 			Create: createMikrotikSystemUpdate,
+		},
+		"mikrotik.interface.l2tpServer": {
+			Init:   initMikrotikInterfaceL2tpServer,
+			Create: createMikrotikInterfaceL2tpServer,
+		},
+		"mikrotik.interface.pptpServer": {
+			Init:   initMikrotikInterfacePptpServer,
+			Create: createMikrotikInterfacePptpServer,
+		},
+		"mikrotik.interface.sstpServer": {
+			Init:   initMikrotikInterfaceSstpServer,
+			Create: createMikrotikInterfaceSstpServer,
+		},
+		"mikrotik.interface.ovpnServer": {
+			Init:   initMikrotikInterfaceOvpnServer,
+			Create: createMikrotikInterfaceOvpnServer,
+		},
+		"mikrotik.ip.ipsec.proposal": {
+			// to override args, implement: initMikrotikIpIpsecProposal(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikIpIpsecProposal,
+		},
+		"mikrotik.ip.ipsec.profile": {
+			// to override args, implement: initMikrotikIpIpsecProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikIpIpsecProfile,
+		},
+		"mikrotik.ip.ipsec.peer": {
+			// to override args, implement: initMikrotikIpIpsecPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikIpIpsecPeer,
+		},
+		"mikrotik.ip.ipsec.identity": {
+			// to override args, implement: initMikrotikIpIpsecIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikIpIpsecIdentity,
 		},
 	}
 }
@@ -385,6 +425,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mikrotik.packageUpdate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotik).GetPackageUpdate()).ToDataRes(types.Resource("mikrotik.system.update"))
+	},
+	"mikrotik.l2tpServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetL2tpServer()).ToDataRes(types.Resource("mikrotik.interface.l2tpServer"))
+	},
+	"mikrotik.pptpServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetPptpServer()).ToDataRes(types.Resource("mikrotik.interface.pptpServer"))
+	},
+	"mikrotik.sstpServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetSstpServer()).ToDataRes(types.Resource("mikrotik.interface.sstpServer"))
+	},
+	"mikrotik.ovpnServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetOvpnServer()).ToDataRes(types.Resource("mikrotik.interface.ovpnServer"))
+	},
+	"mikrotik.ipsecProposals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetIpsecProposals()).ToDataRes(types.Array(types.Resource("mikrotik.ip.ipsec.proposal")))
+	},
+	"mikrotik.ipsecProfiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetIpsecProfiles()).ToDataRes(types.Array(types.Resource("mikrotik.ip.ipsec.profile")))
+	},
+	"mikrotik.ipsecPeers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetIpsecPeers()).ToDataRes(types.Array(types.Resource("mikrotik.ip.ipsec.peer")))
+	},
+	"mikrotik.ipsecIdentities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetIpsecIdentities()).ToDataRes(types.Array(types.Resource("mikrotik.ip.ipsec.identity")))
 	},
 	"mikrotik.system.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikSystem).GetIdentity()).ToDataRes(types.String)
@@ -1751,6 +1815,306 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mikrotik.system.update.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikSystemUpdate).GetStatus()).ToDataRes(types.String)
 	},
+	"mikrotik.interface.l2tpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.l2tpServer.useIpsec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetUseIpsec()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.l2tpServer.hasIpsecSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetHasIpsecSecret()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.l2tpServer.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetAuthentication()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.interface.l2tpServer.maxMtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetMaxMtu()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.l2tpServer.maxMru": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetMaxMru()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.l2tpServer.mrru": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetMrru()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.l2tpServer.keepaliveTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetKeepaliveTimeout()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.l2tpServer.defaultProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetDefaultProfile()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.l2tpServer.allowFastPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetAllowFastPath()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.l2tpServer.oneSessionPerHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetOneSessionPerHost()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.l2tpServer.callerIdType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetCallerIdType()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.l2tpServer.maxSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetMaxSessions()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.l2tpServer.acceptProtoVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceL2tpServer).GetAcceptProtoVersion()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.pptpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfacePptpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.pptpServer.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfacePptpServer).GetAuthentication()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.interface.pptpServer.maxMtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfacePptpServer).GetMaxMtu()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.pptpServer.maxMru": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfacePptpServer).GetMaxMru()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.pptpServer.mrru": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfacePptpServer).GetMrru()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.pptpServer.keepaliveTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfacePptpServer).GetKeepaliveTimeout()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.pptpServer.defaultProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfacePptpServer).GetDefaultProfile()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.sstpServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.sstpServer.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetPort()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.sstpServer.verifyClientCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetVerifyClientCertificate()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.sstpServer.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetCertificate()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.sstpServer.certificateRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetCertificateRef()).ToDataRes(types.Resource("mikrotik.certificate"))
+	},
+	"mikrotik.interface.sstpServer.authentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetAuthentication()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.interface.sstpServer.tlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetTlsVersion()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.sstpServer.forceAes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetForceAes()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.sstpServer.pfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetPfs()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.sstpServer.maxMtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetMaxMtu()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.sstpServer.maxMru": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetMaxMru()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.sstpServer.mrru": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetMrru()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.sstpServer.keepaliveTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetKeepaliveTimeout()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.sstpServer.defaultProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetDefaultProfile()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.sstpServer.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceSstpServer).GetVrf()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.ovpnServer.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetPort()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.ovpnServer.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetProtocol()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetMode()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.requireClientCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetRequireClientCertificate()).ToDataRes(types.Bool)
+	},
+	"mikrotik.interface.ovpnServer.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetCertificate()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.certificateRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetCertificateRef()).ToDataRes(types.Resource("mikrotik.certificate"))
+	},
+	"mikrotik.interface.ovpnServer.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.interface.ovpnServer.auth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetAuth()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.interface.ovpnServer.tlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetTlsVersion()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.userAuthMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetUserAuthMethod()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.redirectGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetRedirectGateway()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.netmask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetNetmask()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.ovpnServer.macAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetMacAddress()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.maxMtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetMaxMtu()).ToDataRes(types.Int)
+	},
+	"mikrotik.interface.ovpnServer.keepaliveTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetKeepaliveTimeout()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.defaultProfile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetDefaultProfile()).ToDataRes(types.String)
+	},
+	"mikrotik.interface.ovpnServer.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikInterfaceOvpnServer).GetVrf()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.proposal.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetName()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.proposal.encAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetEncAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.ip.ipsec.proposal.authAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetAuthAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.ip.ipsec.proposal.pfsGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetPfsGroup()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.proposal.lifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetLifetime()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.proposal.default": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetDefault()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.proposal.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.proposal.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProposal).GetComment()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.profile.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetName()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.profile.hashAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetHashAlgorithm()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.profile.encAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetEncAlgorithms()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.ip.ipsec.profile.dhGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetDhGroups()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.ip.ipsec.profile.prfAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetPrfAlgorithm()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.profile.proposalCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetProposalCheck()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.profile.lifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetLifetime()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.profile.natTraversal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetNatTraversal()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.profile.dpdInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetDpdInterval()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.profile.dpdMaximumFailures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecProfile).GetDpdMaximumFailures()).ToDataRes(types.Int)
+	},
+	"mikrotik.ip.ipsec.peer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetName()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.peer.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetAddress()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.peer.localAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetLocalAddress()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.peer.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetPort()).ToDataRes(types.Int)
+	},
+	"mikrotik.ip.ipsec.peer.exchangeMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetExchangeMode()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.peer.profile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetProfile()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.peer.profileRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetProfileRef()).ToDataRes(types.Resource("mikrotik.ip.ipsec.profile"))
+	},
+	"mikrotik.ip.ipsec.peer.passive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetPassive()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.peer.sendInitialContact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetSendInitialContact()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.peer.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.peer.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecPeer).GetComment()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.peer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetPeer()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.peerRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetPeerRef()).ToDataRes(types.Resource("mikrotik.ip.ipsec.peer"))
+	},
+	"mikrotik.ip.ipsec.identity.authMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetAuthMethod()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.hasSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetHasSecret()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.identity.generatePolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetGeneratePolicy()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.policyTemplateGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetPolicyTemplateGroup()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.matchBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetMatchBy()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.modeConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetModeConfig()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.myIdType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetMyIdType()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.myId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetMyId()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.remoteIdType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetRemoteIdType()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.remoteId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetRemoteId()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.certificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetCertificate()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.remoteCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetRemoteCertificate()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.notrackChain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetNotrackChain()).ToDataRes(types.String)
+	},
+	"mikrotik.ip.ipsec.identity.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.ip.ipsec.identity.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetComment()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1909,6 +2273,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mikrotik.packageUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotik).PackageUpdate, ok = plugin.RawToTValue[*mqlMikrotikSystemUpdate](v.Value, v.Error)
+		return
+	},
+	"mikrotik.l2tpServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).L2tpServer, ok = plugin.RawToTValue[*mqlMikrotikInterfaceL2tpServer](v.Value, v.Error)
+		return
+	},
+	"mikrotik.pptpServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).PptpServer, ok = plugin.RawToTValue[*mqlMikrotikInterfacePptpServer](v.Value, v.Error)
+		return
+	},
+	"mikrotik.sstpServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).SstpServer, ok = plugin.RawToTValue[*mqlMikrotikInterfaceSstpServer](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ovpnServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).OvpnServer, ok = plugin.RawToTValue[*mqlMikrotikInterfaceOvpnServer](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ipsecProposals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).IpsecProposals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ipsecProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).IpsecProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ipsecPeers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).IpsecPeers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ipsecIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).IpsecIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mikrotik.system.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3875,6 +4271,438 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMikrotikSystemUpdate).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"mikrotik.interface.l2tpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.interface.l2tpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.useIpsec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).UseIpsec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.hasIpsecSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).HasIpsecSecret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).Authentication, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.maxMtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).MaxMtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.maxMru": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).MaxMru, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.mrru": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).Mrru, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.keepaliveTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).KeepaliveTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.defaultProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).DefaultProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.allowFastPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).AllowFastPath, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.oneSessionPerHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).OneSessionPerHost, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.callerIdType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).CallerIdType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.maxSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).MaxSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.l2tpServer.acceptProtoVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceL2tpServer).AcceptProtoVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.pptpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.interface.pptpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.pptpServer.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).Authentication, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.pptpServer.maxMtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).MaxMtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.pptpServer.maxMru": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).MaxMru, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.pptpServer.mrru": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).Mrru, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.pptpServer.keepaliveTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).KeepaliveTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.pptpServer.defaultProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfacePptpServer).DefaultProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.interface.sstpServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.verifyClientCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).VerifyClientCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.certificateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).CertificateRef, ok = plugin.RawToTValue[*mqlMikrotikCertificate](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).Authentication, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.tlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).TlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.forceAes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).ForceAes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.pfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).Pfs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.maxMtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).MaxMtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.maxMru": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).MaxMru, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.mrru": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).Mrru, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.keepaliveTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).KeepaliveTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.defaultProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).DefaultProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.sstpServer.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceSstpServer).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.interface.ovpnServer.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.requireClientCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).RequireClientCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.certificateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).CertificateRef, ok = plugin.RawToTValue[*mqlMikrotikCertificate](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Ciphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.auth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Auth, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.tlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).TlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.userAuthMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).UserAuthMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.redirectGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).RedirectGateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.netmask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Netmask, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.macAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).MacAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.maxMtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).MaxMtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.keepaliveTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).KeepaliveTimeout, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.defaultProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).DefaultProfile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.interface.ovpnServer.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikInterfaceOvpnServer).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.encAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).EncAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.authAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).AuthAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.pfsGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).PfsGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.lifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).Lifetime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.default": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).Default, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.proposal.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProposal).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.hashAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).HashAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.encAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).EncAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.dhGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).DhGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.prfAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).PrfAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.proposalCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).ProposalCheck, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.lifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).Lifetime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.natTraversal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).NatTraversal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.dpdInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).DpdInterval, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.profile.dpdMaximumFailures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecProfile).DpdMaximumFailures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.localAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).LocalAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.exchangeMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).ExchangeMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.profileRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).ProfileRef, ok = plugin.RawToTValue[*mqlMikrotikIpIpsecProfile](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.passive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).Passive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.sendInitialContact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).SendInitialContact, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.peer.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecPeer).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.peer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).Peer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.peerRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).PeerRef, ok = plugin.RawToTValue[*mqlMikrotikIpIpsecPeer](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.authMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).AuthMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.hasSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).HasSecret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.generatePolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).GeneratePolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.policyTemplateGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).PolicyTemplateGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.matchBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).MatchBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.modeConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).ModeConfig, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.myIdType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).MyIdType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.myId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).MyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.remoteIdType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).RemoteIdType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.remoteId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).RemoteId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.remoteCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).RemoteCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.notrackChain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).NotrackChain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.ip.ipsec.identity.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -3940,6 +4768,14 @@ type mqlMikrotik struct {
 	Scripts              plugin.TValue[[]any]
 	Routerboot           plugin.TValue[*mqlMikrotikSystemRouterboot]
 	PackageUpdate        plugin.TValue[*mqlMikrotikSystemUpdate]
+	L2tpServer           plugin.TValue[*mqlMikrotikInterfaceL2tpServer]
+	PptpServer           plugin.TValue[*mqlMikrotikInterfacePptpServer]
+	SstpServer           plugin.TValue[*mqlMikrotikInterfaceSstpServer]
+	OvpnServer           plugin.TValue[*mqlMikrotikInterfaceOvpnServer]
+	IpsecProposals       plugin.TValue[[]any]
+	IpsecProfiles        plugin.TValue[[]any]
+	IpsecPeers           plugin.TValue[[]any]
+	IpsecIdentities      plugin.TValue[[]any]
 }
 
 // createMikrotik creates a new instance of this resource
@@ -4552,6 +5388,134 @@ func (c *mqlMikrotik) GetPackageUpdate() *plugin.TValue[*mqlMikrotikSystemUpdate
 		}
 
 		return c.packageUpdate()
+	})
+}
+
+func (c *mqlMikrotik) GetL2tpServer() *plugin.TValue[*mqlMikrotikInterfaceL2tpServer] {
+	return plugin.GetOrCompute[*mqlMikrotikInterfaceL2tpServer](&c.L2tpServer, func() (*mqlMikrotikInterfaceL2tpServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "l2tpServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikInterfaceL2tpServer), nil
+			}
+		}
+
+		return c.l2tpServer()
+	})
+}
+
+func (c *mqlMikrotik) GetPptpServer() *plugin.TValue[*mqlMikrotikInterfacePptpServer] {
+	return plugin.GetOrCompute[*mqlMikrotikInterfacePptpServer](&c.PptpServer, func() (*mqlMikrotikInterfacePptpServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "pptpServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikInterfacePptpServer), nil
+			}
+		}
+
+		return c.pptpServer()
+	})
+}
+
+func (c *mqlMikrotik) GetSstpServer() *plugin.TValue[*mqlMikrotikInterfaceSstpServer] {
+	return plugin.GetOrCompute[*mqlMikrotikInterfaceSstpServer](&c.SstpServer, func() (*mqlMikrotikInterfaceSstpServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "sstpServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikInterfaceSstpServer), nil
+			}
+		}
+
+		return c.sstpServer()
+	})
+}
+
+func (c *mqlMikrotik) GetOvpnServer() *plugin.TValue[*mqlMikrotikInterfaceOvpnServer] {
+	return plugin.GetOrCompute[*mqlMikrotikInterfaceOvpnServer](&c.OvpnServer, func() (*mqlMikrotikInterfaceOvpnServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "ovpnServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikInterfaceOvpnServer), nil
+			}
+		}
+
+		return c.ovpnServer()
+	})
+}
+
+func (c *mqlMikrotik) GetIpsecProposals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpsecProposals, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "ipsecProposals")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipsecProposals()
+	})
+}
+
+func (c *mqlMikrotik) GetIpsecProfiles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpsecProfiles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "ipsecProfiles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipsecProfiles()
+	})
+}
+
+func (c *mqlMikrotik) GetIpsecPeers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpsecPeers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "ipsecPeers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipsecPeers()
+	})
+}
+
+func (c *mqlMikrotik) GetIpsecIdentities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpsecIdentities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "ipsecIdentities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipsecIdentities()
 	})
 }
 
@@ -8400,4 +9364,864 @@ func (c *mqlMikrotikSystemUpdate) GetUpdateAvailable() *plugin.TValue[bool] {
 
 func (c *mqlMikrotikSystemUpdate) GetStatus() *plugin.TValue[string] {
 	return &c.Status
+}
+
+// mqlMikrotikInterfaceL2tpServer for the mikrotik.interface.l2tpServer resource
+type mqlMikrotikInterfaceL2tpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikInterfaceL2tpServerInternal it will be used here
+	Enabled            plugin.TValue[bool]
+	UseIpsec           plugin.TValue[string]
+	HasIpsecSecret     plugin.TValue[bool]
+	Authentication     plugin.TValue[[]any]
+	MaxMtu             plugin.TValue[int64]
+	MaxMru             plugin.TValue[int64]
+	Mrru               plugin.TValue[string]
+	KeepaliveTimeout   plugin.TValue[string]
+	DefaultProfile     plugin.TValue[string]
+	AllowFastPath      plugin.TValue[bool]
+	OneSessionPerHost  plugin.TValue[bool]
+	CallerIdType       plugin.TValue[string]
+	MaxSessions        plugin.TValue[int64]
+	AcceptProtoVersion plugin.TValue[string]
+}
+
+// createMikrotikInterfaceL2tpServer creates a new instance of this resource
+func createMikrotikInterfaceL2tpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikInterfaceL2tpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.interface.l2tpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) MqlName() string {
+	return "mikrotik.interface.l2tpServer"
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetUseIpsec() *plugin.TValue[string] {
+	return &c.UseIpsec
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetHasIpsecSecret() *plugin.TValue[bool] {
+	return &c.HasIpsecSecret
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetAuthentication() *plugin.TValue[[]any] {
+	return &c.Authentication
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetMaxMtu() *plugin.TValue[int64] {
+	return &c.MaxMtu
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetMaxMru() *plugin.TValue[int64] {
+	return &c.MaxMru
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetMrru() *plugin.TValue[string] {
+	return &c.Mrru
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetKeepaliveTimeout() *plugin.TValue[string] {
+	return &c.KeepaliveTimeout
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetDefaultProfile() *plugin.TValue[string] {
+	return &c.DefaultProfile
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetAllowFastPath() *plugin.TValue[bool] {
+	return &c.AllowFastPath
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetOneSessionPerHost() *plugin.TValue[bool] {
+	return &c.OneSessionPerHost
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetCallerIdType() *plugin.TValue[string] {
+	return &c.CallerIdType
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetMaxSessions() *plugin.TValue[int64] {
+	return &c.MaxSessions
+}
+
+func (c *mqlMikrotikInterfaceL2tpServer) GetAcceptProtoVersion() *plugin.TValue[string] {
+	return &c.AcceptProtoVersion
+}
+
+// mqlMikrotikInterfacePptpServer for the mikrotik.interface.pptpServer resource
+type mqlMikrotikInterfacePptpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikInterfacePptpServerInternal it will be used here
+	Enabled          plugin.TValue[bool]
+	Authentication   plugin.TValue[[]any]
+	MaxMtu           plugin.TValue[int64]
+	MaxMru           plugin.TValue[int64]
+	Mrru             plugin.TValue[string]
+	KeepaliveTimeout plugin.TValue[string]
+	DefaultProfile   plugin.TValue[string]
+}
+
+// createMikrotikInterfacePptpServer creates a new instance of this resource
+func createMikrotikInterfacePptpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikInterfacePptpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.interface.pptpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikInterfacePptpServer) MqlName() string {
+	return "mikrotik.interface.pptpServer"
+}
+
+func (c *mqlMikrotikInterfacePptpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikInterfacePptpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMikrotikInterfacePptpServer) GetAuthentication() *plugin.TValue[[]any] {
+	return &c.Authentication
+}
+
+func (c *mqlMikrotikInterfacePptpServer) GetMaxMtu() *plugin.TValue[int64] {
+	return &c.MaxMtu
+}
+
+func (c *mqlMikrotikInterfacePptpServer) GetMaxMru() *plugin.TValue[int64] {
+	return &c.MaxMru
+}
+
+func (c *mqlMikrotikInterfacePptpServer) GetMrru() *plugin.TValue[string] {
+	return &c.Mrru
+}
+
+func (c *mqlMikrotikInterfacePptpServer) GetKeepaliveTimeout() *plugin.TValue[string] {
+	return &c.KeepaliveTimeout
+}
+
+func (c *mqlMikrotikInterfacePptpServer) GetDefaultProfile() *plugin.TValue[string] {
+	return &c.DefaultProfile
+}
+
+// mqlMikrotikInterfaceSstpServer for the mikrotik.interface.sstpServer resource
+type mqlMikrotikInterfaceSstpServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMikrotikInterfaceSstpServerInternal
+	Enabled                 plugin.TValue[bool]
+	Port                    plugin.TValue[int64]
+	VerifyClientCertificate plugin.TValue[string]
+	Certificate             plugin.TValue[string]
+	CertificateRef          plugin.TValue[*mqlMikrotikCertificate]
+	Authentication          plugin.TValue[[]any]
+	TlsVersion              plugin.TValue[string]
+	ForceAes                plugin.TValue[bool]
+	Pfs                     plugin.TValue[bool]
+	MaxMtu                  plugin.TValue[int64]
+	MaxMru                  plugin.TValue[int64]
+	Mrru                    plugin.TValue[string]
+	KeepaliveTimeout        plugin.TValue[string]
+	DefaultProfile          plugin.TValue[string]
+	Vrf                     plugin.TValue[string]
+}
+
+// createMikrotikInterfaceSstpServer creates a new instance of this resource
+func createMikrotikInterfaceSstpServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikInterfaceSstpServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.interface.sstpServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) MqlName() string {
+	return "mikrotik.interface.sstpServer"
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetVerifyClientCertificate() *plugin.TValue[string] {
+	return &c.VerifyClientCertificate
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetCertificate() *plugin.TValue[string] {
+	return &c.Certificate
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetCertificateRef() *plugin.TValue[*mqlMikrotikCertificate] {
+	return plugin.GetOrCompute[*mqlMikrotikCertificate](&c.CertificateRef, func() (*mqlMikrotikCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.interface.sstpServer", c.__id, "certificateRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikCertificate), nil
+			}
+		}
+
+		return c.certificateRef()
+	})
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetAuthentication() *plugin.TValue[[]any] {
+	return &c.Authentication
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetTlsVersion() *plugin.TValue[string] {
+	return &c.TlsVersion
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetForceAes() *plugin.TValue[bool] {
+	return &c.ForceAes
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetPfs() *plugin.TValue[bool] {
+	return &c.Pfs
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetMaxMtu() *plugin.TValue[int64] {
+	return &c.MaxMtu
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetMaxMru() *plugin.TValue[int64] {
+	return &c.MaxMru
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetMrru() *plugin.TValue[string] {
+	return &c.Mrru
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetKeepaliveTimeout() *plugin.TValue[string] {
+	return &c.KeepaliveTimeout
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetDefaultProfile() *plugin.TValue[string] {
+	return &c.DefaultProfile
+}
+
+func (c *mqlMikrotikInterfaceSstpServer) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+// mqlMikrotikInterfaceOvpnServer for the mikrotik.interface.ovpnServer resource
+type mqlMikrotikInterfaceOvpnServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMikrotikInterfaceOvpnServerInternal
+	Enabled                  plugin.TValue[bool]
+	Port                     plugin.TValue[int64]
+	Protocol                 plugin.TValue[string]
+	Mode                     plugin.TValue[string]
+	RequireClientCertificate plugin.TValue[bool]
+	Certificate              plugin.TValue[string]
+	CertificateRef           plugin.TValue[*mqlMikrotikCertificate]
+	Ciphers                  plugin.TValue[[]any]
+	Auth                     plugin.TValue[[]any]
+	TlsVersion               plugin.TValue[string]
+	UserAuthMethod           plugin.TValue[string]
+	RedirectGateway          plugin.TValue[string]
+	Netmask                  plugin.TValue[int64]
+	MacAddress               plugin.TValue[string]
+	MaxMtu                   plugin.TValue[int64]
+	KeepaliveTimeout         plugin.TValue[string]
+	DefaultProfile           plugin.TValue[string]
+	Vrf                      plugin.TValue[string]
+}
+
+// createMikrotikInterfaceOvpnServer creates a new instance of this resource
+func createMikrotikInterfaceOvpnServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikInterfaceOvpnServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.interface.ovpnServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) MqlName() string {
+	return "mikrotik.interface.ovpnServer"
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetRequireClientCertificate() *plugin.TValue[bool] {
+	return &c.RequireClientCertificate
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetCertificate() *plugin.TValue[string] {
+	return &c.Certificate
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetCertificateRef() *plugin.TValue[*mqlMikrotikCertificate] {
+	return plugin.GetOrCompute[*mqlMikrotikCertificate](&c.CertificateRef, func() (*mqlMikrotikCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.interface.ovpnServer", c.__id, "certificateRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikCertificate), nil
+			}
+		}
+
+		return c.certificateRef()
+	})
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetCiphers() *plugin.TValue[[]any] {
+	return &c.Ciphers
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetAuth() *plugin.TValue[[]any] {
+	return &c.Auth
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetTlsVersion() *plugin.TValue[string] {
+	return &c.TlsVersion
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetUserAuthMethod() *plugin.TValue[string] {
+	return &c.UserAuthMethod
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetRedirectGateway() *plugin.TValue[string] {
+	return &c.RedirectGateway
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetNetmask() *plugin.TValue[int64] {
+	return &c.Netmask
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetMacAddress() *plugin.TValue[string] {
+	return &c.MacAddress
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetMaxMtu() *plugin.TValue[int64] {
+	return &c.MaxMtu
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetKeepaliveTimeout() *plugin.TValue[string] {
+	return &c.KeepaliveTimeout
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetDefaultProfile() *plugin.TValue[string] {
+	return &c.DefaultProfile
+}
+
+func (c *mqlMikrotikInterfaceOvpnServer) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+// mqlMikrotikIpIpsecProposal for the mikrotik.ip.ipsec.proposal resource
+type mqlMikrotikIpIpsecProposal struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikIpIpsecProposalInternal it will be used here
+	Name           plugin.TValue[string]
+	EncAlgorithms  plugin.TValue[[]any]
+	AuthAlgorithms plugin.TValue[[]any]
+	PfsGroup       plugin.TValue[string]
+	Lifetime       plugin.TValue[string]
+	Default        plugin.TValue[bool]
+	Disabled       plugin.TValue[bool]
+	Comment        plugin.TValue[string]
+}
+
+// createMikrotikIpIpsecProposal creates a new instance of this resource
+func createMikrotikIpIpsecProposal(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikIpIpsecProposal{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.ip.ipsec.proposal", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikIpIpsecProposal) MqlName() string {
+	return "mikrotik.ip.ipsec.proposal"
+}
+
+func (c *mqlMikrotikIpIpsecProposal) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetEncAlgorithms() *plugin.TValue[[]any] {
+	return &c.EncAlgorithms
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetAuthAlgorithms() *plugin.TValue[[]any] {
+	return &c.AuthAlgorithms
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetPfsGroup() *plugin.TValue[string] {
+	return &c.PfsGroup
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetLifetime() *plugin.TValue[string] {
+	return &c.Lifetime
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetDefault() *plugin.TValue[bool] {
+	return &c.Default
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlMikrotikIpIpsecProposal) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlMikrotikIpIpsecProfile for the mikrotik.ip.ipsec.profile resource
+type mqlMikrotikIpIpsecProfile struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikIpIpsecProfileInternal it will be used here
+	Name               plugin.TValue[string]
+	HashAlgorithm      plugin.TValue[string]
+	EncAlgorithms      plugin.TValue[[]any]
+	DhGroups           plugin.TValue[[]any]
+	PrfAlgorithm       plugin.TValue[string]
+	ProposalCheck      plugin.TValue[string]
+	Lifetime           plugin.TValue[string]
+	NatTraversal       plugin.TValue[bool]
+	DpdInterval        plugin.TValue[string]
+	DpdMaximumFailures plugin.TValue[int64]
+}
+
+// createMikrotikIpIpsecProfile creates a new instance of this resource
+func createMikrotikIpIpsecProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikIpIpsecProfile{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.ip.ipsec.profile", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikIpIpsecProfile) MqlName() string {
+	return "mikrotik.ip.ipsec.profile"
+}
+
+func (c *mqlMikrotikIpIpsecProfile) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetHashAlgorithm() *plugin.TValue[string] {
+	return &c.HashAlgorithm
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetEncAlgorithms() *plugin.TValue[[]any] {
+	return &c.EncAlgorithms
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetDhGroups() *plugin.TValue[[]any] {
+	return &c.DhGroups
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetPrfAlgorithm() *plugin.TValue[string] {
+	return &c.PrfAlgorithm
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetProposalCheck() *plugin.TValue[string] {
+	return &c.ProposalCheck
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetLifetime() *plugin.TValue[string] {
+	return &c.Lifetime
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetNatTraversal() *plugin.TValue[bool] {
+	return &c.NatTraversal
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetDpdInterval() *plugin.TValue[string] {
+	return &c.DpdInterval
+}
+
+func (c *mqlMikrotikIpIpsecProfile) GetDpdMaximumFailures() *plugin.TValue[int64] {
+	return &c.DpdMaximumFailures
+}
+
+// mqlMikrotikIpIpsecPeer for the mikrotik.ip.ipsec.peer resource
+type mqlMikrotikIpIpsecPeer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMikrotikIpIpsecPeerInternal
+	Name               plugin.TValue[string]
+	Address            plugin.TValue[string]
+	LocalAddress       plugin.TValue[string]
+	Port               plugin.TValue[int64]
+	ExchangeMode       plugin.TValue[string]
+	Profile            plugin.TValue[string]
+	ProfileRef         plugin.TValue[*mqlMikrotikIpIpsecProfile]
+	Passive            plugin.TValue[bool]
+	SendInitialContact plugin.TValue[bool]
+	Disabled           plugin.TValue[bool]
+	Comment            plugin.TValue[string]
+}
+
+// createMikrotikIpIpsecPeer creates a new instance of this resource
+func createMikrotikIpIpsecPeer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikIpIpsecPeer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.ip.ipsec.peer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikIpIpsecPeer) MqlName() string {
+	return "mikrotik.ip.ipsec.peer"
+}
+
+func (c *mqlMikrotikIpIpsecPeer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetLocalAddress() *plugin.TValue[string] {
+	return &c.LocalAddress
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetExchangeMode() *plugin.TValue[string] {
+	return &c.ExchangeMode
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetProfile() *plugin.TValue[string] {
+	return &c.Profile
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetProfileRef() *plugin.TValue[*mqlMikrotikIpIpsecProfile] {
+	return plugin.GetOrCompute[*mqlMikrotikIpIpsecProfile](&c.ProfileRef, func() (*mqlMikrotikIpIpsecProfile, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.ip.ipsec.peer", c.__id, "profileRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikIpIpsecProfile), nil
+			}
+		}
+
+		return c.profileRef()
+	})
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetPassive() *plugin.TValue[bool] {
+	return &c.Passive
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetSendInitialContact() *plugin.TValue[bool] {
+	return &c.SendInitialContact
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlMikrotikIpIpsecPeer) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlMikrotikIpIpsecIdentity for the mikrotik.ip.ipsec.identity resource
+type mqlMikrotikIpIpsecIdentity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMikrotikIpIpsecIdentityInternal
+	Peer                plugin.TValue[string]
+	PeerRef             plugin.TValue[*mqlMikrotikIpIpsecPeer]
+	AuthMethod          plugin.TValue[string]
+	HasSecret           plugin.TValue[bool]
+	GeneratePolicy      plugin.TValue[string]
+	PolicyTemplateGroup plugin.TValue[string]
+	MatchBy             plugin.TValue[string]
+	ModeConfig          plugin.TValue[string]
+	MyIdType            plugin.TValue[string]
+	MyId                plugin.TValue[string]
+	RemoteIdType        plugin.TValue[string]
+	RemoteId            plugin.TValue[string]
+	Certificate         plugin.TValue[string]
+	RemoteCertificate   plugin.TValue[string]
+	NotrackChain        plugin.TValue[string]
+	Disabled            plugin.TValue[bool]
+	Comment             plugin.TValue[string]
+}
+
+// createMikrotikIpIpsecIdentity creates a new instance of this resource
+func createMikrotikIpIpsecIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikIpIpsecIdentity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.ip.ipsec.identity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) MqlName() string {
+	return "mikrotik.ip.ipsec.identity"
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetPeer() *plugin.TValue[string] {
+	return &c.Peer
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetPeerRef() *plugin.TValue[*mqlMikrotikIpIpsecPeer] {
+	return plugin.GetOrCompute[*mqlMikrotikIpIpsecPeer](&c.PeerRef, func() (*mqlMikrotikIpIpsecPeer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.ip.ipsec.identity", c.__id, "peerRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikIpIpsecPeer), nil
+			}
+		}
+
+		return c.peerRef()
+	})
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetAuthMethod() *plugin.TValue[string] {
+	return &c.AuthMethod
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetHasSecret() *plugin.TValue[bool] {
+	return &c.HasSecret
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetGeneratePolicy() *plugin.TValue[string] {
+	return &c.GeneratePolicy
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetPolicyTemplateGroup() *plugin.TValue[string] {
+	return &c.PolicyTemplateGroup
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetMatchBy() *plugin.TValue[string] {
+	return &c.MatchBy
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetModeConfig() *plugin.TValue[string] {
+	return &c.ModeConfig
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetMyIdType() *plugin.TValue[string] {
+	return &c.MyIdType
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetMyId() *plugin.TValue[string] {
+	return &c.MyId
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetRemoteIdType() *plugin.TValue[string] {
+	return &c.RemoteIdType
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetRemoteId() *plugin.TValue[string] {
+	return &c.RemoteId
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetCertificate() *plugin.TValue[string] {
+	return &c.Certificate
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetRemoteCertificate() *plugin.TValue[string] {
+	return &c.RemoteCertificate
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetNotrackChain() *plugin.TValue[string] {
+	return &c.NotrackChain
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlMikrotikIpIpsecIdentity) GetComment() *plugin.TValue[string] {
+	return &c.Comment
 }

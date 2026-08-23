@@ -87,6 +87,22 @@ mikrotik {
   routerboot() mikrotik.system.routerboot
   // RouterOS update channel and the version available on it
   packageUpdate() mikrotik.system.update
+  // L2TP server configuration
+  l2tpServer() mikrotik.interface.l2tpServer
+  // PPTP server configuration
+  pptpServer() mikrotik.interface.pptpServer
+  // SSTP server configuration
+  sstpServer() mikrotik.interface.sstpServer
+  // OpenVPN server configuration
+  ovpnServer() mikrotik.interface.ovpnServer
+  // IPsec proposals offered for phase 2 negotiation
+  ipsecProposals() []mikrotik.ip.ipsec.proposal
+  // IPsec profiles used for key exchange negotiation
+  ipsecProfiles() []mikrotik.ip.ipsec.profile
+  // IPsec peers the device negotiates with
+  ipsecPeers() []mikrotik.ip.ipsec.peer
+  // IPsec identities that authenticate peers
+  ipsecIdentities() []mikrotik.ip.ipsec.identity
 }
 
 // MikroTik system information
@@ -1516,4 +1532,358 @@ mikrotik.system.update @defaults("channel installedVersion latestVersion updateA
   updateAvailable bool
   // Status of the last update check
   status string
+}
+
+// MikroTik L2TP server configuration
+//
+// L2TP server settings read from `/interface/l2tp-server/server`. L2TP carries
+// no encryption of its own, so `useIpsec` is what decides whether tunnels to
+// this server are encrypted at all: with it off, the tunnel and everything
+// inside it crosses the network in the clear. `authentication` lists the PPP
+// authentication methods the server still accepts, which is where mschap1,
+// chap, and pap show up.
+mikrotik.interface.l2tpServer @defaults("enabled useIpsec authentication") {
+  // Whether the L2TP server accepts connections
+  enabled bool
+  // Whether tunnels are wrapped in IPsec
+  //
+  // One of no, yes, or required. Anything other than required lets a client
+  // negotiate an unencrypted tunnel.
+  useIpsec string
+  // Whether an IPsec pre-shared key is configured for the server
+  //
+  // The key itself is never read or exposed.
+  hasIpsecSecret bool
+  // PPP authentication methods the server accepts
+  //
+  // For example mschap2, mschap1, chap, or pap. mschap1, chap, and pap are all
+  // broken against an attacker who can capture the handshake.
+  authentication []string
+  // Maximum transmission unit in bytes
+  maxMtu int
+  // Maximum receive unit in bytes
+  maxMru int
+  // Maximum received reconstructed unit
+  mrru string
+  // Idle time before an unresponsive session is dropped
+  keepaliveTimeout string
+  // PPP profile applied to sessions that do not select one
+  defaultProfile string
+  // Whether fast path forwarding is allowed for tunnel traffic
+  allowFastPath bool
+  // Whether a single host may hold only one session
+  oneSessionPerHost bool
+  // Format the caller ID is reported in
+  callerIdType string
+  // Maximum number of concurrent sessions
+  maxSessions int
+  // L2TP protocol version the server accepts
+  acceptProtoVersion string
+}
+
+// MikroTik PPTP server configuration
+//
+// PPTP server settings read from `/interface/pptp-server/server`. PPTP's
+// MS-CHAPv2 and MPPE construction is broken end to end and a captured
+// handshake can be reduced to a single DES key, so an enabled PPTP server is a
+// finding regardless of which authentication methods it lists. RouterOS still
+// ships the menu and still lets it be turned on, which is exactly why
+// `enabled` is worth reading.
+mikrotik.interface.pptpServer @defaults("enabled authentication") {
+  // Whether the PPTP server accepts connections
+  //
+  // PPTP offers no defensible configuration, so an enabled server is a finding
+  // on its own.
+  enabled bool
+  // PPP authentication methods the server accepts
+  //
+  // For example mschap2, mschap1, chap, or pap.
+  authentication []string
+  // Maximum transmission unit in bytes
+  maxMtu int
+  // Maximum receive unit in bytes
+  maxMru int
+  // Maximum received reconstructed unit
+  mrru string
+  // Idle time before an unresponsive session is dropped
+  keepaliveTimeout string
+  // PPP profile applied to sessions that do not select one
+  defaultProfile string
+}
+
+// MikroTik SSTP server configuration
+//
+// SSTP server settings read from `/interface/sstp-server/server`. SSTP runs
+// over TLS, so the server's posture is the certificate it presents and whether
+// it checks the client's: with `verifyClientCertificate` off, anyone who can
+// reach the port and pass PPP authentication gets a tunnel. `certificateRef`
+// resolves the presented certificate in the device certificate store so its
+// expiry, key size, and issuer can be checked.
+mikrotik.interface.sstpServer @defaults("enabled port verifyClientCertificate") {
+  // Whether the SSTP server accepts connections
+  enabled bool
+  // TCP port the server listens on
+  port int
+  // Whether the server requires and verifies a client certificate
+  //
+  // One of no, yes, or quiet. With no, client authentication rests entirely on
+  // the PPP credentials.
+  verifyClientCertificate string
+  // Name of the certificate the server presents
+  certificate string
+  // Certificate the server presents, resolved in the device certificate store
+  //
+  // Null when no certificate is bound, in which case the server cannot serve
+  // TLS at all.
+  certificateRef() mikrotik.certificate
+  // PPP authentication methods the server accepts
+  authentication []string
+  // Minimum accepted TLS version
+  tlsVersion string
+  // Whether only AES cipher suites are offered
+  forceAes bool
+  // Whether perfect forward secrecy is required
+  pfs bool
+  // Maximum transmission unit in bytes
+  maxMtu int
+  // Maximum receive unit in bytes
+  maxMru int
+  // Maximum received reconstructed unit
+  mrru string
+  // Idle time before an unresponsive session is dropped
+  keepaliveTimeout string
+  // PPP profile applied to sessions that do not select one
+  defaultProfile string
+  // VRF the server is bound to
+  vrf string
+}
+
+// MikroTik OpenVPN server configuration
+//
+// OpenVPN server settings read from `/interface/ovpn-server/server`. The
+// server's posture is the cipher and digest sets it offers, whether it
+// requires a client certificate, and which certificate it presents.
+// `requireClientCertificate` off leaves PPP credentials as the only client
+// authentication, and a cipher list that still carries a 64-bit block cipher
+// leaves the tunnel open to a birthday-bound collision attack.
+mikrotik.interface.ovpnServer @defaults("enabled port requireClientCertificate") {
+  // Whether the OpenVPN server accepts connections
+  enabled bool
+  // Port the server listens on
+  port int
+  // Transport protocol the server uses
+  //
+  // One of tcp or udp.
+  protocol string
+  // Tunnel mode
+  //
+  // One of ip for a routed tunnel or ethernet for a bridged one.
+  mode string
+  // Whether the server requires a client certificate
+  //
+  // With this off, PPP credentials are the only client authentication.
+  requireClientCertificate bool
+  // Name of the certificate the server presents
+  certificate string
+  // Certificate the server presents, resolved in the device certificate store
+  certificateRef() mikrotik.certificate
+  // Ciphers the server offers
+  //
+  // For example aes256-gcm, aes256-cbc, aes128-cbc, or blowfish128. blowfish128
+  // is a 64-bit block cipher and is not safe for a long-lived tunnel.
+  ciphers []string
+  // Digests the server offers for packet authentication
+  //
+  // For example sha512, sha256, sha1, md5, or null.
+  auth []string
+  // Minimum accepted TLS version
+  tlsVersion string
+  // Method used to authenticate the tunnel user
+  userAuthMethod string
+  // Whether clients are pushed a default route through the tunnel
+  redirectGateway string
+  // Netmask handed to clients
+  netmask int
+  // MAC address used in ethernet mode
+  macAddress string
+  // Maximum transmission unit in bytes
+  maxMtu int
+  // Idle time before an unresponsive session is dropped
+  keepaliveTimeout string
+  // PPP profile applied to sessions that do not select one
+  defaultProfile string
+  // VRF the server is bound to
+  vrf string
+}
+
+// MikroTik IPsec proposal
+//
+// Phase 2 proposal offered when an IPsec security association is set up, as
+// listed by `/ip/ipsec/proposal`. This is the crypto strength every tunnel
+// that uses it inherits: a proposal still offering 3des or md5 lets a peer
+// negotiate down to them, and a pfsGroup of modp1024 or none means a recovered
+// key exposes traffic captured earlier. The `name` field selects the proposal,
+// for example `mikrotik.ipsecProposals.where(name == "default")`.
+mikrotik.ip.ipsec.proposal @defaults("name encAlgorithms authAlgorithms pfsGroup") {
+  // Proposal name
+  name string
+  // Encryption algorithms offered
+  //
+  // For example aes-256-gcm, aes-256-cbc, aes-128-cbc, 3des, des, or blowfish.
+  // 3des and des are not safe for new tunnels.
+  encAlgorithms []string
+  // Authentication algorithms offered
+  //
+  // For example sha512, sha256, sha1, md5, or null.
+  authAlgorithms []string
+  // Diffie-Hellman group used for perfect forward secrecy
+  //
+  // For example modp2048, ecp256, modp1024, or none. modp1024 is below the
+  // strength expected of a modern exchange, and none disables forward secrecy.
+  pfsGroup string
+  // Lifetime of a security association built from the proposal
+  lifetime string
+  // Whether the proposal is one RouterOS ships rather than one that was added
+  default bool
+  // Whether the proposal is disabled
+  disabled bool
+  // Optional comment attached to the proposal
+  comment string
+}
+
+// MikroTik IPsec profile
+//
+// Key exchange profile used when negotiating with a peer, as listed by
+// `/ip/ipsec/profile`. Where a proposal covers the data channel, a profile
+// covers the exchange that establishes it: the hash, the encryption, and the
+// Diffie-Hellman group, plus whether dead peer detection is on and how long
+// the negotiated keys live. The `name` field selects the profile.
+mikrotik.ip.ipsec.profile @defaults("name encAlgorithms dhGroups hashAlgorithm") {
+  // Profile name
+  name string
+  // Hash algorithm used during key exchange
+  //
+  // For example sha512, sha256, sha1, or md5.
+  hashAlgorithm string
+  // Encryption algorithms offered during key exchange
+  //
+  // For example aes-256, aes-192, aes-128, 3des, des, or blowfish.
+  encAlgorithms []string
+  // Diffie-Hellman groups offered during key exchange
+  //
+  // For example modp2048, ecp256, or modp1024. modp1024 is below the strength
+  // expected of a modern exchange.
+  dhGroups []string
+  // Pseudo-random function used for key derivation
+  prfAlgorithm string
+  // How the peer's proposal is checked against this profile
+  //
+  // For example claim, exact, obey, or strict.
+  proposalCheck string
+  // Lifetime of the negotiated keys
+  lifetime string
+  // Whether NAT traversal is offered
+  natTraversal bool
+  // Interval between dead peer detection probes
+  dpdInterval string
+  // Number of failed probes before the peer is declared dead
+  dpdMaximumFailures int
+}
+
+// MikroTik IPsec peer
+//
+// Remote endpoint the device negotiates IPsec with, as listed by
+// `/ip/ipsec/peer`. The `name` field selects the peer and exposes the remote
+// address, the local address the device negotiates from, the exchange mode,
+// and whether the peer is passive, meaning the device waits to be contacted
+// rather than initiating. The `profileRef` field resolves the key exchange
+// profile, which is where the peer's crypto strength actually lives.
+mikrotik.ip.ipsec.peer @defaults("name address exchangeMode disabled") {
+  // Peer name
+  name string
+  // Address or prefix the peer is reached at
+  address string
+  // Local address the device negotiates from
+  localAddress string
+  // Port used for the key exchange
+  port int
+  // Key exchange mode
+  //
+  // For example ike2, main, aggressive, or main-l2tp. aggressive mode exposes
+  // the identity and, with pre-shared key authentication, a hash an attacker
+  // can grind offline.
+  exchangeMode string
+  // Name of the key exchange profile the peer uses
+  profile string
+  // Key exchange profile the peer uses, resolved in the profile list
+  profileRef() mikrotik.ip.ipsec.profile
+  // Whether the device waits to be contacted rather than initiating
+  passive bool
+  // Whether an initial contact notification is sent
+  sendInitialContact bool
+  // Whether the peer is disabled
+  disabled bool
+  // Optional comment attached to the peer
+  comment string
+}
+
+// MikroTik IPsec identity
+//
+// Authentication settings that decide how a peer proves who it is, as listed
+// by `/ip/ipsec/identity`. Two things here decide whether a tunnel can be
+// stood up by someone who should not be able to: `authMethod` of
+// pre-shared-key rests the whole tunnel on a shared string, and
+// `generatePolicy` lets the peer dictate the traffic selectors rather than
+// matching a policy configured in advance, so the pair of them together means
+// a peer that knows the key can choose what it reaches. `hasSecret` reports
+// that a pre-shared key is configured; the key itself, the EAP password, and
+// the raw key material are never read.
+mikrotik.ip.ipsec.identity @defaults("peer authMethod generatePolicy disabled") {
+  // Name of the peer the identity authenticates
+  peer string
+  // Peer the identity authenticates, resolved in the peer list
+  peerRef() mikrotik.ip.ipsec.peer
+  // Authentication method
+  //
+  // For example pre-shared-key, pre-shared-key-xauth, rsa-signature,
+  // digital-signature, or eap. pre-shared-key rests the tunnel on a shared
+  // string rather than on a key pair.
+  authMethod string
+  // Whether a pre-shared key is configured
+  //
+  // The key itself is never read or exposed.
+  hasSecret bool
+  // Whether the peer may dictate the traffic selectors
+  //
+  // For example no, port-override, or port-strict. Anything other than no lets
+  // the peer install policies rather than matching one configured in advance.
+  generatePolicy string
+  // Policy template group a generated policy must match
+  policyTemplateGroup string
+  // How an incoming exchange is matched to this identity
+  //
+  // For example remote-id, certificate, or none.
+  matchBy string
+  // Mode config applied to the peer
+  modeConfig string
+  // Type of the identity the device presents
+  //
+  // For example auto, address, fqdn, user-fqdn, or key-id.
+  myIdType string
+  // Identity the device presents
+  myId string
+  // Type of the identity expected from the peer
+  remoteIdType string
+  // Identity expected from the peer
+  remoteId string
+  // Name of the certificate the device presents
+  certificate string
+  // Name of the certificate expected from the peer
+  remoteCertificate string
+  // Firewall chain traffic for this identity bypasses connection tracking in
+  notrackChain string
+  // Whether the identity is disabled
+  disabled bool
+  // Optional comment attached to the identity
+  comment string
 }
