@@ -163,7 +163,7 @@ func initMikrotikIpPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 // --- ip.service ---
 
 func newMikrotikService(runtime *plugin.Runtime, row map[string]string) (plugin.Resource, error) {
-	return CreateResource(runtime, "mikrotik.ip.service", map[string]*llx.RawData{
+	res, err := CreateResource(runtime, "mikrotik.ip.service", map[string]*llx.RawData{
 		"__id":        llx.StringData("mikrotik.ip.service/" + row["name"]),
 		"name":        llx.StringData(row["name"]),
 		"port":        llx.IntData(parseInt(row["port"])),
@@ -175,6 +175,11 @@ func newMikrotikService(runtime *plugin.Runtime, row map[string]string) (plugin.
 		"disabled":    llx.BoolData(parseBool(row["disabled"])),
 		"invalid":     llx.BoolData(parseBool(row["invalid"])),
 	})
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlMikrotikIpService).cacheCertificate = certificateRefName(row["certificate"])
+	return res, nil
 }
 
 // --- ip.firewall.filter ---

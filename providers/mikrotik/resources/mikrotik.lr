@@ -75,6 +75,10 @@ mikrotik {
   ipv6NatRules() []mikrotik.ipv6.firewall.nat
   // IPv6 firewall address list entries
   ipv6AddressLists() []mikrotik.ipv6.firewall.addressList
+  // SSH server crypto and login configuration
+  ssh() mikrotik.ssh
+  // Certificates held in the device certificate store
+  certificates() []mikrotik.certificate
 }
 
 // MikroTik system information
@@ -571,7 +575,11 @@ mikrotik.ip.service @defaults("name port disabled") {
   // Address range allowed to connect to the service
   address string
   // Name of the TLS certificate bound to the service
-  certificate string
+  //
+  // Deprecated in favor of certificateRef, which resolves the certificate in
+  // the device store so its validity window, key size, and issuer can be
+  // checked rather than just its name.
+  certificate @maturity("deprecated") string
   // Minimum accepted TLS version
   tlsVersion string
   // VRF the service is bound to
@@ -582,6 +590,11 @@ mikrotik.ip.service @defaults("name port disabled") {
   disabled bool
   // Whether the service configuration is invalid
   invalid bool
+  // Certificate bound to the service, resolved in the device certificate store
+  //
+  // Null when the service has no certificate bound, which for www-ssl and
+  // api-ssl means the service cannot serve TLS at all.
+  certificateRef() mikrotik.certificate
 }
 
 // MikroTik firewall filter rule
@@ -1210,4 +1223,116 @@ mikrotik.ipv6.firewall.nat @defaults("chain action disabled") {
   invalid bool
   // Optional comment attached to the rule
   comment string
+}
+
+// MikroTik SSH server configuration
+//
+// SSH server crypto and login settings read from `/ip/ssh`. `mikrotik.services`
+// reports that the ssh service is enabled and on which port, but the crypto
+// posture lives in this separate menu. `strongCrypto` is off in the shipped
+// RouterOS default, which leaves SHA1, CBC mode ciphers, and 1024-bit
+// Diffie-Hellman acceptable; `allowNoneCrypto` permits an entirely unencrypted
+// session; `hostKeySize` and `hostKeyType` describe the key the server presents;
+// and `forwardingEnabled` controls whether the server will tunnel other traffic
+// for a logged-in client.
+mikrotik.ssh @defaults("strongCrypto allowNoneCrypto hostKeyType hostKeySize") {
+  // Whether only strong ciphers, MACs, and key exchange groups are accepted
+  //
+  // RouterOS ships this disabled, which leaves SHA1, CBC mode ciphers, and
+  // 1024-bit Diffie-Hellman groups acceptable to the server.
+  strongCrypto bool
+  // Whether a session with no encryption is accepted
+  //
+  // When enabled the server will negotiate the "none" cipher, carrying the
+  // login and the session in the clear.
+  allowNoneCrypto bool
+  // Size of the server host key in bits
+  hostKeySize int
+  // Algorithm of the server host key
+  //
+  // For example rsa, ed25519, or ecdsa.
+  hostKeyType string
+  // Whether the server tunnels other connections for a logged-in client
+  //
+  // Reported as an enum rather than a flag: one of no, local, remote, or both.
+  forwardingEnabled string
+  // Whether password login is offered even when a public key is configured
+  alwaysAllowPasswordLogin bool
+  // Ciphers the server offers
+  //
+  // Null on RouterOS versions that do not expose cipher selection through this
+  // menu, in which case the offered set follows from strongCrypto.
+  ciphers []string
+}
+
+// MikroTik certificate
+//
+// Certificate held in the device certificate store, as listed by
+// `/certificate`. The `name` field selects the certificate, for example
+// `mikrotik.certificates.where(name == "webfig")`, and exposes the subject
+// common name, issuer, key algorithm and size, digest algorithm, validity
+// window, and key usage. `expired` compares the validity window against the
+// current time, `selfSigned` compares the issuer against the subject, and
+// `hasPrivateKey` reports whether the device holds the matching private key
+// without the key material ever being read. Certificates bound to a management
+// service are reachable from `mikrotik.ip.service.certificateRef`.
+mikrotik.certificate @defaults("name commonName invalidAfter expired") {
+  // Certificate name in the device store
+  name string
+  // Subject common name
+  commonName string
+  // Subject alternative names
+  subjectAltName string
+  // Issuer distinguished name
+  issuer string
+  // Certificate serial number
+  serialNumber string
+  // Certificate fingerprint
+  fingerprint string
+  // Public key algorithm
+  //
+  // For example rsa, ec, or dsa.
+  keyType string
+  // Public key size in bits
+  //
+  // A size of 1024 or below is too weak for TLS use.
+  keySize int
+  // Signature digest algorithm
+  //
+  // For example sha256, sha1, or md5.
+  digestAlgorithm string
+  // Key usage extensions carried by the certificate
+  keyUsage []string
+  // Start of the certificate validity window
+  invalidBefore time
+  // End of the certificate validity window
+  invalidAfter time
+  // Time remaining before the certificate expires
+  //
+  // Formatted as a RouterOS duration, for example 51w2d3h.
+  expiresAfter string
+  // Whether the certificate validity window has already closed
+  //
+  // Compares invalidAfter against the current time. Null when the device did
+  // not report a validity window that could be read.
+  expired bool
+  // Whether the certificate was issued by its own subject
+  //
+  // Compares the common name carried in issuer against commonName. Null when
+  // either value is missing.
+  selfSigned bool
+  // Whether the device holds the matching private key
+  //
+  // The key material itself is never read or exposed.
+  hasPrivateKey bool
+  // Whether the certificate is trusted when verifying peers
+  trusted bool
+  // Whether a certificate revocation list is maintained for the certificate
+  crl bool
+  // Whether the private key is held on a smart card
+  smartCardKey bool
+  // Authority key identifier
+  akid string
+  // Subject key identifier
+  skid string
 }
