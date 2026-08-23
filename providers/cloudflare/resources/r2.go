@@ -69,6 +69,11 @@ type mqlCloudflareR2BucketInternal struct {
 	publicAccessAvailable   bool
 	cachePublicAccessOn     bool
 	cachePublicAccessDomain string
+
+	customDomainsLock      sync.Mutex
+	customDomainsFetched   bool
+	customDomainsAvailable bool
+	cacheCustomDomains     []r2.BucketDomainCustomListResponseDomain
 }
 
 func (c *mqlCloudflareR2Bucket) id() (string, error) {
@@ -211,4 +216,115 @@ func (c *mqlCloudflareR2Bucket) publicAccessDomain() (string, error) {
 		return "", nil
 	}
 	return domain, nil
+}
+
+// fetchCustomDomains lists the bucket's custom domains. A custom domain serves
+// the bucket's objects on the internet independently of the managed r2.dev
+// subdomain, so this is the second half of the bucket's public-exposure answer.
+//
+// The endpoint returns the whole set in one `result.domains` array with no
+// cursor or page counter in the envelope, so there is nothing to page through.
+//
+// The `available` return is false when the caller cannot read the domain list;
+// callers must not read that as "no custom domains".
+func (c *mqlCloudflareR2Bucket) fetchCustomDomains() (available bool, domains []r2.BucketDomainCustomListResponseDomain, err error) {
+	if c.customDomainsFetched {
+		return c.customDomainsAvailable, c.cacheCustomDomains, nil
+	}
+	c.customDomainsLock.Lock()
+	defer c.customDomainsLock.Unlock()
+	if c.customDomainsFetched {
+		return c.customDomainsAvailable, c.cacheCustomDomains, nil
+	}
+
+	if c.accountID == "" {
+		c.customDomainsFetched = true
+		return false, nil, nil
+	}
+
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+	resp, rerr := conn.Cf.R2.Buckets.Domains.Custom.List(context.TODO(), c.GetName().Data, r2.BucketDomainCustomListParams{
+		AccountID: cloudflare.F(c.accountID),
+	})
+	if rerr != nil {
+		if isUnavailable(rerr) {
+			c.customDomainsFetched = true
+			return false, nil, nil
+		}
+		return false, nil, rerr
+	}
+
+	c.customDomainsAvailable = true
+	c.cacheCustomDomains = resp.Domains
+	c.customDomainsFetched = true
+	return c.customDomainsAvailable, c.cacheCustomDomains, nil
+}
+
+func (c *mqlCloudflareR2Bucket) customDomains() ([]any, error) {
+	available, domains, err := c.fetchCustomDomains()
+	if err != nil {
+		return nil, err
+	}
+	if !available {
+		return []any{}, nil
+	}
+
+	result := make([]any, 0, len(domains))
+	for i := range domains {
+		d := domains[i]
+		res, err := CreateResource(c.MqlRuntime, "cloudflare.r2.bucket.customDomain", map[string]*llx.RawData{
+			"__id":            llx.StringData(c.accountID + "/" + c.GetName().Data + "/domains/custom/" + d.Domain),
+			"domain":          llx.StringData(d.Domain),
+			"enabled":         llx.BoolData(d.Enabled),
+			"ownershipStatus": llx.StringData(string(d.Status.Ownership)),
+			"sslStatus":       llx.StringData(string(d.Status.SSL)),
+			// A domain only terminates TLS once its certificate is issued;
+			// initializing/pending/error all mean there is no usable cert yet.
+			"certificateActive": llx.BoolData(d.Status.SSL == r2.BucketDomainCustomListResponseDomainsStatusSSLActive),
+			"minTlsVersion":     llx.StringData(string(d.MinTLS)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, res)
+	}
+
+	return result, nil
+}
+
+// isPublic reports whether the bucket is reachable from the internet over
+// either of the two independent paths Cloudflare offers: the managed r2.dev
+// subdomain, and any custom domain registered against the bucket.
+//
+// publicAccessEnabled covers only the first, so a bucket published through a
+// custom domain reads false there while being world-readable. Use this for the
+// exposure question.
+//
+// When neither path proves the bucket public, the answer is only `false` if
+// both were actually read. If either could not be read the field is null, so an
+// unreadable bucket is never reported as private.
+func (c *mqlCloudflareR2Bucket) isPublic() (bool, error) {
+	managedAvailable, managedEnabled, _, err := c.fetchPublicAccess()
+	if err != nil {
+		return false, err
+	}
+	if managedAvailable && managedEnabled {
+		return true, nil
+	}
+
+	customAvailable, domains, err := c.fetchCustomDomains()
+	if err != nil {
+		return false, err
+	}
+	for i := range domains {
+		if domains[i].Enabled {
+			return true, nil
+		}
+	}
+
+	if !managedAvailable || !customAvailable {
+		c.IsPublic.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return false, nil
 }

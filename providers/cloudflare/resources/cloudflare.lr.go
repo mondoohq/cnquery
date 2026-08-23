@@ -33,6 +33,7 @@ const (
 	ResourceCloudflareStreamsVideo                                    string = "cloudflare.streams.video"
 	ResourceCloudflareR2                                              string = "cloudflare.r2"
 	ResourceCloudflareR2Bucket                                        string = "cloudflare.r2.bucket"
+	ResourceCloudflareR2BucketCustomDomain                            string = "cloudflare.r2.bucket.customDomain"
 	ResourceCloudflareWorkers                                         string = "cloudflare.workers"
 	ResourceCloudflareWorkersWorker                                   string = "cloudflare.workers.worker"
 	ResourceCloudflareWorkersPage                                     string = "cloudflare.workers.page"
@@ -165,6 +166,10 @@ func init() {
 		"cloudflare.r2.bucket": {
 			// to override args, implement: initCloudflareR2Bucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareR2Bucket,
+		},
+		"cloudflare.r2.bucket.customDomain": {
+			// to override args, implement: initCloudflareR2BucketCustomDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareR2BucketCustomDomain,
 		},
 		"cloudflare.workers": {
 			Init:   initCloudflareWorkers,
@@ -928,6 +933,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.r2.bucket.publicAccessDomain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareR2Bucket).GetPublicAccessDomain()).ToDataRes(types.String)
+	},
+	"cloudflare.r2.bucket.customDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2Bucket).GetCustomDomains()).ToDataRes(types.Array(types.Resource("cloudflare.r2.bucket.customDomain")))
+	},
+	"cloudflare.r2.bucket.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2Bucket).GetIsPublic()).ToDataRes(types.Bool)
+	},
+	"cloudflare.r2.bucket.customDomain.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketCustomDomain).GetDomain()).ToDataRes(types.String)
+	},
+	"cloudflare.r2.bucket.customDomain.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketCustomDomain).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.r2.bucket.customDomain.ownershipStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketCustomDomain).GetOwnershipStatus()).ToDataRes(types.String)
+	},
+	"cloudflare.r2.bucket.customDomain.sslStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketCustomDomain).GetSslStatus()).ToDataRes(types.String)
+	},
+	"cloudflare.r2.bucket.customDomain.certificateActive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketCustomDomain).GetCertificateActive()).ToDataRes(types.Bool)
+	},
+	"cloudflare.r2.bucket.customDomain.minTlsVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareR2BucketCustomDomain).GetMinTlsVersion()).ToDataRes(types.String)
 	},
 	"cloudflare.workers.workers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareWorkers).GetWorkers()).ToDataRes(types.Array(types.Resource("cloudflare.workers.worker")))
@@ -3061,6 +3090,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.r2.bucket.publicAccessDomain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareR2Bucket).PublicAccessDomain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.customDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2Bucket).CustomDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2Bucket).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.customDomain.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketCustomDomain).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.r2.bucket.customDomain.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketCustomDomain).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.customDomain.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketCustomDomain).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.customDomain.ownershipStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketCustomDomain).OwnershipStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.customDomain.sslStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketCustomDomain).SslStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.customDomain.certificateActive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketCustomDomain).CertificateActive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.r2.bucket.customDomain.minTlsVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareR2BucketCustomDomain).MinTlsVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"cloudflare.workers.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7196,6 +7261,8 @@ type mqlCloudflareR2Bucket struct {
 	CreatedOn           plugin.TValue[*time.Time]
 	PublicAccessEnabled plugin.TValue[bool]
 	PublicAccessDomain  plugin.TValue[string]
+	CustomDomains       plugin.TValue[[]any]
+	IsPublic            plugin.TValue[bool]
 }
 
 // createCloudflareR2Bucket creates a new instance of this resource
@@ -7257,6 +7324,97 @@ func (c *mqlCloudflareR2Bucket) GetPublicAccessDomain() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.PublicAccessDomain, func() (string, error) {
 		return c.publicAccessDomain()
 	})
+}
+
+func (c *mqlCloudflareR2Bucket) GetCustomDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomDomains, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.r2.bucket", c.__id, "customDomains")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customDomains()
+	})
+}
+
+func (c *mqlCloudflareR2Bucket) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
+}
+
+// mqlCloudflareR2BucketCustomDomain for the cloudflare.r2.bucket.customDomain resource
+type mqlCloudflareR2BucketCustomDomain struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareR2BucketCustomDomainInternal it will be used here
+	Domain            plugin.TValue[string]
+	Enabled           plugin.TValue[bool]
+	OwnershipStatus   plugin.TValue[string]
+	SslStatus         plugin.TValue[string]
+	CertificateActive plugin.TValue[bool]
+	MinTlsVersion     plugin.TValue[string]
+}
+
+// createCloudflareR2BucketCustomDomain creates a new instance of this resource
+func createCloudflareR2BucketCustomDomain(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareR2BucketCustomDomain{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.r2.bucket.customDomain", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) MqlName() string {
+	return "cloudflare.r2.bucket.customDomain"
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) GetOwnershipStatus() *plugin.TValue[string] {
+	return &c.OwnershipStatus
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) GetSslStatus() *plugin.TValue[string] {
+	return &c.SslStatus
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) GetCertificateActive() *plugin.TValue[bool] {
+	return &c.CertificateActive
+}
+
+func (c *mqlCloudflareR2BucketCustomDomain) GetMinTlsVersion() *plugin.TValue[string] {
+	return &c.MinTlsVersion
 }
 
 // mqlCloudflareWorkers for the cloudflare.workers resource
