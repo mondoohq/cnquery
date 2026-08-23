@@ -27,7 +27,7 @@ func (r *mqlTogether) id() (string, error) {
 	return "together", nil
 }
 
-// mqlTogetherInternal memoizes the /whoami response. Six identity fields are
+// mqlTogetherInternal memoizes the /whoami response. Seven identity fields are
 // backed by it and a query that reads more than one of them must not cost more
 // than one call.
 //
