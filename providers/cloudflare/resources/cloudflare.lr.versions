@@ -296,6 +296,15 @@ cloudflare.pages.envVar.type 13.1.1
 cloudflare.r2 11.0.0
 cloudflare.r2.bucket 11.0.0
 cloudflare.r2.bucket.createdOn 11.0.0
+cloudflare.r2.bucket.customDomain 13.8.1
+cloudflare.r2.bucket.customDomain.certificateActive 13.8.1
+cloudflare.r2.bucket.customDomain.domain 13.8.1
+cloudflare.r2.bucket.customDomain.enabled 13.8.1
+cloudflare.r2.bucket.customDomain.minTlsVersion 13.8.1
+cloudflare.r2.bucket.customDomain.ownershipStatus 13.8.1
+cloudflare.r2.bucket.customDomain.sslStatus 13.8.1
+cloudflare.r2.bucket.customDomains 13.8.1
+cloudflare.r2.bucket.isPublic 13.8.1
 cloudflare.r2.bucket.location 11.0.0
 cloudflare.r2.bucket.name 11.0.0
 cloudflare.r2.bucket.publicAccessDomain 13.1.1

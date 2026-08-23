@@ -542,8 +542,8 @@ private cloudflare.streams.video @defaults("name uid") {
 //
 // Object-storage resources for a Cloudflare account. The buckets field
 // enumerates every R2 bucket, which is the starting point for auditing
-// where account data is stored and which buckets serve objects publicly
-// through the managed r2.dev subdomain.
+// where account data is stored and which buckets serve objects publicly,
+// whether over the managed r2.dev subdomain or a custom domain.
 private cloudflare.r2 @defaults("buckets") {
 	// R2 buckets in the account
 	buckets() []cloudflare.r2.bucket
@@ -551,12 +551,13 @@ private cloudflare.r2 @defaults("buckets") {
 
 // Cloudflare R2 bucket
 //
-// Single R2 storage bucket, identified by its name. The publicAccessEnabled
-// and publicAccessDomain fields report whether the bucket serves its objects
-// publicly over the managed r2.dev subdomain, the primary exposure to audit
-// for an R2 bucket, alongside its storage location and creation time.
+// Single R2 storage bucket, identified by its name. A bucket reaches the
+// internet over two independent paths: the managed r2.dev subdomain, reported
+// by publicAccessEnabled and publicAccessDomain, and custom domains, listed by
+// customDomains. The isPublic field reports whether either path currently
+// serves the bucket, alongside its storage location and creation time.
 private cloudflare.r2.bucket {
- 	// Bucket name
+  // Bucket name
   name string
   // Bucket location
   //
@@ -565,10 +566,61 @@ private cloudflare.r2.bucket {
   location string
   // Time the bucket was created
   createdOn time
-  // Whether public access via the managed r2.dev subdomain is enabled
+  // Whether public access over the managed r2.dev subdomain is enabled
+  //
+  // Covers the managed r2.dev subdomain only. A bucket published through a
+  // custom domain is served publicly no matter what this reports, so use
+  // isPublic to decide whether the bucket is reachable from the internet.
   publicAccessEnabled() bool
   // Managed r2.dev domain assigned to the bucket (empty when public access is disabled)
   publicAccessDomain() string
+  // Custom domains registered for the bucket
+  //
+  // Domains in the account's own zones that serve the bucket's objects, each
+  // with its enabled flag, ownership and certificate status, and minimum TLS
+  // version. Empty when the bucket has no custom domain, and also when the
+  // token cannot read the list, so check isPublic for the exposure question.
+  customDomains() []cloudflare.r2.bucket.customDomain
+  // Whether the bucket is reachable from the internet
+  //
+  // True when the managed r2.dev subdomain is enabled, or when at least one
+  // custom domain is registered and enabled. Null when nothing proved the
+  // bucket public but one of the two paths could not be read, so a bucket
+  // whose exposure is unknown is never reported as private.
+  isPublic() bool
+}
+
+// Custom domain serving a Cloudflare R2 bucket
+//
+// Domain in one of the account's zones that publishes an R2 bucket's objects
+// on the internet, separately from the managed r2.dev subdomain. The enabled
+// field reports whether the domain currently serves the bucket, ownershipStatus
+// and sslStatus report how far the domain got through validation and
+// certificate issuance, and minTlsVersion reports the lowest TLS version the
+// domain accepts.
+private cloudflare.r2.bucket.customDomain @defaults("domain enabled") {
+  // Domain name serving the bucket
+  domain string
+  // Whether the bucket is publicly accessible at this domain
+  enabled bool
+  // Ownership status of the domain
+  //
+  // One of pending, active, deactivated, blocked, error, or unknown.
+  ownershipStatus string
+  // SSL certificate status for the domain
+  //
+  // One of initializing, pending, active, deactivated, error, or unknown.
+  sslStatus string
+  // Whether an SSL certificate is issued and active for the domain
+  //
+  // True only when sslStatus is active. A domain whose certificate is still
+  // initializing or pending cannot yet terminate TLS for the bucket.
+  certificateActive bool
+  // Minimum TLS version the domain accepts for incoming connections
+  //
+  // One of 1.0, 1.1, 1.2, or 1.3. Empty when the API reports no value, in
+  // which case the domain accepts TLS 1.0.
+  minTlsVersion string
 }
 
 // Cloudflare Workers namespace
