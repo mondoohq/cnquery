@@ -322,7 +322,9 @@ func (r *mqlMikrotik) ipAddresses() ([]any, error) {
 }
 
 func (r *mqlMikrotik) ipv6Addresses() ([]any, error) {
-	rows, err := mikrotikConn(r.MqlRuntime).Print("/ipv6/address")
+	// /ipv6 only exists when the ipv6 package is enabled; PrintOptional turns
+	// its absence into an empty list instead of failing the whole query
+	rows, err := mikrotikConn(r.MqlRuntime).PrintOptional("/ipv6/address")
 	if err != nil {
 		return nil, err
 	}

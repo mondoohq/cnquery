@@ -91,7 +91,8 @@ func (r *mqlMikrotikInterface) addresses() ([]any, error) {
 
 func (r *mqlMikrotikInterface) ipv6Addresses() ([]any, error) {
 	conn := mikrotikConn(r.MqlRuntime)
-	rows, err := conn.Print("/ipv6/address")
+	// see mikrotik.ipv6Addresses: the menu is gone without the ipv6 package
+	rows, err := conn.PrintOptional("/ipv6/address")
 	if err != nil {
 		return nil, err
 	}
