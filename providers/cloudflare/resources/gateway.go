@@ -10,9 +10,96 @@ import (
 	cloudflare "github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/zero_trust"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/cloudflare/connection"
 	"go.mondoo.com/mql/types"
 )
+
+// gatewayConfiguration reads the account-wide Gateway settings every Gateway
+// rule runs on top of.
+//
+// The whole resource reports null when the settings cannot be read, rather than
+// a resource whose every toggle reads false: a fabricated false on TLS
+// decryption or the activity log would report an unreadable account as one with
+// its inspection and its audit trail switched off, and pass a policy that says
+// "these must not be disabled" for the wrong reason.
+func (c *mqlCloudflareOne) gatewayConfiguration() (*mqlCloudflareOneGatewayConfiguration, error) {
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+
+	if c.AccountID == "" {
+		return nil, errNoAccountBound
+	}
+
+	resp, err := conn.Cf.ZeroTrust.Gateway.Configurations.Get(context.TODO(), zero_trust.GatewayConfigurationGetParams{
+		AccountID: cloudflare.F(c.AccountID),
+	})
+	if err != nil {
+		if isUnavailable(err) {
+			c.GatewayConfiguration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	s := resp.Settings
+
+	// A nil UUID means the Cloudflare Root CA handles interception, so there is
+	// no customer certificate to name.
+	interceptionCertID := s.Certificate.ID
+	if interceptionCertID == nilUUID {
+		interceptionCertID = ""
+	}
+
+	// The API omits max_ttl_secs when no cap is configured, which decodes to 0.
+	// Zero is not a meaningful TTL cap, so report it as "no cap set".
+	maxTTL := llx.NilData
+	if s.MaxTTLSecs > 0 {
+		maxTTL = llx.IntData(s.MaxTTLSecs)
+	}
+
+	res, err := CreateResource(c.MqlRuntime, "cloudflare.one.gatewayConfiguration", map[string]*llx.RawData{
+		"__id": llx.StringData("cloudflare.one.gatewayConfiguration@" + c.AccountID),
+
+		"tlsDecryptEnabled":  llx.BoolData(s.TLSDecrypt.Enabled),
+		"activityLogEnabled": llx.BoolData(s.ActivityLog.Enabled),
+
+		"antivirusDownloadEnabled": llx.BoolData(s.Antivirus.EnabledDownloadPhase),
+		"antivirusUploadEnabled":   llx.BoolData(s.Antivirus.EnabledUploadPhase),
+		"antivirusFailClosed":      llx.BoolData(s.Antivirus.FailClosed),
+
+		"bodyScanningInspectionMode": llx.StringData(string(s.BodyScanning.InspectionMode)),
+
+		"urlBrowserIsolationEnabled":         llx.BoolData(s.BrowserIsolation.URLBrowserIsolationEnabled),
+		"nonIdentityBrowserIsolationEnabled": llx.BoolData(s.BrowserIsolation.NonIdentityEnabled),
+
+		"protocolDetectionEnabled": llx.BoolData(s.ProtocolDetection.Enabled),
+
+		"sandboxEnabled":        llx.BoolData(s.Sandbox.Enabled),
+		"sandboxFallbackAction": llx.StringData(string(s.Sandbox.FallbackAction)),
+
+		"fipsTls":        llx.BoolData(s.Fips.TLS),
+		"inspectionMode": llx.StringData(string(s.Inspection.Mode)),
+
+		"hostSelectorEnabled":          llx.BoolData(s.HostSelector.Enabled),
+		"extendedEmailMatchingEnabled": llx.BoolData(s.ExtendedEmailMatching.Enabled),
+
+		"maxTtlSeconds":             maxTTL,
+		"interceptionCertificateId": llx.StringData(interceptionCertID),
+
+		"createdAt": timeOrNil(resp.CreatedAt),
+		"updatedAt": timeOrNil(resp.UpdatedAt),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlCloudflareOneGatewayConfiguration), nil
+}
+
+// nilUUID is the all-zero UUID Cloudflare returns for a Gateway interception
+// certificate when the Cloudflare Root CA is in use rather than a customer
+// certificate.
+const nilUUID = "00000000-0000-0000-0000-000000000000"
 
 func (c *mqlCloudflareOneGatewayRule) id() (string, error) {
 	if c.Id.Error != nil {

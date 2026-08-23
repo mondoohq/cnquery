@@ -45,6 +45,7 @@ const (
 	ResourceCloudflareOneAccessGroup                                  string = "cloudflare.one.accessGroup"
 	ResourceCloudflareOneServiceToken                                 string = "cloudflare.one.serviceToken"
 	ResourceCloudflareOneOrganization                                 string = "cloudflare.one.organization"
+	ResourceCloudflareOneGatewayConfiguration                         string = "cloudflare.one.gatewayConfiguration"
 	ResourceCloudflareOneGatewayRule                                  string = "cloudflare.one.gatewayRule"
 	ResourceCloudflareOneList                                         string = "cloudflare.one.list"
 	ResourceCloudflareOneLocation                                     string = "cloudflare.one.location"
@@ -216,6 +217,10 @@ func init() {
 		"cloudflare.one.organization": {
 			// to override args, implement: initCloudflareOneOrganization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareOneOrganization,
+		},
+		"cloudflare.one.gatewayConfiguration": {
+			// to override args, implement: initCloudflareOneGatewayConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareOneGatewayConfiguration,
 		},
 		"cloudflare.one.gatewayRule": {
 			// to override args, implement: initCloudflareOneGatewayRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1058,6 +1063,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.one.organization": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOne).GetOrganization()).ToDataRes(types.Resource("cloudflare.one.organization"))
 	},
+	"cloudflare.one.gatewayConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOne).GetGatewayConfiguration()).ToDataRes(types.Resource("cloudflare.one.gatewayConfiguration"))
+	},
 	"cloudflare.one.gatewayRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOne).GetGatewayRules()).ToDataRes(types.Array(types.Resource("cloudflare.one.gatewayRule")))
 	},
@@ -1297,6 +1305,63 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.one.organization.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneOrganization).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"cloudflare.one.gatewayConfiguration.tlsDecryptEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetTlsDecryptEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.activityLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetActivityLogEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.antivirusDownloadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetAntivirusDownloadEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.antivirusUploadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetAntivirusUploadEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.antivirusFailClosed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetAntivirusFailClosed()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.bodyScanningInspectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetBodyScanningInspectionMode()).ToDataRes(types.String)
+	},
+	"cloudflare.one.gatewayConfiguration.urlBrowserIsolationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetUrlBrowserIsolationEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.nonIdentityBrowserIsolationEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetNonIdentityBrowserIsolationEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.protocolDetectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetProtocolDetectionEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.sandboxEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetSandboxEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.sandboxFallbackAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetSandboxFallbackAction()).ToDataRes(types.String)
+	},
+	"cloudflare.one.gatewayConfiguration.fipsTls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetFipsTls()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.inspectionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetInspectionMode()).ToDataRes(types.String)
+	},
+	"cloudflare.one.gatewayConfiguration.hostSelectorEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetHostSelectorEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.extendedEmailMatchingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetExtendedEmailMatchingEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.one.gatewayConfiguration.maxTtlSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetMaxTtlSeconds()).ToDataRes(types.Int)
+	},
+	"cloudflare.one.gatewayConfiguration.interceptionCertificateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetInterceptionCertificateId()).ToDataRes(types.String)
+	},
+	"cloudflare.one.gatewayConfiguration.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"cloudflare.one.gatewayConfiguration.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareOneGatewayConfiguration).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"cloudflare.one.gatewayRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareOneGatewayRule).GetId()).ToDataRes(types.String)
@@ -3349,6 +3414,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareOne).Organization, ok = plugin.RawToTValue[*mqlCloudflareOneOrganization](v.Value, v.Error)
 		return
 	},
+	"cloudflare.one.gatewayConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOne).GatewayConfiguration, ok = plugin.RawToTValue[*mqlCloudflareOneGatewayConfiguration](v.Value, v.Error)
+		return
+	},
 	"cloudflare.one.gatewayRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareOne).GatewayRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3695,6 +3764,86 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.one.organization.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareOneOrganization).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.tlsDecryptEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).TlsDecryptEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.activityLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).ActivityLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.antivirusDownloadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).AntivirusDownloadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.antivirusUploadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).AntivirusUploadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.antivirusFailClosed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).AntivirusFailClosed, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.bodyScanningInspectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).BodyScanningInspectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.urlBrowserIsolationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).UrlBrowserIsolationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.nonIdentityBrowserIsolationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).NonIdentityBrowserIsolationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.protocolDetectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).ProtocolDetectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.sandboxEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).SandboxEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.sandboxFallbackAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).SandboxFallbackAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.fipsTls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).FipsTls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.inspectionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).InspectionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.hostSelectorEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).HostSelectorEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.extendedEmailMatchingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).ExtendedEmailMatchingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.maxTtlSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).MaxTtlSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.interceptionCertificateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).InterceptionCertificateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.one.gatewayConfiguration.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareOneGatewayConfiguration).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"cloudflare.one.gatewayRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7906,6 +8055,7 @@ type mqlCloudflareOne struct {
 	AccessGroups              plugin.TValue[[]any]
 	ServiceTokens             plugin.TValue[[]any]
 	Organization              plugin.TValue[*mqlCloudflareOneOrganization]
+	GatewayConfiguration      plugin.TValue[*mqlCloudflareOneGatewayConfiguration]
 	GatewayRules              plugin.TValue[[]any]
 	Lists                     plugin.TValue[[]any]
 	Locations                 plugin.TValue[[]any]
@@ -8040,6 +8190,22 @@ func (c *mqlCloudflareOne) GetOrganization() *plugin.TValue[*mqlCloudflareOneOrg
 		}
 
 		return c.organization()
+	})
+}
+
+func (c *mqlCloudflareOne) GetGatewayConfiguration() *plugin.TValue[*mqlCloudflareOneGatewayConfiguration] {
+	return plugin.GetOrCompute[*mqlCloudflareOneGatewayConfiguration](&c.GatewayConfiguration, func() (*mqlCloudflareOneGatewayConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.one", c.__id, "gatewayConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareOneGatewayConfiguration), nil
+			}
+		}
+
+		return c.gatewayConfiguration()
 	})
 }
 
@@ -8827,6 +8993,140 @@ func (c *mqlCloudflareOneOrganization) GetCreatedAt() *plugin.TValue[*time.Time]
 }
 
 func (c *mqlCloudflareOneOrganization) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlCloudflareOneGatewayConfiguration for the cloudflare.one.gatewayConfiguration resource
+type mqlCloudflareOneGatewayConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareOneGatewayConfigurationInternal it will be used here
+	TlsDecryptEnabled                  plugin.TValue[bool]
+	ActivityLogEnabled                 plugin.TValue[bool]
+	AntivirusDownloadEnabled           plugin.TValue[bool]
+	AntivirusUploadEnabled             plugin.TValue[bool]
+	AntivirusFailClosed                plugin.TValue[bool]
+	BodyScanningInspectionMode         plugin.TValue[string]
+	UrlBrowserIsolationEnabled         plugin.TValue[bool]
+	NonIdentityBrowserIsolationEnabled plugin.TValue[bool]
+	ProtocolDetectionEnabled           plugin.TValue[bool]
+	SandboxEnabled                     plugin.TValue[bool]
+	SandboxFallbackAction              plugin.TValue[string]
+	FipsTls                            plugin.TValue[bool]
+	InspectionMode                     plugin.TValue[string]
+	HostSelectorEnabled                plugin.TValue[bool]
+	ExtendedEmailMatchingEnabled       plugin.TValue[bool]
+	MaxTtlSeconds                      plugin.TValue[int64]
+	InterceptionCertificateId          plugin.TValue[string]
+	CreatedAt                          plugin.TValue[*time.Time]
+	UpdatedAt                          plugin.TValue[*time.Time]
+}
+
+// createCloudflareOneGatewayConfiguration creates a new instance of this resource
+func createCloudflareOneGatewayConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareOneGatewayConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.one.gatewayConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) MqlName() string {
+	return "cloudflare.one.gatewayConfiguration"
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetTlsDecryptEnabled() *plugin.TValue[bool] {
+	return &c.TlsDecryptEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetActivityLogEnabled() *plugin.TValue[bool] {
+	return &c.ActivityLogEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetAntivirusDownloadEnabled() *plugin.TValue[bool] {
+	return &c.AntivirusDownloadEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetAntivirusUploadEnabled() *plugin.TValue[bool] {
+	return &c.AntivirusUploadEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetAntivirusFailClosed() *plugin.TValue[bool] {
+	return &c.AntivirusFailClosed
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetBodyScanningInspectionMode() *plugin.TValue[string] {
+	return &c.BodyScanningInspectionMode
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetUrlBrowserIsolationEnabled() *plugin.TValue[bool] {
+	return &c.UrlBrowserIsolationEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetNonIdentityBrowserIsolationEnabled() *plugin.TValue[bool] {
+	return &c.NonIdentityBrowserIsolationEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetProtocolDetectionEnabled() *plugin.TValue[bool] {
+	return &c.ProtocolDetectionEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetSandboxEnabled() *plugin.TValue[bool] {
+	return &c.SandboxEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetSandboxFallbackAction() *plugin.TValue[string] {
+	return &c.SandboxFallbackAction
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetFipsTls() *plugin.TValue[bool] {
+	return &c.FipsTls
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetInspectionMode() *plugin.TValue[string] {
+	return &c.InspectionMode
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetHostSelectorEnabled() *plugin.TValue[bool] {
+	return &c.HostSelectorEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetExtendedEmailMatchingEnabled() *plugin.TValue[bool] {
+	return &c.ExtendedEmailMatchingEnabled
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetMaxTtlSeconds() *plugin.TValue[int64] {
+	return &c.MaxTtlSeconds
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetInterceptionCertificateId() *plugin.TValue[string] {
+	return &c.InterceptionCertificateId
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlCloudflareOneGatewayConfiguration) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 

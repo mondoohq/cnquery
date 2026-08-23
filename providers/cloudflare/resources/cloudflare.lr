@@ -731,6 +731,12 @@ private cloudflare.one {
 	serviceTokens() []cloudflare.one.serviceToken
 	// Access organization configuration
 	organization() cloudflare.one.organization
+	// Account-wide Gateway enforcement settings
+	//
+	// The settings every Gateway rule runs on top of, including whether TLS
+	// is decrypted, whether activity is logged, and whether antivirus, body
+	// scanning, protocol detection, browser isolation and the sandbox are on.
+	gatewayConfiguration() cloudflare.one.gatewayConfiguration
 	// Gateway rules
 	gatewayRules() []cloudflare.one.gatewayRule
 	// Gateway lists
@@ -966,6 +972,101 @@ private cloudflare.one.organization @defaults("name authDomain") {
 	// Time the organization was created
 	createdAt time
 	// Time the organization was last updated
+	updatedAt time
+}
+
+// Account-wide Cloudflare Gateway enforcement settings
+//
+// Settings that apply to every Gateway rule in the account and decide how much
+// of a rule can actually be enforced. With `tlsDecryptEnabled` off, Gateway sees
+// only the SNI of an HTTPS connection, so every HTTP rule, DLP profile and
+// antivirus scan degrades to hostname matching. With `activityLogEnabled` off,
+// no Gateway decision is recorded, leaving no forensic trail for an
+// investigation. The antivirus, body-scanning, protocol-detection, browser
+// isolation and sandbox fields report which inspection engines are turned on.
+//
+// Reported as null when the settings cannot be read, so an unreadable account
+// is never reported as one with every control switched off.
+private cloudflare.one.gatewayConfiguration @defaults("tlsDecryptEnabled activityLogEnabled") {
+	// Whether Gateway decrypts and inspects encrypted HTTP traffic
+	//
+	// False leaves Gateway with only the SNI of a TLS connection, so HTTP
+	// rules, DLP inspection and antivirus scanning no longer see request or
+	// response bodies and silently degrade to hostname matching.
+	tlsDecryptEnabled bool
+
+	// Whether Gateway records the decisions it makes
+	//
+	// False means allowed and blocked requests leave no entry in the Gateway
+	// activity log, so there is no record of what a rule matched.
+	activityLogEnabled bool
+
+	// Whether antivirus scanning runs on downloads
+	antivirusDownloadEnabled bool
+	// Whether antivirus scanning runs on uploads
+	antivirusUploadEnabled bool
+	// Whether requests for files antivirus cannot scan are blocked
+	//
+	// False lets an unscannable file through unscanned, which is the failure
+	// mode an attacker aims for with an archive antivirus cannot open.
+	antivirusFailClosed bool
+
+	// Depth of body inspection used for DLP
+	//
+	// Either deep or shallow. Shallow inspection only reads the beginning of
+	// a request body, so a match placed later in the body is not found. Empty
+	// when body scanning is not configured.
+	bodyScanningInspectionMode string
+
+	// Whether clientless browser isolation is on
+	urlBrowserIsolationEnabled bool
+	// Whether browser isolation accepts non-identity onramps
+	nonIdentityBrowserIsolationEnabled bool
+
+	// Whether Gateway identifies protocols from the first bytes of a connection
+	//
+	// Required for dynamic inspection to find HTTP and HTTPS traffic on
+	// non-standard ports. False confines inspection to the standard ports.
+	protocolDetectionEnabled bool
+
+	// Whether the file sandbox is on
+	sandboxEnabled bool
+	// Action taken when the sandbox cannot scan a file
+	//
+	// Either allow or block. Empty when the sandbox is not configured.
+	sandboxFallbackAction string
+
+	// Whether Gateway enforces FIPS 140-2 compliant cipher suites and TLS versions
+	fipsTls bool
+
+	// Proxy inspection mode
+	//
+	// Either static, where Gateway inspects HTTP on TCP 80 and, with TLS
+	// decryption on, HTTPS on 443, or dynamic, where protocol detection finds
+	// HTTP and HTTPS on any port. Empty when inspection is not configured.
+	inspectionMode string
+
+	// Whether host filtering is available to egress policies
+	hostSelectorEnabled bool
+
+	// Whether email addresses in firewall policies match their plus and dot variants
+	extendedEmailMatchingEnabled bool
+
+	// Account-wide cap on DNS response TTLs, in seconds
+	//
+	// Null when no cap is set. Gateway rewrites DNS responses so returned
+	// record TTLs do not exceed this value.
+	maxTtlSeconds int
+
+	// Identifier of the certificate Gateway presents when intercepting TLS
+	//
+	// Empty or an all-zero UUID when the Cloudflare Root CA handles
+	// interception rather than a customer certificate.
+	interceptionCertificateId string
+
+	// Time the Gateway configuration was created
+	createdAt time
+	// Time the Gateway configuration was last updated
 	updatedAt time
 }
 
