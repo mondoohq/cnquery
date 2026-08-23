@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	together "github.com/togethercomputer/together-go"
@@ -29,23 +30,41 @@ func (r *mqlTogether) id() (string, error) {
 // mqlTogetherInternal memoizes the /whoami response. Six identity fields are
 // backed by it and a query that reads more than one of them must not cost more
 // than one call.
+//
+// The memo latches on success only. sync.Once would also cache a failure, so a
+// single transient 429 or DNS blip would lock out every identity field for the
+// rest of the scan with no retry path.
 type mqlTogetherInternal struct {
-	whoamiOnce sync.Once
-	whoami     *together.WhoamiResponse
-	whoamiErr  error
+	whoamiLock   sync.Mutex
+	whoamiLoaded atomic.Bool
+	whoami       *together.WhoamiResponse
 }
 
 // identity returns the account identity the API key actually authenticates as,
 // as reported by GET /whoami. It is fetched once per resource and reused.
 func (r *mqlTogether) identity() (*together.WhoamiResponse, error) {
-	r.whoamiOnce.Do(func() {
-		conn := togetherConn(r.MqlRuntime)
-		r.whoami, r.whoamiErr = conn.Client().Whoami(context.Background())
-		if r.whoamiErr == nil && r.whoami == nil {
-			r.whoamiErr = errors.New("together: /whoami returned no account identity")
-		}
-	})
-	return r.whoami, r.whoamiErr
+	if r.whoamiLoaded.Load() {
+		return r.whoami, nil
+	}
+
+	r.whoamiLock.Lock()
+	defer r.whoamiLock.Unlock()
+	if r.whoamiLoaded.Load() {
+		return r.whoami, nil
+	}
+
+	conn := togetherConn(r.MqlRuntime)
+	who, err := conn.Client().Whoami(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	if who == nil {
+		return nil, errors.New("together: /whoami returned no account identity")
+	}
+
+	r.whoami = who
+	r.whoamiLoaded.Store(true)
+	return r.whoami, nil
 }
 
 // organization reports the organization the API key belongs to. It is read

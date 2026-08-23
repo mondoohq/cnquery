@@ -143,3 +143,55 @@ func TestIdentityFailureIsReportedNotGuessed(t *testing.T) {
 	assert.Error(t, err, "a key we cannot resolve must fail loudly, never fall back to user input")
 	assert.Empty(t, got)
 }
+
+// TestIdentityFailureIsNotLatched pins the reason the memo latches on success
+// only. sync.Once would also cache the failure, so one bad response during a
+// scan would lock out every identity field for the rest of the session with no
+// retry path.
+//
+// The first response is a 200 carrying a truncated body, which the client
+// surfaces as a decode error. Note that together-go retries 429 and 5xx itself,
+// so a rate limit never reaches this layer as an error; the failures that do
+// reach it are decode and transport errors, which is what this exercises.
+func TestIdentityFailureIsNotLatched(t *testing.T) {
+	var calls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/whoami" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		n := atomic.AddInt32(&calls, 1)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if n == 1 {
+			_, _ = w.Write([]byte(`{"organization_id": `))
+			return
+		}
+		_, _ = w.Write([]byte(whoamiFixture))
+	}))
+	t.Cleanup(srv.Close)
+
+	conn, err := connection.NewTogetherConnection(1, &inventory.Asset{}, &inventory.Config{
+		Options: map[string]string{
+			connection.OptionToken:   "not-a-real-key",
+			connection.OptionBaseURL: srv.URL,
+		},
+	})
+	require.NoError(t, err)
+	r := &mqlTogether{MqlRuntime: &plugin.Runtime{Connection: conn}}
+
+	_, err = r.organization()
+	require.Error(t, err, "an undecodable response must be reported")
+
+	org, err := r.organization()
+	require.NoError(t, err, "the failure must not be cached: the retry has to reach the server")
+	assert.Equal(t, "Example Org", org)
+
+	// once it has succeeded the memo holds, so the retry is not a per-field cost
+	for _, get := range []func() (string, error){r.organizationId, r.projectId, r.apiKeyId} {
+		_, err := get()
+		require.NoError(t, err)
+	}
+	assert.Equal(t, int32(2), atomic.LoadInt32(&calls),
+		"one failed call plus one successful call, then the memo serves every field")
+}
