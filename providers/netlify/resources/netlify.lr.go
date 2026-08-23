@@ -444,6 +444,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.site.stopBuilds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySite).GetStopBuilds()).ToDataRes(types.Bool)
 	},
+	"netlify.site.passwordProtected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetPasswordProtected()).ToDataRes(types.Bool)
+	},
 	"netlify.site.deployKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySite).GetDeployKey()).ToDataRes(types.Resource("netlify.deployKey"))
 	},
@@ -998,6 +1001,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"netlify.site.stopBuilds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifySite).StopBuilds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.site.passwordProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).PasswordProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"netlify.site.deployKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1901,6 +1908,7 @@ type mqlNetlifySite struct {
 	PublicRepo                plugin.TValue[bool]
 	PrivateLogs               plugin.TValue[bool]
 	StopBuilds                plugin.TValue[bool]
+	PasswordProtected         plugin.TValue[bool]
 	DeployKey                 plugin.TValue[*mqlNetlifyDeployKey]
 	EnvironmentVariables      plugin.TValue[[]any]
 	BuildHooks                plugin.TValue[[]any]
@@ -2104,6 +2112,10 @@ func (c *mqlNetlifySite) GetPrivateLogs() *plugin.TValue[bool] {
 
 func (c *mqlNetlifySite) GetStopBuilds() *plugin.TValue[bool] {
 	return &c.StopBuilds
+}
+
+func (c *mqlNetlifySite) GetPasswordProtected() *plugin.TValue[bool] {
+	return &c.PasswordProtected
 }
 
 func (c *mqlNetlifySite) GetDeployKey() *plugin.TValue[*mqlNetlifyDeployKey] {

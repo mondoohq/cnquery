@@ -486,3 +486,86 @@ func TestStrSliceToAny(t *testing.T) {
 		t.Fatalf("expected an empty slice for nil input, got %v", empty)
 	}
 }
+
+// The site password is a secret and is never modelled. Its presence is the
+// finding, so the derivation has to survive every form the API may report the
+// value in, and an unreported key must stay null rather than becoming a
+// confident "not protected".
+func TestSitePasswordProtected(t *testing.T) {
+	tests := []struct {
+		name    string
+		payload string
+		want    *bool
+	}{
+		{
+			name:    "key absent stays null",
+			payload: `{"id":"site_1","name":"www"}`,
+			want:    nil,
+		},
+		{
+			name:    "explicit json null is a reported absence",
+			payload: `{"id":"site_1","password":null}`,
+			want:    ptr(false),
+		},
+		{
+			name:    "empty string is no password",
+			payload: `{"id":"site_1","password":""}`,
+			want:    ptr(false),
+		},
+		{
+			name:    "literal password is protected",
+			payload: `{"id":"site_1","password":"correct-horse"}`,
+			want:    ptr(true),
+		},
+		{
+			name:    "redacted placeholder is still protected",
+			payload: `{"id":"site_1","password":"****"}`,
+			want:    ptr(true),
+		},
+		{
+			name:    "boolean marker true is protected",
+			payload: `{"id":"site_1","password":true}`,
+			want:    ptr(true),
+		},
+		{
+			name:    "boolean marker false is not protected",
+			payload: `{"id":"site_1","password":false}`,
+			want:    ptr(false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var rec siteRecord
+			if err := json.Unmarshal([]byte(tc.payload), &rec); err != nil {
+				t.Fatalf("decode: %v", err)
+			}
+
+			got := sitePasswordProtected(rec.Password)
+			switch {
+			case tc.want == nil && got != nil:
+				t.Fatalf("expected null, got %v", *got)
+			case tc.want != nil && got == nil:
+				t.Fatalf("expected %v, got null", *tc.want)
+			case tc.want != nil && *got != *tc.want:
+				t.Fatalf("expected %v, got %v", *tc.want, *got)
+			}
+		})
+	}
+}
+
+// The raw password must never be readable from the record as a string field:
+// only the derived presence is exposed. This pins the type so a later change
+// that widens it to a plain string fails here.
+func TestSitePasswordIsNotExposedAsAValue(t *testing.T) {
+	var rec siteRecord
+	if err := json.Unmarshal([]byte(`{"id":"site_1","password":"correct-horse"}`), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(rec.Password) == 0 {
+		t.Fatal("expected the raw password to decode so presence can be derived")
+	}
+	if got := sitePasswordProtected(rec.Password); got == nil || !*got {
+		t.Fatalf("expected the site to read as password protected, got %v", got)
+	}
+}

@@ -249,7 +249,8 @@ private netlify.envVar @defaults("key isSecret") {
 // enforcement, `untrustedFlow` for what a fork's pull request may run,
 // `customDomain` and `domainAliases` for the names it answers on, the `repo`
 // fields for the source a build runs from, `publicRepo` and `privateLogs` for
-// build-output exposure, `stopBuilds` for whether automatic deploys are
+// build-output exposure, `passwordProtected` for whether visitors must supply
+// a password to reach it, `stopBuilds` for whether automatic deploys are
 // suspended, and `preventNonGitProdDeploys` for whether production can be
 // published outside of git. The `environmentVariables`, `buildHooks`,
 // `notificationHooks`, and `snippets` fields cover what a deploy injects and
@@ -354,6 +355,18 @@ private netlify.site @defaults("name url") {
   privateLogs bool
   // Whether automatic builds are suspended for the site
   stopBuilds bool
+  // Whether the site is gated behind a visitor password
+  //
+  // Reported per site, unlike the account-wide hasSitePassword rollup, so a
+  // single unprotected site inside an otherwise protected account is visible.
+  // Derived from whether the API reports a password for the site; the
+  // password itself is a secret and is never exposed. Netlify may report the
+  // value as a literal password, as a redacted placeholder, or as a
+  // boolean-ish marker, and in every form the presence of a value is the
+  // signal that a visitor password is set. Null when the API does not report
+  // the field at all, which is indistinguishable from a site that never set
+  // one, so test with `== true` to find the sites known to be protected.
+  passwordProtected bool
   // Deploy key granting the build access to the repository
   deployKey() netlify.deployKey
   // Environment variables that apply to the site
