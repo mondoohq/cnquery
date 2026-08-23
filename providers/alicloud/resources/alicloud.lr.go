@@ -152,6 +152,8 @@ const (
 	ResourceAlicloudAcrInstance                   string = "alicloud.acr.instance"
 	ResourceAlicloudAcrNamespace                  string = "alicloud.acr.namespace"
 	ResourceAlicloudAcrRepository                 string = "alicloud.acr.repository"
+	ResourceAlicloudAcrRepositoryTag              string = "alicloud.acr.repositoryTag"
+	ResourceAlicloudAcrVulnerability              string = "alicloud.acr.vulnerability"
 	ResourceAlicloudAcrSyncRule                   string = "alicloud.acr.syncRule"
 	ResourceAlicloudAcrScanRule                   string = "alicloud.acr.scanRule"
 	ResourceAlicloudEs                            string = "alicloud.es"
@@ -705,6 +707,14 @@ func init() {
 		"alicloud.acr.repository": {
 			// to override args, implement: initAlicloudAcrRepository(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudAcrRepository,
+		},
+		"alicloud.acr.repositoryTag": {
+			// to override args, implement: initAlicloudAcrRepositoryTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAcrRepositoryTag,
+		},
+		"alicloud.acr.vulnerability": {
+			// to override args, implement: initAlicloudAcrVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudAcrVulnerability,
 		},
 		"alicloud.acr.syncRule": {
 			// to override args, implement: initAlicloudAcrSyncRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -6642,6 +6652,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.acr.repository.modifiedTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudAcrRepository).GetModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.repository.imageTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepository).GetImageTags()).ToDataRes(types.Array(types.Resource("alicloud.acr.repositoryTag")))
+	},
+	"alicloud.acr.repositoryTag.instanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repositoryTag.repoId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetRepoId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repositoryTag.tag": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetTag()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repositoryTag.digest": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetDigest()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repositoryTag.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetImageId()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repositoryTag.imageSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetImageSize()).ToDataRes(types.Int)
+	},
+	"alicloud.acr.repositoryTag.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repositoryTag.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.repositoryTag.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.acr.repositoryTag.scanStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetScanStatus()).ToDataRes(types.String)
+	},
+	"alicloud.acr.repositoryTag.scanned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetScanned()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.repositoryTag.vulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetVulnerabilities()).ToDataRes(types.Array(types.Resource("alicloud.acr.vulnerability")))
+	},
+	"alicloud.acr.repositoryTag.vulnerabilityCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetVulnerabilityCount()).ToDataRes(types.Int)
+	},
+	"alicloud.acr.repositoryTag.highSeverityCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetHighSeverityCount()).ToDataRes(types.Int)
+	},
+	"alicloud.acr.repositoryTag.mediumSeverityCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetMediumSeverityCount()).ToDataRes(types.Int)
+	},
+	"alicloud.acr.repositoryTag.lowSeverityCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetLowSeverityCount()).ToDataRes(types.Int)
+	},
+	"alicloud.acr.repositoryTag.unknownSeverityCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetUnknownSeverityCount()).ToDataRes(types.Int)
+	},
+	"alicloud.acr.repositoryTag.hasHighSeverityVulnerabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrRepositoryTag).GetHasHighSeverityVulnerabilities()).ToDataRes(types.Bool)
+	},
+	"alicloud.acr.vulnerability.cveName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetCveName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.aliasName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetAliasName()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.severity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetSeverity()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.cveLink": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetCveLink()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.cveLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetCveLocation()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.feature": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetFeature()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetVersion()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.versionFixed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetVersionFixed()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.versionFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetVersionFormat()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.addedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetAddedBy()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.fixCmd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetFixCmd()).ToDataRes(types.String)
+	},
+	"alicloud.acr.vulnerability.scanType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudAcrVulnerability).GetScanType()).ToDataRes(types.String)
 	},
 	"alicloud.acr.syncRule.syncRuleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudAcrSyncRule).GetSyncRuleId()).ToDataRes(types.String)
@@ -15174,6 +15280,142 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.acr.repository.modifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudAcrRepository).ModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repository.imageTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepository).ImageTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.repositoryTag.instanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).InstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.repoId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).RepoId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.tag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).Tag, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.imageSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).ImageSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.scanStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).ScanStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.scanned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).Scanned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.vulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).Vulnerabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.vulnerabilityCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).VulnerabilityCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.highSeverityCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).HighSeverityCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.mediumSeverityCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).MediumSeverityCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.lowSeverityCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).LowSeverityCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.unknownSeverityCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).UnknownSeverityCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.repositoryTag.hasHighSeverityVulnerabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrRepositoryTag).HasHighSeverityVulnerabilities, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.acr.vulnerability.cveName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).CveName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.aliasName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).AliasName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.severity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).Severity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.cveLink": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).CveLink, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.cveLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).CveLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.feature": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).Feature, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.versionFixed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).VersionFixed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.versionFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).VersionFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.addedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).AddedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.fixCmd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).FixCmd, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.acr.vulnerability.scanType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudAcrVulnerability).ScanType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.acr.syncRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -34916,6 +35158,7 @@ type mqlAlicloudAcrRepository struct {
 	ResourceGroup     plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
 	CreateTime        plugin.TValue[*time.Time]
 	ModifiedTime      plugin.TValue[*time.Time]
+	ImageTags         plugin.TValue[[]any]
 }
 
 // createAlicloudAcrRepository creates a new instance of this resource
@@ -35039,6 +35282,293 @@ func (c *mqlAlicloudAcrRepository) GetCreateTime() *plugin.TValue[*time.Time] {
 
 func (c *mqlAlicloudAcrRepository) GetModifiedTime() *plugin.TValue[*time.Time] {
 	return &c.ModifiedTime
+}
+
+func (c *mqlAlicloudAcrRepository) GetImageTags() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ImageTags, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.repository", c.__id, "imageTags")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.imageTags()
+	})
+}
+
+// mqlAlicloudAcrRepositoryTag for the alicloud.acr.repositoryTag resource
+type mqlAlicloudAcrRepositoryTag struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudAcrRepositoryTagInternal
+	InstanceId                     plugin.TValue[string]
+	RepoId                         plugin.TValue[string]
+	Tag                            plugin.TValue[string]
+	Digest                         plugin.TValue[string]
+	ImageId                        plugin.TValue[string]
+	ImageSize                      plugin.TValue[int64]
+	Status                         plugin.TValue[string]
+	CreateTime                     plugin.TValue[*time.Time]
+	UpdateTime                     plugin.TValue[*time.Time]
+	ScanStatus                     plugin.TValue[string]
+	Scanned                        plugin.TValue[bool]
+	Vulnerabilities                plugin.TValue[[]any]
+	VulnerabilityCount             plugin.TValue[int64]
+	HighSeverityCount              plugin.TValue[int64]
+	MediumSeverityCount            plugin.TValue[int64]
+	LowSeverityCount               plugin.TValue[int64]
+	UnknownSeverityCount           plugin.TValue[int64]
+	HasHighSeverityVulnerabilities plugin.TValue[bool]
+}
+
+// createAlicloudAcrRepositoryTag creates a new instance of this resource
+func createAlicloudAcrRepositoryTag(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcrRepositoryTag{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr.repositoryTag", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) MqlName() string {
+	return "alicloud.acr.repositoryTag"
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetInstanceId() *plugin.TValue[string] {
+	return &c.InstanceId
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetRepoId() *plugin.TValue[string] {
+	return &c.RepoId
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetTag() *plugin.TValue[string] {
+	return &c.Tag
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetDigest() *plugin.TValue[string] {
+	return &c.Digest
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetImageSize() *plugin.TValue[int64] {
+	return &c.ImageSize
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetScanStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ScanStatus, func() (string, error) {
+		return c.scanStatus()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetScanned() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Scanned, func() (bool, error) {
+		return c.scanned()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetVulnerabilities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vulnerabilities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.acr.repositoryTag", c.__id, "vulnerabilities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vulnerabilities()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetVulnerabilityCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.VulnerabilityCount, func() (int64, error) {
+		return c.vulnerabilityCount()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetHighSeverityCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.HighSeverityCount, func() (int64, error) {
+		return c.highSeverityCount()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetMediumSeverityCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MediumSeverityCount, func() (int64, error) {
+		return c.mediumSeverityCount()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetLowSeverityCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LowSeverityCount, func() (int64, error) {
+		return c.lowSeverityCount()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetUnknownSeverityCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UnknownSeverityCount, func() (int64, error) {
+		return c.unknownSeverityCount()
+	})
+}
+
+func (c *mqlAlicloudAcrRepositoryTag) GetHasHighSeverityVulnerabilities() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasHighSeverityVulnerabilities, func() (bool, error) {
+		return c.hasHighSeverityVulnerabilities()
+	})
+}
+
+// mqlAlicloudAcrVulnerability for the alicloud.acr.vulnerability resource
+type mqlAlicloudAcrVulnerability struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudAcrVulnerabilityInternal it will be used here
+	CveName       plugin.TValue[string]
+	AliasName     plugin.TValue[string]
+	Severity      plugin.TValue[string]
+	Description   plugin.TValue[string]
+	CveLink       plugin.TValue[string]
+	CveLocation   plugin.TValue[string]
+	Feature       plugin.TValue[string]
+	Version       plugin.TValue[string]
+	VersionFixed  plugin.TValue[string]
+	VersionFormat plugin.TValue[string]
+	AddedBy       plugin.TValue[string]
+	FixCmd        plugin.TValue[string]
+	ScanType      plugin.TValue[string]
+}
+
+// createAlicloudAcrVulnerability creates a new instance of this resource
+func createAlicloudAcrVulnerability(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudAcrVulnerability{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.acr.vulnerability", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudAcrVulnerability) MqlName() string {
+	return "alicloud.acr.vulnerability"
+}
+
+func (c *mqlAlicloudAcrVulnerability) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetCveName() *plugin.TValue[string] {
+	return &c.CveName
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetAliasName() *plugin.TValue[string] {
+	return &c.AliasName
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetSeverity() *plugin.TValue[string] {
+	return &c.Severity
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetCveLink() *plugin.TValue[string] {
+	return &c.CveLink
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetCveLocation() *plugin.TValue[string] {
+	return &c.CveLocation
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetFeature() *plugin.TValue[string] {
+	return &c.Feature
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetVersionFixed() *plugin.TValue[string] {
+	return &c.VersionFixed
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetVersionFormat() *plugin.TValue[string] {
+	return &c.VersionFormat
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetAddedBy() *plugin.TValue[string] {
+	return &c.AddedBy
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetFixCmd() *plugin.TValue[string] {
+	return &c.FixCmd
+}
+
+func (c *mqlAlicloudAcrVulnerability) GetScanType() *plugin.TValue[string] {
+	return &c.ScanType
 }
 
 // mqlAlicloudAcrSyncRule for the alicloud.acr.syncRule resource

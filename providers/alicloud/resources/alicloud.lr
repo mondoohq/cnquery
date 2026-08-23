@@ -6915,6 +6915,114 @@ alicloud.acr.repository @defaults("repoNamespaceName repoName repoType tagImmuta
   createTime time
   // Time the repository was last modified
   modifiedTime time
+  // Image tags held in the repository
+  //
+  // Each tag names the image content a deployment pulls when it references
+  // this repository by tag, and carries the scan findings for that content.
+  imageTags() []alicloud.acr.repositoryTag
+}
+
+// Container Registry image tag
+//
+// A single tag in a Container Registry repository, keyed by the owning repoId
+// and tag name. Exposes the image content the tag points at (digest, size, push
+// time) and the vulnerability scan of that content. Use it to answer whether a
+// cluster pulls an image carrying known high-severity vulnerabilities, which
+// the scan rule alone cannot say because it configures the scan rather than
+// reporting its findings.
+alicloud.acr.repositoryTag @defaults("tag status vulnerabilityCount") {
+  // ID of the registry instance holding the image
+  instanceId string
+  // ID of the repository holding the tag
+  repoId string
+  // Tag name, for example latest or v1.2.3
+  tag string
+  // Content digest the tag points at, for example sha256:abc123
+  //
+  // The digest, not the tag, identifies the bytes that run. On a repository
+  // with tagImmutability off, the same tag can point at a different digest
+  // tomorrow.
+  digest string
+  // Registry-assigned image ID
+  imageId string
+  // Size of the image in bytes
+  imageSize int
+  // Status of the image, for example NORMAL
+  status string
+  // Time the image was pushed
+  createTime time
+  // Time the image was last updated
+  updateTime time
+  // Scan status of the image
+  //
+  // One of SCANNING, COMPLETE, FAILED, or RETRYING. Empty when the registry
+  // has never scanned the image, or when the scan status cannot be read.
+  scanStatus() string
+  // Whether a vulnerability scan of this image has completed
+  //
+  // False when the image has never been scanned, when a scan is still running,
+  // and when the last scan failed. An unscanned image reports no
+  // vulnerabilities, which must not be read as a clean image.
+  scanned() bool
+  // Vulnerabilities the registry found in the image
+  //
+  // Empty on an image that has not been scanned as well as on a clean one, so
+  // read scanned alongside this.
+  vulnerabilities() []alicloud.acr.vulnerability
+  // Total number of vulnerabilities found in the image
+  vulnerabilityCount() int
+  // Number of high-severity vulnerabilities found in the image
+  highSeverityCount() int
+  // Number of medium-severity vulnerabilities found in the image
+  mediumSeverityCount() int
+  // Number of low-severity vulnerabilities found in the image
+  lowSeverityCount() int
+  // Number of vulnerabilities the scanner could not rate
+  unknownSeverityCount() int
+  // Whether the image carries a high-severity vulnerability
+  //
+  // False on an image that has never been scanned, which is a different fact
+  // from a clean image; read scanned to tell them apart.
+  hasHighSeverityVulnerabilities() bool
+}
+
+// Vulnerability found in a Container Registry image
+//
+// A single scan finding for one image tag. Exposes the CVE, its severity, the
+// package that carries it, and the version that fixes it. Use it to find images
+// running a package with a known fix available.
+alicloud.acr.vulnerability @defaults("cveName severity feature version") {
+  // CVE identifier, for example CVE-2021-3711
+  cveName string
+  // Alternative name the scanner uses for the vulnerability
+  aliasName string
+  // Severity rating
+  //
+  // One of High, Medium, Low, or Unknown.
+  severity string
+  // Description of the vulnerability
+  description string
+  // Reference URL for the vulnerability
+  cveLink string
+  // Path inside the image where the affected component was found
+  cveLocation string
+  // Package or component carrying the vulnerability
+  feature string
+  // Version of the package present in the image
+  version string
+  // Version that fixes the vulnerability, empty when no fix is published
+  //
+  // A non-empty value means the image can be rebuilt to remove the finding
+  // today.
+  versionFixed string
+  // Packaging format the version numbers follow, for example dpkg or rpm
+  versionFormat string
+  // Image layer that introduced the affected component
+  addedBy string
+  // Command that installs the fixed version, empty when no fix is published
+  fixCmd string
+  // Kind of finding, cve for a system package or sca for an application dependency
+  scanType string
 }
 
 // Container Registry replication rule
