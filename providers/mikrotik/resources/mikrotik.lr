@@ -103,6 +103,12 @@ mikrotik {
   ipsecPeers() []mikrotik.ip.ipsec.peer
   // IPsec identities that authenticate peers
   ipsecIdentities() []mikrotik.ip.ipsec.identity
+  // SNMP communities the device answers
+  snmpCommunities() []mikrotik.snmp.community
+  // Logging rules that route topics to actions
+  loggingRules() []mikrotik.system.logging.rule
+  // Logging actions that receive log entries
+  loggingActions() []mikrotik.system.logging.action
 }
 
 // MikroTik system information
@@ -1886,4 +1892,133 @@ mikrotik.ip.ipsec.identity @defaults("peer authMethod generatePolicy disabled") 
   disabled bool
   // Optional comment attached to the identity
   comment string
+}
+
+// MikroTik SNMP community
+//
+// SNMP community configured on the device, as listed by `/snmp/community`.
+// `mikrotik.snmp` reports only the global on/off switch plus the contact and
+// trap settings; whether the device answers a default community name from
+// anywhere on the internet, and with what access, lives entirely here. The
+// community string itself is never read or exposed: `usesDefaultCommunityName`
+// reports whether it is one of the names every scanner tries first, and
+// `addresses` reports which sources may use it at all. For SNMPv3, the
+// authentication and encryption protocols are exposed alongside booleans
+// reporting that passwords are configured, never the passwords.
+mikrotik.snmp.community @defaults("usesDefaultCommunityName addresses readAccess writeAccess") {
+  // Whether the community name is one of the well-known defaults
+  //
+  // True for the names every scanner tries first, public and private. Null
+  // when the device did not report a name for the entry.
+  usesDefaultCommunityName bool
+  // Source addresses allowed to use the community
+  //
+  // An unrestricted value such as 0.0.0.0/0 or ::/0 lets any source that can
+  // reach the SNMP port use the community.
+  addresses string
+  // Whether the community grants read access
+  readAccess bool
+  // Whether the community grants write access
+  //
+  // Write access over SNMP can change the device configuration.
+  writeAccess bool
+  // SNMPv3 security level
+  //
+  // One of none, authorized, or private. Under none the request is neither
+  // authenticated nor encrypted, which is SNMPv1 and v2c behaviour.
+  security string
+  // SNMPv3 authentication protocol
+  //
+  // For example MD5 or SHA1.
+  authenticationProtocol string
+  // SNMPv3 encryption protocol
+  //
+  // For example DES or AES.
+  encryptionProtocol string
+  // Whether an SNMPv3 authentication password is configured
+  //
+  // The password itself is never read or exposed.
+  hasAuthenticationPassword bool
+  // Whether an SNMPv3 encryption password is configured
+  //
+  // The password itself is never read or exposed.
+  hasEncryptionPassword bool
+  // Whether the entry is the one RouterOS ships rather than one that was added
+  default bool
+  // Whether the community is disabled
+  disabled bool
+}
+
+// MikroTik logging rule
+//
+// Rule in `/system/logging` that routes a set of log topics to a logging
+// action. RouterOS ships with everything going to a memory-only action that a
+// reboot erases, so whether a rule routes `system`, `error`, `critical`, and
+// `account` to an action with a remote target is the difference between a
+// device that keeps an audit trail and one that does not. The `action` field
+// carries the action name and `actionRef` resolves it so its target can be
+// read in the same query.
+mikrotik.system.logging.rule @defaults("topics action disabled") {
+  // Log topics the rule routes
+  //
+  // For example system, error, critical, account, info, warning, firewall, or
+  // a negated topic such as !debug.
+  topics []string
+  // Name of the logging action entries are routed to
+  action string
+  // Logging action entries are routed to, resolved in the action list
+  actionRef() mikrotik.system.logging.action
+  // Prefix added to entries routed by the rule
+  prefix string
+  // Whether the rule is disabled
+  disabled bool
+  // Whether the rule is invalid
+  invalid bool
+}
+
+// MikroTik logging action
+//
+// Destination log entries are written to, as listed by
+// `/system/logging/action`. The `name` field selects the action, for example
+// `mikrotik.loggingActions.where(name == "remote")`, and `target` says where
+// the entries actually go: `memory` is a ring buffer a reboot erases, `disk`
+// survives a reboot but not a reformat, and `remote` sends the entries to a
+// syslog collector, which is the only target that survives the device itself.
+// For a remote action, `remote` and `remotePort` name the collector.
+mikrotik.system.logging.action @defaults("name target remote") {
+  // Action name
+  name string
+  // Where entries are written
+  //
+  // One of memory, disk, echo, or remote.
+  target string
+  // Address of the syslog collector, for a remote target
+  remote string
+  // Port of the syslog collector, for a remote target
+  remotePort int
+  // Source address used when sending to a collector
+  srcAddress string
+  // Whether entries are sent in BSD syslog format
+  bsdSyslog bool
+  // Syslog facility applied to entries
+  syslogFacility string
+  // Syslog severity applied to entries
+  syslogSeverity string
+  // Time format used in syslog entries
+  syslogTimeFormat string
+  // Number of entries the memory buffer holds
+  memoryLines int
+  // Whether the memory buffer stops accepting entries when full
+  //
+  // When enabled the oldest entries are kept and new ones are dropped, so a
+  // full buffer stops recording.
+  memoryStopOnFull bool
+  // Name of the file entries are written to, for a disk target
+  diskFileName string
+  // Number of entries per file, for a disk target
+  diskLinesPerFile int
+  // Number of files kept, for a disk target
+  diskFileCount int
+  // Whether writing stops when the disk target is full
+  diskStopOnFull bool
 }

@@ -61,6 +61,9 @@ const (
 	ResourceMikrotikIpIpsecProfile               string = "mikrotik.ip.ipsec.profile"
 	ResourceMikrotikIpIpsecPeer                  string = "mikrotik.ip.ipsec.peer"
 	ResourceMikrotikIpIpsecIdentity              string = "mikrotik.ip.ipsec.identity"
+	ResourceMikrotikSnmpCommunity                string = "mikrotik.snmp.community"
+	ResourceMikrotikSystemLoggingRule            string = "mikrotik.system.logging.rule"
+	ResourceMikrotikSystemLoggingAction          string = "mikrotik.system.logging.action"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -246,6 +249,18 @@ func init() {
 		"mikrotik.ip.ipsec.identity": {
 			// to override args, implement: initMikrotikIpIpsecIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createMikrotikIpIpsecIdentity,
+		},
+		"mikrotik.snmp.community": {
+			// to override args, implement: initMikrotikSnmpCommunity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikSnmpCommunity,
+		},
+		"mikrotik.system.logging.rule": {
+			// to override args, implement: initMikrotikSystemLoggingRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikSystemLoggingRule,
+		},
+		"mikrotik.system.logging.action": {
+			// to override args, implement: initMikrotikSystemLoggingAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikSystemLoggingAction,
 		},
 	}
 }
@@ -449,6 +464,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mikrotik.ipsecIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotik).GetIpsecIdentities()).ToDataRes(types.Array(types.Resource("mikrotik.ip.ipsec.identity")))
+	},
+	"mikrotik.snmpCommunities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetSnmpCommunities()).ToDataRes(types.Array(types.Resource("mikrotik.snmp.community")))
+	},
+	"mikrotik.loggingRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetLoggingRules()).ToDataRes(types.Array(types.Resource("mikrotik.system.logging.rule")))
+	},
+	"mikrotik.loggingActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetLoggingActions()).ToDataRes(types.Array(types.Resource("mikrotik.system.logging.action")))
 	},
 	"mikrotik.system.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikSystem).GetIdentity()).ToDataRes(types.String)
@@ -2115,6 +2139,102 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mikrotik.ip.ipsec.identity.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikIpIpsecIdentity).GetComment()).ToDataRes(types.String)
 	},
+	"mikrotik.snmp.community.usesDefaultCommunityName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetUsesDefaultCommunityName()).ToDataRes(types.Bool)
+	},
+	"mikrotik.snmp.community.addresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetAddresses()).ToDataRes(types.String)
+	},
+	"mikrotik.snmp.community.readAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetReadAccess()).ToDataRes(types.Bool)
+	},
+	"mikrotik.snmp.community.writeAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetWriteAccess()).ToDataRes(types.Bool)
+	},
+	"mikrotik.snmp.community.security": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetSecurity()).ToDataRes(types.String)
+	},
+	"mikrotik.snmp.community.authenticationProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetAuthenticationProtocol()).ToDataRes(types.String)
+	},
+	"mikrotik.snmp.community.encryptionProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetEncryptionProtocol()).ToDataRes(types.String)
+	},
+	"mikrotik.snmp.community.hasAuthenticationPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetHasAuthenticationPassword()).ToDataRes(types.Bool)
+	},
+	"mikrotik.snmp.community.hasEncryptionPassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetHasEncryptionPassword()).ToDataRes(types.Bool)
+	},
+	"mikrotik.snmp.community.default": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetDefault()).ToDataRes(types.Bool)
+	},
+	"mikrotik.snmp.community.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSnmpCommunity).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.logging.rule.topics": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingRule).GetTopics()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.system.logging.rule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingRule).GetAction()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.rule.actionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingRule).GetActionRef()).ToDataRes(types.Resource("mikrotik.system.logging.action"))
+	},
+	"mikrotik.system.logging.rule.prefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingRule).GetPrefix()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.rule.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingRule).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.logging.rule.invalid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingRule).GetInvalid()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.logging.action.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetName()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetTarget()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.remote": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetRemote()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.remotePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetRemotePort()).ToDataRes(types.Int)
+	},
+	"mikrotik.system.logging.action.srcAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetSrcAddress()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.bsdSyslog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetBsdSyslog()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.logging.action.syslogFacility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetSyslogFacility()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.syslogSeverity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetSyslogSeverity()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.syslogTimeFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetSyslogTimeFormat()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.memoryLines": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetMemoryLines()).ToDataRes(types.Int)
+	},
+	"mikrotik.system.logging.action.memoryStopOnFull": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetMemoryStopOnFull()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.logging.action.diskFileName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetDiskFileName()).ToDataRes(types.String)
+	},
+	"mikrotik.system.logging.action.diskLinesPerFile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetDiskLinesPerFile()).ToDataRes(types.Int)
+	},
+	"mikrotik.system.logging.action.diskFileCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetDiskFileCount()).ToDataRes(types.Int)
+	},
+	"mikrotik.system.logging.action.diskStopOnFull": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemLoggingAction).GetDiskStopOnFull()).ToDataRes(types.Bool)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2305,6 +2425,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mikrotik.ipsecIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotik).IpsecIdentities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmpCommunities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).SnmpCommunities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.loggingRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).LoggingRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.loggingActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).LoggingActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"mikrotik.system.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4703,6 +4835,146 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMikrotikIpIpsecIdentity).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"mikrotik.snmp.community.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.snmp.community.usesDefaultCommunityName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).UsesDefaultCommunityName, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.addresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).Addresses, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.readAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).ReadAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.writeAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).WriteAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.security": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).Security, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.authenticationProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).AuthenticationProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.encryptionProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).EncryptionProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.hasAuthenticationPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).HasAuthenticationPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.hasEncryptionPassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).HasEncryptionPassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.default": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).Default, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.snmp.community.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSnmpCommunity).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingRule).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.system.logging.rule.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingRule).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.rule.actionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingRule).ActionRef, ok = plugin.RawToTValue[*mqlMikrotikSystemLoggingAction](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.rule.prefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingRule).Prefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.rule.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingRule).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.rule.invalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingRule).Invalid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.system.logging.action.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.remote": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).Remote, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.remotePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).RemotePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.srcAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).SrcAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.bsdSyslog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).BsdSyslog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.syslogFacility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).SyslogFacility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.syslogSeverity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).SyslogSeverity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.syslogTimeFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).SyslogTimeFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.memoryLines": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).MemoryLines, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.memoryStopOnFull": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).MemoryStopOnFull, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.diskFileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).DiskFileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.diskLinesPerFile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).DiskLinesPerFile, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.diskFileCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).DiskFileCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.logging.action.diskStopOnFull": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemLoggingAction).DiskStopOnFull, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -4776,6 +5048,9 @@ type mqlMikrotik struct {
 	IpsecProfiles        plugin.TValue[[]any]
 	IpsecPeers           plugin.TValue[[]any]
 	IpsecIdentities      plugin.TValue[[]any]
+	SnmpCommunities      plugin.TValue[[]any]
+	LoggingRules         plugin.TValue[[]any]
+	LoggingActions       plugin.TValue[[]any]
 }
 
 // createMikrotik creates a new instance of this resource
@@ -5516,6 +5791,54 @@ func (c *mqlMikrotik) GetIpsecIdentities() *plugin.TValue[[]any] {
 		}
 
 		return c.ipsecIdentities()
+	})
+}
+
+func (c *mqlMikrotik) GetSnmpCommunities() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SnmpCommunities, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "snmpCommunities")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snmpCommunities()
+	})
+}
+
+func (c *mqlMikrotik) GetLoggingRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoggingRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "loggingRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loggingRules()
+	})
+}
+
+func (c *mqlMikrotik) GetLoggingActions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoggingActions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "loggingActions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loggingActions()
 	})
 }
 
@@ -10224,4 +10547,293 @@ func (c *mqlMikrotikIpIpsecIdentity) GetDisabled() *plugin.TValue[bool] {
 
 func (c *mqlMikrotikIpIpsecIdentity) GetComment() *plugin.TValue[string] {
 	return &c.Comment
+}
+
+// mqlMikrotikSnmpCommunity for the mikrotik.snmp.community resource
+type mqlMikrotikSnmpCommunity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikSnmpCommunityInternal it will be used here
+	UsesDefaultCommunityName  plugin.TValue[bool]
+	Addresses                 plugin.TValue[string]
+	ReadAccess                plugin.TValue[bool]
+	WriteAccess               plugin.TValue[bool]
+	Security                  plugin.TValue[string]
+	AuthenticationProtocol    plugin.TValue[string]
+	EncryptionProtocol        plugin.TValue[string]
+	HasAuthenticationPassword plugin.TValue[bool]
+	HasEncryptionPassword     plugin.TValue[bool]
+	Default                   plugin.TValue[bool]
+	Disabled                  plugin.TValue[bool]
+}
+
+// createMikrotikSnmpCommunity creates a new instance of this resource
+func createMikrotikSnmpCommunity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikSnmpCommunity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.snmp.community", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikSnmpCommunity) MqlName() string {
+	return "mikrotik.snmp.community"
+}
+
+func (c *mqlMikrotikSnmpCommunity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetUsesDefaultCommunityName() *plugin.TValue[bool] {
+	return &c.UsesDefaultCommunityName
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetAddresses() *plugin.TValue[string] {
+	return &c.Addresses
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetReadAccess() *plugin.TValue[bool] {
+	return &c.ReadAccess
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetWriteAccess() *plugin.TValue[bool] {
+	return &c.WriteAccess
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetSecurity() *plugin.TValue[string] {
+	return &c.Security
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetAuthenticationProtocol() *plugin.TValue[string] {
+	return &c.AuthenticationProtocol
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetEncryptionProtocol() *plugin.TValue[string] {
+	return &c.EncryptionProtocol
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetHasAuthenticationPassword() *plugin.TValue[bool] {
+	return &c.HasAuthenticationPassword
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetHasEncryptionPassword() *plugin.TValue[bool] {
+	return &c.HasEncryptionPassword
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetDefault() *plugin.TValue[bool] {
+	return &c.Default
+}
+
+func (c *mqlMikrotikSnmpCommunity) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+// mqlMikrotikSystemLoggingRule for the mikrotik.system.logging.rule resource
+type mqlMikrotikSystemLoggingRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMikrotikSystemLoggingRuleInternal
+	Topics    plugin.TValue[[]any]
+	Action    plugin.TValue[string]
+	ActionRef plugin.TValue[*mqlMikrotikSystemLoggingAction]
+	Prefix    plugin.TValue[string]
+	Disabled  plugin.TValue[bool]
+	Invalid   plugin.TValue[bool]
+}
+
+// createMikrotikSystemLoggingRule creates a new instance of this resource
+func createMikrotikSystemLoggingRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikSystemLoggingRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.system.logging.rule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikSystemLoggingRule) MqlName() string {
+	return "mikrotik.system.logging.rule"
+}
+
+func (c *mqlMikrotikSystemLoggingRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikSystemLoggingRule) GetTopics() *plugin.TValue[[]any] {
+	return &c.Topics
+}
+
+func (c *mqlMikrotikSystemLoggingRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlMikrotikSystemLoggingRule) GetActionRef() *plugin.TValue[*mqlMikrotikSystemLoggingAction] {
+	return plugin.GetOrCompute[*mqlMikrotikSystemLoggingAction](&c.ActionRef, func() (*mqlMikrotikSystemLoggingAction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.system.logging.rule", c.__id, "actionRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikSystemLoggingAction), nil
+			}
+		}
+
+		return c.actionRef()
+	})
+}
+
+func (c *mqlMikrotikSystemLoggingRule) GetPrefix() *plugin.TValue[string] {
+	return &c.Prefix
+}
+
+func (c *mqlMikrotikSystemLoggingRule) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlMikrotikSystemLoggingRule) GetInvalid() *plugin.TValue[bool] {
+	return &c.Invalid
+}
+
+// mqlMikrotikSystemLoggingAction for the mikrotik.system.logging.action resource
+type mqlMikrotikSystemLoggingAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikSystemLoggingActionInternal it will be used here
+	Name             plugin.TValue[string]
+	Target           plugin.TValue[string]
+	Remote           plugin.TValue[string]
+	RemotePort       plugin.TValue[int64]
+	SrcAddress       plugin.TValue[string]
+	BsdSyslog        plugin.TValue[bool]
+	SyslogFacility   plugin.TValue[string]
+	SyslogSeverity   plugin.TValue[string]
+	SyslogTimeFormat plugin.TValue[string]
+	MemoryLines      plugin.TValue[int64]
+	MemoryStopOnFull plugin.TValue[bool]
+	DiskFileName     plugin.TValue[string]
+	DiskLinesPerFile plugin.TValue[int64]
+	DiskFileCount    plugin.TValue[int64]
+	DiskStopOnFull   plugin.TValue[bool]
+}
+
+// createMikrotikSystemLoggingAction creates a new instance of this resource
+func createMikrotikSystemLoggingAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikSystemLoggingAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.system.logging.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikSystemLoggingAction) MqlName() string {
+	return "mikrotik.system.logging.action"
+}
+
+func (c *mqlMikrotikSystemLoggingAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetTarget() *plugin.TValue[string] {
+	return &c.Target
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetRemote() *plugin.TValue[string] {
+	return &c.Remote
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetRemotePort() *plugin.TValue[int64] {
+	return &c.RemotePort
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetSrcAddress() *plugin.TValue[string] {
+	return &c.SrcAddress
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetBsdSyslog() *plugin.TValue[bool] {
+	return &c.BsdSyslog
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetSyslogFacility() *plugin.TValue[string] {
+	return &c.SyslogFacility
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetSyslogSeverity() *plugin.TValue[string] {
+	return &c.SyslogSeverity
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetSyslogTimeFormat() *plugin.TValue[string] {
+	return &c.SyslogTimeFormat
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetMemoryLines() *plugin.TValue[int64] {
+	return &c.MemoryLines
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetMemoryStopOnFull() *plugin.TValue[bool] {
+	return &c.MemoryStopOnFull
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetDiskFileName() *plugin.TValue[string] {
+	return &c.DiskFileName
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetDiskLinesPerFile() *plugin.TValue[int64] {
+	return &c.DiskLinesPerFile
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetDiskFileCount() *plugin.TValue[int64] {
+	return &c.DiskFileCount
+}
+
+func (c *mqlMikrotikSystemLoggingAction) GetDiskStopOnFull() *plugin.TValue[bool] {
+	return &c.DiskStopOnFull
 }
