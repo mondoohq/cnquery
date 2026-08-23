@@ -5184,6 +5184,271 @@ alicloud.cloudFirewall {
   //
   // Null when log analysis is off or the project can no longer be read.
   logProject() alicloud.log.project
+  // VPC firewalls guarding traffic between VPCs
+  //
+  // A VPC firewall sits on an east-west path (a CEN attachment, a VPC peering,
+  // or an Express Connect circuit) rather than on the internet boundary, so
+  // controlPolicies says nothing about it. A VPC pair with no VPC firewall, or
+  // one whose firewall is switched off, moves traffic between networks with
+  // nothing inspecting it.
+  vpcFirewalls() []alicloud.cloudFirewall.vpcFirewall
+  // NAT firewalls guarding outbound traffic through a NAT gateway
+  //
+  // A NAT firewall inspects the egress path of a private subnet. Without one,
+  // an instance with no public address still reaches the internet through the
+  // NAT gateway unfiltered.
+  natFirewalls() []alicloud.cloudFirewall.natFirewall
+}
+
+// Cloud Firewall VPC firewall
+//
+// A single VPC firewall, keyed by vpcFirewallId. A VPC firewall guards the
+// east-west path between two VPCs joined by CEN, VPC peering, or Express
+// Connect. Exposes both ends of the pair, whether the firewall is switched on,
+// the strict-mode and intrusion-prevention settings, and the access-control
+// rules it enforces. Use it to find VPC pairs that carry traffic with no
+// firewall in the path, or with a firewall that only observes.
+alicloud.cloudFirewall.vpcFirewall @defaults("vpcFirewallName connectType enabled strictMode") {
+  // VPC firewall ID, used as the lookup key
+  vpcFirewallId string
+  // Name of the VPC firewall
+  vpcFirewallName string
+  // Kind of connection the firewall guards
+  //
+  // One of cen (a Cloud Enterprise Network attachment), vpcpeer (a VPC peering
+  // connection), or expressconnect (a leased-line circuit).
+  connectType string
+  // Sub-type of the connection, for further detail on the connect type
+  connectSubType string
+  // Throughput of the firewall in Mbit/s
+  bandwidth int
+  // Raw switch status of the firewall
+  //
+  // One of opened, closed, or notconfigured.
+  firewallSwitchStatus string
+  // Whether the firewall is switched on
+  //
+  // True only while firewallSwitchStatus reads opened. A configured but closed
+  // firewall enforces none of its control policies.
+  enabled bool
+  // Whether the firewall region is available
+  regionStatus string
+  // Whether strict mode is enabled
+  //
+  // In strict mode traffic is denied unless a policy allows it. With strict
+  // mode off the default is to allow, so an empty policy list means the pair is
+  // wide open rather than closed.
+  strictMode bool
+  // Whether the intrusion-prevention system blocks rather than observes
+  //
+  // False when IPS runs in monitor mode, where a detected intrusion is recorded
+  // and still delivered.
+  ipsBlocking bool
+  // Raw intrusion-prevention mode, 0 (monitor) or 1 (block)
+  ipsMode int
+  // Whether the intrusion-prevention basic rule set is enabled
+  ipsBasicRulesEnabled bool
+  // Whether virtual patching is enabled
+  //
+  // Virtual patching blocks exploitation of a known vulnerability at the
+  // firewall while the workload behind it is still unpatched.
+  ipsVirtualPatchEnabled bool
+  // Intrusion-prevention rule group, 1 (loose), 2 (medium), or 3 (strict)
+  ipsRuleClass int
+  // Region of the local VPC
+  localRegionId string
+  // Name of the local VPC
+  localVpcName string
+  // Local VPC of the guarded pair
+  //
+  // Null when the VPC lies outside the scanned regions.
+  localVpc() alicloud.vpc.network
+  // Region of the peer VPC
+  peerRegionId string
+  // ID of the peer VPC
+  //
+  // Kept as a raw value as well as a reference because the peer may belong to
+  // another Alibaba Cloud account, in which case peerVpc cannot be resolved and
+  // this is the only record of what the pair reaches.
+  peerVpcId string
+  // Name of the peer VPC
+  peerVpcName string
+  // Account that owns the peer VPC
+  peerVpcOwnerId string
+  // Whether the peer VPC belongs to a different account
+  //
+  // A cross-account pair carries traffic out of this account's control, so the
+  // rules on it are worth reading even when both ends look internal.
+  crossAccount bool
+  // Peer VPC of the guarded pair
+  //
+  // Null when the peer belongs to another account or lies outside the scanned
+  // regions.
+  peerVpc() alicloud.vpc.network
+  // Access-control rules enforced on the guarded path
+  controlPolicies() []alicloud.cloudFirewall.vpcControlPolicy
+}
+
+// Cloud Firewall VPC firewall control policy
+//
+// A single east-west access-control rule of a VPC firewall, keyed by aclUuid. A
+// rule permits or denies traffic between a source and a destination on given
+// ports and protocols. Exposes the action, both endpoints, the resolved
+// address-book members, and whether the rule is enforced. Use it to find
+// enabled rules that broadly permit traffic between VPCs (for example an accept
+// rule whose source is 0.0.0.0/0).
+alicloud.cloudFirewall.vpcControlPolicy @defaults("action source destination destPort proto enabled") {
+  // Rule UUID, used as the lookup key
+  aclUuid string
+  // ID of the VPC firewall the rule belongs to
+  vpcFirewallId string
+  // Action taken on matching traffic
+  //
+  // One of accept (allow), drop (deny), or log (monitor only).
+  action string
+  // Source address, CIDR, or address-book reference
+  source string
+  // Source type, either net (a CIDR) or group (an address book)
+  sourceType string
+  // CIDRs behind a source address book, empty when the source is a plain CIDR
+  sourceGroupCidrs []string
+  // Destination address, CIDR, domain, or address-book reference
+  destination string
+  // Destination type, one of net, group, or domain
+  destinationType string
+  // CIDRs behind a destination address book, empty when the destination is a plain CIDR
+  destinationGroupCidrs []string
+  // Destination port or port range
+  destPort string
+  // Destination port type, either port (a literal port) or group (a port address book)
+  destPortType string
+  // Ports behind a destination port address book
+  destPortGroupPorts []string
+  // Protocol, one of ANY, TCP, UDP, or ICMP
+  proto string
+  // Application-layer protocols the rule matches, for example HTTP or ANY
+  applicationNames []string
+  // Description of the rule
+  description string
+  // Whether the rule is enforced
+  //
+  // A disabled rule is configured but not applied.
+  enabled bool
+  // Rule priority order
+  order int
+  // Cumulative number of times the rule has matched traffic
+  hitTimes int
+  // Time the rule last matched traffic, null when it never has
+  lastHitTime time
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  updateTime time
+}
+
+// Cloud Firewall NAT firewall
+//
+// A single NAT firewall, keyed by proxyId. A NAT firewall inspects the traffic
+// a private subnet sends through a NAT gateway. Exposes the guarded gateway and
+// VPC, the firewall health, strict mode, and the access-control rules on the
+// egress path. Use it to find NAT gateways whose outbound traffic passes
+// uninspected.
+alicloud.cloudFirewall.natFirewall @defaults("proxyName proxyStatus enabled strictMode") {
+  // NAT firewall (proxy) ID, used as the lookup key
+  proxyId string
+  // Name of the NAT firewall
+  proxyName string
+  // Region the NAT firewall runs in
+  regionId string
+  // Health of the NAT firewall
+  //
+  // One of configuring, deleting, normal, abnormal, opening, closing, or
+  // closed.
+  proxyStatus string
+  // Whether the NAT firewall is inspecting traffic
+  //
+  // True only while proxyStatus reads normal. Every other state, including
+  // abnormal, leaves egress traffic uninspected.
+  enabled bool
+  // Whether strict mode is enabled
+  //
+  // In strict mode outbound traffic is denied unless a policy allows it. With
+  // strict mode off the default is to allow.
+  strictMode bool
+  // Detail of the failure when the firewall is in an abnormal state, empty otherwise
+  errorDetail string
+  // Name of the VPC the guarded NAT gateway belongs to
+  vpcName string
+  // VPC the guarded NAT gateway belongs to
+  //
+  // Null when the VPC lies outside the scanned regions.
+  vpc() alicloud.vpc.network
+  // Name of the guarded NAT gateway
+  natGatewayName string
+  // NAT gateway the firewall guards
+  //
+  // Null when the gateway lies outside the scanned regions or has been deleted.
+  natGateway() alicloud.vpc.natGateway
+  // Access-control rules enforced on the egress path
+  controlPolicies() []alicloud.cloudFirewall.natControlPolicy
+}
+
+// Cloud Firewall NAT firewall control policy
+//
+// A single NAT-boundary access-control rule, keyed by aclUuid. A rule permits or
+// denies traffic leaving (or entering) a NAT gateway on given ports and
+// protocols. Exposes the direction, action, both endpoints, and whether the rule
+// is enforced. Use it to find egress rules that permit unrestricted outbound
+// traffic from a private subnet.
+alicloud.cloudFirewall.natControlPolicy @defaults("direction action source destination destPort enabled") {
+  // Rule UUID, used as the lookup key
+  aclUuid string
+  // ID of the NAT gateway the rule applies to
+  natGatewayId string
+  // Traffic direction the rule applies to, either in (inbound) or out (outbound)
+  direction string
+  // Action taken on matching traffic
+  //
+  // One of accept (allow), drop (deny), or log (monitor only).
+  action string
+  // Source address, CIDR, or address-book reference
+  source string
+  // Source type, either net (a CIDR) or group (an address book)
+  sourceType string
+  // CIDRs behind a source address book, empty when the source is a plain CIDR
+  sourceGroupCidrs []string
+  // Destination address, CIDR, domain, or address-book reference
+  destination string
+  // Destination type, one of net, group, or domain
+  destinationType string
+  // CIDRs behind a destination address book, empty when the destination is a plain CIDR
+  destinationGroupCidrs []string
+  // Destination port or port range
+  destPort string
+  // Destination port type, either port (a literal port) or group (a port address book)
+  destPortType string
+  // Ports behind a destination port address book
+  destPortGroupPorts []string
+  // Protocol, one of ANY, TCP, UDP, or ICMP
+  proto string
+  // Application-layer protocols the rule matches, for example HTTP or ANY
+  applicationNames []string
+  // Description of the rule
+  description string
+  // Whether the rule is enforced
+  //
+  // A disabled rule is configured but not applied.
+  enabled bool
+  // Rule priority order
+  order int
+  // Cumulative number of times the rule has matched traffic
+  hitTimes int
+  // Time the rule last matched traffic, null when it never has
+  lastHitTime time
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  updateTime time
 }
 
 // Cloud Firewall control policy

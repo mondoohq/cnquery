@@ -16,142 +16,146 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceAlicloud                             string = "alicloud"
-	ResourceAlicloudRam                          string = "alicloud.ram"
-	ResourceAlicloudRamUser                      string = "alicloud.ram.user"
-	ResourceAlicloudRamAccessKey                 string = "alicloud.ram.accessKey"
-	ResourceAlicloudRamGroup                     string = "alicloud.ram.group"
-	ResourceAlicloudRamRole                      string = "alicloud.ram.role"
-	ResourceAlicloudRamPolicy                    string = "alicloud.ram.policy"
-	ResourceAlicloudRamPolicyStatement           string = "alicloud.ram.policy.statement"
-	ResourceAlicloudRamPasswordPolicy            string = "alicloud.ram.passwordPolicy"
-	ResourceAlicloudEcs                          string = "alicloud.ecs"
-	ResourceAlicloudEcsPrefixList                string = "alicloud.ecs.prefixList"
-	ResourceAlicloudEcsInstance                  string = "alicloud.ecs.instance"
-	ResourceAlicloudEcsDisk                      string = "alicloud.ecs.disk"
-	ResourceAlicloudEcsImage                     string = "alicloud.ecs.image"
-	ResourceAlicloudEcsKeypair                   string = "alicloud.ecs.keypair"
-	ResourceAlicloudEcsSecuritygroup             string = "alicloud.ecs.securitygroup"
-	ResourceAlicloudEcsSecuritygroupPermission   string = "alicloud.ecs.securitygroup.permission"
-	ResourceAlicloudEss                          string = "alicloud.ess"
-	ResourceAlicloudEssScalingGroup              string = "alicloud.ess.scalingGroup"
-	ResourceAlicloudEssScalingConfiguration      string = "alicloud.ess.scalingConfiguration"
-	ResourceAlicloudVpc                          string = "alicloud.vpc"
-	ResourceAlicloudVpcNetwork                   string = "alicloud.vpc.network"
-	ResourceAlicloudVpcVswitch                   string = "alicloud.vpc.vswitch"
-	ResourceAlicloudVpcRouteTable                string = "alicloud.vpc.routeTable"
-	ResourceAlicloudVpcRouteTableRoute           string = "alicloud.vpc.routeTable.route"
-	ResourceAlicloudVpcNatGateway                string = "alicloud.vpc.natGateway"
-	ResourceAlicloudVpcEipAddress                string = "alicloud.vpc.eipAddress"
-	ResourceAlicloudVpcNetworkAcl                string = "alicloud.vpc.networkAcl"
-	ResourceAlicloudVpcNetworkAclEntry           string = "alicloud.vpc.networkAcl.entry"
-	ResourceAlicloudOss                          string = "alicloud.oss"
-	ResourceAlicloudOssBucket                    string = "alicloud.oss.bucket"
-	ResourceAlicloudOssBucketCorsRule            string = "alicloud.oss.bucket.corsRule"
-	ResourceAlicloudOssBucketReplicationRule     string = "alicloud.oss.bucket.replicationRule"
-	ResourceAlicloudSlb                          string = "alicloud.slb"
-	ResourceAlicloudSlbLoadBalancer              string = "alicloud.slb.loadBalancer"
-	ResourceAlicloudSlbListener                  string = "alicloud.slb.listener"
-	ResourceAlicloudSlbVServerGroup              string = "alicloud.slb.vServerGroup"
-	ResourceAlicloudSlbBackendServer             string = "alicloud.slb.backendServer"
-	ResourceAlicloudRds                          string = "alicloud.rds"
-	ResourceAlicloudRdsInstance                  string = "alicloud.rds.instance"
-	ResourceAlicloudRedis                        string = "alicloud.redis"
-	ResourceAlicloudRedisInstance                string = "alicloud.redis.instance"
-	ResourceAlicloudMongodb                      string = "alicloud.mongodb"
-	ResourceAlicloudMongodbInstance              string = "alicloud.mongodb.instance"
-	ResourceAlicloudPolardb                      string = "alicloud.polardb"
-	ResourceAlicloudPolardbCluster               string = "alicloud.polardb.cluster"
-	ResourceAlicloudVpcFlowLog                   string = "alicloud.vpc.flowLog"
-	ResourceAlicloudKms                          string = "alicloud.kms"
-	ResourceAlicloudKmsKey                       string = "alicloud.kms.key"
-	ResourceAlicloudKmsSecret                    string = "alicloud.kms.secret"
-	ResourceAlicloudActiontrail                  string = "alicloud.actiontrail"
-	ResourceAlicloudActiontrailTrail             string = "alicloud.actiontrail.trail"
-	ResourceAlicloudLog                          string = "alicloud.log"
-	ResourceAlicloudLogProject                   string = "alicloud.log.project"
-	ResourceAlicloudLogAlert                     string = "alicloud.log.alert"
-	ResourceAlicloudLogAlertQuery                string = "alicloud.log.alert.query"
-	ResourceAlicloudLogLogstore                  string = "alicloud.log.logstore"
-	ResourceAlicloudConfig                       string = "alicloud.config"
-	ResourceAlicloudConfigRule                   string = "alicloud.config.rule"
-	ResourceAlicloudConfigDeliveryChannel        string = "alicloud.config.deliveryChannel"
-	ResourceAlicloudConfigCompliancePack         string = "alicloud.config.compliancePack"
-	ResourceAlicloudConfigAggregator             string = "alicloud.config.aggregator"
-	ResourceAlicloudConfigEvaluationResult       string = "alicloud.config.evaluationResult"
-	ResourceAlicloudResourceManager              string = "alicloud.resourceManager"
-	ResourceAlicloudResourceManagerAccount       string = "alicloud.resourceManager.account"
-	ResourceAlicloudResourceManagerFolder        string = "alicloud.resourceManager.folder"
-	ResourceAlicloudResourceManagerResourceGroup string = "alicloud.resourceManager.resourceGroup"
-	ResourceAlicloudResourceManagerControlPolicy string = "alicloud.resourceManager.controlPolicy"
-	ResourceAlicloudCs                           string = "alicloud.cs"
-	ResourceAlicloudCsGrant                      string = "alicloud.cs.grant"
-	ResourceAlicloudCsCluster                    string = "alicloud.cs.cluster"
-	ResourceAlicloudCsClusterCheck               string = "alicloud.cs.cluster.check"
-	ResourceAlicloudCsNodePool                   string = "alicloud.cs.nodePool"
-	ResourceAlicloudAlb                          string = "alicloud.alb"
-	ResourceAlicloudAlbLoadBalancer              string = "alicloud.alb.loadBalancer"
-	ResourceAlicloudAlbListener                  string = "alicloud.alb.listener"
-	ResourceAlicloudAlbServerGroup               string = "alicloud.alb.serverGroup"
-	ResourceAlicloudAlbServerGroupServer         string = "alicloud.alb.serverGroup.server"
-	ResourceAlicloudNlb                          string = "alicloud.nlb"
-	ResourceAlicloudNlbLoadBalancer              string = "alicloud.nlb.loadBalancer"
-	ResourceAlicloudNlbListener                  string = "alicloud.nlb.listener"
-	ResourceAlicloudNlbServerGroup               string = "alicloud.nlb.serverGroup"
-	ResourceAlicloudNlbServerGroupServer         string = "alicloud.nlb.serverGroup.server"
-	ResourceAlicloudFc                           string = "alicloud.fc"
-	ResourceAlicloudFcFunction                   string = "alicloud.fc.function"
-	ResourceAlicloudFcTrigger                    string = "alicloud.fc.trigger"
-	ResourceAlicloudNas                          string = "alicloud.nas"
-	ResourceAlicloudNasFileSystem                string = "alicloud.nas.fileSystem"
-	ResourceAlicloudNasMountTarget               string = "alicloud.nas.mountTarget"
-	ResourceAlicloudNasAccessGroup               string = "alicloud.nas.accessGroup"
-	ResourceAlicloudNasAccessRule                string = "alicloud.nas.accessRule"
-	ResourceAlicloudWaf                          string = "alicloud.waf"
-	ResourceAlicloudWafInstance                  string = "alicloud.waf.instance"
-	ResourceAlicloudWafDefenseResource           string = "alicloud.waf.defenseResource"
-	ResourceAlicloudWafDomain                    string = "alicloud.waf.domain"
-	ResourceAlicloudWafDefenseTemplate           string = "alicloud.waf.defenseTemplate"
-	ResourceAlicloudWafDefenseRule               string = "alicloud.waf.defenseRule"
-	ResourceAlicloudCloudFirewall                string = "alicloud.cloudFirewall"
-	ResourceAlicloudCloudFirewallControlPolicy   string = "alicloud.cloudFirewall.controlPolicy"
-	ResourceAlicloudAntiddos                     string = "alicloud.antiddos"
-	ResourceAlicloudAntiddosInstance             string = "alicloud.antiddos.instance"
-	ResourceAlicloudAntiddosWebRule              string = "alicloud.antiddos.webRule"
-	ResourceAlicloudAntiddosNetworkRule          string = "alicloud.antiddos.networkRule"
-	ResourceAlicloudCloudsso                     string = "alicloud.cloudsso"
-	ResourceAlicloudCloudssoDirectory            string = "alicloud.cloudsso.directory"
-	ResourceAlicloudCloudssoPasswordPolicy       string = "alicloud.cloudsso.passwordPolicy"
-	ResourceAlicloudCloudssoUser                 string = "alicloud.cloudsso.user"
-	ResourceAlicloudCloudssoGroup                string = "alicloud.cloudsso.group"
-	ResourceAlicloudCloudssoMfaDevice            string = "alicloud.cloudsso.mfaDevice"
-	ResourceAlicloudCloudssoAccessConfiguration  string = "alicloud.cloudsso.accessConfiguration"
-	ResourceAlicloudCloudssoPermissionPolicy     string = "alicloud.cloudsso.permissionPolicy"
-	ResourceAlicloudCloudssoAccessAssignment     string = "alicloud.cloudsso.accessAssignment"
-	ResourceAlicloudSas                          string = "alicloud.sas"
-	ResourceAlicloudSasConfig                    string = "alicloud.sas.config"
-	ResourceAlicloudSasWebPath                   string = "alicloud.sas.webPath"
-	ResourceAlicloudSasNoticeConfig              string = "alicloud.sas.noticeConfig"
-	ResourceAlicloudSasVulnerabilityConfig       string = "alicloud.sas.vulnerabilityConfig"
-	ResourceAlicloudSasPropertySchedule          string = "alicloud.sas.propertySchedule"
-	ResourceAlicloudSasLogDelivery               string = "alicloud.sas.logDelivery"
-	ResourceAlicloudSasMachine                   string = "alicloud.sas.machine"
-	ResourceAlicloudSasVulnerability             string = "alicloud.sas.vulnerability"
-	ResourceAlicloudSasBaselineCheck             string = "alicloud.sas.baselineCheck"
-	ResourceAlicloudSasAlarmEvent                string = "alicloud.sas.alarmEvent"
-	ResourceAlicloudCen                          string = "alicloud.cen"
-	ResourceAlicloudCenInstance                  string = "alicloud.cen.instance"
-	ResourceAlicloudCenAttachment                string = "alicloud.cen.attachment"
-	ResourceAlicloudVpcVpnGateway                string = "alicloud.vpc.vpnGateway"
-	ResourceAlicloudVpcVpnConnection             string = "alicloud.vpc.vpnConnection"
-	ResourceAlicloudAcr                          string = "alicloud.acr"
-	ResourceAlicloudAcrInstance                  string = "alicloud.acr.instance"
-	ResourceAlicloudAcrNamespace                 string = "alicloud.acr.namespace"
-	ResourceAlicloudAcrRepository                string = "alicloud.acr.repository"
-	ResourceAlicloudAcrSyncRule                  string = "alicloud.acr.syncRule"
-	ResourceAlicloudAcrScanRule                  string = "alicloud.acr.scanRule"
-	ResourceAlicloudEs                           string = "alicloud.es"
-	ResourceAlicloudEsInstance                   string = "alicloud.es.instance"
+	ResourceAlicloud                              string = "alicloud"
+	ResourceAlicloudRam                           string = "alicloud.ram"
+	ResourceAlicloudRamUser                       string = "alicloud.ram.user"
+	ResourceAlicloudRamAccessKey                  string = "alicloud.ram.accessKey"
+	ResourceAlicloudRamGroup                      string = "alicloud.ram.group"
+	ResourceAlicloudRamRole                       string = "alicloud.ram.role"
+	ResourceAlicloudRamPolicy                     string = "alicloud.ram.policy"
+	ResourceAlicloudRamPolicyStatement            string = "alicloud.ram.policy.statement"
+	ResourceAlicloudRamPasswordPolicy             string = "alicloud.ram.passwordPolicy"
+	ResourceAlicloudEcs                           string = "alicloud.ecs"
+	ResourceAlicloudEcsPrefixList                 string = "alicloud.ecs.prefixList"
+	ResourceAlicloudEcsInstance                   string = "alicloud.ecs.instance"
+	ResourceAlicloudEcsDisk                       string = "alicloud.ecs.disk"
+	ResourceAlicloudEcsImage                      string = "alicloud.ecs.image"
+	ResourceAlicloudEcsKeypair                    string = "alicloud.ecs.keypair"
+	ResourceAlicloudEcsSecuritygroup              string = "alicloud.ecs.securitygroup"
+	ResourceAlicloudEcsSecuritygroupPermission    string = "alicloud.ecs.securitygroup.permission"
+	ResourceAlicloudEss                           string = "alicloud.ess"
+	ResourceAlicloudEssScalingGroup               string = "alicloud.ess.scalingGroup"
+	ResourceAlicloudEssScalingConfiguration       string = "alicloud.ess.scalingConfiguration"
+	ResourceAlicloudVpc                           string = "alicloud.vpc"
+	ResourceAlicloudVpcNetwork                    string = "alicloud.vpc.network"
+	ResourceAlicloudVpcVswitch                    string = "alicloud.vpc.vswitch"
+	ResourceAlicloudVpcRouteTable                 string = "alicloud.vpc.routeTable"
+	ResourceAlicloudVpcRouteTableRoute            string = "alicloud.vpc.routeTable.route"
+	ResourceAlicloudVpcNatGateway                 string = "alicloud.vpc.natGateway"
+	ResourceAlicloudVpcEipAddress                 string = "alicloud.vpc.eipAddress"
+	ResourceAlicloudVpcNetworkAcl                 string = "alicloud.vpc.networkAcl"
+	ResourceAlicloudVpcNetworkAclEntry            string = "alicloud.vpc.networkAcl.entry"
+	ResourceAlicloudOss                           string = "alicloud.oss"
+	ResourceAlicloudOssBucket                     string = "alicloud.oss.bucket"
+	ResourceAlicloudOssBucketCorsRule             string = "alicloud.oss.bucket.corsRule"
+	ResourceAlicloudOssBucketReplicationRule      string = "alicloud.oss.bucket.replicationRule"
+	ResourceAlicloudSlb                           string = "alicloud.slb"
+	ResourceAlicloudSlbLoadBalancer               string = "alicloud.slb.loadBalancer"
+	ResourceAlicloudSlbListener                   string = "alicloud.slb.listener"
+	ResourceAlicloudSlbVServerGroup               string = "alicloud.slb.vServerGroup"
+	ResourceAlicloudSlbBackendServer              string = "alicloud.slb.backendServer"
+	ResourceAlicloudRds                           string = "alicloud.rds"
+	ResourceAlicloudRdsInstance                   string = "alicloud.rds.instance"
+	ResourceAlicloudRedis                         string = "alicloud.redis"
+	ResourceAlicloudRedisInstance                 string = "alicloud.redis.instance"
+	ResourceAlicloudMongodb                       string = "alicloud.mongodb"
+	ResourceAlicloudMongodbInstance               string = "alicloud.mongodb.instance"
+	ResourceAlicloudPolardb                       string = "alicloud.polardb"
+	ResourceAlicloudPolardbCluster                string = "alicloud.polardb.cluster"
+	ResourceAlicloudVpcFlowLog                    string = "alicloud.vpc.flowLog"
+	ResourceAlicloudKms                           string = "alicloud.kms"
+	ResourceAlicloudKmsKey                        string = "alicloud.kms.key"
+	ResourceAlicloudKmsSecret                     string = "alicloud.kms.secret"
+	ResourceAlicloudActiontrail                   string = "alicloud.actiontrail"
+	ResourceAlicloudActiontrailTrail              string = "alicloud.actiontrail.trail"
+	ResourceAlicloudLog                           string = "alicloud.log"
+	ResourceAlicloudLogProject                    string = "alicloud.log.project"
+	ResourceAlicloudLogAlert                      string = "alicloud.log.alert"
+	ResourceAlicloudLogAlertQuery                 string = "alicloud.log.alert.query"
+	ResourceAlicloudLogLogstore                   string = "alicloud.log.logstore"
+	ResourceAlicloudConfig                        string = "alicloud.config"
+	ResourceAlicloudConfigRule                    string = "alicloud.config.rule"
+	ResourceAlicloudConfigDeliveryChannel         string = "alicloud.config.deliveryChannel"
+	ResourceAlicloudConfigCompliancePack          string = "alicloud.config.compliancePack"
+	ResourceAlicloudConfigAggregator              string = "alicloud.config.aggregator"
+	ResourceAlicloudConfigEvaluationResult        string = "alicloud.config.evaluationResult"
+	ResourceAlicloudResourceManager               string = "alicloud.resourceManager"
+	ResourceAlicloudResourceManagerAccount        string = "alicloud.resourceManager.account"
+	ResourceAlicloudResourceManagerFolder         string = "alicloud.resourceManager.folder"
+	ResourceAlicloudResourceManagerResourceGroup  string = "alicloud.resourceManager.resourceGroup"
+	ResourceAlicloudResourceManagerControlPolicy  string = "alicloud.resourceManager.controlPolicy"
+	ResourceAlicloudCs                            string = "alicloud.cs"
+	ResourceAlicloudCsGrant                       string = "alicloud.cs.grant"
+	ResourceAlicloudCsCluster                     string = "alicloud.cs.cluster"
+	ResourceAlicloudCsClusterCheck                string = "alicloud.cs.cluster.check"
+	ResourceAlicloudCsNodePool                    string = "alicloud.cs.nodePool"
+	ResourceAlicloudAlb                           string = "alicloud.alb"
+	ResourceAlicloudAlbLoadBalancer               string = "alicloud.alb.loadBalancer"
+	ResourceAlicloudAlbListener                   string = "alicloud.alb.listener"
+	ResourceAlicloudAlbServerGroup                string = "alicloud.alb.serverGroup"
+	ResourceAlicloudAlbServerGroupServer          string = "alicloud.alb.serverGroup.server"
+	ResourceAlicloudNlb                           string = "alicloud.nlb"
+	ResourceAlicloudNlbLoadBalancer               string = "alicloud.nlb.loadBalancer"
+	ResourceAlicloudNlbListener                   string = "alicloud.nlb.listener"
+	ResourceAlicloudNlbServerGroup                string = "alicloud.nlb.serverGroup"
+	ResourceAlicloudNlbServerGroupServer          string = "alicloud.nlb.serverGroup.server"
+	ResourceAlicloudFc                            string = "alicloud.fc"
+	ResourceAlicloudFcFunction                    string = "alicloud.fc.function"
+	ResourceAlicloudFcTrigger                     string = "alicloud.fc.trigger"
+	ResourceAlicloudNas                           string = "alicloud.nas"
+	ResourceAlicloudNasFileSystem                 string = "alicloud.nas.fileSystem"
+	ResourceAlicloudNasMountTarget                string = "alicloud.nas.mountTarget"
+	ResourceAlicloudNasAccessGroup                string = "alicloud.nas.accessGroup"
+	ResourceAlicloudNasAccessRule                 string = "alicloud.nas.accessRule"
+	ResourceAlicloudWaf                           string = "alicloud.waf"
+	ResourceAlicloudWafInstance                   string = "alicloud.waf.instance"
+	ResourceAlicloudWafDefenseResource            string = "alicloud.waf.defenseResource"
+	ResourceAlicloudWafDomain                     string = "alicloud.waf.domain"
+	ResourceAlicloudWafDefenseTemplate            string = "alicloud.waf.defenseTemplate"
+	ResourceAlicloudWafDefenseRule                string = "alicloud.waf.defenseRule"
+	ResourceAlicloudCloudFirewall                 string = "alicloud.cloudFirewall"
+	ResourceAlicloudCloudFirewallVpcFirewall      string = "alicloud.cloudFirewall.vpcFirewall"
+	ResourceAlicloudCloudFirewallVpcControlPolicy string = "alicloud.cloudFirewall.vpcControlPolicy"
+	ResourceAlicloudCloudFirewallNatFirewall      string = "alicloud.cloudFirewall.natFirewall"
+	ResourceAlicloudCloudFirewallNatControlPolicy string = "alicloud.cloudFirewall.natControlPolicy"
+	ResourceAlicloudCloudFirewallControlPolicy    string = "alicloud.cloudFirewall.controlPolicy"
+	ResourceAlicloudAntiddos                      string = "alicloud.antiddos"
+	ResourceAlicloudAntiddosInstance              string = "alicloud.antiddos.instance"
+	ResourceAlicloudAntiddosWebRule               string = "alicloud.antiddos.webRule"
+	ResourceAlicloudAntiddosNetworkRule           string = "alicloud.antiddos.networkRule"
+	ResourceAlicloudCloudsso                      string = "alicloud.cloudsso"
+	ResourceAlicloudCloudssoDirectory             string = "alicloud.cloudsso.directory"
+	ResourceAlicloudCloudssoPasswordPolicy        string = "alicloud.cloudsso.passwordPolicy"
+	ResourceAlicloudCloudssoUser                  string = "alicloud.cloudsso.user"
+	ResourceAlicloudCloudssoGroup                 string = "alicloud.cloudsso.group"
+	ResourceAlicloudCloudssoMfaDevice             string = "alicloud.cloudsso.mfaDevice"
+	ResourceAlicloudCloudssoAccessConfiguration   string = "alicloud.cloudsso.accessConfiguration"
+	ResourceAlicloudCloudssoPermissionPolicy      string = "alicloud.cloudsso.permissionPolicy"
+	ResourceAlicloudCloudssoAccessAssignment      string = "alicloud.cloudsso.accessAssignment"
+	ResourceAlicloudSas                           string = "alicloud.sas"
+	ResourceAlicloudSasConfig                     string = "alicloud.sas.config"
+	ResourceAlicloudSasWebPath                    string = "alicloud.sas.webPath"
+	ResourceAlicloudSasNoticeConfig               string = "alicloud.sas.noticeConfig"
+	ResourceAlicloudSasVulnerabilityConfig        string = "alicloud.sas.vulnerabilityConfig"
+	ResourceAlicloudSasPropertySchedule           string = "alicloud.sas.propertySchedule"
+	ResourceAlicloudSasLogDelivery                string = "alicloud.sas.logDelivery"
+	ResourceAlicloudSasMachine                    string = "alicloud.sas.machine"
+	ResourceAlicloudSasVulnerability              string = "alicloud.sas.vulnerability"
+	ResourceAlicloudSasBaselineCheck              string = "alicloud.sas.baselineCheck"
+	ResourceAlicloudSasAlarmEvent                 string = "alicloud.sas.alarmEvent"
+	ResourceAlicloudCen                           string = "alicloud.cen"
+	ResourceAlicloudCenInstance                   string = "alicloud.cen.instance"
+	ResourceAlicloudCenAttachment                 string = "alicloud.cen.attachment"
+	ResourceAlicloudVpcVpnGateway                 string = "alicloud.vpc.vpnGateway"
+	ResourceAlicloudVpcVpnConnection              string = "alicloud.vpc.vpnConnection"
+	ResourceAlicloudAcr                           string = "alicloud.acr"
+	ResourceAlicloudAcrInstance                   string = "alicloud.acr.instance"
+	ResourceAlicloudAcrNamespace                  string = "alicloud.acr.namespace"
+	ResourceAlicloudAcrRepository                 string = "alicloud.acr.repository"
+	ResourceAlicloudAcrSyncRule                   string = "alicloud.acr.syncRule"
+	ResourceAlicloudAcrScanRule                   string = "alicloud.acr.scanRule"
+	ResourceAlicloudEs                            string = "alicloud.es"
+	ResourceAlicloudEsInstance                    string = "alicloud.es.instance"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -259,7 +263,7 @@ func init() {
 			Create: createAlicloudVpcRouteTableRoute,
 		},
 		"alicloud.vpc.natGateway": {
-			// to override args, implement: initAlicloudVpcNatGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initAlicloudVpcNatGateway,
 			Create: createAlicloudVpcNatGateway,
 		},
 		"alicloud.vpc.eipAddress": {
@@ -549,6 +553,22 @@ func init() {
 		"alicloud.cloudFirewall": {
 			// to override args, implement: initAlicloudCloudFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudCloudFirewall,
+		},
+		"alicloud.cloudFirewall.vpcFirewall": {
+			// to override args, implement: initAlicloudCloudFirewallVpcFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudFirewallVpcFirewall,
+		},
+		"alicloud.cloudFirewall.vpcControlPolicy": {
+			// to override args, implement: initAlicloudCloudFirewallVpcControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudFirewallVpcControlPolicy,
+		},
+		"alicloud.cloudFirewall.natFirewall": {
+			// to override args, implement: initAlicloudCloudFirewallNatFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudFirewallNatFirewall,
+		},
+		"alicloud.cloudFirewall.natControlPolicy": {
+			// to override args, implement: initAlicloudCloudFirewallNatControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudFirewallNatControlPolicy,
 		},
 		"alicloud.cloudFirewall.controlPolicy": {
 			// to override args, implement: initAlicloudCloudFirewallControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5170,6 +5190,249 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.cloudFirewall.logProject": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCloudFirewall).GetLogProject()).ToDataRes(types.Resource("alicloud.log.project"))
+	},
+	"alicloud.cloudFirewall.vpcFirewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewall).GetVpcFirewalls()).ToDataRes(types.Array(types.Resource("alicloud.cloudFirewall.vpcFirewall")))
+	},
+	"alicloud.cloudFirewall.natFirewalls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewall).GetNatFirewalls()).ToDataRes(types.Array(types.Resource("alicloud.cloudFirewall.natFirewall")))
+	},
+	"alicloud.cloudFirewall.vpcFirewall.vpcFirewallId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetVpcFirewallId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.vpcFirewallName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetVpcFirewallName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.connectType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetConnectType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.connectSubType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetConnectSubType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.bandwidth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetBandwidth()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.firewallSwitchStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetFirewallSwitchStatus()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.regionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetRegionStatus()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.strictMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetStrictMode()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsBlocking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetIpsBlocking()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetIpsMode()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsBasicRulesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetIpsBasicRulesEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsVirtualPatchEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetIpsVirtualPatchEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsRuleClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetIpsRuleClass()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.localRegionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetLocalRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.localVpcName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetLocalVpcName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.localVpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetLocalVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerRegionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetPeerRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpcId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetPeerVpcId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpcName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetPeerVpcName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpcOwnerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetPeerVpcOwnerId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.crossAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetCrossAccount()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetPeerVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
+	},
+	"alicloud.cloudFirewall.vpcFirewall.controlPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcFirewall).GetControlPolicies()).ToDataRes(types.Array(types.Resource("alicloud.cloudFirewall.vpcControlPolicy")))
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.aclUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetAclUuid()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.vpcFirewallId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetVpcFirewallId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetAction()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetSource()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetSourceType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.sourceGroupCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetSourceGroupCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetDestination()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetDestinationType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destinationGroupCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetDestinationGroupCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetDestPort()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destPortType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetDestPortType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destPortGroupPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetDestPortGroupPorts()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.proto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetProto()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.applicationNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetApplicationNames()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.order": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetOrder()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.hitTimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetHitTimes()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.lastHitTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetLastHitTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallVpcControlPolicy).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudFirewall.natFirewall.proxyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetProxyId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natFirewall.proxyName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetProxyName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natFirewall.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natFirewall.proxyStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetProxyStatus()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natFirewall.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.natFirewall.strictMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetStrictMode()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.natFirewall.errorDetail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetErrorDetail()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natFirewall.vpcName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetVpcName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natFirewall.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
+	},
+	"alicloud.cloudFirewall.natFirewall.natGatewayName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetNatGatewayName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natFirewall.natGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetNatGateway()).ToDataRes(types.Resource("alicloud.vpc.natGateway"))
+	},
+	"alicloud.cloudFirewall.natFirewall.controlPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatFirewall).GetControlPolicies()).ToDataRes(types.Array(types.Resource("alicloud.cloudFirewall.natControlPolicy")))
+	},
+	"alicloud.cloudFirewall.natControlPolicy.aclUuid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetAclUuid()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.natGatewayId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetNatGatewayId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.direction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDirection()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetAction()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetSource()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.sourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetSourceType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.sourceGroupCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetSourceGroupCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDestination()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDestinationType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destinationGroupCidrs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDestinationGroupCidrs()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDestPort()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destPortType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDestPortType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destPortGroupPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDestPortGroupPorts()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.natControlPolicy.proto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetProto()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.applicationNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetApplicationNames()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudFirewall.natControlPolicy.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.order": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetOrder()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.hitTimes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetHitTimes()).ToDataRes(types.Int)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.lastHitTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetLastHitTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudFirewall.natControlPolicy.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudFirewallNatControlPolicy).GetUpdateTime()).ToDataRes(types.Time)
 	},
 	"alicloud.cloudFirewall.controlPolicy.aclUuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCloudFirewallControlPolicy).GetAclUuid()).ToDataRes(types.String)
@@ -12748,6 +13011,346 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.cloudFirewall.logProject": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudCloudFirewall).LogProject, ok = plugin.RawToTValue[*mqlAlicloudLogProject](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewall).VpcFirewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewalls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewall).NatFirewalls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.vpcFirewallId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).VpcFirewallId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.vpcFirewallName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).VpcFirewallName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.connectType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).ConnectType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.connectSubType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).ConnectSubType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.bandwidth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).Bandwidth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.firewallSwitchStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).FirewallSwitchStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.regionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).RegionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.strictMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).StrictMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsBlocking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).IpsBlocking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).IpsMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsBasicRulesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).IpsBasicRulesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsVirtualPatchEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).IpsVirtualPatchEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.ipsRuleClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).IpsRuleClass, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.localRegionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).LocalRegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.localVpcName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).LocalVpcName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.localVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).LocalVpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerRegionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).PeerRegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpcId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).PeerVpcId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpcName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).PeerVpcName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpcOwnerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).PeerVpcOwnerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.crossAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).CrossAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.peerVpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).PeerVpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcFirewall.controlPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcFirewall).ControlPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.aclUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).AclUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.vpcFirewallId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).VpcFirewallId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.sourceGroupCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).SourceGroupCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destinationGroupCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).DestinationGroupCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).DestPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destPortType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).DestPortType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.destPortGroupPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).DestPortGroupPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.proto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).Proto, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.applicationNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).ApplicationNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.order": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).Order, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.hitTimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).HitTimes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.lastHitTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).LastHitTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.vpcControlPolicy.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallVpcControlPolicy).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.proxyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).ProxyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.proxyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).ProxyName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.proxyStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).ProxyStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.strictMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).StrictMode, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.errorDetail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).ErrorDetail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.vpcName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).VpcName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.natGatewayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).NatGatewayName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.natGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).NatGateway, ok = plugin.RawToTValue[*mqlAlicloudVpcNatGateway](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natFirewall.controlPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatFirewall).ControlPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.aclUuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).AclUuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.natGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).NatGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.direction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Direction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.sourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).SourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.sourceGroupCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).SourceGroupCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).DestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destinationGroupCidrs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).DestinationGroupCidrs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).DestPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destPortType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).DestPortType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.destPortGroupPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).DestPortGroupPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.proto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Proto, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.applicationNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).ApplicationNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.order": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).Order, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.hitTimes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).HitTimes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.lastHitTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).LastHitTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudFirewall.natControlPolicy.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudFirewallNatControlPolicy).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.cloudFirewall.controlPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29267,6 +29870,8 @@ type mqlAlicloudCloudFirewall struct {
 	LogRegionId        plugin.TValue[string]
 	LogRetentionDays   plugin.TValue[int64]
 	LogProject         plugin.TValue[*mqlAlicloudLogProject]
+	VpcFirewalls       plugin.TValue[[]any]
+	NatFirewalls       plugin.TValue[[]any]
 }
 
 // createAlicloudCloudFirewall creates a new instance of this resource
@@ -29378,6 +29983,681 @@ func (c *mqlAlicloudCloudFirewall) GetLogProject() *plugin.TValue[*mqlAlicloudLo
 
 		return c.logProject()
 	})
+}
+
+func (c *mqlAlicloudCloudFirewall) GetVpcFirewalls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VpcFirewalls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall", c.__id, "vpcFirewalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.vpcFirewalls()
+	})
+}
+
+func (c *mqlAlicloudCloudFirewall) GetNatFirewalls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.NatFirewalls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall", c.__id, "natFirewalls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.natFirewalls()
+	})
+}
+
+// mqlAlicloudCloudFirewallVpcFirewall for the alicloud.cloudFirewall.vpcFirewall resource
+type mqlAlicloudCloudFirewallVpcFirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudCloudFirewallVpcFirewallInternal
+	VpcFirewallId          plugin.TValue[string]
+	VpcFirewallName        plugin.TValue[string]
+	ConnectType            plugin.TValue[string]
+	ConnectSubType         plugin.TValue[string]
+	Bandwidth              plugin.TValue[int64]
+	FirewallSwitchStatus   plugin.TValue[string]
+	Enabled                plugin.TValue[bool]
+	RegionStatus           plugin.TValue[string]
+	StrictMode             plugin.TValue[bool]
+	IpsBlocking            plugin.TValue[bool]
+	IpsMode                plugin.TValue[int64]
+	IpsBasicRulesEnabled   plugin.TValue[bool]
+	IpsVirtualPatchEnabled plugin.TValue[bool]
+	IpsRuleClass           plugin.TValue[int64]
+	LocalRegionId          plugin.TValue[string]
+	LocalVpcName           plugin.TValue[string]
+	LocalVpc               plugin.TValue[*mqlAlicloudVpcNetwork]
+	PeerRegionId           plugin.TValue[string]
+	PeerVpcId              plugin.TValue[string]
+	PeerVpcName            plugin.TValue[string]
+	PeerVpcOwnerId         plugin.TValue[string]
+	CrossAccount           plugin.TValue[bool]
+	PeerVpc                plugin.TValue[*mqlAlicloudVpcNetwork]
+	ControlPolicies        plugin.TValue[[]any]
+}
+
+// createAlicloudCloudFirewallVpcFirewall creates a new instance of this resource
+func createAlicloudCloudFirewallVpcFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudFirewallVpcFirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudFirewall.vpcFirewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) MqlName() string {
+	return "alicloud.cloudFirewall.vpcFirewall"
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetVpcFirewallId() *plugin.TValue[string] {
+	return &c.VpcFirewallId
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetVpcFirewallName() *plugin.TValue[string] {
+	return &c.VpcFirewallName
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetConnectType() *plugin.TValue[string] {
+	return &c.ConnectType
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetConnectSubType() *plugin.TValue[string] {
+	return &c.ConnectSubType
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetBandwidth() *plugin.TValue[int64] {
+	return &c.Bandwidth
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetFirewallSwitchStatus() *plugin.TValue[string] {
+	return &c.FirewallSwitchStatus
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetRegionStatus() *plugin.TValue[string] {
+	return &c.RegionStatus
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetStrictMode() *plugin.TValue[bool] {
+	return &c.StrictMode
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetIpsBlocking() *plugin.TValue[bool] {
+	return &c.IpsBlocking
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetIpsMode() *plugin.TValue[int64] {
+	return &c.IpsMode
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetIpsBasicRulesEnabled() *plugin.TValue[bool] {
+	return &c.IpsBasicRulesEnabled
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetIpsVirtualPatchEnabled() *plugin.TValue[bool] {
+	return &c.IpsVirtualPatchEnabled
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetIpsRuleClass() *plugin.TValue[int64] {
+	return &c.IpsRuleClass
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetLocalRegionId() *plugin.TValue[string] {
+	return &c.LocalRegionId
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetLocalVpcName() *plugin.TValue[string] {
+	return &c.LocalVpcName
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetLocalVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.LocalVpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall.vpcFirewall", c.__id, "localVpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.localVpc()
+	})
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetPeerRegionId() *plugin.TValue[string] {
+	return &c.PeerRegionId
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetPeerVpcId() *plugin.TValue[string] {
+	return &c.PeerVpcId
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetPeerVpcName() *plugin.TValue[string] {
+	return &c.PeerVpcName
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetPeerVpcOwnerId() *plugin.TValue[string] {
+	return &c.PeerVpcOwnerId
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetCrossAccount() *plugin.TValue[bool] {
+	return &c.CrossAccount
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetPeerVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.PeerVpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall.vpcFirewall", c.__id, "peerVpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.peerVpc()
+	})
+}
+
+func (c *mqlAlicloudCloudFirewallVpcFirewall) GetControlPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ControlPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall.vpcFirewall", c.__id, "controlPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.controlPolicies()
+	})
+}
+
+// mqlAlicloudCloudFirewallVpcControlPolicy for the alicloud.cloudFirewall.vpcControlPolicy resource
+type mqlAlicloudCloudFirewallVpcControlPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudCloudFirewallVpcControlPolicyInternal it will be used here
+	AclUuid               plugin.TValue[string]
+	VpcFirewallId         plugin.TValue[string]
+	Action                plugin.TValue[string]
+	Source                plugin.TValue[string]
+	SourceType            plugin.TValue[string]
+	SourceGroupCidrs      plugin.TValue[[]any]
+	Destination           plugin.TValue[string]
+	DestinationType       plugin.TValue[string]
+	DestinationGroupCidrs plugin.TValue[[]any]
+	DestPort              plugin.TValue[string]
+	DestPortType          plugin.TValue[string]
+	DestPortGroupPorts    plugin.TValue[[]any]
+	Proto                 plugin.TValue[string]
+	ApplicationNames      plugin.TValue[[]any]
+	Description           plugin.TValue[string]
+	Enabled               plugin.TValue[bool]
+	Order                 plugin.TValue[int64]
+	HitTimes              plugin.TValue[int64]
+	LastHitTime           plugin.TValue[*time.Time]
+	CreateTime            plugin.TValue[*time.Time]
+	UpdateTime            plugin.TValue[*time.Time]
+}
+
+// createAlicloudCloudFirewallVpcControlPolicy creates a new instance of this resource
+func createAlicloudCloudFirewallVpcControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudFirewallVpcControlPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudFirewall.vpcControlPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) MqlName() string {
+	return "alicloud.cloudFirewall.vpcControlPolicy"
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetAclUuid() *plugin.TValue[string] {
+	return &c.AclUuid
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetVpcFirewallId() *plugin.TValue[string] {
+	return &c.VpcFirewallId
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetSourceGroupCidrs() *plugin.TValue[[]any] {
+	return &c.SourceGroupCidrs
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetDestinationGroupCidrs() *plugin.TValue[[]any] {
+	return &c.DestinationGroupCidrs
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetDestPort() *plugin.TValue[string] {
+	return &c.DestPort
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetDestPortType() *plugin.TValue[string] {
+	return &c.DestPortType
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetDestPortGroupPorts() *plugin.TValue[[]any] {
+	return &c.DestPortGroupPorts
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetProto() *plugin.TValue[string] {
+	return &c.Proto
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetApplicationNames() *plugin.TValue[[]any] {
+	return &c.ApplicationNames
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetOrder() *plugin.TValue[int64] {
+	return &c.Order
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetHitTimes() *plugin.TValue[int64] {
+	return &c.HitTimes
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetLastHitTime() *plugin.TValue[*time.Time] {
+	return &c.LastHitTime
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudCloudFirewallVpcControlPolicy) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlAlicloudCloudFirewallNatFirewall for the alicloud.cloudFirewall.natFirewall resource
+type mqlAlicloudCloudFirewallNatFirewall struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudCloudFirewallNatFirewallInternal
+	ProxyId         plugin.TValue[string]
+	ProxyName       plugin.TValue[string]
+	RegionId        plugin.TValue[string]
+	ProxyStatus     plugin.TValue[string]
+	Enabled         plugin.TValue[bool]
+	StrictMode      plugin.TValue[bool]
+	ErrorDetail     plugin.TValue[string]
+	VpcName         plugin.TValue[string]
+	Vpc             plugin.TValue[*mqlAlicloudVpcNetwork]
+	NatGatewayName  plugin.TValue[string]
+	NatGateway      plugin.TValue[*mqlAlicloudVpcNatGateway]
+	ControlPolicies plugin.TValue[[]any]
+}
+
+// createAlicloudCloudFirewallNatFirewall creates a new instance of this resource
+func createAlicloudCloudFirewallNatFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudFirewallNatFirewall{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudFirewall.natFirewall", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) MqlName() string {
+	return "alicloud.cloudFirewall.natFirewall"
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetProxyId() *plugin.TValue[string] {
+	return &c.ProxyId
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetProxyName() *plugin.TValue[string] {
+	return &c.ProxyName
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetProxyStatus() *plugin.TValue[string] {
+	return &c.ProxyStatus
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetStrictMode() *plugin.TValue[bool] {
+	return &c.StrictMode
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetErrorDetail() *plugin.TValue[string] {
+	return &c.ErrorDetail
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetVpcName() *plugin.TValue[string] {
+	return &c.VpcName
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall.natFirewall", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetNatGatewayName() *plugin.TValue[string] {
+	return &c.NatGatewayName
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetNatGateway() *plugin.TValue[*mqlAlicloudVpcNatGateway] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNatGateway](&c.NatGateway, func() (*mqlAlicloudVpcNatGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall.natFirewall", c.__id, "natGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNatGateway), nil
+			}
+		}
+
+		return c.natGateway()
+	})
+}
+
+func (c *mqlAlicloudCloudFirewallNatFirewall) GetControlPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ControlPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudFirewall.natFirewall", c.__id, "controlPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.controlPolicies()
+	})
+}
+
+// mqlAlicloudCloudFirewallNatControlPolicy for the alicloud.cloudFirewall.natControlPolicy resource
+type mqlAlicloudCloudFirewallNatControlPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudCloudFirewallNatControlPolicyInternal it will be used here
+	AclUuid               plugin.TValue[string]
+	NatGatewayId          plugin.TValue[string]
+	Direction             plugin.TValue[string]
+	Action                plugin.TValue[string]
+	Source                plugin.TValue[string]
+	SourceType            plugin.TValue[string]
+	SourceGroupCidrs      plugin.TValue[[]any]
+	Destination           plugin.TValue[string]
+	DestinationType       plugin.TValue[string]
+	DestinationGroupCidrs plugin.TValue[[]any]
+	DestPort              plugin.TValue[string]
+	DestPortType          plugin.TValue[string]
+	DestPortGroupPorts    plugin.TValue[[]any]
+	Proto                 plugin.TValue[string]
+	ApplicationNames      plugin.TValue[[]any]
+	Description           plugin.TValue[string]
+	Enabled               plugin.TValue[bool]
+	Order                 plugin.TValue[int64]
+	HitTimes              plugin.TValue[int64]
+	LastHitTime           plugin.TValue[*time.Time]
+	CreateTime            plugin.TValue[*time.Time]
+	UpdateTime            plugin.TValue[*time.Time]
+}
+
+// createAlicloudCloudFirewallNatControlPolicy creates a new instance of this resource
+func createAlicloudCloudFirewallNatControlPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudFirewallNatControlPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudFirewall.natControlPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) MqlName() string {
+	return "alicloud.cloudFirewall.natControlPolicy"
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetAclUuid() *plugin.TValue[string] {
+	return &c.AclUuid
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetNatGatewayId() *plugin.TValue[string] {
+	return &c.NatGatewayId
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDirection() *plugin.TValue[string] {
+	return &c.Direction
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetSourceType() *plugin.TValue[string] {
+	return &c.SourceType
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetSourceGroupCidrs() *plugin.TValue[[]any] {
+	return &c.SourceGroupCidrs
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDestinationType() *plugin.TValue[string] {
+	return &c.DestinationType
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDestinationGroupCidrs() *plugin.TValue[[]any] {
+	return &c.DestinationGroupCidrs
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDestPort() *plugin.TValue[string] {
+	return &c.DestPort
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDestPortType() *plugin.TValue[string] {
+	return &c.DestPortType
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDestPortGroupPorts() *plugin.TValue[[]any] {
+	return &c.DestPortGroupPorts
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetProto() *plugin.TValue[string] {
+	return &c.Proto
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetApplicationNames() *plugin.TValue[[]any] {
+	return &c.ApplicationNames
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetOrder() *plugin.TValue[int64] {
+	return &c.Order
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetHitTimes() *plugin.TValue[int64] {
+	return &c.HitTimes
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetLastHitTime() *plugin.TValue[*time.Time] {
+	return &c.LastHitTime
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudCloudFirewallNatControlPolicy) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
 }
 
 // mqlAlicloudCloudFirewallControlPolicy for the alicloud.cloudFirewall.controlPolicy resource
