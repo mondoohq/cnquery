@@ -4375,7 +4375,8 @@ private gcp.project.dnsService {
 // state. Private zones expose the VPC networks and GKE clusters authorized to
 // resolve against them and any outbound forwarding or peering targets. The
 // `dnssecEnabled` and `dnsSecAlgorithmWeak` predicates flag absent or weak
-// DNSSEC signing, and `recordSets` expose the DNS records within the zone.
+// DNSSEC signing, `dnsKeys` lists the signing keys actually published for the
+// zone, and `recordSets` expose the DNS records within the zone.
 private gcp.project.dnsService.managedzone @defaults("name") {
   // Managed zone ID
   id string
@@ -4389,8 +4390,10 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   //
   // Dict with `state` (DNSSEC signing state: "on", "off", or "transfer"),
   // `nonExistence` (proof-of-nonexistence mode: "nsec" or "nsec3"), and
-  // `defaultKeySpecs`, a list of `{algorithm, keyLength, keyType}` entries
-  // describing the zone's default key-signing and zone-signing keys.
+  // `defaultKeySpecs`, a list of `{algorithm, keyLength, keyType}` entries.
+  // The key specs are the parameters new keys are generated with, not the
+  // keys the zone is signed with today. Read `dnsKeys` for the keys
+  // actually published and in use.
   dnssecConfig dict
   // DNS name of this managed zone
   dnsName string
@@ -4410,9 +4413,29 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   dnssecEnabled bool
   // DNSSEC proof-of-nonexistence mode ("nsec" or "nsec3"); empty when DNSSEC is not configured
   dnssecNonExistence string
-  // Whether DNSSEC is enabled but uses a weak signing algorithm (RSASHA1 / RSASHA1-NSEC3-SHA1)
+  // Whether DNSSEC is enabled but a published signing key uses a weak algorithm
+  //
+  // True when the zone is signed and any key in `dnsKeys` uses RSASHA1 or
+  // RSASHA1-NSEC3-SHA1. Inactive keys count: they remain published in the
+  // DNSKEY record set and resolvers still validate existing signatures
+  // against them. False when the zone is not signed at all, which
+  // `dnssecEnabled` reports separately. Null when the signing keys cannot
+  // be read, so that an unreadable zone is not mistaken for a safe one.
   dnsSecAlgorithmWeak() bool
-  // DNSSEC signing algorithms of the zone's default key specs (e.g. rsasha256, ecdsap256sha256, rsasha1)
+  // DNSSEC signing keys published for the zone
+  //
+  // Keys the zone is actually signed with, each with its `algorithm`,
+  // `keyLength`, `keyTag`, `type` (key-signing or zone-signing), and
+  // whether it `isActive`. Empty when DNSSEC is not enabled on the zone.
+  // These are the live keys: they can differ from the `defaultKeySpecs`
+  // in `dnssecConfig`, which only describe how new keys are generated.
+  dnsKeys() []gcp.project.dnsService.managedzone.dnsKey
+  // DNSSEC key-generation algorithms configured for new keys (e.g. rsasha256, ecdsap256sha256, rsasha1)
+  //
+  // Algorithms from the zone's default key specs, which govern key
+  // generation rather than describing the keys in use. For the algorithms
+  // the zone is signed with today, read the `algorithm` field of
+  // `dnsKeys`.
   dnssecDefaultKeyAlgorithms []string
   // Authorized VPC networks and GKE clusters for a private zone
   //
@@ -4448,6 +4471,56 @@ private gcp.project.dnsService.managedzone @defaults("name") {
   // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
   // when the resource carries no management signal.
   managedBy() string
+}
+
+// Google Cloud DNS zone signing key
+//
+// DNSSEC key published for a managed zone, as the zone is signed today
+// rather than as it was configured to generate keys. The `algorithm` and
+// `keyLength` fields report the cryptography actually in use, which is what a
+// weak-algorithm audit has to read: a zone created with one algorithm and
+// rolled to another still reports the original in its zone-level default key
+// specs. The `type` field distinguishes a key-signing key from a
+// zone-signing key, `isActive` reports whether the key signs new changes or
+// is only retained so resolvers can validate existing signatures, and
+// `digests` holds the hashes used to build the parent zone's DS record.
+private gcp.project.dnsService.managedzone.dnsKey @defaults("keyTag type algorithm keyLength") {
+  // Server-defined unique identifier of the key
+  id string
+  // Non-cryptographic hash of the DNSKEY record, used by a parent zone's DS record to point at this key
+  keyTag int
+  // DNSSEC signing algorithm
+  //
+  // One of rsasha1, rsasha256, rsasha512, ecdsap256sha256, or
+  // ecdsap384sha384. Immutable after the key is created. rsasha1 is
+  // considered weak and is what `dnsSecAlgorithmWeak` looks for.
+  algorithm string
+  // Length of the key in bits
+  keyLength int
+  // Role of the key
+  //
+  // Either "keySigning" for a key-signing key, which has the Secure Entry
+  // Point flag set and signs only the DNSKEY record set, or "zoneSigning"
+  // for a zone-signing key, which signs record sets of every other type.
+  type string
+  // Whether the key signs subsequent changes to the zone
+  //
+  // Inactive keys stay published as DNSKEY records so resolvers can
+  // validate signatures that were already made with them, so an inactive
+  // key with a weak algorithm is still trusted by resolvers.
+  isActive bool
+  // Time the key was created in the control plane
+  creationTime time
+  // User-supplied description of the key
+  description string
+  // Base64-encoded public half of the key
+  publicKey string
+  // Cryptographic hashes of the DNSKEY record, for building the parent zone's DS record
+  //
+  // One entry per computed digest, each with `type` (the hash algorithm:
+  // "sha1", "sha256", or "sha384") and `digest` (the base-16 encoded
+  // bytes). Populated for key-signing keys.
+  digests []dict
 }
 
 // Google Cloud DNS record set
