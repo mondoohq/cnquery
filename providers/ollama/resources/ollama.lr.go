@@ -133,6 +133,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"ollama.authenticationRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllama).GetAuthenticationRequired()).ToDataRes(types.Bool)
 	},
+	"ollama.writeAuthenticationRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllama).GetWriteAuthenticationRequired()).ToDataRes(types.Bool)
+	},
 	"ollama.cloudEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllama).GetCloudEnabled()).ToDataRes(types.Bool)
 	},
@@ -225,6 +228,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"ollama.model.capabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllamaModel).GetCapabilities()).ToDataRes(types.Array(types.String))
+	},
+	"ollama.model.parameters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetParameters()).ToDataRes(types.String)
+	},
+	"ollama.model.renderer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetRenderer()).ToDataRes(types.String)
+	},
+	"ollama.model.parser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOllamaModel).GetParser()).ToDataRes(types.String)
 	},
 	"ollama.model.info": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOllamaModel).GetInfo()).ToDataRes(types.Resource("ollama.model.info"))
@@ -344,6 +356,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ollama.authenticationRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOllama).AuthenticationRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"ollama.writeAuthenticationRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllama).WriteAuthenticationRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"ollama.cloudEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -476,6 +492,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"ollama.model.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOllamaModel).Capabilities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"ollama.model.parameters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Parameters, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.renderer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Renderer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"ollama.model.parser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOllamaModel).Parser, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"ollama.model.info": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -627,15 +655,16 @@ type mqlOllama struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlOllamaInternal it will be used here
-	Host                   plugin.TValue[string]
-	Version                plugin.TValue[string]
-	Tls                    plugin.TValue[bool]
-	IsLocal                plugin.TValue[bool]
-	AuthenticationRequired plugin.TValue[bool]
-	CloudEnabled           plugin.TValue[bool]
-	CloudAccount           plugin.TValue[*mqlOllamaAccount]
-	Models                 plugin.TValue[[]any]
-	RunningModels          plugin.TValue[[]any]
+	Host                        plugin.TValue[string]
+	Version                     plugin.TValue[string]
+	Tls                         plugin.TValue[bool]
+	IsLocal                     plugin.TValue[bool]
+	AuthenticationRequired      plugin.TValue[bool]
+	WriteAuthenticationRequired plugin.TValue[bool]
+	CloudEnabled                plugin.TValue[bool]
+	CloudAccount                plugin.TValue[*mqlOllamaAccount]
+	Models                      plugin.TValue[[]any]
+	RunningModels               plugin.TValue[[]any]
 }
 
 // createOllama creates a new instance of this resource
@@ -702,6 +731,12 @@ func (c *mqlOllama) GetIsLocal() *plugin.TValue[bool] {
 func (c *mqlOllama) GetAuthenticationRequired() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AuthenticationRequired, func() (bool, error) {
 		return c.authenticationRequired()
+	})
+}
+
+func (c *mqlOllama) GetWriteAuthenticationRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WriteAuthenticationRequired, func() (bool, error) {
+		return c.writeAuthenticationRequired()
 	})
 }
 
@@ -846,6 +881,9 @@ type mqlOllamaModel struct {
 	System            plugin.TValue[string]
 	Template          plugin.TValue[string]
 	Capabilities      plugin.TValue[[]any]
+	Parameters        plugin.TValue[string]
+	Renderer          plugin.TValue[string]
+	Parser            plugin.TValue[string]
 	Info              plugin.TValue[*mqlOllamaModelInfo]
 }
 
@@ -987,6 +1025,24 @@ func (c *mqlOllamaModel) GetTemplate() *plugin.TValue[string] {
 func (c *mqlOllamaModel) GetCapabilities() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Capabilities, func() ([]any, error) {
 		return c.capabilities()
+	})
+}
+
+func (c *mqlOllamaModel) GetParameters() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Parameters, func() (string, error) {
+		return c.parameters()
+	})
+}
+
+func (c *mqlOllamaModel) GetRenderer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Renderer, func() (string, error) {
+		return c.renderer()
+	})
+}
+
+func (c *mqlOllamaModel) GetParser() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Parser, func() (string, error) {
+		return c.parser()
 	})
 }
 

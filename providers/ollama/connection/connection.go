@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -139,14 +140,53 @@ func (c *OllamaConnection) Version(ctx context.Context) (string, error) {
 	return c.version, c.versionErr
 }
 
+// writeProbeBody is the body of the unauthenticated write probe. It is
+// truncated JSON: the object is opened and a key is started, then the bytes
+// stop. No JSON decoder can parse it, so no field of a create request, above
+// all no model name, can be read out of it. The key names the probe so an
+// operator reading their server log can see what sent it.
+const writeProbeBody = `{"mondoo_write_auth_probe":`
+
 // AnonymousStatus issues a read-only request with no credentials attached and
 // returns the HTTP status code the instance answers with. It deliberately uses
 // the model listing endpoint: it is a plain GET that changes nothing, so the
 // probe cannot alter the instance it is auditing.
 func (c *OllamaConnection) AnonymousStatus(ctx context.Context) (int, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL.JoinPath("/api/tags").String(), nil)
+	return c.anonymousStatus(ctx, http.MethodGet, "/api/tags", "")
+}
+
+// AnonymousWriteStatus reports the HTTP status an unauthenticated caller gets
+// from the model-creation endpoint, which is what decides whether a stranger
+// can replace the weights this instance serves.
+//
+// The probe cannot create, pull, or delete anything. It posts a body that is
+// not valid JSON, and /api/create decodes its body before it does anything
+// else: a body that fails to decode is answered 400 by the handler's first
+// branch, with no model named and no state touched. Deleting and pulling are
+// never attempted at all, because both take a model name and there is no
+// malformed form of those requests that is safe to send.
+//
+// A server that gates writes rejects the request before its body is ever
+// looked at, so its answer (401, 403, 407) is distinguishable from the 400 a
+// server that accepts anonymous writes returns for the unparseable body.
+func (c *OllamaConnection) AnonymousWriteStatus(ctx context.Context) (int, error) {
+	return c.anonymousStatus(ctx, http.MethodPost, "/api/create", writeProbeBody)
+}
+
+// anonymousStatus issues one request with no credentials attached and returns
+// the status code the instance answers with.
+func (c *OllamaConnection) anonymousStatus(ctx context.Context, method, path, body string) (int, error) {
+	var payload io.Reader
+	if body != "" {
+		payload = strings.NewReader(body)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL.JoinPath(path).String(), payload)
 	if err != nil {
 		return 0, err
+	}
+	if body != "" {
+		req.Header.Set("Content-Type", "application/json")
 	}
 
 	// A fresh client, so the token-bearing transport cannot be reached.

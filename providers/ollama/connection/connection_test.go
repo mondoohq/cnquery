@@ -4,6 +4,8 @@
 package connection
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -101,4 +103,65 @@ func TestVersionIsFetchedOnce(t *testing.T) {
 		assert.Equal(t, "0.12.6", version)
 	}
 	assert.Equal(t, 1, calls, "asset detection and the version field share a single call")
+}
+
+func TestAnonymousWriteStatusCannotMutate(t *testing.T) {
+	var (
+		gotMethod string
+		gotPath   string
+		gotAuth   string
+		gotBody   []byte
+	)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.Path
+		gotAuth = r.Header.Get("Authorization")
+		gotBody, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer srv.Close()
+
+	conn := testConnection(t, srv.URL, func(c *inventory.Config) {
+		c.Options[TokenOption] = "a-token-the-probe-must-not-send"
+	})
+
+	code, err := conn.AnonymousWriteStatus(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, code)
+
+	assert.Equal(t, http.MethodPost, gotMethod)
+	assert.Equal(t, "/api/create", gotPath,
+		"the probe must go to the creation endpoint, never to delete or pull")
+	assert.Empty(t, gotAuth, "the probe must be unauthenticated or it proves nothing")
+
+	// The body is what makes the probe safe: it cannot be decoded, so no model
+	// name, file, or digest can be read out of it.
+	var decoded any
+	assert.Error(t, json.Unmarshal(gotBody, &decoded),
+		"the probe body must not be valid JSON, or the server could act on it")
+	assert.NotContains(t, string(gotBody), "model",
+		"the probe body must not name a model under any key")
+}
+
+func TestAnonymousWriteStatusGatedInstance(t *testing.T) {
+	var reached bool
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached = true
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer srv.Close()
+
+	code, err := testConnection(t, srv.URL).AnonymousWriteStatus(t.Context())
+	require.NoError(t, err)
+	assert.True(t, reached)
+	assert.Equal(t, http.StatusUnauthorized, code)
+}
+
+func TestAnonymousWriteStatusUnreachableHost(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	url := srv.URL
+	srv.Close()
+
+	_, err := testConnection(t, url).AnonymousWriteStatus(t.Context())
+	assert.Error(t, err, "a transport failure must surface, never read as writes being open")
 }

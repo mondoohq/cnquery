@@ -13,10 +13,10 @@ option go_package = "go.mondoo.com/mql/providers/ollama/resources"
 // authentication.
 //
 // The server version, transport encryption, whether the address is
-// reachable beyond the local machine, whether unauthenticated callers are
-// accepted, and whether inference may be offloaded to Ollama Cloud are all
-// queryable, so an instance can be audited for exposure and for the
-// advisories that apply to the version it runs.
+// reachable beyond the local machine, whether unauthenticated callers may
+// read and whether they may write, and whether inference may be offloaded to
+// Ollama Cloud are all queryable, so an instance can be audited for exposure
+// and for the advisories that apply to the version it runs.
 ollama @defaults("host version") {
   // Host address of the Ollama instance
   host() string
@@ -37,13 +37,25 @@ ollama @defaults("host version") {
   // connections from other hosts, and authenticationRequired and tls decide
   // who can reach it and on what terms.
   isLocal() bool
-  // Whether the API rejects unauthenticated requests
+  // Whether the API rejects unauthenticated read requests
   //
   // Determined by re-issuing a read-only request with the authorization header
-  // removed. False means any client that can reach the host can list, pull,
-  // delete, and run models without credentials. Ollama does not require
+  // removed. False means any client that can reach the host can list models and
+  // read their metadata without credentials. It says nothing about writes, which
+  // writeAuthenticationRequired reports separately. Ollama does not require
   // authentication by default.
   authenticationRequired() bool
+  // Whether the API rejects unauthenticated write requests
+  //
+  // Determined by sending a deliberately unparseable body to the model creation
+  // endpoint with no authorization header. The body cannot be decoded, so
+  // nothing is created, pulled, or deleted whatever the answer. A refusal for
+  // lack of credentials reports true. A rejection of the body alone reports
+  // false, meaning any client that can reach the host can create, pull, and
+  // delete models without credentials, and so can replace the weights this
+  // instance serves. An instance can gate reads and still leave writes open, so
+  // this is checked apart from authenticationRequired.
+  writeAuthenticationRequired() bool
   // Whether the instance may offload inference to Ollama Cloud
   //
   // When enabled, prompts and completions for cloud-hosted models leave the
@@ -169,6 +181,25 @@ ollama.model @defaults("name family parameterSize") {
   //
   // For example completion, tools, vision, or thinking.
   capabilities() []string
+  // Runtime parameters baked into the model
+  //
+  // The PARAMETER block of the model's Modelfile verbatim, the defaults the
+  // server applies to every request for this model. Covers settings such as
+  // num_ctx, temperature, and the stop sequences that terminate generation.
+  // Empty for a model whose Modelfile sets no parameters.
+  parameters() string
+  // Built-in renderer that formats messages for the model
+  //
+  // Names the server-side renderer that turns a request into the model's
+  // prompt format, for example qwen3-coder. Empty for a model that is rendered
+  // by its chat template instead.
+  renderer() string
+  // Built-in parser that reads the model's output
+  //
+  // Names the server-side parser that interprets what the model emits,
+  // including tool calls and thinking segments, for example harmony. Empty for
+  // a model whose output needs no parsing beyond plain text.
+  parser() string
   // Structured GGUF metadata extracted from the model's configuration
   info() ollama.model.info
 }

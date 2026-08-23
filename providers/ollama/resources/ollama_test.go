@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"testing"
@@ -181,3 +182,63 @@ func TestModelfileAdaptersDoesNotMaterializeLines(t *testing.T) {
 }
 
 var sink []string
+
+func TestClassifyAuthProbe(t *testing.T) {
+	tests := []struct {
+		name    string
+		code    int
+		open    []int
+		want    bool
+		wantErr bool
+	}{
+		// A refusal for lack of credentials means that path is gated, whether
+		// the instance or a proxy in front of it did the refusing.
+		{"read 401", http.StatusUnauthorized, readOpenStatuses, true, false},
+		{"read 403", http.StatusForbidden, readOpenStatuses, true, false},
+		{"read 407", http.StatusProxyAuthRequired, readOpenStatuses, true, false},
+		{"write 401", http.StatusUnauthorized, writeOpenStatuses, true, false},
+		{"write 403", http.StatusForbidden, writeOpenStatuses, true, false},
+		{"write 407", http.StatusProxyAuthRequired, writeOpenStatuses, true, false},
+
+		// A served read, and a write turned away only for its unparseable body.
+		{"read 200", http.StatusOK, readOpenStatuses, false, false},
+		{"write 400", http.StatusBadRequest, writeOpenStatuses, false, false},
+		{"write 422", http.StatusUnprocessableEntity, writeOpenStatuses, false, false},
+
+		// A 400 says nothing about reads, and a 200 to an unparseable create
+		// body is not an Ollama create handler answering.
+		{"read 400", http.StatusBadRequest, readOpenStatuses, false, true},
+		{"write 200", http.StatusOK, writeOpenStatuses, false, true},
+
+		// An endpoint that is not served, a login redirect, and a gateway
+		// failure are all "could not tell", never a posture claim.
+		{"404", http.StatusNotFound, writeOpenStatuses, false, true},
+		{"405", http.StatusMethodNotAllowed, writeOpenStatuses, false, true},
+		{"302", http.StatusFound, readOpenStatuses, false, true},
+		{"500", http.StatusInternalServerError, writeOpenStatuses, false, true},
+		{"502", http.StatusBadGateway, readOpenStatuses, false, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := classifyAuthProbe(tt.code, tt.open, "write")
+			if tt.wantErr {
+				assert.Error(t, err, "an unclassifiable answer must not be reported as a posture finding")
+				assert.False(t, got)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestWriteOpenStatusesDoNotOverlapAuthRequired(t *testing.T) {
+	for _, code := range writeOpenStatuses {
+		assert.NotContains(t, authRequiredStatuses, code,
+			"a status cannot mean both that writes are gated and that they are open")
+	}
+	for _, code := range readOpenStatuses {
+		assert.NotContains(t, authRequiredStatuses, code)
+	}
+}
