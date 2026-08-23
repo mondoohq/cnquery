@@ -125,6 +125,8 @@ const (
 	ResourceAlicloudAntiddosNetworkRule           string = "alicloud.antiddos.networkRule"
 	ResourceAlicloudCloudsso                      string = "alicloud.cloudsso"
 	ResourceAlicloudCloudssoDirectory             string = "alicloud.cloudsso.directory"
+	ResourceAlicloudCloudssoSamlIdentityProvider  string = "alicloud.cloudsso.samlIdentityProvider"
+	ResourceAlicloudCloudssoTask                  string = "alicloud.cloudsso.task"
 	ResourceAlicloudCloudssoPasswordPolicy        string = "alicloud.cloudsso.passwordPolicy"
 	ResourceAlicloudCloudssoUser                  string = "alicloud.cloudsso.user"
 	ResourceAlicloudCloudssoGroup                 string = "alicloud.cloudsso.group"
@@ -599,6 +601,14 @@ func init() {
 		"alicloud.cloudsso.directory": {
 			Init:   initAlicloudCloudssoDirectory,
 			Create: createAlicloudCloudssoDirectory,
+		},
+		"alicloud.cloudsso.samlIdentityProvider": {
+			// to override args, implement: initAlicloudCloudssoSamlIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudssoSamlIdentityProvider,
+		},
+		"alicloud.cloudsso.task": {
+			// to override args, implement: initAlicloudCloudssoTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudCloudssoTask,
 		},
 		"alicloud.cloudsso.passwordPolicy": {
 			// to override args, implement: initAlicloudCloudssoPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5716,6 +5726,99 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.cloudsso.directory.scimSynchronizationEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCloudssoDirectory).GetScimSynchronizationEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudsso.directory.samlIdentityProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoDirectory).GetSamlIdentityProvider()).ToDataRes(types.Resource("alicloud.cloudsso.samlIdentityProvider"))
+	},
+	"alicloud.cloudsso.directory.ssoEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoDirectory).GetSsoEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudsso.directory.tasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoDirectory).GetTasks()).ToDataRes(types.Array(types.Resource("alicloud.cloudsso.task")))
+	},
+	"alicloud.cloudsso.samlIdentityProvider.directoryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetDirectoryId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.entityId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetEntityId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.loginUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetLoginUrl()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.bindingType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetBindingType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.ssoStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetSsoStatus()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.wantRequestSigned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetWantRequestSigned()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.certificateIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetCertificateIds()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.cloudsso.samlIdentityProvider.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudsso.samlIdentityProvider.updateTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoSamlIdentityProvider).GetUpdateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudsso.task.taskId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetTaskId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.taskType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetTaskType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.succeeded": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetSucceeded()).ToDataRes(types.Bool)
+	},
+	"alicloud.cloudsso.task.failureReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetFailureReason()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.principalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetPrincipalId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.principalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetPrincipalName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.accessConfigurationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetAccessConfigurationId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.accessConfigurationName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetAccessConfigurationName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.accessConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetAccessConfiguration()).ToDataRes(types.Resource("alicloud.cloudsso.accessConfiguration"))
+	},
+	"alicloud.cloudsso.task.targetId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetTargetId()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.targetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetTargetName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.targetPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetTargetPath()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.targetPathName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetTargetPathName()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.targetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetTargetType()).ToDataRes(types.String)
+	},
+	"alicloud.cloudsso.task.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetStartTime()).ToDataRes(types.Time)
+	},
+	"alicloud.cloudsso.task.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudCloudssoTask).GetEndTime()).ToDataRes(types.Time)
 	},
 	"alicloud.cloudsso.passwordPolicy.minPasswordLength": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCloudssoPasswordPolicy).GetMinPasswordLength()).ToDataRes(types.Int)
@@ -13924,6 +14027,138 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.cloudsso.directory.scimSynchronizationEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudCloudssoDirectory).ScimSynchronizationEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.directory.samlIdentityProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoDirectory).SamlIdentityProvider, ok = plugin.RawToTValue[*mqlAlicloudCloudssoSamlIdentityProvider](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.directory.ssoEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoDirectory).SsoEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.directory.tasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoDirectory).Tasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.directoryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).DirectoryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.entityId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).EntityId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.loginUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).LoginUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.bindingType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).BindingType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.ssoStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).SsoStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.wantRequestSigned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).WantRequestSigned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.certificateIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).CertificateIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.samlIdentityProvider.updateTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoSamlIdentityProvider).UpdateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.cloudsso.task.taskId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).TaskId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.taskType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).TaskType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.succeeded": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).Succeeded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.failureReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).FailureReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).PrincipalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.principalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).PrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.accessConfigurationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).AccessConfigurationId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.accessConfigurationName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).AccessConfigurationName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.accessConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).AccessConfiguration, ok = plugin.RawToTValue[*mqlAlicloudCloudssoAccessConfiguration](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.targetId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).TargetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.targetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).TargetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.targetPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).TargetPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.targetPathName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).TargetPathName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.targetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).TargetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.cloudsso.task.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudCloudssoTask).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.cloudsso.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31881,6 +32116,9 @@ type mqlAlicloudCloudssoDirectory struct {
 	AllowUserToGetCredentials  plugin.TValue[bool]
 	LoginNetworkMasks          plugin.TValue[string]
 	ScimSynchronizationEnabled plugin.TValue[bool]
+	SamlIdentityProvider       plugin.TValue[*mqlAlicloudCloudssoSamlIdentityProvider]
+	SsoEnabled                 plugin.TValue[bool]
+	Tasks                      plugin.TValue[[]any]
 }
 
 // createAlicloudCloudssoDirectory creates a new instance of this resource
@@ -32037,6 +32275,284 @@ func (c *mqlAlicloudCloudssoDirectory) GetScimSynchronizationEnabled() *plugin.T
 	return plugin.GetOrCompute[bool](&c.ScimSynchronizationEnabled, func() (bool, error) {
 		return c.scimSynchronizationEnabled()
 	})
+}
+
+func (c *mqlAlicloudCloudssoDirectory) GetSamlIdentityProvider() *plugin.TValue[*mqlAlicloudCloudssoSamlIdentityProvider] {
+	return plugin.GetOrCompute[*mqlAlicloudCloudssoSamlIdentityProvider](&c.SamlIdentityProvider, func() (*mqlAlicloudCloudssoSamlIdentityProvider, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudsso.directory", c.__id, "samlIdentityProvider")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudCloudssoSamlIdentityProvider), nil
+			}
+		}
+
+		return c.samlIdentityProvider()
+	})
+}
+
+func (c *mqlAlicloudCloudssoDirectory) GetSsoEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SsoEnabled, func() (bool, error) {
+		return c.ssoEnabled()
+	})
+}
+
+func (c *mqlAlicloudCloudssoDirectory) GetTasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tasks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudsso.directory", c.__id, "tasks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tasks()
+	})
+}
+
+// mqlAlicloudCloudssoSamlIdentityProvider for the alicloud.cloudsso.samlIdentityProvider resource
+type mqlAlicloudCloudssoSamlIdentityProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudCloudssoSamlIdentityProviderInternal it will be used here
+	DirectoryId       plugin.TValue[string]
+	EntityId          plugin.TValue[string]
+	LoginUrl          plugin.TValue[string]
+	BindingType       plugin.TValue[string]
+	SsoStatus         plugin.TValue[string]
+	Enabled           plugin.TValue[bool]
+	WantRequestSigned plugin.TValue[bool]
+	CertificateIds    plugin.TValue[[]any]
+	CreateTime        plugin.TValue[*time.Time]
+	UpdateTime        plugin.TValue[*time.Time]
+}
+
+// createAlicloudCloudssoSamlIdentityProvider creates a new instance of this resource
+func createAlicloudCloudssoSamlIdentityProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudssoSamlIdentityProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudsso.samlIdentityProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) MqlName() string {
+	return "alicloud.cloudsso.samlIdentityProvider"
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetDirectoryId() *plugin.TValue[string] {
+	return &c.DirectoryId
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetEntityId() *plugin.TValue[string] {
+	return &c.EntityId
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetLoginUrl() *plugin.TValue[string] {
+	return &c.LoginUrl
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetBindingType() *plugin.TValue[string] {
+	return &c.BindingType
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetSsoStatus() *plugin.TValue[string] {
+	return &c.SsoStatus
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetWantRequestSigned() *plugin.TValue[bool] {
+	return &c.WantRequestSigned
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetCertificateIds() *plugin.TValue[[]any] {
+	return &c.CertificateIds
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudCloudssoSamlIdentityProvider) GetUpdateTime() *plugin.TValue[*time.Time] {
+	return &c.UpdateTime
+}
+
+// mqlAlicloudCloudssoTask for the alicloud.cloudsso.task resource
+type mqlAlicloudCloudssoTask struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudCloudssoTaskInternal
+	TaskId                  plugin.TValue[string]
+	TaskType                plugin.TValue[string]
+	Status                  plugin.TValue[string]
+	Succeeded               plugin.TValue[bool]
+	FailureReason           plugin.TValue[string]
+	PrincipalId             plugin.TValue[string]
+	PrincipalName           plugin.TValue[string]
+	PrincipalType           plugin.TValue[string]
+	AccessConfigurationId   plugin.TValue[string]
+	AccessConfigurationName plugin.TValue[string]
+	AccessConfiguration     plugin.TValue[*mqlAlicloudCloudssoAccessConfiguration]
+	TargetId                plugin.TValue[string]
+	TargetName              plugin.TValue[string]
+	TargetPath              plugin.TValue[string]
+	TargetPathName          plugin.TValue[string]
+	TargetType              plugin.TValue[string]
+	StartTime               plugin.TValue[*time.Time]
+	EndTime                 plugin.TValue[*time.Time]
+}
+
+// createAlicloudCloudssoTask creates a new instance of this resource
+func createAlicloudCloudssoTask(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudCloudssoTask{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.cloudsso.task", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudCloudssoTask) MqlName() string {
+	return "alicloud.cloudsso.task"
+}
+
+func (c *mqlAlicloudCloudssoTask) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudCloudssoTask) GetTaskId() *plugin.TValue[string] {
+	return &c.TaskId
+}
+
+func (c *mqlAlicloudCloudssoTask) GetTaskType() *plugin.TValue[string] {
+	return &c.TaskType
+}
+
+func (c *mqlAlicloudCloudssoTask) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudCloudssoTask) GetSucceeded() *plugin.TValue[bool] {
+	return &c.Succeeded
+}
+
+func (c *mqlAlicloudCloudssoTask) GetFailureReason() *plugin.TValue[string] {
+	return &c.FailureReason
+}
+
+func (c *mqlAlicloudCloudssoTask) GetPrincipalId() *plugin.TValue[string] {
+	return &c.PrincipalId
+}
+
+func (c *mqlAlicloudCloudssoTask) GetPrincipalName() *plugin.TValue[string] {
+	return &c.PrincipalName
+}
+
+func (c *mqlAlicloudCloudssoTask) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlAlicloudCloudssoTask) GetAccessConfigurationId() *plugin.TValue[string] {
+	return &c.AccessConfigurationId
+}
+
+func (c *mqlAlicloudCloudssoTask) GetAccessConfigurationName() *plugin.TValue[string] {
+	return &c.AccessConfigurationName
+}
+
+func (c *mqlAlicloudCloudssoTask) GetAccessConfiguration() *plugin.TValue[*mqlAlicloudCloudssoAccessConfiguration] {
+	return plugin.GetOrCompute[*mqlAlicloudCloudssoAccessConfiguration](&c.AccessConfiguration, func() (*mqlAlicloudCloudssoAccessConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.cloudsso.task", c.__id, "accessConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudCloudssoAccessConfiguration), nil
+			}
+		}
+
+		return c.accessConfiguration()
+	})
+}
+
+func (c *mqlAlicloudCloudssoTask) GetTargetId() *plugin.TValue[string] {
+	return &c.TargetId
+}
+
+func (c *mqlAlicloudCloudssoTask) GetTargetName() *plugin.TValue[string] {
+	return &c.TargetName
+}
+
+func (c *mqlAlicloudCloudssoTask) GetTargetPath() *plugin.TValue[string] {
+	return &c.TargetPath
+}
+
+func (c *mqlAlicloudCloudssoTask) GetTargetPathName() *plugin.TValue[string] {
+	return &c.TargetPathName
+}
+
+func (c *mqlAlicloudCloudssoTask) GetTargetType() *plugin.TValue[string] {
+	return &c.TargetType
+}
+
+func (c *mqlAlicloudCloudssoTask) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlAlicloudCloudssoTask) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
 }
 
 // mqlAlicloudCloudssoPasswordPolicy for the alicloud.cloudsso.passwordPolicy resource

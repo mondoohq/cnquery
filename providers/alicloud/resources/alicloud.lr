@@ -5826,6 +5826,122 @@ alicloud.cloudsso.directory @defaults("directoryId directoryName region") {
   // When enabled, the user and group population is managed by the external
   // provider, so accounts deactivated there stop being usable here.
   scimSynchronizationEnabled() bool
+  // External SAML identity provider federated with the directory
+  //
+  // Null when no identity provider has been configured, in which case sign-in
+  // is authenticated by CloudSSO's own user store and the controls of the
+  // corporate identity provider (conditional access, device posture,
+  // deprovisioning on termination) do not apply.
+  samlIdentityProvider() alicloud.cloudsso.samlIdentityProvider
+  // Whether single sign-on through an external identity provider is enabled
+  //
+  // False both when no provider is configured and when one is configured but
+  // switched off, which are the two ways sign-in falls back to the local user
+  // store.
+  ssoEnabled() bool
+  // Access-provisioning tasks recorded for the directory
+  //
+  // Each task is one grant or revocation of an access configuration on a member
+  // account. Use it to find a revocation that failed, which leaves access in
+  // place after it was meant to be withdrawn.
+  tasks() []alicloud.cloudsso.task
+}
+
+// CloudSSO external SAML identity provider
+//
+// The SAML identity provider federated with a CloudSSO directory, keyed by the
+// directoryId. Exposes the provider entity, the sign-in endpoint, the request
+// binding and signing settings, and whether federated sign-in is switched on.
+// Use it to confirm that sign-in is authenticated by the corporate identity
+// provider rather than by CloudSSO's local user store.
+alicloud.cloudsso.samlIdentityProvider @defaults("entityId ssoStatus bindingType") {
+  // ID of the directory the provider is federated with
+  directoryId string
+  // Entity ID of the identity provider, for example http://www.okta.com/exk3qwgt
+  entityId string
+  // Sign-in URL users are redirected to
+  loginUrl string
+  // Binding used to send SAML requests, either Post or Redirect
+  bindingType string
+  // Raw single sign-on status, either Enabled or Disabled
+  ssoStatus string
+  // Whether federated sign-in is switched on
+  //
+  // A provider configured but left disabled means sign-in still falls back to
+  // the local user store.
+  enabled bool
+  // Whether CloudSSO signs the SAML requests it sends
+  //
+  // Signed requests let the identity provider reject an authentication request
+  // that did not originate from this directory.
+  wantRequestSigned bool
+  // IDs of the SAML signing certificates configured for the provider
+  certificateIds []string
+  // Time the provider was first configured
+  createTime time
+  // Time the provider configuration was last modified
+  updateTime time
+}
+
+// CloudSSO access-provisioning task
+//
+// A single grant or revocation of an access configuration on a member account,
+// keyed by taskId. Exposes what was granted to whom on which target and whether
+// the operation succeeded. Use it to find a failed revocation, which leaves
+// access in place after it was meant to be withdrawn.
+alicloud.cloudsso.task @defaults("taskType status principalName targetName") {
+  // Task ID, used as the lookup key
+  taskId string
+  // Kind of operation
+  //
+  // For example ProvisionAccessConfiguration,
+  // DeprovisionAccessConfiguration, CreateAccessAssignment, or
+  // DeleteAccessAssignment.
+  taskType string
+  // Outcome of the task
+  //
+  // One of InProgress, Success, or Failed.
+  status string
+  // Whether the task completed successfully
+  //
+  // False for a task still running as well as for a failed one. A failed
+  // DeleteAccessAssignment means the access it was withdrawing is still
+  // granted.
+  succeeded bool
+  // Reason the task failed, empty when it did not
+  failureReason string
+  // ID of the user or group the task acted on
+  principalId string
+  // Name of the user or group the task acted on
+  principalName string
+  // Kind of principal, either User or Group
+  principalType string
+  // ID of the access configuration the task granted or revoked
+  //
+  // Kept as a raw value alongside accessConfiguration because a task is a
+  // historical record: the configuration it names may since have been deleted,
+  // in which case the reference resolves to null and this is all that remains.
+  accessConfigurationId string
+  // Name of the access configuration the task granted or revoked
+  accessConfigurationName string
+  // Access configuration the task granted or revoked
+  //
+  // Null when the configuration has since been deleted.
+  accessConfiguration() alicloud.cloudsso.accessConfiguration
+  // ID of the account the access was granted on or revoked from
+  targetId string
+  // Name of the account the access was granted on or revoked from
+  targetName string
+  // Resource-directory path of the target
+  targetPath string
+  // Resource-directory path name of the target
+  targetPathName string
+  // Kind of target, for example RD-Account
+  targetType string
+  // Time the task started
+  startTime time
+  // Time the task finished, null while it is still running
+  endTime time
 }
 
 // CloudSSO password policy
