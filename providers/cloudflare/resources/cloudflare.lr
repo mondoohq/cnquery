@@ -198,6 +198,37 @@ private cloudflare.zone.settings {
 	hstsPreload bool
 	// Whether the X-Content-Type-Options: nosniff header is sent alongside HSTS
 	hstsNoSniff bool
+
+	// Cipher suites the zone accepts from visitors
+	//
+	// The explicit allowlist of TLS cipher suites, by IANA name, for example
+	// ECDHE-ECDSA-AES128-GCM-SHA256. Empty means the zone accepts Cloudflare's
+	// default set for its plan. A weak suite listed here is negotiable even
+	// when minTlsVersion looks correct, because the allowlist overrides the
+	// default set rather than narrowing it.
+	ciphers []string
+
+	// Development mode (on, off)
+	//
+	// While on, Cloudflare bypasses its edge cache and disables the
+	// performance features that rewrite responses. It expires on its own after
+	// three hours, so a zone found with it on is either mid-change or has had
+	// it re-enabled.
+	developmentMode string
+
+	// Whether Network Error Logging is enabled for the zone
+	//
+	// NEL asks browsers to report failed requests back to Cloudflare. Null
+	// when the setting is not present in the zone's settings response, which
+	// is not the same as it being turned off.
+	nelEnabled bool
+
+	// Automatic rewriting of insecure JavaScript URLs (on, off)
+	//
+	// When on, Cloudflare rewrites http:// script sources in HTML responses to
+	// https://, so a page served over HTTPS does not pull scripts over plain
+	// HTTP. Off leaves mixed active content to the browser to block or not.
+	replaceInsecureJs string
 }
 
 // Cloudflare custom SSL certificate (user-uploaded)

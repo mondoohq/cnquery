@@ -715,6 +715,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.settings.hstsNoSniff": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneSettings).GetHstsNoSniff()).ToDataRes(types.Bool)
 	},
+	"cloudflare.zone.settings.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetCiphers()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.zone.settings.developmentMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetDevelopmentMode()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.settings.nelEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetNelEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.zone.settings.replaceInsecureJs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneSettings).GetReplaceInsecureJs()).ToDataRes(types.String)
+	},
 	"cloudflare.zone.customCertificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneCustomCertificate).GetId()).ToDataRes(types.String)
 	},
@@ -2944,6 +2956,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.zone.settings.hstsNoSniff": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneSettings).HstsNoSniff, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).Ciphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.developmentMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).DevelopmentMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.nelEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).NelEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.settings.replaceInsecureJs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneSettings).ReplaceInsecureJs, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"cloudflare.zone.customCertificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6640,6 +6668,10 @@ type mqlCloudflareZoneSettings struct {
 	HstsIncludeSubdomains   plugin.TValue[bool]
 	HstsPreload             plugin.TValue[bool]
 	HstsNoSniff             plugin.TValue[bool]
+	Ciphers                 plugin.TValue[[]any]
+	DevelopmentMode         plugin.TValue[string]
+	NelEnabled              plugin.TValue[bool]
+	ReplaceInsecureJs       plugin.TValue[string]
 }
 
 // createCloudflareZoneSettings creates a new instance of this resource
@@ -6764,6 +6796,22 @@ func (c *mqlCloudflareZoneSettings) GetHstsPreload() *plugin.TValue[bool] {
 
 func (c *mqlCloudflareZoneSettings) GetHstsNoSniff() *plugin.TValue[bool] {
 	return &c.HstsNoSniff
+}
+
+func (c *mqlCloudflareZoneSettings) GetCiphers() *plugin.TValue[[]any] {
+	return &c.Ciphers
+}
+
+func (c *mqlCloudflareZoneSettings) GetDevelopmentMode() *plugin.TValue[string] {
+	return &c.DevelopmentMode
+}
+
+func (c *mqlCloudflareZoneSettings) GetNelEnabled() *plugin.TValue[bool] {
+	return &c.NelEnabled
+}
+
+func (c *mqlCloudflareZoneSettings) GetReplaceInsecureJs() *plugin.TValue[string] {
+	return &c.ReplaceInsecureJs
 }
 
 // mqlCloudflareZoneCustomCertificate for the cloudflare.zone.customCertificate resource
@@ -12180,7 +12228,12 @@ func createCloudflareIpAccessRule(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cloudflare.ipAccessRule", res.__id)
@@ -12262,7 +12315,12 @@ func createCloudflareZoneLockdown(runtime *plugin.Runtime, args map[string]*llx.
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("cloudflare.zone.lockdown", res.__id)

@@ -713,6 +713,8 @@ cloudflare.zone.settings.alwaysUseHttps 11.1.0
 cloudflare.zone.settings.automaticHttpsRewrites 11.1.0
 cloudflare.zone.settings.browserCheck 11.1.0
 cloudflare.zone.settings.challengeTtl 13.3.6
+cloudflare.zone.settings.ciphers 13.8.1
+cloudflare.zone.settings.developmentMode 13.8.1
 cloudflare.zone.settings.emailObfuscation 11.1.0
 cloudflare.zone.settings.hotlinkProtection 11.1.0
 cloudflare.zone.settings.hstsEnabled 13.1.1
@@ -723,7 +725,9 @@ cloudflare.zone.settings.hstsPreload 13.1.1
 cloudflare.zone.settings.http3 13.3.6
 cloudflare.zone.settings.ipGeolocation 13.3.6
 cloudflare.zone.settings.minTlsVersion 11.1.0
+cloudflare.zone.settings.nelEnabled 13.8.1
 cloudflare.zone.settings.opportunisticEncryption 11.1.0
+cloudflare.zone.settings.replaceInsecureJs 13.8.1
 cloudflare.zone.settings.securityLevel 11.1.0
 cloudflare.zone.settings.serverSideExcludes 11.1.0
 cloudflare.zone.settings.ssl 11.1.0
