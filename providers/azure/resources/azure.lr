@@ -7306,6 +7306,13 @@ private azure.subscription.sqlService.server @defaults("name location properties
   databases() []azure.subscription.sqlService.database
   // SQL Database server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
+  // SQL Database server IPv6 firewall rules
+  //
+  // The IPv6 half of the server-level firewall, held in a separate rule
+  // list from the IPv4 firewallRules. A dual-stack server can be closed on
+  // IPv4 and wide open on IPv6, so both lists have to be read to judge
+  // reachability.
+  ipv6FirewallRules() []azure.subscription.sqlService.server.ipv6FirewallRule
   // SQL Database server Entra ID administrators
   azureAdAdministrators() []azure.subscription.sqlService.server.administrator
   // SQL Database server administrator login
@@ -7344,9 +7351,11 @@ private azure.subscription.sqlService.server @defaults("name location properties
   // Whether the SQL server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
-  // opens the server to the entire public internet, a rule whose range spans
-  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
-  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
+  // opens the server to the entire public internet. Both rule lists count: an
+  // IPv4 rule spanning 0.0.0.0-255.255.255.255 and an IPv6 rule spanning
+  // ::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff each open the server on their
+  // own. The special "allow all Azure services" rule (0.0.0.0-0.0.0.0) does
+  // not count, since it admits only Azure-internal IPs.
   internetReachable() bool
   // Type of managed identity configured on the server
   //
@@ -8238,6 +8247,27 @@ private azure.subscription.sqlService.firewallrule @defaults("id name") {
   // SQL firewall rule start IP address
   startIpAddress string
   // SQL firewall rule end IP address
+  endIpAddress string
+}
+
+// Azure SQL server IPv6 firewall rule
+//
+// A single server-level IPv6 firewall rule, admitting client connections
+// from the inclusive address range between startIpAddress and endIpAddress.
+// Azure keeps these in a rule list separate from the IPv4 firewall rules, so
+// a server can be tightly scoped on IPv4 while an IPv6 rule spanning
+// ::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff leaves it open to the whole
+// IPv6 internet.
+private azure.subscription.sqlService.server.ipv6FirewallRule @defaults("name startIpAddress endIpAddress") {
+  // IPv6 firewall rule resource ID
+  id string
+  // IPv6 firewall rule name
+  name string
+  // IPv6 firewall rule resource type
+  type string
+  // First IPv6 address admitted by the rule
+  startIpAddress string
+  // Last IPv6 address admitted by the rule, inclusive
   endIpAddress string
 }
 

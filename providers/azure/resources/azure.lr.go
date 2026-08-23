@@ -233,6 +233,7 @@ const (
 	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                                  string = "azure.subscription.postgreSqlService.database"
 	ResourceAzureSubscriptionSqlServiceConfiguration                                                    string = "azure.subscription.sqlService.configuration"
 	ResourceAzureSubscriptionSqlServiceFirewallrule                                                     string = "azure.subscription.sqlService.firewallrule"
+	ResourceAzureSubscriptionSqlServiceServerIpv6FirewallRule                                           string = "azure.subscription.sqlService.server.ipv6FirewallRule"
 	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                               string = "azure.subscription.sqlService.virtualNetworkRule"
 	ResourceAzureSubscriptionSqlServiceManagedInstance                                                  string = "azure.subscription.sqlService.managedInstance"
 	ResourceAzureSubscriptionSqlServiceManagedInstanceDatabase                                          string = "azure.subscription.sqlService.managedInstance.database"
@@ -1421,6 +1422,10 @@ func init() {
 		"azure.subscription.sqlService.firewallrule": {
 			// to override args, implement: initAzureSubscriptionSqlServiceFirewallrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSqlServiceFirewallrule,
+		},
+		"azure.subscription.sqlService.server.ipv6FirewallRule": {
+			// to override args, implement: initAzureSubscriptionSqlServiceServerIpv6FirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSqlServiceServerIpv6FirewallRule,
 		},
 		"azure.subscription.sqlService.virtualNetworkRule": {
 			// to override args, implement: initAzureSubscriptionSqlServiceVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -10043,6 +10048,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.server.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
 	},
+	"azure.subscription.sqlService.server.ipv6FirewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetIpv6FirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.ipv6FirewallRule")))
+	},
 	"azure.subscription.sqlService.server.azureAdAdministrators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetAzureAdAdministrators()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.administrator")))
 	},
@@ -11041,6 +11049,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.sqlService.firewallrule.endIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceFirewallrule).GetEndIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.startIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetStartIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.endIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetEndIpAddress()).ToDataRes(types.String)
 	},
 	"azure.subscription.sqlService.virtualNetworkRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).GetId()).ToDataRes(types.String)
@@ -32499,6 +32522,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceServer).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.server.ipv6FirewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServer).Ipv6FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.server.azureAdAdministrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServer).AzureAdAdministrators, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -33949,6 +33976,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.sqlService.firewallrule.endIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceFirewallrule).EndIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.startIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).StartIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.endIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).EndIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -74732,6 +74783,7 @@ type mqlAzureSubscriptionSqlServiceServer struct {
 	FullyQualifiedDomainName         plugin.TValue[string]
 	Databases                        plugin.TValue[[]any]
 	FirewallRules                    plugin.TValue[[]any]
+	Ipv6FirewallRules                plugin.TValue[[]any]
 	AzureAdAdministrators            plugin.TValue[[]any]
 	AdministratorLogin               plugin.TValue[string]
 	VulnerabilityAssessmentSettings  plugin.TValue[*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings]
@@ -74871,6 +74923,22 @@ func (c *mqlAzureSubscriptionSqlServiceServer) GetFirewallRules() *plugin.TValue
 		}
 
 		return c.firewallRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServer) GetIpv6FirewallRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ipv6FirewallRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.server", c.__id, "ipv6FirewallRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipv6FirewallRules()
 	})
 }
 
@@ -78436,6 +78504,70 @@ func (c *mqlAzureSubscriptionSqlServiceFirewallrule) GetStartIpAddress() *plugin
 }
 
 func (c *mqlAzureSubscriptionSqlServiceFirewallrule) GetEndIpAddress() *plugin.TValue[string] {
+	return &c.EndIpAddress
+}
+
+// mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule for the azure.subscription.sqlService.server.ipv6FirewallRule resource
+type mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionSqlServiceServerIpv6FirewallRuleInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	StartIpAddress plugin.TValue[string]
+	EndIpAddress   plugin.TValue[string]
+}
+
+// createAzureSubscriptionSqlServiceServerIpv6FirewallRule creates a new instance of this resource
+func createAzureSubscriptionSqlServiceServerIpv6FirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sqlService.server.ipv6FirewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) MqlName() string {
+	return "azure.subscription.sqlService.server.ipv6FirewallRule"
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetStartIpAddress() *plugin.TValue[string] {
+	return &c.StartIpAddress
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetEndIpAddress() *plugin.TValue[string] {
 	return &c.EndIpAddress
 }
 

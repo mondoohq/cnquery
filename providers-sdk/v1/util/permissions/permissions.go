@@ -2035,6 +2035,7 @@ var azurePermissionOverrides = map[string]string{
 	// SQL: sub-resources need servers/ or servers/databases/ parent paths
 	"Microsoft.Sql/databases/read":                                "Microsoft.Sql/servers/databases/read",
 	"Microsoft.Sql/firewallRules/read":                            "Microsoft.Sql/servers/firewallRules/read",
+	"Microsoft.Sql/iPv6FirewallRules/read":                        "Microsoft.Sql/servers/ipv6FirewallRules/read",
 	"Microsoft.Sql/virtualNetworkRules/read":                      "Microsoft.Sql/servers/virtualNetworkRules/read",
 	"Microsoft.Sql/encryptionProtectors/read":                     "Microsoft.Sql/servers/encryptionProtector/read",
 	"Microsoft.Sql/backupShortTermRetentionPolicies/read":         "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies/read",

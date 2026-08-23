@@ -6144,6 +6144,13 @@ azure.subscription.sqlService.server.fullyQualifiedDomainName 11.4.28
 azure.subscription.sqlService.server.id 9.0.1
 azure.subscription.sqlService.server.identityType 13.23.1
 azure.subscription.sqlService.server.internetReachable 13.20.1
+azure.subscription.sqlService.server.ipv6FirewallRule 13.36.1
+azure.subscription.sqlService.server.ipv6FirewallRule.endIpAddress 13.36.1
+azure.subscription.sqlService.server.ipv6FirewallRule.id 13.36.1
+azure.subscription.sqlService.server.ipv6FirewallRule.name 13.36.1
+azure.subscription.sqlService.server.ipv6FirewallRule.startIpAddress 13.36.1
+azure.subscription.sqlService.server.ipv6FirewallRule.type 13.36.1
+azure.subscription.sqlService.server.ipv6FirewallRules 13.36.1
 azure.subscription.sqlService.server.key 13.8.2
 azure.subscription.sqlService.server.key.autoRotationEnabled 13.8.2
 azure.subscription.sqlService.server.key.creationDate 13.8.2

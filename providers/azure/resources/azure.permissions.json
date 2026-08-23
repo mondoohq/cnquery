@@ -1,7 +1,7 @@
 {
   "provider": "azure",
   "version": "13.36.0",
-  "generated_at": "2026-08-19T05:02:24-07:00",
+  "generated_at": "2026-08-23T13:29:39-07:00",
   "permissions": [
     "Microsoft.Advisor/recommendations/read",
     "Microsoft.ApiManagement/service/apis/policies/read",
@@ -312,6 +312,7 @@
     "Microsoft.Sql/servers/encryptionProtector/read",
     "Microsoft.Sql/servers/failoverGroups/read",
     "Microsoft.Sql/servers/firewallRules/read",
+    "Microsoft.Sql/servers/ipv6FirewallRules/read",
     "Microsoft.Sql/servers/keys/read",
     "Microsoft.Sql/servers/outboundFirewallRules/read",
     "Microsoft.Sql/servers/privateEndpointConnections/read",
@@ -494,12 +495,6 @@
       "permission": "Microsoft.Authorization/roleAssignments/read",
       "service": "Microsoft.Authorization",
       "action": "NewListForScopePager",
-      "source_file": "cognitiveservices.go"
-    },
-    {
-      "permission": "Microsoft.Authorization/roleAssignments/read",
-      "service": "Microsoft.Authorization",
-      "action": "NewListForSubscriptionPager",
       "source_file": "iam.go"
     },
     {
@@ -2268,6 +2263,12 @@
     },
     {
       "permission": "Microsoft.Sql/servers/firewallRules/read",
+      "service": "Microsoft.Sql",
+      "action": "NewListByServerPager",
+      "source_file": "sql.go"
+    },
+    {
+      "permission": "Microsoft.Sql/servers/ipv6FirewallRules/read",
       "service": "Microsoft.Sql",
       "action": "NewListByServerPager",
       "source_file": "sql.go"
