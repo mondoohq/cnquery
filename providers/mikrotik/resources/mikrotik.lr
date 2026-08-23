@@ -10,10 +10,27 @@ option go_package = "go.mondoo.com/mql/providers/mikrotik/resources"
 // The device identity, RouterOS version, and RouterBOARD hardware are
 // available through `system`, alongside collections for the network
 // interfaces, bridges, VLANs, IP addresses, routes, address pools, DNS
-// settings, firewall and NAT rules, management services, DHCP servers and
-// leases, discovered neighbors, user accounts, and installed packages. These
-// let you audit the device's exposed management surface, filtering and NAT
-// posture, address assignments, and account configuration.
+// settings, DHCP servers and leases, discovered neighbors, user accounts, and
+// installed packages.
+//
+// The filtering posture covers both address families: the IPv4 filter, NAT,
+// mangle, and raw tables and their address lists, the IPv6 filter, NAT, and
+// address lists, connection tracking, and the service port helpers. The
+// management surface covers the services exposed over IP, the SSH server's
+// crypto settings, the certificate store behind every TLS service, the SNMP
+// communities, and the layer 2 and out-of-band paths that bypass IP filtering
+// entirely: neighbor discovery, the MAC server, RoMON, and IP Cloud. Beyond
+// that are the VPN servers the device terminates, the IPsec proposals,
+// profiles, peers, and identities behind every tunnel, the RADIUS clients and
+// AAA settings that decide where logins are actually authenticated, the
+// scheduled tasks and scripts that make configuration changes persist, the
+// logging rules and actions that decide whether there is an audit trail, the
+// RouterBOOT settings that decide whether physical access is enough to take
+// the device over, and the containers running third-party code on the router.
+//
+// No secret material is exposed anywhere in the model. Community strings,
+// pre-shared keys, shared secrets, and private keys are reported as presence
+// or as derived booleans only.
 mikrotik {
   // System identity, RouterOS version, and RouterBOARD hardware
   system() mikrotik.system
@@ -117,6 +134,14 @@ mikrotik {
   cloud() mikrotik.ip.cloud
   // RoMON layer 2 management configuration
   romon() mikrotik.tool.romon
+  // Containers configured on the device
+  containers() []mikrotik.container
+  // Container subsystem configuration
+  containerConfig() mikrotik.container.config
+  // RADIUS clients the device authenticates against
+  radiusClients() []mikrotik.radius.client
+  // AAA settings that govern RADIUS use for device logins
+  userAaa() mikrotik.user.aaa
 }
 
 // MikroTik system information
@@ -2142,4 +2167,158 @@ mikrotik.tool.romon @defaults("enabled id hasSecrets") {
   // Without one, any RoMON-speaking device on the wire can join the mesh. The
   // secret itself is never read or exposed.
   hasSecrets bool
+}
+
+// MikroTik container
+//
+// Container configured on the device, as listed by `/container` on RouterOS
+// 7.4 and later. A container is arbitrary third-party code running on the
+// router itself, with its own network interface attached to the device's
+// bridges and VLANs, so it is both a workload the device now depends on and a
+// foothold inside the network's trust boundary. The `tag` field says which
+// image it runs and where that image came from, `status` whether it is
+// running, `startOnBoot` whether it comes back after a reboot, and `mounts`
+// which of the device's own storage it can reach. The `interface` field
+// resolves the veth interface the container is attached to. This collection is
+// empty on devices without the container package.
+mikrotik.container @defaults("tag status startOnBoot") {
+  // Container name
+  name string
+  // Image tag the container runs
+  //
+  // Includes the registry the image was pulled from, for example
+  // registry.example.com/tools/agent:1.4.
+  tag string
+  // Operating system reported by the image
+  os string
+  // Architecture reported by the image
+  arch string
+  // Root directory the container filesystem is unpacked into
+  rootDir string
+  // Host directories mounted into the container
+  mounts []string
+  // DNS servers handed to the container
+  dns string
+  // Command the container runs
+  cmd string
+  // Entry point the container starts through
+  entrypoint string
+  // Host name inside the container
+  hostname string
+  // Working directory the command runs in
+  workdir string
+  // Container state
+  //
+  // For example running, stopped, extracting, or error.
+  status string
+  // Whether container output is written to the device log
+  logging bool
+  // Whether the container starts when the device boots
+  startOnBoot bool
+  // Optional comment attached to the container
+  comment string
+  // Interface the container is attached to
+  interface() mikrotik.interface
+}
+
+// MikroTik container subsystem configuration
+//
+// Settings read from `/container/config` that govern how containers are pulled
+// and stored. `registryUrl` is where images come from, so it decides whose
+// code the device is willing to run, and `layerDir` and `tmpdir` decide where
+// that code is unpacked. Registry credentials are reported only as
+// `hasRegistryCredentials`; the user name and password are never read. This
+// resource is null on devices without the container package.
+mikrotik.container.config @defaults("registryUrl hasRegistryCredentials") {
+  // Registry images are pulled from
+  registryUrl string
+  // Whether credentials are configured for the registry
+  //
+  // The user name and password are never read or exposed.
+  hasRegistryCredentials bool
+  // Directory container layers are stored in
+  layerDir string
+  // Directory used while extracting an image
+  tmpdir string
+  // Memory limit applied to containers
+  ramHigh string
+}
+
+// MikroTik RADIUS client
+//
+// RADIUS server the device authenticates against, as listed by `/radius`. This
+// is the other half of `mikrotik.users`: once RADIUS is in use for the login
+// service, the local account list is no longer the real access-control
+// surface. `requireMessageAuth` is the Blast-RADIUS control, and with it off
+// the device accepts responses an attacker in the path can forge.
+// `protocol` decides whether the exchange is UDP RADIUS or RADIUS over TLS.
+// The shared secret is reported only as `hasSecret`; the secret itself is
+// never read or exposed.
+mikrotik.radius.client @defaults("services address requireMessageAuth disabled") {
+  // Services the RADIUS server is consulted for
+  //
+  // For example login, ppp, hotspot, wireless, dhcp, or ipsec. With login
+  // present, device administration itself authenticates against this server.
+  services []string
+  // Address of the RADIUS server
+  address string
+  // Protocol used to reach the server
+  //
+  // For example udp or radsec. Under udp the exchange is protected only by the
+  // shared secret.
+  protocol string
+  // Whether responses must carry a Message-Authenticator attribute
+  //
+  // For example yes, no, or yes-for-all-eap. With this off the device accepts
+  // responses that an attacker in the path can forge.
+  requireMessageAuth string
+  // Whether a shared secret is configured
+  //
+  // The secret itself is never read or exposed.
+  hasSecret bool
+  // Port used for authentication requests
+  authenticationPort int
+  // Port used for accounting requests
+  accountingPort int
+  // Time the device waits for a response
+  timeout string
+  // Whether the server is used only when the primary one fails
+  accountingBackup bool
+  // Windows domain the device authenticates against
+  domain string
+  // Realm sent with the request
+  realm string
+  // Source address requests are sent from
+  srcAddress string
+  // Called-Station-Id sent with the request
+  calledId string
+  // Name of the certificate used for RADIUS over TLS
+  certificate string
+  // Whether the client is disabled
+  disabled bool
+  // Optional comment attached to the client
+  comment string
+}
+
+// MikroTik user AAA settings
+//
+// Settings in `/user/aaa` that decide whether device logins authenticate
+// against RADIUS rather than against the local account list. With `useRadius`
+// on, `mikrotik.users` no longer describes who can log in, and the permission
+// group a remote user lands in comes from `defaultGroup` unless the RADIUS
+// server names one. `accounting` decides whether login and configuration
+// activity is reported to the RADIUS server at all.
+mikrotik.user.aaa @defaults("useRadius defaultGroup accounting") {
+  // Whether device logins authenticate against RADIUS
+  useRadius bool
+  // Permission group a RADIUS-authenticated user lands in
+  //
+  // Applies when the RADIUS server does not name a group itself.
+  defaultGroup string
+  // Whether login and configuration activity is reported to RADIUS
+  accounting bool
+  // Interval between accounting updates for an open session
+  interimUpdate string
+  // Permission groups excluded from RADIUS authentication
+  excludeGroups []string
 }
