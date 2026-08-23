@@ -246,3 +246,203 @@ func TestApplicationDecodePinsSsoURL(t *testing.T) {
 	assert.Equal(t, "https://sso.jumpcloud.com/saml2/app-1", a.SsoURL)
 	assert.True(t, a.Active)
 }
+
+// An MFA exclusion is an explicit, deliberate bypass: the account is exempted
+// from the organization's MFA requirement. Before this was surfaced, such an
+// account read as MFA-compliant and the audit that exists to find MFA gaps
+// stepped over exactly the accounts that had been formally excused from it.
+func TestUserMFAExclusion(t *testing.T) {
+	future := "2030-01-02T15:04:05Z"
+	past := "2020-01-02T15:04:05Z"
+
+	tests := []struct {
+		name              string
+		raw               string
+		wantConfigured    bool
+		wantExclusion     *bool
+		wantExclusionTime *time.Time
+	}{
+		{
+			name:           "configured with no exclusion is compliant",
+			raw:            `{"id":"u1","mfa":{"configured":true,"exclusion":false}}`,
+			wantConfigured: true,
+			wantExclusion:  boolPtr(false),
+		},
+		{
+			name:              "configured with a live exclusion surfaces the bypass",
+			raw:               `{"id":"u2","mfa":{"configured":true,"exclusion":true,"exclusionUntil":"` + future + `"}}`,
+			wantConfigured:    true,
+			wantExclusion:     boolPtr(true),
+			wantExclusionTime: mustTime(t, future),
+		},
+		{
+			name:              "expired exclusion still reports its end time",
+			raw:               `{"id":"u3","mfa":{"configured":true,"exclusion":true,"exclusionUntil":"` + past + `"}}`,
+			wantConfigured:    true,
+			wantExclusion:     boolPtr(true),
+			wantExclusionTime: mustTime(t, past),
+		},
+		{
+			name:           "open-ended exclusion has no expiry",
+			raw:            `{"id":"u4","mfa":{"configured":true,"exclusion":true}}`,
+			wantConfigured: true,
+			wantExclusion:  boolPtr(true),
+		},
+		{
+			// encoding/json leaves the zero value on a missing key, and false
+			// is the compliant-looking reading for a bypass flag. An account
+			// the directory said nothing about must read null, not "not
+			// excluded".
+			name:           "absent mfa object leaves the exclusion null, not false",
+			raw:            `{"id":"u5"}`,
+			wantConfigured: false,
+			wantExclusion:  nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var u SystemUser
+			require.NoError(t, json.Unmarshal([]byte(tc.raw), &u))
+
+			assert.Equal(t, tc.wantConfigured, UserMFAConfigured(&u))
+
+			got := UserMFAExclusion(&u)
+			if tc.wantExclusion == nil {
+				assert.Nil(t, got, "an unreported exclusion must be null rather than false")
+			} else {
+				require.NotNil(t, got)
+				assert.Equal(t, *tc.wantExclusion, *got)
+			}
+
+			gotUntil := UserMFAExclusionUntil(&u)
+			if tc.wantExclusionTime == nil {
+				assert.Nil(t, gotUntil)
+			} else {
+				require.NotNil(t, gotUntil)
+				assert.Equal(t, tc.wantExclusionTime.UTC(), gotUntil.UTC())
+			}
+		})
+	}
+
+	t.Run("nil user", func(t *testing.T) {
+		assert.Nil(t, UserMFAExclusion(nil))
+		assert.Nil(t, UserMFAExclusionUntil(nil))
+	})
+}
+
+// mfaEnrollment separates an account that finished enrolling a factor from one
+// that merely has a factor configured, so a mistyped tag here would report a
+// pending enrollment as a completed one.
+func TestUserMFAEnrollmentDecode(t *testing.T) {
+	raw := `{
+		"id": "u1",
+		"mfa": {"configured": true, "exclusion": false},
+		"mfaEnrollment": {
+			"overallStatus": "ENROLLED",
+			"totpStatus": "ENROLLED",
+			"webAuthnStatus": "NOT_ENROLLED",
+			"pushStatus": "PENDING_ACTIVATION"
+		}
+	}`
+
+	var u SystemUser
+	require.NoError(t, json.Unmarshal([]byte(raw), &u))
+
+	require.NotNil(t, u.MFAEnrollment)
+	assert.Equal(t, "ENROLLED", *UserMFAEnrollmentOverallStatus(&u))
+	assert.Equal(t, "ENROLLED", *UserMFATotpStatus(&u))
+	assert.Equal(t, "NOT_ENROLLED", *UserMFAWebAuthnStatus(&u))
+	assert.Equal(t, "PENDING_ACTIVATION", *UserMFAPushStatus(&u))
+}
+
+func TestUserMFAEnrollmentAbsent(t *testing.T) {
+	t.Run("no enrollment object", func(t *testing.T) {
+		var u SystemUser
+		require.NoError(t, json.Unmarshal([]byte(`{"id":"u1"}`), &u))
+
+		assert.Nil(t, u.MFAEnrollment)
+		assert.Nil(t, UserMFAEnrollmentOverallStatus(&u))
+		assert.Nil(t, UserMFATotpStatus(&u))
+		assert.Nil(t, UserMFAWebAuthnStatus(&u))
+		assert.Nil(t, UserMFAPushStatus(&u))
+	})
+
+	t.Run("enrollment object with an unreported factor", func(t *testing.T) {
+		var u SystemUser
+		require.NoError(t, json.Unmarshal([]byte(`{"id":"u1","mfaEnrollment":{"overallStatus":"NOT_ENROLLED"}}`), &u))
+
+		assert.Equal(t, "NOT_ENROLLED", *UserMFAEnrollmentOverallStatus(&u))
+		assert.Nil(t, UserMFATotpStatus(&u), "an empty status must be null, not an empty string")
+		assert.Nil(t, UserMFAWebAuthnStatus(&u))
+		assert.Nil(t, UserMFAPushStatus(&u))
+	})
+
+	t.Run("nil user", func(t *testing.T) {
+		assert.Nil(t, UserMFAEnrollmentOverallStatus(nil))
+		assert.Nil(t, UserMFATotpStatus(nil))
+		assert.Nil(t, UserMFAWebAuthnStatus(nil))
+		assert.Nil(t, UserMFAPushStatus(nil))
+	})
+}
+
+// The password expiration fields are the password half of the same
+// account-hygiene question. An account whose password never expires must not be
+// confused with one the directory reported nothing about.
+func TestUserPasswordExpirationDecode(t *testing.T) {
+	t.Run("never expires", func(t *testing.T) {
+		var u SystemUser
+		require.NoError(t, json.Unmarshal([]byte(`{"id":"u1","password_never_expires":true}`), &u))
+
+		require.NotNil(t, u.PasswordNeverExpires)
+		assert.True(t, *u.PasswordNeverExpires)
+		assert.Nil(t, ParseTimePtr(u.PasswordExpirationDate))
+	})
+
+	t.Run("expires on a reported date", func(t *testing.T) {
+		var u SystemUser
+		require.NoError(t, json.Unmarshal([]byte(`{"id":"u1","password_never_expires":false,"password_expiration_date":"2026-10-24T00:00:00Z"}`), &u))
+
+		require.NotNil(t, u.PasswordNeverExpires)
+		assert.False(t, *u.PasswordNeverExpires)
+
+		got := ParseTimePtr(u.PasswordExpirationDate)
+		require.NotNil(t, got)
+		assert.Equal(t, time.Date(2026, 10, 24, 0, 0, 0, 0, time.UTC), got.UTC())
+	})
+
+	t.Run("bare calendar date", func(t *testing.T) {
+		var u SystemUser
+		require.NoError(t, json.Unmarshal([]byte(`{"id":"u1","password_expiration_date":"2026-10-24"}`), &u))
+
+		got := ParseTimePtr(u.PasswordExpirationDate)
+		require.NotNil(t, got)
+		assert.Equal(t, time.Date(2026, 10, 24, 0, 0, 0, 0, time.UTC), got.UTC())
+	})
+
+	t.Run("absent fields stay null rather than reading as an expiring password", func(t *testing.T) {
+		var u SystemUser
+		require.NoError(t, json.Unmarshal([]byte(`{"id":"u1"}`), &u))
+
+		assert.Nil(t, u.PasswordNeverExpires)
+		assert.Nil(t, u.PasswordExpirationDate)
+		assert.Nil(t, ParseTimePtr(u.PasswordExpirationDate))
+	})
+
+	t.Run("explicit JSON null stays null", func(t *testing.T) {
+		var u SystemUser
+		require.NoError(t, json.Unmarshal([]byte(`{"id":"u1","password_expiration_date":null}`), &u))
+
+		assert.Nil(t, u.PasswordExpirationDate)
+		assert.Nil(t, ParseTimePtr(u.PasswordExpirationDate))
+	})
+}
+
+func boolPtr(b bool) *bool { return &b }
+
+func mustTime(t *testing.T, s string) *time.Time {
+	t.Helper()
+	parsed, err := time.Parse(time.RFC3339, s)
+	require.NoError(t, err)
+	return &parsed
+}

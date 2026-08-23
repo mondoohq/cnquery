@@ -200,11 +200,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"jumpcloud.user.passwordExpired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJumpcloudUser).GetPasswordExpired()).ToDataRes(types.Bool)
 	},
+	"jumpcloud.user.passwordNeverExpires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetPasswordNeverExpires()).ToDataRes(types.Bool)
+	},
+	"jumpcloud.user.passwordExpirationDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetPasswordExpirationDate()).ToDataRes(types.Time)
+	},
 	"jumpcloud.user.mfaConfigured": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJumpcloudUser).GetMfaConfigured()).ToDataRes(types.Bool)
 	},
+	"jumpcloud.user.mfaExclusion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetMfaExclusion()).ToDataRes(types.Bool)
+	},
+	"jumpcloud.user.mfaExclusionUntil": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetMfaExclusionUntil()).ToDataRes(types.Time)
+	},
+	"jumpcloud.user.mfaEnrollmentOverallStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetMfaEnrollmentOverallStatus()).ToDataRes(types.String)
+	},
 	"jumpcloud.user.totpEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJumpcloudUser).GetTotpEnabled()).ToDataRes(types.Bool)
+	},
+	"jumpcloud.user.totpStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetTotpStatus()).ToDataRes(types.String)
+	},
+	"jumpcloud.user.webAuthnStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetWebAuthnStatus()).ToDataRes(types.String)
+	},
+	"jumpcloud.user.pushStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlJumpcloudUser).GetPushStatus()).ToDataRes(types.String)
 	},
 	"jumpcloud.user.passwordlessSudo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlJumpcloudUser).GetPasswordlessSudo()).ToDataRes(types.Bool)
@@ -488,12 +512,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlJumpcloudUser).PasswordExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"jumpcloud.user.passwordNeverExpires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).PasswordNeverExpires, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jumpcloud.user.passwordExpirationDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).PasswordExpirationDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"jumpcloud.user.mfaConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJumpcloudUser).MfaConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"jumpcloud.user.mfaExclusion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).MfaExclusion, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jumpcloud.user.mfaExclusionUntil": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).MfaExclusionUntil, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"jumpcloud.user.mfaEnrollmentOverallStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).MfaEnrollmentOverallStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"jumpcloud.user.totpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlJumpcloudUser).TotpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"jumpcloud.user.totpStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).TotpStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jumpcloud.user.webAuthnStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).WebAuthnStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"jumpcloud.user.pushStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlJumpcloudUser).PushStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"jumpcloud.user.passwordlessSudo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1002,26 +1058,34 @@ type mqlJumpcloudUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlJumpcloudUserInternal it will be used here
-	Id               plugin.TValue[string]
-	Username         plugin.TValue[string]
-	Email            plugin.TValue[string]
-	Firstname        plugin.TValue[string]
-	Lastname         plugin.TValue[string]
-	Displayname      plugin.TValue[string]
-	Activated        plugin.TValue[bool]
-	Suspended        plugin.TValue[bool]
-	AccountLocked    plugin.TValue[bool]
-	PasswordExpired  plugin.TValue[bool]
-	MfaConfigured    plugin.TValue[bool]
-	TotpEnabled      plugin.TValue[bool]
-	PasswordlessSudo plugin.TValue[bool]
-	Sudo             plugin.TValue[bool]
-	LdapBindingUser  plugin.TValue[bool]
-	EnableManagedUid plugin.TValue[bool]
-	State            plugin.TValue[string]
-	Created          plugin.TValue[*time.Time]
-	UserGroups       plugin.TValue[[]any]
-	Systems          plugin.TValue[[]any]
+	Id                         plugin.TValue[string]
+	Username                   plugin.TValue[string]
+	Email                      plugin.TValue[string]
+	Firstname                  plugin.TValue[string]
+	Lastname                   plugin.TValue[string]
+	Displayname                plugin.TValue[string]
+	Activated                  plugin.TValue[bool]
+	Suspended                  plugin.TValue[bool]
+	AccountLocked              plugin.TValue[bool]
+	PasswordExpired            plugin.TValue[bool]
+	PasswordNeverExpires       plugin.TValue[bool]
+	PasswordExpirationDate     plugin.TValue[*time.Time]
+	MfaConfigured              plugin.TValue[bool]
+	MfaExclusion               plugin.TValue[bool]
+	MfaExclusionUntil          plugin.TValue[*time.Time]
+	MfaEnrollmentOverallStatus plugin.TValue[string]
+	TotpEnabled                plugin.TValue[bool]
+	TotpStatus                 plugin.TValue[string]
+	WebAuthnStatus             plugin.TValue[string]
+	PushStatus                 plugin.TValue[string]
+	PasswordlessSudo           plugin.TValue[bool]
+	Sudo                       plugin.TValue[bool]
+	LdapBindingUser            plugin.TValue[bool]
+	EnableManagedUid           plugin.TValue[bool]
+	State                      plugin.TValue[string]
+	Created                    plugin.TValue[*time.Time]
+	UserGroups                 plugin.TValue[[]any]
+	Systems                    plugin.TValue[[]any]
 }
 
 // createJumpcloudUser creates a new instance of this resource
@@ -1101,12 +1165,44 @@ func (c *mqlJumpcloudUser) GetPasswordExpired() *plugin.TValue[bool] {
 	return &c.PasswordExpired
 }
 
+func (c *mqlJumpcloudUser) GetPasswordNeverExpires() *plugin.TValue[bool] {
+	return &c.PasswordNeverExpires
+}
+
+func (c *mqlJumpcloudUser) GetPasswordExpirationDate() *plugin.TValue[*time.Time] {
+	return &c.PasswordExpirationDate
+}
+
 func (c *mqlJumpcloudUser) GetMfaConfigured() *plugin.TValue[bool] {
 	return &c.MfaConfigured
 }
 
+func (c *mqlJumpcloudUser) GetMfaExclusion() *plugin.TValue[bool] {
+	return &c.MfaExclusion
+}
+
+func (c *mqlJumpcloudUser) GetMfaExclusionUntil() *plugin.TValue[*time.Time] {
+	return &c.MfaExclusionUntil
+}
+
+func (c *mqlJumpcloudUser) GetMfaEnrollmentOverallStatus() *plugin.TValue[string] {
+	return &c.MfaEnrollmentOverallStatus
+}
+
 func (c *mqlJumpcloudUser) GetTotpEnabled() *plugin.TValue[bool] {
 	return &c.TotpEnabled
+}
+
+func (c *mqlJumpcloudUser) GetTotpStatus() *plugin.TValue[string] {
+	return &c.TotpStatus
+}
+
+func (c *mqlJumpcloudUser) GetWebAuthnStatus() *plugin.TValue[string] {
+	return &c.WebAuthnStatus
+}
+
+func (c *mqlJumpcloudUser) GetPushStatus() *plugin.TValue[string] {
+	return &c.PushStatus
 }
 
 func (c *mqlJumpcloudUser) GetPasswordlessSudo() *plugin.TValue[bool] {

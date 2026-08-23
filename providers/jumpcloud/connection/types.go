@@ -28,12 +28,36 @@ type SystemUser struct {
 	State            string   `json:"state"`
 	Created          string   `json:"created"`
 	MFA              *userMFA `json:"mfa"`
+
+	// MFAEnrollment carries the per-factor enrollment state, which is a
+	// stronger signal than MFA.Configured: an account can have a factor
+	// configured while its enrollment is still pending or has expired.
+	MFAEnrollment *userMFAEnrollment `json:"mfaEnrollment"`
+
+	// PasswordNeverExpires and PasswordExpirationDate are pointers so an
+	// account the directory reported nothing about stays null instead of
+	// reading as a password that does expire on the zero date.
+	PasswordNeverExpires   *bool   `json:"password_never_expires"`
+	PasswordExpirationDate *string `json:"password_expiration_date"`
 }
 
-// userMFA is the nested multi-factor configuration on a user.
+// userMFA is the nested multi-factor configuration on a user. An exclusion is
+// an explicit, deliberate bypass: the account is exempted from the
+// organization's MFA requirement, optionally until ExclusionUntil.
 type userMFA struct {
-	Configured bool `json:"configured"`
-	Exclusion  bool `json:"exclusion"`
+	Configured     bool   `json:"configured"`
+	Exclusion      bool   `json:"exclusion"`
+	ExclusionUntil string `json:"exclusionUntil"`
+}
+
+// userMFAEnrollment is the nested multi-factor enrollment state on a user. Each
+// status is one of NOT_ENROLLED, DISABLED, PENDING_ACTIVATION,
+// ENROLLMENT_EXPIRED, IN_ENROLLMENT, PRE_ENROLLMENT, or ENROLLED.
+type userMFAEnrollment struct {
+	OverallStatus  string `json:"overallStatus"`
+	TotpStatus     string `json:"totpStatus"`
+	WebAuthnStatus string `json:"webAuthnStatus"`
+	PushStatus     string `json:"pushStatus"`
 }
 
 // EffectiveID returns the user's identifier, preferring `id` and falling back
@@ -248,7 +272,9 @@ func GraphTargetIDs(conns []*GraphConnection, filterType string) []string {
 
 // UserMFAConfigured reports whether the account has any multi-factor method set
 // up, treating an enrolled TOTP factor and a configured MFA object as
-// equivalent signals.
+// equivalent signals. It deliberately says nothing about exclusions: an account
+// formally excused from the MFA requirement still reports true here, so pair it
+// with UserMFAExclusion before concluding that a second factor is enforced.
 func UserMFAConfigured(u *SystemUser) bool {
 	if u == nil {
 		return false
@@ -259,15 +285,90 @@ func UserMFAConfigured(u *SystemUser) bool {
 	return u.MFA != nil && u.MFA.Configured
 }
 
-// ParseTime parses a JumpCloud RFC3339 timestamp, returning nil for an empty or
+// UserMFAExclusion reports whether the account is explicitly excluded from the
+// organization's MFA requirement. It returns nil when the response carried no
+// multi-factor object at all, so an unknown exclusion surfaces as null instead
+// of as a compliant-looking false.
+func UserMFAExclusion(u *SystemUser) *bool {
+	if u == nil || u.MFA == nil {
+		return nil
+	}
+	exclusion := u.MFA.Exclusion
+	return &exclusion
+}
+
+// UserMFAExclusionUntil returns the time the account's MFA exclusion expires,
+// or nil when there is no exclusion, no expiry, or no multi-factor object. A
+// nil result on an excluded account means the bypass is open-ended.
+func UserMFAExclusionUntil(u *SystemUser) *time.Time {
+	if u == nil || u.MFA == nil {
+		return nil
+	}
+	return ParseTime(u.MFA.ExclusionUntil)
+}
+
+// UserMFAEnrollmentOverallStatus returns the account's overall multi-factor
+// enrollment state, or nil when the response reported none.
+func UserMFAEnrollmentOverallStatus(u *SystemUser) *string {
+	return userMFAEnrollmentField(u, func(e *userMFAEnrollment) string { return e.OverallStatus })
+}
+
+// UserMFATotpStatus returns the enrollment state of the account's TOTP factor,
+// or nil when the response reported none.
+func UserMFATotpStatus(u *SystemUser) *string {
+	return userMFAEnrollmentField(u, func(e *userMFAEnrollment) string { return e.TotpStatus })
+}
+
+// UserMFAWebAuthnStatus returns the enrollment state of the account's WebAuthn
+// factor, or nil when the response reported none.
+func UserMFAWebAuthnStatus(u *SystemUser) *string {
+	return userMFAEnrollmentField(u, func(e *userMFAEnrollment) string { return e.WebAuthnStatus })
+}
+
+// UserMFAPushStatus returns the enrollment state of the account's push factor,
+// or nil when the response reported none.
+func UserMFAPushStatus(u *SystemUser) *string {
+	return userMFAEnrollmentField(u, func(e *userMFAEnrollment) string { return e.PushStatus })
+}
+
+// userMFAEnrollmentField reads one enrollment status off a user, collapsing a
+// missing enrollment object and an empty status to nil so neither is reported
+// as a state the directory never returned.
+func userMFAEnrollmentField(u *SystemUser, pick func(*userMFAEnrollment) string) *string {
+	if u == nil || u.MFAEnrollment == nil {
+		return nil
+	}
+	status := pick(u.MFAEnrollment)
+	if status == "" {
+		return nil
+	}
+	return &status
+}
+
+// timeLayouts are the timestamp shapes JumpCloud returns. Most fields are
+// RFC3339; the password expiration date can come back as a bare calendar date.
+var timeLayouts = []string{time.RFC3339, "2006-01-02"}
+
+// ParseTime parses a JumpCloud timestamp, returning nil for an empty or
 // unparseable value so an absent time surfaces as null rather than a zero date.
 func ParseTime(s string) *time.Time {
 	if s == "" {
 		return nil
 	}
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
+	for _, layout := range timeLayouts {
+		t, err := time.Parse(layout, s)
+		if err == nil {
+			return &t
+		}
+	}
+	return nil
+}
+
+// ParseTimePtr parses an optional JumpCloud timestamp, returning nil when the
+// field was absent from the response.
+func ParseTimePtr(s *string) *time.Time {
+	if s == nil {
 		return nil
 	}
-	return &t
+	return ParseTime(*s)
 }

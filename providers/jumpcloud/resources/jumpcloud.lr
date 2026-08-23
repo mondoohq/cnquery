@@ -39,10 +39,12 @@ jumpcloud {
 // A user in the JumpCloud directory, selected by its `id`. The
 // multi-factor, lockout, suspension, sudo, and LDAP-binding flags support
 // access-hygiene audits (for example asserting that every active account has
-// MFA configured). The `userGroups` and `systems` accessors resolve the
-// groups the account belongs to and the systems it can authenticate to, so
-// access can be traced without joining identifiers manually.
-private jumpcloud.user @defaults("email mfaConfigured suspended") {
+// MFA configured and is not excluded from the MFA requirement). The password
+// expiration fields cover the password half of the same question. The
+// `userGroups` and `systems` accessors resolve the groups the account belongs
+// to and the systems it can authenticate to, so access can be traced without
+// joining identifiers manually.
+private jumpcloud.user @defaults("email mfaConfigured mfaExclusion suspended") {
   // Unique identifier of the user
   id string
   // Username used to sign in
@@ -63,10 +65,61 @@ private jumpcloud.user @defaults("email mfaConfigured suspended") {
   accountLocked bool
   // Whether the account password has expired
   passwordExpired bool
+  // Whether the account password is exempt from expiration
+  //
+  // Null when the directory reported no password expiration policy for the
+  // account.
+  passwordNeverExpires bool
+  // Time the account password expires
+  //
+  // Null when the account has no expiration date, which is the case for an
+  // account whose password never expires.
+  passwordExpirationDate time
   // Whether multi-factor authentication is configured for the account
+  //
+  // Reports only that a factor is set up for the account. It does not account
+  // for exclusions, so an account with `mfaExclusion` set reports true here
+  // and is still exempt from the MFA requirement.
   mfaConfigured bool
+  // Whether the account is excluded from the multi-factor requirement
+  //
+  // An exclusion is an explicit, deliberate bypass that exempts the account
+  // from the organization's MFA requirement, usually until
+  // `mfaExclusionUntil`. Null when the directory reported no multi-factor
+  // configuration for the account.
+  mfaExclusion bool
+  // Time the account's multi-factor exclusion expires
+  //
+  // Null when the account has no exclusion, or when the exclusion carries no
+  // expiry and the bypass is therefore open-ended.
+  mfaExclusionUntil time
+  // Overall multi-factor enrollment state of the account
+  //
+  // One of NOT_ENROLLED, DISABLED, PENDING_ACTIVATION, ENROLLMENT_EXPIRED,
+  // IN_ENROLLMENT, PRE_ENROLLMENT, or ENROLLED. This separates an account that
+  // has completed enrollment from one that merely has a factor configured.
+  // Null when the directory reported no enrollment state.
+  mfaEnrollmentOverallStatus string
   // Whether TOTP-based multi-factor authentication is enabled
   totpEnabled bool
+  // Multi-factor enrollment state of the TOTP factor
+  //
+  // One of NOT_ENROLLED, DISABLED, PENDING_ACTIVATION, ENROLLMENT_EXPIRED,
+  // IN_ENROLLMENT, PRE_ENROLLMENT, or ENROLLED. Null when the directory
+  // reported no enrollment state for this factor.
+  totpStatus string
+  // Multi-factor enrollment state of the WebAuthn factor
+  //
+  // One of NOT_ENROLLED, DISABLED, PENDING_ACTIVATION, ENROLLMENT_EXPIRED,
+  // IN_ENROLLMENT, PRE_ENROLLMENT, or ENROLLED. Null when the directory
+  // reported no enrollment state for this factor.
+  webAuthnStatus string
+  // Multi-factor enrollment state of the JumpCloud Protect push factor
+  //
+  // One of NOT_ENROLLED, DISABLED, PENDING_ACTIVATION, ENROLLMENT_EXPIRED,
+  // IN_ENROLLMENT, PRE_ENROLLMENT, or ENROLLED. Null when the directory
+  // reported no enrollment state for this factor.
+  pushStatus string
   // Whether the user is granted passwordless sudo on associated systems
   passwordlessSudo bool
   // Whether the user is granted administrator (sudo) rights on associated systems
