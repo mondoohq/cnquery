@@ -13,6 +13,7 @@ zoom.account.meetingEncryptionType 13.0.0
 zoom.account.meetingOnlyAccountUsersCanJoin 13.0.0
 zoom.account.meetingPasscodeRequired 13.0.0
 zoom.account.meetingPmiPasscodeRequired 13.0.0
+zoom.account.meetingSignedInUsersOnly 13.0.1
 zoom.account.meetingWaitingRoomEnabled 13.0.0
 zoom.account.ownerEmail 13.0.0
 zoom.account.signInSessionTimeoutMinutes 13.0.0

@@ -56,8 +56,20 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
   meetingE2eeAvailable() bool
   // Whether meetings require participants to be authenticated before joining
   meetingAuthenticationRequired() bool
-  // Whether meeting participation is restricted to users signed in on this account (blocks external/guest participants)
-  meetingOnlyAccountUsersCanJoin() bool
+  // Whether only signed-in Zoom users may join meetings
+  //
+  // Deprecated in favor of meetingSignedInUsersOnly. Reports the same
+  // account-wide sign-in requirement, but the name overstates it: the
+  // requirement admits any signed-in Zoom user, not only users provisioned on
+  // this account.
+  meetingOnlyAccountUsersCanJoin() @maturity("deprecated") bool
+  // Whether only signed-in Zoom users may join meetings
+  //
+  // The account-wide default requiring participants to be signed in to a Zoom
+  // account before they can join a meeting. It admits any signed-in Zoom user;
+  // restricting participation to this account's users is configured per
+  // authentication profile rather than by this setting.
+  meetingSignedInUsersOnly() bool
   // Whether cloud recording is enabled for the account
   cloudRecordingEnabled() bool
   // Whether cloud recordings are encrypted at rest

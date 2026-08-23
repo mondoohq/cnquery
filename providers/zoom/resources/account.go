@@ -28,6 +28,10 @@ type mqlZoomAccountInternal struct {
 	meetingSecurityFetched bool
 	meetingSecurity        *connection.MeetingSecuritySettings
 	meetingSecurityLock    sync.Mutex
+
+	meetingAuthFetched bool
+	meetingAuth        *connection.MeetingAuthenticationSettings
+	meetingAuthLock    sync.Mutex
 }
 
 // initZoomAccount populates the account singleton on construction. It is an
@@ -102,6 +106,30 @@ func (a *mqlZoomAccount) fetchMeetingSecurity() (*connection.MeetingSecuritySett
 	return a.meetingSecurity, nil
 }
 
+// fetchMeetingAuthentication performs the `?option=meeting_authentication`
+// account-settings GET. Zoom reports the meeting-authentication requirement as
+// a top-level boolean of that view, not as a member of meeting_security, so it
+// needs its own call.
+func (a *mqlZoomAccount) fetchMeetingAuthentication() (*connection.MeetingAuthenticationSettings, error) {
+	if a.meetingAuthFetched {
+		return a.meetingAuth, nil
+	}
+	a.meetingAuthLock.Lock()
+	defer a.meetingAuthLock.Unlock()
+	if a.meetingAuthFetched {
+		return a.meetingAuth, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.ZoomConnection)
+	auth, err := conn.Client().GetAccountMeetingAuthentication(context.Background(), conn.AccountID())
+	if err != nil {
+		return nil, err
+	}
+	a.meetingAuth = auth
+	a.meetingAuthFetched = true
+	return a.meetingAuth, nil
+}
+
 func (a *mqlZoomAccount) meetingWaitingRoomEnabled() (bool, error) {
 	s, err := a.fetchMeetingSecurity()
 	if err != nil {
@@ -143,19 +171,25 @@ func (a *mqlZoomAccount) meetingE2eeAvailable() (bool, error) {
 }
 
 func (a *mqlZoomAccount) meetingAuthenticationRequired() (bool, error) {
-	s, err := a.fetchMeetingSecurity()
+	s, err := a.fetchMeetingAuthentication()
 	if err != nil {
 		return false, err
 	}
 	return s.MeetingAuthentication, nil
 }
 
+// meetingOnlyAccountUsersCanJoin is retained for backwards compatibility and
+// reports the same value as meetingSignedInUsersOnly.
 func (a *mqlZoomAccount) meetingOnlyAccountUsersCanJoin() (bool, error) {
-	s, err := a.fetchMeetingSecurity()
+	return a.meetingSignedInUsersOnly()
+}
+
+func (a *mqlZoomAccount) meetingSignedInUsersOnly() (bool, error) {
+	s, err := a.fetchSettings()
 	if err != nil {
 		return false, err
 	}
-	return s.OnlyAuthenticatedCanJoin, nil
+	return s.ScheduleMeeting.EnforceLogin, nil
 }
 
 func (a *mqlZoomAccount) cloudRecordingEnabled() (bool, error) {

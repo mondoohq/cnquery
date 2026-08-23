@@ -162,6 +162,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"zoom.account.meetingOnlyAccountUsersCanJoin": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccount).GetMeetingOnlyAccountUsersCanJoin()).ToDataRes(types.Bool)
 	},
+	"zoom.account.meetingSignedInUsersOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetMeetingSignedInUsersOnly()).ToDataRes(types.Bool)
+	},
 	"zoom.account.cloudRecordingEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccount).GetCloudRecordingEnabled()).ToDataRes(types.Bool)
 	},
@@ -346,6 +349,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zoom.account.meetingOnlyAccountUsersCanJoin": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoomAccount).MeetingOnlyAccountUsersCanJoin, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.meetingSignedInUsersOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).MeetingSignedInUsersOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"zoom.account.cloudRecordingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -650,6 +657,7 @@ type mqlZoomAccount struct {
 	MeetingE2eeAvailable            plugin.TValue[bool]
 	MeetingAuthenticationRequired   plugin.TValue[bool]
 	MeetingOnlyAccountUsersCanJoin  plugin.TValue[bool]
+	MeetingSignedInUsersOnly        plugin.TValue[bool]
 	CloudRecordingEnabled           plugin.TValue[bool]
 	CloudRecordingEncryptionEnabled plugin.TValue[bool]
 	SignInSessionTimeoutMinutes     plugin.TValue[int64]
@@ -738,6 +746,12 @@ func (c *mqlZoomAccount) GetMeetingAuthenticationRequired() *plugin.TValue[bool]
 func (c *mqlZoomAccount) GetMeetingOnlyAccountUsersCanJoin() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.MeetingOnlyAccountUsersCanJoin, func() (bool, error) {
 		return c.meetingOnlyAccountUsersCanJoin()
+	})
+}
+
+func (c *mqlZoomAccount) GetMeetingSignedInUsersOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetingSignedInUsersOnly, func() (bool, error) {
+		return c.meetingSignedInUsersOnly()
 	})
 }
 

@@ -25,6 +25,10 @@ type mqlZoomGroupInternal struct {
 	fetched         bool
 	meetingSecurity *connection.MeetingSecuritySettings
 	lock            sync.Mutex
+
+	meetingAuthFetched bool
+	meetingAuth        *connection.MeetingAuthenticationSettings
+	meetingAuthLock    sync.Mutex
 }
 
 // groups lists every user group defined on the account, each carrying its
@@ -173,10 +177,34 @@ func (g *mqlZoomGroup) settingsE2eeAvailable() (bool, error) {
 	return s.E2eeAvailable, nil
 }
 
+// fetchMeetingAuthentication performs the `?option=meeting_authentication`
+// group-settings GET. Zoom reports the group's meeting-authentication override
+// as a top-level boolean of that view, not as a member of meeting_security, so
+// it needs its own call.
+func (g *mqlZoomGroup) fetchMeetingAuthentication() (*connection.MeetingAuthenticationSettings, error) {
+	if g.meetingAuthFetched {
+		return g.meetingAuth, nil
+	}
+	g.meetingAuthLock.Lock()
+	defer g.meetingAuthLock.Unlock()
+	if g.meetingAuthFetched {
+		return g.meetingAuth, nil
+	}
+
+	conn := g.MqlRuntime.Connection.(*connection.ZoomConnection)
+	auth, err := conn.Client().GetGroupMeetingAuthentication(context.Background(), g.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	g.meetingAuth = auth
+	g.meetingAuthFetched = true
+	return g.meetingAuth, nil
+}
+
 func (g *mqlZoomGroup) settingsOnlyAuthenticatedUsersCanJoin() (bool, error) {
-	s, err := g.fetchMeetingSecurity()
+	s, err := g.fetchMeetingAuthentication()
 	if err != nil {
 		return false, err
 	}
-	return s.OnlyAuthenticatedCanJoin, nil
+	return s.MeetingAuthentication, nil
 }

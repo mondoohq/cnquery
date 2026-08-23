@@ -178,3 +178,98 @@ func TestUnoptionedAccountSettingsCarryNoMeetingSecurity(t *testing.T) {
 		t.Errorf("un-optioned response unexpectedly carried meeting_security: %+v", wrapper.MeetingSecurity)
 	}
 }
+
+// `meeting_security.only_authenticated_can_join` is not a Zoom field. The two
+// controls it was standing in for are `schedule_meeting.enforce_login` in the
+// un-optioned response and the top-level `meeting_authentication` boolean of
+// the `?option=meeting_authentication` view. These tests pin both.
+
+func TestAccountSettingsDecodeEnforceLogin(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(unoptionedAccountSettingsPayload))
+	}))
+	defer srv.Close()
+
+	settings, err := newTestClient(srv).GetAccountSettings(context.Background(), "acct-1")
+	if err != nil {
+		t.Fatalf("GetAccountSettings: %v", err)
+	}
+	if !settings.ScheduleMeeting.EnforceLogin {
+		t.Error("meetingSignedInUsersOnly: got false, want true")
+	}
+
+	// The documented meeting_security view carries no sign-in requirement at
+	// all, which is where the field used to be read from.
+	var ms meetingSecurityResponse
+	if err := json.Unmarshal([]byte(accountMeetingSecurityPayload), &ms); err != nil {
+		t.Fatal(err)
+	}
+	if !ms.MeetingSecurity.WaitingRoom {
+		t.Error("sanity: meeting_security payload should decode waiting_room true")
+	}
+}
+
+func TestGetAccountMeetingAuthenticationRequestsTheOption(t *testing.T) {
+	var gotOption string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotOption = r.URL.Query().Get("option")
+		w.Header().Set("Content-Type", "application/json")
+		if gotOption != "meeting_authentication" {
+			_, _ = w.Write([]byte(unoptionedAccountSettingsPayload))
+			return
+		}
+		// Shaped like the documented option=meeting_authentication response:
+		// meeting_authentication sits at the top level, not under
+		// meeting_security.
+		_, _ = w.Write([]byte(`{
+			"meeting_authentication": true,
+			"allow_authentication_exception": false,
+			"authentication_options": [
+				{"id": "mtg_enforce_domain_x", "name": "Sign in to Zoom with specified domain",
+				 "type": "enforce_login_with_domains", "domains": "example.com", "default_option": true, "visible": true}
+			]
+		}`))
+	}))
+	defer srv.Close()
+
+	auth, err := newTestClient(srv).GetAccountMeetingAuthentication(context.Background(), "acct-1")
+	if err != nil {
+		t.Fatalf("GetAccountMeetingAuthentication: %v", err)
+	}
+	if want := "meeting_authentication"; gotOption != want {
+		t.Errorf("option query parameter: got %q, want %q", gotOption, want)
+	}
+	if !auth.MeetingAuthentication {
+		t.Error("meetingAuthenticationRequired: got false, want true")
+	}
+}
+
+func TestGetGroupMeetingAuthenticationRequestsTheOption(t *testing.T) {
+	var gotPath, gotOption string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotOption = r.URL.Query().Get("option")
+		w.Header().Set("Content-Type", "application/json")
+		if gotOption != "meeting_authentication" {
+			_, _ = w.Write([]byte(`{"schedule_meeting": {"host_video": false}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"meeting_authentication": true, "allow_authentication_exception": true}`))
+	}))
+	defer srv.Close()
+
+	auth, err := newTestClient(srv).GetGroupMeetingAuthentication(context.Background(), "grp-1")
+	if err != nil {
+		t.Fatalf("GetGroupMeetingAuthentication: %v", err)
+	}
+	if want := "/groups/grp-1/settings"; gotPath != want {
+		t.Errorf("path: got %q, want %q", gotPath, want)
+	}
+	if want := "meeting_authentication"; gotOption != want {
+		t.Errorf("option query parameter: got %q, want %q", gotOption, want)
+	}
+	if !auth.MeetingAuthentication {
+		t.Error("settingsOnlyAuthenticatedUsersCanJoin: got false, want true")
+	}
+}
