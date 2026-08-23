@@ -817,6 +817,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ram.securityPreference": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRam).GetSecurityPreference()).ToDataRes(types.Dict)
 	},
+	"alicloud.ram.allowUserToManageAccessKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRam).GetAllowUserToManageAccessKeys()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.allowUserToManageMfaDevices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRam).GetAllowUserToManageMfaDevices()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.allowUserToManagePublicKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRam).GetAllowUserToManagePublicKeys()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.allowUserToChangePassword": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRam).GetAllowUserToChangePassword()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.saveMfaTicketEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRam).GetSaveMfaTicketEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.loginNetworkMasks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRam).GetLoginNetworkMasks()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.loginSessionDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRam).GetLoginSessionDuration()).ToDataRes(types.Int)
+	},
 	"alicloud.ram.user.userId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamUser).GetUserId()).ToDataRes(types.String)
 	},
@@ -864,6 +885,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.ram.user.loginProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamUser).GetLoginProfile()).ToDataRes(types.Dict)
+	},
+	"alicloud.ram.user.consoleLoginEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetConsoleLoginEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.user.mfaBindRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetMfaBindRequired()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.user.passwordResetRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetPasswordResetRequired()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.user.mfaEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetMfaEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.ram.user.mfaDeviceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetMfaDeviceType()).ToDataRes(types.String)
+	},
+	"alicloud.ram.user.mfaDeviceSerialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetMfaDeviceSerialNumber()).ToDataRes(types.String)
+	},
+	"alicloud.ram.user.loginProfileCreateDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamUser).GetLoginProfileCreateDate()).ToDataRes(types.Time)
 	},
 	"alicloud.ram.accessKey.userName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamAccessKey).GetUserName()).ToDataRes(types.String)
@@ -937,6 +979,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ram.role.attachedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamRole).GetAttachedPolicies()).ToDataRes(types.Array(types.Resource("alicloud.ram.policy")))
 	},
+	"alicloud.ram.role.trustStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamRole).GetTrustStatements()).ToDataRes(types.Array(types.Resource("alicloud.ram.policy.statement")))
+	},
+	"alicloud.ram.role.trustedPrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamRole).GetTrustedPrincipals()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.role.trustedAccountIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamRole).GetTrustedAccountIds()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.role.trustedServices": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamRole).GetTrustedServices()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ram.role.hasWildcardPrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamRole).GetHasWildcardPrincipal()).ToDataRes(types.Bool)
+	},
 	"alicloud.ram.policy.policyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamPolicy).GetPolicyName()).ToDataRes(types.String)
 	},
@@ -993,6 +1050,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.ram.policy.statement.condition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamPolicyStatement).GetCondition()).ToDataRes(types.Dict)
+	},
+	"alicloud.ram.policy.statement.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRamPolicyStatement).GetPrincipal()).ToDataRes(types.Dict)
 	},
 	"alicloud.ram.passwordPolicy.minimumPasswordLength": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRamPasswordPolicy).GetMinimumPasswordLength()).ToDataRes(types.Int)
@@ -6797,6 +6857,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRam).SecurityPreference, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"alicloud.ram.allowUserToManageAccessKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRam).AllowUserToManageAccessKeys, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.allowUserToManageMfaDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRam).AllowUserToManageMfaDevices, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.allowUserToManagePublicKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRam).AllowUserToManagePublicKeys, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.allowUserToChangePassword": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRam).AllowUserToChangePassword, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.saveMfaTicketEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRam).SaveMfaTicketEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.loginNetworkMasks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRam).LoginNetworkMasks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.loginSessionDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRam).LoginSessionDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"alicloud.ram.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRamUser).__id, ok = v.Value.(string)
 		return
@@ -6863,6 +6951,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.ram.user.loginProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRamUser).LoginProfile, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.user.consoleLoginEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).ConsoleLoginEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.user.mfaBindRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).MfaBindRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.user.passwordResetRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).PasswordResetRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.user.mfaEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).MfaEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.user.mfaDeviceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).MfaDeviceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.user.mfaDeviceSerialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).MfaDeviceSerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.user.loginProfileCreateDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamUser).LoginProfileCreateDate, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"alicloud.ram.accessKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6973,6 +7089,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRamRole).AttachedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.ram.role.trustStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamRole).TrustStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.role.trustedPrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamRole).TrustedPrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.role.trustedAccountIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamRole).TrustedAccountIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.role.trustedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamRole).TrustedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.role.hasWildcardPrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamRole).HasWildcardPrincipal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"alicloud.ram.policy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRamPolicy).__id, ok = v.Value.(string)
 		return
@@ -7055,6 +7191,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.ram.policy.statement.condition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudRamPolicyStatement).Condition, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ram.policy.statement.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRamPolicyStatement).Principal, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"alicloud.ram.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -15339,13 +15479,20 @@ func (c *mqlAlicloud) GetRegions() *plugin.TValue[[]any] {
 type mqlAlicloudRam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudRamInternal it will be used here
-	Users              plugin.TValue[[]any]
-	Groups             plugin.TValue[[]any]
-	Roles              plugin.TValue[[]any]
-	Policies           plugin.TValue[[]any]
-	PasswordPolicy     plugin.TValue[*mqlAlicloudRamPasswordPolicy]
-	SecurityPreference plugin.TValue[any]
+	mqlAlicloudRamInternal
+	Users                       plugin.TValue[[]any]
+	Groups                      plugin.TValue[[]any]
+	Roles                       plugin.TValue[[]any]
+	Policies                    plugin.TValue[[]any]
+	PasswordPolicy              plugin.TValue[*mqlAlicloudRamPasswordPolicy]
+	SecurityPreference          plugin.TValue[any]
+	AllowUserToManageAccessKeys plugin.TValue[bool]
+	AllowUserToManageMfaDevices plugin.TValue[bool]
+	AllowUserToManagePublicKeys plugin.TValue[bool]
+	AllowUserToChangePassword   plugin.TValue[bool]
+	SaveMfaTicketEnabled        plugin.TValue[bool]
+	LoginNetworkMasks           plugin.TValue[[]any]
+	LoginSessionDuration        plugin.TValue[int64]
 }
 
 // createAlicloudRam creates a new instance of this resource
@@ -15471,27 +15618,76 @@ func (c *mqlAlicloudRam) GetSecurityPreference() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAlicloudRam) GetAllowUserToManageAccessKeys() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowUserToManageAccessKeys, func() (bool, error) {
+		return c.allowUserToManageAccessKeys()
+	})
+}
+
+func (c *mqlAlicloudRam) GetAllowUserToManageMfaDevices() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowUserToManageMfaDevices, func() (bool, error) {
+		return c.allowUserToManageMfaDevices()
+	})
+}
+
+func (c *mqlAlicloudRam) GetAllowUserToManagePublicKeys() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowUserToManagePublicKeys, func() (bool, error) {
+		return c.allowUserToManagePublicKeys()
+	})
+}
+
+func (c *mqlAlicloudRam) GetAllowUserToChangePassword() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowUserToChangePassword, func() (bool, error) {
+		return c.allowUserToChangePassword()
+	})
+}
+
+func (c *mqlAlicloudRam) GetSaveMfaTicketEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SaveMfaTicketEnabled, func() (bool, error) {
+		return c.saveMfaTicketEnabled()
+	})
+}
+
+func (c *mqlAlicloudRam) GetLoginNetworkMasks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoginNetworkMasks, func() ([]any, error) {
+		return c.loginNetworkMasks()
+	})
+}
+
+func (c *mqlAlicloudRam) GetLoginSessionDuration() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LoginSessionDuration, func() (int64, error) {
+		return c.loginSessionDuration()
+	})
+}
+
 // mqlAlicloudRamUser for the alicloud.ram.user resource
 type mqlAlicloudRamUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudRamUserInternal
-	UserId            plugin.TValue[string]
-	UserName          plugin.TValue[string]
-	DisplayName       plugin.TValue[string]
-	Email             plugin.TValue[string]
-	MobilePhone       plugin.TValue[string]
-	Comments          plugin.TValue[string]
-	CreateDate        plugin.TValue[*time.Time]
-	UpdateDate        plugin.TValue[*time.Time]
-	LastLoginDate     plugin.TValue[*time.Time]
-	AccessKeys        plugin.TValue[[]any]
-	Groups            plugin.TValue[[]any]
-	Policies          plugin.TValue[[]any]
-	AttachedPolicies  plugin.TValue[[]any]
-	EffectivePolicies plugin.TValue[[]any]
-	MfaDevice         plugin.TValue[any]
-	LoginProfile      plugin.TValue[any]
+	UserId                 plugin.TValue[string]
+	UserName               plugin.TValue[string]
+	DisplayName            plugin.TValue[string]
+	Email                  plugin.TValue[string]
+	MobilePhone            plugin.TValue[string]
+	Comments               plugin.TValue[string]
+	CreateDate             plugin.TValue[*time.Time]
+	UpdateDate             plugin.TValue[*time.Time]
+	LastLoginDate          plugin.TValue[*time.Time]
+	AccessKeys             plugin.TValue[[]any]
+	Groups                 plugin.TValue[[]any]
+	Policies               plugin.TValue[[]any]
+	AttachedPolicies       plugin.TValue[[]any]
+	EffectivePolicies      plugin.TValue[[]any]
+	MfaDevice              plugin.TValue[any]
+	LoginProfile           plugin.TValue[any]
+	ConsoleLoginEnabled    plugin.TValue[bool]
+	MfaBindRequired        plugin.TValue[bool]
+	PasswordResetRequired  plugin.TValue[bool]
+	MfaEnabled             plugin.TValue[bool]
+	MfaDeviceType          plugin.TValue[string]
+	MfaDeviceSerialNumber  plugin.TValue[string]
+	LoginProfileCreateDate plugin.TValue[*time.Time]
 }
 
 // createAlicloudRamUser creates a new instance of this resource
@@ -15648,6 +15844,48 @@ func (c *mqlAlicloudRamUser) GetMfaDevice() *plugin.TValue[any] {
 func (c *mqlAlicloudRamUser) GetLoginProfile() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.LoginProfile, func() (any, error) {
 		return c.loginProfile()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetConsoleLoginEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ConsoleLoginEnabled, func() (bool, error) {
+		return c.consoleLoginEnabled()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetMfaBindRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MfaBindRequired, func() (bool, error) {
+		return c.mfaBindRequired()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetPasswordResetRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordResetRequired, func() (bool, error) {
+		return c.passwordResetRequired()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetMfaEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MfaEnabled, func() (bool, error) {
+		return c.mfaEnabled()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetMfaDeviceType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MfaDeviceType, func() (string, error) {
+		return c.mfaDeviceType()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetMfaDeviceSerialNumber() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MfaDeviceSerialNumber, func() (string, error) {
+		return c.mfaDeviceSerialNumber()
+	})
+}
+
+func (c *mqlAlicloudRamUser) GetLoginProfileCreateDate() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LoginProfileCreateDate, func() (*time.Time, error) {
+		return c.loginProfileCreateDate()
 	})
 }
 
@@ -15858,6 +16096,11 @@ type mqlAlicloudRamRole struct {
 	AssumeRolePolicyDocument plugin.TValue[string]
 	Policies                 plugin.TValue[[]any]
 	AttachedPolicies         plugin.TValue[[]any]
+	TrustStatements          plugin.TValue[[]any]
+	TrustedPrincipals        plugin.TValue[[]any]
+	TrustedAccountIds        plugin.TValue[[]any]
+	TrustedServices          plugin.TValue[[]any]
+	HasWildcardPrincipal     plugin.TValue[bool]
 }
 
 // createAlicloudRamRole creates a new instance of this resource
@@ -15954,6 +16197,46 @@ func (c *mqlAlicloudRamRole) GetAttachedPolicies() *plugin.TValue[[]any] {
 		}
 
 		return c.attachedPolicies()
+	})
+}
+
+func (c *mqlAlicloudRamRole) GetTrustStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ram.role", c.__id, "trustStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.trustStatements()
+	})
+}
+
+func (c *mqlAlicloudRamRole) GetTrustedPrincipals() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedPrincipals, func() ([]any, error) {
+		return c.trustedPrincipals()
+	})
+}
+
+func (c *mqlAlicloudRamRole) GetTrustedAccountIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedAccountIds, func() ([]any, error) {
+		return c.trustedAccountIds()
+	})
+}
+
+func (c *mqlAlicloudRamRole) GetTrustedServices() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedServices, func() ([]any, error) {
+		return c.trustedServices()
+	})
+}
+
+func (c *mqlAlicloudRamRole) GetHasWildcardPrincipal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardPrincipal, func() (bool, error) {
+		return c.hasWildcardPrincipal()
 	})
 }
 
@@ -16097,6 +16380,7 @@ type mqlAlicloudRamPolicyStatement struct {
 	Resource    plugin.TValue[[]any]
 	NotResource plugin.TValue[[]any]
 	Condition   plugin.TValue[any]
+	Principal   plugin.TValue[any]
 }
 
 // createAlicloudRamPolicyStatement creates a new instance of this resource
@@ -16153,6 +16437,10 @@ func (c *mqlAlicloudRamPolicyStatement) GetNotResource() *plugin.TValue[[]any] {
 
 func (c *mqlAlicloudRamPolicyStatement) GetCondition() *plugin.TValue[any] {
 	return &c.Condition
+}
+
+func (c *mqlAlicloudRamPolicyStatement) GetPrincipal() *plugin.TValue[any] {
+	return &c.Principal
 }
 
 // mqlAlicloudRamPasswordPolicy for the alicloud.ram.passwordPolicy resource

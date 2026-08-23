@@ -40,11 +40,41 @@ alicloud.ram {
   passwordPolicy() alicloud.ram.passwordPolicy
   // Console and credential security preferences for the account
   //
-  // Nested preferences controlling whether RAM users may manage their own
-  // access keys, MFA devices, and public keys, whether they may change their
-  // own password, the console login network masks, and the login session
-  // duration.
-  securityPreference() dict
+  // Deprecated in favor of allowUserToManageAccessKeys,
+  // allowUserToManageMfaDevices, allowUserToManagePublicKeys,
+  // allowUserToChangePassword, saveMfaTicketEnabled, loginNetworkMasks, and
+  // loginSessionDuration. Every value here is null on an account whose
+  // preferences cannot be read, and a null compares as true in an MQL `&&`
+  // assertion, so a check written against this dict passes on the accounts it
+  // was meant to catch.
+  securityPreference() @maturity("deprecated") dict
+  // Whether RAM users may create and rotate their own access keys
+  //
+  // A user who can mint their own long-lived keys can move credentials out of
+  // any console-based control, including the MFA requirement on console
+  // sign-in.
+  allowUserToManageAccessKeys() bool
+  // Whether RAM users may bind and unbind their own MFA devices
+  //
+  // A user who can unbind their own device can remove the second factor an MFA
+  // requirement was meant to enforce.
+  allowUserToManageMfaDevices() bool
+  // Whether RAM users may manage their own public keys
+  allowUserToManagePublicKeys() bool
+  // Whether RAM users may change their own console password
+  allowUserToChangePassword() bool
+  // Whether the console remembers an MFA verification for the session
+  //
+  // When on, a browser that has passed MFA once is not challenged again for the
+  // remembered period, so a stolen session skips the second factor.
+  saveMfaTicketEnabled() bool
+  // Network masks console sign-in is restricted to
+  //
+  // Console sign-in is refused from outside these CIDRs. An empty list means
+  // sign-in is accepted from anywhere on the internet.
+  loginNetworkMasks() []string
+  // Console session duration in hours before re-authentication is required
+  loginSessionDuration() int
 }
 
 // Resource Access Management user
@@ -102,15 +132,45 @@ alicloud.ram.user {
   effectivePolicies() []alicloud.ram.policy
   // Multi-factor authentication device bound to the user
   //
-  // The serialNumber and type of the bound MFA device, or null when the user
-  // has no MFA device.
-  mfaDevice() dict
+  // Deprecated in favor of mfaEnabled, mfaDeviceType, and
+  // mfaDeviceSerialNumber. This dict is null for a user with no device bound,
+  // and a null compares as true in an MQL `&&` assertion, so a check written
+  // against it passes on exactly the users it was meant to catch.
+  mfaDevice() @maturity("deprecated") dict
   // Console login profile for the user
   //
-  // Presence indicates the user can sign in to the console. Exposes userName,
-  // mfaBindRequired, passwordResetRequired, and createDate, or null when the
-  // user has no console login enabled.
-  loginProfile() dict
+  // Deprecated in favor of consoleLoginEnabled, mfaBindRequired,
+  // passwordResetRequired, and loginProfileCreateDate. This dict is null for a
+  // user with no console access, and a null compares as true in an MQL `&&`
+  // assertion.
+  loginProfile() @maturity("deprecated") dict
+  // Whether the user can sign in to the Alibaba Cloud console
+  //
+  // False for a user that holds only programmatic credentials. Console access
+  // is what the password policy, the MFA requirement, and the login network
+  // masks apply to, so it decides which account-wide controls reach this user
+  // at all.
+  consoleLoginEnabled() bool
+  // Whether the user must bind an MFA device at the next console sign-in
+  //
+  // This is the enforcement flag, not the state: a user with it set may still
+  // have no device bound today. Read mfaEnabled for whether a second factor is
+  // in place now.
+  mfaBindRequired() bool
+  // Whether the user must change their password at the next console sign-in
+  passwordResetRequired() bool
+  // Whether a multi-factor authentication device is bound to the user
+  //
+  // False for a user with console access and no second factor, which is the
+  // case a console-sign-in audit is looking for. Also false for a user with no
+  // console access at all, where the question does not arise.
+  mfaEnabled() bool
+  // Type of the bound MFA device, for example VMFA, empty when none is bound
+  mfaDeviceType() string
+  // Serial number identifying the bound MFA device, empty when none is bound
+  mfaDeviceSerialNumber() string
+  // Time the console login profile was created, null when the user has no console access
+  loginProfileCreateDate() time
 }
 
 // Resource Access Management access key
@@ -207,6 +267,37 @@ alicloud.ram.role {
   // Traverse to policyDocument alongside assumeRolePolicyDocument to see both
   // who may assume the role and what the assumed session is allowed to do.
   attachedPolicies() []alicloud.ram.policy
+  // Parsed statements of the trust policy
+  //
+  // The assume-role policy decoded into statements, so the principals and the
+  // conditions on the trust can be queried directly instead of by matching text
+  // against assumeRolePolicyDocument.
+  trustStatements() []alicloud.ram.policy.statement
+  // Principals permitted to assume the role
+  //
+  // Every principal named by an allowing trust statement, across all principal
+  // kinds, sorted and deduplicated. For example
+  // `acs:ram::123456789:root`, `acs:ram::123456789:user/deploy`,
+  // `ecs.aliyuncs.com`, or the wildcard `*`.
+  trustedPrincipals() []string
+  // Accounts permitted to assume the role
+  //
+  // The account IDs parsed out of the RAM principals in the trust policy,
+  // sorted and deduplicated. Compare against the account under audit to find a
+  // role a foreign account can assume, which is a cross-account takeover path
+  // into whatever the role's attached policies grant.
+  trustedAccountIds() []string
+  // Alibaba Cloud services permitted to assume the role
+  //
+  // The Service principals in the trust policy, for example ecs.aliyuncs.com
+  // or fc.aliyuncs.com. A service-linked role is expected to have these; a role
+  // meant for humans is not.
+  trustedServices() []string
+  // Whether any identity may assume the role
+  //
+  // True when an allowing trust statement names the wildcard `*` as a
+  // principal, which lets any Alibaba Cloud identity anywhere assume the role.
+  hasWildcardPrincipal() bool
 }
 
 // Resource Access Management permission policy
@@ -314,6 +405,14 @@ alicloud.ram.policy.statement @defaults("effect action resource") {
   // `{"IpAddress": {"acs:SourceIp": ["10.0.0.0/8"]}}`. Null when the statement
   // grants unconditionally.
   condition dict
+  // Identities the statement applies to
+  //
+  // Keyed by principal kind, for example
+  // `{"RAM": ["acs:ram::123456789:root"], "Service": ["ecs.aliyuncs.com"]}`.
+  // Null on a permission policy statement, which names actions and resources
+  // rather than principals; set on a role trust statement and on a bucket
+  // policy statement.
+  principal dict
 }
 
 // Resource Access Management password policy
