@@ -59,6 +59,22 @@ mikrotik {
   users() []mikrotik.user
   // User permission groups
   userGroups() []mikrotik.user.group
+  // IPv4 firewall mangle rules
+  mangleRules() []mikrotik.ip.firewall.mangle
+  // IPv4 firewall raw rules, evaluated before connection tracking
+  rawRules() []mikrotik.ip.firewall.raw
+  // IPv4 firewall address list entries
+  firewallAddressLists() []mikrotik.ip.firewall.addressList
+  // Connection tracking configuration and timeouts
+  connectionTracking() mikrotik.ip.firewall.connectionTracking
+  // Firewall connection helpers for protocols that need them
+  servicePorts() []mikrotik.ip.firewall.servicePort
+  // IPv6 firewall filter rules
+  ipv6FirewallRules() []mikrotik.ipv6.firewall.filter
+  // IPv6 firewall NAT rules
+  ipv6NatRules() []mikrotik.ipv6.firewall.nat
+  // IPv6 firewall address list entries
+  ipv6AddressLists() []mikrotik.ipv6.firewall.addressList
 }
 
 // MikroTik system information
@@ -616,6 +632,10 @@ mikrotik.ip.firewall.filter @defaults("chain action disabled") {
   invalid bool
   // Optional comment attached to the rule
   comment string
+  // Name of the address list the source address is matched against
+  srcAddressList string
+  // Name of the address list the destination address is matched against
+  dstAddressList string
 }
 
 // MikroTik firewall NAT rule
@@ -667,6 +687,10 @@ mikrotik.ip.firewall.nat @defaults("chain action disabled") {
   invalid bool
   // Optional comment attached to the rule
   comment string
+  // Name of the address list the source address is matched against
+  srcAddressList string
+  // Name of the address list the destination address is matched against
+  dstAddressList string
 }
 
 // MikroTik DHCP server
@@ -811,5 +835,379 @@ mikrotik.user.group @defaults("name policy") {
   // Web interface skin assigned to the group
   skin string
   // Optional comment attached to the group
+  comment string
+}
+
+// MikroTik firewall mangle rule
+//
+// IPv4 firewall mangle rule, as listed by `/ip/firewall/mangle`. Mangle marks
+// packets, connections, and routes, so it determines which traffic is steered
+// into which routing table, queue, or policy path. Exposes the chain, the
+// action and the mark it applies, the match conditions including address list
+// references, byte and packet counters, and whether the rule is disabled.
+// Rules are returned in their configured order. The RouterOS `.id` handle
+// behind each rule is stable only while the device keeps its current
+// configuration, so match rules on their chain, action, and comment rather
+// than on identity across scans.
+mikrotik.ip.firewall.mangle @defaults("chain action newPacketMark disabled") {
+  // Chain the rule belongs to
+  //
+  // For example prerouting, input, forward, output, or postrouting, or a
+  // custom chain name.
+  chain string
+  // Action taken when the rule matches
+  //
+  // For example mark-packet, mark-connection, mark-routing, change-mss,
+  // change-ttl, jump, return, log, or passthrough.
+  action string
+  // Packet mark applied by a mark-packet action
+  newPacketMark string
+  // Connection mark applied by a mark-connection action
+  newConnectionMark string
+  // Routing mark applied by a mark-routing action
+  newRoutingMark string
+  // Whether matching continues after the rule applies its mark
+  passthrough bool
+  // Protocol the rule matches
+  protocol string
+  // Source address or range the rule matches
+  srcAddress string
+  // Destination address or range the rule matches
+  dstAddress string
+  // Name of the address list the source address is matched against
+  srcAddressList string
+  // Name of the address list the destination address is matched against
+  dstAddressList string
+  // Source port(s) the rule matches
+  srcPort string
+  // Destination port(s) the rule matches
+  dstPort string
+  // Inbound interface the rule matches
+  inInterface string
+  // Outbound interface the rule matches
+  outInterface string
+  // Connection states the rule matches
+  connectionState string
+  // Connection mark the rule matches
+  connectionMark string
+  // Packet mark the rule matches
+  packetMark string
+  // Routing mark the rule matches
+  routingMark string
+  // Whether matching packets are logged
+  log bool
+  // Prefix added to log entries for this rule
+  logPrefix string
+  // Number of bytes matched by the rule
+  bytes int
+  // Number of packets matched by the rule
+  packets int
+  // Whether the rule is disabled
+  disabled bool
+  // Whether the rule was created dynamically
+  dynamic bool
+  // Whether the rule is invalid
+  invalid bool
+  // Optional comment attached to the rule
+  comment string
+}
+
+// MikroTik firewall raw rule
+//
+// IPv4 firewall raw rule, as listed by `/ip/firewall/raw`. The raw table is
+// evaluated before connection tracking, so a raw accept short-circuits every
+// filter rule that follows and a raw drop discards traffic before any state is
+// created. Reading the filter chain alone therefore does not give the device's
+// effective policy. Exposes the chain, action, match conditions including
+// address list references, counters, and whether the rule is disabled. Rules
+// are returned in their configured order.
+mikrotik.ip.firewall.raw @defaults("chain action disabled") {
+  // Chain the rule belongs to
+  //
+  // For example prerouting or output, or a custom chain name.
+  chain string
+  // Action taken when the rule matches
+  //
+  // For example accept, drop, notrack, jump, return, or log.
+  action string
+  // Protocol the rule matches
+  protocol string
+  // Source address or range the rule matches
+  srcAddress string
+  // Destination address or range the rule matches
+  dstAddress string
+  // Name of the address list the source address is matched against
+  srcAddressList string
+  // Name of the address list the destination address is matched against
+  dstAddressList string
+  // Source port(s) the rule matches
+  srcPort string
+  // Destination port(s) the rule matches
+  dstPort string
+  // Inbound interface the rule matches
+  inInterface string
+  // Outbound interface the rule matches
+  outInterface string
+  // Whether matching packets are logged
+  log bool
+  // Prefix added to log entries for this rule
+  logPrefix string
+  // Number of bytes matched by the rule
+  bytes int
+  // Number of packets matched by the rule
+  packets int
+  // Whether the rule is disabled
+  disabled bool
+  // Whether the rule was created dynamically
+  dynamic bool
+  // Whether the rule is invalid
+  invalid bool
+  // Optional comment attached to the rule
+  comment string
+}
+
+// MikroTik IPv4 firewall address list entry
+//
+// Single address or range held in a named IPv4 firewall address list, as
+// listed by `/ip/firewall/address-list`. Filter, mangle, raw, and NAT rules
+// reference these lists by name through their srcAddressList and
+// dstAddressList fields, so the effective scope of such a rule is only
+// resolvable once the list membership is known. The `list` field carries the
+// list name and `address` the member, alongside the timeout and creation time
+// for entries added dynamically by a rule.
+mikrotik.ip.firewall.addressList @defaults("list address dynamic") {
+  // Name of the address list the entry belongs to
+  list string
+  // Address, range, or CIDR held by the entry
+  address string
+  // Time the entry was added to the list
+  creationTime string
+  // Remaining time before a dynamic entry is removed
+  //
+  // Formatted as a RouterOS duration, for example 1d2h3m. Empty for static
+  // entries, which never time out.
+  timeout string
+  // Whether the entry was added dynamically by a firewall rule
+  dynamic bool
+  // Whether the entry is disabled
+  disabled bool
+  // Optional comment attached to the entry
+  comment string
+}
+
+// MikroTik IPv6 firewall address list entry
+//
+// Single address or prefix held in a named IPv6 firewall address list, as
+// listed by `/ipv6/firewall/address-list`. IPv6 filter, mangle, raw, and NAT
+// rules reference these lists by name, so the effective scope of such a rule
+// is only resolvable once the list membership is known. The `list` field
+// carries the list name and `address` the member, alongside the timeout and
+// creation time for entries added dynamically by a rule.
+mikrotik.ipv6.firewall.addressList @defaults("list address dynamic") {
+  // Name of the address list the entry belongs to
+  list string
+  // Address or prefix held by the entry
+  address string
+  // Time the entry was added to the list
+  creationTime string
+  // Remaining time before a dynamic entry is removed
+  //
+  // Formatted as a RouterOS duration, for example 1d2h3m. Empty for static
+  // entries, which never time out.
+  timeout string
+  // Whether the entry was added dynamically by a firewall rule
+  dynamic bool
+  // Whether the entry is disabled
+  disabled bool
+  // Optional comment attached to the entry
+  comment string
+}
+
+// MikroTik connection tracking configuration
+//
+// Connection tracking settings read from `/ip/firewall/connection-tracking`.
+// Stateful filtering depends on connection tracking being active, so a device
+// with tracking turned off silently reduces every connection-state match in
+// the filter chain to a no-op. Exposes whether tracking is on, the per
+// protocol and per state timeouts that decide how long a connection stays
+// tracked, whether loose TCP tracking accepts out-of-window packets, and the
+// current and maximum entry counts.
+mikrotik.ip.firewall.connectionTracking @defaults("enabled totalEntries maxEntries") {
+  // Whether connection tracking is active
+  //
+  // One of auto, yes, or no. Under auto RouterOS enables tracking only while
+  // at least one firewall or NAT rule needs it.
+  enabled string
+  // Whether out-of-window TCP packets are accepted into an existing connection
+  looseTcpTracking bool
+  // Number of connections currently tracked
+  totalEntries int
+  // Maximum number of connections that can be tracked
+  maxEntries int
+  // Timeout for a TCP connection in the SYN-SENT state
+  tcpSynSentTimeout string
+  // Timeout for a TCP connection in the SYN-RECEIVED state
+  tcpSynReceivedTimeout string
+  // Timeout for an established TCP connection
+  tcpEstablishedTimeout string
+  // Timeout for a TCP connection in the FIN-WAIT state
+  tcpFinWaitTimeout string
+  // Timeout for a TCP connection in the CLOSE-WAIT state
+  tcpCloseWaitTimeout string
+  // Timeout for a TCP connection in the LAST-ACK state
+  tcpLastAckTimeout string
+  // Timeout for a TCP connection in the TIME-WAIT state
+  tcpTimeWaitTimeout string
+  // Timeout for a closed TCP connection
+  tcpCloseTimeout string
+  // Timeout applied while TCP data stays unacknowledged
+  tcpMaxRetransTimeout string
+  // Timeout applied to unacknowledged TCP data
+  tcpUnackedTimeout string
+  // Timeout for a UDP connection that has seen traffic in one direction
+  udpTimeout string
+  // Timeout for a UDP connection that has seen traffic in both directions
+  udpStreamTimeout string
+  // Timeout for a tracked ICMP exchange
+  icmpTimeout string
+  // Timeout applied to protocols without a specific tracker
+  genericTimeout string
+}
+
+// MikroTik firewall service port helper
+//
+// Connection helper that inspects a protocol's control channel so the firewall
+// can accept the data connections it negotiates, as listed by
+// `/ip/firewall/service-port`. Helpers open ports on demand and several of
+// them parse untrusted payloads, so an enabled helper for a protocol the
+// device does not carry is unnecessary exposure. The `name` field selects the
+// helper, for example `mikrotik.servicePorts.where(name == "sip")`.
+mikrotik.ip.firewall.servicePort @defaults("name ports disabled") {
+  // Helper name
+  //
+  // For example ftp, tftp, irc, h323, sip, pptp, udplite, dccp, or sctp.
+  name string
+  // Control ports the helper watches
+  ports string
+  // Whether the helper is disabled
+  disabled bool
+  // Whether the helper configuration is invalid
+  invalid bool
+}
+
+// MikroTik IPv6 firewall filter rule
+//
+// IPv6 firewall filter rule, as listed by `/ipv6/firewall/filter`. IPv6
+// traffic is filtered by its own table, so a device whose IPv4 input chain is
+// locked down can still leave the IPv6 input chain at the default accept
+// policy and be reachable over IPv6 on every management port. Exposes the
+// chain, action, match conditions (protocol, source and destination address
+// and port, address list references, in and out interface, connection state),
+// logging configuration, byte and packet counters, and whether the rule is
+// disabled. Rules are returned in their configured order.
+mikrotik.ipv6.firewall.filter @defaults("chain action disabled") {
+  // Chain the rule belongs to
+  //
+  // For example input, forward, or output, or a custom chain name.
+  chain string
+  // Action taken when the rule matches
+  //
+  // For example accept, drop, reject, jump, return, or log.
+  action string
+  // Protocol the rule matches
+  protocol string
+  // Source address or prefix the rule matches
+  srcAddress string
+  // Destination address or prefix the rule matches
+  dstAddress string
+  // Name of the address list the source address is matched against
+  srcAddressList string
+  // Name of the address list the destination address is matched against
+  dstAddressList string
+  // Source port(s) the rule matches
+  srcPort string
+  // Destination port(s) the rule matches
+  dstPort string
+  // Inbound interface the rule matches
+  inInterface string
+  // Outbound interface the rule matches
+  outInterface string
+  // Connection states the rule matches
+  connectionState string
+  // ICMPv6 message types the rule matches
+  icmpOptions string
+  // Whether matching packets are logged
+  log bool
+  // Prefix added to log entries for this rule
+  logPrefix string
+  // Number of bytes matched by the rule
+  bytes int
+  // Number of packets matched by the rule
+  packets int
+  // Whether the rule is disabled
+  disabled bool
+  // Whether the rule was created dynamically
+  dynamic bool
+  // Whether the rule is invalid
+  invalid bool
+  // Optional comment attached to the rule
+  comment string
+}
+
+// MikroTik IPv6 firewall NAT rule
+//
+// IPv6 firewall NAT rule, as listed by `/ipv6/firewall/nat`. IPv6 deployments
+// usually route globally routable addresses rather than translating them, so
+// any rule here changes how internal hosts are presented or reached and is
+// worth reviewing on its own. Exposes the chain, the action, the match
+// conditions, the address and port translation targets, byte and packet
+// counters, and whether the rule is disabled. Rules are returned in their
+// configured order.
+mikrotik.ipv6.firewall.nat @defaults("chain action disabled") {
+  // Chain the rule belongs to
+  //
+  // For example srcnat or dstnat.
+  chain string
+  // Action taken when the rule matches
+  //
+  // For example masquerade, src-nat, dst-nat, redirect, or netmap.
+  action string
+  // Protocol the rule matches
+  protocol string
+  // Source address or prefix the rule matches
+  srcAddress string
+  // Destination address or prefix the rule matches
+  dstAddress string
+  // Name of the address list the source address is matched against
+  srcAddressList string
+  // Name of the address list the destination address is matched against
+  dstAddressList string
+  // Source port(s) the rule matches
+  srcPort string
+  // Destination port(s) the rule matches
+  dstPort string
+  // Inbound interface the rule matches
+  inInterface string
+  // Outbound interface the rule matches
+  outInterface string
+  // Addresses traffic is translated to
+  toAddresses string
+  // Ports traffic is translated to
+  toPorts string
+  // Whether matching packets are logged
+  log bool
+  // Prefix added to log entries for this rule
+  logPrefix string
+  // Number of bytes matched by the rule
+  bytes int
+  // Number of packets matched by the rule
+  packets int
+  // Whether the rule is disabled
+  disabled bool
+  // Whether the rule was created dynamically
+  dynamic bool
+  // Whether the rule is invalid
+  invalid bool
+  // Optional comment attached to the rule
   comment string
 }
