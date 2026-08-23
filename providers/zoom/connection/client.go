@@ -176,9 +176,9 @@ const optionMeetingAuthentication = "meeting_authentication"
 
 // AccountSettings is the subset of the un-optioned Get Account Settings
 // response this provider reads: the schedule-meeting sign-in requirement,
-// cloud recording, and the sign-in security section. The meeting-security defaults live behind
-// `?option=meeting_security` and are fetched separately, see
-// GetAccountMeetingSecurity.
+// cloud recording, and the sign-in security section. The meeting-security
+// defaults live behind `?option=meeting_security` and are fetched separately,
+// see GetAccountMeetingSecurity.
 type AccountSettings struct {
 	ScheduleMeeting struct {
 		// EnforceLogin is Zoom's "only signed-in users can join meetings"
@@ -187,8 +187,7 @@ type AccountSettings struct {
 		EnforceLogin bool `json:"enforce_login"`
 	} `json:"schedule_meeting"`
 	Recording struct {
-		CloudRecording           bool `json:"cloud_recording"`
-		CloudRecordingEncryption bool `json:"cloud_recording_encryption"`
+		CloudRecording bool `json:"cloud_recording"`
 	} `json:"recording"`
 	Security struct {
 		// SignAgainPeriodForInactivityOnClient and
@@ -258,31 +257,6 @@ func (c *Client) GetAccountMeetingAuthentication(ctx context.Context, accountID 
 	var out MeetingAuthenticationSettings
 	q := url.Values{"option": {optionMeetingAuthentication}}
 	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", q, &out); err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-// SsoSettings is the account's single sign-on configuration.
-//
-// Deprecated: none of these keys appears in a documented Zoom response, and
-// the account settings endpoint accepts no `sso` option, so every field of
-// this type decodes to its zero value. Retained because the zoom.account.sso
-// fields it backs have shipped. The closest documented equivalent is the
-// `security.signin_with_sso` object of the un-optioned account settings
-// response, which reports a different set of values under different names.
-type SsoSettings struct {
-	Enabled             bool     `json:"sso_enabled"`
-	Domains             []string `json:"domains"`
-	GroupMappingEnabled bool     `json:"group_mapping_enabled"`
-	IdpIssuer           string   `json:"idp_issuer"`
-	IdpSsoUrl           string   `json:"idp_sso_url"`
-}
-
-// GetSsoSettings fetches the account's SSO configuration.
-func (c *Client) GetSsoSettings(ctx context.Context, accountID string) (*SsoSettings, error) {
-	var out SsoSettings
-	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", url.Values{"option": {"sso"}}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

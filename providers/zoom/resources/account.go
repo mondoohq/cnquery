@@ -10,7 +10,6 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/zoom/connection"
-	"go.mondoo.com/mql/types"
 )
 
 // mqlZoomAccountInternal caches the account settings behind lazy fetches. The
@@ -178,12 +177,6 @@ func (a *mqlZoomAccount) meetingAuthenticationRequired() (bool, error) {
 	return s.MeetingAuthentication, nil
 }
 
-// meetingOnlyAccountUsersCanJoin is retained for backwards compatibility and
-// reports the same value as meetingSignedInUsersOnly.
-func (a *mqlZoomAccount) meetingOnlyAccountUsersCanJoin() (bool, error) {
-	return a.meetingSignedInUsersOnly()
-}
-
 func (a *mqlZoomAccount) meetingSignedInUsersOnly() (bool, error) {
 	s, err := a.fetchSettings()
 	if err != nil {
@@ -200,20 +193,6 @@ func (a *mqlZoomAccount) cloudRecordingEnabled() (bool, error) {
 	return s.Recording.CloudRecording, nil
 }
 
-func (a *mqlZoomAccount) cloudRecordingEncryptionEnabled() (bool, error) {
-	s, err := a.fetchSettings()
-	if err != nil {
-		return false, err
-	}
-	return s.Recording.CloudRecordingEncryption, nil
-}
-
-// signInSessionTimeoutMinutes is retained for backwards compatibility and
-// reports the same value as signInSessionTimeoutWebMinutes.
-func (a *mqlZoomAccount) signInSessionTimeoutMinutes() (int64, error) {
-	return a.signInSessionTimeoutWebMinutes()
-}
-
 func (a *mqlZoomAccount) signInSessionTimeoutWebMinutes() (int64, error) {
 	s, err := a.fetchSettings()
 	if err != nil {
@@ -228,32 +207,4 @@ func (a *mqlZoomAccount) signInSessionTimeoutClientMinutes() (int64, error) {
 		return 0, err
 	}
 	return s.Security.SignAgainPeriodForInactivityOnClient, nil
-}
-
-// initZoomAccountSso populates the account's single sign-on singleton on
-// construction. It is an init rather than a zoom.account accessor because
-// zoom.account.sso is a directly-addressable resource whose dotted name would
-// otherwise collide with an sso field on zoom.account and leave its fields
-// unset when queried as `zoom.account.sso`. There is exactly one SSO
-// configuration per connected account, so it resolves from the connection
-// alone.
-func initZoomAccountSso(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	// fast path: the caller already provided a populated resource
-	if len(args) > 1 {
-		return args, nil, nil
-	}
-
-	conn := runtime.Connection.(*connection.ZoomConnection)
-	s, err := conn.Client().GetSsoSettings(context.Background(), conn.AccountID())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	args["__id"] = llx.StringData(conn.AccountID() + "/sso")
-	args["enabled"] = llx.BoolData(s.Enabled)
-	args["domains"] = llx.ArrayData(strToAnyList(s.Domains), types.String)
-	args["groupMappingEnabled"] = llx.BoolData(s.GroupMappingEnabled)
-	args["idpIssuer"] = llx.StringData(s.IdpIssuer)
-	args["idpSsoUrl"] = llx.StringData(s.IdpSsoUrl)
-	return args, nil, nil
 }

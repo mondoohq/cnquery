@@ -50,16 +50,6 @@ func userSsoLinked(u *connection.User) bool {
 	return false
 }
 
-// primaryLoginType backs the deprecated singular loginType field with the
-// first of the user's sign-in methods. A user Zoom reports no sign-in method
-// for gets a null rather than 0, which is a real login type (Facebook OAuth).
-func primaryLoginType(u *connection.User) *int64 {
-	if len(u.LoginTypes) == 0 {
-		return nil
-	}
-	return &u.LoginTypes[0]
-}
-
 // resolveZoomUsers turns a list of member IDs into typed zoom.user resources.
 // Each ID is resolved from the account's user index (fetched at most once per
 // connection), so a role or group with N members costs one paginated user list
@@ -139,7 +129,6 @@ func newMqlZoomUser(runtime *plugin.Runtime, u *connection.User) (plugin.Resourc
 		"type":          llx.IntData(u.Type),
 		"status":        llx.StringData(u.Status),
 		"verified":      llx.BoolData(userVerified(u)),
-		"loginType":     llx.IntDataPtr(primaryLoginType(u)),
 		"loginTypes":    llx.ArrayData(intToAnyList(u.LoginTypes), types.Int),
 		"ssoLinked":     llx.BoolData(userSsoLinked(u)),
 		"lastLoginTime": llx.TimeDataPtr(u.LastLoginTime),

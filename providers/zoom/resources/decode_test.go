@@ -137,18 +137,6 @@ func TestUserSsoLinked(t *testing.T) {
 	}
 }
 
-func TestPrimaryLoginType(t *testing.T) {
-	// An absent sign-in method must stay null rather than becoming 0, which is
-	// a real login type (Facebook OAuth).
-	if got := primaryLoginType(&connection.User{}); got != nil {
-		t.Errorf("primaryLoginType(no methods): got %d, want nil", *got)
-	}
-	got := primaryLoginType(&connection.User{LoginTypes: []int64{101, 1}})
-	if got == nil || *got != 101 {
-		t.Errorf("primaryLoginType([101 1]): got %v, want 101", got)
-	}
-}
-
 // A user record that carries the singular `login_type` key the Zoom docs once
 // described must not populate loginTypes: the API does not send it, and
 // accepting it would hide the array decode regressing.
