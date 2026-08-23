@@ -264,6 +264,13 @@ func (c *Client) GetAccountMeetingAuthentication(ctx context.Context, accountID 
 }
 
 // SsoSettings is the account's single sign-on configuration.
+//
+// Deprecated: none of these keys appears in a documented Zoom response, and
+// the account settings endpoint accepts no `sso` option, so every field of
+// this type decodes to its zero value. Retained because the zoom.account.sso
+// fields it backs have shipped. The closest documented equivalent is the
+// `security.signin_with_sso` object of the un-optioned account settings
+// response, which reports a different set of values under different names.
 type SsoSettings struct {
 	Enabled             bool     `json:"sso_enabled"`
 	Domains             []string `json:"domains"`

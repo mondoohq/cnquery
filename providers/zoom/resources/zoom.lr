@@ -32,8 +32,8 @@ zoom @maturity("experimental") {
 // whether meetings require participants to be signed in, and the
 // inactivity periods after which the web portal and the desktop client
 // sign a user out.
-// The account's single sign-on configuration is available through the
-// `zoom.account.sso` resource.
+// The account's `zoom.account.sso` resource is deprecated in full, see
+// that resource for why.
 zoom.account @defaults("id accountName") @maturity("experimental") {
   // Zoom account ID
   id string
@@ -98,17 +98,40 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
 // Account-wide SSO settings: whether SSO is enabled, the email domains
 // provisioned through it, whether group membership is synced from the
 // identity provider, and the identity provider's issuer and login URL.
+// Every field is deprecated. Zoom publishes no account-level SSO settings
+// endpoint, and none of the keys these fields read appears in any
+// documented response, so they all report their zero value on every
+// account. Use `zoom.user.loginTypes` to see which users sign in through
+// SSO until a replacement backed by a documented API is available.
 zoom.account.sso @defaults("enabled") @maturity("experimental") {
   // Whether SSO is enabled for the account
-  enabled bool
+  //
+  // Not backed by any documented Zoom API. The account settings endpoint
+  // accepts no `sso` option and publishes no `sso_enabled` key, so this
+  // reports false on every account regardless of the account's real SSO
+  // configuration.
+  enabled @maturity("deprecated") bool
   // Email domains provisioned through SSO
-  domains []string
+  //
+  // Not backed by any documented Zoom API. No documented response carries a
+  // top-level `domains` key for an account, so this is empty on every
+  // account.
+  domains @maturity("deprecated") []string
   // Whether group membership is mapped from the identity provider
-  groupMappingEnabled bool
+  //
+  // Not backed by any documented Zoom API. No documented response carries a
+  // `group_mapping_enabled` key, so this reports false on every account.
+  groupMappingEnabled @maturity("deprecated") bool
   // Identity provider issuer URL
-  idpIssuer string
+  //
+  // Not backed by any documented Zoom API. No documented response carries an
+  // `idp_issuer` key, so this is empty on every account.
+  idpIssuer @maturity("deprecated") string
   // Identity provider single sign-on URL
-  idpSsoUrl string
+  //
+  // Not backed by any documented Zoom API. No documented response carries an
+  // `idp_sso_url` key, so this is empty on every account.
+  idpSsoUrl @maturity("deprecated") string
 }
 
 // Zoom user
