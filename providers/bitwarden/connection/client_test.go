@@ -4,8 +4,12 @@
 package connection
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -282,5 +286,151 @@ func TestListResponseDecode(t *testing.T) {
 	}
 	if out.ContinuationToken != nil {
 		t.Fatalf("ContinuationToken = %v, want nil", out.ContinuationToken)
+	}
+}
+
+// pagedHandler serves a list endpoint in pages of the given size, using the
+// index of the next record as the continuation cursor, the way the Public API
+// documents the field: a cursor on a partial page, null on the last one.
+func pagedHandler(t *testing.T, ids []string, pageSize int, requests *[]string) http.HandlerFunc {
+	t.Helper()
+	return func(w http.ResponseWriter, r *http.Request) {
+		*requests = append(*requests, r.URL.RequestURI())
+
+		start := 0
+		if tok := r.URL.Query().Get("continuationToken"); tok != "" {
+			var err error
+			start, err = strconv.Atoi(tok)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
+		end := start + pageSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+
+		body := map[string]any{"object": "list"}
+		data := make([]map[string]any, 0, end-start)
+		for _, id := range ids[start:end] {
+			data = append(data, map[string]any{"id": id, "name": id, "externalId": nil, "groups": nil})
+		}
+		body["data"] = data
+		if end < len(ids) {
+			body["continuationToken"] = strconv.Itoa(end)
+		} else {
+			body["continuationToken"] = nil
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(body)
+	}
+}
+
+func TestListAllFollowsContinuationToken(t *testing.T) {
+	ids := []string{"c1", "c2", "c3", "c4", "c5"}
+	var requests []string
+	srv := httptest.NewServer(pagedHandler(t, ids, 3, &requests))
+	defer srv.Close()
+
+	c := NewClient(srv.URL, srv.Client())
+	got, err := c.ListCollections(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != len(ids) {
+		t.Fatalf("got %d collections, want %d (short enumeration)", len(got), len(ids))
+	}
+	for i, want := range ids {
+		if got[i].Id != want {
+			t.Fatalf("collection %d = %q, want %q", i, got[i].Id, want)
+		}
+	}
+
+	wantRequests := []string{"/collections", "/collections?continuationToken=3"}
+	if len(requests) != len(wantRequests) {
+		t.Fatalf("requests = %v, want %v", requests, wantRequests)
+	}
+	for i, want := range wantRequests {
+		if requests[i] != want {
+			t.Fatalf("request %d = %q, want %q", i, requests[i], want)
+		}
+	}
+}
+
+func TestListAllSinglePageIssuesOneRequest(t *testing.T) {
+	ids := []string{"m1", "m2"}
+	var requests []string
+	srv := httptest.NewServer(pagedHandler(t, ids, 10, &requests))
+	defer srv.Close()
+
+	c := NewClient(srv.URL, srv.Client())
+	got, err := c.ListMembers(context.Background())
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("got %d members, want 2", len(got))
+	}
+	if len(requests) != 1 {
+		t.Fatalf("requests = %v, want a single request when the cursor is null", requests)
+	}
+}
+
+// TestListAllStuckTokenTerminates covers a server that keeps echoing the same
+// cursor. Without the repeat guard the walk would re-fetch the same page for
+// the length of the scan.
+func TestListAllStuckTokenTerminates(t *testing.T) {
+	var requests int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"object":            "list",
+			"data":              []map[string]any{{"id": "g1", "name": "g1"}},
+			"continuationToken": "stuck",
+		})
+	}))
+	defer srv.Close()
+
+	c := NewClient(srv.URL, srv.Client())
+	_, err := c.ListGroups(context.Background())
+	if err == nil {
+		t.Fatal("expected an error for a server that never advances its cursor")
+	}
+	if !strings.Contains(err.Error(), "same continuation token twice") {
+		t.Fatalf("error = %v, want the repeated-cursor error", err)
+	}
+	if requests != 2 {
+		t.Fatalf("requests = %d, want 2 (the guard must fire on the first repeat)", requests)
+	}
+}
+
+// TestListAllPageCapTerminates covers a server that mints a fresh cursor on
+// every response, which the repeat guard cannot catch.
+func TestListAllPageCapTerminates(t *testing.T) {
+	var requests int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"object":            "list",
+			"data":              []map[string]any{{"id": strconv.Itoa(requests), "type": 1, "enabled": false}},
+			"continuationToken": strconv.Itoa(requests),
+		})
+	}))
+	defer srv.Close()
+
+	c := NewClient(srv.URL, srv.Client())
+	_, err := c.ListPolicies(context.Background())
+	if err == nil {
+		t.Fatal("expected an error for a server that paginates forever")
+	}
+	if !strings.Contains(err.Error(), "did not stop paginating") {
+		t.Fatalf("error = %v, want the page-cap error", err)
+	}
+	if requests != maxListPages {
+		t.Fatalf("requests = %d, want the walk to stop at maxListPages (%d)", requests, maxListPages)
 	}
 }
