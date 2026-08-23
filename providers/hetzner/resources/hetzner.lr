@@ -153,6 +153,14 @@ private hetzner.server @defaults("id name status") {
   // Dict with two boolean keys: `delete` (the server cannot be deleted
   // while true) and `rebuild` (the server cannot be rebuilt while true).
   protection dict
+  // Operations Hetzner recorded against this server
+  //
+  // The server's action history: reset_password, enable_rescue,
+  // request_console, attach_iso, rebuild, change_protection, and every other
+  // operation the API ran on it, each with a status and a finish time.
+  // Hetzner Cloud keeps no separate audit trail, so this is the only record
+  // that ties a privileged operation to a specific host.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud server private network attachment
@@ -206,6 +214,42 @@ private hetzner.network.exposure @defaults("internetReachable hasPublicIp") {
   // port and description. For a load balancer, the public forwarding services,
   // each with keys protocol, listenPort, and destinationPort.
   openIngressRules []dict
+}
+
+// Hetzner Cloud action
+//
+// One operation Hetzner recorded against a project resource, such as
+// reset_password, enable_rescue, request_console, attach_iso, rebuild,
+// change_protection, or set_rules. Hetzner Cloud keeps no separate audit
+// log, so the action history attached to a resource is the only record of
+// what was done to it and when. Reports the `command` that ran, its
+// `status` (running, success, error), the start and finish times, and the
+// error code and message a failed operation reported.
+private hetzner.action @defaults("id command status finished") {
+  // Action ID
+  id int
+  // Command that ran (reset_password, enable_rescue, attach_iso, set_rules, ...)
+  command string
+  // Status (running, success, error)
+  status string
+  // Completion percentage, 100 once the action has finished
+  progress int
+  // Time the action started
+  started time
+  // Time the action finished; null while the action is still running
+  finished time
+  // Error code a failed action reported; empty when the action did not fail
+  errorCode string
+  // Error message a failed action reported; empty when the action did not fail
+  errorMessage string
+  // Resources the action ran against
+  //
+  // Each entry is a dict with `id` and `type`. The type is one of server,
+  // image, iso, floating_ip, volume, network, certificate, load_balancer,
+  // firewall, placement_group, primary_ip, zone, storage_box,
+  // storage_box_snapshot, or storage_box_subaccount. An operation that joins
+  // two resources, such as attaching a volume to a server, names both.
+  resources []dict
 }
 
 // Hetzner Cloud server type (VM size)
@@ -310,6 +354,12 @@ private hetzner.image @defaults("id name type") {
   boundServer() hetzner.server
   // Server the image was created from (nullable, for snapshots/backups)
   createdFrom() hetzner.server
+  // Operations Hetzner recorded against this image
+  //
+  // The image's action history, covering the snapshot or backup creation that
+  // produced it along with change_protection, each with a status and a finish
+  // time.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud SSH key
@@ -384,6 +434,12 @@ private hetzner.volume @defaults("id name size") {
   protection dict
   // User-defined labels for organizing the resource
   labels map[string]string
+  // Operations Hetzner recorded against this volume
+  //
+  // The volume's action history: attach_volume, detach_volume, resize_volume,
+  // and change_protection, each with a status and a finish time. Shows every
+  // server the volume has been mounted on over its lifetime.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud network (VPC)
@@ -424,6 +480,13 @@ private hetzner.network @defaults("id name ipRange") {
   protection dict
   // User-defined labels for organizing the resource
   labels map[string]string
+  // Operations Hetzner recorded against this network
+  //
+  // The network's action history: add_subnet, delete_subnet, add_route,
+  // delete_route, and change_protection, each with a status and a finish
+  // time. A route or subnet that widened the network's reach is traceable
+  // only here.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud floating IP
@@ -461,6 +524,12 @@ private hetzner.floatingIp @defaults("id ip type") {
   labels map[string]string
   // Creation timestamp
   created time
+  // Operations Hetzner recorded against this floating IP
+  //
+  // The address's action history: assign_floating_ip, unassign_floating_ip,
+  // change_dns_ptr, and change_protection, each with a status and a finish
+  // time. Shows every server that has held this public address.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud primary IP
@@ -502,6 +571,12 @@ private hetzner.primaryIp @defaults("id ip type") {
   labels map[string]string
   // Creation timestamp
   created time
+  // Operations Hetzner recorded against this primary IP
+  //
+  // The address's action history: assign_primary_ip, unassign_primary_ip,
+  // change_dns_ptr, and change_protection, each with a status and a finish
+  // time. Shows every server that has held this public address.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud load balancer
@@ -559,6 +634,13 @@ hetzner.loadBalancer @defaults("id name") {
   outgoingTraffic int
   // Ingoing traffic for the current period (bytes)
   ingoingTraffic int
+  // Operations Hetzner recorded against this load balancer
+  //
+  // The load balancer's action history: add_service, delete_service,
+  // add_target, attach_to_network, enable_public_interface, and the rest,
+  // each with a status and a finish time. Changes to what the load balancer
+  // listens on and forwards to are recorded nowhere else.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud load balancer private network attachment
@@ -703,6 +785,12 @@ hetzner.firewall @defaults("id name") {
   labelSelectorTargets() []hetzner.server
   // User-defined labels for organizing the resource
   labels map[string]string
+  // Operations Hetzner recorded against this firewall
+  //
+  // The firewall's action history: set_rules, apply_to_resources, and
+  // remove_from_resources, each with a status and a finish time. A rule set
+  // that widened shortly before an exposure finding is traceable only here.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud TLS certificate
@@ -778,6 +866,13 @@ private hetzner.certificate @defaults("id name type") {
   loadBalancers() []hetzner.loadBalancer
   // User-defined labels for organizing the resource
   labels map[string]string
+  // Operations Hetzner recorded against this certificate
+  //
+  // The certificate's action history, covering the issuance and renewal
+  // operations Hetzner runs for a managed certificate, each with a status and
+  // a finish time. A renewal that failed and never recovered shows up here
+  // before the certificate expires.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud placement group
@@ -962,6 +1057,13 @@ private hetzner.storageBox @defaults("id name status") {
   subaccounts() []hetzner.storageBox.subaccount
   // Snapshots of the Storage Box
   snapshots() []hetzner.storageBox.snapshot
+  // Operations Hetzner recorded against this Storage Box
+  //
+  // The Storage Box's action history: update_access_settings, reset_password,
+  // enable_snapshot_plan, rollback_snapshot, and the rest, each with a status
+  // and a finish time. A protocol switched on or a password reset is
+  // traceable only here.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud Storage Box type (storage tier)
@@ -1112,6 +1214,12 @@ private hetzner.zone @defaults("id name mode status") {
   labels map[string]string
   // Creation timestamp
   created time
+  // Operations Hetzner recorded against this zone
+  //
+  // The zone's action history: change_protection, import_zonefile, and the
+  // rest, each with a status and a finish time. A bulk record replacement
+  // that moved where the domain resolves is recorded nowhere else.
+  actions() []hetzner.action
 }
 
 // Hetzner Cloud DNS resource record set
