@@ -38,6 +38,24 @@ type mqlHetznerInternal struct {
 	loadBalancersList []*hcloud.LoadBalancer
 	loadBalancersErr  error
 
+	// certificatesOnce backs the load balancer certificate union, which
+	// resolves certificate IDs against the project list rather than looking
+	// each one up on its own.
+	certificatesOnce sync.Once
+	certificatesList []*hcloud.Certificate
+	certificatesErr  error
+
+	// volumesOnce and storageBoxesOnce back the location residency rollups
+	// alongside the address lists above, so `hetzner.locations { volumes }`
+	// costs one list call rather than one per location.
+	volumesOnce sync.Once
+	volumesList []*hcloud.Volume
+	volumesErr  error
+
+	storageBoxesOnce sync.Once
+	storageBoxesList []*hcloud.StorageBox
+	storageBoxesErr  error
+
 	// zoneRecords backs the reverse edge, server.dnsRecords. It costs a zone
 	// list plus one record-set list per zone, so it stays separate from the
 	// address lists above and is only paid when that edge is queried.

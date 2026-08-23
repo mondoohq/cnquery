@@ -94,6 +94,21 @@ func initHetznerZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	return args, res, err
 }
 
+// zonefile exports what Hetzner's nameservers actually serve for the zone.
+//
+// This is a separate request per zone, so it stays a computed field and is
+// never populated while listing zones. An export failure propagates rather
+// than reporting an empty zone file: an empty string would read as a zone that
+// publishes nothing, which is a claim we did not verify.
+func (m *mqlHetznerZone) zonefile() (string, error) {
+	c := conn(m.MqlRuntime)
+	res, _, err := c.Client().Zone.ExportZonefile(ctx(), &hcloud.Zone{ID: m.Id.Data})
+	if err != nil {
+		return "", err
+	}
+	return res.Zonefile, nil
+}
+
 func (m *mqlHetznerZone) rrsets() ([]any, error) {
 	c := conn(m.MqlRuntime)
 	zone := &hcloud.Zone{ID: m.Id.Data}

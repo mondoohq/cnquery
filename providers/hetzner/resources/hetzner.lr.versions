@@ -2,7 +2,18 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 hetzner 13.0.1
+hetzner.action 13.7.8
+hetzner.action.command 13.7.8
+hetzner.action.errorCode 13.7.8
+hetzner.action.errorMessage 13.7.8
+hetzner.action.finished 13.7.8
+hetzner.action.id 13.7.8
+hetzner.action.progress 13.7.8
+hetzner.action.resources 13.7.8
+hetzner.action.started 13.7.8
+hetzner.action.status 13.7.8
 hetzner.certificate 13.0.1
+hetzner.certificate.actions 13.7.8
 hetzner.certificate.certificate 13.1.2
 hetzner.certificate.created 13.0.1
 hetzner.certificate.domainNames 13.0.1
@@ -35,6 +46,7 @@ hetzner.datacenter.serverTypesAvailableForMigration 13.0.1
 hetzner.datacenter.supportedServerTypes 13.0.1
 hetzner.datacenters 13.0.1
 hetzner.firewall 13.0.1
+hetzner.firewall.actions 13.7.8
 hetzner.firewall.created 13.0.1
 hetzner.firewall.egressRestricted 13.7.6
 hetzner.firewall.id 13.0.1
@@ -46,6 +58,7 @@ hetzner.firewall.rules 13.0.1
 hetzner.firewall.servers 13.0.1
 hetzner.firewalls 13.0.1
 hetzner.floatingIp 13.0.1
+hetzner.floatingIp.actions 13.7.8
 hetzner.floatingIp.blocked 13.0.1
 hetzner.floatingIp.created 13.0.1
 hetzner.floatingIp.description 13.0.1
@@ -60,6 +73,7 @@ hetzner.floatingIp.server 13.0.1
 hetzner.floatingIp.type 13.0.1
 hetzner.floatingIps 13.0.1
 hetzner.image 13.0.1
+hetzner.image.actions 13.7.8
 hetzner.image.architecture 13.1.2
 hetzner.image.boundServer 13.0.1
 hetzner.image.created 13.0.1
@@ -85,10 +99,13 @@ hetzner.iso.deprecation 13.0.1
 hetzner.iso.description 13.0.1
 hetzner.iso.id 13.0.1
 hetzner.iso.name 13.0.1
+hetzner.iso.servers 13.7.8
 hetzner.iso.type 13.0.1
 hetzner.isos 13.0.1
 hetzner.loadBalancer 13.0.1
+hetzner.loadBalancer.actions 13.7.8
 hetzner.loadBalancer.algorithm 13.0.1
+hetzner.loadBalancer.certificates 13.7.8
 hetzner.loadBalancer.created 13.0.1
 hetzner.loadBalancer.exposure 13.3.1
 hetzner.loadBalancer.id 13.0.1
@@ -104,6 +121,8 @@ hetzner.loadBalancer.privateNet.ip 13.0.1
 hetzner.loadBalancer.privateNet.loadBalancer 13.7.6
 hetzner.loadBalancer.privateNet.network 13.0.1
 hetzner.loadBalancer.protection 13.0.1
+hetzner.loadBalancer.publicIpv4DnsPtr 13.7.8
+hetzner.loadBalancer.publicIpv6DnsPtr 13.7.8
 hetzner.loadBalancer.publicNet 13.0.1
 hetzner.loadBalancer.servers 13.5.2
 hetzner.loadBalancer.service 13.0.1
@@ -141,14 +160,20 @@ hetzner.location 13.0.1
 hetzner.location.city 13.0.1
 hetzner.location.country 13.0.1
 hetzner.location.description 13.0.1
+hetzner.location.floatingIps 13.7.8
 hetzner.location.id 13.0.1
 hetzner.location.latitude 13.0.1
+hetzner.location.loadBalancers 13.7.8
 hetzner.location.longitude 13.0.1
 hetzner.location.name 13.0.1
 hetzner.location.networkZone 13.0.1
+hetzner.location.primaryIps 13.7.8
 hetzner.location.servers 13.5.2
+hetzner.location.storageBoxes 13.7.8
+hetzner.location.volumes 13.7.8
 hetzner.locations 13.0.1
 hetzner.network 13.0.1
+hetzner.network.actions 13.7.8
 hetzner.network.created 13.0.1
 hetzner.network.exposeRoutesToVswitch 13.0.1
 hetzner.network.exposure 13.3.1
@@ -162,8 +187,14 @@ hetzner.network.labels 13.0.1
 hetzner.network.loadBalancers 13.1.2
 hetzner.network.name 13.0.1
 hetzner.network.protection 13.0.1
+hetzner.network.route 13.7.8
+hetzner.network.route.destination 13.7.8
+hetzner.network.route.gateway 13.7.8
+hetzner.network.route.gatewayServer 13.7.8
+hetzner.network.route.network 13.7.8
 hetzner.network.routes 13.0.1
 hetzner.network.servers 13.0.1
+hetzner.network.staticRoutes 13.7.8
 hetzner.network.subnets 13.0.1
 hetzner.networks 13.0.1
 hetzner.placementGroup 13.0.1
@@ -175,6 +206,7 @@ hetzner.placementGroup.servers 13.0.1
 hetzner.placementGroup.type 13.0.1
 hetzner.placementGroups 13.0.1
 hetzner.primaryIp 13.0.1
+hetzner.primaryIp.actions 13.7.8
 hetzner.primaryIp.assigneeId 13.0.1
 hetzner.primaryIp.assigneeType 13.0.1
 hetzner.primaryIp.autoDelete 13.0.1
@@ -191,6 +223,7 @@ hetzner.primaryIp.server 13.0.1
 hetzner.primaryIp.type 13.0.1
 hetzner.primaryIps 13.0.1
 hetzner.server 13.0.1
+hetzner.server.actions 13.7.8
 hetzner.server.backupWindow 13.0.1
 hetzner.server.backupsEnabled 13.5.2
 hetzner.server.created 13.0.1
@@ -237,12 +270,15 @@ hetzner.server.status 13.0.1
 hetzner.server.volumes 13.0.1
 hetzner.serverType 13.0.1
 hetzner.serverType.architecture 13.0.1
+hetzner.serverType.category 13.7.8
 hetzner.serverType.cores 13.0.1
 hetzner.serverType.cpuType 13.0.1
 hetzner.serverType.deprecated 13.0.1
+hetzner.serverType.deprecation 13.7.8
 hetzner.serverType.description 13.0.1
 hetzner.serverType.disk 13.0.1
 hetzner.serverType.id 13.0.1
+hetzner.serverType.includedTraffic 13.7.8
 hetzner.serverType.location 13.0.1
 hetzner.serverType.location.available 13.0.1
 hetzner.serverType.location.deprecation 13.0.1
@@ -266,6 +302,7 @@ hetzner.sshKey.name 13.0.1
 hetzner.sshKey.publicKey 13.0.1
 hetzner.sshKeys 13.0.1
 hetzner.storageBox 13.4.2
+hetzner.storageBox.actions 13.7.8
 hetzner.storageBox.created 13.4.2
 hetzner.storageBox.id 13.4.2
 hetzner.storageBox.labels 13.4.2
@@ -325,6 +362,7 @@ hetzner.storageBoxType.subaccountsLimit 13.4.2
 hetzner.storageBoxTypes 13.4.2
 hetzner.storageBoxes 13.4.2
 hetzner.volume 13.0.1
+hetzner.volume.actions 13.7.8
 hetzner.volume.created 13.0.1
 hetzner.volume.format 13.0.1
 hetzner.volume.id 13.0.1
@@ -338,6 +376,7 @@ hetzner.volume.size 13.0.1
 hetzner.volume.status 13.0.1
 hetzner.volumes 13.0.1
 hetzner.zone 13.4.2
+hetzner.zone.actions 13.7.8
 hetzner.zone.assignedNameservers 13.4.2
 hetzner.zone.created 13.4.2
 hetzner.zone.delegatedNameservers 13.4.2
@@ -372,4 +411,5 @@ hetzner.zone.rrset.zone 13.4.2
 hetzner.zone.rrsets 13.4.2
 hetzner.zone.status 13.4.2
 hetzner.zone.ttl 13.4.2
+hetzner.zone.zonefile 13.7.8
 hetzner.zones 13.4.2

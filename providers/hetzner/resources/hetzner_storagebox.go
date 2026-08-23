@@ -20,11 +20,21 @@ func (r *mqlHetznerStorageBox) id() (string, error) {
 	return fmt.Sprintf("hetzner.storageBox/%d", r.Id.Data), nil
 }
 
-func (h *mqlHetzner) storageBoxes() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.StorageBox, *hcloud.Response, error) {
-		return c.Client().StorageBox.List(ctx(), hcloud.StorageBoxListOpts{ListOpts: opts})
+// allStorageBoxes lists every project Storage Box exactly once and caches the
+// raw result on the hetzner namespace resource, mirroring allServers. The
+// storageBoxes() field and the location rollup both resolve through here.
+func (h *mqlHetzner) allStorageBoxes() ([]*hcloud.StorageBox, error) {
+	h.storageBoxesOnce.Do(func() {
+		c := conn(h.MqlRuntime)
+		h.storageBoxesList, h.storageBoxesErr = paginate(func(opts hcloud.ListOpts) ([]*hcloud.StorageBox, *hcloud.Response, error) {
+			return c.Client().StorageBox.List(ctx(), hcloud.StorageBoxListOpts{ListOpts: opts})
+		})
 	})
+	return h.storageBoxesList, h.storageBoxesErr
+}
+
+func (h *mqlHetzner) storageBoxes() ([]any, error) {
+	items, err := h.allStorageBoxes()
 	if err != nil {
 		return nil, err
 	}

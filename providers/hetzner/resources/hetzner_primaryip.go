@@ -21,10 +21,7 @@ func (r *mqlHetznerPrimaryIp) id() (string, error) {
 }
 
 func (h *mqlHetzner) primaryIps() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.PrimaryIP, *hcloud.Response, error) {
-		return c.Client().PrimaryIP.List(ctx(), hcloud.PrimaryIPListOpts{ListOpts: opts})
-	})
+	items, err := h.allPrimaryIPs()
 	if err != nil {
 		return nil, err
 	}

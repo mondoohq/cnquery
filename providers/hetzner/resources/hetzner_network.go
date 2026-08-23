@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 	"go.mondoo.com/mql/llx"
@@ -14,6 +15,7 @@ import (
 type mqlHetznerNetworkInternal struct {
 	cacheServers       []*hcloud.Server
 	cacheLoadBalancers []*hcloud.LoadBalancer
+	cacheRoutes        []hcloud.NetworkRoute
 }
 
 func (r *mqlHetznerNetwork) id() (string, error) {
@@ -78,6 +80,7 @@ func newMqlHetznerNetwork(runtime *plugin.Runtime, n *hcloud.Network) (*mqlHetzn
 	m := res.(*mqlHetznerNetwork)
 	m.cacheServers = n.Servers
 	m.cacheLoadBalancers = n.LoadBalancers
+	m.cacheRoutes = n.Routes
 	return m, nil
 }
 
@@ -125,4 +128,126 @@ func (m *mqlHetznerNetwork) loadBalancers() ([]any, error) {
 		out = append(out, ref)
 	}
 	return out, nil
+}
+
+func (m *mqlHetznerNetwork) staticRoutes() ([]any, error) {
+	out := make([]any, 0, len(m.cacheRoutes))
+	for _, r := range m.cacheRoutes {
+		res, err := newMqlHetznerNetworkRoute(m.MqlRuntime, m.Id.Data, r)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// --- network.route sub-resource ---
+
+// mqlHetznerNetworkRouteInternal keeps the network the route belongs to and
+// the raw gateway address, which gatewayServer resolves against the project's
+// servers.
+type mqlHetznerNetworkRouteInternal struct {
+	cacheNetworkID int64
+	cacheGateway   net.IP
+}
+
+func (r *mqlHetznerNetworkRoute) id() (string, error) {
+	return networkRouteID(r.cacheNetworkID, r.Destination.Data), nil
+}
+
+// networkRouteID builds the cache key for a route. A network holds at most one
+// route per destination, so the network id plus the destination CIDR is stable
+// and unique.
+func networkRouteID(networkID int64, destination string) string {
+	return fmt.Sprintf("hetzner.network.route/%d/%s", networkID, destination)
+}
+
+func newMqlHetznerNetworkRoute(runtime *plugin.Runtime, networkID int64, r hcloud.NetworkRoute) (*mqlHetznerNetworkRoute, error) {
+	destination := ipNetString(r.Destination)
+	res, err := CreateResource(runtime, "hetzner.network.route", map[string]*llx.RawData{
+		"__id":        llx.StringData(networkRouteID(networkID, destination)),
+		"destination": llx.StringData(destination),
+		"gateway":     llx.StringData(ipString(r.Gateway)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	m := res.(*mqlHetznerNetworkRoute)
+	m.cacheNetworkID = networkID
+	m.cacheGateway = r.Gateway
+	return m, nil
+}
+
+func (m *mqlHetznerNetworkRoute) network() (*mqlHetznerNetwork, error) {
+	if m.cacheNetworkID == 0 {
+		m.Network.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	ref, err := NewResource(m.MqlRuntime, "hetzner.network", map[string]*llx.RawData{
+		"id": llx.IntData(m.cacheNetworkID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ref.(*mqlHetznerNetwork), nil
+}
+
+// gatewayServer names the server carrying the route's traffic.
+//
+// It scans the once-cached project server list rather than resolving the
+// gateway with a per-route NewResource: an init runs before the runtime cache
+// is consulted, so a per-route lookup would turn one Server.List into one API
+// call per route, and there is no endpoint that maps a private address to a
+// server in the first place.
+func (m *mqlHetznerNetworkRoute) gatewayServer() (*mqlHetznerServer, error) {
+	if m.cacheGateway == nil {
+		m.GatewayServer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	h, err := hetznerNamespace(m.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	servers, err := h.allServers()
+	if err != nil {
+		return nil, err
+	}
+	s := serverHoldingPrivateIP(servers, m.cacheNetworkID, m.cacheGateway)
+	if s == nil {
+		m.GatewayServer.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newMqlHetznerServer(m.MqlRuntime, s)
+}
+
+// serverHoldingPrivateIP returns the server whose attachment to the given
+// network holds addr, as either the interface address or an alias IP.
+//
+// The match is scoped to one network on purpose. Two networks in a project can
+// carry overlapping IP ranges, so an address alone does not identify a server;
+// only the address within the route's own network does.
+func serverHoldingPrivateIP(servers []*hcloud.Server, networkID int64, addr net.IP) *hcloud.Server {
+	if addr == nil {
+		return nil
+	}
+	for _, s := range servers {
+		if s == nil {
+			continue
+		}
+		for _, p := range s.PrivateNet {
+			if p.Network == nil || p.Network.ID != networkID {
+				continue
+			}
+			if p.IP.Equal(addr) {
+				return s
+			}
+			for _, alias := range p.Aliases {
+				if alias.Equal(addr) {
+					return s
+				}
+			}
+		}
+	}
+	return nil
 }

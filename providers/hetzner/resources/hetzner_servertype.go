@@ -49,8 +49,19 @@ func newMqlHetznerServerType(runtime *plugin.Runtime, t *hcloud.ServerType) (*mq
 		"disk":         llx.IntData(int64(t.Disk)),
 		"storageType":  llx.StringData(string(t.StorageType)),
 		"cpuType":      llx.StringData(string(t.CPUType)),
+		"category":     llx.StringData(t.Category),
 		"architecture": llx.StringData(string(t.Architecture)),
 		"deprecated":   llx.BoolData(t.IsDeprecated()),
+		// hcloud marks ServerType.DeprecatableResource as phasing out in
+		// favour of the per-location schedule, which locations() already
+		// carries. The type-wide schedule is kept because the shipped
+		// `deprecated` bool reads from the same struct and says only that a
+		// type is going away, never by when.
+		"deprecation": llx.DictData(deprecationDict(t.Deprecation)),
+		// Deprecated in the SDK and reports 0 after 2024-08-05, when Hetzner
+		// moved the traffic allowance into per-location pricing. Carried so
+		// the inventory matches what the API returns.
+		"includedTraffic": llx.IntData(t.IncludedTraffic),
 	})
 	if err != nil {
 		return nil, err
