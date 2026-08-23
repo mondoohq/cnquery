@@ -47,8 +47,8 @@ func createTailscaleWebhookResource(runtime *plugin.Runtime, wh *tsclient.Webhoo
 		"endpointUrl":      llx.StringData(wh.EndpointURL),
 		"providerType":     llx.StringData(string(wh.ProviderType)),
 		"creatorLoginName": llx.StringData(wh.CreatorLoginName),
-		"created":          llx.TimeData(wh.Created),
-		"lastModified":     llx.TimeData(wh.LastModified),
+		"created":          llx.TimeDataPtr(optionalTimeValue(wh.Created)),
+		"lastModified":     llx.TimeDataPtr(optionalTimeValue(wh.LastModified)),
 		"subscriptions":    llx.ArrayData(subs, types.String),
 	})
 }

@@ -7,6 +7,7 @@ tailscale.aclPolicy.acls 13.0.7
 tailscale.aclPolicy.attrConfig 13.3.11
 tailscale.aclPolicy.autoApproverExitNodes 13.0.7
 tailscale.aclPolicy.autoApproverRoutes 13.0.7
+tailscale.aclPolicy.autoApproverServices 13.4.1
 tailscale.aclPolicy.defaultSourcePosture 13.0.7
 tailscale.aclPolicy.derpRegions 13.3.11
 tailscale.aclPolicy.disableIPv4 13.0.7
@@ -37,6 +38,7 @@ tailscale.authKey.expires 13.1.8
 tailscale.authKey.hasExpiration 13.2.4
 tailscale.authKey.id 13.1.8
 tailscale.authKey.invalid 13.1.8
+tailscale.authKey.isExpired 13.4.1
 tailscale.authKey.isRevoked 13.2.4
 tailscale.authKey.issuer 13.3.11
 tailscale.authKey.keyType 13.3.11

@@ -237,7 +237,12 @@ tailscale.user @defaults("id displayName type") {
   deviceCount int
   // Time the user joined the tailnet
   createdAt time
-  // Last time the user was active on the tailnet, either via a node connection or by authenticating to a Tailscale service (including the admin panel)
+  // Last time the user was active on the tailnet
+  //
+  // Activity is either a node connection or authenticating to a
+  // Tailscale service, including the admin panel. Null when Tailscale
+  // reports no such time, so a query for dormant accounts selects only
+  // the accounts that have been seen at least once.
   lastSeenAt time
   // Whether the user is currently connected to the tailnet
   currentlyConnected bool
@@ -347,6 +352,12 @@ tailscale.aclPolicy @defaults("tailnet") {
   autoApproverExitNodes []string
   // Subnet routes that are auto-approved when advertised by listed users/groups (CIDR → owners)
   autoApproverRoutes map[string][]string
+  // Tailnet services whose advertisement is auto-approved when advertised by listed users/groups (service name → owners)
+  //
+  // A listed owner can stand up the named service under its stable VIP
+  // and have the advertisement approved without an administrator acting
+  // on it. Empty means every service advertisement needs approval.
+  autoApproverServices map[string][]string
   // Default device-posture rule names applied to every ACL source that doesn't specify its own srcPosture. Empty when posture rules are unused.
   defaultSourcePosture []string
   // Named device posture rules referenced by name from src/defaultSrcPosture (rule name -> list of posture conditions)
@@ -424,11 +435,26 @@ private tailscale.authKey @defaults("id keyType description expires revoked") {
   created time
   // Time the key was last modified
   updated time
-  // Time the key expires; the zero value means the key never expires
+  // Expiration time of the key
+  //
+  // Null when the key never expires. A key with no expiration is the
+  // longest-lived credential the tailnet can hold, so absence here is
+  // the finding rather than the all-clear, and there is no date to
+  // compare against the current time. Use isExpired to test whether a
+  // key is past its expiration, and hasExpiration to find the keys that
+  // have no expiration at all.
   expires time
   // Whether the key has an expiration set (false means the key never expires)
   hasExpiration() bool
-  // Time the key was revoked; the zero value means the key has not been revoked
+  // Whether the key is past its expiration time
+  //
+  // False for a key that never expires, since such a key is never past an
+  // expiration it does not have. Pair with hasExpiration to tell a key
+  // that is still within its window from one that has no window.
+  isExpired() bool
+  // Revocation time of the key
+  //
+  // Null when the key has not been revoked.
   revoked time
   // Whether the key has been revoked
   isRevoked() bool
@@ -482,6 +508,8 @@ private tailscale.webhook @defaults("endpointId providerType endpointUrl") {
   // Time the endpoint was registered
   created time
   // Time the endpoint subscription was last modified
+  //
+  // Null when Tailscale reports no such time.
   lastModified time
   // Events the endpoint is subscribed to
   //
