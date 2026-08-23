@@ -28,6 +28,7 @@ const (
 	ResourceHetznerSshKey                 string = "hetzner.sshKey"
 	ResourceHetznerVolume                 string = "hetzner.volume"
 	ResourceHetznerNetwork                string = "hetzner.network"
+	ResourceHetznerNetworkRoute           string = "hetzner.network.route"
 	ResourceHetznerFloatingIp             string = "hetzner.floatingIp"
 	ResourceHetznerPrimaryIp              string = "hetzner.primaryIp"
 	ResourceHetznerLoadBalancer           string = "hetzner.loadBalancer"
@@ -101,6 +102,10 @@ func init() {
 		"hetzner.network": {
 			Init:   initHetznerNetwork,
 			Create: createHetznerNetwork,
+		},
+		"hetzner.network.route": {
+			// to override args, implement: initHetznerNetworkRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createHetznerNetworkRoute,
 		},
 		"hetzner.floatingIp": {
 			Init:   initHetznerFloatingIp,
@@ -664,6 +669,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.network.routes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerNetwork).GetRoutes()).ToDataRes(types.Array(types.Dict))
 	},
+	"hetzner.network.staticRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerNetwork).GetStaticRoutes()).ToDataRes(types.Array(types.Resource("hetzner.network.route")))
+	},
 	"hetzner.network.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerNetwork).GetServers()).ToDataRes(types.Array(types.Resource("hetzner.server")))
 	},
@@ -681,6 +689,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.network.actions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerNetwork).GetActions()).ToDataRes(types.Array(types.Resource("hetzner.action")))
+	},
+	"hetzner.network.route.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerNetworkRoute).GetNetwork()).ToDataRes(types.Resource("hetzner.network"))
+	},
+	"hetzner.network.route.destination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerNetworkRoute).GetDestination()).ToDataRes(types.String)
+	},
+	"hetzner.network.route.gateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerNetworkRoute).GetGateway()).ToDataRes(types.String)
+	},
+	"hetzner.network.route.gatewayServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerNetworkRoute).GetGatewayServer()).ToDataRes(types.Resource("hetzner.server"))
 	},
 	"hetzner.floatingIp.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerFloatingIp).GetId()).ToDataRes(types.Int)
@@ -1950,6 +1970,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerNetwork).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"hetzner.network.staticRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerNetwork).StaticRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"hetzner.network.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerNetwork).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1972,6 +1996,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.network.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerNetwork).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.network.route.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerNetworkRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"hetzner.network.route.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerNetworkRoute).Network, ok = plugin.RawToTValue[*mqlHetznerNetwork](v.Value, v.Error)
+		return
+	},
+	"hetzner.network.route.destination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerNetworkRoute).Destination, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.network.route.gateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerNetworkRoute).Gateway, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.network.route.gatewayServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerNetworkRoute).GatewayServer, ok = plugin.RawToTValue[*mqlHetznerServer](v.Value, v.Error)
 		return
 	},
 	"hetzner.floatingIp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4003,7 +4047,12 @@ func createHetznerAction(runtime *plugin.Runtime, args map[string]*llx.RawData) 
 		return res, err
 	}
 
-	// to override __id implement: id() (string, error)
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("hetzner.action", res.__id)
@@ -4674,6 +4723,7 @@ type mqlHetznerNetwork struct {
 	Created               plugin.TValue[*time.Time]
 	Subnets               plugin.TValue[[]any]
 	Routes                plugin.TValue[[]any]
+	StaticRoutes          plugin.TValue[[]any]
 	Servers               plugin.TValue[[]any]
 	LoadBalancers         plugin.TValue[[]any]
 	ExposeRoutesToVswitch plugin.TValue[bool]
@@ -4743,6 +4793,22 @@ func (c *mqlHetznerNetwork) GetRoutes() *plugin.TValue[[]any] {
 	return &c.Routes
 }
 
+func (c *mqlHetznerNetwork) GetStaticRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StaticRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.network", c.__id, "staticRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.staticRoutes()
+	})
+}
+
 func (c *mqlHetznerNetwork) GetServers() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4800,6 +4866,94 @@ func (c *mqlHetznerNetwork) GetActions() *plugin.TValue[[]any] {
 		}
 
 		return c.actions()
+	})
+}
+
+// mqlHetznerNetworkRoute for the hetzner.network.route resource
+type mqlHetznerNetworkRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlHetznerNetworkRouteInternal
+	Network       plugin.TValue[*mqlHetznerNetwork]
+	Destination   plugin.TValue[string]
+	Gateway       plugin.TValue[string]
+	GatewayServer plugin.TValue[*mqlHetznerServer]
+}
+
+// createHetznerNetworkRoute creates a new instance of this resource
+func createHetznerNetworkRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlHetznerNetworkRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("hetzner.network.route", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlHetznerNetworkRoute) MqlName() string {
+	return "hetzner.network.route"
+}
+
+func (c *mqlHetznerNetworkRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlHetznerNetworkRoute) GetNetwork() *plugin.TValue[*mqlHetznerNetwork] {
+	return plugin.GetOrCompute[*mqlHetznerNetwork](&c.Network, func() (*mqlHetznerNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.network.route", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlHetznerNetworkRoute) GetDestination() *plugin.TValue[string] {
+	return &c.Destination
+}
+
+func (c *mqlHetznerNetworkRoute) GetGateway() *plugin.TValue[string] {
+	return &c.Gateway
+}
+
+func (c *mqlHetznerNetworkRoute) GetGatewayServer() *plugin.TValue[*mqlHetznerServer] {
+	return plugin.GetOrCompute[*mqlHetznerServer](&c.GatewayServer, func() (*mqlHetznerServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.network.route", c.__id, "gatewayServer")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlHetznerServer), nil
+			}
+		}
+
+		return c.gatewayServer()
 	})
 }
 

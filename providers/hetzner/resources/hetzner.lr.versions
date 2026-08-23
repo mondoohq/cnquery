@@ -178,8 +178,14 @@ hetzner.network.labels 13.0.1
 hetzner.network.loadBalancers 13.1.2
 hetzner.network.name 13.0.1
 hetzner.network.protection 13.0.1
+hetzner.network.route 13.7.8
+hetzner.network.route.destination 13.7.8
+hetzner.network.route.gateway 13.7.8
+hetzner.network.route.gatewayServer 13.7.8
+hetzner.network.route.network 13.7.8
 hetzner.network.routes 13.0.1
 hetzner.network.servers 13.0.1
+hetzner.network.staticRoutes 13.7.8
 hetzner.network.subnets 13.0.1
 hetzner.networks 13.0.1
 hetzner.placementGroup 13.0.1

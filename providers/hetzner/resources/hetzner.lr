@@ -447,8 +447,8 @@ private hetzner.volume @defaults("id name size") {
 // Private network spanning one or more subnets that Hetzner Cloud servers and
 // load balancers attach to for internal traffic. Select a network by its
 // numeric id, for example hetzner.network(id: 4711). The ipRange field holds the
-// overall CIDR, subnets carves it into per-zone ranges, and routes lists static
-// next-hop entries. Inspect servers and loadBalancers to see what is attached,
+// overall CIDR, subnets carves it into per-zone ranges, and staticRoutes lists
+// the next-hop entries with the gateway resolved to a server. Inspect servers and loadBalancers to see what is attached,
 // and exposeRoutesToVswitch to check whether the network's routes are advertised
 // to a connected vSwitch.
 private hetzner.network @defaults("id name ipRange") {
@@ -468,8 +468,19 @@ private hetzner.network @defaults("id name ipRange") {
   // attaches the subnet to a Hetzner vSwitch, extending the network to
   // dedicated servers and other networks outside this project.
   subnets []dict
-  // Routes [{destination, gateway}]
-  routes []dict
+  // Static routes as raw dicts
+  //
+  // Deprecated in favor of staticRoutes, which carries the same destination
+  // and gateway plus the server holding the gateway address. Each entry is a
+  // dict with `destination` and `gateway`.
+  routes @maturity("deprecated") []dict
+  // Static routes with the gateway resolved to a server
+  //
+  // The network's next-hop entries. A route to 0.0.0.0/0 whose gateway is one
+  // server's private address makes that host the egress path for every other
+  // server on the network, so the route names the server carrying the traffic
+  // rather than leaving a bare address.
+  staticRoutes() []hetzner.network.route
   // Servers attached to this network
   servers() []hetzner.server
   // Load balancers attached to this network
@@ -487,6 +498,31 @@ private hetzner.network @defaults("id name ipRange") {
   // time. A route or subnet that widened the network's reach is traceable
   // only here.
   actions() []hetzner.action
+}
+
+// Static route in a Hetzner Cloud network
+//
+// One next-hop entry in a project network, pairing a destination CIDR with the
+// gateway address traffic for that destination is sent to. Hetzner's NAT
+// gateway pattern is a route to 0.0.0.0/0 whose gateway is one server's
+// private address, which quietly makes that host the egress path for every
+// other server on the network. The `gatewayServer` field resolves the gateway
+// address against the private network attachments and alias IPs of the
+// project's servers, naming the host that carries the traffic.
+private hetzner.network.route @defaults("destination gateway") {
+  // Network the route belongs to
+  network() hetzner.network
+  // Destination CIDR the route matches
+  destination string
+  // Gateway address traffic for the destination is sent to
+  gateway string
+  // Server holding the gateway address
+  //
+  // The project server whose attachment to this network holds the gateway
+  // address, either as the interface address or as an alias IP. Null when no
+  // server in the project holds it, which is what a gateway pointing at a
+  // vSwitch or at hardware outside the project looks like.
+  gatewayServer() hetzner.server
 }
 
 // Hetzner Cloud floating IP
