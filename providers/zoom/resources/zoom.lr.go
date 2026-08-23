@@ -174,6 +174,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"zoom.account.signInSessionTimeoutMinutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccount).GetSignInSessionTimeoutMinutes()).ToDataRes(types.Int)
 	},
+	"zoom.account.signInSessionTimeoutWebMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetSignInSessionTimeoutWebMinutes()).ToDataRes(types.Int)
+	},
+	"zoom.account.signInSessionTimeoutClientMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetSignInSessionTimeoutClientMinutes()).ToDataRes(types.Int)
+	},
 	"zoom.account.sso.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccountSso).GetEnabled()).ToDataRes(types.Bool)
 	},
@@ -368,6 +374,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zoom.account.signInSessionTimeoutMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoomAccount).SignInSessionTimeoutMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.signInSessionTimeoutWebMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).SignInSessionTimeoutWebMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.signInSessionTimeoutClientMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).SignInSessionTimeoutClientMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"zoom.account.sso.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -654,20 +668,22 @@ type mqlZoomAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlZoomAccountInternal
-	Id                              plugin.TValue[string]
-	AccountName                     plugin.TValue[string]
-	OwnerEmail                      plugin.TValue[string]
-	MeetingWaitingRoomEnabled       plugin.TValue[bool]
-	MeetingPasscodeRequired         plugin.TValue[bool]
-	MeetingPmiPasscodeRequired      plugin.TValue[bool]
-	MeetingEncryptionType           plugin.TValue[string]
-	MeetingE2eeAvailable            plugin.TValue[bool]
-	MeetingAuthenticationRequired   plugin.TValue[bool]
-	MeetingOnlyAccountUsersCanJoin  plugin.TValue[bool]
-	MeetingSignedInUsersOnly        plugin.TValue[bool]
-	CloudRecordingEnabled           plugin.TValue[bool]
-	CloudRecordingEncryptionEnabled plugin.TValue[bool]
-	SignInSessionTimeoutMinutes     plugin.TValue[int64]
+	Id                                plugin.TValue[string]
+	AccountName                       plugin.TValue[string]
+	OwnerEmail                        plugin.TValue[string]
+	MeetingWaitingRoomEnabled         plugin.TValue[bool]
+	MeetingPasscodeRequired           plugin.TValue[bool]
+	MeetingPmiPasscodeRequired        plugin.TValue[bool]
+	MeetingEncryptionType             plugin.TValue[string]
+	MeetingE2eeAvailable              plugin.TValue[bool]
+	MeetingAuthenticationRequired     plugin.TValue[bool]
+	MeetingOnlyAccountUsersCanJoin    plugin.TValue[bool]
+	MeetingSignedInUsersOnly          plugin.TValue[bool]
+	CloudRecordingEnabled             plugin.TValue[bool]
+	CloudRecordingEncryptionEnabled   plugin.TValue[bool]
+	SignInSessionTimeoutMinutes       plugin.TValue[int64]
+	SignInSessionTimeoutWebMinutes    plugin.TValue[int64]
+	SignInSessionTimeoutClientMinutes plugin.TValue[int64]
 }
 
 // createZoomAccount creates a new instance of this resource
@@ -777,6 +793,18 @@ func (c *mqlZoomAccount) GetCloudRecordingEncryptionEnabled() *plugin.TValue[boo
 func (c *mqlZoomAccount) GetSignInSessionTimeoutMinutes() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.SignInSessionTimeoutMinutes, func() (int64, error) {
 		return c.signInSessionTimeoutMinutes()
+	})
+}
+
+func (c *mqlZoomAccount) GetSignInSessionTimeoutWebMinutes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SignInSessionTimeoutWebMinutes, func() (int64, error) {
+		return c.signInSessionTimeoutWebMinutes()
+	})
+}
+
+func (c *mqlZoomAccount) GetSignInSessionTimeoutClientMinutes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SignInSessionTimeoutClientMinutes, func() (int64, error) {
+		return c.signInSessionTimeoutClientMinutes()
 	})
 }
 

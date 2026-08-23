@@ -29,8 +29,9 @@ zoom @maturity("experimental") {
 // tied to the credentials used to connect). Covers the meeting-security
 // defaults applied to every meeting on the account (waiting room,
 // passcode requirements, encryption type), cloud-recording encryption,
-// whether only authenticated or account-internal users may join
-// meetings, and the sign-in session timeout enforced for the workforce.
+// whether meetings require participants to be signed in, and the
+// inactivity periods after which the web portal and the desktop client
+// sign a user out.
 // The account's single sign-on configuration is available through the
 // `zoom.account.sso` resource.
 zoom.account @defaults("id accountName") @maturity("experimental") {
@@ -74,8 +75,22 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
   cloudRecordingEnabled() bool
   // Whether cloud recordings are encrypted at rest
   cloudRecordingEncryptionEnabled() bool
-  // Sign-in session timeout, in minutes, before a user is forced to re-authenticate (0 means no timeout is enforced)
-  signInSessionTimeoutMinutes() int
+  // Sign-in session timeout, in minutes, before a user is forced to re-authenticate
+  //
+  // Deprecated in favor of signInSessionTimeoutWebMinutes and
+  // signInSessionTimeoutClientMinutes. Zoom enforces the web portal and the
+  // desktop client separately, and this reports the web portal period alone.
+  signInSessionTimeoutMinutes() @maturity("deprecated") int
+  // Inactivity period, in minutes, after which a user is signed out of the Zoom web portal
+  //
+  // 0 when the setting is switched off, so no timeout is enforced on the web
+  // portal. Otherwise one of 5, 10, 15, 30, 60, or 120.
+  signInSessionTimeoutWebMinutes() int
+  // Inactivity period, in minutes, after which a user is signed out of the Zoom desktop and mobile client
+  //
+  // 0 when the setting is switched off, so no timeout is enforced on the
+  // client. Otherwise one of 5, 10, 15, 30, 45, 60, 90, or 120.
+  signInSessionTimeoutClientMinutes() int
 }
 
 // Zoom single sign-on (SSO) configuration

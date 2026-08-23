@@ -191,7 +191,13 @@ type AccountSettings struct {
 		CloudRecordingEncryption bool `json:"cloud_recording_encryption"`
 	} `json:"recording"`
 	Security struct {
-		SignInSessionTimeout int64 `json:"session_timeout"`
+		// SignAgainPeriodForInactivityOnClient and
+		// SignAgainPeriodForInactivityOnWeb are the periods of inactivity, in
+		// minutes, after which a signed-in user is automatically signed out of
+		// the Zoom client and the Zoom web portal respectively. Zoom enforces
+		// the two separately, and reports 0 for whichever is switched off.
+		SignAgainPeriodForInactivityOnClient int64 `json:"sign_again_period_for_inactivity_on_client"`
+		SignAgainPeriodForInactivityOnWeb    int64 `json:"sign_again_period_for_inactivity_on_web"`
 	} `json:"security"`
 }
 

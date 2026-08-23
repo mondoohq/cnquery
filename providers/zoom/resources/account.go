@@ -208,12 +208,26 @@ func (a *mqlZoomAccount) cloudRecordingEncryptionEnabled() (bool, error) {
 	return s.Recording.CloudRecordingEncryption, nil
 }
 
+// signInSessionTimeoutMinutes is retained for backwards compatibility and
+// reports the same value as signInSessionTimeoutWebMinutes.
 func (a *mqlZoomAccount) signInSessionTimeoutMinutes() (int64, error) {
+	return a.signInSessionTimeoutWebMinutes()
+}
+
+func (a *mqlZoomAccount) signInSessionTimeoutWebMinutes() (int64, error) {
 	s, err := a.fetchSettings()
 	if err != nil {
 		return 0, err
 	}
-	return s.Security.SignInSessionTimeout, nil
+	return s.Security.SignAgainPeriodForInactivityOnWeb, nil
+}
+
+func (a *mqlZoomAccount) signInSessionTimeoutClientMinutes() (int64, error) {
+	s, err := a.fetchSettings()
+	if err != nil {
+		return 0, err
+	}
+	return s.Security.SignAgainPeriodForInactivityOnClient, nil
 }
 
 // initZoomAccountSso populates the account's single sign-on singleton on

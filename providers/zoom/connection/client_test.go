@@ -273,3 +273,59 @@ func TestGetGroupMeetingAuthenticationRequestsTheOption(t *testing.T) {
 		t.Error("settingsOnlyAuthenticatedUsersCanJoin: got false, want true")
 	}
 }
+
+// `security.session_timeout` is not a Zoom field. The sign-in inactivity
+// timeouts are `sign_again_period_for_inactivity_on_client` and
+// `sign_again_period_for_inactivity_on_web`, both in minutes, both 0 when the
+// setting is switched off.
+func TestAccountSettingsDecodeSignInInactivityPeriods(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(unoptionedAccountSettingsPayload))
+	}))
+	defer srv.Close()
+
+	settings, err := newTestClient(srv).GetAccountSettings(context.Background(), "acct-1")
+	if err != nil {
+		t.Fatalf("GetAccountSettings: %v", err)
+	}
+	if want := int64(30); settings.Security.SignAgainPeriodForInactivityOnClient != want {
+		t.Errorf("signInSessionTimeoutClientMinutes: got %d, want %d",
+			settings.Security.SignAgainPeriodForInactivityOnClient, want)
+	}
+	if want := int64(15); settings.Security.SignAgainPeriodForInactivityOnWeb != want {
+		t.Errorf("signInSessionTimeoutWebMinutes: got %d, want %d",
+			settings.Security.SignAgainPeriodForInactivityOnWeb, want)
+	}
+}
+
+// A response carrying the `session_timeout` key the provider used to read must
+// leave both periods at 0: Zoom does not send it, and accepting it would hide
+// the real keys regressing.
+func TestAccountSettingsIgnoreSessionTimeoutKey(t *testing.T) {
+	var settings AccountSettings
+	if err := json.Unmarshal([]byte(`{"security": {"session_timeout": 15}}`), &settings); err != nil {
+		t.Fatal(err)
+	}
+	if settings.Security.SignAgainPeriodForInactivityOnWeb != 0 ||
+		settings.Security.SignAgainPeriodForInactivityOnClient != 0 {
+		t.Errorf("session_timeout unexpectedly decoded: %+v", settings.Security)
+	}
+}
+
+// An account with the timeouts switched off reports 0 for both, which is a
+// real reading and not an absent key.
+func TestAccountSettingsSignInInactivityPeriodsOff(t *testing.T) {
+	var settings AccountSettings
+	const payload = `{"security": {
+		"sign_again_period_for_inactivity_on_client": 0,
+		"sign_again_period_for_inactivity_on_web": 0
+	}}`
+	if err := json.Unmarshal([]byte(payload), &settings); err != nil {
+		t.Fatal(err)
+	}
+	if settings.Security.SignAgainPeriodForInactivityOnClient != 0 ||
+		settings.Security.SignAgainPeriodForInactivityOnWeb != 0 {
+		t.Errorf("expected both periods 0, got %+v", settings.Security)
+	}
+}

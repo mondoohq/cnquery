@@ -16,7 +16,9 @@ zoom.account.meetingPmiPasscodeRequired 13.0.0
 zoom.account.meetingSignedInUsersOnly 13.0.1
 zoom.account.meetingWaitingRoomEnabled 13.0.0
 zoom.account.ownerEmail 13.0.0
+zoom.account.signInSessionTimeoutClientMinutes 13.0.1
 zoom.account.signInSessionTimeoutMinutes 13.0.0
+zoom.account.signInSessionTimeoutWebMinutes 13.0.1
 zoom.account.sso 13.0.0
 zoom.account.sso.domains 13.0.0
 zoom.account.sso.enabled 13.0.0
