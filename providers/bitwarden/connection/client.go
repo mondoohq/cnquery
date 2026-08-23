@@ -76,13 +76,12 @@ func (f *flexEnum) UnmarshalJSON(b []byte) error {
 // listResponse is the envelope Bitwarden's Public API wraps list endpoints
 // in: {"object": "list", "data": [...], "continuationToken": null}.
 //
-// Known limitation: the list readers below (ListPolicies, ListMembers,
-// ListGroups, ListCollections) return only the first page (out.Data) and do
-// not follow ContinuationToken. The Bitwarden Public API returns the full set
-// in a single response for these organization-scoped endpoints (the token is
-// null in practice), so results are complete today. If a future API version
-// starts paginating any of these, add a loop that re-requests with the
-// continuation token until it is nil, or results will be silently truncated.
+// ContinuationToken is the API's pagination cursor: when it is non-null the
+// response is a partial page and the next one is fetched by repeating the
+// request with ?continuationToken=<value>. It is documented on the list
+// envelope of every list endpoint this provider reads (collections, groups,
+// members, policies), so the readers below walk it via listAll rather than
+// stopping at the first page.
 type listResponse[T any] struct {
 	Object            string  `json:"object"`
 	Data              []T     `json:"data"`
@@ -162,22 +161,70 @@ func (c *Client) get(ctx context.Context, path string, out any) error {
 	return nil
 }
 
+// maxListPages bounds a single pagination walk. The organization-scoped list
+// endpoints this provider reads return at most a few hundred records, so the
+// cap is far above any real response set and only serves as a backstop against
+// a server that hands out fresh cursors forever.
+const maxListPages = 1000
+
+// listAll reads every page of a Public API list endpoint, following the
+// continuation cursor until the server stops handing one out, and returns the
+// concatenated records.
+//
+// Termination is guarded twice, because a pagination loop that trusts the
+// server is a loop that can spin for the length of a scan:
+//   - a repeated cursor (the server echoing the token it was just given, which
+//     would re-serve the same page forever) is reported as an error rather than
+//     silently truncating the result;
+//   - maxListPages caps the total number of requests for a server that keeps
+//     minting new cursors.
+//
+// It is a free function rather than a method because Go does not allow type
+// parameters on methods.
+func listAll[T any](ctx context.Context, c *Client, path string) ([]T, error) {
+	var all []T
+	seen := map[string]struct{}{}
+	next := ""
+
+	for range maxListPages {
+		page := path
+		if next != "" {
+			sep := "?"
+			if strings.Contains(path, "?") {
+				sep = "&"
+			}
+			page = path + sep + "continuationToken=" + url.QueryEscape(next)
+		}
+
+		var out listResponse[T]
+		if err := c.get(ctx, page, &out); err != nil {
+			return nil, err
+		}
+		all = append(all, out.Data...)
+
+		// A null or empty cursor is the API saying this was the last page.
+		if out.ContinuationToken == nil || *out.ContinuationToken == "" {
+			return all, nil
+		}
+
+		next = *out.ContinuationToken
+		if _, repeated := seen[next]; repeated {
+			return nil, errors.Newf("bitwarden: %s returned the same continuation token twice, refusing to page forever", path)
+		}
+		seen[next] = struct{}{}
+	}
+
+	return nil, errors.Newf("bitwarden: %s did not stop paginating after %d pages", path, maxListPages)
+}
+
 // ListPolicies lists every security policy configured for the organization.
 func (c *Client) ListPolicies(ctx context.Context) ([]Policy, error) {
-	var out listResponse[Policy]
-	if err := c.get(ctx, "/policies", &out); err != nil {
-		return nil, err
-	}
-	return out.Data, nil
+	return listAll[Policy](ctx, c, "/policies")
 }
 
 // ListMembers lists every member of the organization.
 func (c *Client) ListMembers(ctx context.Context) ([]Member, error) {
-	var out listResponse[Member]
-	if err := c.get(ctx, "/members", &out); err != nil {
-		return nil, err
-	}
-	return out.Data, nil
+	return listAll[Member](ctx, c, "/members")
 }
 
 // GetMember reads a single member by its member (organization user) ID.
@@ -200,11 +247,7 @@ func (c *Client) GetMemberGroupIds(ctx context.Context, id string) ([]string, er
 
 // ListGroups lists every group defined in the organization.
 func (c *Client) ListGroups(ctx context.Context) ([]Group, error) {
-	var out listResponse[Group]
-	if err := c.get(ctx, "/groups", &out); err != nil {
-		return nil, err
-	}
-	return out.Data, nil
+	return listAll[Group](ctx, c, "/groups")
 }
 
 // GetGroup reads a single group by its ID.
@@ -227,11 +270,7 @@ func (c *Client) GetGroupMemberIds(ctx context.Context, id string) ([]string, er
 
 // ListCollections lists every collection defined in the organization.
 func (c *Client) ListCollections(ctx context.Context) ([]Collection, error) {
-	var out listResponse[Collection]
-	if err := c.get(ctx, "/collections", &out); err != nil {
-		return nil, err
-	}
-	return out.Data, nil
+	return listAll[Collection](ctx, c, "/collections")
 }
 
 // GetCollection reads a single collection by its ID.
