@@ -43,13 +43,19 @@ mql shell zoom
 **Meeting security defaults**
 
 ```shell
-mql> zoom.account { meetingWaitingRoomEnabled meetingPasscodeRequired meetingE2eeAvailable cloudRecordingEncryptionEnabled }
+mql> zoom.account { meetingWaitingRoomEnabled meetingPasscodeRequired meetingE2eeAvailable meetingEncryptionType }
 ```
 
-**Single sign-on configuration**
+**Sign-in enforcement**
 
 ```shell
-mql> zoom.account.sso { enabled domains groupMappingEnabled }
+mql> zoom.account { meetingSignedInUsersOnly meetingAuthenticationRequired signInSessionTimeoutWebMinutes signInSessionTimeoutClientMinutes }
+```
+
+**Users who do not sign in through SSO**
+
+```shell
+mql> zoom.users.where(ssoLinked == false) { email loginTypes }
 ```
 
 **Users and their roles**

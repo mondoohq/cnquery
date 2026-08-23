@@ -25,3 +25,13 @@ func strToAnyList(s []string) []any {
 	}
 	return res
 }
+
+// intToAnyList converts an []int64 into an MQL int-array value, treating a nil
+// slice as an empty list.
+func intToAnyList(s []int64) []any {
+	res := make([]any, 0, len(s))
+	for _, v := range s {
+		res = append(res, v)
+	}
+	return res
+}

@@ -26,9 +26,10 @@ type mqlZoomUserInternal struct {
 
 const usersPageSize = 300
 
-// zoomSsoLoginType is the login_type Zoom reports for users who authenticate
-// through the account's SSO configuration.
-const zoomSsoLoginType = 100
+// zoomSsoLoginType is the login type Zoom reports for users who authenticate
+// through the account's SSO configuration. Note that the neighbouring value
+// 100 is Zoom Work email, which is not SSO.
+const zoomSsoLoginType = 101
 
 // userVerified reports whether the user's email address is verified. Zoom
 // encodes this as 0 (unverified) or 1 (verified).
@@ -37,9 +38,16 @@ func userVerified(u *connection.User) bool {
 }
 
 // userSsoLinked reports whether the user signs in through the account's SSO
-// configuration, derived from the login_type Zoom assigns to SSO users.
+// configuration. Zoom returns a user's sign-in methods as a list, and a user
+// who has ever signed in another way keeps that method alongside SSO, so this
+// asks whether SSO is among them rather than whether it is the only one.
 func userSsoLinked(u *connection.User) bool {
-	return u.LoginType == zoomSsoLoginType
+	for _, lt := range u.LoginTypes {
+		if lt == zoomSsoLoginType {
+			return true
+		}
+	}
+	return false
 }
 
 // resolveZoomUsers turns a list of member IDs into typed zoom.user resources.
@@ -121,7 +129,7 @@ func newMqlZoomUser(runtime *plugin.Runtime, u *connection.User) (plugin.Resourc
 		"type":          llx.IntData(u.Type),
 		"status":        llx.StringData(u.Status),
 		"verified":      llx.BoolData(userVerified(u)),
-		"loginType":     llx.IntData(u.LoginType),
+		"loginTypes":    llx.ArrayData(intToAnyList(u.LoginTypes), types.Int),
 		"ssoLinked":     llx.BoolData(userSsoLinked(u)),
 		"lastLoginTime": llx.TimeDataPtr(u.LastLoginTime),
 		"createdAt":     llx.TimeDataPtr(u.CreatedAt),

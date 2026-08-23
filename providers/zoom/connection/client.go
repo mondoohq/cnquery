@@ -90,8 +90,12 @@ type User struct {
 	Type        int64  `json:"type"`
 	Status      string `json:"status"`
 	// Verified is 0 or 1 (whether the user's email address is verified).
-	Verified      int        `json:"verified"`
-	LoginType     int64      `json:"login_type"`
+	Verified int `json:"verified"`
+	// LoginTypes is the user's sign-in methods. The Get a user and List users
+	// responses return `login_types`, an array of integers; the singular
+	// `login_type` the docs once described is a query parameter, not a
+	// response field.
+	LoginTypes    []int64    `json:"login_types"`
 	RoleID        string     `json:"role_id"`
 	GroupIDs      []string   `json:"group_ids"`
 	LastLoginTime *time.Time `json:"last_login_time"`
@@ -156,30 +160,48 @@ func (c *Client) GetAccount(ctx context.Context, accountID string) (*AccountInfo
 	return &out, nil
 }
 
-// AccountSettings is the subset of Get Account Settings this provider reads:
-// meeting-security defaults, cloud-recording encryption, and the sign-in
-// session timeout.
+// optionMeetingSecurity is the `option` query value that selects the
+// meeting-security view of the account and group settings endpoints. The
+// meeting_security object is returned ONLY for this option: the un-optioned
+// response documents an entirely different set of sections (schedule_meeting,
+// in_meeting, recording, security, ...) and carries no meeting_security key,
+// so an un-optioned request decodes every meeting-security field to false.
+const optionMeetingSecurity = "meeting_security"
+
+// optionMeetingAuthentication is the `option` query value that selects the
+// meeting-authentication view of the account and group settings endpoints. The
+// `meeting_authentication` boolean is returned only for this option and sits at
+// the top level of that response, not inside meeting_security.
+const optionMeetingAuthentication = "meeting_authentication"
+
+// AccountSettings is the subset of the un-optioned Get Account Settings
+// response this provider reads: the schedule-meeting sign-in requirement,
+// cloud recording, and the sign-in security section. The meeting-security
+// defaults live behind `?option=meeting_security` and are fetched separately,
+// see GetAccountMeetingSecurity.
 type AccountSettings struct {
-	MeetingSecurity struct {
-		WaitingRoom                bool   `json:"waiting_room"`
-		MeetingPasswordRequirement bool   `json:"meeting_password"`
-		PmiPasswordRequirement     bool   `json:"pmi_password"`
-		EncryptionType             string `json:"encryption_type"`
-		E2eeAvailable              bool   `json:"end_to_end_encrypted_meetings"`
-		MeetingAuthentication      bool   `json:"meeting_authentication"`
-		OnlyAuthenticatedCanJoin   bool   `json:"only_authenticated_can_join"`
-	} `json:"meeting_security"`
+	ScheduleMeeting struct {
+		// EnforceLogin is Zoom's "only signed-in users can join meetings"
+		// control. It applies to any signed-in Zoom user, not only to users on
+		// this account.
+		EnforceLogin bool `json:"enforce_login"`
+	} `json:"schedule_meeting"`
 	Recording struct {
-		CloudRecording           bool `json:"cloud_recording"`
-		CloudRecordingEncryption bool `json:"cloud_recording_encryption"`
+		CloudRecording bool `json:"cloud_recording"`
 	} `json:"recording"`
 	Security struct {
-		SignInSessionTimeout int64 `json:"session_timeout"`
+		// SignAgainPeriodForInactivityOnClient and
+		// SignAgainPeriodForInactivityOnWeb are the periods of inactivity, in
+		// minutes, after which a signed-in user is automatically signed out of
+		// the Zoom client and the Zoom web portal respectively. Zoom enforces
+		// the two separately, and reports 0 for whichever is switched off.
+		SignAgainPeriodForInactivityOnClient int64 `json:"sign_again_period_for_inactivity_on_client"`
+		SignAgainPeriodForInactivityOnWeb    int64 `json:"sign_again_period_for_inactivity_on_web"`
 	} `json:"security"`
 }
 
-// GetAccountSettings fetches the account-wide meeting, recording, and
-// sign-in security settings in a single call.
+// GetAccountSettings fetches the un-optioned account settings: the recording
+// and sign-in security sections.
 func (c *Client) GetAccountSettings(ctx context.Context, accountID string) (*AccountSettings, error) {
 	var out AccountSettings
 	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", nil, &out); err != nil {
@@ -188,19 +210,53 @@ func (c *Client) GetAccountSettings(ctx context.Context, accountID string) (*Acc
 	return &out, nil
 }
 
-// SsoSettings is the account's single sign-on configuration.
-type SsoSettings struct {
-	Enabled             bool     `json:"sso_enabled"`
-	Domains             []string `json:"domains"`
-	GroupMappingEnabled bool     `json:"group_mapping_enabled"`
-	IdpIssuer           string   `json:"idp_issuer"`
-	IdpSsoUrl           string   `json:"idp_sso_url"`
+// MeetingSecuritySettings is the meeting_security object returned by the
+// account and group settings endpoints under `?option=meeting_security`. Both
+// endpoints document the same object, so one type serves the account defaults
+// and the per-group overrides.
+type MeetingSecuritySettings struct {
+	WaitingRoom                bool   `json:"waiting_room"`
+	MeetingPasswordRequirement bool   `json:"meeting_password"`
+	PmiPasswordRequirement     bool   `json:"pmi_password"`
+	EncryptionType             string `json:"encryption_type"`
+	E2eeAvailable              bool   `json:"end_to_end_encrypted_meetings"`
 }
 
-// GetSsoSettings fetches the account's SSO configuration.
-func (c *Client) GetSsoSettings(ctx context.Context, accountID string) (*SsoSettings, error) {
-	var out SsoSettings
-	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", url.Values{"option": {"sso"}}, &out); err != nil {
+// meetingSecurityResponse wraps the meeting_security object both settings
+// endpoints nest their meeting-security view under.
+type meetingSecurityResponse struct {
+	MeetingSecurity MeetingSecuritySettings `json:"meeting_security"`
+}
+
+// GetAccountMeetingSecurity fetches the account-wide meeting-security
+// defaults, which the settings endpoint only returns for
+// `?option=meeting_security`.
+func (c *Client) GetAccountMeetingSecurity(ctx context.Context, accountID string) (*MeetingSecuritySettings, error) {
+	var out meetingSecurityResponse
+	q := url.Values{"option": {optionMeetingSecurity}}
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", q, &out); err != nil {
+		return nil, err
+	}
+	return &out.MeetingSecurity, nil
+}
+
+// MeetingAuthenticationSettings is the meeting-authentication view of the
+// account and group settings endpoints. Both endpoints document the same
+// top-level `meeting_authentication` boolean, so one type serves the account
+// default and the per-group override.
+type MeetingAuthenticationSettings struct {
+	// MeetingAuthentication is Zoom's "only authenticated users can join
+	// meetings" control.
+	MeetingAuthentication bool `json:"meeting_authentication"`
+}
+
+// GetAccountMeetingAuthentication fetches the account-wide
+// meeting-authentication requirement, which the settings endpoint only returns
+// for `?option=meeting_authentication`.
+func (c *Client) GetAccountMeetingAuthentication(ctx context.Context, accountID string) (*MeetingAuthenticationSettings, error) {
+	var out MeetingAuthenticationSettings
+	q := url.Values{"option": {optionMeetingAuthentication}}
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", q, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -303,21 +359,26 @@ func (c *Client) GetGroup(ctx context.Context, groupID string) (*Group, error) {
 	return &out, nil
 }
 
-// GroupSettings is the meeting-security overrides configured on a group,
-// which take precedence over the account defaults for the group's members.
-type GroupSettings struct {
-	MeetingSecurity struct {
-		WaitingRoom              bool `json:"waiting_room"`
-		MeetingPasswordRequired  bool `json:"meeting_password"`
-		E2eeAvailable            bool `json:"end_to_end_encrypted_meetings"`
-		OnlyAuthenticatedCanJoin bool `json:"only_authenticated_can_join"`
-	} `json:"meeting_security"`
+// GetGroupMeetingSecurity fetches the meeting-security overrides configured on
+// a group, which take precedence over the account defaults for the group's
+// members. As with the account endpoint, the group settings endpoint only
+// returns the meeting_security object for `?option=meeting_security`.
+func (c *Client) GetGroupMeetingSecurity(ctx context.Context, groupID string) (*MeetingSecuritySettings, error) {
+	var out meetingSecurityResponse
+	q := url.Values{"option": {optionMeetingSecurity}}
+	if err := c.get(ctx, "/groups/"+url.PathEscape(groupID)+"/settings", q, &out); err != nil {
+		return nil, err
+	}
+	return &out.MeetingSecurity, nil
 }
 
-// GetGroupSettings fetches the meeting-security overrides for a group.
-func (c *Client) GetGroupSettings(ctx context.Context, groupID string) (*GroupSettings, error) {
-	var out GroupSettings
-	if err := c.get(ctx, "/groups/"+url.PathEscape(groupID)+"/settings", nil, &out); err != nil {
+// GetGroupMeetingAuthentication fetches the group's meeting-authentication
+// override, which the group settings endpoint only returns for
+// `?option=meeting_authentication`.
+func (c *Client) GetGroupMeetingAuthentication(ctx context.Context, groupID string) (*MeetingAuthenticationSettings, error) {
+	var out MeetingAuthenticationSettings
+	q := url.Values{"option": {optionMeetingAuthentication}}
+	if err := c.get(ctx, "/groups/"+url.PathEscape(groupID)+"/settings", q, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
