@@ -13,15 +13,21 @@ import (
 	"go.mondoo.com/mql/types"
 )
 
-// mqlZoomAccountInternal caches the account settings behind a single lazy
-// fetch. All the meeting-security, recording, and sign-in fields on
-// zoom.account are computed accessors that share this fetch, so querying
-// any subset of them still costs exactly one GET /accounts/{id}/settings
-// call, guarded by double-check locking against concurrent field reads.
+// mqlZoomAccountInternal caches the account settings behind lazy fetches. The
+// Zoom settings endpoint splits what this resource reads across two views: the
+// un-optioned response carries the recording and sign-in security sections,
+// while the meeting-security defaults are only returned for
+// `?option=meeting_security`. Each view is fetched at most once and guarded by
+// double-check locking, so querying any subset of the fields backed by a view
+// costs exactly one call for it, and querying none costs nothing.
 type mqlZoomAccountInternal struct {
-	fetched  bool
-	settings *connection.AccountSettings
-	lock     sync.Mutex
+	settingsFetched bool
+	settings        *connection.AccountSettings
+	settingsLock    sync.Mutex
+
+	meetingSecurityFetched bool
+	meetingSecurity        *connection.MeetingSecuritySettings
+	meetingSecurityLock    sync.Mutex
 }
 
 // initZoomAccount populates the account singleton on construction. It is an
@@ -49,16 +55,16 @@ func initZoomAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 	return args, nil, nil
 }
 
-// fetchSettings performs the single account-settings GET this resource's
-// meeting/recording/sign-in fields all read from, caching the result behind
+// fetchSettings performs the single un-optioned account-settings GET this
+// resource's recording and sign-in fields read from, caching the result behind
 // double-check locking so concurrent field access only fetches once.
 func (a *mqlZoomAccount) fetchSettings() (*connection.AccountSettings, error) {
-	if a.fetched {
+	if a.settingsFetched {
 		return a.settings, nil
 	}
-	a.lock.Lock()
-	defer a.lock.Unlock()
-	if a.fetched {
+	a.settingsLock.Lock()
+	defer a.settingsLock.Unlock()
+	if a.settingsFetched {
 		return a.settings, nil
 	}
 
@@ -68,64 +74,88 @@ func (a *mqlZoomAccount) fetchSettings() (*connection.AccountSettings, error) {
 		return nil, err
 	}
 	a.settings = settings
-	a.fetched = true
+	a.settingsFetched = true
 	return a.settings, nil
 }
 
+// fetchMeetingSecurity performs the `?option=meeting_security` account-settings
+// GET the meeting* fields read from. The meeting_security object is absent from
+// the un-optioned response, so it needs its own call rather than a second read
+// of fetchSettings.
+func (a *mqlZoomAccount) fetchMeetingSecurity() (*connection.MeetingSecuritySettings, error) {
+	if a.meetingSecurityFetched {
+		return a.meetingSecurity, nil
+	}
+	a.meetingSecurityLock.Lock()
+	defer a.meetingSecurityLock.Unlock()
+	if a.meetingSecurityFetched {
+		return a.meetingSecurity, nil
+	}
+
+	conn := a.MqlRuntime.Connection.(*connection.ZoomConnection)
+	ms, err := conn.Client().GetAccountMeetingSecurity(context.Background(), conn.AccountID())
+	if err != nil {
+		return nil, err
+	}
+	a.meetingSecurity = ms
+	a.meetingSecurityFetched = true
+	return a.meetingSecurity, nil
+}
+
 func (a *mqlZoomAccount) meetingWaitingRoomEnabled() (bool, error) {
-	s, err := a.fetchSettings()
+	s, err := a.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.WaitingRoom, nil
+	return s.WaitingRoom, nil
 }
 
 func (a *mqlZoomAccount) meetingPasscodeRequired() (bool, error) {
-	s, err := a.fetchSettings()
+	s, err := a.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.MeetingPasswordRequirement, nil
+	return s.MeetingPasswordRequirement, nil
 }
 
 func (a *mqlZoomAccount) meetingPmiPasscodeRequired() (bool, error) {
-	s, err := a.fetchSettings()
+	s, err := a.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.PmiPasswordRequirement, nil
+	return s.PmiPasswordRequirement, nil
 }
 
 func (a *mqlZoomAccount) meetingEncryptionType() (string, error) {
-	s, err := a.fetchSettings()
+	s, err := a.fetchMeetingSecurity()
 	if err != nil {
 		return "", err
 	}
-	return s.MeetingSecurity.EncryptionType, nil
+	return s.EncryptionType, nil
 }
 
 func (a *mqlZoomAccount) meetingE2eeAvailable() (bool, error) {
-	s, err := a.fetchSettings()
+	s, err := a.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.E2eeAvailable, nil
+	return s.E2eeAvailable, nil
 }
 
 func (a *mqlZoomAccount) meetingAuthenticationRequired() (bool, error) {
-	s, err := a.fetchSettings()
+	s, err := a.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.MeetingAuthentication, nil
+	return s.MeetingAuthentication, nil
 }
 
 func (a *mqlZoomAccount) meetingOnlyAccountUsersCanJoin() (bool, error) {
-	s, err := a.fetchSettings()
+	s, err := a.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.OnlyAuthenticatedCanJoin, nil
+	return s.OnlyAuthenticatedCanJoin, nil
 }
 
 func (a *mqlZoomAccount) cloudRecordingEnabled() (bool, error) {

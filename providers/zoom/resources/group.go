@@ -17,13 +17,14 @@ const groupMembersPageSize = 300
 
 // mqlZoomGroupInternal caches the group's meeting-security overrides behind a
 // single lazy fetch. All the settings* accessors share this fetch, so querying
-// any subset of them costs exactly one GET /groups/{id}/settings call, guarded
-// by double-check locking against concurrent field reads. Keeping it lazy means
+// any subset of them costs exactly one
+// GET /groups/{id}/settings?option=meeting_security call, guarded by
+// double-check locking against concurrent field reads. Keeping it lazy means
 // listing groups by id/name/totalMembers issues no per-group settings call.
 type mqlZoomGroupInternal struct {
-	fetched  bool
-	settings *connection.GroupSettings
-	lock     sync.Mutex
+	fetched         bool
+	meetingSecurity *connection.MeetingSecuritySettings
+	lock            sync.Mutex
 }
 
 // groups lists every user group defined on the account, each carrying its
@@ -123,57 +124,59 @@ func (g *mqlZoomGroup) members() ([]any, error) {
 	return resolveZoomUsers(g.MqlRuntime, conn, memberIds)
 }
 
-// fetchSettings performs the single group-settings GET this group's settings*
-// fields all read from, caching the result behind double-check locking so
-// concurrent field access only fetches once.
-func (g *mqlZoomGroup) fetchSettings() (*connection.GroupSettings, error) {
+// fetchMeetingSecurity performs the single group-settings GET this group's
+// settings* fields all read from, caching the result behind double-check
+// locking so concurrent field access only fetches once. The meeting_security
+// object is absent from the un-optioned response, so the request has to carry
+// `?option=meeting_security`.
+func (g *mqlZoomGroup) fetchMeetingSecurity() (*connection.MeetingSecuritySettings, error) {
 	if g.fetched {
-		return g.settings, nil
+		return g.meetingSecurity, nil
 	}
 	g.lock.Lock()
 	defer g.lock.Unlock()
 	if g.fetched {
-		return g.settings, nil
+		return g.meetingSecurity, nil
 	}
 
 	conn := g.MqlRuntime.Connection.(*connection.ZoomConnection)
-	settings, err := conn.Client().GetGroupSettings(context.Background(), g.Id.Data)
+	ms, err := conn.Client().GetGroupMeetingSecurity(context.Background(), g.Id.Data)
 	if err != nil {
 		return nil, err
 	}
-	g.settings = settings
+	g.meetingSecurity = ms
 	g.fetched = true
-	return g.settings, nil
+	return g.meetingSecurity, nil
 }
 
 func (g *mqlZoomGroup) settingsWaitingRoomEnabled() (bool, error) {
-	s, err := g.fetchSettings()
+	s, err := g.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.WaitingRoom, nil
+	return s.WaitingRoom, nil
 }
 
 func (g *mqlZoomGroup) settingsMeetingPasscodeRequired() (bool, error) {
-	s, err := g.fetchSettings()
+	s, err := g.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.MeetingPasswordRequired, nil
+	return s.MeetingPasswordRequirement, nil
 }
 
 func (g *mqlZoomGroup) settingsE2eeAvailable() (bool, error) {
-	s, err := g.fetchSettings()
+	s, err := g.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.E2eeAvailable, nil
+	return s.E2eeAvailable, nil
 }
 
 func (g *mqlZoomGroup) settingsOnlyAuthenticatedUsersCanJoin() (bool, error) {
-	s, err := g.fetchSettings()
+	s, err := g.fetchMeetingSecurity()
 	if err != nil {
 		return false, err
 	}
-	return s.MeetingSecurity.OnlyAuthenticatedCanJoin, nil
+	return s.OnlyAuthenticatedCanJoin, nil
 }

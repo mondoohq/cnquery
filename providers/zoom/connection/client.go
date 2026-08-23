@@ -156,19 +156,20 @@ func (c *Client) GetAccount(ctx context.Context, accountID string) (*AccountInfo
 	return &out, nil
 }
 
-// AccountSettings is the subset of Get Account Settings this provider reads:
-// meeting-security defaults, cloud-recording encryption, and the sign-in
-// session timeout.
+// optionMeetingSecurity is the `option` query value that selects the
+// meeting-security view of the account and group settings endpoints. The
+// meeting_security object is returned ONLY for this option: the un-optioned
+// response documents an entirely different set of sections (schedule_meeting,
+// in_meeting, recording, security, ...) and carries no meeting_security key,
+// so an un-optioned request decodes every meeting-security field to false.
+const optionMeetingSecurity = "meeting_security"
+
+// AccountSettings is the subset of the un-optioned Get Account Settings
+// response this provider reads: cloud recording and the sign-in security
+// section. The meeting-security defaults live behind
+// `?option=meeting_security` and are fetched separately, see
+// GetAccountMeetingSecurity.
 type AccountSettings struct {
-	MeetingSecurity struct {
-		WaitingRoom                bool   `json:"waiting_room"`
-		MeetingPasswordRequirement bool   `json:"meeting_password"`
-		PmiPasswordRequirement     bool   `json:"pmi_password"`
-		EncryptionType             string `json:"encryption_type"`
-		E2eeAvailable              bool   `json:"end_to_end_encrypted_meetings"`
-		MeetingAuthentication      bool   `json:"meeting_authentication"`
-		OnlyAuthenticatedCanJoin   bool   `json:"only_authenticated_can_join"`
-	} `json:"meeting_security"`
 	Recording struct {
 		CloudRecording           bool `json:"cloud_recording"`
 		CloudRecordingEncryption bool `json:"cloud_recording_encryption"`
@@ -178,14 +179,46 @@ type AccountSettings struct {
 	} `json:"security"`
 }
 
-// GetAccountSettings fetches the account-wide meeting, recording, and
-// sign-in security settings in a single call.
+// GetAccountSettings fetches the un-optioned account settings: the recording
+// and sign-in security sections.
 func (c *Client) GetAccountSettings(ctx context.Context, accountID string) (*AccountSettings, error) {
 	var out AccountSettings
 	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", nil, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
+}
+
+// MeetingSecuritySettings is the meeting_security object returned by the
+// account and group settings endpoints under `?option=meeting_security`. Both
+// endpoints document the same object, so one type serves the account defaults
+// and the per-group overrides.
+type MeetingSecuritySettings struct {
+	WaitingRoom                bool   `json:"waiting_room"`
+	MeetingPasswordRequirement bool   `json:"meeting_password"`
+	PmiPasswordRequirement     bool   `json:"pmi_password"`
+	EncryptionType             string `json:"encryption_type"`
+	E2eeAvailable              bool   `json:"end_to_end_encrypted_meetings"`
+	MeetingAuthentication      bool   `json:"meeting_authentication"`
+	OnlyAuthenticatedCanJoin   bool   `json:"only_authenticated_can_join"`
+}
+
+// meetingSecurityResponse wraps the meeting_security object both settings
+// endpoints nest their meeting-security view under.
+type meetingSecurityResponse struct {
+	MeetingSecurity MeetingSecuritySettings `json:"meeting_security"`
+}
+
+// GetAccountMeetingSecurity fetches the account-wide meeting-security
+// defaults, which the settings endpoint only returns for
+// `?option=meeting_security`.
+func (c *Client) GetAccountMeetingSecurity(ctx context.Context, accountID string) (*MeetingSecuritySettings, error) {
+	var out meetingSecurityResponse
+	q := url.Values{"option": {optionMeetingSecurity}}
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/settings", q, &out); err != nil {
+		return nil, err
+	}
+	return &out.MeetingSecurity, nil
 }
 
 // SsoSettings is the account's single sign-on configuration.
@@ -303,24 +336,17 @@ func (c *Client) GetGroup(ctx context.Context, groupID string) (*Group, error) {
 	return &out, nil
 }
 
-// GroupSettings is the meeting-security overrides configured on a group,
-// which take precedence over the account defaults for the group's members.
-type GroupSettings struct {
-	MeetingSecurity struct {
-		WaitingRoom              bool `json:"waiting_room"`
-		MeetingPasswordRequired  bool `json:"meeting_password"`
-		E2eeAvailable            bool `json:"end_to_end_encrypted_meetings"`
-		OnlyAuthenticatedCanJoin bool `json:"only_authenticated_can_join"`
-	} `json:"meeting_security"`
-}
-
-// GetGroupSettings fetches the meeting-security overrides for a group.
-func (c *Client) GetGroupSettings(ctx context.Context, groupID string) (*GroupSettings, error) {
-	var out GroupSettings
-	if err := c.get(ctx, "/groups/"+url.PathEscape(groupID)+"/settings", nil, &out); err != nil {
+// GetGroupMeetingSecurity fetches the meeting-security overrides configured on
+// a group, which take precedence over the account defaults for the group's
+// members. As with the account endpoint, the group settings endpoint only
+// returns the meeting_security object for `?option=meeting_security`.
+func (c *Client) GetGroupMeetingSecurity(ctx context.Context, groupID string) (*MeetingSecuritySettings, error) {
+	var out meetingSecurityResponse
+	q := url.Values{"option": {optionMeetingSecurity}}
+	if err := c.get(ctx, "/groups/"+url.PathEscape(groupID)+"/settings", q, &out); err != nil {
 		return nil, err
 	}
-	return &out, nil
+	return &out.MeetingSecurity, nil
 }
 
 // GroupMember is a member entry returned by List Group Members.

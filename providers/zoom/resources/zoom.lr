@@ -49,7 +49,7 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
   // Default meeting encryption type
   //
   // One of `enhanced_encryption` (encrypted in transit and at rest on
-  // Zoom's servers) or `end_to_end_encryption` (E2EE, only the meeting
+  // Zoom's servers) or `e2ee` (end-to-end encryption, only the meeting
   // participants hold the decryption keys).
   meetingEncryptionType() string
   // Whether end-to-end encryption (E2EE) is available to hosts on this account
