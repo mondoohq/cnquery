@@ -139,41 +139,55 @@ func (g *mqlGcpProjectEffectiveOrgPolicy) fetchEffectivePolicy() (*orgpolicypb.P
 	return policy, nil
 }
 
-// interpret decodes the effective spec into the scalar predicates. The effective
-// policy carries a single merged spec, so unlike gcp.orgPolicy there is no
-// separate dry-run spec to distinguish.
-func (g *mqlGcpProjectEffectiveOrgPolicy) interpret() (enforced, allowAll, denyAll bool, allowedValues, deniedValues []any, err error) {
+// interpret decodes the effective spec. The effective policy carries a single
+// merged spec, so unlike gcp.orgPolicy there is no separate dry-run spec to
+// distinguish.
+func (g *mqlGcpProjectEffectiveOrgPolicy) interpret() (policySpecSummary, error) {
 	policy, err := g.effectivePolicy()
 	if err != nil {
-		return false, false, false, nil, nil, err
+		return policySpecSummary{}, err
 	}
-	enforced, allowAll, denyAll, _, allowedValues, deniedValues = interpretPolicySpec(policy.GetSpec())
-	return enforced, allowAll, denyAll, allowedValues, deniedValues, nil
+	return interpretPolicySpec(policy.GetSpec()), nil
 }
 
 func (g *mqlGcpProjectEffectiveOrgPolicy) enforced() (bool, error) {
-	enforced, _, _, _, _, err := g.interpret()
-	return enforced, err
+	summary, err := g.interpret()
+	return summary.enforced, err
 }
 
 func (g *mqlGcpProjectEffectiveOrgPolicy) allowAll() (bool, error) {
-	_, allowAll, _, _, _, err := g.interpret()
-	return allowAll, err
+	summary, err := g.interpret()
+	return summary.allowAll, err
 }
 
 func (g *mqlGcpProjectEffectiveOrgPolicy) denyAll() (bool, error) {
-	_, _, denyAll, _, _, err := g.interpret()
-	return denyAll, err
+	summary, err := g.interpret()
+	return summary.denyAll, err
 }
 
 func (g *mqlGcpProjectEffectiveOrgPolicy) allowedValues() ([]any, error) {
-	_, _, _, allowedValues, _, err := g.interpret()
-	return allowedValues, err
+	summary, err := g.interpret()
+	return summary.allowedValues, err
 }
 
 func (g *mqlGcpProjectEffectiveOrgPolicy) deniedValues() ([]any, error) {
-	_, _, _, _, deniedValues, err := g.interpret()
-	return deniedValues, err
+	summary, err := g.interpret()
+	return summary.deniedValues, err
+}
+
+// hasConditionalRules reports whether the effective policy is carried, wholly or
+// in part, by rules gated by a CEL condition. Those rules are excluded from
+// enforced/allowAll/denyAll, so without this field a constraint enforced only by
+// a tag-scoped rule is byte-for-byte identical to a constraint with no policy
+// anywhere in the hierarchy.
+func (g *mqlGcpProjectEffectiveOrgPolicy) hasConditionalRules() (bool, error) {
+	summary, err := g.interpret()
+	return summary.hasConditionalRules, err
+}
+
+func (g *mqlGcpProjectEffectiveOrgPolicy) conditionalRules() ([]any, error) {
+	summary, err := g.interpret()
+	return summary.conditionalRules, err
 }
 
 func (g *mqlGcpProjectEffectiveOrgPolicy) spec() (any, error) {
