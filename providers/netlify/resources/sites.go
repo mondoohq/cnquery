@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/url"
 	"strconv"
@@ -50,7 +51,55 @@ type siteRecord struct {
 	CreatedAt                 netlifyTime        `json:"created_at"`
 	UpdatedAt                 netlifyTime        `json:"updated_at"`
 	BuildSettings             *buildSettingsData `json:"build_settings"`
+
+	// Password is the site's visitor password as the API reports it. It is
+	// held as raw JSON so the value never lands in a field, and so an absent
+	// key stays distinguishable from a reported one. A non-pointer
+	// json.RawMessage is deliberate: a pointer would collapse an explicit
+	// JSON null back into the absent case. Only its presence is surfaced,
+	// through passwordProtected.
+	Password json.RawMessage `json:"password"`
 }
+
+// sitePasswordProtected reports whether a site is gated behind a visitor
+// password, from the raw password value the API returned.
+//
+// The password itself is a secret and is never modelled. Only its presence is
+// the finding, and presence survives every form the API may report the value
+// in: a literal password, a redacted placeholder such as "****", or a
+// boolean-ish marker. A key the API did not return at all yields nil, which
+// reaches MQL as null rather than as a confident "not protected", because an
+// unreported field is indistinguishable from a site that never set one.
+func sitePasswordProtected(raw json.RawMessage) *bool {
+	if len(raw) == 0 {
+		return nil
+	}
+
+	var v any
+	if err := json.Unmarshal(raw, &v); err != nil {
+		// The key was returned in a shape we cannot read. A value is present,
+		// which is the signal we report.
+		return ptr(true)
+	}
+
+	switch t := v.(type) {
+	case nil:
+		// Explicitly reported as having no password.
+		return ptr(false)
+	case string:
+		// A literal password or a redacted placeholder. Either way a password
+		// is set; an empty string is the API saying none is.
+		return ptr(t != "")
+	case bool:
+		return ptr(t)
+	case float64:
+		return ptr(t != 0)
+	default:
+		return ptr(true)
+	}
+}
+
+func ptr[T any](v T) *T { return &v }
 
 // buildSettingsData is the repository configuration a build runs from. Netlify
 // returns it inline with the site.
@@ -148,6 +197,7 @@ func newNetlifySite(runtime *plugin.Runtime, rec *siteRecord) (*mqlNetlifySite, 
 		"skipAutomaticBuilds":       optionalBool(build.SkipAutomaticBuilds),
 		"idDomain":                  llx.StringData(rec.IDDomain),
 		"stopBuilds":                llx.BoolData(build.StopBuilds),
+		"passwordProtected":         optionalBool(sitePasswordProtected(rec.Password)),
 	})
 	if err != nil {
 		return nil, err
