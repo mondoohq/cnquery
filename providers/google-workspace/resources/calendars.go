@@ -56,7 +56,10 @@ func (g *mqlGoogleworkspace) calendars() ([]any, error) {
 
 func (g *mqlGoogleworkspaceCalendar) acl() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GoogleWorkspaceConnection)
-	calendarService, err := calendarService(conn, calendar.CalendarScope)
+	// acl.list accepts calendar, calendar.acls or calendar.acls.readonly. Ask
+	// for the read-only one so the domain-wide delegation grant never needs
+	// read/write access to every calendar in the domain.
+	calendarService, err := calendarService(conn, calendar.CalendarAclsReadonlyScope)
 	if err != nil {
 		return nil, err
 	}
