@@ -355,6 +355,7 @@ azure.subscription.authorizationService.roleAssignment.principal 13.33.8
 azure.subscription.authorizationService.roleAssignment.principalId 11.2.1
 azure.subscription.authorizationService.roleAssignment.principalType 13.16.2
 azure.subscription.authorizationService.roleAssignment.role 11.2.1
+azure.subscription.authorizationService.roleAssignment.roleDefinitionId 13.36.1
 azure.subscription.authorizationService.roleAssignment.scope 11.2.1
 azure.subscription.authorizationService.roleAssignment.updatedAt 11.2.1
 azure.subscription.authorizationService.roleAssignmentSchedule 13.25.1
@@ -3028,6 +3029,7 @@ azure.subscription.keyVaultService.managedHsm.privateEndpointConnections 13.3.3
 azure.subscription.keyVaultService.managedHsm.provisioningState 13.3.3
 azure.subscription.keyVaultService.managedHsm.publicNetworkAccess 13.3.3
 azure.subscription.keyVaultService.managedHsm.regions 13.3.3
+azure.subscription.keyVaultService.managedHsm.roleAssignments 13.36.1
 azure.subscription.keyVaultService.managedHsm.scheduledPurgeDate 13.3.3
 azure.subscription.keyVaultService.managedHsm.skuName 13.3.3
 azure.subscription.keyVaultService.managedHsm.softDeleteRetentionInDays 13.3.3
@@ -3084,6 +3086,7 @@ azure.subscription.keyVaultService.vault.privateEndpointConnections 11.4.24
 azure.subscription.keyVaultService.vault.properties 9.0.1
 azure.subscription.keyVaultService.vault.publicNetworkAccess 11.4.28
 azure.subscription.keyVaultService.vault.rbacAuthorizationEnabled 9.0.1
+azure.subscription.keyVaultService.vault.roleAssignments 13.36.1
 azure.subscription.keyVaultService.vault.secrets 9.0.1
 azure.subscription.keyVaultService.vault.skuName 13.1.8
 azure.subscription.keyVaultService.vault.softDeleteRetentionInDays 11.4.28

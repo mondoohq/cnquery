@@ -12152,6 +12152,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.managedHsm.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetKeys()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key")))
 	},
+	"azure.subscription.keyVaultService.managedHsm.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
+	},
 	"azure.subscription.keyVaultService.vault.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetId()).ToDataRes(types.String)
 	},
@@ -12223,6 +12226,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.vault.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetAccessPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.vault.accessPolicy")))
+	},
+	"azure.subscription.keyVaultService.vault.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
 	},
 	"azure.subscription.keyVaultService.vault.networkAcls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetNetworkAcls()).ToDataRes(types.Resource("azure.subscription.keyVaultService.vault.networkAcls"))
@@ -14185,6 +14191,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.authorizationService.roleAssignment.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
 	},
 	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetRole()).ToDataRes(types.Resource("azure.subscription.authorizationService.roleDefinition"))
@@ -35530,6 +35539,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.managedHsm.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).__id, ok = v.Value.(string)
 		return
@@ -35628,6 +35641,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.vault.accessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).AccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.vault.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceVault).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.vault.networkAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38496,6 +38513,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.authorizationService.roleAssignment.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -82006,6 +82027,7 @@ type mqlAzureSubscriptionKeyVaultServiceManagedHsm struct {
 	PrivateEndpointConnections plugin.TValue[[]any]
 	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 	Keys                       plugin.TValue[[]any]
+	RoleAssignments            plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKeyVaultServiceManagedHsm creates a new instance of this resource
@@ -82161,6 +82183,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetKeys() *plugin.TValue
 	})
 }
 
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.managedHsm", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
+	})
+}
+
 // mqlAzureSubscriptionKeyVaultServiceVault for the azure.subscription.keyVaultService.vault resource
 type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	MqlRuntime *plugin.Runtime
@@ -82190,6 +82228,7 @@ type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	Autorotation                 plugin.TValue[[]any]
 	PrivateEndpointConnections   plugin.TValue[[]any]
 	AccessPolicies               plugin.TValue[[]any]
+	RoleAssignments              plugin.TValue[[]any]
 	NetworkAcls                  plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls]
 	SystemMetadata               plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -82442,6 +82481,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetAccessPolicies() *plugin.T
 		}
 
 		return c.accessPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.vault", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
 	})
 }
 
@@ -89407,16 +89462,17 @@ type mqlAzureSubscriptionAuthorizationServiceRoleAssignment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal
-	Id            plugin.TValue[string]
-	Description   plugin.TValue[string]
-	Scope         plugin.TValue[string]
-	PrincipalId   plugin.TValue[string]
-	PrincipalType plugin.TValue[string]
-	Condition     plugin.TValue[string]
-	CreatedAt     plugin.TValue[*time.Time]
-	UpdatedAt     plugin.TValue[*time.Time]
-	Role          plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
-	Principal     plugin.TValue[*mqlAzureEntraPrincipal]
+	Id               plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Scope            plugin.TValue[string]
+	PrincipalId      plugin.TValue[string]
+	PrincipalType    plugin.TValue[string]
+	Condition        plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	RoleDefinitionId plugin.TValue[string]
+	Role             plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
+	Principal        plugin.TValue[*mqlAzureEntraPrincipal]
 }
 
 // createAzureSubscriptionAuthorizationServiceRoleAssignment creates a new instance of this resource
@@ -89481,6 +89537,12 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetCreatedAt() 
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleDefinitionId, func() (string, error) {
+		return c.roleDefinitionId()
+	})
 }
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetRole() *plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition] {

@@ -9282,6 +9282,16 @@ azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   // "Managed HSM Crypto User"), which is separate from the
   // management-plane permission that lists the pool.
   keys() []azure.subscription.keyVaultService.key
+  // Microsoft Entra role assignments granting management-plane access to the pool
+  //
+  // The effective role assignments at the pool scope, including those
+  // inherited from the resource group, subscription, and management-group
+  // ancestors. These govern the management plane (who can read, configure,
+  // and delete the pool). Data-plane key access is governed separately by
+  // Managed HSM local RBAC, which is not part of Azure Resource Manager and
+  // does not appear here; initialAdminObjectIds names its bootstrap
+  // administrators.
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
 }
 
 // Azure Key Vault vault
@@ -9351,7 +9361,23 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   // Private endpoint connections for the vault
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Vault access policies
+  //
+  // The vault access policy model, which is only in force when
+  // rbacAuthorizationEnabled is false. On a vault using Azure RBAC
+  // authorization Azure stores no access policies at all and this list is
+  // empty, which does not mean nobody can read the vault. Read
+  // roleAssignments for the authorization model in that case.
   accessPolicies() []azure.subscription.keyVaultService.vault.accessPolicy
+  // Microsoft Entra role assignments granting access to the vault
+  //
+  // The effective role assignments at the vault scope, including those
+  // inherited from the resource group, subscription, and management-group
+  // ancestors. This is where authorization lives when
+  // rbacAuthorizationEnabled is true, since Azure RBAC vaults hold no
+  // accessPolicies. Together with accessPolicies it answers who can read
+  // the keys, secrets, and certificates the vault holds (for example who
+  // holds Key Vault Secrets User or Key Vault Administrator).
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
   // Vault network ACL rules
   networkAcls() azure.subscription.keyVaultService.vault.networkAcls
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -11236,6 +11262,13 @@ private azure.subscription.authorizationService.roleAssignment  @defaults("princ
   condition string
   createdAt time
   updatedAt time
+  // Resource ID of the role definition the assignment grants
+  //
+  // The full ARM ID of the granted role, for example
+  // "/subscriptions/<id>/providers/Microsoft.Authorization/roleDefinitions/<guid>".
+  // Always present, including when the role itself resolves to null because
+  // it is defined at a scope this subscription listing does not cover.
+  roleDefinitionId() string
   role() azure.subscription.authorizationService.roleDefinition
   // Microsoft Entra principal the role was assigned to
   //
