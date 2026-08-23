@@ -274,6 +274,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"grafana.serviceAccountToken.isExpired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaServiceAccountToken).GetIsExpired()).ToDataRes(types.Bool)
 	},
+	"grafana.serviceAccountToken.isRevoked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaServiceAccountToken).GetIsRevoked()).ToDataRes(types.Bool)
+	},
+	"grafana.serviceAccountToken.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaServiceAccountToken).GetLastUsedAt()).ToDataRes(types.Time)
+	},
+	"grafana.serviceAccountToken.serviceAccount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGrafanaServiceAccountToken).GetServiceAccount()).ToDataRes(types.Resource("grafana.serviceAccount"))
+	},
 	"grafana.datasource.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGrafanaDatasource).GetId()).ToDataRes(types.Int)
 	},
@@ -655,6 +664,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"grafana.serviceAccountToken.isExpired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGrafanaServiceAccountToken).IsExpired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.serviceAccountToken.isRevoked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaServiceAccountToken).IsRevoked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"grafana.serviceAccountToken.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaServiceAccountToken).LastUsedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"grafana.serviceAccountToken.serviceAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGrafanaServiceAccountToken).ServiceAccount, ok = plugin.RawToTValue[*mqlGrafanaServiceAccount](v.Value, v.Error)
 		return
 	},
 	"grafana.datasource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1442,6 +1463,9 @@ type mqlGrafanaServiceAccountToken struct {
 	HasExpiration          plugin.TValue[bool]
 	SecondsUntilExpiration plugin.TValue[float64]
 	IsExpired              plugin.TValue[bool]
+	IsRevoked              plugin.TValue[bool]
+	LastUsedAt             plugin.TValue[*time.Time]
+	ServiceAccount         plugin.TValue[*mqlGrafanaServiceAccount]
 }
 
 // createGrafanaServiceAccountToken creates a new instance of this resource
@@ -1511,6 +1535,30 @@ func (c *mqlGrafanaServiceAccountToken) GetSecondsUntilExpiration() *plugin.TVal
 
 func (c *mqlGrafanaServiceAccountToken) GetIsExpired() *plugin.TValue[bool] {
 	return &c.IsExpired
+}
+
+func (c *mqlGrafanaServiceAccountToken) GetIsRevoked() *plugin.TValue[bool] {
+	return &c.IsRevoked
+}
+
+func (c *mqlGrafanaServiceAccountToken) GetLastUsedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUsedAt
+}
+
+func (c *mqlGrafanaServiceAccountToken) GetServiceAccount() *plugin.TValue[*mqlGrafanaServiceAccount] {
+	return plugin.GetOrCompute[*mqlGrafanaServiceAccount](&c.ServiceAccount, func() (*mqlGrafanaServiceAccount, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("grafana.serviceAccountToken", c.__id, "serviceAccount")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGrafanaServiceAccount), nil
+			}
+		}
+
+		return c.serviceAccount()
+	})
 }
 
 // mqlGrafanaDatasource for the grafana.datasource resource

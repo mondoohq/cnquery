@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -259,3 +260,55 @@ func TestServiceAccountTokens_HasExpirationLogic(t *testing.T) {
 		})
 	}
 }
+
+// TestTokenDecode_RevokedAndLastUsed pins the struct tags for the two fields a
+// token audit turns on: a mistyped tag would decode isRevoked as false and
+// report a dead credential as live.
+func TestTokenDecode_RevokedAndLastUsed(t *testing.T) {
+	// Shaped like GET /api/serviceaccounts/{id}/tokens: one revoked token and
+	// one live token that has never authenticated.
+	const payload = `[
+	  {"id":1,"name":"revoked-token","created":"2026-08-01T10:00:00Z","expiration":"0001-01-01T00:00:00Z","lastUsedAt":"2026-08-02T11:30:00Z","hasExpired":false,"secondsUntilExpiration":0,"isRevoked":true},
+	  {"id":2,"name":"live-token","created":"2026-08-01T10:05:00Z","expiration":"0001-01-01T00:00:00Z","lastUsedAt":null,"hasExpired":false,"secondsUntilExpiration":0,"isRevoked":false}
+	]`
+
+	var toks []grafanaTokenJSON
+	require.NoError(t, json.Unmarshal([]byte(payload), &toks))
+	require.Len(t, toks, 2)
+
+	assert.True(t, toks[0].IsRevoked, "revoked token must decode isRevoked=true")
+	require.NotNil(t, toks[0].LastUsedAt)
+	lastUsed := parseGrafanaTimePtr(toks[0].LastUsedAt)
+	require.NotNil(t, lastUsed)
+	assert.Equal(t, "2026-08-02T11:30:00Z", lastUsed.UTC().Format(time.RFC3339))
+
+	assert.False(t, toks[1].IsRevoked, "live token must decode isRevoked=false")
+	assert.Nil(t, toks[1].LastUsedAt)
+	assert.Nil(t, parseGrafanaTimePtr(toks[1].LastUsedAt), "a never-used token must report null, not the zero time")
+}
+
+func TestParseGrafanaTimePtr(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  *string
+		want string // empty means nil
+	}{
+		{"absent", nil, ""},
+		{"empty string", strPtr(""), ""},
+		{"grafana zero sentinel", strPtr("0001-01-01T00:00:00Z"), ""},
+		{"valid timestamp", strPtr("2026-08-02T11:30:00Z"), "2026-08-02T11:30:00Z"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseGrafanaTimePtr(tt.raw)
+			if tt.want == "" {
+				assert.Nil(t, got)
+				return
+			}
+			require.NotNil(t, got)
+			assert.Equal(t, tt.want, got.UTC().Format(time.RFC3339))
+		})
+	}
+}
+
+func strPtr(s string) *string { return &s }
