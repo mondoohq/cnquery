@@ -165,6 +165,7 @@ var anyHostNameRegexps = map[string]struct{}{
 	"(.*)":      {},
 	"(.+)":      {},
 	"[\\s\\S]*": {},
+	"[\\s\\S]+": {},
 }
 
 // matchesAnyHostName reports whether a host_names_regexp entry matches every
