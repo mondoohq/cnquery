@@ -6768,7 +6768,23 @@ azure.subscription.webService.appsite @defaults("id name location") {
   // App site configuration
   configuration() azure.subscription.webService.appsiteconfig
   // App site authentication settings
+  //
+  // The Easy Auth V1 view of App Service Authentication. It reports
+  // enabled false on an app configured with Easy Auth V2, which stores its
+  // configuration separately. Read authSettingsV2 to tell a V2-authenticated
+  // app apart from an app with no authentication at all.
   authenticationSettings() azure.subscription.webService.appsiteauthsettings
+  // App site authentication settings (Easy Auth V2)
+  //
+  // The V2 view of App Service Authentication, the configuration model the
+  // Azure portal writes today. Reports whether the app requires
+  // authentication (requireAuthentication), what happens to an
+  // unauthenticated caller (unauthenticatedClientAction), which
+  // applications the Entra ID authorization policy admits
+  // (allowedApplications), and whether the token store and HTTPS
+  // requirement are on. Null when the app has no V2 configuration or the
+  // credential cannot read it.
+  authSettingsV2() azure.subscription.webService.appsiteauthsettingsv2
   // App site metadata
   metadata() dict
   // App site application settings
@@ -6962,6 +6978,94 @@ private azure.subscription.webService.appsiteauthsettings @defaults("id name") {
   // Anything other than AllowAnonymous means unauthenticated requests are blocked
   // or redirected to a login provider.
   unauthenticatedClientAction string
+}
+
+// Azure AppSite authentication settings (Easy Auth V2)
+//
+// The App Service Authentication configuration in its V2 form, which is
+// what the Azure portal writes today and what an app configured through it
+// actually runs on. It is stored separately from the V1 settings, so a V2
+// app reports enabled false on
+// azure.subscription.webService.appsiteauthsettings and looks
+// indistinguishable from an app with no authentication at all. Query
+// requireAuthentication and unauthenticatedClientAction for whether the app
+// admits anonymous callers, allowedApplications and allowedAudiences for
+// how narrowly the Entra ID authorization policy is scoped, and requireHttps
+// and tokenStoreEnabled for the transport and token handling around the
+// login flow.
+private azure.subscription.webService.appsiteauthsettingsv2 @defaults("id requireAuthentication unauthenticatedClientAction") {
+  // Auth settings resource ID
+  id string
+  // Auth settings resource name
+  name string
+  // Auth settings resource kind
+  kind string
+  // Auth settings resource type
+  type string
+  // Raw V2 auth settings property bag
+  //
+  // The unprocessed configuration from Azure Resource Manager, with keys
+  // including `platform`, `globalValidation`, `httpSettings`,
+  // `identityProviders`, and `login`. Use it to reach identity providers
+  // that have no dedicated field, such as the custom OpenID Connect
+  // providers under `identityProviders.customOpenIdConnectProviders`. Azure
+  // returns the app-setting name that holds each provider's client secret,
+  // never the secret value.
+  properties dict
+  // Whether the Authentication / Authorization feature is enabled for the app
+  //
+  // Corresponds to `platform.enabled`. False on an app that has V2
+  // configuration written but the feature switched off.
+  enabled bool
+  // Runtime version of the Authentication / Authorization module
+  runtimeVersion string
+  // Whether every request must be authenticated
+  //
+  // Corresponds to `globalValidation.requireAuthentication`. False means
+  // requests reach the app without a validated identity, whatever identity
+  // providers are configured. An app that carries no V2 configuration at
+  // all reports false here rather than null, so the absence of a setting
+  // cannot read as a protection.
+  requireAuthentication bool
+  // Action taken when an unauthenticated client requests the app
+  //
+  // Corresponds to `globalValidation.unauthenticatedClientAction`. One of
+  // AllowAnonymous, RedirectToLoginPage, Return401, or Return403. Anything
+  // other than AllowAnonymous blocks or redirects unauthenticated requests.
+  unauthenticatedClientAction string
+  // Paths exempt from the authentication flow
+  //
+  // Corresponds to `globalValidation.excludedPaths`. Requests to these
+  // paths are not redirected to the login page even when authentication is
+  // required, so a broad entry here is a hole in the requirement.
+  excludedPaths []string
+  // Default identity provider used when several are configured
+  redirectToProvider string
+  // Whether authentication and authorization responses must use HTTPS
+  //
+  // Corresponds to `httpSettings.requireHttps`. False permits the login
+  // redirect and its tokens to travel over plain HTTP.
+  requireHttps bool
+  // Whether provider tokens obtained during login are durably stored
+  //
+  // Corresponds to `login.tokenStore.enabled`.
+  tokenStoreEnabled bool
+  // Whether the Microsoft Entra ID identity provider is enabled
+  //
+  // Corresponds to `identityProviders.azureActiveDirectory.enabled`.
+  azureActiveDirectoryEnabled bool
+  // Applications admitted by the Entra ID default authorization policy
+  //
+  // Corresponds to
+  // `identityProviders.azureActiveDirectory.validation.defaultAuthorizationPolicy.allowedApplications`.
+  // Empty means the policy names no application allowlist, so any caller the
+  // configured audiences accept is admitted.
+  allowedApplications []string
+  // Audiences accepted by Entra ID token validation
+  //
+  // Corresponds to
+  // `identityProviders.azureActiveDirectory.validation.allowedAudiences`.
+  allowedAudiences []string
 }
 
 // Azure AppSite config
@@ -7306,6 +7410,13 @@ private azure.subscription.sqlService.server @defaults("name location properties
   databases() []azure.subscription.sqlService.database
   // SQL Database server firewall rules
   firewallRules() []azure.subscription.sqlService.firewallrule
+  // SQL Database server IPv6 firewall rules
+  //
+  // The IPv6 half of the server-level firewall, held in a separate rule
+  // list from the IPv4 firewallRules. A dual-stack server can be closed on
+  // IPv4 and wide open on IPv6, so both lists have to be read to judge
+  // reachability.
+  ipv6FirewallRules() []azure.subscription.sqlService.server.ipv6FirewallRule
   // SQL Database server Entra ID administrators
   azureAdAdministrators() []azure.subscription.sqlService.server.administrator
   // SQL Database server administrator login
@@ -7344,9 +7455,11 @@ private azure.subscription.sqlService.server @defaults("name location properties
   // Whether the SQL server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
-  // opens the server to the entire public internet, a rule whose range spans
-  // 0.0.0.0-255.255.255.255. The special "allow all Azure services" rule
-  // (0.0.0.0-0.0.0.0) does not count, since it admits only Azure-internal IPs.
+  // opens the server to the entire public internet. Both rule lists count: an
+  // IPv4 rule spanning 0.0.0.0-255.255.255.255 and an IPv6 rule spanning
+  // ::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff each open the server on their
+  // own. The special "allow all Azure services" rule (0.0.0.0-0.0.0.0) does
+  // not count, since it admits only Azure-internal IPs.
   internetReachable() bool
   // Type of managed identity configured on the server
   //
@@ -8238,6 +8351,27 @@ private azure.subscription.sqlService.firewallrule @defaults("id name") {
   // SQL firewall rule start IP address
   startIpAddress string
   // SQL firewall rule end IP address
+  endIpAddress string
+}
+
+// Azure SQL server IPv6 firewall rule
+//
+// A single server-level IPv6 firewall rule, admitting client connections
+// from the inclusive address range between startIpAddress and endIpAddress.
+// Azure keeps these in a rule list separate from the IPv4 firewall rules, so
+// a server can be tightly scoped on IPv4 while an IPv6 rule spanning
+// ::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff leaves it open to the whole
+// IPv6 internet.
+private azure.subscription.sqlService.server.ipv6FirewallRule @defaults("name startIpAddress endIpAddress") {
+  // IPv6 firewall rule resource ID
+  id string
+  // IPv6 firewall rule name
+  name string
+  // IPv6 firewall rule resource type
+  type string
+  // First IPv6 address admitted by the rule
+  startIpAddress string
+  // Last IPv6 address admitted by the rule, inclusive
   endIpAddress string
 }
 
@@ -9282,6 +9416,16 @@ azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   // "Managed HSM Crypto User"), which is separate from the
   // management-plane permission that lists the pool.
   keys() []azure.subscription.keyVaultService.key
+  // Microsoft Entra role assignments granting management-plane access to the pool
+  //
+  // The effective role assignments at the pool scope, including those
+  // inherited from the resource group, subscription, and management-group
+  // ancestors. These govern the management plane (who can read, configure,
+  // and delete the pool). Data-plane key access is governed separately by
+  // Managed HSM local RBAC, which is not part of Azure Resource Manager and
+  // does not appear here; initialAdminObjectIds names its bootstrap
+  // administrators.
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
 }
 
 // Azure Key Vault vault
@@ -9351,7 +9495,23 @@ private azure.subscription.keyVaultService.vault @defaults("vaultName type vault
   // Private endpoint connections for the vault
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Vault access policies
+  //
+  // The vault access policy model, which is only in force when
+  // rbacAuthorizationEnabled is false. On a vault using Azure RBAC
+  // authorization Azure stores no access policies at all and this list is
+  // empty, which does not mean nobody can read the vault. Read
+  // roleAssignments for the authorization model in that case.
   accessPolicies() []azure.subscription.keyVaultService.vault.accessPolicy
+  // Microsoft Entra role assignments granting access to the vault
+  //
+  // The effective role assignments at the vault scope, including those
+  // inherited from the resource group, subscription, and management-group
+  // ancestors. This is where authorization lives when
+  // rbacAuthorizationEnabled is true, since Azure RBAC vaults hold no
+  // accessPolicies. Together with accessPolicies it answers who can read
+  // the keys, secrets, and certificates the vault holds (for example who
+  // holds Key Vault Secrets User or Key Vault Administrator).
+  roleAssignments() []azure.subscription.authorizationService.roleAssignment
   // Vault network ACL rules
   networkAcls() azure.subscription.keyVaultService.vault.networkAcls
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -11236,6 +11396,13 @@ private azure.subscription.authorizationService.roleAssignment  @defaults("princ
   condition string
   createdAt time
   updatedAt time
+  // Resource ID of the role definition the assignment grants
+  //
+  // The full ARM ID of the granted role, for example
+  // "/subscriptions/<id>/providers/Microsoft.Authorization/roleDefinitions/<guid>".
+  // Always present, including when the role itself resolves to null because
+  // it is defined at a scope this subscription listing does not cover.
+  roleDefinitionId() string
   role() azure.subscription.authorizationService.roleDefinition
   // Microsoft Entra principal the role was assigned to
   //

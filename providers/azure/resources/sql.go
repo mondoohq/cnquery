@@ -369,6 +369,78 @@ func (a *mqlAzureSubscriptionSqlServiceServer) firewallRules() ([]any, error) {
 	return res, nil
 }
 
+// ipv6FirewallRuleArgs maps one SDK IPv6 firewall rule onto the MQL resource
+// arguments. The endpoints live on a nullable Properties pointer under names
+// that differ from the IPv4 rule's (StartIPv6Address, not StartIPAddress), and
+// reading either one wrong yields an empty string that parses to no address at
+// all -- which scores the rule as admitting nothing rather than as unread.
+func ipv6FirewallRuleArgs(entry *sql.IPv6FirewallRule) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":           llx.StringDataPtr(entry.ID),
+		"id":             llx.StringDataPtr(entry.ID),
+		"name":           llx.StringDataPtr(entry.Name),
+		"type":           llx.StringDataPtr(entry.Type),
+		"startIpAddress": llx.StringDataPtr(orZero(entry.Properties).StartIPv6Address),
+		"endIpAddress":   llx.StringDataPtr(orZero(entry.Properties).EndIPv6Address),
+	}
+}
+
+// ipv6FirewallRules lists the server-level IPv6 firewall rules. Azure keeps
+// these in a rule list of their own, separate from firewallRules, so a
+// dual-stack server that is tightly scoped on IPv4 can still be wide open on
+// IPv6.
+//
+// A credential that can read the server but not this list (403), or a server
+// whose resource provider does not expose it (404), degrades to a null list
+// rather than failing the query: null reads as "not determined", which is what
+// happened, and is distinct from an empty list meaning "no IPv6 rules".
+func (a *mqlAzureSubscriptionSqlServiceServer) ipv6FirewallRules() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	server, err := resourceID.Component("servers")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := sql.NewIPv6FirewallRulesClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pager := client.NewListByServerPager(resourceID.ResourceGroup, server, &sql.IPv6FirewallRulesClientListByServerOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusForbidden || respErr.StatusCode == http.StatusNotFound) {
+				log.Warn().Err(err).Str("server", a.Id.Data).Msg("could not list sql server ipv6 firewall rules")
+				a.Ipv6FirewallRules.State = plugin.StateIsSet | plugin.StateIsNull
+				return nil, nil
+			}
+			return nil, err
+		}
+		for _, entry := range page.Value {
+			if entry == nil {
+				continue
+			}
+			mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.ipv6FirewallRule", ipv6FirewallRuleArgs(entry))
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRule)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
 	ctx := context.Background()

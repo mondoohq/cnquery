@@ -192,6 +192,7 @@ const (
 	ResourceAzureSubscriptionWebServiceAppslot                                                          string = "azure.subscription.webService.appslot"
 	ResourceAzureSubscriptionWebServiceAppsiteBasicPublishingCredentialsPolicies                        string = "azure.subscription.webService.appsite.basicPublishingCredentialsPolicies"
 	ResourceAzureSubscriptionWebServiceAppsiteauthsettings                                              string = "azure.subscription.webService.appsiteauthsettings"
+	ResourceAzureSubscriptionWebServiceAppsiteauthsettingsv2                                            string = "azure.subscription.webService.appsiteauthsettingsv2"
 	ResourceAzureSubscriptionWebServiceAppsiteconfig                                                    string = "azure.subscription.webService.appsiteconfig"
 	ResourceAzureSubscriptionWebServiceAppsiteconfigIpSecurityRestriction                               string = "azure.subscription.webService.appsiteconfig.ipSecurityRestriction"
 	ResourceAzureSubscriptionWebServiceHostingEnvironment                                               string = "azure.subscription.webService.hostingEnvironment"
@@ -233,6 +234,7 @@ const (
 	ResourceAzureSubscriptionPostgreSqlServiceDatabase                                                  string = "azure.subscription.postgreSqlService.database"
 	ResourceAzureSubscriptionSqlServiceConfiguration                                                    string = "azure.subscription.sqlService.configuration"
 	ResourceAzureSubscriptionSqlServiceFirewallrule                                                     string = "azure.subscription.sqlService.firewallrule"
+	ResourceAzureSubscriptionSqlServiceServerIpv6FirewallRule                                           string = "azure.subscription.sqlService.server.ipv6FirewallRule"
 	ResourceAzureSubscriptionSqlServiceVirtualNetworkRule                                               string = "azure.subscription.sqlService.virtualNetworkRule"
 	ResourceAzureSubscriptionSqlServiceManagedInstance                                                  string = "azure.subscription.sqlService.managedInstance"
 	ResourceAzureSubscriptionSqlServiceManagedInstanceDatabase                                          string = "azure.subscription.sqlService.managedInstance.database"
@@ -1258,6 +1260,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteauthsettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsiteauthsettings,
 		},
+		"azure.subscription.webService.appsiteauthsettingsv2": {
+			// to override args, implement: initAzureSubscriptionWebServiceAppsiteauthsettingsv2(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionWebServiceAppsiteauthsettingsv2,
+		},
 		"azure.subscription.webService.appsiteconfig": {
 			// to override args, implement: initAzureSubscriptionWebServiceAppsiteconfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionWebServiceAppsiteconfig,
@@ -1421,6 +1427,10 @@ func init() {
 		"azure.subscription.sqlService.firewallrule": {
 			// to override args, implement: initAzureSubscriptionSqlServiceFirewallrule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSqlServiceFirewallrule,
+		},
+		"azure.subscription.sqlService.server.ipv6FirewallRule": {
+			// to override args, implement: initAzureSubscriptionSqlServiceServerIpv6FirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSqlServiceServerIpv6FirewallRule,
 		},
 		"azure.subscription.sqlService.virtualNetworkRule": {
 			// to override args, implement: initAzureSubscriptionSqlServiceVirtualNetworkRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9401,6 +9411,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appsite.authenticationSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetAuthenticationSettings()).ToDataRes(types.Resource("azure.subscription.webService.appsiteauthsettings"))
 	},
+	"azure.subscription.webService.appsite.authSettingsV2": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetAuthSettingsV2()).ToDataRes(types.Resource("azure.subscription.webService.appsiteauthsettingsv2"))
+	},
 	"azure.subscription.webService.appsite.metadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsite).GetMetadata()).ToDataRes(types.Dict)
 	},
@@ -9616,6 +9629,54 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.webService.appsiteauthsettings.unauthenticatedClientAction": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).GetUnauthenticatedClientAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.kind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetKind()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.properties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.runtimeVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetRuntimeVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.requireAuthentication": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetRequireAuthentication()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.unauthenticatedClientAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetUnauthenticatedClientAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.excludedPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetExcludedPaths()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.redirectToProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetRedirectToProvider()).ToDataRes(types.String)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.requireHttps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetRequireHttps()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.tokenStoreEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetTokenStoreEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.azureActiveDirectoryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetAzureActiveDirectoryEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.allowedApplications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetAllowedApplications()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.allowedAudiences": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).GetAllowedAudiences()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.webService.appsiteconfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppsiteconfig).GetId()).ToDataRes(types.String)
@@ -10042,6 +10103,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.sqlService.server.firewallRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetFirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.firewallrule")))
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetIpv6FirewallRules()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.ipv6FirewallRule")))
 	},
 	"azure.subscription.sqlService.server.azureAdAdministrators": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServer).GetAzureAdAdministrators()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.administrator")))
@@ -11041,6 +11105,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.sqlService.firewallrule.endIpAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceFirewallrule).GetEndIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.startIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetStartIpAddress()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.endIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).GetEndIpAddress()).ToDataRes(types.String)
 	},
 	"azure.subscription.sqlService.virtualNetworkRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).GetId()).ToDataRes(types.String)
@@ -12152,6 +12231,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.managedHsm.keys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetKeys()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key")))
 	},
+	"azure.subscription.keyVaultService.managedHsm.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
+	},
 	"azure.subscription.keyVaultService.vault.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetId()).ToDataRes(types.String)
 	},
@@ -12223,6 +12305,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.vault.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetAccessPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.vault.accessPolicy")))
+	},
+	"azure.subscription.keyVaultService.vault.roleAssignments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetRoleAssignments()).ToDataRes(types.Array(types.Resource("azure.subscription.authorizationService.roleAssignment")))
 	},
 	"azure.subscription.keyVaultService.vault.networkAcls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVault).GetNetworkAcls()).ToDataRes(types.Resource("azure.subscription.keyVaultService.vault.networkAcls"))
@@ -14185,6 +14270,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.authorizationService.roleAssignment.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.authorizationService.roleAssignment.roleDefinitionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetRoleDefinitionId()).ToDataRes(types.String)
 	},
 	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).GetRole()).ToDataRes(types.Resource("azure.subscription.authorizationService.roleDefinition"))
@@ -31566,6 +31654,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppsite).AuthenticationSettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.webService.appsite.authSettingsV2": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsite).AuthSettingsV2, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.webService.appsite.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsite).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -31876,6 +31968,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.webService.appsiteauthsettings.unauthenticatedClientAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings).UnauthenticatedClientAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).Kind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.runtimeVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).RuntimeVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.requireAuthentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).RequireAuthentication, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.unauthenticatedClientAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).UnauthenticatedClientAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.excludedPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).ExcludedPaths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.redirectToProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).RedirectToProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.requireHttps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).RequireHttps, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.tokenStoreEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).TokenStoreEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.azureActiveDirectoryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).AzureActiveDirectoryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.allowedApplications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).AllowedApplications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.webService.appsiteauthsettingsv2.allowedAudiences": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2).AllowedAudiences, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appsiteconfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32488,6 +32648,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.sqlService.server.firewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServer).FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServer).Ipv6FirewallRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.server.azureAdAdministrators": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33940,6 +34104,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.sqlService.firewallrule.endIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceFirewallrule).EndIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.startIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).StartIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.ipv6FirewallRule.endIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule).EndIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.virtualNetworkRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35530,6 +35718,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).Keys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.managedHsm.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.vault.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).__id, ok = v.Value.(string)
 		return
@@ -35628,6 +35820,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.vault.accessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVault).AccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.vault.roleAssignments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceVault).RoleAssignments, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.vault.networkAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38496,6 +38692,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.authorizationService.roleAssignment.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.authorizationService.roleAssignment.roleDefinitionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment).RoleDefinitionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.authorizationService.roleAssignment.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72413,6 +72613,7 @@ type mqlAzureSubscriptionWebServiceAppsite struct {
 	Slots                        plugin.TValue[[]any]
 	Configuration                plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
 	AuthenticationSettings       plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
+	AuthSettingsV2               plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2]
 	Metadata                     plugin.TValue[any]
 	ApplicationSettings          plugin.TValue[any]
 	ConnectionSettings           plugin.TValue[any]
@@ -72616,6 +72817,22 @@ func (c *mqlAzureSubscriptionWebServiceAppsite) GetAuthenticationSettings() *plu
 		}
 
 		return c.authenticationSettings()
+	})
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsite) GetAuthSettingsV2() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2](&c.AuthSettingsV2, func() (*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.webService.appsite", c.__id, "authSettingsV2")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2), nil
+			}
+		}
+
+		return c.authSettingsV2()
 	})
 }
 
@@ -73476,6 +73693,130 @@ func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettings) GetEnabled() *plugin
 
 func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettings) GetUnauthenticatedClientAction() *plugin.TValue[string] {
 	return &c.UnauthenticatedClientAction
+}
+
+// mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2 for the azure.subscription.webService.appsiteauthsettingsv2 resource
+type mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2 struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2Internal it will be used here
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Kind                        plugin.TValue[string]
+	Type                        plugin.TValue[string]
+	Properties                  plugin.TValue[any]
+	Enabled                     plugin.TValue[bool]
+	RuntimeVersion              plugin.TValue[string]
+	RequireAuthentication       plugin.TValue[bool]
+	UnauthenticatedClientAction plugin.TValue[string]
+	ExcludedPaths               plugin.TValue[[]any]
+	RedirectToProvider          plugin.TValue[string]
+	RequireHttps                plugin.TValue[bool]
+	TokenStoreEnabled           plugin.TValue[bool]
+	AzureActiveDirectoryEnabled plugin.TValue[bool]
+	AllowedApplications         plugin.TValue[[]any]
+	AllowedAudiences            plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionWebServiceAppsiteauthsettingsv2 creates a new instance of this resource
+func createAzureSubscriptionWebServiceAppsiteauthsettingsv2(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.webService.appsiteauthsettingsv2", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) MqlName() string {
+	return "azure.subscription.webService.appsiteauthsettingsv2"
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetKind() *plugin.TValue[string] {
+	return &c.Kind
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetProperties() *plugin.TValue[any] {
+	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetRuntimeVersion() *plugin.TValue[string] {
+	return &c.RuntimeVersion
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetRequireAuthentication() *plugin.TValue[bool] {
+	return &c.RequireAuthentication
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetUnauthenticatedClientAction() *plugin.TValue[string] {
+	return &c.UnauthenticatedClientAction
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetExcludedPaths() *plugin.TValue[[]any] {
+	return &c.ExcludedPaths
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetRedirectToProvider() *plugin.TValue[string] {
+	return &c.RedirectToProvider
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetRequireHttps() *plugin.TValue[bool] {
+	return &c.RequireHttps
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetTokenStoreEnabled() *plugin.TValue[bool] {
+	return &c.TokenStoreEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetAzureActiveDirectoryEnabled() *plugin.TValue[bool] {
+	return &c.AzureActiveDirectoryEnabled
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetAllowedApplications() *plugin.TValue[[]any] {
+	return &c.AllowedApplications
+}
+
+func (c *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) GetAllowedAudiences() *plugin.TValue[[]any] {
+	return &c.AllowedAudiences
 }
 
 // mqlAzureSubscriptionWebServiceAppsiteconfig for the azure.subscription.webService.appsiteconfig resource
@@ -74711,6 +75052,7 @@ type mqlAzureSubscriptionSqlServiceServer struct {
 	FullyQualifiedDomainName         plugin.TValue[string]
 	Databases                        plugin.TValue[[]any]
 	FirewallRules                    plugin.TValue[[]any]
+	Ipv6FirewallRules                plugin.TValue[[]any]
 	AzureAdAdministrators            plugin.TValue[[]any]
 	AdministratorLogin               plugin.TValue[string]
 	VulnerabilityAssessmentSettings  plugin.TValue[*mqlAzureSubscriptionSqlServiceServerVulnerabilityassessmentsettings]
@@ -74850,6 +75192,22 @@ func (c *mqlAzureSubscriptionSqlServiceServer) GetFirewallRules() *plugin.TValue
 		}
 
 		return c.firewallRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServer) GetIpv6FirewallRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ipv6FirewallRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.server", c.__id, "ipv6FirewallRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipv6FirewallRules()
 	})
 }
 
@@ -78415,6 +78773,70 @@ func (c *mqlAzureSubscriptionSqlServiceFirewallrule) GetStartIpAddress() *plugin
 }
 
 func (c *mqlAzureSubscriptionSqlServiceFirewallrule) GetEndIpAddress() *plugin.TValue[string] {
+	return &c.EndIpAddress
+}
+
+// mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule for the azure.subscription.sqlService.server.ipv6FirewallRule resource
+type mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionSqlServiceServerIpv6FirewallRuleInternal it will be used here
+	Id             plugin.TValue[string]
+	Name           plugin.TValue[string]
+	Type           plugin.TValue[string]
+	StartIpAddress plugin.TValue[string]
+	EndIpAddress   plugin.TValue[string]
+}
+
+// createAzureSubscriptionSqlServiceServerIpv6FirewallRule creates a new instance of this resource
+func createAzureSubscriptionSqlServiceServerIpv6FirewallRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sqlService.server.ipv6FirewallRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) MqlName() string {
+	return "azure.subscription.sqlService.server.ipv6FirewallRule"
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetStartIpAddress() *plugin.TValue[string] {
+	return &c.StartIpAddress
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule) GetEndIpAddress() *plugin.TValue[string] {
 	return &c.EndIpAddress
 }
 
@@ -82006,6 +82428,7 @@ type mqlAzureSubscriptionKeyVaultServiceManagedHsm struct {
 	PrivateEndpointConnections plugin.TValue[[]any]
 	SystemMetadata             plugin.TValue[*mqlAzureSubscriptionSystemData]
 	Keys                       plugin.TValue[[]any]
+	RoleAssignments            plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionKeyVaultServiceManagedHsm creates a new instance of this resource
@@ -82161,6 +82584,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetKeys() *plugin.TValue
 	})
 }
 
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.managedHsm", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
+	})
+}
+
 // mqlAzureSubscriptionKeyVaultServiceVault for the azure.subscription.keyVaultService.vault resource
 type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	MqlRuntime *plugin.Runtime
@@ -82190,6 +82629,7 @@ type mqlAzureSubscriptionKeyVaultServiceVault struct {
 	Autorotation                 plugin.TValue[[]any]
 	PrivateEndpointConnections   plugin.TValue[[]any]
 	AccessPolicies               plugin.TValue[[]any]
+	RoleAssignments              plugin.TValue[[]any]
 	NetworkAcls                  plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls]
 	SystemMetadata               plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -82442,6 +82882,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetAccessPolicies() *plugin.T
 		}
 
 		return c.accessPolicies()
+	})
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceVault) GetRoleAssignments() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RoleAssignments, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.vault", c.__id, "roleAssignments")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.roleAssignments()
 	})
 }
 
@@ -89407,16 +89863,17 @@ type mqlAzureSubscriptionAuthorizationServiceRoleAssignment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal
-	Id            plugin.TValue[string]
-	Description   plugin.TValue[string]
-	Scope         plugin.TValue[string]
-	PrincipalId   plugin.TValue[string]
-	PrincipalType plugin.TValue[string]
-	Condition     plugin.TValue[string]
-	CreatedAt     plugin.TValue[*time.Time]
-	UpdatedAt     plugin.TValue[*time.Time]
-	Role          plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
-	Principal     plugin.TValue[*mqlAzureEntraPrincipal]
+	Id               plugin.TValue[string]
+	Description      plugin.TValue[string]
+	Scope            plugin.TValue[string]
+	PrincipalId      plugin.TValue[string]
+	PrincipalType    plugin.TValue[string]
+	Condition        plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
+	RoleDefinitionId plugin.TValue[string]
+	Role             plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition]
+	Principal        plugin.TValue[*mqlAzureEntraPrincipal]
 }
 
 // createAzureSubscriptionAuthorizationServiceRoleAssignment creates a new instance of this resource
@@ -89481,6 +89938,12 @@ func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetCreatedAt() 
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetRoleDefinitionId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RoleDefinitionId, func() (string, error) {
+		return c.roleDefinitionId()
+	})
 }
 
 func (c *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) GetRole() *plugin.TValue[*mqlAzureSubscriptionAuthorizationServiceRoleDefinition] {

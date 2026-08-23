@@ -5,12 +5,14 @@ package resources
 
 import (
 	"math"
+	"math/big"
 	"net/netip"
 	"sort"
 	"strconv"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
 )
 
@@ -150,21 +152,56 @@ func publicNetworkAccessEnabled(value string) bool {
 // internet-open: it permits traffic only from Azure-internal service IPs, not
 // from arbitrary public addresses. The span test excludes it on its own, since
 // it admits a single address.
+//
+// IPv6 rules are judged the same way against the 128-bit space. Azure holds
+// them in a rule list of their own, so a server can be tightly scoped on IPv4
+// and still admit :: -> ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff, the whole IPv6
+// internet. A rule whose two endpoints are from different families admits
+// nothing coherent and is not treated as open.
 func firewallRuleAllowsAnyInternet(startIp, endIp string) bool {
 	start, err := netip.ParseAddr(strings.TrimSpace(startIp))
-	if err != nil || !start.Is4() {
+	if err != nil {
 		return false
 	}
 	end, err := netip.ParseAddr(strings.TrimSpace(endIp))
-	if err != nil || !end.Is4() {
+	if err != nil {
 		return false
 	}
-	lo, hi := ipv4ToUint(start), ipv4ToUint(end)
-	if hi < lo {
-		return false
+
+	switch {
+	case start.Is4() && end.Is4():
+		lo, hi := ipv4ToUint(start), ipv4ToUint(end)
+		if hi < lo {
+			return false
+		}
+		const halfOfIPv4 = uint64(1) << 31
+		return uint64(hi)-uint64(lo)+1 >= halfOfIPv4
+
+	case start.Is6() && !start.Is4In6() && end.Is6() && !end.Is4In6():
+		lo := ipv6ToBigInt(start)
+		hi := ipv6ToBigInt(end)
+		if hi.Cmp(lo) < 0 {
+			return false
+		}
+		// span = hi - lo + 1, compared against half of the 128-bit space.
+		span := new(big.Int).Sub(hi, lo)
+		span.Add(span, big.NewInt(1))
+		return span.Cmp(halfOfIPv6) >= 0
 	}
-	const halfOfIPv4 = uint64(1) << 31
-	return uint64(hi)-uint64(lo)+1 >= halfOfIPv4
+
+	return false
+}
+
+// halfOfIPv6 is 2^127, the threshold a rule has to span before it counts as
+// admitting the IPv6 internet. Mirrors the IPv4 half-space test.
+var halfOfIPv6 = new(big.Int).Lsh(big.NewInt(1), 127)
+
+// ipv6ToBigInt renders a 128-bit address as an unsigned big integer so two
+// addresses can be subtracted. uint64 pairs would need carry handling for a
+// span that crosses the halfway point, which is exactly the case being tested.
+func ipv6ToBigInt(addr netip.Addr) *big.Int {
+	b := addr.As16()
+	return new(big.Int).SetBytes(b[:])
 }
 
 // databaseInternetReachable combines the publicNetworkAccess gate with the
@@ -607,6 +644,18 @@ func sqlFirewallRanges(rules []any) [][2]string {
 	return out
 }
 
+// internetReachable judges an Azure SQL server against both of its firewall
+// rule lists.
+//
+// Reading only firewallRules answered for IPv4 alone, so a server whose only
+// wide-open rule was an IPv6 one -- :: through
+// ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff, the entire IPv6 internet --
+// reported false while it was reachable by anyone.
+//
+// When the IPv6 list cannot be read (see ipv6FirewallRules) and IPv4 alone does
+// not already prove the server open, the answer is not known: this reports null
+// rather than false, since false would be the same false negative in a
+// different disguise.
 func (a *mqlAzureSubscriptionSqlServiceServer) internetReachable() (bool, error) {
 	pna := a.GetPublicNetworkAccess()
 	if pna.Error != nil {
@@ -616,7 +665,34 @@ func (a *mqlAzureSubscriptionSqlServiceServer) internetReachable() (bool, error)
 	if rules.Error != nil {
 		return false, rules.Error
 	}
-	return databaseInternetReachable(pna.Data, sqlFirewallRanges(rules.Data)), nil
+	ipv6Rules := a.GetIpv6FirewallRules()
+	if ipv6Rules.Error != nil {
+		return false, ipv6Rules.Error
+	}
+
+	ranges := sqlFirewallRanges(rules.Data)
+	ranges = append(ranges, sqlIPv6FirewallRanges(ipv6Rules.Data)...)
+	reachable := databaseInternetReachable(pna.Data, ranges)
+
+	if !reachable && ipv6Rules.IsNull() && publicNetworkAccessEnabled(pna.Data) {
+		a.InternetReachable.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return reachable, nil
+}
+
+// sqlIPv6FirewallRanges collects (startIp, endIp) pairs from a list of MQL SQL
+// IPv6 firewall-rule resources, ignoring rules whose accessor lookups error.
+func sqlIPv6FirewallRanges(rules []any) [][2]string {
+	out := make([][2]string, 0, len(rules))
+	for _, r := range rules {
+		fr, ok := r.(*mqlAzureSubscriptionSqlServiceServerIpv6FirewallRule)
+		if !ok {
+			continue
+		}
+		out = append(out, [2]string{fr.GetStartIpAddress().Data, fr.GetEndIpAddress().Data})
+	}
+	return out
 }
 
 func (a *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) internetReachable() (bool, error) {

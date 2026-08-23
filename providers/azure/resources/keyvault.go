@@ -882,6 +882,19 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) accessPolicies() ([]any, erro
 	return res, nil
 }
 
+// roleAssignments returns the effective Microsoft Entra role assignments at the
+// vault scope.
+//
+// This is the half of Key Vault authorization that accessPolicies cannot see. A
+// vault with rbacAuthorizationEnabled set stores no access policies at all, so
+// accessPolicies comes back empty on Microsoft's recommended access model and
+// on its own reads as "no principal can reach the secrets". The grants are role
+// assignments instead (Key Vault Secrets User, Key Vault Administrator, and the
+// rest), and they are what this reports.
+func (a *mqlAzureSubscriptionKeyVaultServiceVault) roleAssignments() ([]any, error) {
+	return roleAssignmentsForScope(a.MqlRuntime, a.Id.Data, "key vault")
+}
+
 func (a *mqlAzureSubscriptionKeyVaultServiceVault) networkAcls() (*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls, error) {
 	vault, err := a.fetchVault()
 	if err != nil {
@@ -2087,6 +2100,14 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 	}
 
 	return res, nil
+}
+
+// roleAssignments returns the effective Microsoft Entra role assignments at the
+// Managed HSM pool scope. These govern the management plane only. Data-plane
+// key access runs on Managed HSM local RBAC, which lives inside the HSM rather
+// than in Azure Resource Manager and is not listable here.
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) roleAssignments() ([]any, error) {
+	return roleAssignmentsForScope(a.MqlRuntime, a.Id.Data, "managed hsm")
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnections() ([]any, error) {

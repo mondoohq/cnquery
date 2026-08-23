@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	authorization "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -301,7 +302,7 @@ func (a *mqlAzureSubscriptionAuthorizationService) roleAssignments() ([]any, err
 }
 
 type mqlAzureSubscriptionAuthorizationServiceRoleAssignmentInternal struct {
-	roleDefinitionId string
+	cacheRoleDefinitionId string
 }
 
 func newMqlRoleAssignment(runtime *plugin.Runtime, roleAssignment *authorization.RoleAssignment) (*mqlAzureSubscriptionAuthorizationServiceRoleAssignment, error) {
@@ -330,9 +331,72 @@ func newMqlRoleAssignment(runtime *plugin.Runtime, roleAssignment *authorization
 
 	mqlRoleDefinition := r.(*mqlAzureSubscriptionAuthorizationServiceRoleAssignment)
 	if roleAssignment.Properties.RoleDefinitionID != nil {
-		mqlRoleDefinition.roleDefinitionId = *roleAssignment.Properties.RoleDefinitionID
+		mqlRoleDefinition.cacheRoleDefinitionId = *roleAssignment.Properties.RoleDefinitionID
 	}
 	return mqlRoleDefinition, nil
+}
+
+// roleAssignmentsForScope lists the effective role assignments at an ARM scope.
+// NewListForScopePager with no filter returns assignments made at the scope
+// itself plus everything inherited from the resource group, subscription, and
+// management-group ancestors, so the result is effective RBAC access to the
+// resource rather than just what was assigned directly on it.
+//
+// Reading role assignments needs Microsoft.Authorization/roleAssignments/read,
+// which a credential scoped only to the resource's own data plane may not hold.
+// A 403 degrades to the assignments resolved so far rather than failing the
+// whole query.
+func roleAssignmentsForScope(runtime *plugin.Runtime, scope string, what string) ([]any, error) {
+	conn, ok := runtime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+
+	resourceID, err := ParseResourceID(scope)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := authorization.NewRoleAssignmentsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	pager := client.NewListForScopePager(scope, &authorization.RoleAssignmentsClientListForScopeOptions{})
+	res := []any{}
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusForbidden {
+				log.Warn().Err(err).Msgf("could not list %s role assignments due to access denied", what)
+				return res, nil
+			}
+			return nil, err
+		}
+		for _, roleAssignment := range page.Value {
+			if roleAssignment == nil {
+				continue
+			}
+			mqlRoleAssignment, err := newMqlRoleAssignment(runtime, roleAssignment)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlRoleAssignment)
+		}
+	}
+	return res, nil
+}
+
+// roleDefinitionId reports the ARM resource ID of the granted role. It is kept
+// separate from role(), which resolves the definition itself and reports null
+// for a role defined outside the subscription's listing: the raw ID is always
+// known from the assignment, so an audit can still see which role was granted.
+func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) roleDefinitionId() (string, error) {
+	return a.cacheRoleDefinitionId, nil
 }
 
 func extractSubscriptionID(roleDefinitionID string) (string, error) {
@@ -348,7 +412,7 @@ func extractSubscriptionID(roleDefinitionID string) (string, error) {
 }
 
 func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzureSubscriptionAuthorizationServiceRoleDefinition, error) {
-	if a.roleDefinitionId == "" {
+	if a.cacheRoleDefinitionId == "" {
 		a.Role.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
@@ -387,7 +451,7 @@ func (a *mqlAzureSubscriptionAuthorizationServiceRoleAssignment) role() (*mqlAzu
 			continue
 		}
 		// ARM resource IDs are case-insensitive.
-		if strings.EqualFold(role.__id, a.roleDefinitionId) {
+		if strings.EqualFold(role.__id, a.cacheRoleDefinitionId) {
 			return role, nil
 		}
 	}

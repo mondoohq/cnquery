@@ -520,6 +520,10 @@ func (a *mqlAzureSubscriptionWebServiceAppsiteauthsettings) id() (string, error)
 	return a.Id.Data, nil
 }
 
+func (a *mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2) id() (string, error) {
+	return a.Id.Data, nil
+}
+
 func (a *mqlAzureSubscriptionWebServiceAppsiteconfig) id() (string, error) {
 	return a.Id.Data, nil
 }
@@ -1019,6 +1023,140 @@ func (a *mqlAzureSubscriptionWebServiceAppsite) authenticationSettings() (*mqlAz
 	}
 
 	return res.(*mqlAzureSubscriptionWebServiceAppsiteauthsettings), nil
+}
+
+// authSettingsV2Args maps a V2 auth settings response onto the MQL resource
+// arguments, flattening the nested configuration groups that carry the
+// security-relevant answers.
+//
+// Every level of the V2 shape is a nullable pointer, and an absent group is
+// indistinguishable at the wire from one whose values are off, so each read is
+// guarded and an absent group leaves its fields at the safe reading: not
+// required, not enabled, nothing allowed.
+//
+// The booleans are deliberately reported as false rather than null when the
+// group carrying them is absent. Null is not a neutral answer in MQL: `null &&
+// null` evaluates to true, so a policy asserting `requireAuthentication &&
+// requireHttps` would PASS on an app whose auth configuration was never
+// written. False is also the safe direction on its own terms -- it can
+// overstate a weakness, never a protection.
+func authSettingsV2Args(settings web.SiteAuthSettingsV2, properties any) map[string]*llx.RawData {
+	var (
+		enabled                     *bool
+		runtimeVersion              *string
+		requireAuthentication       *bool
+		unauthenticatedClientAction *string
+		redirectToProvider          *string
+		requireHTTPS                *bool
+		tokenStoreEnabled           *bool
+		aadEnabled                  *bool
+		excludedPaths               []any
+		allowedApplications         []any
+		allowedAudiences            []any
+	)
+
+	if props := settings.Properties; props != nil {
+		if platform := props.Platform; platform != nil {
+			enabled = platform.Enabled
+			runtimeVersion = platform.RuntimeVersion
+		}
+		if gv := props.GlobalValidation; gv != nil {
+			requireAuthentication = gv.RequireAuthentication
+			unauthenticatedClientAction = (*string)(gv.UnauthenticatedClientAction)
+			redirectToProvider = gv.RedirectToProvider
+			excludedPaths = strPtrSliceToAny(gv.ExcludedPaths)
+		}
+		if http := props.HTTPSettings; http != nil {
+			requireHTTPS = http.RequireHTTPS
+		}
+		if login := props.Login; login != nil && login.TokenStore != nil {
+			tokenStoreEnabled = login.TokenStore.Enabled
+		}
+		if idp := props.IdentityProviders; idp != nil && idp.AzureActiveDirectory != nil {
+			aad := idp.AzureActiveDirectory
+			aadEnabled = aad.Enabled
+			if v := aad.Validation; v != nil {
+				allowedAudiences = strPtrSliceToAny(v.AllowedAudiences)
+				if p := v.DefaultAuthorizationPolicy; p != nil {
+					allowedApplications = strPtrSliceToAny(p.AllowedApplications)
+				}
+			}
+		}
+	}
+
+	return map[string]*llx.RawData{
+		"__id":                        llx.StringDataPtr(settings.ID),
+		"id":                          llx.StringDataPtr(settings.ID),
+		"name":                        llx.StringDataPtr(settings.Name),
+		"kind":                        llx.StringDataPtr(settings.Kind),
+		"type":                        llx.StringDataPtr(settings.Type),
+		"properties":                  llx.DictData(properties),
+		"enabled":                     llx.BoolData(convert.ToValue(enabled)),
+		"runtimeVersion":              llx.StringData(convert.ToValue(runtimeVersion)),
+		"requireAuthentication":       llx.BoolData(convert.ToValue(requireAuthentication)),
+		"unauthenticatedClientAction": llx.StringData(convert.ToValue(unauthenticatedClientAction)),
+		"excludedPaths":               llx.ArrayData(excludedPaths, types.String),
+		"redirectToProvider":          llx.StringData(convert.ToValue(redirectToProvider)),
+		"requireHttps":                llx.BoolData(convert.ToValue(requireHTTPS)),
+		"tokenStoreEnabled":           llx.BoolData(convert.ToValue(tokenStoreEnabled)),
+		"azureActiveDirectoryEnabled": llx.BoolData(convert.ToValue(aadEnabled)),
+		"allowedApplications":         llx.ArrayData(allowedApplications, types.String),
+		"allowedAudiences":            llx.ArrayData(allowedAudiences, types.String),
+	}
+}
+
+// authSettingsV2 reads App Service Authentication in its V2 form.
+//
+// authenticationSettings reads the V1 endpoint, and the two configurations are
+// stored separately: an app set up with Easy Auth V2 -- which is what the Azure
+// portal writes today -- reports V1 enabled false. So an authenticated app was
+// reported as unauthenticated, and was indistinguishable from an app with no
+// authentication configured at all.
+//
+// A credential that cannot read the configuration (403) or an app with no V2
+// configuration (404) yields null rather than failing the query.
+func (a *mqlAzureSubscriptionWebServiceAppsite) authSettingsV2() (*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	ctx := context.Background()
+
+	resourceID, err := ParseResourceID(a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	site, err := resourceID.Component("sites")
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := web.NewWebAppsClient(resourceID.SubscriptionID, conn.Token(), &arm.ClientOptions{
+		ClientOptions: conn.ClientOptions(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	settings, err := client.GetAuthSettingsV2(ctx, resourceID.ResourceGroup, site, &web.WebAppsClientGetAuthSettingsV2Options{})
+	if err != nil {
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusForbidden || respErr.StatusCode == http.StatusNotFound) {
+			log.Warn().Err(err).Str("site", a.Id.Data).Msg("could not read app service auth settings v2")
+			a.AuthSettingsV2.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	properties, err := convert.JsonToDict(settings.Properties)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.webService.appsiteauthsettingsv2",
+		authSettingsV2Args(settings.SiteAuthSettingsV2, properties))
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionWebServiceAppsiteauthsettingsv2), nil
 }
 
 func (a *mqlAzureSubscriptionWebServiceAppsite) metadata() (any, error) {
