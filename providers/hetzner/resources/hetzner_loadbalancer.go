@@ -52,17 +52,22 @@ func newMqlHetznerLoadBalancer(runtime *plugin.Runtime, lb *hcloud.LoadBalancer)
 	}
 
 	res, err := CreateResource(runtime, "hetzner.loadBalancer", map[string]*llx.RawData{
-		"__id":            llx.StringData(fmt.Sprintf("hetzner.loadBalancer/%d", lb.ID)),
-		"id":              llx.IntData(lb.ID),
-		"name":            llx.StringData(lb.Name),
-		"publicNet":       llx.DictData(publicNet),
-		"algorithm":       llx.StringData(string(lb.Algorithm.Type)),
-		"protection":      llx.DictData(protectionDict(lb.Protection.Delete)),
-		"labels":          labelData(lb.Labels),
-		"created":         llx.TimeDataPtr(timePtr(lb.Created)),
-		"includedTraffic": llx.IntData(int64(lb.IncludedTraffic)),
-		"outgoingTraffic": llx.IntData(int64(lb.OutgoingTraffic)),
-		"ingoingTraffic":  llx.IntData(int64(lb.IngoingTraffic)),
+		"__id":      llx.StringData(fmt.Sprintf("hetzner.loadBalancer/%d", lb.ID)),
+		"id":        llx.IntData(lb.ID),
+		"name":      llx.StringData(lb.Name),
+		"publicNet": llx.DictData(publicNet),
+		// Hetzner returns one PTR per public address on a load balancer, not
+		// the per-address map a server's IPv6 /64 carries, so both are plain
+		// strings here.
+		"publicIpv4DnsPtr": llx.StringData(lb.PublicNet.IPv4.DNSPtr),
+		"publicIpv6DnsPtr": llx.StringData(lb.PublicNet.IPv6.DNSPtr),
+		"algorithm":        llx.StringData(string(lb.Algorithm.Type)),
+		"protection":       llx.DictData(protectionDict(lb.Protection.Delete)),
+		"labels":           labelData(lb.Labels),
+		"created":          llx.TimeDataPtr(timePtr(lb.Created)),
+		"includedTraffic":  llx.IntData(int64(lb.IncludedTraffic)),
+		"outgoingTraffic":  llx.IntData(int64(lb.OutgoingTraffic)),
+		"ingoingTraffic":   llx.IntData(int64(lb.IngoingTraffic)),
 	})
 	if err != nil {
 		return nil, err
@@ -453,4 +458,81 @@ func (m *mqlHetznerLoadBalancer) servers() ([]any, error) {
 		}
 	}
 	return serverRefs(m.MqlRuntime, ids)
+}
+
+// loadBalancerCertificateIDs returns the deduplicated certificate IDs the load
+// balancer's services terminate TLS with, in first-seen order.
+//
+// Only HTTPS services carry certificates, so a plain TCP or HTTP listener
+// contributes nothing. One certificate attached to several listeners is
+// reported once.
+func loadBalancerCertificateIDs(services []hcloud.LoadBalancerService) []int64 {
+	var ids []int64
+	seen := map[int64]struct{}{}
+	for _, s := range services {
+		for _, c := range s.HTTP.Certificates {
+			if c == nil || c.ID == 0 {
+				continue
+			}
+			if _, ok := seen[c.ID]; ok {
+				continue
+			}
+			seen[c.ID] = struct{}{}
+			ids = append(ids, c.ID)
+		}
+	}
+	return ids
+}
+
+// certificates returns the certificates the load balancer as a whole serves,
+// the reverse of certificate.loadBalancers.
+//
+// The IDs are resolved against the once-cached project certificate list, so a
+// project-wide sweep costs a single Certificate.List no matter how many load
+// balancers and listeners share a certificate. A certificate missing from that
+// list falls back to a by-id lookup rather than being dropped, which would
+// under-report what the load balancer serves.
+func (m *mqlHetznerLoadBalancer) certificates() ([]any, error) {
+	ids := loadBalancerCertificateIDs(m.cacheServices)
+	if len(ids) == 0 {
+		return []any{}, nil
+	}
+	h, err := hetznerNamespace(m.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+	certs, err := h.allCertificates()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]any, 0, len(ids))
+	for _, id := range ids {
+		if cert := certificateByID(certs, id); cert != nil {
+			res, err := newMqlHetznerCertificate(m.MqlRuntime, cert)
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, res)
+			continue
+		}
+		ref, err := NewResource(m.MqlRuntime, "hetzner.certificate", map[string]*llx.RawData{
+			"id": llx.IntData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, ref)
+	}
+	return out, nil
+}
+
+// certificateByID picks a certificate out of the project list, or nil when the
+// list does not hold it.
+func certificateByID(certs []*hcloud.Certificate, id int64) *hcloud.Certificate {
+	for _, c := range certs {
+		if c != nil && c.ID == id {
+			return c
+		}
+	}
+	return nil
 }

@@ -80,11 +80,22 @@ func (r *mqlHetznerCertificate) id() (string, error) {
 	return fmt.Sprintf("hetzner.certificate/%d", r.Id.Data), nil
 }
 
-func (h *mqlHetzner) certificates() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.Certificate, *hcloud.Response, error) {
-		return c.Client().Certificate.List(ctx(), hcloud.CertificateListOpts{ListOpts: opts})
+// allCertificates lists every project certificate exactly once and caches the
+// raw result on the hetzner namespace resource, mirroring allServers. Both the
+// certificates() field and the load balancer certificate union resolve through
+// here, so a project-wide sweep costs a single Certificate.List.
+func (h *mqlHetzner) allCertificates() ([]*hcloud.Certificate, error) {
+	h.certificatesOnce.Do(func() {
+		c := conn(h.MqlRuntime)
+		h.certificatesList, h.certificatesErr = paginate(func(opts hcloud.ListOpts) ([]*hcloud.Certificate, *hcloud.Response, error) {
+			return c.Client().Certificate.List(ctx(), hcloud.CertificateListOpts{ListOpts: opts})
+		})
 	})
+	return h.certificatesList, h.certificatesErr
+}
+
+func (h *mqlHetzner) certificates() ([]any, error) {
+	items, err := h.allCertificates()
 	if err != nil {
 		return nil, err
 	}

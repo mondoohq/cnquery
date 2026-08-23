@@ -795,6 +795,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.loadBalancer.publicNet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetPublicNet()).ToDataRes(types.Dict)
 	},
+	"hetzner.loadBalancer.publicIpv4DnsPtr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancer).GetPublicIpv4DnsPtr()).ToDataRes(types.String)
+	},
+	"hetzner.loadBalancer.publicIpv6DnsPtr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancer).GetPublicIpv6DnsPtr()).ToDataRes(types.String)
+	},
 	"hetzner.loadBalancer.privateNet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetPrivateNet()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer.privateNet")))
 	},
@@ -809,6 +815,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.loadBalancer.services": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetServices()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer.service")))
+	},
+	"hetzner.loadBalancer.certificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLoadBalancer).GetCertificates()).ToDataRes(types.Array(types.Resource("hetzner.certificate")))
 	},
 	"hetzner.loadBalancer.targets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLoadBalancer).GetTargets()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer.target")))
@@ -2154,6 +2163,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerLoadBalancer).PublicNet, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"hetzner.loadBalancer.publicIpv4DnsPtr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancer).PublicIpv4DnsPtr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancer.publicIpv6DnsPtr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancer).PublicIpv6DnsPtr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"hetzner.loadBalancer.privateNet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLoadBalancer).PrivateNet, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2172,6 +2189,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.loadBalancer.services": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLoadBalancer).Services, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.loadBalancer.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLoadBalancer).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"hetzner.loadBalancer.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5265,11 +5286,14 @@ type mqlHetznerLoadBalancer struct {
 	Id               plugin.TValue[int64]
 	Name             plugin.TValue[string]
 	PublicNet        plugin.TValue[any]
+	PublicIpv4DnsPtr plugin.TValue[string]
+	PublicIpv6DnsPtr plugin.TValue[string]
 	PrivateNet       plugin.TValue[[]any]
 	Location         plugin.TValue[*mqlHetznerLocation]
 	LoadBalancerType plugin.TValue[*mqlHetznerLoadBalancerType]
 	Algorithm        plugin.TValue[string]
 	Services         plugin.TValue[[]any]
+	Certificates     plugin.TValue[[]any]
 	Targets          plugin.TValue[[]any]
 	Servers          plugin.TValue[[]any]
 	Exposure         plugin.TValue[*mqlHetznerNetworkExposure]
@@ -5329,6 +5353,14 @@ func (c *mqlHetznerLoadBalancer) GetName() *plugin.TValue[string] {
 
 func (c *mqlHetznerLoadBalancer) GetPublicNet() *plugin.TValue[any] {
 	return &c.PublicNet
+}
+
+func (c *mqlHetznerLoadBalancer) GetPublicIpv4DnsPtr() *plugin.TValue[string] {
+	return &c.PublicIpv4DnsPtr
+}
+
+func (c *mqlHetznerLoadBalancer) GetPublicIpv6DnsPtr() *plugin.TValue[string] {
+	return &c.PublicIpv6DnsPtr
 }
 
 func (c *mqlHetznerLoadBalancer) GetPrivateNet() *plugin.TValue[[]any] {
@@ -5396,6 +5428,22 @@ func (c *mqlHetznerLoadBalancer) GetServices() *plugin.TValue[[]any] {
 		}
 
 		return c.services()
+	})
+}
+
+func (c *mqlHetznerLoadBalancer) GetCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Certificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.loadBalancer", c.__id, "certificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.certificates()
 	})
 }
 

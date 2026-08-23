@@ -104,6 +104,7 @@ hetzner.isos 13.0.1
 hetzner.loadBalancer 13.0.1
 hetzner.loadBalancer.actions 13.7.8
 hetzner.loadBalancer.algorithm 13.0.1
+hetzner.loadBalancer.certificates 13.7.8
 hetzner.loadBalancer.created 13.0.1
 hetzner.loadBalancer.exposure 13.3.1
 hetzner.loadBalancer.id 13.0.1
@@ -119,6 +120,8 @@ hetzner.loadBalancer.privateNet.ip 13.0.1
 hetzner.loadBalancer.privateNet.loadBalancer 13.7.6
 hetzner.loadBalancer.privateNet.network 13.0.1
 hetzner.loadBalancer.protection 13.0.1
+hetzner.loadBalancer.publicIpv4DnsPtr 13.7.8
+hetzner.loadBalancer.publicIpv6DnsPtr 13.7.8
 hetzner.loadBalancer.publicNet 13.0.1
 hetzner.loadBalancer.servers 13.5.2
 hetzner.loadBalancer.service 13.0.1

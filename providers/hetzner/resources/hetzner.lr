@@ -637,6 +637,10 @@ hetzner.loadBalancer @defaults("id name") {
   // enabled is false the load balancer is reachable only over attached
   // private networks.
   publicNet dict
+  // Reverse DNS (PTR) record for the public IPv4 address; empty when unset or the load balancer has no public interface
+  publicIpv4DnsPtr string
+  // Reverse DNS (PTR) record for the public IPv6 address; empty when unset or the load balancer has no public interface
+  publicIpv6DnsPtr string
   // Private network attachments
   privateNet() []hetzner.loadBalancer.privateNet
   // Location
@@ -647,6 +651,13 @@ hetzner.loadBalancer @defaults("id name") {
   algorithm string
   // Forwarding services
   services() []hetzner.loadBalancer.service
+  // TLS certificates the load balancer terminates with
+  //
+  // The deduplicated union of the certificates attached to every forwarding
+  // service, which is the whole set the load balancer serves. Where services
+  // carries them per listener, this is the set to check for expiry,
+  // self-signed bodies, and weak keys in a single pass.
+  certificates() []hetzner.certificate
   // Targets behind the load balancer
   targets() []hetzner.loadBalancer.target
   // Backend servers behind the load balancer
