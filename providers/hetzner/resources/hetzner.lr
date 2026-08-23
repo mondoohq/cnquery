@@ -973,6 +973,12 @@ private hetzner.iso @defaults("id name type") {
   deprecation dict
   // Architecture (x86, arm)
   architecture string
+  // Servers with this ISO attached
+  //
+  // The project servers currently booting from this image. A server with an
+  // ISO attached can boot outside its installed operating system, which
+  // bypasses every control that lives on the disk.
+  servers() []hetzner.server
 }
 
 // Hetzner Cloud location
@@ -984,7 +990,9 @@ private hetzner.iso @defaults("id name type") {
 // `city`, `country`, and geographic coordinates, the `networkZone` groups
 // locations that can share private networks (eu-central, us-east, us-west),
 // which matters when planning cross-region connectivity and data residency.
-// The `servers` field lists the server instances running in this location.
+// The servers, volumes, loadBalancers, primaryIps, floatingIps and
+// storageBoxes fields list what the project actually holds here, which is what
+// a residency assertion has to cover.
 private hetzner.location @defaults("id name city") {
   init(id? int)
   // Location ID
@@ -1005,6 +1013,20 @@ private hetzner.location @defaults("id name city") {
   networkZone string
   // Servers running in this location
   servers() []hetzner.server
+  // Block storage volumes in this location
+  volumes() []hetzner.volume
+  // Load balancers in this location
+  loadBalancers() []hetzner.loadBalancer
+  // Primary IPs in this location
+  primaryIps() []hetzner.primaryIp
+  // Floating IPs homed in this location
+  //
+  // The addresses whose home location is this one. A floating IP can be
+  // routed to a server elsewhere, so the home location is where the address
+  // itself lives rather than where its traffic currently lands.
+  floatingIps() []hetzner.floatingIp
+  // Storage Boxes in this location
+  storageBoxes() []hetzner.storageBox
 }
 
 // Hetzner Cloud datacenter

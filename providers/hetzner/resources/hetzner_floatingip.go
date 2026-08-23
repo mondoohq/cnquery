@@ -21,10 +21,7 @@ func (r *mqlHetznerFloatingIp) id() (string, error) {
 }
 
 func (h *mqlHetzner) floatingIps() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.FloatingIP, *hcloud.Response, error) {
-		return c.Client().FloatingIP.List(ctx(), hcloud.FloatingIPListOpts{ListOpts: opts})
-	})
+	items, err := h.allFloatingIPs()
 	if err != nil {
 		return nil, err
 	}

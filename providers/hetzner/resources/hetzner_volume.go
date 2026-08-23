@@ -20,11 +20,21 @@ func (r *mqlHetznerVolume) id() (string, error) {
 	return fmt.Sprintf("hetzner.volume/%d", r.Id.Data), nil
 }
 
-func (h *mqlHetzner) volumes() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.Volume, *hcloud.Response, error) {
-		return c.Client().Volume.List(ctx(), hcloud.VolumeListOpts{ListOpts: opts})
+// allVolumes lists every project volume exactly once and caches the raw result
+// on the hetzner namespace resource, mirroring allServers. The volumes() field
+// and the location rollup both resolve through here.
+func (h *mqlHetzner) allVolumes() ([]*hcloud.Volume, error) {
+	h.volumesOnce.Do(func() {
+		c := conn(h.MqlRuntime)
+		h.volumesList, h.volumesErr = paginate(func(opts hcloud.ListOpts) ([]*hcloud.Volume, *hcloud.Response, error) {
+			return c.Client().Volume.List(ctx(), hcloud.VolumeListOpts{ListOpts: opts})
+		})
 	})
+	return h.volumesList, h.volumesErr
+}
+
+func (h *mqlHetzner) volumes() ([]any, error) {
+	items, err := h.allVolumes()
 	if err != nil {
 		return nil, err
 	}

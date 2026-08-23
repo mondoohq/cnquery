@@ -26,10 +26,7 @@ func (r *mqlHetznerLoadBalancer) id() (string, error) {
 }
 
 func (h *mqlHetzner) loadBalancers() ([]any, error) {
-	c := conn(h.MqlRuntime)
-	items, err := paginate(func(opts hcloud.ListOpts) ([]*hcloud.LoadBalancer, *hcloud.Response, error) {
-		return c.Client().LoadBalancer.List(ctx(), hcloud.LoadBalancerListOpts{ListOpts: opts})
-	})
+	items, err := h.allLoadBalancers()
 	if err != nil {
 		return nil, err
 	}

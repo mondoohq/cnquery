@@ -70,3 +70,19 @@ func initHetznerIso(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 	res, err := newMqlHetznerIso(runtime, iso)
 	return args, res, err
 }
+
+// serverHasISO reports whether the server currently boots from the given ISO.
+//
+// A server with an ISO attached can boot outside its installed operating
+// system, which bypasses every control that lives on the disk, so this is the
+// reverse of the server.iso edge rather than a convenience.
+func serverHasISO(s *hcloud.Server, isoID int64) bool {
+	return s != nil && s.ISO != nil && s.ISO.ID == isoID
+}
+
+func (m *mqlHetznerIso) servers() ([]any, error) {
+	isoID := m.Id.Data
+	return serversMatching(m.MqlRuntime, func(s *hcloud.Server) bool {
+		return serverHasISO(s, isoID)
+	})
+}

@@ -1062,6 +1062,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.iso.architecture": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerIso).GetArchitecture()).ToDataRes(types.String)
 	},
+	"hetzner.iso.servers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerIso).GetServers()).ToDataRes(types.Array(types.Resource("hetzner.server")))
+	},
 	"hetzner.location.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLocation).GetId()).ToDataRes(types.Int)
 	},
@@ -1088,6 +1091,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"hetzner.location.servers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerLocation).GetServers()).ToDataRes(types.Array(types.Resource("hetzner.server")))
+	},
+	"hetzner.location.volumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLocation).GetVolumes()).ToDataRes(types.Array(types.Resource("hetzner.volume")))
+	},
+	"hetzner.location.loadBalancers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLocation).GetLoadBalancers()).ToDataRes(types.Array(types.Resource("hetzner.loadBalancer")))
+	},
+	"hetzner.location.primaryIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLocation).GetPrimaryIps()).ToDataRes(types.Array(types.Resource("hetzner.primaryIp")))
+	},
+	"hetzner.location.floatingIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLocation).GetFloatingIps()).ToDataRes(types.Array(types.Resource("hetzner.floatingIp")))
+	},
+	"hetzner.location.storageBoxes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerLocation).GetStorageBoxes()).ToDataRes(types.Array(types.Resource("hetzner.storageBox")))
 	},
 	"hetzner.datacenter.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerDatacenter).GetId()).ToDataRes(types.Int)
@@ -2551,6 +2569,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlHetznerIso).Architecture, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"hetzner.iso.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerIso).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"hetzner.location.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLocation).__id, ok = v.Value.(string)
 		return
@@ -2589,6 +2611,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.location.servers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerLocation).Servers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.location.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLocation).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.location.loadBalancers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLocation).LoadBalancers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.location.primaryIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLocation).PrimaryIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.location.floatingIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLocation).FloatingIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.location.storageBoxes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerLocation).StorageBoxes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"hetzner.datacenter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6349,6 +6391,7 @@ type mqlHetznerIso struct {
 	Type         plugin.TValue[string]
 	Deprecation  plugin.TValue[any]
 	Architecture plugin.TValue[string]
+	Servers      plugin.TValue[[]any]
 }
 
 // createHetznerIso creates a new instance of this resource
@@ -6412,20 +6455,41 @@ func (c *mqlHetznerIso) GetArchitecture() *plugin.TValue[string] {
 	return &c.Architecture
 }
 
+func (c *mqlHetznerIso) GetServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Servers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.iso", c.__id, "servers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.servers()
+	})
+}
+
 // mqlHetznerLocation for the hetzner.location resource
 type mqlHetznerLocation struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlHetznerLocationInternal it will be used here
-	Id          plugin.TValue[int64]
-	Name        plugin.TValue[string]
-	Description plugin.TValue[string]
-	Country     plugin.TValue[string]
-	City        plugin.TValue[string]
-	Latitude    plugin.TValue[float64]
-	Longitude   plugin.TValue[float64]
-	NetworkZone plugin.TValue[string]
-	Servers     plugin.TValue[[]any]
+	Id            plugin.TValue[int64]
+	Name          plugin.TValue[string]
+	Description   plugin.TValue[string]
+	Country       plugin.TValue[string]
+	City          plugin.TValue[string]
+	Latitude      plugin.TValue[float64]
+	Longitude     plugin.TValue[float64]
+	NetworkZone   plugin.TValue[string]
+	Servers       plugin.TValue[[]any]
+	Volumes       plugin.TValue[[]any]
+	LoadBalancers plugin.TValue[[]any]
+	PrimaryIps    plugin.TValue[[]any]
+	FloatingIps   plugin.TValue[[]any]
+	StorageBoxes  plugin.TValue[[]any]
 }
 
 // createHetznerLocation creates a new instance of this resource
@@ -6510,6 +6574,86 @@ func (c *mqlHetznerLocation) GetServers() *plugin.TValue[[]any] {
 		}
 
 		return c.servers()
+	})
+}
+
+func (c *mqlHetznerLocation) GetVolumes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Volumes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.location", c.__id, "volumes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.volumes()
+	})
+}
+
+func (c *mqlHetznerLocation) GetLoadBalancers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.location", c.__id, "loadBalancers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancers()
+	})
+}
+
+func (c *mqlHetznerLocation) GetPrimaryIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PrimaryIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.location", c.__id, "primaryIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.primaryIps()
+	})
+}
+
+func (c *mqlHetznerLocation) GetFloatingIps() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FloatingIps, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.location", c.__id, "floatingIps")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.floatingIps()
+	})
+}
+
+func (c *mqlHetznerLocation) GetStorageBoxes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StorageBoxes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("hetzner.location", c.__id, "storageBoxes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storageBoxes()
 	})
 }
 

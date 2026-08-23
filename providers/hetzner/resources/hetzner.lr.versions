@@ -99,6 +99,7 @@ hetzner.iso.deprecation 13.0.1
 hetzner.iso.description 13.0.1
 hetzner.iso.id 13.0.1
 hetzner.iso.name 13.0.1
+hetzner.iso.servers 13.7.8
 hetzner.iso.type 13.0.1
 hetzner.isos 13.0.1
 hetzner.loadBalancer 13.0.1
@@ -159,12 +160,17 @@ hetzner.location 13.0.1
 hetzner.location.city 13.0.1
 hetzner.location.country 13.0.1
 hetzner.location.description 13.0.1
+hetzner.location.floatingIps 13.7.8
 hetzner.location.id 13.0.1
 hetzner.location.latitude 13.0.1
+hetzner.location.loadBalancers 13.7.8
 hetzner.location.longitude 13.0.1
 hetzner.location.name 13.0.1
 hetzner.location.networkZone 13.0.1
+hetzner.location.primaryIps 13.7.8
 hetzner.location.servers 13.5.2
+hetzner.location.storageBoxes 13.7.8
+hetzner.location.volumes 13.7.8
 hetzner.locations 13.0.1
 hetzner.network 13.0.1
 hetzner.network.actions 13.7.8
