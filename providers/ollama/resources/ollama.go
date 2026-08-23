@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -45,23 +46,54 @@ func (r *mqlOllama) isLocal() (bool, error) {
 	return ollamaConn(r.MqlRuntime).IsLocal(), nil
 }
 
+// authRequiredStatuses are the answers that mean the request was refused for
+// lack of credentials, whoever refused it: the instance itself, or a proxy in
+// front of it.
+var authRequiredStatuses = []int{
+	http.StatusUnauthorized,
+	http.StatusForbidden,
+	http.StatusProxyAuthRequired,
+}
+
+// readOpenStatuses are the answers that mean an unauthenticated read was
+// served.
+var readOpenStatuses = []int{http.StatusOK}
+
+// writeOpenStatuses are the answers that mean an unauthenticated write reached
+// the instance's own handler and was turned away only because the probe's body
+// is unparseable. Nothing stood between the caller and the write path, so a
+// well-formed request from the same caller would have been carried out.
+var writeOpenStatuses = []int{http.StatusBadRequest, http.StatusUnprocessableEntity}
+
+// classifyAuthProbe turns the status an unauthenticated probe was answered with
+// into whether that access path demands credentials. Anything outside the two
+// known sets (a redirect to a login page, a gateway error, an endpoint the
+// instance does not serve) says nothing reliable, and guessing either way would
+// be worse than reporting that we could not tell.
+func classifyAuthProbe(code int, openStatuses []int, access string) (bool, error) {
+	if slices.Contains(authRequiredStatuses, code) {
+		return true, nil
+	}
+	if slices.Contains(openStatuses, code) {
+		return false, nil
+	}
+	return false, fmt.Errorf("cannot determine whether %s authentication is required: unauthenticated request answered with status %d", access, code)
+}
+
 func (r *mqlOllama) authenticationRequired() (bool, error) {
 	code, err := ollamaConn(r.MqlRuntime).AnonymousStatus(context.Background())
 	if err != nil {
 		return false, err
 	}
+	return classifyAuthProbe(code, readOpenStatuses, "read")
+}
 
-	switch code {
-	case http.StatusOK:
-		return false, nil
-	case http.StatusUnauthorized, http.StatusForbidden, http.StatusProxyAuthRequired:
-		return true, nil
+func (r *mqlOllama) writeAuthenticationRequired() (bool, error) {
+	code, err := ollamaConn(r.MqlRuntime).AnonymousWriteStatus(context.Background())
+	if err != nil {
+		return false, err
 	}
-
-	// Anything else (a redirect to a login page, a gateway error) says nothing
-	// reliable about the instance's own authentication, and guessing either way
-	// would be worse than reporting that we could not tell.
-	return false, fmt.Errorf("cannot determine whether authentication is required: unauthenticated request answered with status %d", code)
+	return classifyAuthProbe(code, writeOpenStatuses, "write")
 }
 
 func (r *mqlOllama) cloudEnabled() (bool, error) {
@@ -148,6 +180,13 @@ func (r *mqlOllama) models() ([]interface{}, error) {
 		mqlModel, err := CreateResource(r.MqlRuntime, "ollama.model", ollamaModelArgs(m))
 		if err != nil {
 			return nil, err
+		}
+		if len(m.Capabilities) > 0 {
+			model := mqlModel.(*mqlOllamaModel)
+			model.listCapabilities = make([]string, len(m.Capabilities))
+			for i, c := range m.Capabilities {
+				model.listCapabilities[i] = string(c)
+			}
 		}
 		res = append(res, mqlModel)
 	}
@@ -286,6 +325,13 @@ type mqlOllamaModelInternal struct {
 	fetched bool
 	show    *api.ShowResponse
 	lock    sync.Mutex
+
+	// listCapabilities holds the capabilities the model listing already
+	// reported, so reading the capabilities field costs nothing extra. Nil when
+	// the listing did not carry them, which is how a server older than the field
+	// answers and how a model reached by cross-reference rather than by listing
+	// arrives; the per-model Show call is then still made.
+	listCapabilities []string
 }
 
 func (r *mqlOllamaModel) fetchShow() (*api.ShowResponse, error) {
@@ -394,6 +440,17 @@ func (r *mqlOllamaModel) template() (string, error) {
 }
 
 func (r *mqlOllamaModel) capabilities() ([]interface{}, error) {
+	// The model listing reports capabilities, so asking every model to describe
+	// itself again would cost one extra request per installed model on a query
+	// that is often the whole point of the scan.
+	if len(r.listCapabilities) > 0 {
+		caps := make([]interface{}, len(r.listCapabilities))
+		for i, c := range r.listCapabilities {
+			caps[i] = c
+		}
+		return caps, nil
+	}
+
 	show, err := r.fetchShow()
 	if err != nil {
 		return nil, err
@@ -403,6 +460,32 @@ func (r *mqlOllamaModel) capabilities() ([]interface{}, error) {
 		caps[i] = string(c)
 	}
 	return caps, nil
+}
+
+// parameters returns the PARAMETER block of the model's Modelfile verbatim, the
+// runtime defaults the server applies to every request for this model.
+func (r *mqlOllamaModel) parameters() (string, error) {
+	show, err := r.fetchShow()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(show.Parameters), nil
+}
+
+func (r *mqlOllamaModel) renderer() (string, error) {
+	show, err := r.fetchShow()
+	if err != nil {
+		return "", err
+	}
+	return show.Renderer, nil
+}
+
+func (r *mqlOllamaModel) parser() (string, error) {
+	show, err := r.fetchShow()
+	if err != nil {
+		return "", err
+	}
+	return show.Parser, nil
 }
 
 func (r *mqlOllamaModel) info() (*mqlOllamaModelInfo, error) {
