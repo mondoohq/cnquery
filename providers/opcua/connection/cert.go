@@ -58,10 +58,13 @@ func ephemeralCertificate() (certDER []byte, key *rsa.PrivateKey, err error) {
 			Organization: []string{"Mondoo"},
 		},
 		// tolerate a small clock skew between client and server
-		NotBefore:             now.Add(-1 * time.Hour),
-		NotAfter:              now.Add(24 * time.Hour),
-		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageDataEncipherment | x509.KeyUsageCertSign,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		NotBefore: now.Add(-1 * time.Hour),
+		NotAfter:  now.Add(24 * time.Hour),
+		// A client certificate signs nothing but its own handshake, so it gets
+		// neither KeyUsageCertSign nor the server EKU. Some servers reject an
+		// over-privileged client certificate outright.
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageDataEncipherment,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		BasicConstraintsValid: true,
 		URIs:                  []*url.URL{uri},
 	}
