@@ -6768,7 +6768,23 @@ azure.subscription.webService.appsite @defaults("id name location") {
   // App site configuration
   configuration() azure.subscription.webService.appsiteconfig
   // App site authentication settings
+  //
+  // The Easy Auth V1 view of App Service Authentication. It reports
+  // enabled false on an app configured with Easy Auth V2, which stores its
+  // configuration separately. Read authSettingsV2 to tell a V2-authenticated
+  // app apart from an app with no authentication at all.
   authenticationSettings() azure.subscription.webService.appsiteauthsettings
+  // App site authentication settings (Easy Auth V2)
+  //
+  // The V2 view of App Service Authentication, the configuration model the
+  // Azure portal writes today. Reports whether the app requires
+  // authentication (requireAuthentication), what happens to an
+  // unauthenticated caller (unauthenticatedClientAction), which
+  // applications the Entra ID authorization policy admits
+  // (allowedApplications), and whether the token store and HTTPS
+  // requirement are on. Null when the app has no V2 configuration or the
+  // credential cannot read it.
+  authSettingsV2() azure.subscription.webService.appsiteauthsettingsv2
   // App site metadata
   metadata() dict
   // App site application settings
@@ -6962,6 +6978,94 @@ private azure.subscription.webService.appsiteauthsettings @defaults("id name") {
   // Anything other than AllowAnonymous means unauthenticated requests are blocked
   // or redirected to a login provider.
   unauthenticatedClientAction string
+}
+
+// Azure AppSite authentication settings (Easy Auth V2)
+//
+// The App Service Authentication configuration in its V2 form, which is
+// what the Azure portal writes today and what an app configured through it
+// actually runs on. It is stored separately from the V1 settings, so a V2
+// app reports enabled false on
+// azure.subscription.webService.appsiteauthsettings and looks
+// indistinguishable from an app with no authentication at all. Query
+// requireAuthentication and unauthenticatedClientAction for whether the app
+// admits anonymous callers, allowedApplications and allowedAudiences for
+// how narrowly the Entra ID authorization policy is scoped, and requireHttps
+// and tokenStoreEnabled for the transport and token handling around the
+// login flow.
+private azure.subscription.webService.appsiteauthsettingsv2 @defaults("id requireAuthentication unauthenticatedClientAction") {
+  // Auth settings resource ID
+  id string
+  // Auth settings resource name
+  name string
+  // Auth settings resource kind
+  kind string
+  // Auth settings resource type
+  type string
+  // Raw V2 auth settings property bag
+  //
+  // The unprocessed configuration from Azure Resource Manager, with keys
+  // including `platform`, `globalValidation`, `httpSettings`,
+  // `identityProviders`, and `login`. Use it to reach identity providers
+  // that have no dedicated field, such as the custom OpenID Connect
+  // providers under `identityProviders.customOpenIdConnectProviders`. Azure
+  // returns the app-setting name that holds each provider's client secret,
+  // never the secret value.
+  properties dict
+  // Whether the Authentication / Authorization feature is enabled for the app
+  //
+  // Corresponds to `platform.enabled`. False on an app that has V2
+  // configuration written but the feature switched off.
+  enabled bool
+  // Runtime version of the Authentication / Authorization module
+  runtimeVersion string
+  // Whether every request must be authenticated
+  //
+  // Corresponds to `globalValidation.requireAuthentication`. False means
+  // requests reach the app without a validated identity, whatever identity
+  // providers are configured. An app that carries no V2 configuration at
+  // all reports false here rather than null, so the absence of a setting
+  // cannot read as a protection.
+  requireAuthentication bool
+  // Action taken when an unauthenticated client requests the app
+  //
+  // Corresponds to `globalValidation.unauthenticatedClientAction`. One of
+  // AllowAnonymous, RedirectToLoginPage, Return401, or Return403. Anything
+  // other than AllowAnonymous blocks or redirects unauthenticated requests.
+  unauthenticatedClientAction string
+  // Paths exempt from the authentication flow
+  //
+  // Corresponds to `globalValidation.excludedPaths`. Requests to these
+  // paths are not redirected to the login page even when authentication is
+  // required, so a broad entry here is a hole in the requirement.
+  excludedPaths []string
+  // Default identity provider used when several are configured
+  redirectToProvider string
+  // Whether authentication and authorization responses must use HTTPS
+  //
+  // Corresponds to `httpSettings.requireHttps`. False permits the login
+  // redirect and its tokens to travel over plain HTTP.
+  requireHttps bool
+  // Whether provider tokens obtained during login are durably stored
+  //
+  // Corresponds to `login.tokenStore.enabled`.
+  tokenStoreEnabled bool
+  // Whether the Microsoft Entra ID identity provider is enabled
+  //
+  // Corresponds to `identityProviders.azureActiveDirectory.enabled`.
+  azureActiveDirectoryEnabled bool
+  // Applications admitted by the Entra ID default authorization policy
+  //
+  // Corresponds to
+  // `identityProviders.azureActiveDirectory.validation.defaultAuthorizationPolicy.allowedApplications`.
+  // Empty means the policy names no application allowlist, so any caller the
+  // configured audiences accept is admitted.
+  allowedApplications []string
+  // Audiences accepted by Entra ID token validation
+  //
+  // Corresponds to
+  // `identityProviders.azureActiveDirectory.validation.allowedAudiences`.
+  allowedAudiences []string
 }
 
 // Azure AppSite config
