@@ -150,6 +150,7 @@ gcp.loggingSettings.storageLocation 13.34.2
 gcp.orgPolicy 11.5.1
 gcp.orgPolicy.allowAll 13.21.2
 gcp.orgPolicy.allowedValues 13.21.2
+gcp.orgPolicy.conditionalRules 13.37.1
 gcp.orgPolicy.constraint 13.6.1
 gcp.orgPolicy.constraint.booleanConstraint 13.6.1
 gcp.orgPolicy.constraint.constraintDefault 13.6.1
@@ -173,6 +174,7 @@ gcp.orgPolicy.dryRunOnly 13.18.1
 gcp.orgPolicy.dryRunSpec 11.5.1
 gcp.orgPolicy.enforced 13.21.2
 gcp.orgPolicy.etag 11.5.1
+gcp.orgPolicy.hasConditionalRules 13.37.1
 gcp.orgPolicy.id 11.5.1
 gcp.orgPolicy.inheritFromParent 13.21.2
 gcp.orgPolicy.name 11.5.1
@@ -3203,10 +3205,12 @@ gcp.project.documentaiService.projectId 13.31.3
 gcp.project.effectiveOrgPolicy 13.34.2
 gcp.project.effectiveOrgPolicy.allowAll 13.34.2
 gcp.project.effectiveOrgPolicy.allowedValues 13.34.2
+gcp.project.effectiveOrgPolicy.conditionalRules 13.37.1
 gcp.project.effectiveOrgPolicy.constraint 13.34.2
 gcp.project.effectiveOrgPolicy.deniedValues 13.34.2
 gcp.project.effectiveOrgPolicy.denyAll 13.34.2
 gcp.project.effectiveOrgPolicy.enforced 13.34.2
+gcp.project.effectiveOrgPolicy.hasConditionalRules 13.37.1
 gcp.project.effectiveOrgPolicy.projectId 13.34.2
 gcp.project.effectiveOrgPolicy.spec 13.34.2
 gcp.project.essentialContacts 9.0.0

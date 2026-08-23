@@ -12322,6 +12322,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.orgPolicy.inheritFromParent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrgPolicy).GetInheritFromParent()).ToDataRes(types.Bool)
 	},
+	"gcp.orgPolicy.hasConditionalRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetHasConditionalRules()).ToDataRes(types.Bool)
+	},
+	"gcp.orgPolicy.conditionalRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrgPolicy).GetConditionalRules()).ToDataRes(types.Array(types.Dict))
+	},
 	"gcp.project.effectiveOrgPolicy.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEffectiveOrgPolicy).GetProjectId()).ToDataRes(types.String)
 	},
@@ -12342,6 +12348,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.effectiveOrgPolicy.denyAll": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEffectiveOrgPolicy).GetDenyAll()).ToDataRes(types.Bool)
+	},
+	"gcp.project.effectiveOrgPolicy.hasConditionalRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectEffectiveOrgPolicy).GetHasConditionalRules()).ToDataRes(types.Bool)
+	},
+	"gcp.project.effectiveOrgPolicy.conditionalRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectEffectiveOrgPolicy).GetConditionalRules()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.effectiveOrgPolicy.spec": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectEffectiveOrgPolicy).GetSpec()).ToDataRes(types.Dict)
@@ -32841,6 +32853,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpOrgPolicy).InheritFromParent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.orgPolicy.hasConditionalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).HasConditionalRules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.orgPolicy.conditionalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrgPolicy).ConditionalRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.effectiveOrgPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectEffectiveOrgPolicy).__id, ok = v.Value.(string)
 		return
@@ -32871,6 +32891,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.effectiveOrgPolicy.denyAll": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectEffectiveOrgPolicy).DenyAll, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.effectiveOrgPolicy.hasConditionalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectEffectiveOrgPolicy).HasConditionalRules, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.effectiveOrgPolicy.conditionalRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectEffectiveOrgPolicy).ConditionalRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.effectiveOrgPolicy.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -75839,20 +75867,22 @@ type mqlGcpOrgPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpOrgPolicyInternal it will be used here
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	ConstraintName    plugin.TValue[string]
-	Spec              plugin.TValue[any]
-	DryRunSpec        plugin.TValue[any]
-	Etag              plugin.TValue[string]
-	UpdatedAt         plugin.TValue[*time.Time]
-	DryRunOnly        plugin.TValue[bool]
-	Enforced          plugin.TValue[bool]
-	AllowedValues     plugin.TValue[[]any]
-	DeniedValues      plugin.TValue[[]any]
-	AllowAll          plugin.TValue[bool]
-	DenyAll           plugin.TValue[bool]
-	InheritFromParent plugin.TValue[bool]
+	Id                  plugin.TValue[string]
+	Name                plugin.TValue[string]
+	ConstraintName      plugin.TValue[string]
+	Spec                plugin.TValue[any]
+	DryRunSpec          plugin.TValue[any]
+	Etag                plugin.TValue[string]
+	UpdatedAt           plugin.TValue[*time.Time]
+	DryRunOnly          plugin.TValue[bool]
+	Enforced            plugin.TValue[bool]
+	AllowedValues       plugin.TValue[[]any]
+	DeniedValues        plugin.TValue[[]any]
+	AllowAll            plugin.TValue[bool]
+	DenyAll             plugin.TValue[bool]
+	InheritFromParent   plugin.TValue[bool]
+	HasConditionalRules plugin.TValue[bool]
+	ConditionalRules    plugin.TValue[[]any]
 }
 
 // createGcpOrgPolicy creates a new instance of this resource
@@ -75950,19 +75980,29 @@ func (c *mqlGcpOrgPolicy) GetInheritFromParent() *plugin.TValue[bool] {
 	return &c.InheritFromParent
 }
 
+func (c *mqlGcpOrgPolicy) GetHasConditionalRules() *plugin.TValue[bool] {
+	return &c.HasConditionalRules
+}
+
+func (c *mqlGcpOrgPolicy) GetConditionalRules() *plugin.TValue[[]any] {
+	return &c.ConditionalRules
+}
+
 // mqlGcpProjectEffectiveOrgPolicy for the gcp.project.effectiveOrgPolicy resource
 type mqlGcpProjectEffectiveOrgPolicy struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlGcpProjectEffectiveOrgPolicyInternal
-	ProjectId     plugin.TValue[string]
-	Constraint    plugin.TValue[string]
-	Enforced      plugin.TValue[bool]
-	AllowedValues plugin.TValue[[]any]
-	DeniedValues  plugin.TValue[[]any]
-	AllowAll      plugin.TValue[bool]
-	DenyAll       plugin.TValue[bool]
-	Spec          plugin.TValue[any]
+	ProjectId           plugin.TValue[string]
+	Constraint          plugin.TValue[string]
+	Enforced            plugin.TValue[bool]
+	AllowedValues       plugin.TValue[[]any]
+	DeniedValues        plugin.TValue[[]any]
+	AllowAll            plugin.TValue[bool]
+	DenyAll             plugin.TValue[bool]
+	HasConditionalRules plugin.TValue[bool]
+	ConditionalRules    plugin.TValue[[]any]
+	Spec                plugin.TValue[any]
 }
 
 // createGcpProjectEffectiveOrgPolicy creates a new instance of this resource
@@ -76032,6 +76072,18 @@ func (c *mqlGcpProjectEffectiveOrgPolicy) GetAllowAll() *plugin.TValue[bool] {
 func (c *mqlGcpProjectEffectiveOrgPolicy) GetDenyAll() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.DenyAll, func() (bool, error) {
 		return c.denyAll()
+	})
+}
+
+func (c *mqlGcpProjectEffectiveOrgPolicy) GetHasConditionalRules() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasConditionalRules, func() (bool, error) {
+		return c.hasConditionalRules()
+	})
+}
+
+func (c *mqlGcpProjectEffectiveOrgPolicy) GetConditionalRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ConditionalRules, func() ([]any, error) {
+		return c.conditionalRules()
 	})
 }
 

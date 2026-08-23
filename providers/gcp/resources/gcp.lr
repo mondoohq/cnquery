@@ -10878,7 +10878,10 @@ private gcp.orgPolicy @defaults("constraintName") {
   // `enforce: true`, the form used by boolean constraints such as
   // `iam.disableServiceAccountKeyCreation`, `compute.requireOsLogin`, and
   // `storage.uniformBucketLevelAccess`. Reflects only the directly-set live
-  // spec on this resource, not policy inherited from a parent.
+  // spec on this resource, not policy inherited from a parent. A false
+  // value together with `hasConditionalRules` true does not mean the
+  // constraint goes unenforced: it may be enforced for the resources the
+  // condition selects.
   enforced bool
   // Values explicitly allowed by the live spec's unconditional list-constraint rules
   allowedValues []string
@@ -10890,6 +10893,25 @@ private gcp.orgPolicy @defaults("constraintName") {
   denyAll bool
   // Whether the live spec inherits and merges policy from the parent resource
   inheritFromParent bool
+  // Whether the live spec carries at least one rule gated by a CEL condition
+  //
+  // A conditional rule applies only to resources matching its condition,
+  // most often a tag, so its effect cannot be decided without evaluating
+  // that condition against a specific resource. Conditional rules are
+  // therefore left out of `enforced`, `allowAll`, `denyAll`,
+  // `allowedValues`, and `deniedValues`. When this field is true those
+  // summaries do not describe the whole policy, and `conditionalRules`
+  // has to be read alongside them.
+  hasConditionalRules bool
+  // Rules in the live spec gated by a CEL condition
+  //
+  // One entry per condition-gated rule. Keys: `condition` (the CEL
+  // expression, typically a `resource.matchTag(...)` or
+  // `resource.matchTagId(...)` test), `conditionTitle`,
+  // `conditionDescription`, and the effect the rule has where its
+  // condition holds: `enforce`, `allowAll`, `denyAll`, `allowedValues`,
+  // and `deniedValues`. Empty when every rule applies unconditionally.
+  conditionalRules []dict
 }
 
 // Effective organization policy at a project
@@ -10909,7 +10931,9 @@ private gcp.orgPolicy @defaults("constraintName") {
 // value (`enforced` false, empty value lists) rather than an error, since that is
 // the effective state: nothing is enforced. A constraint name that does not exist
 // resolves the same way, so confirm the name when a result looks unexpectedly
-// empty.
+// empty. A constraint carried only by condition-gated rules also summarizes as
+// the zero value, so check `hasConditionalRules` before reading an all-false
+// result as "nothing is enforced".
 private gcp.project.effectiveOrgPolicy @defaults("constraint enforced") {
   init(constraint string)
   // Project the policy is evaluated for
@@ -10917,6 +10941,11 @@ private gcp.project.effectiveOrgPolicy @defaults("constraint enforced") {
   // Constraint being resolved (e.g. constraints/compute.requireOsLogin)
   constraint string
   // Whether a boolean constraint is enforced once inheritance is applied
+  //
+  // True when the effective spec contains an unconditional rule with
+  // `enforce: true`. A false value together with `hasConditionalRules`
+  // true does not mean the constraint goes unenforced: it may be enforced
+  // for the resources the condition selects.
   enforced() bool
   // Values allowed by the effective list-constraint rules
   allowedValues() []string
@@ -10926,6 +10955,25 @@ private gcp.project.effectiveOrgPolicy @defaults("constraint enforced") {
   allowAll() bool
   // Whether the effective policy denies all values for a list constraint
   denyAll() bool
+  // Whether the effective policy carries at least one rule gated by a CEL condition
+  //
+  // A conditional rule applies only to resources matching its condition,
+  // most often a tag, so its effect cannot be decided without evaluating
+  // that condition against a specific resource. Conditional rules are
+  // therefore left out of `enforced`, `allowAll`, `denyAll`,
+  // `allowedValues`, and `deniedValues`. When this field is true those
+  // summaries do not describe the whole policy, and `conditionalRules`
+  // has to be read alongside them.
+  hasConditionalRules() bool
+  // Rules in the effective policy gated by a CEL condition
+  //
+  // One entry per condition-gated rule. Keys: `condition` (the CEL
+  // expression, typically a `resource.matchTag(...)` or
+  // `resource.matchTagId(...)` test), `conditionTitle`,
+  // `conditionDescription`, and the effect the rule has where its
+  // condition holds: `enforce`, `allowAll`, `denyAll`, `allowedValues`,
+  // and `deniedValues`. Empty when every rule applies unconditionally.
+  conditionalRules() []dict
   // Effective policy specification
   //
   // Raw merged policy spec. Keys: `rules` (each with `values` holding
