@@ -874,6 +874,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.account.logExplorerDatasets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccount).GetLogExplorerDatasets()).ToDataRes(types.Array(types.Resource("cloudflare.logExplorerDataset")))
 	},
+	"cloudflare.account.apiTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareAccount).GetApiTokens()).ToDataRes(types.Array(types.Resource("cloudflare.apiToken")))
+	},
 	"cloudflare.account.ipAccessRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareAccount).GetIpAccessRules()).ToDataRes(types.Array(types.Resource("cloudflare.ipAccessRule")))
 	},
@@ -903,6 +906,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.apiToken.ipNotIn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareApiToken).GetIpNotIn()).ToDataRes(types.Array(types.String))
+	},
+	"cloudflare.apiToken.lastUsedOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareApiToken).GetLastUsedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.apiToken.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareApiToken).GetAccountId()).ToDataRes(types.String)
 	},
 	"cloudflare.apiToken.policies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareApiToken).GetPolicies()).ToDataRes(types.Array(types.Dict))
@@ -3190,6 +3199,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareAccount).LogExplorerDatasets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"cloudflare.account.apiTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareAccount).ApiTokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"cloudflare.account.ipAccessRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareAccount).IpAccessRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3232,6 +3245,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.apiToken.ipNotIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareApiToken).IpNotIn, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.apiToken.lastUsedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareApiToken).LastUsedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.apiToken.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareApiToken).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"cloudflare.apiToken.policies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7171,6 +7192,7 @@ type mqlCloudflareAccount struct {
 	TunnelVirtualNetworks plugin.TValue[[]any]
 	TurnstileWidgets      plugin.TValue[[]any]
 	LogExplorerDatasets   plugin.TValue[[]any]
+	ApiTokens             plugin.TValue[[]any]
 	IpAccessRules         plugin.TValue[[]any]
 }
 
@@ -7455,6 +7477,22 @@ func (c *mqlCloudflareAccount) GetLogExplorerDatasets() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlCloudflareAccount) GetApiTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApiTokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.account", c.__id, "apiTokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.apiTokens()
+	})
+}
+
 func (c *mqlCloudflareAccount) GetIpAccessRules() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.IpAccessRules, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -7485,6 +7523,8 @@ type mqlCloudflareApiToken struct {
 	ExpiresOn  plugin.TValue[*time.Time]
 	IpIn       plugin.TValue[[]any]
 	IpNotIn    plugin.TValue[[]any]
+	LastUsedOn plugin.TValue[*time.Time]
+	AccountId  plugin.TValue[string]
 	Policies   plugin.TValue[[]any]
 }
 
@@ -7559,6 +7599,14 @@ func (c *mqlCloudflareApiToken) GetIpIn() *plugin.TValue[[]any] {
 
 func (c *mqlCloudflareApiToken) GetIpNotIn() *plugin.TValue[[]any] {
 	return &c.IpNotIn
+}
+
+func (c *mqlCloudflareApiToken) GetLastUsedOn() *plugin.TValue[*time.Time] {
+	return &c.LastUsedOn
+}
+
+func (c *mqlCloudflareApiToken) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
 }
 
 func (c *mqlCloudflareApiToken) GetPolicies() *plugin.TValue[[]any] {

@@ -3,6 +3,7 @@
 
 cloudflare 11.0.0
 cloudflare.account 11.0.0
+cloudflare.account.apiTokens 13.8.1
 cloudflare.account.auditLog 13.4.1
 cloudflare.account.auditLog.actionResult 13.4.1
 cloudflare.account.auditLog.actionType 13.4.1
@@ -53,11 +54,13 @@ cloudflare.account.videos 11.0.0
 cloudflare.account.workers 13.6.5
 cloudflare.accounts 11.0.0
 cloudflare.apiToken 13.1.1
+cloudflare.apiToken.accountId 13.8.1
 cloudflare.apiToken.expiresOn 13.1.1
 cloudflare.apiToken.id 13.1.1
 cloudflare.apiToken.ipIn 13.1.1
 cloudflare.apiToken.ipNotIn 13.1.1
 cloudflare.apiToken.issuedOn 13.1.1
+cloudflare.apiToken.lastUsedOn 13.8.1
 cloudflare.apiToken.modifiedOn 13.1.1
 cloudflare.apiToken.name 13.1.1
 cloudflare.apiToken.notBefore 13.1.1

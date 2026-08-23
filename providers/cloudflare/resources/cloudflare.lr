@@ -23,7 +23,8 @@ cloudflare {
 	// the user the connecting token authenticates as. It requires a
 	// token with user-level access (the User API Tokens Read permission);
 	// an account-scoped token cannot list them and this returns empty.
-	// Account-owned tokens (Enterprise) are not exposed here.
+	// Account-owned tokens are listed separately, through
+	// `cloudflare.account.apiTokens`.
 	apiTokens() []cloudflare.apiToken
 }
 
@@ -456,6 +457,16 @@ private cloudflare.account @defaults("name") {
 	// logs from being removed while an investigation is open.
 	logExplorerDatasets() []cloudflare.logExplorerDataset
 
+	// Account-owned API tokens
+	//
+	// Tokens owned by the account rather than by a user, which is where
+	// long-lived automation credentials live. Each reports its validity
+	// window (`notBefore`, `expiresOn`), the IP allowlist and blocklist
+	// restricting where it may be used (`ipIn`, `ipNotIn`), when it was last
+	// used (`lastUsedOn`), and the grants that define its reach (`policies`).
+	// Token secrets are never returned by the API and are not exposed.
+	apiTokens() []cloudflare.apiToken
+
 	// Account-wide IP Access rules
 	//
 	// The IP, IP range, ASN, and country rules the account applies across all
@@ -492,6 +503,16 @@ private cloudflare.apiToken @defaults("name status expiresOn") {
 	ipIn []string
 	// IP addresses blocked from using the token (CIDR list)
 	ipNotIn []string
+	// Time the token was last used
+	//
+	// Null when the token has never been used, which on a long-lived
+	// automation credential means it can be revoked without effect.
+	lastUsedOn time
+	// Account that owns the token
+	//
+	// Null for a user-owned token, which belongs to the authenticating user
+	// rather than to any one account.
+	accountId string
 	// Token policies
 	//
 	// Grant rules that define what the token can do. Each entry has `id`
