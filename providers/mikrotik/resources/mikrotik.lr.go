@@ -49,6 +49,10 @@ const (
 	ResourceMikrotikIpv6FirewallNat              string = "mikrotik.ipv6.firewall.nat"
 	ResourceMikrotikSsh                          string = "mikrotik.ssh"
 	ResourceMikrotikCertificate                  string = "mikrotik.certificate"
+	ResourceMikrotikSystemScheduler              string = "mikrotik.system.scheduler"
+	ResourceMikrotikSystemScript                 string = "mikrotik.system.script"
+	ResourceMikrotikSystemRouterboot             string = "mikrotik.system.routerboot"
+	ResourceMikrotikSystemUpdate                 string = "mikrotik.system.update"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -186,6 +190,22 @@ func init() {
 		"mikrotik.certificate": {
 			Init:   initMikrotikCertificate,
 			Create: createMikrotikCertificate,
+		},
+		"mikrotik.system.scheduler": {
+			// to override args, implement: initMikrotikSystemScheduler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikSystemScheduler,
+		},
+		"mikrotik.system.script": {
+			// to override args, implement: initMikrotikSystemScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createMikrotikSystemScript,
+		},
+		"mikrotik.system.routerboot": {
+			Init:   initMikrotikSystemRouterboot,
+			Create: createMikrotikSystemRouterboot,
+		},
+		"mikrotik.system.update": {
+			Init:   initMikrotikSystemUpdate,
+			Create: createMikrotikSystemUpdate,
 		},
 	}
 }
@@ -353,6 +373,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mikrotik.certificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotik).GetCertificates()).ToDataRes(types.Array(types.Resource("mikrotik.certificate")))
+	},
+	"mikrotik.schedulers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetSchedulers()).ToDataRes(types.Array(types.Resource("mikrotik.system.scheduler")))
+	},
+	"mikrotik.scripts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetScripts()).ToDataRes(types.Array(types.Resource("mikrotik.system.script")))
+	},
+	"mikrotik.routerboot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetRouterboot()).ToDataRes(types.Resource("mikrotik.system.routerboot"))
+	},
+	"mikrotik.packageUpdate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotik).GetPackageUpdate()).ToDataRes(types.Resource("mikrotik.system.update"))
 	},
 	"mikrotik.system.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikSystem).GetIdentity()).ToDataRes(types.String)
@@ -1599,6 +1631,126 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mikrotik.certificate.skid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikCertificate).GetSkid()).ToDataRes(types.String)
 	},
+	"mikrotik.system.scheduler.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetName()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.startDate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetStartDate()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetStartTime()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.interval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetInterval()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.onEvent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetOnEvent()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetOwner()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetPolicy()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.system.scheduler.runCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetRunCount()).ToDataRes(types.Int)
+	},
+	"mikrotik.system.scheduler.nextRun": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetNextRun()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.scheduler.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetComment()).ToDataRes(types.String)
+	},
+	"mikrotik.system.scheduler.script": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScheduler).GetScript()).ToDataRes(types.Resource("mikrotik.system.script"))
+	},
+	"mikrotik.system.script.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetName()).ToDataRes(types.String)
+	},
+	"mikrotik.system.script.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetOwner()).ToDataRes(types.String)
+	},
+	"mikrotik.system.script.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetPolicy()).ToDataRes(types.Array(types.String))
+	},
+	"mikrotik.system.script.dontRequirePermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetDontRequirePermissions()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.script.runCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetRunCount()).ToDataRes(types.Int)
+	},
+	"mikrotik.system.script.lastStarted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetLastStarted()).ToDataRes(types.String)
+	},
+	"mikrotik.system.script.source": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetSource()).ToDataRes(types.String)
+	},
+	"mikrotik.system.script.invalid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetInvalid()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.script.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemScript).GetComment()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.protectedRouterboot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetProtectedRouterboot()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.protected": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetProtected()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.routerboot.autoUpgrade": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetAutoUpgrade()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.routerboot.bootDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetBootDevice()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.bootProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetBootProtocol()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.bootOs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetBootOs()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.reformatHoldButton": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetReformatHoldButton()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.reformatHoldButtonMax": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetReformatHoldButtonMax()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.enableJumperReset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetEnableJumperReset()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.routerboot.enterSetupOn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetEnterSetupOn()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.silentBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetSilentBoot()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.routerboot.forceBackupBooter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetForceBackupBooter()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.routerboot.cpuFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetCpuFrequency()).ToDataRes(types.String)
+	},
+	"mikrotik.system.routerboot.baudRate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemRouterboot).GetBaudRate()).ToDataRes(types.Int)
+	},
+	"mikrotik.system.update.channel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemUpdate).GetChannel()).ToDataRes(types.String)
+	},
+	"mikrotik.system.update.installedVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemUpdate).GetInstalledVersion()).ToDataRes(types.String)
+	},
+	"mikrotik.system.update.latestVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemUpdate).GetLatestVersion()).ToDataRes(types.String)
+	},
+	"mikrotik.system.update.updateAvailable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemUpdate).GetUpdateAvailable()).ToDataRes(types.Bool)
+	},
+	"mikrotik.system.update.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikSystemUpdate).GetStatus()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -1741,6 +1893,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mikrotik.certificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotik).Certificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.schedulers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).Schedulers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.scripts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).Scripts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.routerboot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).Routerboot, ok = plugin.RawToTValue[*mqlMikrotikSystemRouterboot](v.Value, v.Error)
+		return
+	},
+	"mikrotik.packageUpdate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotik).PackageUpdate, ok = plugin.RawToTValue[*mqlMikrotikSystemUpdate](v.Value, v.Error)
 		return
 	},
 	"mikrotik.system.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3531,6 +3699,182 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMikrotikCertificate).Skid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"mikrotik.system.scheduler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.system.scheduler.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.startDate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).StartDate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).StartTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.interval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).Interval, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.onEvent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).OnEvent, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).Policy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.runCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).RunCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.nextRun": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).NextRun, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.scheduler.script": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScheduler).Script, ok = plugin.RawToTValue[*mqlMikrotikSystemScript](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.system.script.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).Policy, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.dontRequirePermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).DontRequirePermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.runCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).RunCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.lastStarted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).LastStarted, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.source": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).Source, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.invalid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).Invalid, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.script.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemScript).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.system.routerboot.protectedRouterboot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).ProtectedRouterboot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.protected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).Protected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.autoUpgrade": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).AutoUpgrade, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.bootDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).BootDevice, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.bootProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).BootProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.bootOs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).BootOs, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.reformatHoldButton": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).ReformatHoldButton, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.reformatHoldButtonMax": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).ReformatHoldButtonMax, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.enableJumperReset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).EnableJumperReset, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.enterSetupOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).EnterSetupOn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.silentBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).SilentBoot, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.forceBackupBooter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).ForceBackupBooter, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.cpuFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).CpuFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.routerboot.baudRate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemRouterboot).BaudRate, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.update.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemUpdate).__id, ok = v.Value.(string)
+		return
+	},
+	"mikrotik.system.update.channel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemUpdate).Channel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.update.installedVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemUpdate).InstalledVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.update.latestVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemUpdate).LatestVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.update.updateAvailable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemUpdate).UpdateAvailable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"mikrotik.system.update.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikSystemUpdate).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -3592,6 +3936,10 @@ type mqlMikrotik struct {
 	Ipv6AddressLists     plugin.TValue[[]any]
 	Ssh                  plugin.TValue[*mqlMikrotikSsh]
 	Certificates         plugin.TValue[[]any]
+	Schedulers           plugin.TValue[[]any]
+	Scripts              plugin.TValue[[]any]
+	Routerboot           plugin.TValue[*mqlMikrotikSystemRouterboot]
+	PackageUpdate        plugin.TValue[*mqlMikrotikSystemUpdate]
 }
 
 // createMikrotik creates a new instance of this resource
@@ -4140,6 +4488,70 @@ func (c *mqlMikrotik) GetCertificates() *plugin.TValue[[]any] {
 		}
 
 		return c.certificates()
+	})
+}
+
+func (c *mqlMikrotik) GetSchedulers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Schedulers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "schedulers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.schedulers()
+	})
+}
+
+func (c *mqlMikrotik) GetScripts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Scripts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "scripts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.scripts()
+	})
+}
+
+func (c *mqlMikrotik) GetRouterboot() *plugin.TValue[*mqlMikrotikSystemRouterboot] {
+	return plugin.GetOrCompute[*mqlMikrotikSystemRouterboot](&c.Routerboot, func() (*mqlMikrotikSystemRouterboot, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "routerboot")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikSystemRouterboot), nil
+			}
+		}
+
+		return c.routerboot()
+	})
+}
+
+func (c *mqlMikrotik) GetPackageUpdate() *plugin.TValue[*mqlMikrotikSystemUpdate] {
+	return plugin.GetOrCompute[*mqlMikrotikSystemUpdate](&c.PackageUpdate, func() (*mqlMikrotikSystemUpdate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik", c.__id, "packageUpdate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikSystemUpdate), nil
+			}
+		}
+
+		return c.packageUpdate()
 	})
 }
 
@@ -7620,4 +8032,372 @@ func (c *mqlMikrotikCertificate) GetAkid() *plugin.TValue[string] {
 
 func (c *mqlMikrotikCertificate) GetSkid() *plugin.TValue[string] {
 	return &c.Skid
+}
+
+// mqlMikrotikSystemScheduler for the mikrotik.system.scheduler resource
+type mqlMikrotikSystemScheduler struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlMikrotikSystemSchedulerInternal
+	Name      plugin.TValue[string]
+	StartDate plugin.TValue[string]
+	StartTime plugin.TValue[string]
+	Interval  plugin.TValue[string]
+	OnEvent   plugin.TValue[string]
+	Owner     plugin.TValue[string]
+	Policy    plugin.TValue[[]any]
+	RunCount  plugin.TValue[int64]
+	NextRun   plugin.TValue[string]
+	Disabled  plugin.TValue[bool]
+	Comment   plugin.TValue[string]
+	Script    plugin.TValue[*mqlMikrotikSystemScript]
+}
+
+// createMikrotikSystemScheduler creates a new instance of this resource
+func createMikrotikSystemScheduler(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikSystemScheduler{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.system.scheduler", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikSystemScheduler) MqlName() string {
+	return "mikrotik.system.scheduler"
+}
+
+func (c *mqlMikrotikSystemScheduler) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikSystemScheduler) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMikrotikSystemScheduler) GetStartDate() *plugin.TValue[string] {
+	return &c.StartDate
+}
+
+func (c *mqlMikrotikSystemScheduler) GetStartTime() *plugin.TValue[string] {
+	return &c.StartTime
+}
+
+func (c *mqlMikrotikSystemScheduler) GetInterval() *plugin.TValue[string] {
+	return &c.Interval
+}
+
+func (c *mqlMikrotikSystemScheduler) GetOnEvent() *plugin.TValue[string] {
+	return &c.OnEvent
+}
+
+func (c *mqlMikrotikSystemScheduler) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlMikrotikSystemScheduler) GetPolicy() *plugin.TValue[[]any] {
+	return &c.Policy
+}
+
+func (c *mqlMikrotikSystemScheduler) GetRunCount() *plugin.TValue[int64] {
+	return &c.RunCount
+}
+
+func (c *mqlMikrotikSystemScheduler) GetNextRun() *plugin.TValue[string] {
+	return &c.NextRun
+}
+
+func (c *mqlMikrotikSystemScheduler) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlMikrotikSystemScheduler) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlMikrotikSystemScheduler) GetScript() *plugin.TValue[*mqlMikrotikSystemScript] {
+	return plugin.GetOrCompute[*mqlMikrotikSystemScript](&c.Script, func() (*mqlMikrotikSystemScript, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.system.scheduler", c.__id, "script")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikSystemScript), nil
+			}
+		}
+
+		return c.script()
+	})
+}
+
+// mqlMikrotikSystemScript for the mikrotik.system.script resource
+type mqlMikrotikSystemScript struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikSystemScriptInternal it will be used here
+	Name                   plugin.TValue[string]
+	Owner                  plugin.TValue[string]
+	Policy                 plugin.TValue[[]any]
+	DontRequirePermissions plugin.TValue[bool]
+	RunCount               plugin.TValue[int64]
+	LastStarted            plugin.TValue[string]
+	Source                 plugin.TValue[string]
+	Invalid                plugin.TValue[bool]
+	Comment                plugin.TValue[string]
+}
+
+// createMikrotikSystemScript creates a new instance of this resource
+func createMikrotikSystemScript(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikSystemScript{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.system.script", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikSystemScript) MqlName() string {
+	return "mikrotik.system.script"
+}
+
+func (c *mqlMikrotikSystemScript) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikSystemScript) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlMikrotikSystemScript) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlMikrotikSystemScript) GetPolicy() *plugin.TValue[[]any] {
+	return &c.Policy
+}
+
+func (c *mqlMikrotikSystemScript) GetDontRequirePermissions() *plugin.TValue[bool] {
+	return &c.DontRequirePermissions
+}
+
+func (c *mqlMikrotikSystemScript) GetRunCount() *plugin.TValue[int64] {
+	return &c.RunCount
+}
+
+func (c *mqlMikrotikSystemScript) GetLastStarted() *plugin.TValue[string] {
+	return &c.LastStarted
+}
+
+func (c *mqlMikrotikSystemScript) GetSource() *plugin.TValue[string] {
+	return &c.Source
+}
+
+func (c *mqlMikrotikSystemScript) GetInvalid() *plugin.TValue[bool] {
+	return &c.Invalid
+}
+
+func (c *mqlMikrotikSystemScript) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+// mqlMikrotikSystemRouterboot for the mikrotik.system.routerboot resource
+type mqlMikrotikSystemRouterboot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikSystemRouterbootInternal it will be used here
+	ProtectedRouterboot   plugin.TValue[string]
+	Protected             plugin.TValue[bool]
+	AutoUpgrade           plugin.TValue[bool]
+	BootDevice            plugin.TValue[string]
+	BootProtocol          plugin.TValue[string]
+	BootOs                plugin.TValue[string]
+	ReformatHoldButton    plugin.TValue[string]
+	ReformatHoldButtonMax plugin.TValue[string]
+	EnableJumperReset     plugin.TValue[bool]
+	EnterSetupOn          plugin.TValue[string]
+	SilentBoot            plugin.TValue[bool]
+	ForceBackupBooter     plugin.TValue[bool]
+	CpuFrequency          plugin.TValue[string]
+	BaudRate              plugin.TValue[int64]
+}
+
+// createMikrotikSystemRouterboot creates a new instance of this resource
+func createMikrotikSystemRouterboot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikSystemRouterboot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.system.routerboot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikSystemRouterboot) MqlName() string {
+	return "mikrotik.system.routerboot"
+}
+
+func (c *mqlMikrotikSystemRouterboot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetProtectedRouterboot() *plugin.TValue[string] {
+	return &c.ProtectedRouterboot
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetProtected() *plugin.TValue[bool] {
+	return &c.Protected
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetAutoUpgrade() *plugin.TValue[bool] {
+	return &c.AutoUpgrade
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetBootDevice() *plugin.TValue[string] {
+	return &c.BootDevice
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetBootProtocol() *plugin.TValue[string] {
+	return &c.BootProtocol
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetBootOs() *plugin.TValue[string] {
+	return &c.BootOs
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetReformatHoldButton() *plugin.TValue[string] {
+	return &c.ReformatHoldButton
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetReformatHoldButtonMax() *plugin.TValue[string] {
+	return &c.ReformatHoldButtonMax
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetEnableJumperReset() *plugin.TValue[bool] {
+	return &c.EnableJumperReset
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetEnterSetupOn() *plugin.TValue[string] {
+	return &c.EnterSetupOn
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetSilentBoot() *plugin.TValue[bool] {
+	return &c.SilentBoot
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetForceBackupBooter() *plugin.TValue[bool] {
+	return &c.ForceBackupBooter
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetCpuFrequency() *plugin.TValue[string] {
+	return &c.CpuFrequency
+}
+
+func (c *mqlMikrotikSystemRouterboot) GetBaudRate() *plugin.TValue[int64] {
+	return &c.BaudRate
+}
+
+// mqlMikrotikSystemUpdate for the mikrotik.system.update resource
+type mqlMikrotikSystemUpdate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlMikrotikSystemUpdateInternal it will be used here
+	Channel          plugin.TValue[string]
+	InstalledVersion plugin.TValue[string]
+	LatestVersion    plugin.TValue[string]
+	UpdateAvailable  plugin.TValue[bool]
+	Status           plugin.TValue[string]
+}
+
+// createMikrotikSystemUpdate creates a new instance of this resource
+func createMikrotikSystemUpdate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlMikrotikSystemUpdate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("mikrotik.system.update", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlMikrotikSystemUpdate) MqlName() string {
+	return "mikrotik.system.update"
+}
+
+func (c *mqlMikrotikSystemUpdate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlMikrotikSystemUpdate) GetChannel() *plugin.TValue[string] {
+	return &c.Channel
+}
+
+func (c *mqlMikrotikSystemUpdate) GetInstalledVersion() *plugin.TValue[string] {
+	return &c.InstalledVersion
+}
+
+func (c *mqlMikrotikSystemUpdate) GetLatestVersion() *plugin.TValue[string] {
+	return &c.LatestVersion
+}
+
+func (c *mqlMikrotikSystemUpdate) GetUpdateAvailable() *plugin.TValue[bool] {
+	return &c.UpdateAvailable
+}
+
+func (c *mqlMikrotikSystemUpdate) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }

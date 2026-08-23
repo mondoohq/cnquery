@@ -140,3 +140,40 @@ func TestPrintOne(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, empty, "a menu with no records yields an empty map, not nil access")
 }
+
+func TestPrintOneOptional(t *testing.T) {
+	fake := newFakeClient()
+	fake.replies["/system/package/update/print"] = reply(
+		map[string]string{"channel": "stable", "installed-version": "7.16.2"},
+	)
+	// a CHR build has no RouterBOARD bootloader menu at all
+	fake.errs["/system/routerboard/settings/print"] = errors.New("from RouterOS: no such command prefix")
+	conn := &MikrotikConnection{client: fake}
+
+	row, err := conn.PrintOneOptional("/system/package/update")
+	require.NoError(t, err)
+	assert.Equal(t, "stable", row["channel"])
+
+	// an absent menu yields an empty row, not an error, so the caller can
+	// report the subsystem as absent rather than failing the query
+	missing, err := conn.PrintOneOptional("/system/routerboard/settings")
+	require.NoError(t, err)
+	assert.Empty(t, missing)
+
+	// a menu that exists but holds no records is also an empty row
+	fake.replies["/container/config/print"] = reply()
+	empty, err := conn.PrintOneOptional("/container/config")
+	require.NoError(t, err)
+	assert.Empty(t, empty)
+}
+
+func TestPrintOneOptionalPropagatesRealErrors(t *testing.T) {
+	fake := newFakeClient()
+	fake.errs["/ip/ssh/print"] = errors.New("from RouterOS: not enough permissions")
+	conn := &MikrotikConnection{client: fake}
+
+	_, err := conn.PrintOneOptional("/ip/ssh")
+	// a permission failure must not be laundered into "the menu is absent",
+	// which would report an unread setting as an absent subsystem
+	require.Error(t, err)
+}

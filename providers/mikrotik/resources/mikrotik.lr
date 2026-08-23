@@ -79,6 +79,14 @@ mikrotik {
   ssh() mikrotik.ssh
   // Certificates held in the device certificate store
   certificates() []mikrotik.certificate
+  // Scheduled tasks that run on a timer or at boot
+  schedulers() []mikrotik.system.scheduler
+  // Scripts stored on the device
+  scripts() []mikrotik.system.script
+  // RouterBOOT bootloader protection settings
+  routerboot() mikrotik.system.routerboot
+  // RouterOS update channel and the version available on it
+  packageUpdate() mikrotik.system.update
 }
 
 // MikroTik system information
@@ -1335,4 +1343,177 @@ mikrotik.certificate @defaults("name commonName invalidAfter expired") {
   akid string
   // Subject key identifier
   skid string
+}
+
+// MikroTik scheduled task
+//
+// Task in `/system/scheduler` that RouterOS runs on a timer, at a start time,
+// or at startup. Together with `/system/script` this is the RouterOS
+// persistence mechanism: a scheduler whose `onEvent` fires a script holding
+// `write`, `policy`, and `ftp` permissions is a self-reinstalling backdoor
+// that survives a password change. The `name` field selects the task and
+// exposes the start date and time, the repeat interval, the command or script
+// name in `onEvent`, the owner, the policies the task runs with, and how many
+// times it has fired. The `script` field resolves `onEvent` against the script
+// store when it names a stored script rather than carrying inline commands.
+mikrotik.system.scheduler @defaults("name interval onEvent disabled") {
+  // Task name
+  name string
+  // Date the task first runs
+  startDate string
+  // Time of day the task runs
+  //
+  // The literal startup means the task runs when RouterOS finishes booting.
+  startTime string
+  // Interval between runs
+  //
+  // Formatted as a RouterOS duration, for example 1d or 00:05:00. An interval
+  // of 0s means the task runs once at its start time.
+  interval string
+  // Command or script name the task runs
+  onEvent string
+  // User account the task runs as
+  owner string
+  // Policies the task runs with
+  //
+  // For example read, write, policy, ftp, test, reboot, password, sniff, or
+  // sensitive. A task holding write, policy, and ftp can rewrite the
+  // configuration and reinstate itself.
+  policy []string
+  // Number of times the task has run
+  runCount int
+  // Time the task is next due to run
+  nextRun string
+  // Whether the task is disabled
+  disabled bool
+  // Optional comment attached to the task
+  comment string
+  // Stored script the task runs, when onEvent names one
+  //
+  // Null when onEvent carries inline commands rather than a script name.
+  script() mikrotik.system.script
+}
+
+// MikroTik stored script
+//
+// Script stored in `/system/script`. Scripts are the payload half of the
+// RouterOS persistence mechanism: the policies a script holds decide what it
+// may do, and `dontRequirePermissions` lets it run beyond the rights of
+// whoever calls it. The `name` field selects the script and exposes its owner,
+// its policy set, its run count and last start time, and its source, which is
+// what shows whether a scheduled task rewrites accounts, opens a service, or
+// fetches and runs remote content.
+mikrotik.system.script @defaults("name owner policy runCount") {
+  // Script name
+  name string
+  // User account that owns the script
+  owner string
+  // Policies the script runs with
+  //
+  // For example read, write, policy, ftp, test, reboot, password, sniff, or
+  // sensitive.
+  policy []string
+  // Whether the script runs beyond the rights of whoever calls it
+  //
+  // When enabled the script's own policy set applies rather than the caller's,
+  // so a lower-privileged account can trigger privileged actions.
+  dontRequirePermissions bool
+  // Number of times the script has run
+  runCount int
+  // Time the script last started
+  lastStarted string
+  // Script source
+  source string
+  // Whether the script is invalid
+  invalid bool
+  // Optional comment attached to the script
+  comment string
+}
+
+// MikroTik RouterBOOT settings
+//
+// Bootloader settings read from `/system/routerboard/settings`.
+// `protectedRouterboot` is the control that decides whether physical access is
+// enough to take the device over: with it disabled, anyone who can reach the
+// reset button or the serial console can netinstall the device or clear its
+// configuration, and the RouterOS-level account and firewall configuration
+// stops being the boundary. The boot device and boot protocol settings decide
+// whether the device will boot an image handed to it over the network, and the
+// reset button behaviour decides what a button press does. This menu is absent
+// on CHR and other non-RouterBOARD builds, where the resource is null.
+mikrotik.system.routerboot @defaults("protectedRouterboot protected bootDevice") {
+  // RouterBOOT protection mode
+  //
+  // One of disabled, enabled, or on RouterOS 7 a mode that also requires the
+  // protection to be lifted from RouterOS before the bootloader accepts
+  // changes. Check the derived `protected` field for the yes-or-no reading.
+  protectedRouterboot string
+  // Whether RouterBOOT is protected against bootloader-level takeover
+  //
+  // Derived from protectedRouterboot. Null when the device did not report the
+  // setting, which is the case on builds with no RouterBOARD bootloader.
+  protected bool
+  // Whether RouterBOOT upgrades itself when RouterOS is upgraded
+  autoUpgrade bool
+  // Device RouterBOOT boots from
+  //
+  // For example nand-if-fail-then-ethernet, ethernet, or nand-only. Any value
+  // that includes ethernet lets the device boot an image served on the wire.
+  bootDevice string
+  // Protocol used when booting over the network
+  //
+  // For example bootp or dhcp.
+  bootProtocol string
+  // Operating system RouterBOOT boots
+  bootOs string
+  // Action taken when the reset button is held
+  //
+  // For example run-script or, with enableJumperReset, a configuration reset.
+  reformatHoldButton string
+  // Longest reset button hold that still triggers reformatHoldButton
+  reformatHoldButtonMax string
+  // Whether the hardware jumper or button may reset the configuration
+  enableJumperReset bool
+  // Interface RouterBOOT opens its setup on
+  //
+  // For example any-key, delete-key, or the serial console.
+  enterSetupOn string
+  // Whether RouterBOOT suppresses console output while booting
+  silentBoot bool
+  // Whether the backup bootloader is used
+  forceBackupBooter bool
+  // Configured CPU frequency
+  cpuFrequency string
+  // Serial console baud rate
+  baudRate int
+}
+
+// MikroTik RouterOS update status
+//
+// Update channel and available version read from `/system/package/update`.
+// `mikrotik.system.version` says what the device runs; this says what the
+// device could run, which turns the version into an actionable "is this device
+// behind" check. The channel is a finding of its own: `development` or
+// `testing` on a production router means it takes builds that have not been
+// through a stable release.
+mikrotik.system.update @defaults("channel installedVersion latestVersion updateAvailable") {
+  // Release channel the device takes updates from
+  //
+  // For example stable, long-term, testing, or development.
+  channel string
+  // RouterOS version currently installed
+  installedVersion string
+  // Latest RouterOS version offered on the channel
+  //
+  // Empty until the device has checked the channel, which it does not do on
+  // its own.
+  latestVersion string
+  // Whether a newer version is available on the channel
+  //
+  // Compares latestVersion against installedVersion. Null when the device has
+  // not checked the channel, since not having looked is not the same as being
+  // up to date.
+  updateAvailable bool
+  // Status of the last update check
+  status string
 }
