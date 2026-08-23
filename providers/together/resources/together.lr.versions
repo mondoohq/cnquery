@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BUSL-1.1
 
 together 13.0.0
+together.apiKeyId 13.0.14
 together.batch 13.0.0
 together.batch.completedAt 13.0.0
 together.batch.createdAt 13.0.0
@@ -121,6 +122,10 @@ together.model.quantization 13.0.0
 together.model.type 13.0.0
 together.models 13.0.0
 together.organization 13.0.0
+together.organizationId 13.0.14
+together.organizationName 13.0.14
+together.projectId 13.0.14
+together.projectName 13.0.14
 together.secret 13.0.0
 together.secret.createdAt 13.0.0
 together.secret.createdBy 13.0.0
@@ -130,6 +135,7 @@ together.secret.lastUpdatedBy 13.0.0
 together.secret.name 13.0.0
 together.secret.updatedAt 13.0.0
 together.secrets 13.0.0
+together.userId 13.0.14
 together.volume 13.0.0
 together.volume.createdAt 13.0.0
 together.volume.currentVersion 13.0.0
