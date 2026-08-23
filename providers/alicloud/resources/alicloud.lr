@@ -2997,6 +2997,36 @@ alicloud.kms.key {
   dkmsInstanceId string
   // Alias names that point at the key, for example alias/my-key
   aliases() []string
+  // Key policy document
+  //
+  // The resource policy attached to the key, as a JSON string. It names the
+  // identities permitted to use the key for cryptographic operations, which is
+  // a grant that the RAM policies attached to those identities do not show on
+  // their own. Empty when the key carries no policy, and on a key policy the
+  // scan is not permitted to read.
+  policy() string
+  // Parsed statements of the key policy
+  //
+  // The key policy decoded into statements, so the principals and the actions
+  // they are granted can be queried directly rather than by matching text.
+  statements() []alicloud.ram.policy.statement
+  // Accounts outside the key's own account that the key policy grants use of the key
+  //
+  // Sorted and deduplicated. A non-empty list means the key can be used to
+  // decrypt from another Alibaba Cloud account, so data encrypted with it is
+  // readable outside this account's control.
+  externalPrincipalAccountIds() []string
+  // Whether the key policy grants use of the key outside its own account
+  //
+  // True when an allowing statement names a principal in another account, or
+  // names the wildcard `*`. Note that a key with no readable policy reports
+  // false, because an unread policy must not be reported as a grant.
+  allowsExternalPrincipal() bool
+  // Whether the key policy names the wildcard as a principal
+  //
+  // True when an allowing statement grants use of the key to `*`, which admits
+  // any identity the key's resource-sharing configuration reaches.
+  hasWildcardPrincipal() bool
 }
 
 // Key Management Service secret

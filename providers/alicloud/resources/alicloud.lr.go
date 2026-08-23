@@ -3250,6 +3250,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.kms.key.aliases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudKmsKey).GetAliases()).ToDataRes(types.Array(types.String))
 	},
+	"alicloud.kms.key.policy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudKmsKey).GetPolicy()).ToDataRes(types.String)
+	},
+	"alicloud.kms.key.statements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudKmsKey).GetStatements()).ToDataRes(types.Array(types.Resource("alicloud.ram.policy.statement")))
+	},
+	"alicloud.kms.key.externalPrincipalAccountIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudKmsKey).GetExternalPrincipalAccountIds()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.kms.key.allowsExternalPrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudKmsKey).GetAllowsExternalPrincipal()).ToDataRes(types.Bool)
+	},
+	"alicloud.kms.key.hasWildcardPrincipal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudKmsKey).GetHasWildcardPrincipal()).ToDataRes(types.Bool)
+	},
 	"alicloud.kms.secret.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudKmsSecret).GetRegionId()).ToDataRes(types.String)
 	},
@@ -10287,6 +10302,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.kms.key.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudKmsKey).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.kms.key.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudKmsKey).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.kms.key.statements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudKmsKey).Statements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.kms.key.externalPrincipalAccountIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudKmsKey).ExternalPrincipalAccountIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.kms.key.allowsExternalPrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudKmsKey).AllowsExternalPrincipal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.kms.key.hasWildcardPrincipal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudKmsKey).HasWildcardPrincipal, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"alicloud.kms.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23210,27 +23245,32 @@ type mqlAlicloudKmsKey struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudKmsKeyInternal
-	RegionId           plugin.TValue[string]
-	KeyId              plugin.TValue[string]
-	Arn                plugin.TValue[string]
-	KeyState           plugin.TValue[string]
-	KeyUsage           plugin.TValue[string]
-	KeySpec            plugin.TValue[string]
-	Origin             plugin.TValue[string]
-	ProtectionLevel    plugin.TValue[string]
-	AutomaticRotation  plugin.TValue[string]
-	RotationInterval   plugin.TValue[string]
-	CreationDate       plugin.TValue[*time.Time]
-	DeleteDate         plugin.TValue[*time.Time]
-	LastRotationDate   plugin.TValue[*time.Time]
-	NextRotationDate   plugin.TValue[*time.Time]
-	MaterialExpireTime plugin.TValue[*time.Time]
-	PrimaryKeyVersion  plugin.TValue[string]
-	DeletionProtection plugin.TValue[string]
-	Creator            plugin.TValue[string]
-	Description        plugin.TValue[string]
-	DkmsInstanceId     plugin.TValue[string]
-	Aliases            plugin.TValue[[]any]
+	RegionId                    plugin.TValue[string]
+	KeyId                       plugin.TValue[string]
+	Arn                         plugin.TValue[string]
+	KeyState                    plugin.TValue[string]
+	KeyUsage                    plugin.TValue[string]
+	KeySpec                     plugin.TValue[string]
+	Origin                      plugin.TValue[string]
+	ProtectionLevel             plugin.TValue[string]
+	AutomaticRotation           plugin.TValue[string]
+	RotationInterval            plugin.TValue[string]
+	CreationDate                plugin.TValue[*time.Time]
+	DeleteDate                  plugin.TValue[*time.Time]
+	LastRotationDate            plugin.TValue[*time.Time]
+	NextRotationDate            plugin.TValue[*time.Time]
+	MaterialExpireTime          plugin.TValue[*time.Time]
+	PrimaryKeyVersion           plugin.TValue[string]
+	DeletionProtection          plugin.TValue[string]
+	Creator                     plugin.TValue[string]
+	Description                 plugin.TValue[string]
+	DkmsInstanceId              plugin.TValue[string]
+	Aliases                     plugin.TValue[[]any]
+	Policy                      plugin.TValue[string]
+	Statements                  plugin.TValue[[]any]
+	ExternalPrincipalAccountIds plugin.TValue[[]any]
+	AllowsExternalPrincipal     plugin.TValue[bool]
+	HasWildcardPrincipal        plugin.TValue[bool]
 }
 
 // createAlicloudKmsKey creates a new instance of this resource
@@ -23353,6 +23393,46 @@ func (c *mqlAlicloudKmsKey) GetDkmsInstanceId() *plugin.TValue[string] {
 func (c *mqlAlicloudKmsKey) GetAliases() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Aliases, func() ([]any, error) {
 		return c.aliases()
+	})
+}
+
+func (c *mqlAlicloudKmsKey) GetPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Policy, func() (string, error) {
+		return c.policy()
+	})
+}
+
+func (c *mqlAlicloudKmsKey) GetStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Statements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.kms.key", c.__id, "statements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.statements()
+	})
+}
+
+func (c *mqlAlicloudKmsKey) GetExternalPrincipalAccountIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExternalPrincipalAccountIds, func() ([]any, error) {
+		return c.externalPrincipalAccountIds()
+	})
+}
+
+func (c *mqlAlicloudKmsKey) GetAllowsExternalPrincipal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowsExternalPrincipal, func() (bool, error) {
+		return c.allowsExternalPrincipal()
+	})
+}
+
+func (c *mqlAlicloudKmsKey) GetHasWildcardPrincipal() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasWildcardPrincipal, func() (bool, error) {
+		return c.hasWildcardPrincipal()
 	})
 }
 

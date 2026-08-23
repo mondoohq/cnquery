@@ -40,6 +40,7 @@ func (r *mqlAlicloudKms) id() (string, error) {
 // mqlAlicloudKmsKeyInternal caches the region and key id needed to resolve the
 // key's alias list and to build its cache key.
 type mqlAlicloudKmsKeyInternal struct {
+	kmsKeyPolicyState
 	region string
 	keyId  string
 }

@@ -973,6 +973,7 @@ alicloud.fc.trigger.type 13.0.1
 alicloud.kms 13.0.1
 alicloud.kms.key 13.0.1
 alicloud.kms.key.aliases 13.0.1
+alicloud.kms.key.allowsExternalPrincipal 13.5.1
 alicloud.kms.key.arn 13.0.1
 alicloud.kms.key.automaticRotation 13.0.1
 alicloud.kms.key.creationDate 13.0.1
@@ -981,6 +982,8 @@ alicloud.kms.key.deleteDate 13.0.1
 alicloud.kms.key.deletionProtection 13.0.1
 alicloud.kms.key.description 13.0.1
 alicloud.kms.key.dkmsInstanceId 13.0.1
+alicloud.kms.key.externalPrincipalAccountIds 13.5.1
+alicloud.kms.key.hasWildcardPrincipal 13.5.1
 alicloud.kms.key.keyId 13.0.1
 alicloud.kms.key.keySpec 13.0.1
 alicloud.kms.key.keyState 13.0.1
@@ -989,10 +992,12 @@ alicloud.kms.key.lastRotationDate 13.0.1
 alicloud.kms.key.materialExpireTime 13.0.1
 alicloud.kms.key.nextRotationDate 13.0.1
 alicloud.kms.key.origin 13.0.1
+alicloud.kms.key.policy 13.5.1
 alicloud.kms.key.primaryKeyVersion 13.0.1
 alicloud.kms.key.protectionLevel 13.0.1
 alicloud.kms.key.regionId 13.0.1
 alicloud.kms.key.rotationInterval 13.0.1
+alicloud.kms.key.statements 13.5.1
 alicloud.kms.keys 13.0.1
 alicloud.kms.secret 13.0.1
 alicloud.kms.secret.arn 13.0.1
