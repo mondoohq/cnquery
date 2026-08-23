@@ -408,4 +408,5 @@ hetzner.zone.rrset.zone 13.4.2
 hetzner.zone.rrsets 13.4.2
 hetzner.zone.status 13.4.2
 hetzner.zone.ttl 13.4.2
+hetzner.zone.zonefile 13.7.8
 hetzner.zones 13.4.2

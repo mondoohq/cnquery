@@ -1329,6 +1329,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"hetzner.zone.rrsets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerZone).GetRrsets()).ToDataRes(types.Array(types.Resource("hetzner.zone.rrset")))
 	},
+	"hetzner.zone.zonefile": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHetznerZone).GetZonefile()).ToDataRes(types.String)
+	},
 	"hetzner.zone.protection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHetznerZone).GetProtection()).ToDataRes(types.Dict)
 	},
@@ -2951,6 +2954,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"hetzner.zone.rrsets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHetznerZone).Rrsets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"hetzner.zone.zonefile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHetznerZone).Zonefile, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"hetzner.zone.protection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7332,6 +7339,7 @@ type mqlHetznerZone struct {
 	DelegationStatus     plugin.TValue[string]
 	DelegationLastCheck  plugin.TValue[*time.Time]
 	Rrsets               plugin.TValue[[]any]
+	Zonefile             plugin.TValue[string]
 	Protection           plugin.TValue[any]
 	Labels               plugin.TValue[map[string]any]
 	Created              plugin.TValue[*time.Time]
@@ -7436,6 +7444,12 @@ func (c *mqlHetznerZone) GetRrsets() *plugin.TValue[[]any] {
 		}
 
 		return c.rrsets()
+	})
+}
+
+func (c *mqlHetznerZone) GetZonefile() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Zonefile, func() (string, error) {
+		return c.zonefile()
 	})
 }
 
