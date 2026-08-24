@@ -103,6 +103,8 @@ func TestMatchesAnyHostName(t *testing.T) {
 		{"(.*)", true},
 		{"(.+)", true},
 		{`[\s\S]*`, true},
+		{`[\s\S]+`, true},
+		{`^[\s\S]+$`, true},
 		{"", false},
 		{"^$", false},
 		{"a.*", false},
