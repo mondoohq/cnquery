@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mondoo.com/mql/v13/utils/dnssec"
+	"go.mondoo.com/mql/utils/dnssec"
 )
 
 // DNSSECKey is one key pair written by dnssec-keygen.

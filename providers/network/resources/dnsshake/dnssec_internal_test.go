@@ -11,7 +11,7 @@ import (
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/utils/dnssec"
+	"go.mondoo.com/mql/utils/dnssec"
 )
 
 // These tests never touch the network. Everything they exercise is decoding
@@ -206,6 +206,32 @@ func TestRrsetCoveredBy(t *testing.T) {
 
 	t.Run("nothing covered returns empty, not nil-shaped surprises", func(t *testing.T) {
 		assert.Empty(t, rrsetCoveredBy(sig, []dns.RR{otherName, otherType}))
+	})
+}
+
+func TestVerifySignaturesSkipsIrrelevantRrsigs(t *testing.T) {
+	a1, err := dns.NewRR("www.example.com. 300 IN A 192.0.2.1")
+	require.NoError(t, err)
+
+	// An RRSIG covering NSEC, bundled alongside an A answer by a validating
+	// resolver. Nothing in the answer is of the covered type.
+	nsecSig := &dns.RRSIG{
+		Hdr:         dns.RR_Header{Name: "www.example.com.", Class: dns.ClassINET},
+		TypeCovered: dns.TypeNSEC,
+		SignerName:  "example.com.",
+	}
+
+	d := &DnsClient{}
+
+	t.Run("an answer carrying only uncovered signatures does not verify", func(t *testing.T) {
+		// Every signature is skipped, so nothing was actually checked. This
+		// must not pass: skipping is only safe while at least one signature
+		// still has to verify.
+		assert.False(t, d.verifySignatures("", []*dns.RRSIG{nsecSig}, []dns.RR{a1}))
+	})
+
+	t.Run("no signatures at all does not verify", func(t *testing.T) {
+		assert.False(t, d.verifySignatures("", nil, []dns.RR{a1}))
 	})
 }
 

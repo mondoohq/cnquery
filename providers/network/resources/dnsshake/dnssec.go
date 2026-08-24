@@ -12,7 +12,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/miekg/dns"
-	"go.mondoo.com/mql/v13/utils/dnssec"
+	"go.mondoo.com/mql/utils/dnssec"
 )
 
 // DnssecValidation is the outcome of a DNSSEC-validating resolution.
@@ -280,13 +280,27 @@ func fingerprintSignature(signature string) string {
 // verifySignatures checks each signature over the answer against the keys its
 // signing zone publishes.
 //
-// Every signature has to verify. Accepting the answer because one of several
-// verified would pass a zone that is half-way through a botched rollover and
-// serving signatures from a key it has already withdrawn.
+// Every signature that covers something in the answer has to verify. Accepting
+// the answer because one of several verified would pass a zone that is
+// half-way through a botched rollover and serving signatures from a key it has
+// already withdrawn.
+//
+// A signature covering a type that is not in the answer is skipped rather than
+// failed: validating resolvers bundle extra RRSIGs (an NSEC signature
+// alongside an A answer, say), and failing on those would report a correctly
+// signed zone as unvalidated. Skipping is only safe because the count below
+// requires at least one signature to have actually been checked -- otherwise an
+// answer carrying nothing but irrelevant RRSIGs would verify vacuously.
 func (d *DnsClient) verifySignatures(server string, rrsigs []*dns.RRSIG, answer []dns.RR) bool {
 	keysByZone := map[string][]*dns.DNSKEY{}
+	verified := 0
 
 	for _, sig := range rrsigs {
+		rrset := rrsetCoveredBy(sig, answer)
+		if len(rrset) == 0 {
+			continue
+		}
+
 		zone := sig.SignerName
 		keys, ok := keysByZone[zone]
 		if !ok {
@@ -297,17 +311,13 @@ func (d *DnsClient) verifySignatures(server string, rrsigs []*dns.RRSIG, answer 
 			return false
 		}
 
-		rrset := rrsetCoveredBy(sig, answer)
-		if len(rrset) == 0 {
-			return false
-		}
-
 		if !verifyWithAnyKey(sig, keys, rrset) {
 			return false
 		}
+		verified++
 	}
 
-	return len(rrsigs) > 0
+	return verified > 0
 }
 
 // verifyWithAnyKey reports whether any of the zone's keys validates the
@@ -392,15 +402,23 @@ func (d *DnsClient) delegationSigners(server, zone string) ([]*dns.DS, string, e
 		return nil, "", err
 	}
 
+	// A recursive resolver answers a DS query from the Answer section. Some
+	// configurations end up talking to the child zone's authoritative server
+	// instead, which returns the DS in the Authority section of a referral, so
+	// both are read here.
+	sections := make([]dns.RR, 0, len(msg.Answer)+len(msg.Ns))
+	sections = append(sections, msg.Answer...)
+	sections = append(sections, msg.Ns...)
+
 	records := []*dns.DS{}
-	for _, rr := range msg.Answer {
+	for _, rr := range sections {
 		if ds, ok := rr.(*dns.DS); ok {
 			records = append(records, ds)
 		}
 	}
 
 	parent := parentZone(zone)
-	for _, sig := range rrsigsIn(msg.Answer) {
+	for _, sig := range rrsigsIn(sections) {
 		if sig.TypeCovered == dns.TypeDS && sig.SignerName != "" {
 			parent = sig.SignerName
 			break

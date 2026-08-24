@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strconv"
@@ -11,11 +12,11 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/v13/providers/network/resources/dnsshake"
-	"go.mondoo.com/mql/v13/types"
-	"go.mondoo.com/mql/v13/utils/dnssec"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/network/resources/dnsshake"
+	"go.mondoo.com/mql/types"
+	"go.mondoo.com/mql/utils/dnssec"
 )
 
 // dnssec reports how the zone is signed, from the record sweep params already
@@ -58,7 +59,7 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssecConfig, error) {
 		algorithms = append(algorithms, a)
 	}
 	slices.SortFunc(algorithms, func(a, b any) int {
-		return int(a.(int64) - b.(int64))
+		return cmp.Compare(a.(int64), b.(int64))
 	})
 
 	// The DS records live in the parent zone; a query for them at this name is
@@ -74,7 +75,7 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssecConfig, error) {
 		}
 
 		res, err := CreateResource(d.MqlRuntime, "dns.dsRecord", map[string]*llx.RawData{
-			"__id":                llx.StringData(fmt.Sprintf("dns.dsRecord/%s/%d/%s", d.Fqdn.Data, ds.DigestType, ds.Digest)),
+			"__id":                llx.StringData(fmt.Sprintf("dns.dsRecord/%s/%d/%d/%s", d.Fqdn.Data, ds.Algorithm, ds.DigestType, ds.Digest)),
 			"algorithm":           llx.IntData(int64(ds.Algorithm)),
 			"algorithmName":       llx.StringData(dnssec.AlgorithmName(int(ds.Algorithm))),
 			"digestType":          llx.IntData(int64(ds.DigestType)),
@@ -318,7 +319,7 @@ func (d *mqlDns) dnssecValidation(fqdn string) (*mqlDnsDnssecValidationResult, e
 		algorithms = append(algorithms, a)
 	}
 	slices.SortFunc(algorithms, func(a, b any) int {
-		return int(a.(int64) - b.(int64))
+		return cmp.Compare(a.(int64), b.(int64))
 	})
 
 	// Both expiry fields stay null when nothing was signed, rather than

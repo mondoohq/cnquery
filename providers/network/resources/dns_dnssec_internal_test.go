@@ -9,7 +9,7 @@ import (
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/utils/dnssec"
+	"go.mondoo.com/mql/utils/dnssec"
 )
 
 // The params dict these read is what convert.JsonToDict produced from a
