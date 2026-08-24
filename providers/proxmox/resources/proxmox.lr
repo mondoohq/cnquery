@@ -2216,7 +2216,7 @@ proxmox.node.disk @defaults("devPath model size health") {
 // when it is `text` the device only returns unstructured output via
 // the `text` field. Structured `attributes` are available for ATA and
 // SAS drives.
-proxmox.node.disk.smart @defaults("health type") {
+private proxmox.node.disk.smart @defaults("health type") {
   // Overall device health verdict
   health string
   // SMART report flavor (ata, nvme, sas, text)

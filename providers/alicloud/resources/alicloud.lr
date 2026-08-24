@@ -420,7 +420,7 @@ alicloud.ram.policy.statement @defaults("effect action resource") {
 // Account-wide password requirements for RAM users. Exposes the minimum
 // length, character-class requirements, expiration and reuse rules, and the
 // failed-login lockout threshold.
-alicloud.ram.passwordPolicy {
+private alicloud.ram.passwordPolicy {
   // Minimum number of characters required in a password
   minimumPasswordLength int
   // Whether passwords must contain a lowercase letter
@@ -7047,7 +7047,7 @@ alicloud.sas {
 // fingerprints are collected. A machine can sit in the inventory reporting no
 // findings because a scan it needed was never scheduled, which the machine
 // inventory alone does not show.
-alicloud.sas.config {
+private alicloud.sas.config {
   // Whether the scheduled antivirus scan is switched on
   //
   // This is the scheduled scan, not real-time protection. Reports false when

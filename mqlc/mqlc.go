@@ -1196,6 +1196,35 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 	return false, types.Nil, nil
 }
 
+// prefersFieldOverResource reports whether the dotted path `owner`.`field`
+// should be compiled as a field read on owner instead of being extended into the
+// resource of the same name.
+//
+// The path extension is greedy, so a resource name always used to win over a
+// field of the same name. That is wrong for private resources: private means the
+// resource cannot stand on its own, and a bare instance skips the owner's
+// accessor. For resources whose fields are only filled by that accessor every
+// field then reads null, which combined with MQL's asymmetric null comparisons
+// turns a check into a confidently wrong verdict rather than an error. See
+// windows.deviceGuard, windows.lsa.ntlm, aws.emr.cluster.encryptionConfiguration
+// and friends.
+//
+// Only redirect when the owner really does expose the value under that name and
+// with exactly that type, so nothing that used to compile becomes unreachable.
+// Implicit fields are excluded: those are the singular accessors lr generates for
+// every `x.y` resource, they are not backed by an accessor on the owner, so
+// routing through them would break paths that work today.
+func (c *compiler) prefersFieldOverResource(owner *resources.ResourceInfo, target *resources.ResourceInfo, field string) bool {
+	if !target.GetPrivate() {
+		return false
+	}
+	_, f := c.Schema.LookupField(owner.Name, field)
+	if f == nil || f.GetIsImplicitResource() {
+		return false
+	}
+	return types.Type(f.Type) == types.Resource(target.Name)
+}
+
 // compile a resource from an identifier, trying to find the longest matching resource
 // and execute all call functions if there are any
 func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*parser.Call, types.Type, error) {
@@ -1205,9 +1234,13 @@ func (c *compiler) compileResource(id string, calls []*parser.Call) (bool, []*pa
 	}
 
 	for len(calls) > 0 && calls[0].Ident != nil {
-		nuID := id + "." + (*calls[0].Ident)
+		field := *calls[0].Ident
+		nuID := id + "." + field
 		nuResource := c.Schema.Lookup(nuID)
 		if nuResource == nil {
+			break
+		}
+		if c.prefersFieldOverResource(resource, nuResource, field) {
 			break
 		}
 		resource, id = nuResource, nuID

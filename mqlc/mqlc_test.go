@@ -2606,3 +2606,40 @@ func allCodepoints(code *llx.CodeV2) ([]uint64, []uint64) {
 	}
 	return entrypoints, datapoints
 }
+
+func TestCompiler_PrivateResourcePathPrefersField(t *testing.T) {
+	// A dotted path whose full name is also a resource used to always compile to
+	// that resource, skipping the owner's accessor. For private resources with
+	// data-only fields that left every field null. Private resources must instead
+	// be reached through the owner's accessor, while everything else keeps
+	// resolving to the longest matching resource name.
+	data := []struct {
+		code   string
+		chunks []string
+	}{
+		// private sub-resources: routed through the owner's accessor
+		{"windows.deviceGuard.credentialGuardConfig", []string{"windows", "deviceGuard", "credentialGuardConfig"}},
+		{"windows.lsa.ntlm.useLogonCredential", []string{"windows.lsa", "ntlm", "useLogonCredential"}},
+		{"windows.smb.serverConfiguration.requireSecuritySignature", []string{"windows.smb", "serverConfiguration", "requireSecuritySignature"}},
+		{"windows.winrm.service.allowBasic", []string{"windows.winrm", "service", "allowBasic"}},
+		{"windows.defender.status.amEngineVersion", []string{"windows.defender", "status", "amEngineVersion"}},
+		// public resources are untouched, even when they shadow a field
+		{"windows.lsa.forceGuest", []string{"windows.lsa", "forceGuest"}},
+		{"sshd.config.params", []string{"sshd.config", "params"}},
+		// the singular accessors lr generates for list resources are implicit and
+		// not backed by the owner, so those paths keep resolving to the resource
+		{"windows.printerDriver.name", []string{"windows.printerDriver", "name"}},
+	}
+
+	for _, v := range data {
+		t.Run(v.code, func(t *testing.T) {
+			compileT(t, v.code, func(res *llx.CodeBundle) {
+				ids := []string{}
+				for _, c := range res.CodeV2.Blocks[0].Chunks {
+					ids = append(ids, c.Id)
+				}
+				assert.Equal(t, v.chunks, ids)
+			})
+		})
+	}
+}
