@@ -93,14 +93,7 @@ func (s *mqlFile) codesignSignature(conn shared.Connection, path string) (*mqlFi
 				teamID = v
 			}
 		case ts == nil && strings.HasPrefix(line, "Timestamp="):
-			// codesign's -dvvv timestamp is locale-formatted, so this parse is
-			// best-effort: on a non-English macOS it may not match and ts stays
-			// nil (the signature's signed/verified/authority fields are
-			// unaffected).
-			v := strings.TrimPrefix(line, "Timestamp=")
-			if t, e := time.Parse("Jan 2, 2006 at 3:04:05 PM", v); e == nil {
-				ts = &t
-			}
+			ts = parseCodesignTimestamp(strings.TrimPrefix(line, "Timestamp="))
 		}
 	}
 	return s.newSignature(path, signed, verified, authority, teamID, "", ts, "codesign")
@@ -149,6 +142,30 @@ func readAll(r io.Reader) string {
 	b, _ := io.ReadAll(r)
 	return string(b)
 }
+
+// parseCodesignTimestamp parses the timestamp codesign prints in its -dvvv
+// output, e.g. "Apr 1, 2026 at 6:38:28 AM".
+//
+// codesign renders the date through ICU, which on current macOS separates the
+// time from AM/PM with U+202F (narrow no-break space) rather than a plain
+// space, so the layout below only matches after the Unicode spaces are folded
+// to ASCII. The format is also locale-dependent: on a non-English macOS the
+// month name will not match and the timestamp stays null, which leaves the
+// signature's signed/verified/authority fields unaffected.
+func parseCodesignTimestamp(v string) *time.Time {
+	v = strings.TrimSpace(unicodeSpaces.Replace(v))
+	if t, err := time.Parse("Jan 2, 2006 at 3:04:05 PM", v); err == nil {
+		return &t
+	}
+	return nil
+}
+
+// unicodeSpaces folds the non-ASCII spaces ICU emits to a plain space.
+var unicodeSpaces = strings.NewReplacer(
+	"\u202f", " ", // narrow no-break space
+	"\u00a0", " ", // no-break space
+	"\u2009", " ", // thin space
+)
 
 // unixSingleQuote wraps a path in single quotes for a POSIX shell, escaping any
 // embedded single quotes.

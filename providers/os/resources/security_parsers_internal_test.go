@@ -6,6 +6,7 @@ package resources
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -81,4 +82,27 @@ func TestParseDriverDate(t *testing.T) {
 	assert.Nil(t, parseDriverDate(json.RawMessage(`null`)))
 	assert.Nil(t, parseDriverDate(json.RawMessage(`{"foo":1}`)))
 	assert.Nil(t, parseDriverDate(nil))
+}
+
+func TestParseCodesignTimestamp(t *testing.T) {
+	// codesign on current macOS separates the time from AM/PM with U+202F,
+	// not a plain space; parsing has to tolerate both.
+	narrow := "Apr 1, 2026 at 6:38:28\u202fAM"
+	got := parseCodesignTimestamp(narrow)
+	require.NotNil(t, got, "narrow no-break space before AM must still parse")
+	assert.Equal(t, time.Date(2026, time.April, 1, 6, 38, 28, 0, time.UTC), got.UTC())
+
+	got = parseCodesignTimestamp("Apr 1, 2026 at 6:38:28 AM")
+	require.NotNil(t, got, "plain ASCII space must still parse")
+	assert.Equal(t, time.Date(2026, time.April, 1, 6, 38, 28, 0, time.UTC), got.UTC())
+
+	got = parseCodesignTimestamp("Dec 25, 2025 at 11:59:59\u00a0PM")
+	require.NotNil(t, got)
+	assert.Equal(t, time.Date(2025, time.December, 25, 23, 59, 59, 0, time.UTC), got.UTC())
+
+	// an unparseable (e.g. non-English locale) value stays null rather than
+	// becoming the zero time
+	for _, v := range []string{"", "not a date", "1 avr. 2026 \u00e0 06:38:28"} {
+		assert.Nil(t, parseCodesignTimestamp(v), "should stay null: %q", v)
+	}
 }
