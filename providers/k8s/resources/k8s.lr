@@ -141,6 +141,8 @@ k8s {
   resourceClaims() []k8s.resourceclaim
   // Kubernetes dynamic resource allocation ResourceClaimTemplates
   resourceClaimTemplates() []k8s.resourceclaimtemplate
+  // Kubernetes RuntimeClasses
+  runtimeClasses() []k8s.runtimeclass
 }
 
 // Kubernetes API resource type
@@ -381,6 +383,27 @@ private k8s.node @defaults("name labels['kubernetes.io/arch'] labels['kubernetes
   volumesAttached() []dict
   // Names of volumes currently in use by pods on the node
   volumesInUse() []string
+  // Container runtime handlers the kubelet advertises
+  //
+  // One entry per handler the node can run pods with, with keys `name` (the
+  // handler a RuntimeClass selects, empty for the runtime's default) and
+  // `features`, holding `recursiveReadOnlyMounts` and `userNamespaces`. A
+  // kubelet that reports no handlers returns an empty list.
+  runtimeHandlers() []dict
+  // Whether any runtime handler on the node supports user namespaces
+  //
+  // A pod that sets hostUsers to false gets no isolation on a node whose
+  // runtime cannot provide a user namespace, so this is what makes that
+  // mismatch detectable. Null when the kubelet advertises no handler features
+  // at all, which is not the same as reporting that the feature is absent.
+  supportsUserNamespaces() bool
+  // Whether the node's runtime supports SupplementalGroupsPolicy
+  //
+  // Read from the node's reported features. When true the runtime honors a
+  // pod's supplementalGroupsPolicy of Strict, which stops the container image
+  // from adding group memberships the pod spec did not grant. Null when the
+  // kubelet reports no feature block.
+  supportsSupplementalGroupsPolicy() bool
 }
 
 // Kubernetes node taint
@@ -461,6 +484,8 @@ private k8s.pod @defaults("namespace name created") @context("k8s.context") {
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Volumes the pod declares
+  volumes() []k8s.volume
   // Whether any container effectively runs with the Unconfined seccomp profile
   //
   // Resolves the container-level seccomp profile, falling back to the pod-level
@@ -603,6 +628,11 @@ private k8s.pod @defaults("namespace name created") @context("k8s.context") {
   schedulerName() string
   // Name of the RuntimeClass that selects the container runtime
   runtimeClassName() string
+  // The RuntimeClass that selects the container runtime
+  //
+  // Null when the pod names no RuntimeClass, in which case the node's default
+  // runtime handler runs it, or when the named class no longer exists.
+  runtimeClass() k8s.runtimeclass
   // Name of the ServiceAccount used to run the pod
   serviceAccountName() string
   // The ServiceAccount used to run the pod
@@ -621,6 +651,15 @@ private k8s.pod @defaults("namespace name created") @context("k8s.context") {
   hostPID() bool
   // Whether the pod shares the host IPC namespace
   hostIPC() bool
+  // Whether the pod shares the host user namespace
+  //
+  // True when containers run in the node's user namespace, so a process
+  // running as root inside a container is root on the node. False when the pod
+  // requests its own user namespace, which maps container UIDs onto
+  // unprivileged host UIDs. Kubernetes leaves the field unset by default and
+  // treats unset as true, so this reports true for a pod that never asks for
+  // the isolation.
+  hostUsers() bool
   // Whether containers in the pod share a single PID namespace
   shareProcessNamespace() bool
   // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
@@ -711,6 +750,15 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   hostPID() bool
   // Whether the pod shares the host IPC namespace
   hostIPC() bool
+  // Whether the pod template shares the host user namespace
+  //
+  // True when containers run in the node's user namespace, so a process
+  // running as root inside a container is root on the node. False when the
+  // template requests its own user namespace, which maps container UIDs onto
+  // unprivileged host UIDs. Kubernetes leaves the field unset by default and
+  // treats unset as true, so this reports true for a template that never asks
+  // for the isolation.
+  hostUsers() bool
   // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
   securityContext() dict
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
@@ -742,6 +790,8 @@ private k8s.deployment @defaults("namespace name desiredReplicas readyReplicas c
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Volumes the pod template declares
+  volumes() []k8s.volume
   // Whether any container effectively runs with the Unconfined seccomp profile
   //
   // Resolves the container-level seccomp profile, falling back to the pod-level
@@ -890,6 +940,15 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   hostPID() bool
   // Whether the pod shares the host IPC namespace
   hostIPC() bool
+  // Whether the pod template shares the host user namespace
+  //
+  // True when containers run in the node's user namespace, so a process
+  // running as root inside a container is root on the node. False when the
+  // template requests its own user namespace, which maps container UIDs onto
+  // unprivileged host UIDs. Kubernetes leaves the field unset by default and
+  // treats unset as true, so this reports true for a template that never asks
+  // for the isolation.
+  hostUsers() bool
   // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
   securityContext() dict
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
@@ -921,6 +980,8 @@ private k8s.daemonset @defaults("namespace name desiredNumberScheduled numberRea
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Volumes the pod template declares
+  volumes() []k8s.volume
   // Whether any container effectively runs with the Unconfined seccomp profile
   //
   // Resolves the container-level seccomp profile, falling back to the pod-level
@@ -1059,6 +1120,15 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   hostPID() bool
   // Whether the pod shares the host IPC namespace
   hostIPC() bool
+  // Whether the pod template shares the host user namespace
+  //
+  // True when containers run in the node's user namespace, so a process
+  // running as root inside a container is root on the node. False when the
+  // template requests its own user namespace, which maps container UIDs onto
+  // unprivileged host UIDs. Kubernetes leaves the field unset by default and
+  // treats unset as true, so this reports true for a template that never asks
+  // for the isolation.
+  hostUsers() bool
   // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
   securityContext() dict
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
@@ -1090,6 +1160,8 @@ private k8s.statefulset @defaults("namespace name desiredReplicas readyReplicas 
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Volumes the pod template declares
+  volumes() []k8s.volume
   // Whether any container effectively runs with the Unconfined seccomp profile
   //
   // Resolves the container-level seccomp profile, falling back to the pod-level
@@ -1245,6 +1317,15 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   hostPID() bool
   // Whether the pod shares the host IPC namespace
   hostIPC() bool
+  // Whether the pod template shares the host user namespace
+  //
+  // True when containers run in the node's user namespace, so a process
+  // running as root inside a container is root on the node. False when the
+  // template requests its own user namespace, which maps container UIDs onto
+  // unprivileged host UIDs. Kubernetes leaves the field unset by default and
+  // treats unset as true, so this reports true for a template that never asks
+  // for the isolation.
+  hostUsers() bool
   // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
   securityContext() dict
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
@@ -1276,6 +1357,8 @@ private k8s.replicaset @defaults("namespace name desiredReplicas readyReplicas c
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Volumes the pod template declares
+  volumes() []k8s.volume
   // Whether any container effectively runs with the Unconfined seccomp profile
   //
   // Resolves the container-level seccomp profile, falling back to the pod-level
@@ -1413,6 +1496,15 @@ private k8s.job @defaults("namespace name succeeded failed created") @context("k
   hostPID() bool
   // Whether the pod shares the host IPC namespace
   hostIPC() bool
+  // Whether the pod template shares the host user namespace
+  //
+  // True when containers run in the node's user namespace, so a process
+  // running as root inside a container is root on the node. False when the
+  // template requests its own user namespace, which maps container UIDs onto
+  // unprivileged host UIDs. Kubernetes leaves the field unset by default and
+  // treats unset as true, so this reports true for a template that never asks
+  // for the isolation.
+  hostUsers() bool
   // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
   securityContext() dict
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
@@ -1444,6 +1536,8 @@ private k8s.job @defaults("namespace name succeeded failed created") @context("k
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Volumes the pod template declares
+  volumes() []k8s.volume
   // Whether any container effectively runs with the Unconfined seccomp profile
   //
   // Resolves the container-level seccomp profile, falling back to the pod-level
@@ -1597,6 +1691,15 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") @contex
   hostPID() bool
   // Whether the pod shares the host IPC namespace
   hostIPC() bool
+  // Whether the pod template shares the host user namespace
+  //
+  // True when containers run in the node's user namespace, so a process
+  // running as root inside a container is root on the node. False when the
+  // template requests its own user namespace, which maps container UIDs onto
+  // unprivileged host UIDs. Kubernetes leaves the field unset by default and
+  // treats unset as true, so this reports true for a template that never asks
+  // for the isolation.
+  hostUsers() bool
   // Pod-level security context (runAsUser, runAsGroup, runAsNonRoot, fsGroup, seccompProfile, supplementalGroups, sysctls, windowsOptions)
   securityContext() dict
   // Whether any container runs in privileged mode, across regular, init, and ephemeral containers
@@ -1628,6 +1731,8 @@ private k8s.cronjob @defaults("namespace name schedule suspend created") @contex
   usesHostNamespaces() bool
   // Whether the pod mounts a hostPath volume
   usesHostPath() bool
+  // Volumes the pod template declares
+  volumes() []k8s.volume
   // Whether any container effectively runs with the Unconfined seccomp profile
   //
   // Resolves the container-level seccomp profile, falling back to the pod-level
@@ -1851,6 +1956,34 @@ private k8s.container @defaults("name") {
   // container sets no seccomp profile, in which case the pod-level profile (if
   // any) applies. Parsed from `securityContext.seccompProfile.type`.
   seccompProfileType string
+  // AppArmor profile type applied to the container
+  //
+  // One of `RuntimeDefault`, `Localhost`, or `Unconfined`. Empty when the
+  // container sets no AppArmor profile, in which case the pod-level profile
+  // (if any) applies. `Unconfined` disables AppArmor confinement for the
+  // container. Parsed from `securityContext.appArmorProfile.type`.
+  appArmorProfileType string
+  // How /proc is mounted inside the container
+  //
+  // One of `Default`, which masks and read-only mounts the kernel paths the
+  // runtime considers dangerous, or `Unmasked`, which exposes all of them.
+  // Empty when the container sets no procMount, in which case `Default`
+  // applies. Parsed from `securityContext.procMount`.
+  procMount string
+  // SELinux type label the container runs under
+  //
+  // Empty when the container sets no SELinux type, in which case the pod-level
+  // label or the runtime's default applies. A type such as `spc_t` runs the
+  // container as a super-privileged container with no SELinux confinement.
+  // Parsed from `securityContext.seLinuxOptions.type`.
+  seLinuxType string
+  // SELinux level label the container runs under
+  //
+  // The sensitivity and category set (for example `s0:c123,c456`) that
+  // separates one container's objects from another's. Empty when the container
+  // sets no level, in which case the pod-level label or a runtime-assigned
+  // level applies. Parsed from `securityContext.seLinuxOptions.level`.
+  seLinuxLevel string
   // Container's working directory
   workingDir string
   // Whether this container should allocate a TTY for itself
@@ -2028,6 +2161,34 @@ private k8s.initContainer @defaults("name") {
   // container sets no seccomp profile, in which case the pod-level profile (if
   // any) applies. Parsed from `securityContext.seccompProfile.type`.
   seccompProfileType string
+  // AppArmor profile type applied to the container
+  //
+  // One of `RuntimeDefault`, `Localhost`, or `Unconfined`. Empty when the
+  // container sets no AppArmor profile, in which case the pod-level profile
+  // (if any) applies. `Unconfined` disables AppArmor confinement for the
+  // container. Parsed from `securityContext.appArmorProfile.type`.
+  appArmorProfileType string
+  // How /proc is mounted inside the container
+  //
+  // One of `Default`, which masks and read-only mounts the kernel paths the
+  // runtime considers dangerous, or `Unmasked`, which exposes all of them.
+  // Empty when the container sets no procMount, in which case `Default`
+  // applies. Parsed from `securityContext.procMount`.
+  procMount string
+  // SELinux type label the container runs under
+  //
+  // Empty when the container sets no SELinux type, in which case the pod-level
+  // label or the runtime's default applies. A type such as `spc_t` runs the
+  // container as a super-privileged container with no SELinux confinement.
+  // Parsed from `securityContext.seLinuxOptions.type`.
+  seLinuxType string
+  // SELinux level label the container runs under
+  //
+  // The sensitivity and category set (for example `s0:c123,c456`) that
+  // separates one container's objects from another's. Empty when the container
+  // sets no level, in which case the pod-level label or a runtime-assigned
+  // level applies. Parsed from `securityContext.seLinuxOptions.level`.
+  seLinuxLevel string
   // Container's working directory
   workingDir string
   // Whether this container should allocate a TTY for itself
@@ -2147,6 +2308,34 @@ private k8s.ephemeralContainer @defaults("name") {
   // container sets no seccomp profile, in which case the pod-level profile (if
   // any) applies. Parsed from `securityContext.seccompProfile.type`.
   seccompProfileType string
+  // AppArmor profile type applied to the container
+  //
+  // One of `RuntimeDefault`, `Localhost`, or `Unconfined`. Empty when the
+  // container sets no AppArmor profile, in which case the pod-level profile
+  // (if any) applies. `Unconfined` disables AppArmor confinement for the
+  // container. Parsed from `securityContext.appArmorProfile.type`.
+  appArmorProfileType string
+  // How /proc is mounted inside the container
+  //
+  // One of `Default`, which masks and read-only mounts the kernel paths the
+  // runtime considers dangerous, or `Unmasked`, which exposes all of them.
+  // Empty when the container sets no procMount, in which case `Default`
+  // applies. Parsed from `securityContext.procMount`.
+  procMount string
+  // SELinux type label the container runs under
+  //
+  // Empty when the container sets no SELinux type, in which case the pod-level
+  // label or the runtime's default applies. A type such as `spc_t` runs the
+  // container as a super-privileged container with no SELinux confinement.
+  // Parsed from `securityContext.seLinuxOptions.type`.
+  seLinuxType string
+  // SELinux level label the container runs under
+  //
+  // The sensitivity and category set (for example `s0:c123,c456`) that
+  // separates one container's objects from another's. Empty when the container
+  // sets no level, in which case the pod-level label or a runtime-assigned
+  // level applies. Parsed from `securityContext.seLinuxOptions.level`.
+  seLinuxLevel string
   // Container's working directory
   workingDir string
   // Whether this container should allocate a TTY for itself
@@ -2576,6 +2765,18 @@ private k8s.serviceaccount @defaults("namespace name created") @context("k8s.con
   canReadSecrets() bool
   // Whether any bound role has a wildcard rule (wildcard verbs, API groups, or resources)
   hasWildcardPermissions() bool
+  // Secret objects the service account carries
+  //
+  // Resolves each entry of secrets to the Secret in the account's namespace. A
+  // service account that still carries a Secret here holds a long-lived,
+  // non-expiring API token, unlike the projected tokens the kubelet rotates.
+  // Entries whose Secret no longer exists are omitted.
+  secretRefs() []k8s.secret
+  // Secret objects used to pull private container images
+  //
+  // Resolves each entry of imagePullSecrets to the Secret in the account's
+  // namespace. Entries whose Secret no longer exists are omitted.
+  imagePullSecretRefs() []k8s.secret
 }
 
 // Kubernetes ClusterRole
@@ -3242,6 +3443,147 @@ private k8s.persistentvolume @defaults("name capacity['storage'] phase storageCl
   reason() string
   // Human-readable message about the current phase
   message() string
+}
+
+// Kubernetes RuntimeClass
+//
+// Container runtime configuration a pod selects by name, selected by name.
+// The handler field names the CRI handler the kubelet invokes, which is how a
+// workload is placed on a sandboxed runtime such as gVisor or Kata Containers
+// instead of the node's default runtime. The overhead field reports the fixed
+// resources the runtime itself consumes per pod, scheduling restricts which
+// nodes may run pods of the class, and pods returns the pods currently
+// selecting it.
+private k8s.runtimeclass @defaults("name handler created") @context("k8s.context") {
+  // Mondoo ID for the Kubernetes object
+  id string
+  // Kubernetes object UID
+  uid string
+  // Kubernetes resource version
+  resourceVersion string
+  // Kubernetes labels
+  labels() map[string]string
+  // Kubernetes annotations
+  annotations() map[string]string
+  // Owner references describing the controllers and parent objects that own this object
+  ownerReferences() []k8s.ownerReference
+  // Server-side apply records describing which field managers own which fields
+  managedFields() []k8s.managedField
+  // Kubernetes object name
+  name string
+  // Kubernetes object type
+  kind string
+  // Kubernetes object creation timestamp
+  created time
+  // Full resource manifest
+  manifest() dict
+  // CRI handler the kubelet invokes for pods of this class
+  //
+  // Names a runtime the node has configured, for example `runc` for the
+  // default runtime or `runsc` for gVisor. A node whose kubelet advertises no
+  // matching handler cannot run pods of this class.
+  handler string
+  // Fixed resource overhead the runtime adds to every pod of this class
+  //
+  // Keys are resource names such as cpu and memory; values are Kubernetes
+  // quantity strings. Empty when the class declares no overhead.
+  overhead map[string]string
+  // Node restrictions for pods of this class
+  //
+  // Keys are `nodeSelector`, the labels a node must carry for a pod of this
+  // class to be scheduled on it, and `tolerations`, the taints such a pod
+  // gains automatically. Null when the class places no restriction, in which
+  // case any node may run its pods whether or not the runtime is installed
+  // there.
+  scheduling dict
+  // Pods that select this RuntimeClass
+  pods() []k8s.pod
+}
+
+// Kubernetes pod volume
+//
+// Storage a pod or pod template attaches, selected by the volume name that a
+// container's volumeMounts refer to. The type field names the single populated
+// volume source, and the sources that carry security meaning are read out
+// alongside it: hostPath and hostPathType for a mount of the node's own
+// filesystem, emptyDirMedium and emptyDirSizeLimit for scratch space,
+// csiDriver for an inline CSI volume, and serviceAccountTokens for the
+// projected API tokens the kubelet writes into the pod. The secrets,
+// configMaps, and persistentVolumeClaim fields resolve the objects a source
+// names in the same namespace, and source carries the complete volume source
+// for the types that are not read out into their own fields.
+private k8s.volume @defaults("name type") {
+  // Name of the volume as referenced by container volumeMounts
+  name string
+  // Namespace of the pod or pod template that declares the volume
+  namespace string
+  // Populated volume source type
+  //
+  // One of `hostPath`, `emptyDir`, `secret`, `configMap`, `projected`,
+  // `persistentVolumeClaim`, `csi`, `downwardAPI`, `ephemeral`, `nfs`,
+  // `iscsi`, or another source name the API server accepts. Empty when the
+  // volume declares no source at all.
+  type string
+  // Node filesystem path the volume mounts
+  //
+  // A hostPath volume reaches the node's own filesystem, so this path decides
+  // what a container reads or writes outside its image. Null for every other
+  // volume type.
+  hostPath string
+  // Expected type of the hostPath target
+  //
+  // One of `DirectoryOrCreate`, `Directory`, `FileOrCreate`, `File`, `Socket`,
+  // `CharDevice`, `BlockDevice`, or empty for no check. Null for every volume
+  // type other than hostPath.
+  hostPathType string
+  // Storage medium backing an emptyDir volume
+  //
+  // Empty for the node's default medium, which is disk, and `Memory` for a
+  // tmpfs volume that counts against the pod's memory limit. Null for every
+  // other volume type.
+  emptyDirMedium string
+  // Size limit of an emptyDir volume as a Kubernetes quantity
+  //
+  // Null when the volume is not an emptyDir or sets no limit, in which case it
+  // may grow until the node's ephemeral storage is exhausted.
+  emptyDirSizeLimit string
+  // Name of the CSI driver backing an inline CSI volume
+  //
+  // Null for every volume type other than an inline csi volume.
+  csiDriver string
+  // Projected ServiceAccount tokens the volume delivers
+  //
+  // One entry per serviceAccountToken source in a projected volume, with keys
+  // `audience` (the recipient the token is valid for, empty when the token
+  // targets the API server itself), `expirationSeconds` (the lifetime
+  // requested from the kubelet, which rotates the file), and `path` (the file
+  // the token is written to inside the container). Empty for every other
+  // volume type.
+  serviceAccountTokens() []dict
+  // Secret objects the volume mounts
+  //
+  // Resolves a secret volume source, and every secret source of a projected
+  // volume, to the Secret in the same namespace. Empty when the volume mounts
+  // no Secret; a referenced Secret that no longer exists is omitted.
+  secrets() []k8s.secret
+  // ConfigMap objects the volume mounts
+  //
+  // Resolves a configMap volume source, and every configMap source of a
+  // projected volume, to the ConfigMap in the same namespace. Empty when the
+  // volume mounts no ConfigMap; a referenced ConfigMap that no longer exists
+  // is omitted.
+  configMaps() []k8s.configmap
+  // PersistentVolumeClaim the volume binds
+  //
+  // Null when the volume is not a persistentVolumeClaim volume, or when the
+  // claim it names no longer exists.
+  persistentVolumeClaim() k8s.persistentvolumeclaim
+  // Complete volume source
+  //
+  // The volume source as the API server stores it, keyed by source name. This
+  // carries the sources that are not read out into their own fields, such as
+  // nfs, iscsi, cephfs, downwardAPI, and ephemeral.
+  source dict
 }
 
 // Kubernetes StorageClass

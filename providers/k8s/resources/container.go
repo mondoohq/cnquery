@@ -27,10 +27,19 @@ var (
 // containerSecurityContextArgs flattens the security-relevant fields of a
 // container's SecurityContext into typed resource args. Pointer fields stay
 // null when unset so policies can distinguish "not configured" from false.
+//
+// The string-valued confinement fields (seccomp, AppArmor, procMount, SELinux)
+// stay empty when the container sets nothing, which is what lets a policy tell
+// "this container asked for no confinement of its own, so the pod-level
+// setting decides" apart from an explicit Unconfined.
 func containerSecurityContextArgs(sc *corev1.SecurityContext) map[string]*llx.RawData {
 	added := []any{}
 	dropped := []any{}
 	seccompType := ""
+	appArmorType := ""
+	procMount := ""
+	seLinuxType := ""
+	seLinuxLevel := ""
 
 	var (
 		privileged, allowPrivEsc, runAsNonRoot, readOnlyRoot *bool
@@ -55,6 +64,16 @@ func containerSecurityContextArgs(sc *corev1.SecurityContext) map[string]*llx.Ra
 		if sc.SeccompProfile != nil {
 			seccompType = string(sc.SeccompProfile.Type)
 		}
+		if sc.AppArmorProfile != nil {
+			appArmorType = string(sc.AppArmorProfile.Type)
+		}
+		if sc.ProcMount != nil {
+			procMount = string(*sc.ProcMount)
+		}
+		if sc.SELinuxOptions != nil {
+			seLinuxType = sc.SELinuxOptions.Type
+			seLinuxLevel = sc.SELinuxOptions.Level
+		}
 	}
 
 	return map[string]*llx.RawData{
@@ -67,6 +86,10 @@ func containerSecurityContextArgs(sc *corev1.SecurityContext) map[string]*llx.Ra
 		"addedCapabilities":        llx.ArrayData(added, types.String),
 		"droppedCapabilities":      llx.ArrayData(dropped, types.String),
 		"seccompProfileType":       llx.StringData(seccompType),
+		"appArmorProfileType":      llx.StringData(appArmorType),
+		"procMount":                llx.StringData(procMount),
+		"seLinuxType":              llx.StringData(seLinuxType),
+		"seLinuxLevel":             llx.StringData(seLinuxLevel),
 	}
 }
 

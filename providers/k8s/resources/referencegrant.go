@@ -25,7 +25,10 @@ type mqlK8sReferencegrantInternal struct {
 func (k *mqlK8s) referenceGrants() ([]any, error) {
 	// ReferenceGrant is served as v1beta1 on older clusters and v1 on newer ones.
 	// Pass the unqualified plural so the server-preferred version is selected.
-	return k8sResourceToMql(k.MqlRuntime, "referencegrants", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
+	// Gateway API ships as CRDs, so a cluster that never installed them has no
+	// such kind. That is a cluster with no Gateways, not a failed scan, so the
+	// list degrades to empty rather than erroring.
+	return k8sOptionalResourceToMql(k.MqlRuntime, "referencegrants", func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		var rg *gatewayv1.ReferenceGrant

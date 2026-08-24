@@ -259,3 +259,29 @@ func (k *mqlK8sServiceaccount) ownerReferences() ([]any, error) {
 func (k *mqlK8sServiceaccount) managedFields() ([]any, error) {
 	return k8sManagedFields(k.MqlRuntime, k.obj)
 }
+
+// secretRefs resolves the ObjectReferences in the account's secrets list to
+// the Secret objects themselves. This is the join a "no static ServiceAccount
+// tokens" audit needs: a service account that still lists a Secret here holds
+// a long-lived token that nothing rotates.
+func (k *mqlK8sServiceaccount) secretRefs() ([]any, error) {
+	names := make([]string, 0, len(k.obj.Secrets))
+	for _, ref := range k.obj.Secrets {
+		names = append(names, ref.Name)
+	}
+	return resolveNamespaced[*mqlK8sSecret](
+		k.MqlRuntime, k.obj.GetNamespace(), names,
+		func(x *mqlK8s) *plugin.TValue[[]any] { return x.GetSecrets() })
+}
+
+// imagePullSecretRefs resolves the LocalObjectReferences in the account's
+// imagePullSecrets list to the Secret objects themselves.
+func (k *mqlK8sServiceaccount) imagePullSecretRefs() ([]any, error) {
+	names := make([]string, 0, len(k.obj.ImagePullSecrets))
+	for _, ref := range k.obj.ImagePullSecrets {
+		names = append(names, ref.Name)
+	}
+	return resolveNamespaced[*mqlK8sSecret](
+		k.MqlRuntime, k.obj.GetNamespace(), names,
+		func(x *mqlK8s) *plugin.TValue[[]any] { return x.GetSecrets() })
+}
