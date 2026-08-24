@@ -28,9 +28,8 @@ type AssetWithError struct {
 // mergeConnectionFeatures unions the process-global CLI features
 // (cli/config.Features, populated from local config/MONDOO_FEATURES) with any
 // caller-supplied features (e.g. platform/server-activated ones). Both must
-// reach the provider connection: connection-level features like
-// TerraformResolveVars are read at Connect time, and the global alone never
-// carries server-activated features.
+// reach the provider connection: connection-level features are read at Connect
+// time, and the global alone never carries server-activated features.
 func mergeConnectionFeatures(extra []byte) []byte {
 	out := make([]byte, 0, len(config.Features)+len(extra))
 	seen := make(map[byte]bool, len(config.Features)+len(extra))

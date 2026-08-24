@@ -32,7 +32,7 @@ resource "aws_security_group" "ex" {
   }
 }
 `), 0o600))
-	rt := newRuntimeForDir(t, dir, nil)
+	rt := newRuntimeForDir(t, dir)
 
 	args, _, err := initTerraformResources(rt, map[string]*llx.RawData{})
 	require.NoError(t, err)
@@ -75,7 +75,7 @@ resource "aws_security_group" "ex" {
   }
 }
 `), 0o600))
-	rt := newRuntimeForDir(t, dir, nil)
+	rt := newRuntimeForDir(t, dir)
 
 	args, _, err := initTerraformResources(rt, map[string]*llx.RawData{})
 	require.NoError(t, err)

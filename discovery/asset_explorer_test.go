@@ -14,15 +14,16 @@ import (
 
 // TestMergeConnectionFeatures verifies that connection features are the union of
 // the local cli/config.Features global and caller-supplied (server-activated)
-// features — so a feature present only on the context (e.g. TerraformResolveVars
-// from GetScanParameters) still reaches the provider connection.
+// features — so a feature present only on the context (e.g. one activated
+// upstream and returned by GetScanParameters) still reaches the provider
+// connection.
 func TestMergeConnectionFeatures(t *testing.T) {
 	saved := config.Features
 	t.Cleanup(func() { config.Features = saved })
 	config.Features = []byte{7, 9} // local config features
 
 	t.Run("adds server features on top of local ones", func(t *testing.T) {
-		got := mergeConnectionFeatures([]byte{17}) // TerraformResolveVars from server
+		got := mergeConnectionFeatures([]byte{17}) // server-activated feature
 		assert.ElementsMatch(t, []byte{7, 9, 17}, got)
 	})
 

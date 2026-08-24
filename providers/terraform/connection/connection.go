@@ -33,7 +33,7 @@ type Connection struct {
 	closer          func()
 
 	// features carries the active MQL feature flags (encoded bitset) for this
-	// connection. Used to gate behaviors like Terraform variable resolution.
+	// connection, as sent by the client at Connect time.
 	features []byte
 
 	// varCtx memoizes the resolved var.*/local.* evaluation context so it is

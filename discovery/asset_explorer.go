@@ -110,9 +110,9 @@ func NewAssetExplorer(ctx context.Context, cfg AssetExplorerConfig) (*AssetExplo
 		upstream:  cfg.Upstream,
 		recording: cfg.Recording,
 		// Carry the context's mql features (which include platform/server-activated
-		// ones like TerraformResolveVars) into every asset connection, unioned with
-		// the local cli/config.Features global. Without this, connection-level
-		// features present only on the context never reach the provider.
+		// ones) into every asset connection, unioned with the local
+		// cli/config.Features global. Without this, connection-level features
+		// present only on the context never reach the provider.
 		features:        []byte(mql.GetFeatures(ctx)),
 		runtimeLabels:   runtimeLabels,
 		seenPlatformIDs: make(map[string]struct{}),

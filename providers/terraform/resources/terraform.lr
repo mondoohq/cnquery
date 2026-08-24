@@ -104,9 +104,10 @@ private terraform.context @defaults("path range content") {
 // field carries the block kind and `labels` holds its identifying
 // labels; for resource and data blocks, `resourceType` and
 // `resourceName` expose the two labels separately. Argument values
-// are available raw, with variable and local references left intact,
-// or folded into the plan/state shape, so one audit can run across
-// HCL, plan, and state assets.
+// are available resolved, with variable and local references replaced
+// by their effective values, unresolved via `argumentReferences`, or
+// folded into the plan/state shape, so one audit can run across HCL,
+// plan, and state assets.
 private terraform.block @defaults("type labels") @context("terraform.context") {
   // Block type
   type string
@@ -123,8 +124,15 @@ private terraform.block @defaults("type labels") @context("terraform.context") {
   // Block end position
   end terraform.fileposition
   // Block arguments
+  //
+  // Argument values with `var.*` and `local.*` references resolved to
+  // their effective values (variable defaults overridden by .tfvars,
+  // locals evaluated from those). References that cannot be resolved
+  // statically, such as data sources and resource attributes, fall back
+  // to their reference string. For the unresolved view, use
+  // `argumentReferences`.
   arguments() dict
-  // Block arguments with variable and local references left unresolved (e.g. "var.bucket_acl"), regardless of the TerraformResolveVars feature flag
+  // Block arguments with variable and local references left unresolved (e.g. "var.bucket_acl")
   argumentReferences() dict
   // Arguments with child blocks folded in as lists-of-maps, mirroring the plan (change.after) and state (values) shape
   values() dict
