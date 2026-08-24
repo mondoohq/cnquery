@@ -100,6 +100,8 @@ const (
 	ResourceAwsIamPasswordPolicy                                                string = "aws.iam.passwordPolicy"
 	ResourceAwsIamUsercredentialreportentry                                     string = "aws.iam.usercredentialreportentry"
 	ResourceAwsIamUser                                                          string = "aws.iam.user"
+	ResourceAwsIamUserServiceSpecificCredential                                 string = "aws.iam.user.serviceSpecificCredential"
+	ResourceAwsIamUserSshPublicKey                                              string = "aws.iam.user.sshPublicKey"
 	ResourceAwsIamUserAccessKey                                                 string = "aws.iam.user.accessKey"
 	ResourceAwsIamInstanceProfile                                               string = "aws.iam.instanceProfile"
 	ResourceAwsIamLoginProfile                                                  string = "aws.iam.loginProfile"
@@ -115,6 +117,7 @@ const (
 	ResourceAwsIamOidcProvider                                                  string = "aws.iam.oidcProvider"
 	ResourceAwsIamAccessAnalyzer                                                string = "aws.iam.accessAnalyzer"
 	ResourceAwsIamAccessAnalyzerAnalyzer                                        string = "aws.iam.accessAnalyzer.analyzer"
+	ResourceAwsIamAccessAnalyzerArchiveRule                                     string = "aws.iam.accessAnalyzer.archiveRule"
 	ResourceAwsIamAccessAnalyzerFinding                                         string = "aws.iam.accessAnalyzer.finding"
 	ResourceAwsPersonalize                                                      string = "aws.personalize"
 	ResourceAwsPersonalizeDatasetGroup                                          string = "aws.personalize.datasetGroup"
@@ -240,6 +243,7 @@ const (
 	ResourceAwsNetworkExposure                                                  string = "aws.network.exposure"
 	ResourceAwsNetworkEffectiveIngress                                          string = "aws.network.effectiveIngress"
 	ResourceAwsElbListener                                                      string = "aws.elb.listener"
+	ResourceAwsElbListenerCertificate                                           string = "aws.elb.listener.certificate"
 	ResourceAwsElbListenerRule                                                  string = "aws.elb.listener.rule"
 	ResourceAwsElbLoadbalancerAttribute                                         string = "aws.elb.loadbalancer.attribute"
 	ResourceAwsCodebuild                                                        string = "aws.codebuild"
@@ -262,6 +266,7 @@ const (
 	ResourceAwsGuarddutyDetectorMember                                          string = "aws.guardduty.detector.member"
 	ResourceAwsGuarddutyFinding                                                 string = "aws.guardduty.finding"
 	ResourceAwsMacie                                                            string = "aws.macie"
+	ResourceAwsMacieRevealConfiguration                                         string = "aws.macie.revealConfiguration"
 	ResourceAwsMacieSession                                                     string = "aws.macie.session"
 	ResourceAwsMacieClassificationJob                                           string = "aws.macie.classificationJob"
 	ResourceAwsMacieFinding                                                     string = "aws.macie.finding"
@@ -282,6 +287,8 @@ const (
 	ResourceAwsDetectiveOrganizationAdminAccount                                string = "aws.detective.organizationAdminAccount"
 	ResourceAwsSecurityhub                                                      string = "aws.securityhub"
 	ResourceAwsSecurityhubHub                                                   string = "aws.securityhub.hub"
+	ResourceAwsSecurityhubOrganizationConfiguration                             string = "aws.securityhub.organizationConfiguration"
+	ResourceAwsSecurityhubFindingAggregator                                     string = "aws.securityhub.findingAggregator"
 	ResourceAwsSecurityhubStandardSubscription                                  string = "aws.securityhub.standardSubscription"
 	ResourceAwsSecurityhubStandardControl                                       string = "aws.securityhub.standardControl"
 	ResourceAwsSecurityhubFinding                                               string = "aws.securityhub.finding"
@@ -1336,6 +1343,14 @@ func init() {
 			Init:   initAwsIamUser,
 			Create: createAwsIamUser,
 		},
+		"aws.iam.user.serviceSpecificCredential": {
+			// to override args, implement: initAwsIamUserServiceSpecificCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamUserServiceSpecificCredential,
+		},
+		"aws.iam.user.sshPublicKey": {
+			// to override args, implement: initAwsIamUserSshPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamUserSshPublicKey,
+		},
 		"aws.iam.user.accessKey": {
 			// to override args, implement: initAwsIamUserAccessKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamUserAccessKey,
@@ -1395,6 +1410,10 @@ func init() {
 		"aws.iam.accessAnalyzer.analyzer": {
 			// to override args, implement: initAwsIamAccessAnalyzerAnalyzer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamAccessAnalyzerAnalyzer,
+		},
+		"aws.iam.accessAnalyzer.archiveRule": {
+			// to override args, implement: initAwsIamAccessAnalyzerArchiveRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamAccessAnalyzerArchiveRule,
 		},
 		"aws.iam.accessAnalyzer.finding": {
 			// to override args, implement: initAwsIamAccessAnalyzerFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1896,6 +1915,10 @@ func init() {
 			// to override args, implement: initAwsElbListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElbListener,
 		},
+		"aws.elb.listener.certificate": {
+			// to override args, implement: initAwsElbListenerCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsElbListenerCertificate,
+		},
 		"aws.elb.listener.rule": {
 			// to override args, implement: initAwsElbListenerRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsElbListenerRule,
@@ -1984,6 +2007,10 @@ func init() {
 			// to override args, implement: initAwsMacie(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMacie,
 		},
+		"aws.macie.revealConfiguration": {
+			// to override args, implement: initAwsMacieRevealConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieRevealConfiguration,
+		},
 		"aws.macie.session": {
 			// to override args, implement: initAwsMacieSession(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsMacieSession,
@@ -2063,6 +2090,14 @@ func init() {
 		"aws.securityhub.hub": {
 			// to override args, implement: initAwsSecurityhubHub(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsSecurityhubHub,
+		},
+		"aws.securityhub.organizationConfiguration": {
+			// to override args, implement: initAwsSecurityhubOrganizationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubOrganizationConfiguration,
+		},
+		"aws.securityhub.findingAggregator": {
+			// to override args, implement: initAwsSecurityhubFindingAggregator(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsSecurityhubFindingAggregator,
 		},
 		"aws.securityhub.standardSubscription": {
 			// to override args, implement: initAwsSecurityhubStandardSubscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5958,6 +5993,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.statement.managedrulegroupstatement.vendorName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetVendorName()).ToDataRes(types.String)
 	},
+	"aws.waf.rule.statement.managedrulegroupstatement.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetVersion()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.ruleActionOverrides": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetRuleActionOverrides()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.excludedRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).GetExcludedRules()).ToDataRes(types.Array(types.String))
+	},
 	"aws.waf.rule.statement.andstatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementAndstatement).GetRuleName()).ToDataRes(types.String)
 	},
@@ -5990,6 +6034,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.statement.ratebasedstatement.statementID": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRatebasedstatement).GetStatementID()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ratebasedstatement.limit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRatebasedstatement).GetLimit()).ToDataRes(types.Int)
+	},
+	"aws.waf.rule.statement.ratebasedstatement.evaluationWindowSec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRatebasedstatement).GetEvaluationWindowSec()).ToDataRes(types.Int)
+	},
+	"aws.waf.rule.statement.ratebasedstatement.aggregateKeyType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRatebasedstatement).GetAggregateKeyType()).ToDataRes(types.String)
+	},
+	"aws.waf.rule.statement.ratebasedstatement.customKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRatebasedstatement).GetCustomKeys()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.waf.rule.statement.ratebasedstatement.scopeDownStatement": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRuleStatementRatebasedstatement).GetScopeDownStatement()).ToDataRes(types.Resource("aws.waf.rule.statement"))
 	},
 	"aws.waf.rule.statement.regexpatternsetreferencestatement.ruleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleStatementRegexpatternsetreferencestatement).GetRuleName()).ToDataRes(types.String)
@@ -7344,6 +7403,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.user.accessKeyDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetAccessKeyDetails()).ToDataRes(types.Array(types.Resource("aws.iam.user.accessKey")))
 	},
+	"aws.iam.user.serviceSpecificCredentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetServiceSpecificCredentials()).ToDataRes(types.Array(types.Resource("aws.iam.user.serviceSpecificCredential")))
+	},
+	"aws.iam.user.sshPublicKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetSshPublicKeys()).ToDataRes(types.Array(types.Resource("aws.iam.user.sshPublicKey")))
+	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetLoginProfile()).ToDataRes(types.Resource("aws.iam.loginProfile"))
 	},
@@ -7358,6 +7423,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.user.lastAccessedServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetLastAccessedServices()).ToDataRes(types.Array(types.Resource("aws.iam.serviceLastAccessed")))
+	},
+	"aws.iam.user.serviceSpecificCredential.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.user.serviceSpecificCredential.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetUsername()).ToDataRes(types.String)
+	},
+	"aws.iam.user.serviceSpecificCredential.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetServiceName()).ToDataRes(types.String)
+	},
+	"aws.iam.user.serviceSpecificCredential.serviceUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetServiceUsername()).ToDataRes(types.String)
+	},
+	"aws.iam.user.serviceSpecificCredential.serviceCredentialAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetServiceCredentialAlias()).ToDataRes(types.String)
+	},
+	"aws.iam.user.serviceSpecificCredential.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.iam.user.serviceSpecificCredential.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.serviceSpecificCredential.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserServiceSpecificCredential).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.sshPublicKey.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserSshPublicKey).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.user.sshPublicKey.username": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserSshPublicKey).GetUsername()).ToDataRes(types.String)
+	},
+	"aws.iam.user.sshPublicKey.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserSshPublicKey).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.iam.user.sshPublicKey.uploadedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserSshPublicKey).GetUploadedAt()).ToDataRes(types.Time)
 	},
 	"aws.iam.user.accessKey.accessKeyId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUserAccessKey).GetAccessKeyId()).ToDataRes(types.String)
@@ -7724,6 +7825,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.accessAnalyzer.analyzer.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.accessAnalyzer.analyzer.archiveRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerAnalyzer).GetArchiveRules()).ToDataRes(types.Array(types.Resource("aws.iam.accessAnalyzer.archiveRule")))
+	},
+	"aws.iam.accessAnalyzer.archiveRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerArchiveRule).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.accessAnalyzer.archiveRule.analyzerArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerArchiveRule).GetAnalyzerArn()).ToDataRes(types.String)
+	},
+	"aws.iam.accessAnalyzer.archiveRule.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerArchiveRule).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.iam.accessAnalyzer.archiveRule.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerArchiveRule).GetFilter()).ToDataRes(types.Map(types.String, types.Dict))
+	},
+	"aws.iam.accessAnalyzer.archiveRule.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerArchiveRule).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.accessAnalyzer.archiveRule.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamAccessAnalyzerArchiveRule).GetUpdatedAt()).ToDataRes(types.Time)
 	},
 	"aws.iam.accessAnalyzer.finding.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamAccessAnalyzerFinding).GetId()).ToDataRes(types.String)
@@ -11322,6 +11444,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.opensearch.domain.tlsSecurityPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetTlsSecurityPolicy()).ToDataRes(types.String)
 	},
+	"aws.opensearch.domain.accessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetAccessPolicies()).ToDataRes(types.String)
+	},
+	"aws.opensearch.domain.policyStatements": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetPolicyStatements()).ToDataRes(types.Array(types.Resource("aws.iam.policyStatement")))
+	},
+	"aws.opensearch.domain.isPublic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsOpensearchDomain).GetIsPublic()).ToDataRes(types.Bool)
+	},
 	"aws.opensearch.domain.customEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsOpensearchDomain).GetCustomEndpointEnabled()).ToDataRes(types.Bool)
 	},
@@ -11889,6 +12020,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.loadbalancer.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetIpAddressType()).ToDataRes(types.String)
 	},
+	"aws.elb.loadbalancer.enforceSecurityGroupInboundRulesOnPrivateLinkTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbLoadbalancer).GetEnforceSecurityGroupInboundRulesOnPrivateLinkTraffic()).ToDataRes(types.String)
+	},
 	"aws.elb.loadbalancer.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbLoadbalancer).GetVpc()).ToDataRes(types.Resource("aws.vpc"))
 	},
@@ -11997,8 +12131,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.listener.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetRules()).ToDataRes(types.Array(types.Resource("aws.elb.listener.rule")))
 	},
+	"aws.elb.listener.sniCertificates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetSniCertificates()).ToDataRes(types.Array(types.Resource("aws.elb.listener.certificate")))
+	},
 	"aws.elb.listener.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.elb.listener.certificate.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerCertificate).GetArn()).ToDataRes(types.String)
+	},
+	"aws.elb.listener.certificate.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerCertificate).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"aws.elb.listener.certificate.acmCertificate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListenerCertificate).GetAcmCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
 	},
 	"aws.elb.listener.rule.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListenerRule).GetArn()).ToDataRes(types.String)
@@ -12765,6 +12911,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.macie.classificationExportConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacie).GetClassificationExportConfigurations()).ToDataRes(types.Array(types.Resource("aws.macie.classificationExportConfiguration")))
 	},
+	"aws.macie.revealConfigurations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacie).GetRevealConfigurations()).ToDataRes(types.Array(types.Resource("aws.macie.revealConfiguration")))
+	},
+	"aws.macie.revealConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieRevealConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.macie.revealConfiguration.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieRevealConfiguration).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.macie.revealConfiguration.retrievalMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieRevealConfiguration).GetRetrievalMode()).ToDataRes(types.String)
+	},
+	"aws.macie.revealConfiguration.roleName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieRevealConfiguration).GetRoleName()).ToDataRes(types.String)
+	},
+	"aws.macie.revealConfiguration.retrievalIamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieRevealConfiguration).GetRetrievalIamRole()).ToDataRes(types.Resource("aws.iam.role"))
+	},
+	"aws.macie.revealConfiguration.kmsKeyArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieRevealConfiguration).GetKmsKeyArn()).ToDataRes(types.String)
+	},
+	"aws.macie.revealConfiguration.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieRevealConfiguration).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.macie.session.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieSession).GetArn()).ToDataRes(types.String)
 	},
@@ -12791,6 +12961,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.session.s3BucketCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieSession).GetS3BucketCount()).ToDataRes(types.Int)
+	},
+	"aws.macie.session.publishClassificationFindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieSession).GetPublishClassificationFindings()).ToDataRes(types.Bool)
+	},
+	"aws.macie.session.publishPolicyFindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieSession).GetPublishPolicyFindings()).ToDataRes(types.Bool)
 	},
 	"aws.macie.classificationJob.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieClassificationJob).GetArn()).ToDataRes(types.String)
@@ -13302,8 +13478,53 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.securityhub.hub.enabledProducts": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubHub).GetEnabledProducts()).ToDataRes(types.Array(types.Resource("aws.securityhub.enabledProduct")))
 	},
+	"aws.securityhub.hub.autoEnableControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetAutoEnableControls()).ToDataRes(types.Bool)
+	},
+	"aws.securityhub.hub.controlFindingGenerator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetControlFindingGenerator()).ToDataRes(types.String)
+	},
+	"aws.securityhub.hub.organizationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetOrganizationConfiguration()).ToDataRes(types.Resource("aws.securityhub.organizationConfiguration"))
+	},
+	"aws.securityhub.hub.findingAggregator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubHub).GetFindingAggregator()).ToDataRes(types.Resource("aws.securityhub.findingAggregator"))
+	},
 	"aws.securityhub.hub.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubHub).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.securityhub.organizationConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubOrganizationConfiguration).GetRegion()).ToDataRes(types.String)
+	},
+	"aws.securityhub.organizationConfiguration.autoEnable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubOrganizationConfiguration).GetAutoEnable()).ToDataRes(types.Bool)
+	},
+	"aws.securityhub.organizationConfiguration.autoEnableStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubOrganizationConfiguration).GetAutoEnableStandards()).ToDataRes(types.String)
+	},
+	"aws.securityhub.organizationConfiguration.configurationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubOrganizationConfiguration).GetConfigurationType()).ToDataRes(types.String)
+	},
+	"aws.securityhub.organizationConfiguration.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubOrganizationConfiguration).GetStatus()).ToDataRes(types.String)
+	},
+	"aws.securityhub.organizationConfiguration.statusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubOrganizationConfiguration).GetStatusMessage()).ToDataRes(types.String)
+	},
+	"aws.securityhub.organizationConfiguration.memberAccountLimitReached": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubOrganizationConfiguration).GetMemberAccountLimitReached()).ToDataRes(types.Bool)
+	},
+	"aws.securityhub.findingAggregator.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFindingAggregator).GetArn()).ToDataRes(types.String)
+	},
+	"aws.securityhub.findingAggregator.findingAggregationRegion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFindingAggregator).GetFindingAggregationRegion()).ToDataRes(types.String)
+	},
+	"aws.securityhub.findingAggregator.regionLinkingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFindingAggregator).GetRegionLinkingMode()).ToDataRes(types.String)
+	},
+	"aws.securityhub.findingAggregator.regions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsSecurityhubFindingAggregator).GetRegions()).ToDataRes(types.Array(types.String))
 	},
 	"aws.securityhub.standardSubscription.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsSecurityhubStandardSubscription).GetArn()).ToDataRes(types.String)
@@ -16488,6 +16709,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cloudfront.distribution.origin.account": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetAccount()).ToDataRes(types.String)
 	},
+	"aws.cloudfront.distribution.origin.originProtocolPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetOriginProtocolPolicy()).ToDataRes(types.String)
+	},
+	"aws.cloudfront.distribution.origin.originSslProtocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetOriginSslProtocols()).ToDataRes(types.Array(types.String))
+	},
 	"aws.cloudfront.distribution.origin.originMtlsClientCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCloudfrontDistributionOrigin).GetOriginMtlsClientCertificate()).ToDataRes(types.Resource("aws.acm.certificate"))
 	},
@@ -17159,6 +17386,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.objectLockEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetObjectLockEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.objectLockRetentionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetObjectLockRetentionMode()).ToDataRes(types.String)
+	},
+	"aws.s3.bucket.objectLockRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetObjectLockRetentionDays()).ToDataRes(types.Int)
+	},
+	"aws.s3.bucket.objectLockRetentionYears": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3Bucket).GetObjectLockRetentionYears()).ToDataRes(types.Int)
 	},
 	"aws.s3.bucket.metricsConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3Bucket).GetMetricsConfigurations()).ToDataRes(types.Array(types.Resource("aws.s3.bucket.metricsConfiguration")))
@@ -25445,6 +25681,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetAuthenticationMode()).ToDataRes(types.String)
+	},
+	"aws.eks.cluster.bootstrapClusterCreatorAdminPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetBootstrapClusterCreatorAdminPermissions()).ToDataRes(types.Bool)
 	},
 	"aws.eks.cluster.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetDeletionProtection()).ToDataRes(types.Bool)
@@ -37984,6 +38223,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).VendorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.waf.rule.statement.managedrulegroupstatement.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.ruleActionOverrides": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).RuleActionOverrides, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.managedrulegroupstatement.excludedRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementManagedrulegroupstatement).ExcludedRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.waf.rule.statement.andstatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementAndstatement).__id, ok = v.Value.(string)
 		return
@@ -38042,6 +38293,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.rule.statement.ratebasedstatement.statementID": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRuleStatementRatebasedstatement).StatementID, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ratebasedstatement.limit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRatebasedstatement).Limit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ratebasedstatement.evaluationWindowSec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRatebasedstatement).EvaluationWindowSec, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ratebasedstatement.aggregateKeyType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRatebasedstatement).AggregateKeyType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ratebasedstatement.customKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRatebasedstatement).CustomKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.statement.ratebasedstatement.scopeDownStatement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRuleStatementRatebasedstatement).ScopeDownStatement, ok = plugin.RawToTValue[*mqlAwsWafRuleStatement](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.statement.regexpatternsetreferencestatement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40036,6 +40307,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIamUser).AccessKeyDetails, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.user.serviceSpecificCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).ServiceSpecificCredentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.sshPublicKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).SshPublicKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.user.loginProfile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).LoginProfile, ok = plugin.RawToTValue[*mqlAwsIamLoginProfile](v.Value, v.Error)
 		return
@@ -40054,6 +40333,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.user.lastAccessedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).LastAccessedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.serviceUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).ServiceUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.serviceCredentialAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).ServiceCredentialAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.serviceSpecificCredential.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserServiceSpecificCredential).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.sshPublicKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserSshPublicKey).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.user.sshPublicKey.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserSshPublicKey).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.sshPublicKey.username": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserSshPublicKey).Username, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.sshPublicKey.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserSshPublicKey).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.sshPublicKey.uploadedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserSshPublicKey).UploadedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.accessKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40602,6 +40937,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.accessAnalyzer.analyzer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamAccessAnalyzerAnalyzer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.analyzer.archiveRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerAnalyzer).ArchiveRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.archiveRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerArchiveRule).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.accessAnalyzer.archiveRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerArchiveRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.archiveRule.analyzerArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerArchiveRule).AnalyzerArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.archiveRule.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerArchiveRule).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.archiveRule.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerArchiveRule).Filter, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.archiveRule.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerArchiveRule).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.accessAnalyzer.archiveRule.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamAccessAnalyzerArchiveRule).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.accessAnalyzer.finding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -45844,6 +46211,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsOpensearchDomain).TlsSecurityPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.opensearch.domain.accessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).AccessPolicies, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.policyStatements": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).PolicyStatements, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.opensearch.domain.isPublic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsOpensearchDomain).IsPublic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.opensearch.domain.customEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsOpensearchDomain).CustomEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -46644,6 +47023,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbLoadbalancer).IpAddressType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.elb.loadbalancer.enforceSecurityGroupInboundRulesOnPrivateLinkTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbLoadbalancer).EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.elb.loadbalancer.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbLoadbalancer).Vpc, ok = plugin.RawToTValue[*mqlAwsVpc](v.Value, v.Error)
 		return
@@ -46800,8 +47183,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbListener).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.elb.listener.sniCertificates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).SniCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.elb.listener.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbListener).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.elb.listener.certificate.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerCertificate).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.certificate.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerCertificate).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.certificate.acmCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListenerCertificate).AcmCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
 	},
 	"aws.elb.listener.rule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47912,6 +48315,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMacie).ClassificationExportConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.macie.revealConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacie).RevealConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.revealConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.revealConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.revealConfiguration.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.revealConfiguration.retrievalMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).RetrievalMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.revealConfiguration.roleName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).RoleName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.revealConfiguration.retrievalIamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).RetrievalIamRole, ok = plugin.RawToTValue[*mqlAwsIamRole](v.Value, v.Error)
+		return
+	},
+	"aws.macie.revealConfiguration.kmsKeyArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).KmsKeyArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.revealConfiguration.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieRevealConfiguration).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.macie.session.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieSession).__id, ok = v.Value.(string)
 		return
@@ -47950,6 +48389,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.session.s3BucketCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieSession).S3BucketCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.macie.session.publishClassificationFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieSession).PublishClassificationFindings, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.macie.session.publishPolicyFindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieSession).PublishPolicyFindings, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.macie.classificationJob.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48708,8 +49155,76 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsSecurityhubHub).EnabledProducts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.securityhub.hub.autoEnableControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).AutoEnableControls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.controlFindingGenerator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).ControlFindingGenerator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.organizationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).OrganizationConfiguration, ok = plugin.RawToTValue[*mqlAwsSecurityhubOrganizationConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.hub.findingAggregator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubHub).FindingAggregator, ok = plugin.RawToTValue[*mqlAwsSecurityhubFindingAggregator](v.Value, v.Error)
+		return
+	},
 	"aws.securityhub.hub.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsSecurityhubHub).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.autoEnable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).AutoEnable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.autoEnableStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).AutoEnableStandards, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.configurationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).ConfigurationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.statusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).StatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.organizationConfiguration.memberAccountLimitReached": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubOrganizationConfiguration).MemberAccountLimitReached, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.findingAggregator.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFindingAggregator).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.securityhub.findingAggregator.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFindingAggregator).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.findingAggregator.findingAggregationRegion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFindingAggregator).FindingAggregationRegion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.findingAggregator.regionLinkingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFindingAggregator).RegionLinkingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.securityhub.findingAggregator.regions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsSecurityhubFindingAggregator).Regions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.securityhub.standardSubscription.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53452,6 +53967,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCloudfrontDistributionOrigin).Account, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.cloudfront.distribution.origin.originProtocolPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).OriginProtocolPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cloudfront.distribution.origin.originSslProtocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCloudfrontDistributionOrigin).OriginSslProtocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.cloudfront.distribution.origin.originMtlsClientCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCloudfrontDistributionOrigin).OriginMtlsClientCertificate, ok = plugin.RawToTValue[*mqlAwsAcmCertificate](v.Value, v.Error)
 		return
@@ -54454,6 +54977,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.objectLockEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3Bucket).ObjectLockEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.objectLockRetentionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).ObjectLockRetentionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.objectLockRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).ObjectLockRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.objectLockRetentionYears": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3Bucket).ObjectLockRetentionYears, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.metricsConfigurations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66410,6 +66945,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).AuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.bootstrapClusterCreatorAdminPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).BootstrapClusterCreatorAdminPermissions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -86501,10 +87040,13 @@ type mqlAwsWafRuleStatementManagedrulegroupstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWafRuleStatementManagedrulegroupstatementInternal it will be used here
-	RuleName    plugin.TValue[string]
-	StatementID plugin.TValue[string]
-	Name        plugin.TValue[string]
-	VendorName  plugin.TValue[string]
+	RuleName            plugin.TValue[string]
+	StatementID         plugin.TValue[string]
+	Name                plugin.TValue[string]
+	VendorName          plugin.TValue[string]
+	Version             plugin.TValue[string]
+	RuleActionOverrides plugin.TValue[map[string]any]
+	ExcludedRules       plugin.TValue[[]any]
 }
 
 // createAwsWafRuleStatementManagedrulegroupstatement creates a new instance of this resource
@@ -86558,6 +87100,18 @@ func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetName() *plugin.TVal
 
 func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetVendorName() *plugin.TValue[string] {
 	return &c.VendorName
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetRuleActionOverrides() *plugin.TValue[map[string]any] {
+	return &c.RuleActionOverrides
+}
+
+func (c *mqlAwsWafRuleStatementManagedrulegroupstatement) GetExcludedRules() *plugin.TValue[[]any] {
+	return &c.ExcludedRules
 }
 
 // mqlAwsWafRuleStatementAndstatement for the aws.waf.rule.statement.andstatement resource
@@ -86742,8 +87296,13 @@ type mqlAwsWafRuleStatementRatebasedstatement struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWafRuleStatementRatebasedstatementInternal it will be used here
-	RuleName    plugin.TValue[string]
-	StatementID plugin.TValue[string]
+	RuleName            plugin.TValue[string]
+	StatementID         plugin.TValue[string]
+	Limit               plugin.TValue[int64]
+	EvaluationWindowSec plugin.TValue[int64]
+	AggregateKeyType    plugin.TValue[string]
+	CustomKeys          plugin.TValue[[]any]
+	ScopeDownStatement  plugin.TValue[*mqlAwsWafRuleStatement]
 }
 
 // createAwsWafRuleStatementRatebasedstatement creates a new instance of this resource
@@ -86789,6 +87348,26 @@ func (c *mqlAwsWafRuleStatementRatebasedstatement) GetRuleName() *plugin.TValue[
 
 func (c *mqlAwsWafRuleStatementRatebasedstatement) GetStatementID() *plugin.TValue[string] {
 	return &c.StatementID
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) GetLimit() *plugin.TValue[int64] {
+	return &c.Limit
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) GetEvaluationWindowSec() *plugin.TValue[int64] {
+	return &c.EvaluationWindowSec
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) GetAggregateKeyType() *plugin.TValue[string] {
+	return &c.AggregateKeyType
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) GetCustomKeys() *plugin.TValue[[]any] {
+	return &c.CustomKeys
+}
+
+func (c *mqlAwsWafRuleStatementRatebasedstatement) GetScopeDownStatement() *plugin.TValue[*mqlAwsWafRuleStatement] {
+	return &c.ScopeDownStatement
 }
 
 // mqlAwsWafRuleStatementRegexpatternsetreferencestatement for the aws.waf.rule.statement.regexpatternsetreferencestatement resource
@@ -91983,23 +92562,25 @@ type mqlAwsIamUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsIamUserInternal
-	Arn                  plugin.TValue[string]
-	Id                   plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	CreatedAt            plugin.TValue[*time.Time]
-	PasswordLastUsed     plugin.TValue[*time.Time]
-	Tags                 plugin.TValue[map[string]any]
-	ManagedBy            plugin.TValue[string]
-	Policies             plugin.TValue[[]any]
-	InlinePolicyDetails  plugin.TValue[[]any]
-	AttachedPolicies     plugin.TValue[[]any]
-	Groups               plugin.TValue[[]any]
-	AccessKeyDetails     plugin.TValue[[]any]
-	LoginProfile         plugin.TValue[*mqlAwsIamLoginProfile]
-	Path                 plugin.TValue[string]
-	MfaDevices           plugin.TValue[[]any]
-	PermissionsBoundary  plugin.TValue[*mqlAwsIamPolicy]
-	LastAccessedServices plugin.TValue[[]any]
+	Arn                        plugin.TValue[string]
+	Id                         plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	PasswordLastUsed           plugin.TValue[*time.Time]
+	Tags                       plugin.TValue[map[string]any]
+	ManagedBy                  plugin.TValue[string]
+	Policies                   plugin.TValue[[]any]
+	InlinePolicyDetails        plugin.TValue[[]any]
+	AttachedPolicies           plugin.TValue[[]any]
+	Groups                     plugin.TValue[[]any]
+	AccessKeyDetails           plugin.TValue[[]any]
+	ServiceSpecificCredentials plugin.TValue[[]any]
+	SshPublicKeys              plugin.TValue[[]any]
+	LoginProfile               plugin.TValue[*mqlAwsIamLoginProfile]
+	Path                       plugin.TValue[string]
+	MfaDevices                 plugin.TValue[[]any]
+	PermissionsBoundary        plugin.TValue[*mqlAwsIamPolicy]
+	LastAccessedServices       plugin.TValue[[]any]
 }
 
 // createAwsIamUser creates a new instance of this resource
@@ -92131,6 +92712,38 @@ func (c *mqlAwsIamUser) GetAccessKeyDetails() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsIamUser) GetServiceSpecificCredentials() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceSpecificCredentials, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "serviceSpecificCredentials")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceSpecificCredentials()
+	})
+}
+
+func (c *mqlAwsIamUser) GetSshPublicKeys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SshPublicKeys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "sshPublicKeys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sshPublicKeys()
+	})
+}
+
 func (c *mqlAwsIamUser) GetLoginProfile() *plugin.TValue[*mqlAwsIamLoginProfile] {
 	return plugin.GetOrCompute[*mqlAwsIamLoginProfile](&c.LoginProfile, func() (*mqlAwsIamLoginProfile, error) {
 		if c.MqlRuntime.HasRecording {
@@ -92187,6 +92800,154 @@ func (c *mqlAwsIamUser) GetLastAccessedServices() *plugin.TValue[[]any] {
 
 		return c.lastAccessedServices()
 	})
+}
+
+// mqlAwsIamUserServiceSpecificCredential for the aws.iam.user.serviceSpecificCredential resource
+type mqlAwsIamUserServiceSpecificCredential struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamUserServiceSpecificCredentialInternal it will be used here
+	Id                     plugin.TValue[string]
+	Username               plugin.TValue[string]
+	ServiceName            plugin.TValue[string]
+	ServiceUsername        plugin.TValue[string]
+	ServiceCredentialAlias plugin.TValue[string]
+	Status                 plugin.TValue[string]
+	CreatedAt              plugin.TValue[*time.Time]
+	ExpiresAt              plugin.TValue[*time.Time]
+}
+
+// createAwsIamUserServiceSpecificCredential creates a new instance of this resource
+func createAwsIamUserServiceSpecificCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamUserServiceSpecificCredential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.user.serviceSpecificCredential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) MqlName() string {
+	return "aws.iam.user.serviceSpecificCredential"
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetServiceUsername() *plugin.TValue[string] {
+	return &c.ServiceUsername
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetServiceCredentialAlias() *plugin.TValue[string] {
+	return &c.ServiceCredentialAlias
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsIamUserServiceSpecificCredential) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+// mqlAwsIamUserSshPublicKey for the aws.iam.user.sshPublicKey resource
+type mqlAwsIamUserSshPublicKey struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamUserSshPublicKeyInternal it will be used here
+	Id         plugin.TValue[string]
+	Username   plugin.TValue[string]
+	Status     plugin.TValue[string]
+	UploadedAt plugin.TValue[*time.Time]
+}
+
+// createAwsIamUserSshPublicKey creates a new instance of this resource
+func createAwsIamUserSshPublicKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamUserSshPublicKey{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.user.sshPublicKey", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamUserSshPublicKey) MqlName() string {
+	return "aws.iam.user.sshPublicKey"
+}
+
+func (c *mqlAwsIamUserSshPublicKey) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamUserSshPublicKey) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIamUserSshPublicKey) GetUsername() *plugin.TValue[string] {
+	return &c.Username
+}
+
+func (c *mqlAwsIamUserSshPublicKey) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsIamUserSshPublicKey) GetUploadedAt() *plugin.TValue[*time.Time] {
+	return &c.UploadedAt
 }
 
 // mqlAwsIamUserAccessKey for the aws.iam.user.accessKey resource
@@ -93715,6 +94476,7 @@ type mqlAwsIamAccessAnalyzerAnalyzer struct {
 	LastResourceAnalyzed   plugin.TValue[string]
 	LastResourceAnalyzedAt plugin.TValue[*time.Time]
 	CreatedAt              plugin.TValue[*time.Time]
+	ArchiveRules           plugin.TValue[[]any]
 }
 
 // createAwsIamAccessAnalyzerAnalyzer creates a new instance of this resource
@@ -93788,6 +94550,96 @@ func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetLastResourceAnalyzedAt() *plugin.TV
 
 func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlAwsIamAccessAnalyzerAnalyzer) GetArchiveRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ArchiveRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.accessAnalyzer.analyzer", c.__id, "archiveRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.archiveRules()
+	})
+}
+
+// mqlAwsIamAccessAnalyzerArchiveRule for the aws.iam.accessAnalyzer.archiveRule resource
+type mqlAwsIamAccessAnalyzerArchiveRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamAccessAnalyzerArchiveRuleInternal it will be used here
+	Name        plugin.TValue[string]
+	AnalyzerArn plugin.TValue[string]
+	Region      plugin.TValue[string]
+	Filter      plugin.TValue[map[string]any]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+}
+
+// createAwsIamAccessAnalyzerArchiveRule creates a new instance of this resource
+func createAwsIamAccessAnalyzerArchiveRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamAccessAnalyzerArchiveRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.accessAnalyzer.archiveRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) MqlName() string {
+	return "aws.iam.accessAnalyzer.archiveRule"
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) GetAnalyzerArn() *plugin.TValue[string] {
+	return &c.AnalyzerArn
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) GetFilter() *plugin.TValue[map[string]any] {
+	return &c.Filter
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAwsIamAccessAnalyzerArchiveRule) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
 }
 
 // mqlAwsIamAccessAnalyzerFinding for the aws.iam.accessAnalyzer.finding resource
@@ -107885,6 +108737,9 @@ type mqlAwsOpensearchDomain struct {
 	VpcEgressEnabled                   plugin.TValue[bool]
 	EnforceHTTPS                       plugin.TValue[bool]
 	TlsSecurityPolicy                  plugin.TValue[string]
+	AccessPolicies                     plugin.TValue[string]
+	PolicyStatements                   plugin.TValue[[]any]
+	IsPublic                           plugin.TValue[bool]
 	CustomEndpointEnabled              plugin.TValue[bool]
 	CustomEndpoint                     plugin.TValue[string]
 	CustomEndpointCertificate          plugin.TValue[*mqlAwsAcmCertificate]
@@ -108099,6 +108954,32 @@ func (c *mqlAwsOpensearchDomain) GetEnforceHTTPS() *plugin.TValue[bool] {
 
 func (c *mqlAwsOpensearchDomain) GetTlsSecurityPolicy() *plugin.TValue[string] {
 	return &c.TlsSecurityPolicy
+}
+
+func (c *mqlAwsOpensearchDomain) GetAccessPolicies() *plugin.TValue[string] {
+	return &c.AccessPolicies
+}
+
+func (c *mqlAwsOpensearchDomain) GetPolicyStatements() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PolicyStatements, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.opensearch.domain", c.__id, "policyStatements")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.policyStatements()
+	})
+}
+
+func (c *mqlAwsOpensearchDomain) GetIsPublic() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsPublic, func() (bool, error) {
+		return c.isPublic()
+	})
 }
 
 func (c *mqlAwsOpensearchDomain) GetCustomEndpointEnabled() *plugin.TValue[bool] {
@@ -109638,33 +110519,34 @@ type mqlAwsElbLoadbalancer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsElbLoadbalancerInternal
-	Arn                  plugin.TValue[string]
-	DnsName              plugin.TValue[string]
-	ListenerDescriptions plugin.TValue[[]any]
-	Name                 plugin.TValue[string]
-	Scheme               plugin.TValue[string]
-	Attributes           plugin.TValue[[]any]
-	CreatedAt            plugin.TValue[*time.Time]
-	AvailabilityZones    plugin.TValue[[]any]
-	Subnets              plugin.TValue[[]any]
-	State                plugin.TValue[string]
-	SecurityGroups       plugin.TValue[[]any]
-	Exposure             plugin.TValue[*mqlAwsNetworkExposure]
-	WebAcl               plugin.TValue[*mqlAwsWafAcl]
-	HostedZoneId         plugin.TValue[string]
-	Region               plugin.TValue[string]
-	ElbType              plugin.TValue[string]
-	IpAddressType        plugin.TValue[string]
-	Vpc                  plugin.TValue[*mqlAwsVpc]
-	Tags                 plugin.TValue[map[string]any]
-	CloudformationStack  plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy            plugin.TValue[string]
-	TargetGroups         plugin.TValue[[]any]
-	Instances            plugin.TValue[[]any]
-	Listeners            plugin.TValue[[]any]
-	EnforcesTls          plugin.TValue[bool]
-	Attribute            plugin.TValue[*mqlAwsElbLoadbalancerAttribute]
-	HealthCheck          plugin.TValue[any]
+	Arn                                                  plugin.TValue[string]
+	DnsName                                              plugin.TValue[string]
+	ListenerDescriptions                                 plugin.TValue[[]any]
+	Name                                                 plugin.TValue[string]
+	Scheme                                               plugin.TValue[string]
+	Attributes                                           plugin.TValue[[]any]
+	CreatedAt                                            plugin.TValue[*time.Time]
+	AvailabilityZones                                    plugin.TValue[[]any]
+	Subnets                                              plugin.TValue[[]any]
+	State                                                plugin.TValue[string]
+	SecurityGroups                                       plugin.TValue[[]any]
+	Exposure                                             plugin.TValue[*mqlAwsNetworkExposure]
+	WebAcl                                               plugin.TValue[*mqlAwsWafAcl]
+	HostedZoneId                                         plugin.TValue[string]
+	Region                                               plugin.TValue[string]
+	ElbType                                              plugin.TValue[string]
+	IpAddressType                                        plugin.TValue[string]
+	EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic plugin.TValue[string]
+	Vpc                                                  plugin.TValue[*mqlAwsVpc]
+	Tags                                                 plugin.TValue[map[string]any]
+	CloudformationStack                                  plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                                            plugin.TValue[string]
+	TargetGroups                                         plugin.TValue[[]any]
+	Instances                                            plugin.TValue[[]any]
+	Listeners                                            plugin.TValue[[]any]
+	EnforcesTls                                          plugin.TValue[bool]
+	Attribute                                            plugin.TValue[*mqlAwsElbLoadbalancerAttribute]
+	HealthCheck                                          plugin.TValue[any]
 }
 
 // createAwsElbLoadbalancer creates a new instance of this resource
@@ -109810,6 +110692,10 @@ func (c *mqlAwsElbLoadbalancer) GetElbType() *plugin.TValue[string] {
 
 func (c *mqlAwsElbLoadbalancer) GetIpAddressType() *plugin.TValue[string] {
 	return &c.IpAddressType
+}
+
+func (c *mqlAwsElbLoadbalancer) GetEnforceSecurityGroupInboundRulesOnPrivateLinkTraffic() *plugin.TValue[string] {
+	return &c.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic
 }
 
 func (c *mqlAwsElbLoadbalancer) GetVpc() *plugin.TValue[*mqlAwsVpc] {
@@ -110079,6 +110965,7 @@ type mqlAwsElbListener struct {
 	MutualAuthentication plugin.TValue[any]
 	TrustStore           plugin.TValue[*mqlAwsElbTruststore]
 	Rules                plugin.TValue[[]any]
+	SniCertificates      plugin.TValue[[]any]
 	Tags                 plugin.TValue[map[string]any]
 }
 
@@ -110231,9 +111118,96 @@ func (c *mqlAwsElbListener) GetRules() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsElbListener) GetSniCertificates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SniCertificates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.listener", c.__id, "sniCertificates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sniCertificates()
+	})
+}
+
 func (c *mqlAwsElbListener) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
+	})
+}
+
+// mqlAwsElbListenerCertificate for the aws.elb.listener.certificate resource
+type mqlAwsElbListenerCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsElbListenerCertificateInternal it will be used here
+	Arn            plugin.TValue[string]
+	IsDefault      plugin.TValue[bool]
+	AcmCertificate plugin.TValue[*mqlAwsAcmCertificate]
+}
+
+// createAwsElbListenerCertificate creates a new instance of this resource
+func createAwsElbListenerCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsElbListenerCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.elb.listener.certificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsElbListenerCertificate) MqlName() string {
+	return "aws.elb.listener.certificate"
+}
+
+func (c *mqlAwsElbListenerCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsElbListenerCertificate) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsElbListenerCertificate) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAwsElbListenerCertificate) GetAcmCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
+	return plugin.GetOrCompute[*mqlAwsAcmCertificate](&c.AcmCertificate, func() (*mqlAwsAcmCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.elb.listener.certificate", c.__id, "acmCertificate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsAcmCertificate), nil
+			}
+		}
+
+		return c.acmCertificate()
 	})
 }
 
@@ -112838,6 +113812,7 @@ type mqlAwsMacie struct {
 	Administrators                     plugin.TValue[[]any]
 	AutomatedDiscoveryConfigurations   plugin.TValue[[]any]
 	ClassificationExportConfigurations plugin.TValue[[]any]
+	RevealConfigurations               plugin.TValue[[]any]
 }
 
 // createAwsMacie creates a new instance of this resource
@@ -113069,20 +114044,141 @@ func (c *mqlAwsMacie) GetClassificationExportConfigurations() *plugin.TValue[[]a
 	})
 }
 
+func (c *mqlAwsMacie) GetRevealConfigurations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RevealConfigurations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie", c.__id, "revealConfigurations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.revealConfigurations()
+	})
+}
+
+// mqlAwsMacieRevealConfiguration for the aws.macie.revealConfiguration resource
+type mqlAwsMacieRevealConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsMacieRevealConfigurationInternal it will be used here
+	Region           plugin.TValue[string]
+	Status           plugin.TValue[string]
+	RetrievalMode    plugin.TValue[string]
+	RoleName         plugin.TValue[string]
+	RetrievalIamRole plugin.TValue[*mqlAwsIamRole]
+	KmsKeyArn        plugin.TValue[string]
+	KmsKey           plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsMacieRevealConfiguration creates a new instance of this resource
+func createAwsMacieRevealConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieRevealConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.revealConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieRevealConfiguration) MqlName() string {
+	return "aws.macie.revealConfiguration"
+}
+
+func (c *mqlAwsMacieRevealConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieRevealConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsMacieRevealConfiguration) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsMacieRevealConfiguration) GetRetrievalMode() *plugin.TValue[string] {
+	return &c.RetrievalMode
+}
+
+func (c *mqlAwsMacieRevealConfiguration) GetRoleName() *plugin.TValue[string] {
+	return &c.RoleName
+}
+
+func (c *mqlAwsMacieRevealConfiguration) GetRetrievalIamRole() *plugin.TValue[*mqlAwsIamRole] {
+	return plugin.GetOrCompute[*mqlAwsIamRole](&c.RetrievalIamRole, func() (*mqlAwsIamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.revealConfiguration", c.__id, "retrievalIamRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsIamRole), nil
+			}
+		}
+
+		return c.retrievalIamRole()
+	})
+}
+
+func (c *mqlAwsMacieRevealConfiguration) GetKmsKeyArn() *plugin.TValue[string] {
+	return &c.KmsKeyArn
+}
+
+func (c *mqlAwsMacieRevealConfiguration) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.revealConfiguration", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
 // mqlAwsMacieSession for the aws.macie.session resource
 type mqlAwsMacieSession struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsMacieSessionInternal it will be used here
-	Arn                        plugin.TValue[string]
-	Region                     plugin.TValue[string]
-	Status                     plugin.TValue[string]
-	CreatedAt                  plugin.TValue[*time.Time]
-	UpdatedAt                  plugin.TValue[*time.Time]
-	FindingPublishingFrequency plugin.TValue[string]
-	ServiceRole                plugin.TValue[string]
-	ServiceRoleIamRole         plugin.TValue[*mqlAwsIamRole]
-	S3BucketCount              plugin.TValue[int64]
+	mqlAwsMacieSessionInternal
+	Arn                           plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	Status                        plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	UpdatedAt                     plugin.TValue[*time.Time]
+	FindingPublishingFrequency    plugin.TValue[string]
+	ServiceRole                   plugin.TValue[string]
+	ServiceRoleIamRole            plugin.TValue[*mqlAwsIamRole]
+	S3BucketCount                 plugin.TValue[int64]
+	PublishClassificationFindings plugin.TValue[bool]
+	PublishPolicyFindings         plugin.TValue[bool]
 }
 
 // createAwsMacieSession creates a new instance of this resource
@@ -113173,6 +114269,18 @@ func (c *mqlAwsMacieSession) GetServiceRoleIamRole() *plugin.TValue[*mqlAwsIamRo
 func (c *mqlAwsMacieSession) GetS3BucketCount() *plugin.TValue[int64] {
 	return plugin.GetOrCompute[int64](&c.S3BucketCount, func() (int64, error) {
 		return c.s3BucketCount()
+	})
+}
+
+func (c *mqlAwsMacieSession) GetPublishClassificationFindings() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PublishClassificationFindings, func() (bool, error) {
+		return c.publishClassificationFindings()
+	})
+}
+
+func (c *mqlAwsMacieSession) GetPublishPolicyFindings() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PublishPolicyFindings, func() (bool, error) {
+		return c.publishPolicyFindings()
 	})
 }
 
@@ -114939,16 +116047,20 @@ type mqlAwsSecurityhubHub struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsSecurityhubHubInternal
-	Arn                   plugin.TValue[string]
-	SubscribedAt          plugin.TValue[string]
-	Region                plugin.TValue[string]
-	StandardSubscriptions plugin.TValue[[]any]
-	Findings              plugin.TValue[[]any]
-	AutomationRules       plugin.TValue[[]any]
-	Insights              plugin.TValue[[]any]
-	Members               plugin.TValue[[]any]
-	EnabledProducts       plugin.TValue[[]any]
-	Tags                  plugin.TValue[map[string]any]
+	Arn                       plugin.TValue[string]
+	SubscribedAt              plugin.TValue[string]
+	Region                    plugin.TValue[string]
+	StandardSubscriptions     plugin.TValue[[]any]
+	Findings                  plugin.TValue[[]any]
+	AutomationRules           plugin.TValue[[]any]
+	Insights                  plugin.TValue[[]any]
+	Members                   plugin.TValue[[]any]
+	EnabledProducts           plugin.TValue[[]any]
+	AutoEnableControls        plugin.TValue[bool]
+	ControlFindingGenerator   plugin.TValue[string]
+	OrganizationConfiguration plugin.TValue[*mqlAwsSecurityhubOrganizationConfiguration]
+	FindingAggregator         plugin.TValue[*mqlAwsSecurityhubFindingAggregator]
+	Tags                      plugin.TValue[map[string]any]
 }
 
 // createAwsSecurityhubHub creates a new instance of this resource
@@ -115096,10 +116208,193 @@ func (c *mqlAwsSecurityhubHub) GetEnabledProducts() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAwsSecurityhubHub) GetAutoEnableControls() *plugin.TValue[bool] {
+	return &c.AutoEnableControls
+}
+
+func (c *mqlAwsSecurityhubHub) GetControlFindingGenerator() *plugin.TValue[string] {
+	return &c.ControlFindingGenerator
+}
+
+func (c *mqlAwsSecurityhubHub) GetOrganizationConfiguration() *plugin.TValue[*mqlAwsSecurityhubOrganizationConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsSecurityhubOrganizationConfiguration](&c.OrganizationConfiguration, func() (*mqlAwsSecurityhubOrganizationConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.hub", c.__id, "organizationConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecurityhubOrganizationConfiguration), nil
+			}
+		}
+
+		return c.organizationConfiguration()
+	})
+}
+
+func (c *mqlAwsSecurityhubHub) GetFindingAggregator() *plugin.TValue[*mqlAwsSecurityhubFindingAggregator] {
+	return plugin.GetOrCompute[*mqlAwsSecurityhubFindingAggregator](&c.FindingAggregator, func() (*mqlAwsSecurityhubFindingAggregator, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.securityhub.hub", c.__id, "findingAggregator")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsSecurityhubFindingAggregator), nil
+			}
+		}
+
+		return c.findingAggregator()
+	})
+}
+
 func (c *mqlAwsSecurityhubHub) GetTags() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Tags, func() (map[string]any, error) {
 		return c.tags()
 	})
+}
+
+// mqlAwsSecurityhubOrganizationConfiguration for the aws.securityhub.organizationConfiguration resource
+type mqlAwsSecurityhubOrganizationConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecurityhubOrganizationConfigurationInternal it will be used here
+	Region                    plugin.TValue[string]
+	AutoEnable                plugin.TValue[bool]
+	AutoEnableStandards       plugin.TValue[string]
+	ConfigurationType         plugin.TValue[string]
+	Status                    plugin.TValue[string]
+	StatusMessage             plugin.TValue[string]
+	MemberAccountLimitReached plugin.TValue[bool]
+}
+
+// createAwsSecurityhubOrganizationConfiguration creates a new instance of this resource
+func createAwsSecurityhubOrganizationConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubOrganizationConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.organizationConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) MqlName() string {
+	return "aws.securityhub.organizationConfiguration"
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) GetRegion() *plugin.TValue[string] {
+	return &c.Region
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) GetAutoEnable() *plugin.TValue[bool] {
+	return &c.AutoEnable
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) GetAutoEnableStandards() *plugin.TValue[string] {
+	return &c.AutoEnableStandards
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) GetConfigurationType() *plugin.TValue[string] {
+	return &c.ConfigurationType
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) GetStatusMessage() *plugin.TValue[string] {
+	return &c.StatusMessage
+}
+
+func (c *mqlAwsSecurityhubOrganizationConfiguration) GetMemberAccountLimitReached() *plugin.TValue[bool] {
+	return &c.MemberAccountLimitReached
+}
+
+// mqlAwsSecurityhubFindingAggregator for the aws.securityhub.findingAggregator resource
+type mqlAwsSecurityhubFindingAggregator struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsSecurityhubFindingAggregatorInternal it will be used here
+	Arn                      plugin.TValue[string]
+	FindingAggregationRegion plugin.TValue[string]
+	RegionLinkingMode        plugin.TValue[string]
+	Regions                  plugin.TValue[[]any]
+}
+
+// createAwsSecurityhubFindingAggregator creates a new instance of this resource
+func createAwsSecurityhubFindingAggregator(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsSecurityhubFindingAggregator{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.securityhub.findingAggregator", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsSecurityhubFindingAggregator) MqlName() string {
+	return "aws.securityhub.findingAggregator"
+}
+
+func (c *mqlAwsSecurityhubFindingAggregator) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsSecurityhubFindingAggregator) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsSecurityhubFindingAggregator) GetFindingAggregationRegion() *plugin.TValue[string] {
+	return &c.FindingAggregationRegion
+}
+
+func (c *mqlAwsSecurityhubFindingAggregator) GetRegionLinkingMode() *plugin.TValue[string] {
+	return &c.RegionLinkingMode
+}
+
+func (c *mqlAwsSecurityhubFindingAggregator) GetRegions() *plugin.TValue[[]any] {
+	return &c.Regions
 }
 
 // mqlAwsSecurityhubStandardSubscription for the aws.securityhub.standardSubscription resource
@@ -128280,6 +129575,8 @@ type mqlAwsCloudfrontDistributionOrigin struct {
 	ConnectionTimeout           plugin.TValue[int64]
 	OriginPath                  plugin.TValue[string]
 	Account                     plugin.TValue[string]
+	OriginProtocolPolicy        plugin.TValue[string]
+	OriginSslProtocols          plugin.TValue[[]any]
 	OriginMtlsClientCertificate plugin.TValue[*mqlAwsAcmCertificate]
 	OriginAccessControlId       plugin.TValue[string]
 	OriginAccessIdentity        plugin.TValue[string]
@@ -128344,6 +129641,14 @@ func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginPath() *plugin.TValue[stri
 
 func (c *mqlAwsCloudfrontDistributionOrigin) GetAccount() *plugin.TValue[string] {
 	return &c.Account
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginProtocolPolicy() *plugin.TValue[string] {
+	return &c.OriginProtocolPolicy
+}
+
+func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginSslProtocols() *plugin.TValue[[]any] {
+	return &c.OriginSslProtocols
 }
 
 func (c *mqlAwsCloudfrontDistributionOrigin) GetOriginMtlsClientCertificate() *plugin.TValue[*mqlAwsAcmCertificate] {
@@ -130869,6 +132174,9 @@ type mqlAwsS3Bucket struct {
 	IgnorePublicAcls                 plugin.TValue[bool]
 	RestrictPublicBuckets            plugin.TValue[bool]
 	ObjectLockEnabled                plugin.TValue[bool]
+	ObjectLockRetentionMode          plugin.TValue[string]
+	ObjectLockRetentionDays          plugin.TValue[int64]
+	ObjectLockRetentionYears         plugin.TValue[int64]
 	MetricsConfigurations            plugin.TValue[[]any]
 	Exists                           plugin.TValue[bool]
 	CreatedAt                        plugin.TValue[*time.Time]
@@ -131154,6 +132462,24 @@ func (c *mqlAwsS3Bucket) GetRestrictPublicBuckets() *plugin.TValue[bool] {
 func (c *mqlAwsS3Bucket) GetObjectLockEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ObjectLockEnabled, func() (bool, error) {
 		return c.objectLockEnabled()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetObjectLockRetentionMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ObjectLockRetentionMode, func() (string, error) {
+		return c.objectLockRetentionMode()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetObjectLockRetentionDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ObjectLockRetentionDays, func() (int64, error) {
+		return c.objectLockRetentionDays()
+	})
+}
+
+func (c *mqlAwsS3Bucket) GetObjectLockRetentionYears() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ObjectLockRetentionYears, func() (int64, error) {
+		return c.objectLockRetentionYears()
 	})
 }
 
@@ -160279,51 +161605,52 @@ type mqlAwsEksCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEksClusterInternal
-	Name                                  plugin.TValue[string]
-	Arn                                   plugin.TValue[string]
-	Region                                plugin.TValue[string]
-	Tags                                  plugin.TValue[map[string]any]
-	CloudformationStack                   plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy                             plugin.TValue[string]
-	Endpoint                              plugin.TValue[string]
-	Version                               plugin.TValue[string]
-	PlatformVersion                       plugin.TValue[string]
-	Status                                plugin.TValue[string]
-	EncryptionKmsKey                      plugin.TValue[*mqlAwsKmsKey]
-	EncryptionResources                   plugin.TValue[[]any]
-	Logging                               plugin.TValue[any]
-	NetworkConfig                         plugin.TValue[any]
-	ControlPlaneEgressMode                plugin.TValue[string]
-	CreatedAt                             plugin.TValue[*time.Time]
-	NodeGroups                            plugin.TValue[[]any]
-	Addons                                plugin.TValue[[]any]
-	IamRole                               plugin.TValue[*mqlAwsIamRole]
-	SupportType                           plugin.TValue[string]
-	AuthenticationMode                    plugin.TValue[string]
-	DeletionProtection                    plugin.TValue[bool]
-	EndpointPublicAccess                  plugin.TValue[bool]
-	EndpointPrivateAccess                 plugin.TValue[bool]
-	PublicAccessCidrs                     plugin.TValue[[]any]
-	Exposure                              plugin.TValue[*mqlAwsNetworkExposure]
-	AccessEntries                         plugin.TValue[[]any]
-	FargateProfiles                       plugin.TValue[[]any]
-	PodIdentityAssociations               plugin.TValue[[]any]
-	IdentityProviderConfigs               plugin.TValue[[]any]
-	Vpc                                   plugin.TValue[*mqlAwsVpc]
-	ClusterSubnets                        plugin.TValue[[]any]
-	ClusterSecurityGroups                 plugin.TValue[[]any]
-	ClusterSecurityGroup                  plugin.TValue[*mqlAwsEc2Securitygroup]
-	Health                                plugin.TValue[any]
-	CertificateAuthority                  plugin.TValue[string]
-	ActiveCertificateAuthorityId          plugin.TValue[string]
-	ActiveCertificateAuthorityActivatedBy plugin.TValue[string]
-	Insights                              plugin.TValue[[]any]
-	AvailableAddonVersions                plugin.TValue[[]any]
-	UpgradePolicy                         plugin.TValue[any]
-	ZonalShiftConfig                      plugin.TValue[any]
-	ComputeConfig                         plugin.TValue[any]
-	StorageConfig                         plugin.TValue[any]
-	RemoteNetworkConfig                   plugin.TValue[any]
+	Name                                    plugin.TValue[string]
+	Arn                                     plugin.TValue[string]
+	Region                                  plugin.TValue[string]
+	Tags                                    plugin.TValue[map[string]any]
+	CloudformationStack                     plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                               plugin.TValue[string]
+	Endpoint                                plugin.TValue[string]
+	Version                                 plugin.TValue[string]
+	PlatformVersion                         plugin.TValue[string]
+	Status                                  plugin.TValue[string]
+	EncryptionKmsKey                        plugin.TValue[*mqlAwsKmsKey]
+	EncryptionResources                     plugin.TValue[[]any]
+	Logging                                 plugin.TValue[any]
+	NetworkConfig                           plugin.TValue[any]
+	ControlPlaneEgressMode                  plugin.TValue[string]
+	CreatedAt                               plugin.TValue[*time.Time]
+	NodeGroups                              plugin.TValue[[]any]
+	Addons                                  plugin.TValue[[]any]
+	IamRole                                 plugin.TValue[*mqlAwsIamRole]
+	SupportType                             plugin.TValue[string]
+	AuthenticationMode                      plugin.TValue[string]
+	BootstrapClusterCreatorAdminPermissions plugin.TValue[bool]
+	DeletionProtection                      plugin.TValue[bool]
+	EndpointPublicAccess                    plugin.TValue[bool]
+	EndpointPrivateAccess                   plugin.TValue[bool]
+	PublicAccessCidrs                       plugin.TValue[[]any]
+	Exposure                                plugin.TValue[*mqlAwsNetworkExposure]
+	AccessEntries                           plugin.TValue[[]any]
+	FargateProfiles                         plugin.TValue[[]any]
+	PodIdentityAssociations                 plugin.TValue[[]any]
+	IdentityProviderConfigs                 plugin.TValue[[]any]
+	Vpc                                     plugin.TValue[*mqlAwsVpc]
+	ClusterSubnets                          plugin.TValue[[]any]
+	ClusterSecurityGroups                   plugin.TValue[[]any]
+	ClusterSecurityGroup                    plugin.TValue[*mqlAwsEc2Securitygroup]
+	Health                                  plugin.TValue[any]
+	CertificateAuthority                    plugin.TValue[string]
+	ActiveCertificateAuthorityId            plugin.TValue[string]
+	ActiveCertificateAuthorityActivatedBy   plugin.TValue[string]
+	Insights                                plugin.TValue[[]any]
+	AvailableAddonVersions                  plugin.TValue[[]any]
+	UpgradePolicy                           plugin.TValue[any]
+	ZonalShiftConfig                        plugin.TValue[any]
+	ComputeConfig                           plugin.TValue[any]
+	StorageConfig                           plugin.TValue[any]
+	RemoteNetworkConfig                     plugin.TValue[any]
 }
 
 // createAwsEksCluster creates a new instance of this resource
@@ -160530,6 +161857,12 @@ func (c *mqlAwsEksCluster) GetSupportType() *plugin.TValue[string] {
 func (c *mqlAwsEksCluster) GetAuthenticationMode() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.AuthenticationMode, func() (string, error) {
 		return c.authenticationMode()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetBootstrapClusterCreatorAdminPermissions() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BootstrapClusterCreatorAdminPermissions, func() (bool, error) {
+		return c.bootstrapClusterCreatorAdminPermissions()
 	})
 }
 

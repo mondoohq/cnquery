@@ -1,10 +1,11 @@
 {
   "provider": "aws",
   "version": "13.53.3",
-  "generated_at": "2026-08-20T13:29:18-07:00",
+  "generated_at": "2026-08-23T14:21:06-07:00",
   "permissions": [
     "access-analyzer:GetFindingV2",
     "access-analyzer:ListAnalyzers",
+    "access-analyzer:ListArchiveRules",
     "access-analyzer:ListFindings",
     "account:GetAlternateContact",
     "account:GetContactInformation",
@@ -417,6 +418,7 @@
     "elasticfilesystem:DescribeMountTargetSecurityGroups",
     "elasticfilesystem:DescribeMountTargets",
     "elasticfilesystem:DescribeReplicationConfigurations",
+    "elasticloadbalancing:DescribeListenerCertificates",
     "elasticloadbalancing:DescribeListeners",
     "elasticloadbalancing:DescribeLoadBalancerAttributes",
     "elasticloadbalancing:DescribeLoadBalancers",
@@ -550,7 +552,9 @@
     "iam:ListRoleTags",
     "iam:ListRoles",
     "iam:ListSAMLProviders",
+    "iam:ListSSHPublicKeys",
     "iam:ListServerCertificates",
+    "iam:ListServiceSpecificCredentials",
     "iam:ListUserPolicies",
     "iam:ListUserTags",
     "iam:ListUsers",
@@ -637,7 +641,9 @@
     "macie2:GetCustomDataIdentifier",
     "macie2:GetFindings",
     "macie2:GetFindingsFilter",
+    "macie2:GetFindingsPublicationConfiguration",
     "macie2:GetMacieSession",
+    "macie2:GetRevealConfiguration",
     "macie2:ListAllowLists",
     "macie2:ListClassificationJobs",
     "macie2:ListCustomDataIdentifiers",
@@ -905,13 +911,16 @@
     "secretsmanager:ListSecrets",
     "securityhub:BatchGetStandardsControlAssociations",
     "securityhub:DescribeHub",
+    "securityhub:DescribeOrganizationConfiguration",
     "securityhub:GetEnabledStandards",
+    "securityhub:GetFindingAggregator",
     "securityhub:GetFindingHistory",
     "securityhub:GetFindings",
     "securityhub:GetInsightResults",
     "securityhub:GetInsights",
     "securityhub:ListAutomationRules",
     "securityhub:ListEnabledProductsForImport",
+    "securityhub:ListFindingAggregators",
     "securityhub:ListMembers",
     "securityhub:ListSecurityControlDefinitions",
     "securityhub:ListTagsForResource",
@@ -1044,6 +1053,12 @@
       "permission": "access-analyzer:ListAnalyzers",
       "service": "access-analyzer",
       "action": "ListAnalyzers",
+      "source_file": "aws_iam_accessanalyzer.go"
+    },
+    {
+      "permission": "access-analyzer:ListArchiveRules",
+      "service": "access-analyzer",
+      "action": "ListArchiveRules",
       "source_file": "aws_iam_accessanalyzer.go"
     },
     {
@@ -3615,6 +3630,12 @@
       "source_file": "aws_efs.go"
     },
     {
+      "permission": "elasticloadbalancing:DescribeListenerCertificates",
+      "service": "elasticloadbalancing",
+      "action": "DescribeListenerCertificates",
+      "source_file": "aws_elb.go"
+    },
+    {
       "permission": "elasticloadbalancing:DescribeListeners",
       "service": "elasticloadbalancing",
       "action": "DescribeListeners",
@@ -4431,9 +4452,21 @@
       "source_file": "aws_iam.go"
     },
     {
+      "permission": "iam:ListSSHPublicKeys",
+      "service": "iam",
+      "action": "ListSSHPublicKeys",
+      "source_file": "aws_iam.go"
+    },
+    {
       "permission": "iam:ListServerCertificates",
       "service": "iam",
       "action": "ListServerCertificates",
+      "source_file": "aws_iam.go"
+    },
+    {
+      "permission": "iam:ListServiceSpecificCredentials",
+      "service": "iam",
+      "action": "ListServiceSpecificCredentials",
       "source_file": "aws_iam.go"
     },
     {
@@ -4959,9 +4992,21 @@
       "source_file": "aws_macie.go"
     },
     {
+      "permission": "macie2:GetFindingsPublicationConfiguration",
+      "service": "macie2",
+      "action": "GetFindingsPublicationConfiguration",
+      "source_file": "aws_macie.go"
+    },
+    {
       "permission": "macie2:GetMacieSession",
       "service": "macie2",
       "action": "GetMacieSession",
+      "source_file": "aws_macie.go"
+    },
+    {
+      "permission": "macie2:GetRevealConfiguration",
+      "service": "macie2",
+      "action": "GetRevealConfiguration",
       "source_file": "aws_macie.go"
     },
     {
@@ -6663,9 +6708,21 @@
       "source_file": "aws_securityhub.go"
     },
     {
+      "permission": "securityhub:DescribeOrganizationConfiguration",
+      "service": "securityhub",
+      "action": "DescribeOrganizationConfiguration",
+      "source_file": "aws_securityhub.go"
+    },
+    {
       "permission": "securityhub:GetEnabledStandards",
       "service": "securityhub",
       "action": "GetEnabledStandards",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:GetFindingAggregator",
+      "service": "securityhub",
+      "action": "GetFindingAggregator",
       "source_file": "aws_securityhub.go"
     },
     {
@@ -6702,6 +6759,12 @@
       "permission": "securityhub:ListEnabledProductsForImport",
       "service": "securityhub",
       "action": "ListEnabledProductsForImport",
+      "source_file": "aws_securityhub.go"
+    },
+    {
+      "permission": "securityhub:ListFindingAggregators",
+      "service": "securityhub",
+      "action": "ListFindingAggregators",
       "source_file": "aws_securityhub.go"
     },
     {
