@@ -557,7 +557,7 @@ mikrotik.radius.client.accountingPort 13.0.11
 mikrotik.radius.client.address 13.0.11
 mikrotik.radius.client.authenticationPort 13.0.11
 mikrotik.radius.client.calledId 13.0.11
-mikrotik.radius.client.certificate 13.0.11
+mikrotik.radius.client.certificateRef 13.0.11
 mikrotik.radius.client.comment 13.0.11
 mikrotik.radius.client.disabled 13.0.11
 mikrotik.radius.client.domain 13.0.11

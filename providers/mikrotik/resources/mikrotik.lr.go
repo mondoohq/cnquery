@@ -2452,8 +2452,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mikrotik.radius.client.calledId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikRadiusClient).GetCalledId()).ToDataRes(types.String)
 	},
-	"mikrotik.radius.client.certificate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikRadiusClient).GetCertificate()).ToDataRes(types.String)
+	"mikrotik.radius.client.certificateRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikRadiusClient).GetCertificateRef()).ToDataRes(types.Resource("mikrotik.certificate"))
 	},
 	"mikrotik.radius.client.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikRadiusClient).GetDisabled()).ToDataRes(types.Bool)
@@ -5480,8 +5480,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMikrotikRadiusClient).CalledId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"mikrotik.radius.client.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikRadiusClient).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"mikrotik.radius.client.certificateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikRadiusClient).CertificateRef, ok = plugin.RawToTValue[*mqlMikrotikCertificate](v.Value, v.Error)
 		return
 	},
 	"mikrotik.radius.client.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11979,7 +11979,7 @@ func (c *mqlMikrotikContainerConfig) GetRamHigh() *plugin.TValue[string] {
 type mqlMikrotikRadiusClient struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlMikrotikRadiusClientInternal it will be used here
+	mqlMikrotikRadiusClientInternal
 	Services           plugin.TValue[[]any]
 	Address            plugin.TValue[string]
 	Protocol           plugin.TValue[string]
@@ -11993,7 +11993,7 @@ type mqlMikrotikRadiusClient struct {
 	Realm              plugin.TValue[string]
 	SrcAddress         plugin.TValue[string]
 	CalledId           plugin.TValue[string]
-	Certificate        plugin.TValue[string]
+	CertificateRef     plugin.TValue[*mqlMikrotikCertificate]
 	Disabled           plugin.TValue[bool]
 	Comment            plugin.TValue[string]
 }
@@ -12082,8 +12082,20 @@ func (c *mqlMikrotikRadiusClient) GetCalledId() *plugin.TValue[string] {
 	return &c.CalledId
 }
 
-func (c *mqlMikrotikRadiusClient) GetCertificate() *plugin.TValue[string] {
-	return &c.Certificate
+func (c *mqlMikrotikRadiusClient) GetCertificateRef() *plugin.TValue[*mqlMikrotikCertificate] {
+	return plugin.GetOrCompute[*mqlMikrotikCertificate](&c.CertificateRef, func() (*mqlMikrotikCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.radius.client", c.__id, "certificateRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikCertificate), nil
+			}
+		}
+
+		return c.certificateRef()
+	})
 }
 
 func (c *mqlMikrotikRadiusClient) GetDisabled() *plugin.TValue[bool] {

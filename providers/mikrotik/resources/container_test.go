@@ -102,6 +102,9 @@ func TestRadiusClientArgs(t *testing.T) {
 	assert.Equal(t, true, args["hasSecret"].Value)
 	assert.Equal(t, int64(1812), args["authenticationPort"].Value)
 	assert.Equal(t, false, args["accountingBackup"].Value)
+	// the certificate name is carried only by certificateRef, never as a
+	// field that duplicates it
+	assert.NotContains(t, args, "certificate")
 
 	// the shared secret never reaches the result
 	assert.NotContains(t, args, "secret")

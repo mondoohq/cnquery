@@ -2262,9 +2262,11 @@ mikrotik.container.config @defaults("registryUrl hasRegistryCredentials") {
 // service, the local account list is no longer the real access-control
 // surface. `requireMessageAuth` is the Blast-RADIUS control, and with it off
 // the device accepts responses an attacker in the path can forge.
-// `protocol` decides whether the exchange is UDP RADIUS or RADIUS over TLS.
-// The shared secret is reported only as `hasSecret`; the secret itself is
-// never read or exposed.
+// `protocol` decides whether the exchange is UDP RADIUS or RADIUS over TLS,
+// and for RADIUS over TLS `certificateRef` resolves the certificate the device
+// presents so its expiry, key size, and issuer can be checked in the same
+// query. The shared secret is reported only as `hasSecret`; the secret itself
+// is never read or exposed.
 mikrotik.radius.client @defaults("services address requireMessageAuth disabled") {
   // Services the RADIUS server is consulted for
   //
@@ -2303,8 +2305,11 @@ mikrotik.radius.client @defaults("services address requireMessageAuth disabled")
   srcAddress string
   // Called-Station-Id sent with the request
   calledId string
-  // Name of the certificate used for RADIUS over TLS
-  certificate string
+  // Certificate used for RADIUS over TLS, resolved in the device certificate store
+  //
+  // Null when no certificate is bound, which is the case for a client that
+  // reaches the server over plain UDP RADIUS rather than RADIUS over TLS.
+  certificateRef() mikrotik.certificate
   // Whether the client is disabled
   disabled bool
   // Optional comment attached to the client

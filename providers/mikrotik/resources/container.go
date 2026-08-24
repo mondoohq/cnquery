@@ -95,6 +95,10 @@ func initMikrotikContainerConfig(runtime *plugin.Runtime, args map[string]*llx.R
 
 // --- radius.client ---
 
+type mqlMikrotikRadiusClientInternal struct {
+	cacheCertificate string
+}
+
 func radiusClientArgs(row map[string]string) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"__id":               llx.StringData(rowID("mikrotik.radius.client/", row, row["address"], row["service"])),
@@ -112,14 +116,30 @@ func radiusClientArgs(row map[string]string) map[string]*llx.RawData {
 		"realm":              llx.StringData(row["realm"]),
 		"srcAddress":         llx.StringData(row["src-address"]),
 		"calledId":           llx.StringData(row["called-id"]),
-		"certificate":        llx.StringData(row["certificate"]),
 		"disabled":           boolField(row, "disabled"),
 		"comment":            llx.StringData(row["comment"]),
 	}
 }
 
 func newMikrotikRadiusClient(runtime *plugin.Runtime, row map[string]string) (plugin.Resource, error) {
-	return CreateResource(runtime, "mikrotik.radius.client", radiusClientArgs(row))
+	res, err := CreateResource(runtime, "mikrotik.radius.client", radiusClientArgs(row))
+	if err != nil {
+		return nil, err
+	}
+	res.(*mqlMikrotikRadiusClient).cacheCertificate = certificateRefName(row["certificate"])
+	return res, nil
+}
+
+// certificateRef resolves the certificate the client presents for RADIUS over
+// TLS against the already-cached /certificate listing, so a device with
+// several RADIUS servers configured costs one read of /certificate rather than
+// one per server.
+func (r *mqlMikrotikRadiusClient) certificateRef() (*mqlMikrotikCertificate, error) {
+	if r.cacheCertificate == "" {
+		r.CertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return certificateByName(r.MqlRuntime, r.cacheCertificate)
 }
 
 func (r *mqlMikrotik) radiusClients() ([]any, error) {
