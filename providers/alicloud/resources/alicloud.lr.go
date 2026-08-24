@@ -42,6 +42,8 @@ const (
 	ResourceAlicloudVpcRouteTable                 string = "alicloud.vpc.routeTable"
 	ResourceAlicloudVpcRouteTableRoute            string = "alicloud.vpc.routeTable.route"
 	ResourceAlicloudVpcNatGateway                 string = "alicloud.vpc.natGateway"
+	ResourceAlicloudVpcNatGatewaySnatEntry        string = "alicloud.vpc.natGateway.snatEntry"
+	ResourceAlicloudVpcNatGatewayForwardEntry     string = "alicloud.vpc.natGateway.forwardEntry"
 	ResourceAlicloudVpcEipAddress                 string = "alicloud.vpc.eipAddress"
 	ResourceAlicloudVpcNetworkAcl                 string = "alicloud.vpc.networkAcl"
 	ResourceAlicloudVpcNetworkAclEntry            string = "alicloud.vpc.networkAcl.entry"
@@ -272,6 +274,14 @@ func init() {
 		"alicloud.vpc.natGateway": {
 			Init:   initAlicloudVpcNatGateway,
 			Create: createAlicloudVpcNatGateway,
+		},
+		"alicloud.vpc.natGateway.snatEntry": {
+			// to override args, implement: initAlicloudVpcNatGatewaySnatEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudVpcNatGatewaySnatEntry,
+		},
+		"alicloud.vpc.natGateway.forwardEntry": {
+			// to override args, implement: initAlicloudVpcNatGatewayForwardEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudVpcNatGatewayForwardEntry,
 		},
 		"alicloud.vpc.eipAddress": {
 			// to override args, implement: initAlicloudVpcEipAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2099,6 +2109,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.vpc.natGateway.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNatGateway).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.vpc.natGateway.snatEntries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGateway).GetSnatEntries()).ToDataRes(types.Array(types.Resource("alicloud.vpc.natGateway.snatEntry")))
+	},
+	"alicloud.vpc.natGateway.forwardEntries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGateway).GetForwardEntries()).ToDataRes(types.Array(types.Resource("alicloud.vpc.natGateway.forwardEntry")))
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatEntryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetSnatEntryId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatEntryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetSnatEntryName()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatTableId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetSnatTableId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetSnatIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.sourceCIDR": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetSourceCIDR()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.sourceVSwitchId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetSourceVSwitchId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.sourceVswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetSourceVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
+	},
+	"alicloud.vpc.natGateway.snatEntry.networkInterfaceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetNetworkInterfaceId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.eipAffinity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetEipAffinity()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.snatEntry.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewaySnatEntry).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardEntryId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetForwardEntryId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardEntryName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetForwardEntryName()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardTableId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetForwardTableId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.externalIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetExternalIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.externalPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetExternalPort()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.internalIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetInternalIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.internalPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetInternalPort()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.ipProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetIpProtocol()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardsAllPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetForwardsAllPorts()).ToDataRes(types.Bool)
+	},
+	"alicloud.vpc.natGateway.forwardEntry.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcNatGatewayForwardEntry).GetStatus()).ToDataRes(types.String)
 	},
 	"alicloud.vpc.eipAddress.allocationId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcEipAddress).GetAllocationId()).ToDataRes(types.String)
@@ -8962,6 +9038,102 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.vpc.natGateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudVpcNatGateway).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGateway).SnatEntries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGateway).ForwardEntries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatEntryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).SnatEntryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatEntryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).SnatEntryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatTableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).SnatTableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.snatIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).SnatIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.sourceCIDR": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).SourceCIDR, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.sourceVSwitchId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).SourceVSwitchId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.sourceVswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).SourceVswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.networkInterfaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).NetworkInterfaceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.eipAffinity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).EipAffinity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.snatEntry.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewaySnatEntry).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardEntryId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).ForwardEntryId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardEntryName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).ForwardEntryName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardTableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).ForwardTableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.externalIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).ExternalIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.externalPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).ExternalPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.internalIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).InternalIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.internalPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).InternalPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.ipProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).IpProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.forwardsAllPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).ForwardsAllPorts, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.natGateway.forwardEntry.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcNatGatewayForwardEntry).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.eipAddress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20279,6 +20451,8 @@ type mqlAlicloudVpcNatGateway struct {
 	IpLists                   plugin.TValue[[]any]
 	AccessMode                plugin.TValue[any]
 	Tags                      plugin.TValue[map[string]any]
+	SnatEntries               plugin.TValue[[]any]
+	ForwardEntries            plugin.TValue[[]any]
 }
 
 // createAlicloudVpcNatGateway creates a new instance of this resource
@@ -20468,6 +20642,238 @@ func (c *mqlAlicloudVpcNatGateway) GetAccessMode() *plugin.TValue[any] {
 
 func (c *mqlAlicloudVpcNatGateway) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+func (c *mqlAlicloudVpcNatGateway) GetSnatEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SnatEntries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.natGateway", c.__id, "snatEntries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snatEntries()
+	})
+}
+
+func (c *mqlAlicloudVpcNatGateway) GetForwardEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ForwardEntries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.natGateway", c.__id, "forwardEntries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.forwardEntries()
+	})
+}
+
+// mqlAlicloudVpcNatGatewaySnatEntry for the alicloud.vpc.natGateway.snatEntry resource
+type mqlAlicloudVpcNatGatewaySnatEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudVpcNatGatewaySnatEntryInternal
+	SnatEntryId        plugin.TValue[string]
+	SnatEntryName      plugin.TValue[string]
+	SnatTableId        plugin.TValue[string]
+	SnatIp             plugin.TValue[string]
+	SourceCIDR         plugin.TValue[string]
+	SourceVSwitchId    plugin.TValue[string]
+	SourceVswitch      plugin.TValue[*mqlAlicloudVpcVswitch]
+	NetworkInterfaceId plugin.TValue[string]
+	EipAffinity        plugin.TValue[string]
+	Status             plugin.TValue[string]
+}
+
+// createAlicloudVpcNatGatewaySnatEntry creates a new instance of this resource
+func createAlicloudVpcNatGatewaySnatEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudVpcNatGatewaySnatEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.vpc.natGateway.snatEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) MqlName() string {
+	return "alicloud.vpc.natGateway.snatEntry"
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetSnatEntryId() *plugin.TValue[string] {
+	return &c.SnatEntryId
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetSnatEntryName() *plugin.TValue[string] {
+	return &c.SnatEntryName
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetSnatTableId() *plugin.TValue[string] {
+	return &c.SnatTableId
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetSnatIp() *plugin.TValue[string] {
+	return &c.SnatIp
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetSourceCIDR() *plugin.TValue[string] {
+	return &c.SourceCIDR
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetSourceVSwitchId() *plugin.TValue[string] {
+	return &c.SourceVSwitchId
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetSourceVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.SourceVswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.natGateway.snatEntry", c.__id, "sourceVswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.sourceVswitch()
+	})
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetNetworkInterfaceId() *plugin.TValue[string] {
+	return &c.NetworkInterfaceId
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetEipAffinity() *plugin.TValue[string] {
+	return &c.EipAffinity
+}
+
+func (c *mqlAlicloudVpcNatGatewaySnatEntry) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+// mqlAlicloudVpcNatGatewayForwardEntry for the alicloud.vpc.natGateway.forwardEntry resource
+type mqlAlicloudVpcNatGatewayForwardEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudVpcNatGatewayForwardEntryInternal it will be used here
+	ForwardEntryId   plugin.TValue[string]
+	ForwardEntryName plugin.TValue[string]
+	ForwardTableId   plugin.TValue[string]
+	ExternalIp       plugin.TValue[string]
+	ExternalPort     plugin.TValue[string]
+	InternalIp       plugin.TValue[string]
+	InternalPort     plugin.TValue[string]
+	IpProtocol       plugin.TValue[string]
+	ForwardsAllPorts plugin.TValue[bool]
+	Status           plugin.TValue[string]
+}
+
+// createAlicloudVpcNatGatewayForwardEntry creates a new instance of this resource
+func createAlicloudVpcNatGatewayForwardEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudVpcNatGatewayForwardEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.vpc.natGateway.forwardEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) MqlName() string {
+	return "alicloud.vpc.natGateway.forwardEntry"
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetForwardEntryId() *plugin.TValue[string] {
+	return &c.ForwardEntryId
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetForwardEntryName() *plugin.TValue[string] {
+	return &c.ForwardEntryName
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetForwardTableId() *plugin.TValue[string] {
+	return &c.ForwardTableId
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetExternalIp() *plugin.TValue[string] {
+	return &c.ExternalIp
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetExternalPort() *plugin.TValue[string] {
+	return &c.ExternalPort
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetInternalIp() *plugin.TValue[string] {
+	return &c.InternalIp
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetInternalPort() *plugin.TValue[string] {
+	return &c.InternalPort
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetIpProtocol() *plugin.TValue[string] {
+	return &c.IpProtocol
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetForwardsAllPorts() *plugin.TValue[bool] {
+	return &c.ForwardsAllPorts
+}
+
+func (c *mqlAlicloudVpcNatGatewayForwardEntry) GetStatus() *plugin.TValue[string] {
+	return &c.Status
 }
 
 // mqlAlicloudVpcEipAddress for the alicloud.vpc.eipAddress resource

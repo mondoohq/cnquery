@@ -1536,6 +1536,95 @@ alicloud.vpc.natGateway {
   accessMode dict
   // Tags attached to the NAT gateway
   tags map[string]string
+  // SNAT rules giving private addresses outbound internet access
+  //
+  // Each rule maps a source range or vSwitch onto one or more public
+  // addresses. An instance with no public address of its own still reaches the
+  // internet whenever a SNAT rule covers it, which a check on the instance's
+  // own addressing does not show.
+  snatEntries() []alicloud.vpc.natGateway.snatEntry
+  // DNAT rules forwarding inbound traffic to private addresses
+  //
+  // Each rule publishes a private address and port on a public IP. This is an
+  // inbound path from the internet that no security group audit sees, because
+  // the security group is evaluated against the private address the traffic
+  // arrives at.
+  forwardEntries() []alicloud.vpc.natGateway.forwardEntry
+}
+
+// SNAT rule of a NAT gateway
+//
+// A single source-NAT rule, keyed by snatEntryId. A rule gives a source range,
+// a vSwitch, or one network interface outbound internet access through a public
+// address. Exposes the source it covers, the public addresses it uses, and the
+// rule status. Use it to find which private workloads can reach the internet.
+alicloud.vpc.natGateway.snatEntry @defaults("snatEntryName snatIp sourceCIDR status") {
+  // SNAT rule ID, used as the lookup key
+  snatEntryId string
+  // Name of the SNAT rule
+  snatEntryName string
+  // ID of the SNAT table holding the rule
+  snatTableId string
+  // Public addresses the rule translates to, comma-separated when several
+  snatIp string
+  // Source CIDR the rule applies to, empty when the rule is scoped by vSwitch
+  sourceCIDR string
+  // ID of the vSwitch the rule applies to, empty when the rule is scoped by CIDR
+  sourceVSwitchId string
+  // vSwitch the rule applies to
+  //
+  // Null when the rule is scoped by CIDR or network interface rather than by
+  // vSwitch, and when the vSwitch lies outside the scanned regions.
+  sourceVswitch() alicloud.vpc.vswitch
+  // ID of the network interface the rule applies to, empty when it is not interface-scoped
+  networkInterfaceId string
+  // Whether the rule pins a connection to one public address
+  //
+  // Enabled when consecutive connections from the same source keep the same
+  // public address.
+  eipAffinity string
+  // Lifecycle status of the rule
+  //
+  // One of Pending, Available, or Deleting. Only an Available rule forwards
+  // traffic.
+  status string
+}
+
+// DNAT rule of a NAT gateway
+//
+// A single destination-NAT (port forwarding) rule, keyed by forwardEntryId. A
+// rule publishes a private address and port on a public IP, which is an inbound
+// path from the internet. Exposes both ends of the mapping, the protocol, and
+// whether the rule forwards every port. Use it to find private workloads
+// reachable from the internet without a public address of their own.
+alicloud.vpc.natGateway.forwardEntry @defaults("forwardEntryName externalIp externalPort internalIp status") {
+  // DNAT rule ID, used as the lookup key
+  forwardEntryId string
+  // Name of the DNAT rule
+  forwardEntryName string
+  // ID of the DNAT table holding the rule
+  forwardTableId string
+  // Public address traffic arrives at
+  externalIp string
+  // Public port traffic arrives at, or any when every port is forwarded
+  externalPort string
+  // Private address traffic is forwarded to
+  internalIp string
+  // Private port traffic is forwarded to, or any when every port is forwarded
+  internalPort string
+  // Protocol the rule forwards, one of TCP, UDP, or Any
+  ipProtocol string
+  // Whether the rule forwards every port
+  //
+  // True when the rule maps the whole port range rather than one port, which
+  // publishes every listening service on the private address rather than the
+  // one that was meant to be exposed.
+  forwardsAllPorts bool
+  // Lifecycle status of the rule
+  //
+  // One of Pending, Available, or Deleting. Only an Available rule forwards
+  // traffic.
+  status string
 }
 
 // Elastic IP address (EIP)
