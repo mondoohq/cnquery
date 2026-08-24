@@ -9,6 +9,7 @@ import (
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mongodb.org/atlas-sdk/v20250312023/admin"
 )
 
 // isAccessDenied reports whether the API response indicates the credential is
@@ -16,6 +17,33 @@ import (
 // endpoint). Such resources degrade to null rather than failing the scan.
 func isAccessDenied(resp *http.Response) bool {
 	return resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden)
+}
+
+// projectConfigFields maps the project settings payload onto the
+// mongodbatlas.projectConfig fields.
+//
+// Every flag is read from its pointer field rather than the SDK's Get accessor.
+// The accessors dereference a *bool and return the zero value when the pointer
+// is nil, so a flag the API did not report would become a fabricated false. In
+// MQL `null && null` evaluates to true, so a fabricated false on a flag whose
+// secure reading is false (isDataExplorerEnabled and the generative AI flags)
+// makes a "must be disabled" assertion pass on a project where the flag was
+// never read at all.
+func projectConfigFields(pid string, s *admin.GroupSettings) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":                                            llx.StringData("mongodbatlas.projectConfig/" + pid),
+		"isDataExplorerEnabled":                           llx.BoolDataPtr(s.IsDataExplorerEnabled),
+		"isDataExplorerGenAIFeaturesEnabled":              llx.BoolDataPtr(s.IsDataExplorerGenAIFeaturesEnabled),
+		"isExtendedStorageSizesEnabled":                   llx.BoolDataPtr(s.IsExtendedStorageSizesEnabled),
+		"isPerformanceAdvisorEnabled":                     llx.BoolDataPtr(s.IsPerformanceAdvisorEnabled),
+		"isRealtimePerformancePanelEnabled":               llx.BoolDataPtr(s.IsRealtimePerformancePanelEnabled),
+		"isSchemaAdvisorEnabled":                          llx.BoolDataPtr(s.IsSchemaAdvisorEnabled),
+		"isCollectDatabaseSpecificsStatisticsEnabled":     llx.BoolDataPtr(s.IsCollectDatabaseSpecificsStatisticsEnabled),
+		"isDataExplorerGenAISampleDocumentPassingEnabled": llx.BoolDataPtr(s.IsDataExplorerGenAISampleDocumentPassingEnabled),
+		"isClusterAiAssistantEnabled":                     llx.BoolDataPtr(s.IsClusterAiAssistantEnabled),
+		"isNativeRerankingEnabled":                        llx.BoolDataPtr(s.IsNativeRerankingEnabled),
+		"isDataValidationEnabled":                         llx.BoolDataPtr(s.IsDataValidationEnabled),
+	}
 }
 
 func (r *mqlMongodbatlas) projectSettings() (*mqlMongodbatlasProjectConfig, error) {
@@ -27,24 +55,7 @@ func (r *mqlMongodbatlas) projectSettings() (*mqlMongodbatlasProjectConfig, erro
 	if err != nil {
 		return nil, err
 	}
-	res, err := CreateResource(r.MqlRuntime, "mongodbatlas.projectConfig", map[string]*llx.RawData{
-		"__id":                                        llx.StringData("mongodbatlas.projectConfig/" + pid),
-		"isDataExplorerEnabled":                       llx.BoolData(s.GetIsDataExplorerEnabled()),
-		"isDataExplorerGenAIFeaturesEnabled":          llx.BoolData(s.GetIsDataExplorerGenAIFeaturesEnabled()),
-		"isExtendedStorageSizesEnabled":               llx.BoolData(s.GetIsExtendedStorageSizesEnabled()),
-		"isPerformanceAdvisorEnabled":                 llx.BoolData(s.GetIsPerformanceAdvisorEnabled()),
-		"isRealtimePerformancePanelEnabled":           llx.BoolData(s.GetIsRealtimePerformancePanelEnabled()),
-		"isSchemaAdvisorEnabled":                      llx.BoolData(s.GetIsSchemaAdvisorEnabled()),
-		"isCollectDatabaseSpecificsStatisticsEnabled": llx.BoolData(s.GetIsCollectDatabaseSpecificsStatisticsEnabled()),
-		// The four flags below are read as pointers so a setting the API did
-		// not report stays null. A fabricated false on
-		// isDataExplorerGenAISampleDocumentPassingEnabled would report "sample
-		// documents are not sent" as fact on a project where it was never read.
-		"isDataExplorerGenAISampleDocumentPassingEnabled": llx.BoolDataPtr(s.IsDataExplorerGenAISampleDocumentPassingEnabled),
-		"isClusterAiAssistantEnabled":                     llx.BoolDataPtr(s.IsClusterAiAssistantEnabled),
-		"isNativeRerankingEnabled":                        llx.BoolDataPtr(s.IsNativeRerankingEnabled),
-		"isDataValidationEnabled":                         llx.BoolDataPtr(s.IsDataValidationEnabled),
-	})
+	res, err := CreateResource(r.MqlRuntime, "mongodbatlas.projectConfig", projectConfigFields(pid, s))
 	if err != nil {
 		return nil, err
 	}
