@@ -858,11 +858,13 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		} else {
 			log.Warn().Str("resource", rr.MqlName()).Str("field", chunk.Id).Msg("exec> field missing from schema in WatchAndUpdate callback")
 		}
-		data := &RawData{
+		// The field's value arrives here rather than as a return, so an optional
+		// link has to tag its null on this path too.
+		data := shortCircuitNull(chunk, &RawData{
 			Type:  fieldType,
 			Value: fieldData,
 			Error: fieldError,
-		}
+		})
 		e.cache.Store(ref, &stepCache{
 			Result: data,
 		})
@@ -913,9 +915,97 @@ func BuiltinFunctionV2(typ types.Type, name string) (*chunkHandlerV2, error) {
 	return &fh, nil
 }
 
+// errNullBinding reports a link that could not resolve because the value it
+// reads from is null. Only produced under strict mode; see ADR 043.
+type errNullBinding struct {
+	field string
+}
+
+func (e *errNullBinding) Error() string {
+	return "cannot access \"" + e.field + "\", the value it reads from is null"
+}
+
+// resolveNullBinding applies the strict-mode rule for a link whose binding came
+// back null, before the link's handler ever runs.
+//
+// It returns (result, true) when the caller should stop and use that result, and
+// (nil, false) when the link should proceed to its handler as usual.
+func (e *blockExecutor) resolveNullBinding(bind *RawData, chunk *Chunk) (*RawData, bool) {
+	if bind.Value != nil || bind.Error != nil {
+		return nil, false
+	}
+
+	f := chunk.Function
+	if f == nil || f.Nullability == Function_NULLABILITY_UNSPECIFIED {
+		// Non-strict, or an operator: fall through to the handler, which keeps
+		// its own long-standing answer for a null receiver. This is also what
+		// leaves `== null`, `!= empty` and the boolean operators working, since
+		// the compiler never marks them (ADR 043 §2).
+		return nil, false
+	}
+
+	// The chunk's declared output type, so a short-circuited null still types
+	// correctly for whatever consumes it next.
+	typ := types.Type(f.Type)
+	if typ == "" {
+		typ = bind.Type
+	}
+
+	// A required link errors - unless the null reaching it was produced by an
+	// upstream `?`, which passes through every downstream link untouched. That
+	// pass-through is the short circuit: `a?.b.c` yields null when `a` is null
+	// without ever running `.b` or `.c`, while `a?.b.c` with `a` set and `b` null
+	// still errors at `.c`, the same as optional chaining in JavaScript.
+	if f.Nullability == Function_NULLABILITY_REQUIRED && !bind.ShortCircuited {
+		return &RawData{Type: typ, Error: &errNullBinding{field: linkName(chunk)}}, true
+	}
+
+	return &RawData{Type: typ, ShortCircuited: true}, true
+}
+
+// linkName is what a diagnostic should call this link. A key lookup is spelled
+// `[]` in the bytecode whether the author wrote `m["k"]` or the bare-word `m.k`,
+// so naming the chunk would report `[]` instead of the key the user typed.
+func linkName(chunk *Chunk) string {
+	if chunk.Id != "[]" && chunk.Id != "[]?" {
+		return chunk.Id
+	}
+	if args := chunk.Function.GetArgs(); len(args) == 1 && types.Type(args[0].Type) == types.String {
+		return string(args[0].Value)
+	}
+	return chunk.Id
+}
+
+// shortCircuitNull tags a null that an optional link produced, so that every
+// downstream link passes it through instead of erroring on it.
+//
+// It returns a copy rather than mutating, because handlers hand back shared
+// package-level values (NilData, BoolTrue, ...) and tagging one in place would
+// corrupt it for every other caller in the process.
+func shortCircuitNull(chunk *Chunk, res *RawData) *RawData {
+	if res == nil || res.Value != nil || res.Error != nil || res.ShortCircuited {
+		return res
+	}
+	if chunk.Function.GetNullability() != Function_NULLABILITY_OPTIONAL {
+		return res
+	}
+	return &RawData{Type: res.Type, ShortCircuited: true}
+}
+
 // this is called for objects that call a function
 func (e *blockExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	log.Trace().Uint64("ref", ref).Str("id", chunk.Id).Msg("exec> run bound function")
+
+	// Strict mode decides what a null binding means before dispatch, so every
+	// link answers to one rule instead of the ~100 independent nil branches the
+	// handlers carry. Those branches still run in non-strict mode, unchanged.
+	if res, handled := e.resolveNullBinding(bind, chunk); handled {
+		e.cache.Store(ref, &stepCache{Result: res})
+		if res.Error != nil {
+			return nil, 0, res.Error
+		}
+		return res, 0, nil
+	}
 
 	// check if the resource defines the function to allow providers to override
 	// builtin functions like `length` or any other function
@@ -932,6 +1022,7 @@ func (e *blockExecutor) runBoundFunction(bind *RawData, chunk *Chunk, ref uint64
 	if err == nil {
 		res, dref, err := fh.f(e, bind, chunk, ref)
 		if res != nil {
+			res = shortCircuitNull(chunk, res)
 			e.cache.Store(ref, &stepCache{Result: res})
 		}
 		if err != nil {

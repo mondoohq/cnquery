@@ -176,6 +176,11 @@ func (m *Function) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.Nullability != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Nullability))
+		i--
+		dAtA[i] = 0x28
+	}
 	if m.Binding != 0 {
 		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Binding))
 		i--
@@ -1517,6 +1522,9 @@ func (m *Function) SizeVT() (n int) {
 	if m.Binding != 0 {
 		n += 1 + protohelpers.SizeOfVarint(uint64(m.Binding))
 	}
+	if m.Nullability != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Nullability))
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2530,6 +2538,25 @@ func (m *Function) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Binding |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nullability", wireType)
+			}
+			m.Nullability = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Nullability |= Function_Nullability(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

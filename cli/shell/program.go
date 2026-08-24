@@ -38,6 +38,13 @@ func WithFeatures(features mql.Features) Option {
 	}
 }
 
+// WithStrict turns on ADR 043 strict mode for queries compiled by this shell.
+func WithStrict(strict bool) Option {
+	return func(s *ShellProgram) {
+		s.strict = strict
+	}
+}
+
 // WithUpstreamConfig sets the upstream configuration
 func WithUpstreamConfig(c *upstream.UpstreamConfig) Option {
 	return func(s *ShellProgram) {
@@ -72,6 +79,7 @@ type ShellProgram struct {
 	runtime        llx.Runtime
 	theme          *ShellTheme
 	features       mql.Features
+	strict         bool
 	upstreamConfig *upstream.UpstreamConfig
 	onCloseHandler func()
 	out            io.Writer
@@ -128,7 +136,7 @@ func (s *ShellProgram) RunWithCommand(initialCmd string) error {
 	}
 
 	// Create the model
-	model := newShellModel(s.runtime, s.theme, s.features, initialCmd, connectedProviderIDs)
+	model := newShellModel(s.runtime, s.theme, s.features, s.strict, initialCmd, connectedProviderIDs)
 
 	// Create and run the Bubble Tea program
 	// Note: We don't use WithAltScreen() so output stays in terminal scrollback
@@ -166,7 +174,7 @@ func (s *ShellProgram) Close() {
 
 // RunOnce executes a query and returns the results (non-interactive)
 func (s *ShellProgram) RunOnce(cmd string) (*llx.CodeBundle, map[string]*llx.RawResult, error) {
-	code, err := mqlc.Compile(cmd, nil, mqlc.NewConfig(s.runtime.Schema(), s.features))
+	code, err := mqlc.Compile(cmd, nil, s.compilerConfig())
 	if err != nil {
 		fmt.Fprintln(s.out, s.printTheme.Error("failed to compile: "+err.Error()))
 
@@ -205,4 +213,11 @@ func formatSuggestions(suggestions []*llx.Documentation, theme *theme.Theme) str
 		res.WriteString(theme.List(s.Field+": "+s.Title) + "\n")
 	}
 	return res.String()
+}
+
+// compilerConfig mirrors shellModel.compilerConfig for the non-interactive path.
+func (s *ShellProgram) compilerConfig() mqlc.CompilerConfig {
+	conf := mqlc.NewConfig(s.runtime.Schema(), s.features)
+	conf.Strict = s.strict
+	return conf
 }

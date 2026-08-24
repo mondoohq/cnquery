@@ -114,6 +114,11 @@ type Operand struct {
 	Value    *Value        `json:",omitempty"`
 	Calls    []*Call       `json:",omitempty"`
 	Block    []*Expression `json:",omitempty"`
+	// ValueIsConditional is set when a `?` directly follows the operand's root
+	// value, as in `a?.b`, `a?["k"]`, or `a? { … }`. It is the root-value case of
+	// Call.IsConditional: the mark guards the link to its left, and for the first
+	// `?` in a chain that link is the value itself.
+	ValueIsConditional bool `json:",omitempty"`
 }
 
 // Value representation
@@ -130,11 +135,15 @@ type Value struct {
 
 // Call to a value
 type Call struct {
-	Comments      string      `json:",omitempty"`
-	Ident         *string     `json:",omitempty"`
-	Function      []*Arg      `json:",omitempty"`
-	Accessor      *Expression `json:",omitempty"`
-	IsConditional bool        `json:",omitempty"`
+	Comments string      `json:",omitempty"`
+	Ident    *string     `json:",omitempty"`
+	Function []*Arg      `json:",omitempty"`
+	Accessor *Expression `json:",omitempty"`
+	// IsConditional is set when a `?` directly follows this call, as in `a.b?.c`,
+	// `a.b?`, or `a.b? == "no"`. The mark guards the link it is attached to: this
+	// link may fail to resolve or may be null, and the chain yields null instead
+	// of erroring. See ADR 043.
+	IsConditional bool `json:",omitempty"`
 }
 
 // Arg is a call argument
@@ -525,17 +534,24 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 	}
 	_ = p.nextToken()
 
-	isConditional := false
 	for {
-		// on every iteration, we reset conditional unless it is in a valid chain
-		if p.token.Value != "?" && p.token.Value != "." {
-			isConditional = false
-		}
-
 		switch p.token.Value {
 		case "?":
+			// The mark guards the link to its left, which is whatever we have
+			// already built: the last call, or the root value if there are no
+			// calls yet. That one rule covers every position `?` can occupy -
+			// `a?.b`, `a.b?.c`, `a?["k"]`, `a? { … }`, and a trailing `a.b?` or
+			// `a.b? == "no"` - with no lookahead.
+			//
+			// It is deliberately not sticky: in `a?.b.c` only `a` is marked, so a
+			// null `b` still errors in strict mode, matching optional chaining in
+			// JavaScript. Guarding two links takes two marks (`a?.b?.c`).
+			if n := len(res.Calls); n > 0 {
+				res.Calls[n-1].IsConditional = true
+			} else {
+				res.ValueIsConditional = true
+			}
 			_ = p.nextToken()
-			isConditional = true
 
 		case ".":
 			_ = p.nextToken()
@@ -543,7 +559,7 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 			// everything else must be an identifier
 			if p.token.Type != Ident {
 				v := "."
-				res.Calls = append(res.Calls, &Call{Ident: &v, IsConditional: isConditional})
+				res.Calls = append(res.Calls, &Call{Ident: &v})
 
 				if p.token.EOF() {
 					p.indent++
@@ -555,9 +571,8 @@ func (p *parser) parseOperand() (*Operand, bool, error) {
 
 			v := p.token.Value
 			res.Calls = append(res.Calls, &Call{
-				Ident:         &v,
-				IsConditional: isConditional,
-				Comments:      p.flushComments(),
+				Ident:    &v,
+				Comments: p.flushComments(),
 			})
 			_ = p.nextToken()
 

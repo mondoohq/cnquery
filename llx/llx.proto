@@ -39,16 +39,37 @@ message Function {
   // FIXME: this is a suggestion to allow function calls to be bound
   // to non-local references; Remove this comment or remove the feature
   uint64 binding = 4;
+
+  // How this call behaves when it cannot resolve. See ADR 043 (strict mode).
+  // A link fails to resolve when its binding is null, or - for a map or dict -
+  // when the key it names is absent.
+  enum Nullability {
+    // Non-strict: a link that cannot resolve yields null, as it always has.
+    NULLABILITY_UNSPECIFIED = 0;
+    // Strict: a link that cannot resolve is an error. A binding that is a
+    // short-circuited null (produced by an upstream NULLABILITY_OPTIONAL link)
+    // still passes straight through.
+    NULLABILITY_REQUIRED = 1;
+    // The author wrote `?` before this link. It never errors, and a null result
+    // is marked short-circuited so the rest of the chain passes it through.
+    NULLABILITY_OPTIONAL = 2;
+  }
+  Nullability nullability = 5;
 }
 
 message Chunk {
-  // protolint:disable:next ENUM_FIELD_NAMES_PREFIX
+  // These values predate the CALL_ prefix rule and renaming them is a wire
+  // change, so it stays suppressed. Block form rather than `disable:next`:
+  // protolint takes the expected prefix from the preceding enum, so adding
+  // Function.Nullability above made a one-line suppression stop covering these.
+  // protolint:disable ENUM_FIELD_NAMES_PREFIX
   enum Call {
     // protolint:disable:next ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
     PRIMITIVE = 0;
     FUNCTION = 1;
     PROPERTY = 2;
   }
+  // protolint:enable ENUM_FIELD_NAMES_PREFIX
   Call call = 1;
   string id = 2;
   Primitive primitive = 3;

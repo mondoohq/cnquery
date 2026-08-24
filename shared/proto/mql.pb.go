@@ -41,8 +41,11 @@ type RunQueryConfig struct {
 	Output          string                 `protobuf:"bytes,11,opt,name=output,proto3" json:"output,omitempty"`
 	Input           string                 `protobuf:"bytes,12,opt,name=input,proto3" json:"input,omitempty"`
 	Exit_1OnFailure bool                   `protobuf:"varint,14,opt,name=exit_1_on_failure,json=exit1OnFailure,proto3" json:"exit_1_on_failure,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Compile under ADR 043 strict mode: every link in an MQL chain must resolve,
+	// and `?` marks one optional.
+	Strict        bool `protobuf:"varint,15,opt,name=strict,proto3" json:"strict,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RunQueryConfig) Reset() {
@@ -173,6 +176,13 @@ func (x *RunQueryConfig) GetExit_1OnFailure() bool {
 	return false
 }
 
+func (x *RunQueryConfig) GetStrict() bool {
+	if x != nil {
+		return x.Strict
+	}
+	return false
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -257,7 +267,7 @@ var File_mql_proto protoreflect.FileDescriptor
 
 const file_mql_proto_rawDesc = "" +
 	"\n" +
-	"\tmql.proto\x12\x05proto\x1a*providers-sdk/v1/inventory/inventory.proto\"\xc6\x03\n" +
+	"\tmql.proto\x12\x05proto\x1a*providers-sdk/v1/inventory/inventory.proto\"\xde\x03\n" +
 	"\x0eRunQueryConfig\x12\x18\n" +
 	"\acommand\x18\x01 \x01(\tR\acommand\x12'\n" +
 	"\x0fcallback_server\x18\x02 \x01(\rR\x0ecallbackServer\x12=\n" +
@@ -274,7 +284,8 @@ const file_mql_proto_rawDesc = "" +
 	" \x01(\bR\tincognito\x12\x16\n" +
 	"\x06output\x18\v \x01(\tR\x06output\x12\x14\n" +
 	"\x05input\x18\f \x01(\tR\x05input\x12)\n" +
-	"\x11exit_1_on_failure\x18\x0e \x01(\bR\x0eexit1OnFailure\"\a\n" +
+	"\x11exit_1_on_failure\x18\x0e \x01(\bR\x0eexit1OnFailure\x12\x16\n" +
+	"\x06strict\x18\x0f \x01(\bR\x06strict\"\a\n" +
 	"\x05Empty\"\x1c\n" +
 	"\x06String\x12\x12\n" +
 	"\x04data\x18\x01 \x01(\tR\x04data2;\n" +

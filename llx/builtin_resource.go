@@ -49,7 +49,13 @@ func _resourceWhereV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64,
 		return bind, 0, nil
 	}
 
-	resource := bind.Value.(Resource)
+	// Comma-ok, not a bare assertion: a panic in a builtin runs on an executor
+	// goroutine and takes down the whole scan, not just this query. A null bind
+	// reaches here whenever the list resolved but the resource behind it did not.
+	resource, ok := bind.Value.(Resource)
+	if !ok {
+		return nil, 0, errors.New("cannot call 'where' on a non-resource value")
+	}
 
 	arg1 := chunk.Function.Args[1]
 	blockRef, ok := arg1.RefV2()

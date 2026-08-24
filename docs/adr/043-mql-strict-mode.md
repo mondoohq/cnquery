@@ -179,9 +179,27 @@ and key access:
   the same way `.field` is.
 - **Implicit array mapping** — `xs.field` over a null `xs`. A *non-null* list whose
   elements produce nulls is unaffected: those are produced values, not receivers.
-- **Builtin methods on a null receiver** — `x.length`, `x.all(…)`, `x.contains(…)`,
-  the comparison helpers. These are the 104 `bind.Value == nil` sites, and strict
-  mode answers them with the rule above instead of per-site judgment.
+- **Builtin methods on a null receiver** — `x.length`, `x.all(…)`, `x.contains(…)`.
+  These are the 104 `bind.Value == nil` sites, and strict mode answers them with
+  the rule above instead of per-site judgment.
+
+**Operators that take null as a meaningful operand are exempt.** `== null`,
+`!= null`, `== empty`, `!= empty`, `notEmpty`, and the three-valued boolean core
+(`&&`, `||`, `!`) receive a null receiver as *input*, not as a failed dereference,
+so the rule does not apply to them. Without the exemption `a["key"] == null` would
+error in strict mode and there would be no way to test for null at all.
+
+This preserves behavior rather than adding a special case: `null == null` already
+evaluates **true** today, via `chunkEqTrueV2` → `boolOpV2` (`llx/builtin.go:35`,
+`llx/builtin_simple.go:48-64`), and the `== null` / `== empty` handlers exist for
+every type (`llx/builtin.go:64-65,116-117,189-190,262-263,418-419,466-467,
+656-657,745-746,771-772`). The exemption is structural rather than a list: an
+operator is not part of an access chain, so the compiler never marks it, and an
+unmarked chunk keeps the behavior it has always had.
+
+Note what the exemption does *not* cover. `a.b == null` with `a` null still errors,
+because the failing link is `.b`, not the comparison — the guard is `a?.b == null`.
+The exemption only means the comparison itself tolerates a null it is handed.
 
 **Arrays are left inconsistent, deliberately.** An out-of-range `xs[9]` errors at
 the lookup already, in both modes (`llx/builtin_array.go:87-95`). Under §1 an
@@ -339,58 +357,87 @@ deprecation, and the bytecode must carry `REQUIRED` explicitly rather than
 inferring it from absence — see §4, where this is what forces the tri-state over
 a single `optional` bit.
 
-## Phased plan
+## Implementation status
 
-1. **Fix the parser so every `?` position survives.** Three gaps, all of them
-   spellings §1 needs:
-   - `m?["k"]` and `x? { … }` — the loop resets `isConditional` on any token that
-     is not `?` or `.` (`mqlc/parser/parser.go:528-531`), and the `[` and `{` cases
-     never read it (`:596-618`, `:620`), so both parse and silently drop the mark.
-   - `m.k?` trailing, including `m.k? == "no"` — `parseOperand` consumes the `?`
-     and discards it when no `.` follows, and `parseOperation` swallows a `?` in
-     operator position (`:730-732`). This is the escape hatch for a knowingly
-     optional key, so it is not optional itself.
-   - The mark binds to the link on its **left**, while the parser records it on the
-     call to its right (`Call.IsConditional`). Either shift it at parse time or
-     shift it in the compiler, but pick one and write it down.
-2. **Add `Nullability` to the proto and to `Function.checksumV2`**, and thread the
-   flag into `compileBoundIdentifier` (`mqlc/mqlc.go:1017`), the accessor paths, and
-   the block path. Emit `OPTIONAL` where the author marked, `UNSET` everywhere else.
-   No `REQUIRED` yet, so this is observably a no-op and lands the wire change early.
-3. **Unify the nil handling.** The 104 `bind.Value == nil` branches each decide for
-   themselves; a mode switch cannot sit on top of that. Collapse them into one
-   decision point ahead of dispatch, reproducing today's behavior exactly, as a
-   pure refactor with no semantic change. Prerequisite for step 4 and the largest
-   piece of work in the plan.
-4. **Implement `REQUIRED` in the VM.** Two checks, because §1 has two failure
-   modes: a null receiver at the decision point step 3 created (plus
-   `runResourceFunction`), and an absent key inside `mapGetIndex`/`dictGetIndex` —
-   which is where [#7079][pr7079] removed exactly this branch, so the shape is
-   already known. Non-strict compilations never emit `REQUIRED`, so nothing changes
-   for existing content.
-5. **Make the short-circuit real.** This is the piece with genuine implementation
-   risk and it should not be waved past. Today an `OPTIONAL` link needs no
-   machinery, because a null simply propagates step by step and lands as null. Once
-   `REQUIRED` exists, that stops working: in `a?.f.c` a null `a` must skip `.f` and
-   `.c` rather than let the `REQUIRED` `.f` error — JavaScript throws here only when
-   the guard is absent, and so must we. Marking the whole tail `OPTIONAL` at compile
-   time is the tempting shortcut and it is wrong: it would also swallow a null `f`
-   in `a?.f.c`, which must still error. So the executor has to short-circuit for
-   real, delivering null to the entrypoint instead of walking `e.calls`. Blocks and
-   array mapping are where "the rest of the chain" gets hard to define; settle that
-   before committing to the approach.
-6. **Add the strictness knob to `CompilerConfig`** and the tri-state `strict` key
-   to `CommonOpts`, with the content-then-config precedence rule. Shell, `mql run`,
-   and `mqlx` pick up the config default; cnspec wires the policy declaration.
-7. **Add the min-version gate.** Populate and enforce `min_mondoo_version` for
-   bundles containing `REQUIRED` chunks.
-8. **Lint for an explicit mode.** In v14 every policy must state strict or
-   non-strict; the linter fails an unstated one. Pair it with a diagnostic pass
-   that reports each unguarded dereference in a policy about to go strict, so
-   authors can find the chains that need `?` before flipping.
-9. **Later, and separately: streamline.** Reducing the ceremony and eventually
-   retiring non-strict is explicitly future work, gated on evidence from real v14
-   policy runs rather than on a release date.
+Landed in mql (parser through to the config knob). Strict mode is off by default;
+with it off nothing is marked and every checksum is byte-identical to before.
+
+1. **Parser — `?` in every position.** The mark attaches to the link on its
+   **left**: the last call, or the operand's root value when there is no call yet
+   (`Operand.ValueIsConditional`). One rule covers `a?.b`, `a.b?.c`, `a?["k"]`,
+   `a? { … }`, and a trailing `a.b?` / `a.b? == "no"`, all of which previously
+   parsed and silently dropped the mark. The old stickiness is gone: `?` no longer
+   carries across a dotted run, which is what makes the semantics non-sticky.
+2. **Wire format.** `Function.Nullability` (`llx/llx.proto`), folded into
+   `Function.checksumV2` **only when set**, so pre-existing checksums do not move
+   — `TestCompiler_DeterministicChecksum` still passes with its hardcoded id.
+3. **Compiler.** `CompilerConfig.Strict`; each link is marked as it is emitted.
+   `[]?` is retired as an encoding in favor of `[]` plus the marker, with the
+   `[]?` handler kept registered for bundles already compiled.
+4. **Runtime.** One decision point ahead of builtin dispatch
+   (`llx/builtin.go`, `runBoundFunction`), plus the absent-key rule inside
+   `mapGetIndex` / `dictGetIndex` — the branch [#7079][pr7079] removed.
+
+Two things went differently from the plan, both simplifications:
+
+- **The 104 nil branches were not unified.** The decision point sits *ahead* of
+  dispatch and only intercepts marked chunks, so under non-strict every branch
+  still runs exactly as before. Unifying them is no longer a prerequisite; it is
+  optional cleanup.
+- **The short circuit needed no executor surgery.** A null produced by an optional
+  link is tagged (`RawData.ShortCircuited`) and a required link passes a tagged
+  null straight through. That is what makes `a?.f.c` yield null when `a` is null
+  while still erroring when `a` is set and `f` is null. The alternative - having
+  the executor skip downstream chunks - would have collided with block completion
+  counting expected codepoints (`llx/llx.go:497-546`), which hangs rather than
+  errors when a callback point never reports.
+
+Landed in cnspec (the policy declaration, §6):
+
+5. **`Policy.strict` and `QueryPack.strict`**, tri-state, carried across
+   `ConvertQuerypacks`. Resolved by `Policy.EffectiveStrict(default)` and stamped
+   onto the per-policy compile in `CompileExt`. It also enters the policy's
+   execution checksum, so a policy compiled both ways cannot resolve to one
+   cached plan.
+6. **The operator's default** rides `LocalServices.Strict` /
+   `scan.WithStrict()`, fed from the `strict` config key and `--strict`. It only
+   decides what an *undeclared* policy inherits.
+7. **A conflict guard.** Queries live at bundle level and are shared by MRN, so
+   one query is compiled once per referencing policy, each time overwriting its
+   checksum and code id. Two policies disagreeing about the mode used to mean the
+   last one compiled decided the semantics for both; that now fails the bundle
+   instead.
+8. **The lint rule**, opt-in behind `LintOptions.RequireStrictDeclaration` and
+   `cnspec policy lint --require-strict-declaration`. It fires on every policy
+   written before the field existed, so enabling it by default would bury real
+   findings under migration noise. It becomes the default in v14.
+
+One trap worth recording, because nothing about it is visible from the mql side.
+A query is recompiled well after the bundle is built - the resolver rebuilds
+executable code (`mquery2executionQuery`), and the datalake refreshes checksums -
+each time from a compiler config that knows nothing about the owning policy. The
+first cut compiled the bundle strict and the execution job lenient, so the
+reporting job waited on checksums the execution job never produced and the check
+came back **unscored**: not passing, not failing, simply absent from the report.
+The fix is that a query records the mode it was compiled under
+(`Mquery.strict`, derived rather than authored) and `Mquery.Compile` honors it,
+which makes every later recompile agree by construction. Any future code path
+that recompiles a query has to keep going through `Mquery.Compile`.
+
+Not yet done:
+
+9. **The min-version gate** (§5). Nothing sets or reads
+   `CodeBundle.min_mondoo_version` yet, so a strict bundle on an old executor
+   still degrades silently in the permissive direction. This must land before
+   strict content ships anywhere it could reach an older node.
+10. **Asset filters follow the bundle default, not the policy.** Filters are
+    deduplicated across policies by code id, so compiling one two ways would
+    split matching rather than just change the mode. They are predicates over
+    asset metadata rather than assertions, so they gain little from strictness -
+    but it is a documented seam, not a uniform rule.
+11. **Later, and separately: streamline.** Reducing the ceremony and eventually
+    retiring non-strict is future work, gated on evidence from real v14 policy
+    runs rather than on a release date.
 
 ## Caveat: replaying non-strict recordings
 

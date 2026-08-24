@@ -55,6 +55,7 @@ import (
 // share it; it is safe for concurrent use.
 type Env struct {
 	features mql.Features
+	strict   bool
 	private  []privateProvider
 
 	mu     sync.Mutex
@@ -81,6 +82,15 @@ type EnvOption func(*Env) error
 func WithFeatures(features mql.Features) EnvOption {
 	return func(e *Env) error {
 		e.features = features
+		return nil
+	}
+}
+
+// WithStrict compiles under ADR 043 strict mode: every link in an access chain
+// must resolve, and `?` marks one optional. Default: off.
+func WithStrict(strict bool) EnvOption {
+	return func(e *Env) error {
+		e.strict = strict
 		return nil
 	}
 }

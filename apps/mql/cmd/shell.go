@@ -60,6 +60,7 @@ type ShellConfig struct {
 	Command        string
 	Asset          *inventory.Asset
 	Features       mql.Features
+	Strict         bool
 	PlatformID     string
 	WelcomeMessage string
 	UpstreamConfig *upstream.UpstreamConfig
@@ -91,6 +92,7 @@ func ParseShellConfig(cmd *cobra.Command, cliRes *plugin.ParseCLIRes) *ShellConf
 
 	shellConf := ShellConfig{
 		Features:       config.Features,
+		Strict:         config.Strict,
 		PlatformID:     viper.GetString("platform-id"),
 		Asset:          cliRes.Asset,
 		UpstreamConfig: upstreamConfig,
@@ -178,6 +180,7 @@ func StartShell(runtime *providers.Runtime, conf *ShellConfig) error {
 		connectAsset.Runtime,
 		shell.WithOnClose(onCloseHandler),
 		shell.WithFeatures(conf.Features),
+		shell.WithStrict(conf.Strict),
 		shell.WithUpstreamConfig(conf.UpstreamConfig),
 		shell.WithTheme(shellTheme),
 	)

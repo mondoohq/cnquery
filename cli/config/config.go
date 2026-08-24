@@ -29,6 +29,10 @@ import (
 // or default if no config exits
 var (
 	Features mql.Features
+	// Strict is the config-file default for ADR 043 strict mode, used by
+	// surfaces that carry no content of their own (shell, `mql run`). Content
+	// that declares its own mode overrides this.
+	Strict bool
 )
 
 const (
@@ -47,6 +51,7 @@ func Init(rootCmd *cobra.Command) {
 		if err != nil {
 			log.Error().Msg(err.Error())
 		}
+		Strict = viper.GetBool("strict")
 		// by default we don't print the list of active features, at least not for now...
 	})
 	// persistent flags are global for the application
@@ -286,6 +291,17 @@ type CommonOpts struct {
 	// client features
 	Features []string `json:"features,omitempty" mapstructure:"features"`
 
+	// Strict turns on ADR 043 strict mode for MQL compiled by this client: every
+	// link in an access chain must resolve, and `?` marks one optional.
+	//
+	// Deliberately a *bool and deliberately not a feature flag. Strictness is a
+	// property of the content, so a policy states its own mode and this is only
+	// the default for surfaces that carry no content of their own - the shell,
+	// `mql run`, embeddings. A tri-state is what lets "unset, fall back to the
+	// default" stay distinguishable from "explicitly non-strict", which a
+	// two-state feature flag cannot express.
+	Strict *bool `json:"strict,omitempty" mapstructure:"strict"`
+
 	// API Proxy for communicating with Mondoo Platform API
 	APIProxy string `json:"api_proxy,omitempty" mapstructure:"api_proxy"`
 
@@ -315,6 +331,13 @@ type WIF struct {
 
 type CliConfigAuthentication struct {
 	Method string `json:"method,omitempty" mapstructure:"method"`
+}
+
+// GetStrict reports the configured default for strict mode. Unset means
+// non-strict, which is the v14 default; content that wants strictness says so
+// itself rather than relying on this.
+func (c *CommonOpts) GetStrict() bool {
+	return c.Strict != nil && *c.Strict
 }
 
 func (c *CommonOpts) GetFeatures() mql.Features {
