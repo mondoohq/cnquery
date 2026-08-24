@@ -40916,12 +40916,7 @@ func createNetworkHostsEntry(runtime *plugin.Runtime, args map[string]*llx.RawDa
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("networkHosts.entry", res.__id)
@@ -41071,12 +41066,7 @@ func createNetworkProtocolsEntry(runtime *plugin.Runtime, args map[string]*llx.R
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("networkProtocols.entry", res.__id)
@@ -41231,12 +41221,7 @@ func createNetworkServicesEntry(runtime *plugin.Runtime, args map[string]*llx.Ra
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("networkServices.entry", res.__id)
@@ -42521,12 +42506,7 @@ func createKnownhostsEntry(runtime *plugin.Runtime, args map[string]*llx.RawData
 		return res, err
 	}
 
-	if res.__id == "" {
-		res.__id, err = res.id()
-		if err != nil {
-			return nil, err
-		}
-	}
+	// to override __id implement: id() (string, error)
 
 	if runtime.HasRecording {
 		args, err = runtime.ResourceFromRecording("knownhosts.entry", res.__id)

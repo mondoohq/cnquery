@@ -150,6 +150,9 @@ func (x *mqlNetworkHosts) list() ([]any, error) {
 	}
 	for _, r := range parseEtcTable(content) {
 		entry, err := CreateResource(x.MqlRuntime, "networkHosts.entry", map[string]*llx.RawData{
+			// the id carries the source file: two networkHosts resources
+			// reading different paths otherwise collide on line+ip
+			"__id":      llx.StringData("networkHosts.entry/" + x.Path.Data + ":" + strconv.Itoa(r.line) + "/" + r.fields[0]),
 			"line":      llx.IntData(int64(r.line)),
 			"ip":        llx.StringData(r.fields[0]),
 			"hostnames": llx.ArrayData(llx.TArr2Raw[string](r.fields[1:]), "string"),
@@ -161,10 +164,6 @@ func (x *mqlNetworkHosts) list() ([]any, error) {
 		res = append(res, entry)
 	}
 	return res, nil
-}
-
-func (x *mqlNetworkHostsEntry) id() (string, error) {
-	return "networkHosts.entry/" + strconv.FormatInt(x.Line.Data, 10) + "/" + x.Ip.Data, nil
 }
 
 // --- network.protocols ---
@@ -194,6 +193,9 @@ func (x *mqlNetworkProtocols) list() ([]any, error) {
 		}
 		number, _ := strconv.Atoi(r.fields[1])
 		entry, err := CreateResource(x.MqlRuntime, "networkProtocols.entry", map[string]*llx.RawData{
+			// the id carries the source file: two networkProtocols resources
+			// reading different paths otherwise collide on line+name
+			"__id":    llx.StringData("networkProtocols.entry/" + x.Path.Data + ":" + strconv.Itoa(r.line) + "/" + r.fields[0]),
 			"line":    llx.IntData(int64(r.line)),
 			"name":    llx.StringData(r.fields[0]),
 			"number":  llx.IntData(int64(number)),
@@ -206,10 +208,6 @@ func (x *mqlNetworkProtocols) list() ([]any, error) {
 		res = append(res, entry)
 	}
 	return res, nil
-}
-
-func (x *mqlNetworkProtocolsEntry) id() (string, error) {
-	return "networkProtocols.entry/" + strconv.FormatInt(x.Line.Data, 10) + "/" + x.Name.Data, nil
 }
 
 // --- network.services ---
@@ -245,6 +243,9 @@ func (x *mqlNetworkServices) list() ([]any, error) {
 			port, _ = strconv.Atoi(r.fields[1])
 		}
 		entry, err := CreateResource(x.MqlRuntime, "networkServices.entry", map[string]*llx.RawData{
+			// the id carries the source file: two networkServices resources
+			// reading different paths otherwise collide on line+name
+			"__id":     llx.StringData("networkServices.entry/" + x.Path.Data + ":" + strconv.Itoa(r.line) + "/" + r.fields[0]),
 			"line":     llx.IntData(int64(r.line)),
 			"name":     llx.StringData(r.fields[0]),
 			"port":     llx.IntData(int64(port)),
@@ -258,9 +259,4 @@ func (x *mqlNetworkServices) list() ([]any, error) {
 		res = append(res, entry)
 	}
 	return res, nil
-}
-
-func (x *mqlNetworkServicesEntry) id() (string, error) {
-	return "networkServices.entry/" + strconv.FormatInt(x.Line.Data, 10) + "/" + x.Name.Data + "/" +
-		strconv.FormatInt(x.Port.Data, 10) + "/" + x.Protocol.Data, nil
 }

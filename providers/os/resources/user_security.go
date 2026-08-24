@@ -70,6 +70,9 @@ func (x *mqlKnownhosts) list() ([]any, error) {
 		}
 		host := fields[idx]
 		entry, err := CreateResource(x.MqlRuntime, "knownhosts.entry", map[string]*llx.RawData{
+			// the id carries the source file: every user has its own
+			// ~/.ssh/known_hosts, so line+host alone collides across users
+			"__id":     llx.StringData("knownhosts.entry/" + x.Path.Data + ":" + strconv.Itoa(i+1) + "/" + host),
 			"line":     llx.IntData(int64(i + 1)),
 			"host":     llx.StringData(host),
 			"isHashed": llx.BoolData(strings.HasPrefix(host, "|1|")),
@@ -82,10 +85,6 @@ func (x *mqlKnownhosts) list() ([]any, error) {
 		res = append(res, entry)
 	}
 	return res, nil
-}
-
-func (x *mqlKnownhostsEntry) id() (string, error) {
-	return "knownhosts.entry/" + strconv.FormatInt(x.Line.Data, 10) + "/" + x.Host.Data, nil
 }
 
 // --- user.shellHistory ---

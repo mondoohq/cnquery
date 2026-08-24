@@ -8,13 +8,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
 type mqlMacosScreenlockInternal struct {
 	lock    sync.Mutex
-	fetched bool
+	fetched atomic.Bool
 	ask     bool
 	delay   int64
 }
@@ -24,12 +25,12 @@ type mqlMacosScreenlockInternal struct {
 // askForPassword means false, and no delay means a large sentinel so that
 // "delay <= N" compliance checks do not pass on absent data.
 func (m *mqlMacosScreenlock) fetch() error {
-	if m.fetched {
+	if m.fetched.Load() {
 		return nil
 	}
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	if m.fetched {
+	if m.fetched.Load() {
 		return nil
 	}
 
@@ -45,7 +46,7 @@ func (m *mqlMacosScreenlock) fetch() error {
 		m.delay = v
 	}
 
-	m.fetched = true
+	m.fetched.Store(true)
 	return nil
 }
 
