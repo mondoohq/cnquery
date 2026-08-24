@@ -93,6 +93,8 @@ private neon.organization @defaults("name plan") {
   apiKeys() []neon.apiKey
   // Projects belonging to the organization
   projects() []neon.project
+  // Invitations sent but not yet accepted
+  invitations() []neon.organization.invitation
 }
 
 // Member of a Neon organization
@@ -105,7 +107,11 @@ private neon.organization.member @defaults("email role") {
   id string
   // Email address of the member
   email string
-  // Role the member holds, either admin or member
+  // Role the member holds
+  //
+  // One of admin, member, editor, viewer, or collaborator. An admin carries
+  // project creation, member management, and API key issuance across the
+  // whole organization.
   role string
   // Whether the member has multi-factor authentication enabled
   //
@@ -115,6 +121,12 @@ private neon.organization.member @defaults("email role") {
   hasMfa bool
   // Time the member joined the organization
   joinedAt time
+  // Time the account was deactivated, or null while it is active
+  //
+  // A deactivated account stays on the roster with the role it held, so a
+  // roster read that ignores this field counts access that can no longer be
+  // exercised alongside access that can.
+  deactivatedAt time
 }
 
 // Neon API Key
@@ -227,6 +239,14 @@ private neon.project @defaults("name regionId") {
   jwksEndpoints() []neon.project.jwksEndpoint
   // Private connectivity endpoints attached to the project
   vpcEndpoints() []neon.vpcEndpoint
+  // Findings reported by Neon's own advisor checks
+  advisorIssues() []neon.project.advisorIssue
+  // Members of the owning organization and the rights each holds on the project
+  members() []neon.project.member
+  // Control-plane operations Neon has run on the project
+  operations() []neon.project.operation
+  // Snapshots captured of the project's branches
+  snapshots() []neon.project.snapshot
 }
 
 // Access granted on a Neon project
@@ -283,6 +303,21 @@ private neon.vpcEndpoint @defaults("vpcEndpointId label") {
   vpcEndpointId string
   // Descriptive label given to the endpoint
   label string
+  // Attachment state of the endpoint
+  //
+  // A value of new means the endpoint has been configured but Neon has not
+  // accepted the connection yet, so nothing reaches the project over it. A
+  // value of accepted means the private path is live. A project that sets
+  // blockPublicConnections against an endpoint that is not accepted is not
+  // privately reachable, it is unreachable.
+  state() string
+  // Number of projects restricted to reaching Neon over this endpoint
+  numRestrictedProjects() int
+  // Projects restricted to this endpoint, at most three of them
+  //
+  // The API returns a sample rather than the full set. Compare its length
+  // against numRestrictedProjects to tell a complete list from a sample.
+  exampleRestrictedProjects() []neon.project
 }
 
 // Neon Branch
@@ -344,6 +379,14 @@ private neon.branch @defaults("name protected") {
   roles() []neon.role
   // Databases defined on the branch
   databases() []neon.database
+  // Neon Auth integration on the branch, or null when none is set up
+  auth() neon.auth
+  // Object storage buckets on the branch
+  buckets() []neon.bucket
+  // Scoped credentials issued against the branch
+  credentials() []neon.credential
+  // Functions deployed on the branch
+  functions() []neon.function
 }
 
 // Compute endpoint of a Neon branch
@@ -445,4 +488,444 @@ private neon.database @defaults("name") {
   owner() neon.role
   // Branch the database is defined on
   branch() neon.branch
+  // Data API publishing the database over HTTP, or null when none is deployed
+  dataApi() neon.dataApi
+}
+
+// Invitation to a Neon organization
+//
+// An invitation sent to an email address that has not been accepted yet. An
+// outstanding invitation carrying the admin role is organization-wide
+// administrative access waiting to be claimed by whoever controls that
+// mailbox, and it does not appear on the member roster until it is accepted.
+// Query `email` against the addresses the organization expects to grant access
+// to, and `role` for what the invitation confers.
+private neon.organization.invitation @defaults("email role invitedAt") {
+  // Unique invitation identifier
+  id string
+  // Email address the invitation was sent to
+  email string
+  // Role the invitation confers once accepted
+  //
+  // One of admin, member, editor, viewer, or collaborator.
+  role string
+  // Time the invitation was sent
+  invitedAt time
+  // Member who sent the invitation, or null when they have left the organization
+  invitedBy() neon.organization.member
+}
+
+// Finding reported by Neon's advisors
+//
+// A single finding from the first-party checks Neon runs over a project's
+// Postgres schema and its exposure, such as a table left without row-level
+// security. The `facing` field separates a finding that affects what the
+// project publishes externally from one that is internal only, `level` carries
+// the severity, `categories` separates security findings from performance
+// ones, and `remediation` carries the fix Neon suggests.
+private neon.project.advisorIssue @defaults("name level facing") {
+  // Identifier of the issue type, for example rls_disabled_in_public
+  name string
+  // Human-readable title of the finding
+  title string
+  // Severity of the finding, for example ERROR, WARN, or INFO
+  level string
+  // Whether the finding affects external exposure
+  //
+  // A value of EXTERNAL means the finding concerns what the project publishes
+  // beyond its own boundary, which is where an unauthenticated reader could
+  // reach it. A value of INTERNAL means it is confined to the project.
+  facing string
+  // Categories the finding belongs to, either SECURITY or PERFORMANCE
+  categories []string
+  // Description of what the check looks for
+  description string
+  // Detail of what the check found on this project
+  detail string
+  // Remediation Neon suggests for the finding
+  remediation string
+  // Structured detail of the finding, such as the schema and table it concerns
+  metadata dict
+}
+
+// Member of a Neon project
+//
+// An account of the owning organization together with the rights it holds on
+// one project. Query `effectiveProjectPermission` for what the member can
+// actually do, since it resolves an explicit grant, the organization's default
+// for the project, and an organization-admin override into a single answer.
+// The `grantSource` field reports which of those produced it, so access held
+// only because someone is an organization admin is distinguishable from access
+// granted on the project itself.
+private neon.project.member @defaults("email effectiveProjectPermission grantSource") {
+  // Unique membership identifier
+  id string
+  // Email address of the member
+  email string
+  // Display name of the member
+  name string
+  // Role the member holds in the owning organization
+  //
+  // One of admin, member, editor, viewer, or collaborator.
+  orgRole string
+  // Role the member holds on the project, or null when none is set on it
+  //
+  // One of viewer, editor, or admin.
+  projectRole string
+  // Permission the organization applies to the project by default
+  //
+  // One of VIEWER, EDITOR, or ADMIN.
+  orgDefaultProjectPermission string
+  // Permission granted on the project itself, or null when none was granted
+  //
+  // One of VIEWER, EDITOR, or ADMIN.
+  explicitProjectPermission string
+  // Permission the member actually holds on the project
+  //
+  // One of VIEWER, EDITOR, or ADMIN. This is the resolved answer, and it is
+  // what a review of who can change the project should read.
+  effectiveProjectPermission string
+  // Where the effective permission came from
+  //
+  // One of explicit for a grant made on the project, org_role_default for the
+  // organization's default, org_admin_override for rights held only by virtue
+  // of organization administration, or unassigned when the member holds none.
+  grantSource string
+  // Membership of the owning organization, or null when it cannot be read
+  organizationMember() neon.organization.member
+}
+
+// Control-plane operation on a Neon project
+//
+// A single action Neon ran on a project, which is the only change record the
+// API exposes. The `action` field names what ran, and the actions that change
+// a project's guarantees are visible here rather than on the resource they
+// changed: timeline_update_protected_config is a branch gaining or losing
+// protection, and detach_parent_branch is a branch being severed from the one
+// it was created from. Query `status` for whether the action completed and
+// `failuresCount` for one that kept failing.
+private neon.project.operation @defaults("action status createdAt") {
+  // Unique operation identifier
+  id string
+  // Action that ran
+  //
+  // Values include create_branch, delete_timeline, detach_parent_branch,
+  // timeline_update_protected_config, apply_config, start_compute, and
+  // suspend_compute, among others.
+  action string
+  // Lifecycle state of the operation
+  //
+  // One of scheduling, running, finished, failed, error, cancelling,
+  // cancelled, or skipped.
+  status string
+  // Message describing why the operation failed, or null when it did not
+  error string
+  // Number of times the operation failed
+  failuresCount int
+  // Time the operation was last retried, or null when it never was
+  retryAt time
+  // Time the operation was created
+  createdAt time
+  // Time the operation's status was last updated
+  updatedAt time
+  // Total duration of the operation in milliseconds
+  totalDurationMs int
+  // Branch the operation ran on, or null when it was not branch-scoped
+  branch() neon.branch
+  // Compute endpoint the operation ran on, or null when it was not endpoint-scoped
+  endpoint() neon.endpoint
+  // Project the operation ran on
+  project() neon.project
+}
+
+// Snapshot of a Neon branch
+//
+// A point-in-time capture of a branch that a new branch can be restored from.
+// Snapshots are the durable restore path, and they outlive the window that
+// historyRetentionSeconds describes, so a project whose branches carry no
+// snapshot can only be recovered as far back as that window reaches. The
+// `manual` field separates a snapshot an operator took from one a schedule
+// produced, and `expiresAt` is when the snapshot stops being available.
+private neon.project.snapshot @defaults("name createdAt expiresAt") {
+  // Unique snapshot identifier
+  id string
+  // Human-readable label for the snapshot
+  name string
+  // Write-ahead log position the snapshot was captured at
+  lsn string
+  // Point in time the snapshot captures
+  timestamp time
+  // Time the snapshot was created
+  createdAt time
+  // Time the snapshot expires and becomes eligible for deletion, or null when it does not expire
+  expiresAt time
+  // Whether an operator took the snapshot rather than a schedule producing it
+  manual bool
+  // Full size of the snapshot in bytes
+  fullSize int
+  // Size of the snapshot's difference from its predecessor in bytes
+  diffSize int
+  // Branch the snapshot was captured from, or null when that branch is gone
+  sourceBranch() neon.branch
+}
+
+// Object storage bucket on a Neon branch
+//
+// A bucket on the object storage plane attached to a branch. The
+// `accessLevel` field governs who may read the objects it holds, and a value
+// of public_read serves every object to an anonymous caller over HTTP. That
+// plane is separate from the project's Postgres endpoints, so neither
+// blockPublicConnections nor allowedIps constrains what a bucket publishes.
+private neon.bucket @defaults("name accessLevel") {
+  // Bucket name
+  name string
+  // Who may read the bucket's objects
+  //
+  // A value of private requires a credential carrying the storage:read scope.
+  // A value of public_read serves every object in the bucket to any caller,
+  // with no credential and no network restriction.
+  accessLevel string
+  // Time the bucket was created
+  createdAt time
+  // Branch the bucket is attached to
+  branch() neon.branch
+}
+
+// Scoped credential on a Neon branch
+//
+// A bearer credential issued against a branch, separate from the API keys that
+// authenticate to the control plane. The `scopes` field lists the capabilities
+// it carries, such as reading or writing object storage and invoking
+// functions. Unlike an API key a credential may carry an expiry, and
+// `expiresAt` is null when it never expires, so a credential holding
+// storage:write with no expiry and no recent use is a secret left behind.
+// Query `revokedAt` for whether the credential is still live.
+private neon.credential @defaults("tokenIdShort scopes expiresAt") {
+  // Shortened form of the credential identifier, safe to record
+  //
+  // The full credential identifier is not exposed, and the bearer token itself
+  // is returned only once when the credential is issued.
+  tokenIdShort string
+  // Label given to the credential at issuance, or null when none was given
+  name string
+  // Capabilities the credential carries
+  //
+  // Each entry is one of storage:read, storage:write, ai_gateway:invoke, or
+  // functions:invoke. A credential may only do what its scopes list.
+  scopes []string
+  // Kind of principal the credential authenticates as
+  //
+  // A value of user is a credential an operator issued. Values of function and
+  // system are issued by Neon for its own use and are not created through the
+  // customer-facing API.
+  principalType string
+  // Time the credential was created
+  createdAt time
+  // Time the credential last authenticated, or null when it never has
+  lastUsedAt time
+  // Time the credential was revoked, or null while it is live
+  revokedAt time
+  // Time the credential expires, or null when it never expires
+  expiresAt time
+  // Branch the credential is scoped to, or null when it is not branch-scoped
+  branch() neon.branch
+  // Function the credential was minted for, or null when it was not
+  function() neon.function
+}
+
+// Function deployed on a Neon branch
+//
+// Code Neon runs on a branch's behalf, reachable at `invocationUrl`. That URL
+// resolves publicly, so a project's functions are an internet-facing compute
+// surface that neither blockPublicConnections nor allowedIps governs. The
+// `activeDeployment` field is the build currently serving traffic and
+// `currentDeployment` is the most recent build, which differ while a
+// deployment is still building or after one failed.
+private neon.function @defaults("name slug invocationUrl") {
+  // Unique function identifier
+  id string
+  // Branch-unique name forming the first label of the invocation URL
+  slug string
+  // Display name of the function
+  name string
+  // URL the function is invoked at
+  //
+  // The host carries the branch identifier and the slug under a Neon-managed
+  // domain, and it resolves from the public internet.
+  invocationUrl string
+  // Time the function was created
+  createdAt time
+  // Build currently serving invocations, or null when none is live
+  activeDeployment() neon.function.deployment
+  // Most recent build, or null when the function has never been deployed
+  currentDeployment() neon.function.deployment
+  // Branch the function is deployed on
+  branch() neon.branch
+}
+
+// Build of a Neon function
+//
+// One build of a function, carrying the runtime it executes under and the
+// names of the environment variables it was deployed with. Neon encrypts the
+// values and never returns them, so `environment` lists names only, which is
+// still what shows a function wired to a secret it should not hold. Query
+// `status` for whether the build completed and `error` for why one failed.
+private neon.function.deployment @defaults("id status runtime") {
+  // Build number, which increases with each deployment of the function
+  id int
+  // Build lifecycle state
+  //
+  // One of pending, building, completed, or failed.
+  status string
+  // Memory the build runs with, in mebibytes
+  memoryMib int
+  // Runtime the build executes under, for example nodejs24
+  runtime string
+  // Time the build was created
+  createdAt time
+  // Names of the environment variables the build was deployed with
+  //
+  // Neon encrypts the values and never returns them, so only the names appear
+  // here.
+  environment []string
+  // Message describing why the build failed, or null when it did not
+  error string
+}
+
+// Data API of a Neon database
+//
+// A REST interface that publishes a database over HTTP. An anonymous request
+// is executed as the role named by `dbAnonRole`, so whatever that role can
+// read is what an unauthenticated caller can read, across every schema listed
+// in `dbSchemas`. The `corsAllowedOrigins` field is the browser-side
+// allowlist, and a value of `*` alongside a privileged anonymous role is a
+// reachable path to the data. This interface is served separately from the
+// project's Postgres endpoints, so blockPublicConnections does not govern it.
+private neon.dataApi @defaults("url status dbAnonRole") {
+  // URL the Data API is served at
+  url string
+  // Deployment state of the Data API
+  status string
+  // Role an anonymous request is executed as
+  //
+  // A request that presents no token runs with this role's rights, so the
+  // grants held by this role are what the interface publishes to the public.
+  dbAnonRole string
+  // Schemas the interface exposes
+  dbSchemas []string
+  // Schemas the interface exposes that are available on the database
+  availableSchemas []string
+  // Extra schemas added to the search path, or null when none are
+  dbExtraSearchPath string
+  // Hard limit on rows returned in one response, or null when unlimited
+  dbMaxRows int
+  // Whether aggregate queries are permitted
+  dbAggregatesEnabled bool
+  // Browser origins permitted to call the interface
+  //
+  // A value of `*` permits a page on any origin to call the interface with the
+  // caller's credentials. Null when no allowlist is configured.
+  corsAllowedOrigins string
+  // Claim of a presented token that names the role to run as, or null when unset
+  jwtRoleClaimKey string
+  // Seconds a verified token is cached for, or null when unset
+  jwtCacheMaxLifetime int
+  // Whether the interface publishes its own OpenAPI description, and to whom
+  openapiMode string
+  // Whether responses carry server timing headers
+  serverTimingEnabled bool
+  // Database the interface publishes
+  database() neon.database
+}
+
+// Neon Auth integration on a branch
+//
+// The identity provider Neon runs for an application, and the record every
+// other part of the identity surface hangs from. The `authProvider` field
+// names which implementation backs it, and a value of mock is a stand-in for
+// local development that does not actually verify anyone, so a branch serving
+// production traffic behind it is not authenticating its users. Query
+// `allowLocalhost` and `trustedDomains` for the redirect-URI boundary,
+// the `emailPassword` fields for self-registration, and `oauthProviders` for
+// how sign-in with an outside provider is configured.
+private neon.auth @defaults("authProvider ownedBy") {
+  // Implementation backing the integration
+  //
+  // One of mock, stack, or better_auth. A value of mock does not verify
+  // credentials and exists for local development.
+  authProvider string
+  // Identifier of the project in the backing provider
+  authProviderProjectId string
+  // Database the integration stores its identity tables in
+  dbName string
+  // URL of the key set that signs the integration's tokens
+  jwksUrl string
+  // Base URL the integration is served at, or null when it has none
+  baseUrl string
+  // Display name of the integration, or null when it has none
+  name string
+  // Who owns the integration, either user or neon
+  ownedBy string
+  // State of an ownership transfer, either initiated or finished, or null when none is under way
+  transferStatus string
+  // Time the integration was created
+  createdAt time
+  // Whether a callback to a localhost address is accepted
+  //
+  // A localhost redirect URI is accepted from any caller, so a listener an
+  // attacker controls on the victim's own machine can receive a token minted
+  // for the victim. It is a development convenience that should not be left on
+  // where real users sign in.
+  allowLocalhost() bool
+  // Domains a sign-in flow may redirect back to
+  //
+  // This is the redirect-URI allowlist, which is the boundary that keeps a
+  // token from being delivered to somewhere the application does not control.
+  trustedDomains() []string
+  // Whether an account may be created with an email address and a password
+  emailPasswordEnabled() bool
+  // How an email address is verified, either link or otp
+  emailVerificationMethod() string
+  // Whether an address must be verified before the account is usable
+  //
+  // When false alongside a sign-up that is not disabled, anyone can register
+  // an account against an address they do not control and use it.
+  requireEmailVerification() bool
+  // Whether verifying an address signs the account in
+  autoSignInAfterVerification() bool
+  // Whether a verification email is sent when an account is created
+  sendVerificationEmailOnSignUp() bool
+  // Whether a verification email is sent when an account signs in
+  sendVerificationEmailOnSignIn() bool
+  // Whether self-registration is turned off
+  //
+  // When false, any caller that reaches the integration may create an account.
+  disableSignUp() bool
+  // Providers a user may sign in with from outside
+  oauthProviders() []neon.auth.oauthProvider
+  // Branch the integration runs on
+  branch() neon.branch
+}
+
+// Sign-in provider of a Neon Auth integration
+//
+// An outside provider users may sign in with. The `type` field separates a
+// provider wired up with the tenant's own application credentials from one
+// running on credentials Neon shares across tenants, and a value of shared
+// means users are authenticated through a development registration Neon owns
+// rather than the tenant's, which Neon documents as unsuitable for production.
+// Client secrets are not exposed.
+private neon.auth.oauthProvider @defaults("provider type") {
+  // Provider users sign in with
+  //
+  // One of google, github, microsoft, or vercel.
+  provider string
+  // Whose application credentials the provider uses
+  //
+  // A value of standard means the tenant registered its own application with
+  // the provider. A value of shared means Neon's shared development
+  // credentials are used, which is not intended for production.
+  type string
+  // Client identifier of the registered application, or null when shared credentials are used
+  clientId string
 }

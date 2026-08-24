@@ -16,19 +16,31 @@ import (
 
 // The MQL type names exposed as public consts for ease of reference.
 const (
-	ResourceNeon                    string = "neon"
-	ResourceNeonUser                string = "neon.user"
-	ResourceNeonOrganization        string = "neon.organization"
-	ResourceNeonOrganizationMember  string = "neon.organization.member"
-	ResourceNeonApiKey              string = "neon.apiKey"
-	ResourceNeonProject             string = "neon.project"
-	ResourceNeonProjectPermission   string = "neon.project.permission"
-	ResourceNeonProjectJwksEndpoint string = "neon.project.jwksEndpoint"
-	ResourceNeonVpcEndpoint         string = "neon.vpcEndpoint"
-	ResourceNeonBranch              string = "neon.branch"
-	ResourceNeonEndpoint            string = "neon.endpoint"
-	ResourceNeonRole                string = "neon.role"
-	ResourceNeonDatabase            string = "neon.database"
+	ResourceNeon                       string = "neon"
+	ResourceNeonUser                   string = "neon.user"
+	ResourceNeonOrganization           string = "neon.organization"
+	ResourceNeonOrganizationMember     string = "neon.organization.member"
+	ResourceNeonApiKey                 string = "neon.apiKey"
+	ResourceNeonProject                string = "neon.project"
+	ResourceNeonProjectPermission      string = "neon.project.permission"
+	ResourceNeonProjectJwksEndpoint    string = "neon.project.jwksEndpoint"
+	ResourceNeonVpcEndpoint            string = "neon.vpcEndpoint"
+	ResourceNeonBranch                 string = "neon.branch"
+	ResourceNeonEndpoint               string = "neon.endpoint"
+	ResourceNeonRole                   string = "neon.role"
+	ResourceNeonDatabase               string = "neon.database"
+	ResourceNeonOrganizationInvitation string = "neon.organization.invitation"
+	ResourceNeonProjectAdvisorIssue    string = "neon.project.advisorIssue"
+	ResourceNeonProjectMember          string = "neon.project.member"
+	ResourceNeonProjectOperation       string = "neon.project.operation"
+	ResourceNeonProjectSnapshot        string = "neon.project.snapshot"
+	ResourceNeonBucket                 string = "neon.bucket"
+	ResourceNeonCredential             string = "neon.credential"
+	ResourceNeonFunction               string = "neon.function"
+	ResourceNeonFunctionDeployment     string = "neon.function.deployment"
+	ResourceNeonDataApi                string = "neon.dataApi"
+	ResourceNeonAuth                   string = "neon.auth"
+	ResourceNeonAuthOauthProvider      string = "neon.auth.oauthProvider"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -86,6 +98,54 @@ func init() {
 		"neon.database": {
 			// to override args, implement: initNeonDatabase(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNeonDatabase,
+		},
+		"neon.organization.invitation": {
+			// to override args, implement: initNeonOrganizationInvitation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonOrganizationInvitation,
+		},
+		"neon.project.advisorIssue": {
+			// to override args, implement: initNeonProjectAdvisorIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonProjectAdvisorIssue,
+		},
+		"neon.project.member": {
+			// to override args, implement: initNeonProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonProjectMember,
+		},
+		"neon.project.operation": {
+			// to override args, implement: initNeonProjectOperation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonProjectOperation,
+		},
+		"neon.project.snapshot": {
+			// to override args, implement: initNeonProjectSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonProjectSnapshot,
+		},
+		"neon.bucket": {
+			// to override args, implement: initNeonBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonBucket,
+		},
+		"neon.credential": {
+			// to override args, implement: initNeonCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonCredential,
+		},
+		"neon.function": {
+			// to override args, implement: initNeonFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonFunction,
+		},
+		"neon.function.deployment": {
+			// to override args, implement: initNeonFunctionDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonFunctionDeployment,
+		},
+		"neon.dataApi": {
+			// to override args, implement: initNeonDataApi(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonDataApi,
+		},
+		"neon.auth": {
+			// to override args, implement: initNeonAuth(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonAuth,
+		},
+		"neon.auth.oauthProvider": {
+			// to override args, implement: initNeonAuthOauthProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNeonAuthOauthProvider,
 		},
 	}
 }
@@ -230,6 +290,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"neon.organization.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonOrganization).GetProjects()).ToDataRes(types.Array(types.Resource("neon.project")))
 	},
+	"neon.organization.invitations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganization).GetInvitations()).ToDataRes(types.Array(types.Resource("neon.organization.invitation")))
+	},
 	"neon.organization.member.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonOrganizationMember).GetId()).ToDataRes(types.String)
 	},
@@ -244,6 +307,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"neon.organization.member.joinedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonOrganizationMember).GetJoinedAt()).ToDataRes(types.Time)
+	},
+	"neon.organization.member.deactivatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganizationMember).GetDeactivatedAt()).ToDataRes(types.Time)
 	},
 	"neon.apiKey.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonApiKey).GetId()).ToDataRes(types.String)
@@ -347,6 +413,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"neon.project.vpcEndpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonProject).GetVpcEndpoints()).ToDataRes(types.Array(types.Resource("neon.vpcEndpoint")))
 	},
+	"neon.project.advisorIssues": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProject).GetAdvisorIssues()).ToDataRes(types.Array(types.Resource("neon.project.advisorIssue")))
+	},
+	"neon.project.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProject).GetMembers()).ToDataRes(types.Array(types.Resource("neon.project.member")))
+	},
+	"neon.project.operations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProject).GetOperations()).ToDataRes(types.Array(types.Resource("neon.project.operation")))
+	},
+	"neon.project.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProject).GetSnapshots()).ToDataRes(types.Array(types.Resource("neon.project.snapshot")))
+	},
 	"neon.project.permission.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonProjectPermission).GetId()).ToDataRes(types.String)
 	},
@@ -388,6 +466,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"neon.vpcEndpoint.label": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonVpcEndpoint).GetLabel()).ToDataRes(types.String)
+	},
+	"neon.vpcEndpoint.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonVpcEndpoint).GetState()).ToDataRes(types.String)
+	},
+	"neon.vpcEndpoint.numRestrictedProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonVpcEndpoint).GetNumRestrictedProjects()).ToDataRes(types.Int)
+	},
+	"neon.vpcEndpoint.exampleRestrictedProjects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonVpcEndpoint).GetExampleRestrictedProjects()).ToDataRes(types.Array(types.Resource("neon.project")))
 	},
 	"neon.branch.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonBranch).GetId()).ToDataRes(types.String)
@@ -439,6 +526,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"neon.branch.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonBranch).GetDatabases()).ToDataRes(types.Array(types.Resource("neon.database")))
+	},
+	"neon.branch.auth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBranch).GetAuth()).ToDataRes(types.Resource("neon.auth"))
+	},
+	"neon.branch.buckets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBranch).GetBuckets()).ToDataRes(types.Array(types.Resource("neon.bucket")))
+	},
+	"neon.branch.credentials": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBranch).GetCredentials()).ToDataRes(types.Array(types.Resource("neon.credential")))
+	},
+	"neon.branch.functions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBranch).GetFunctions()).ToDataRes(types.Array(types.Resource("neon.function")))
 	},
 	"neon.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonEndpoint).GetId()).ToDataRes(types.String)
@@ -532,6 +631,345 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"neon.database.branch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNeonDatabase).GetBranch()).ToDataRes(types.Resource("neon.branch"))
+	},
+	"neon.database.dataApi": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDatabase).GetDataApi()).ToDataRes(types.Resource("neon.dataApi"))
+	},
+	"neon.organization.invitation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganizationInvitation).GetId()).ToDataRes(types.String)
+	},
+	"neon.organization.invitation.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganizationInvitation).GetEmail()).ToDataRes(types.String)
+	},
+	"neon.organization.invitation.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganizationInvitation).GetRole()).ToDataRes(types.String)
+	},
+	"neon.organization.invitation.invitedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganizationInvitation).GetInvitedAt()).ToDataRes(types.Time)
+	},
+	"neon.organization.invitation.invitedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonOrganizationInvitation).GetInvitedBy()).ToDataRes(types.Resource("neon.organization.member"))
+	},
+	"neon.project.advisorIssue.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetName()).ToDataRes(types.String)
+	},
+	"neon.project.advisorIssue.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetTitle()).ToDataRes(types.String)
+	},
+	"neon.project.advisorIssue.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetLevel()).ToDataRes(types.String)
+	},
+	"neon.project.advisorIssue.facing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetFacing()).ToDataRes(types.String)
+	},
+	"neon.project.advisorIssue.categories": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetCategories()).ToDataRes(types.Array(types.String))
+	},
+	"neon.project.advisorIssue.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetDescription()).ToDataRes(types.String)
+	},
+	"neon.project.advisorIssue.detail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetDetail()).ToDataRes(types.String)
+	},
+	"neon.project.advisorIssue.remediation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetRemediation()).ToDataRes(types.String)
+	},
+	"neon.project.advisorIssue.metadata": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectAdvisorIssue).GetMetadata()).ToDataRes(types.Dict)
+	},
+	"neon.project.member.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetId()).ToDataRes(types.String)
+	},
+	"neon.project.member.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetEmail()).ToDataRes(types.String)
+	},
+	"neon.project.member.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetName()).ToDataRes(types.String)
+	},
+	"neon.project.member.orgRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetOrgRole()).ToDataRes(types.String)
+	},
+	"neon.project.member.projectRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetProjectRole()).ToDataRes(types.String)
+	},
+	"neon.project.member.orgDefaultProjectPermission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetOrgDefaultProjectPermission()).ToDataRes(types.String)
+	},
+	"neon.project.member.explicitProjectPermission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetExplicitProjectPermission()).ToDataRes(types.String)
+	},
+	"neon.project.member.effectiveProjectPermission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetEffectiveProjectPermission()).ToDataRes(types.String)
+	},
+	"neon.project.member.grantSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetGrantSource()).ToDataRes(types.String)
+	},
+	"neon.project.member.organizationMember": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectMember).GetOrganizationMember()).ToDataRes(types.Resource("neon.organization.member"))
+	},
+	"neon.project.operation.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetId()).ToDataRes(types.String)
+	},
+	"neon.project.operation.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetAction()).ToDataRes(types.String)
+	},
+	"neon.project.operation.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetStatus()).ToDataRes(types.String)
+	},
+	"neon.project.operation.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetError()).ToDataRes(types.String)
+	},
+	"neon.project.operation.failuresCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetFailuresCount()).ToDataRes(types.Int)
+	},
+	"neon.project.operation.retryAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetRetryAt()).ToDataRes(types.Time)
+	},
+	"neon.project.operation.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"neon.project.operation.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"neon.project.operation.totalDurationMs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetTotalDurationMs()).ToDataRes(types.Int)
+	},
+	"neon.project.operation.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetBranch()).ToDataRes(types.Resource("neon.branch"))
+	},
+	"neon.project.operation.endpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetEndpoint()).ToDataRes(types.Resource("neon.endpoint"))
+	},
+	"neon.project.operation.project": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectOperation).GetProject()).ToDataRes(types.Resource("neon.project"))
+	},
+	"neon.project.snapshot.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetId()).ToDataRes(types.String)
+	},
+	"neon.project.snapshot.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetName()).ToDataRes(types.String)
+	},
+	"neon.project.snapshot.lsn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetLsn()).ToDataRes(types.String)
+	},
+	"neon.project.snapshot.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetTimestamp()).ToDataRes(types.Time)
+	},
+	"neon.project.snapshot.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"neon.project.snapshot.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"neon.project.snapshot.manual": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetManual()).ToDataRes(types.Bool)
+	},
+	"neon.project.snapshot.fullSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetFullSize()).ToDataRes(types.Int)
+	},
+	"neon.project.snapshot.diffSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetDiffSize()).ToDataRes(types.Int)
+	},
+	"neon.project.snapshot.sourceBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonProjectSnapshot).GetSourceBranch()).ToDataRes(types.Resource("neon.branch"))
+	},
+	"neon.bucket.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBucket).GetName()).ToDataRes(types.String)
+	},
+	"neon.bucket.accessLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBucket).GetAccessLevel()).ToDataRes(types.String)
+	},
+	"neon.bucket.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBucket).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"neon.bucket.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonBucket).GetBranch()).ToDataRes(types.Resource("neon.branch"))
+	},
+	"neon.credential.tokenIdShort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetTokenIdShort()).ToDataRes(types.String)
+	},
+	"neon.credential.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetName()).ToDataRes(types.String)
+	},
+	"neon.credential.scopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetScopes()).ToDataRes(types.Array(types.String))
+	},
+	"neon.credential.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"neon.credential.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"neon.credential.lastUsedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetLastUsedAt()).ToDataRes(types.Time)
+	},
+	"neon.credential.revokedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetRevokedAt()).ToDataRes(types.Time)
+	},
+	"neon.credential.expiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetExpiresAt()).ToDataRes(types.Time)
+	},
+	"neon.credential.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetBranch()).ToDataRes(types.Resource("neon.branch"))
+	},
+	"neon.credential.function": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonCredential).GetFunction()).ToDataRes(types.Resource("neon.function"))
+	},
+	"neon.function.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetId()).ToDataRes(types.String)
+	},
+	"neon.function.slug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetSlug()).ToDataRes(types.String)
+	},
+	"neon.function.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetName()).ToDataRes(types.String)
+	},
+	"neon.function.invocationUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetInvocationUrl()).ToDataRes(types.String)
+	},
+	"neon.function.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"neon.function.activeDeployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetActiveDeployment()).ToDataRes(types.Resource("neon.function.deployment"))
+	},
+	"neon.function.currentDeployment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetCurrentDeployment()).ToDataRes(types.Resource("neon.function.deployment"))
+	},
+	"neon.function.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunction).GetBranch()).ToDataRes(types.Resource("neon.branch"))
+	},
+	"neon.function.deployment.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunctionDeployment).GetId()).ToDataRes(types.Int)
+	},
+	"neon.function.deployment.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunctionDeployment).GetStatus()).ToDataRes(types.String)
+	},
+	"neon.function.deployment.memoryMib": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunctionDeployment).GetMemoryMib()).ToDataRes(types.Int)
+	},
+	"neon.function.deployment.runtime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunctionDeployment).GetRuntime()).ToDataRes(types.String)
+	},
+	"neon.function.deployment.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunctionDeployment).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"neon.function.deployment.environment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunctionDeployment).GetEnvironment()).ToDataRes(types.Array(types.String))
+	},
+	"neon.function.deployment.error": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonFunctionDeployment).GetError()).ToDataRes(types.String)
+	},
+	"neon.dataApi.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetUrl()).ToDataRes(types.String)
+	},
+	"neon.dataApi.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetStatus()).ToDataRes(types.String)
+	},
+	"neon.dataApi.dbAnonRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetDbAnonRole()).ToDataRes(types.String)
+	},
+	"neon.dataApi.dbSchemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetDbSchemas()).ToDataRes(types.Array(types.String))
+	},
+	"neon.dataApi.availableSchemas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetAvailableSchemas()).ToDataRes(types.Array(types.String))
+	},
+	"neon.dataApi.dbExtraSearchPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetDbExtraSearchPath()).ToDataRes(types.String)
+	},
+	"neon.dataApi.dbMaxRows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetDbMaxRows()).ToDataRes(types.Int)
+	},
+	"neon.dataApi.dbAggregatesEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetDbAggregatesEnabled()).ToDataRes(types.Bool)
+	},
+	"neon.dataApi.corsAllowedOrigins": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetCorsAllowedOrigins()).ToDataRes(types.String)
+	},
+	"neon.dataApi.jwtRoleClaimKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetJwtRoleClaimKey()).ToDataRes(types.String)
+	},
+	"neon.dataApi.jwtCacheMaxLifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetJwtCacheMaxLifetime()).ToDataRes(types.Int)
+	},
+	"neon.dataApi.openapiMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetOpenapiMode()).ToDataRes(types.String)
+	},
+	"neon.dataApi.serverTimingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetServerTimingEnabled()).ToDataRes(types.Bool)
+	},
+	"neon.dataApi.database": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonDataApi).GetDatabase()).ToDataRes(types.Resource("neon.database"))
+	},
+	"neon.auth.authProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetAuthProvider()).ToDataRes(types.String)
+	},
+	"neon.auth.authProviderProjectId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetAuthProviderProjectId()).ToDataRes(types.String)
+	},
+	"neon.auth.dbName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetDbName()).ToDataRes(types.String)
+	},
+	"neon.auth.jwksUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetJwksUrl()).ToDataRes(types.String)
+	},
+	"neon.auth.baseUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetBaseUrl()).ToDataRes(types.String)
+	},
+	"neon.auth.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetName()).ToDataRes(types.String)
+	},
+	"neon.auth.ownedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetOwnedBy()).ToDataRes(types.String)
+	},
+	"neon.auth.transferStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetTransferStatus()).ToDataRes(types.String)
+	},
+	"neon.auth.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"neon.auth.allowLocalhost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetAllowLocalhost()).ToDataRes(types.Bool)
+	},
+	"neon.auth.trustedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetTrustedDomains()).ToDataRes(types.Array(types.String))
+	},
+	"neon.auth.emailPasswordEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetEmailPasswordEnabled()).ToDataRes(types.Bool)
+	},
+	"neon.auth.emailVerificationMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetEmailVerificationMethod()).ToDataRes(types.String)
+	},
+	"neon.auth.requireEmailVerification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetRequireEmailVerification()).ToDataRes(types.Bool)
+	},
+	"neon.auth.autoSignInAfterVerification": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetAutoSignInAfterVerification()).ToDataRes(types.Bool)
+	},
+	"neon.auth.sendVerificationEmailOnSignUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetSendVerificationEmailOnSignUp()).ToDataRes(types.Bool)
+	},
+	"neon.auth.sendVerificationEmailOnSignIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetSendVerificationEmailOnSignIn()).ToDataRes(types.Bool)
+	},
+	"neon.auth.disableSignUp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetDisableSignUp()).ToDataRes(types.Bool)
+	},
+	"neon.auth.oauthProviders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetOauthProviders()).ToDataRes(types.Array(types.Resource("neon.auth.oauthProvider")))
+	},
+	"neon.auth.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuth).GetBranch()).ToDataRes(types.Resource("neon.branch"))
+	},
+	"neon.auth.oauthProvider.provider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuthOauthProvider).GetProvider()).ToDataRes(types.String)
+	},
+	"neon.auth.oauthProvider.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuthOauthProvider).GetType()).ToDataRes(types.String)
+	},
+	"neon.auth.oauthProvider.clientId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNeonAuthOauthProvider).GetClientId()).ToDataRes(types.String)
 	},
 }
 
@@ -653,6 +1091,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNeonOrganization).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"neon.organization.invitations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganization).Invitations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"neon.organization.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonOrganizationMember).__id, ok = v.Value.(string)
 		return
@@ -675,6 +1117,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"neon.organization.member.joinedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonOrganizationMember).JoinedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.organization.member.deactivatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationMember).DeactivatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"neon.apiKey.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -821,6 +1267,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNeonProject).VpcEndpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"neon.project.advisorIssues": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProject).AdvisorIssues, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.project.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProject).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.project.operations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProject).Operations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProject).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"neon.project.permission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonProjectPermission).__id, ok = v.Value.(string)
 		return
@@ -887,6 +1349,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"neon.vpcEndpoint.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonVpcEndpoint).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.vpcEndpoint.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonVpcEndpoint).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.vpcEndpoint.numRestrictedProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonVpcEndpoint).NumRestrictedProjects, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.vpcEndpoint.exampleRestrictedProjects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonVpcEndpoint).ExampleRestrictedProjects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"neon.branch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -959,6 +1433,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"neon.branch.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonBranch).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.branch.auth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBranch).Auth, ok = plugin.RawToTValue[*mqlNeonAuth](v.Value, v.Error)
+		return
+	},
+	"neon.branch.buckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBranch).Buckets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.branch.credentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBranch).Credentials, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.branch.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBranch).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"neon.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1095,6 +1585,506 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"neon.database.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNeonDatabase).Branch, ok = plugin.RawToTValue[*mqlNeonBranch](v.Value, v.Error)
+		return
+	},
+	"neon.database.dataApi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDatabase).DataApi, ok = plugin.RawToTValue[*mqlNeonDataApi](v.Value, v.Error)
+		return
+	},
+	"neon.organization.invitation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationInvitation).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.organization.invitation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationInvitation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.organization.invitation.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationInvitation).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.organization.invitation.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationInvitation).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.organization.invitation.invitedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationInvitation).InvitedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.organization.invitation.invitedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonOrganizationInvitation).InvitedBy, ok = plugin.RawToTValue[*mqlNeonOrganizationMember](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.project.advisorIssue.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.facing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Facing, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.categories": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Categories, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.detail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Detail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.remediation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Remediation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.advisorIssue.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectAdvisorIssue).Metadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.project.member.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.orgRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).OrgRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.projectRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).ProjectRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.orgDefaultProjectPermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).OrgDefaultProjectPermission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.explicitProjectPermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).ExplicitProjectPermission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.effectiveProjectPermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).EffectiveProjectPermission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.grantSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).GrantSource, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.member.organizationMember": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectMember).OrganizationMember, ok = plugin.RawToTValue[*mqlNeonOrganizationMember](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.project.operation.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.failuresCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).FailuresCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.retryAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).RetryAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.totalDurationMs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).TotalDurationMs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).Branch, ok = plugin.RawToTValue[*mqlNeonBranch](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.endpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).Endpoint, ok = plugin.RawToTValue[*mqlNeonEndpoint](v.Value, v.Error)
+		return
+	},
+	"neon.project.operation.project": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectOperation).Project, ok = plugin.RawToTValue[*mqlNeonProject](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.project.snapshot.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.lsn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).Lsn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).Timestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.manual": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).Manual, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.fullSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).FullSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.diffSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).DiffSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.project.snapshot.sourceBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonProjectSnapshot).SourceBranch, ok = plugin.RawToTValue[*mqlNeonBranch](v.Value, v.Error)
+		return
+	},
+	"neon.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBucket).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.bucket.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBucket).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.bucket.accessLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBucket).AccessLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.bucket.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBucket).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.bucket.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonBucket).Branch, ok = plugin.RawToTValue[*mqlNeonBranch](v.Value, v.Error)
+		return
+	},
+	"neon.credential.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.credential.tokenIdShort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).TokenIdShort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.credential.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.credential.scopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).Scopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.credential.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.credential.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.credential.lastUsedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).LastUsedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.credential.revokedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).RevokedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.credential.expiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).ExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.credential.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).Branch, ok = plugin.RawToTValue[*mqlNeonBranch](v.Value, v.Error)
+		return
+	},
+	"neon.credential.function": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonCredential).Function, ok = plugin.RawToTValue[*mqlNeonFunction](v.Value, v.Error)
+		return
+	},
+	"neon.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.function.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.function.slug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).Slug, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.function.invocationUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).InvocationUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.function.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.function.activeDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).ActiveDeployment, ok = plugin.RawToTValue[*mqlNeonFunctionDeployment](v.Value, v.Error)
+		return
+	},
+	"neon.function.currentDeployment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).CurrentDeployment, ok = plugin.RawToTValue[*mqlNeonFunctionDeployment](v.Value, v.Error)
+		return
+	},
+	"neon.function.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunction).Branch, ok = plugin.RawToTValue[*mqlNeonBranch](v.Value, v.Error)
+		return
+	},
+	"neon.function.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.function.deployment.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).Id, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.function.deployment.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.function.deployment.memoryMib": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).MemoryMib, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.function.deployment.runtime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).Runtime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.function.deployment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.function.deployment.environment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).Environment, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.function.deployment.error": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonFunctionDeployment).Error, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.dataApi.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.dbAnonRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).DbAnonRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.dbSchemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).DbSchemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.availableSchemas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).AvailableSchemas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.dbExtraSearchPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).DbExtraSearchPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.dbMaxRows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).DbMaxRows, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.dbAggregatesEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).DbAggregatesEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.corsAllowedOrigins": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).CorsAllowedOrigins, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.jwtRoleClaimKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).JwtRoleClaimKey, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.jwtCacheMaxLifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).JwtCacheMaxLifetime, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.openapiMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).OpenapiMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.serverTimingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).ServerTimingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.dataApi.database": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonDataApi).Database, ok = plugin.RawToTValue[*mqlNeonDatabase](v.Value, v.Error)
+		return
+	},
+	"neon.auth.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.auth.authProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).AuthProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.authProviderProjectId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).AuthProviderProjectId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.dbName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).DbName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.jwksUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).JwksUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.baseUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).BaseUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.ownedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).OwnedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.transferStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).TransferStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"neon.auth.allowLocalhost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).AllowLocalhost, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.auth.trustedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).TrustedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.auth.emailPasswordEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).EmailPasswordEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.auth.emailVerificationMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).EmailVerificationMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.requireEmailVerification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).RequireEmailVerification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.auth.autoSignInAfterVerification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).AutoSignInAfterVerification, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.auth.sendVerificationEmailOnSignUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).SendVerificationEmailOnSignUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.auth.sendVerificationEmailOnSignIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).SendVerificationEmailOnSignIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.auth.disableSignUp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).DisableSignUp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"neon.auth.oauthProviders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).OauthProviders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"neon.auth.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuth).Branch, ok = plugin.RawToTValue[*mqlNeonBranch](v.Value, v.Error)
+		return
+	},
+	"neon.auth.oauthProvider.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuthOauthProvider).__id, ok = v.Value.(string)
+		return
+	},
+	"neon.auth.oauthProvider.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuthOauthProvider).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.oauthProvider.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuthOauthProvider).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"neon.auth.oauthProvider.clientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNeonAuthOauthProvider).ClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 }
@@ -1334,6 +2324,7 @@ type mqlNeonOrganization struct {
 	Members            plugin.TValue[[]any]
 	ApiKeys            plugin.TValue[[]any]
 	Projects           plugin.TValue[[]any]
+	Invitations        plugin.TValue[[]any]
 }
 
 // createNeonOrganization creates a new instance of this resource
@@ -1457,16 +2448,33 @@ func (c *mqlNeonOrganization) GetProjects() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlNeonOrganization) GetInvitations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Invitations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.organization", c.__id, "invitations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.invitations()
+	})
+}
+
 // mqlNeonOrganizationMember for the neon.organization.member resource
 type mqlNeonOrganizationMember struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNeonOrganizationMemberInternal it will be used here
-	Id       plugin.TValue[string]
-	Email    plugin.TValue[string]
-	Role     plugin.TValue[string]
-	HasMfa   plugin.TValue[bool]
-	JoinedAt plugin.TValue[*time.Time]
+	mqlNeonOrganizationMemberInternal
+	Id            plugin.TValue[string]
+	Email         plugin.TValue[string]
+	Role          plugin.TValue[string]
+	HasMfa        plugin.TValue[bool]
+	JoinedAt      plugin.TValue[*time.Time]
+	DeactivatedAt plugin.TValue[*time.Time]
 }
 
 // createNeonOrganizationMember creates a new instance of this resource
@@ -1524,6 +2532,10 @@ func (c *mqlNeonOrganizationMember) GetHasMfa() *plugin.TValue[bool] {
 
 func (c *mqlNeonOrganizationMember) GetJoinedAt() *plugin.TValue[*time.Time] {
 	return &c.JoinedAt
+}
+
+func (c *mqlNeonOrganizationMember) GetDeactivatedAt() *plugin.TValue[*time.Time] {
+	return &c.DeactivatedAt
 }
 
 // mqlNeonApiKey for the neon.apiKey resource
@@ -1628,6 +2640,10 @@ type mqlNeonProject struct {
 	Permissions                     plugin.TValue[[]any]
 	JwksEndpoints                   plugin.TValue[[]any]
 	VpcEndpoints                    plugin.TValue[[]any]
+	AdvisorIssues                   plugin.TValue[[]any]
+	Members                         plugin.TValue[[]any]
+	Operations                      plugin.TValue[[]any]
+	Snapshots                       plugin.TValue[[]any]
 }
 
 // createNeonProject creates a new instance of this resource
@@ -1865,6 +2881,70 @@ func (c *mqlNeonProject) GetVpcEndpoints() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlNeonProject) GetAdvisorIssues() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AdvisorIssues, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project", c.__id, "advisorIssues")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.advisorIssues()
+	})
+}
+
+func (c *mqlNeonProject) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
+}
+
+func (c *mqlNeonProject) GetOperations() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Operations, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project", c.__id, "operations")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.operations()
+	})
+}
+
+func (c *mqlNeonProject) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
 // mqlNeonProjectPermission for the neon.project.permission resource
 type mqlNeonProjectPermission struct {
 	MqlRuntime *plugin.Runtime
@@ -2029,9 +3109,12 @@ func (c *mqlNeonProjectJwksEndpoint) GetBranch() *plugin.TValue[*mqlNeonBranch] 
 type mqlNeonVpcEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlNeonVpcEndpointInternal it will be used here
-	VpcEndpointId plugin.TValue[string]
-	Label         plugin.TValue[string]
+	mqlNeonVpcEndpointInternal
+	VpcEndpointId             plugin.TValue[string]
+	Label                     plugin.TValue[string]
+	State                     plugin.TValue[string]
+	NumRestrictedProjects     plugin.TValue[int64]
+	ExampleRestrictedProjects plugin.TValue[[]any]
 }
 
 // createNeonVpcEndpoint creates a new instance of this resource
@@ -2074,6 +3157,34 @@ func (c *mqlNeonVpcEndpoint) GetLabel() *plugin.TValue[string] {
 	return &c.Label
 }
 
+func (c *mqlNeonVpcEndpoint) GetState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.State, func() (string, error) {
+		return c.state()
+	})
+}
+
+func (c *mqlNeonVpcEndpoint) GetNumRestrictedProjects() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NumRestrictedProjects, func() (int64, error) {
+		return c.numRestrictedProjects()
+	})
+}
+
+func (c *mqlNeonVpcEndpoint) GetExampleRestrictedProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ExampleRestrictedProjects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.vpcEndpoint", c.__id, "exampleRestrictedProjects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.exampleRestrictedProjects()
+	})
+}
+
 // mqlNeonBranch for the neon.branch resource
 type mqlNeonBranch struct {
 	MqlRuntime *plugin.Runtime
@@ -2096,6 +3207,10 @@ type mqlNeonBranch struct {
 	Endpoints         plugin.TValue[[]any]
 	Roles             plugin.TValue[[]any]
 	Databases         plugin.TValue[[]any]
+	Auth              plugin.TValue[*mqlNeonAuth]
+	Buckets           plugin.TValue[[]any]
+	Credentials       plugin.TValue[[]any]
+	Functions         plugin.TValue[[]any]
 }
 
 // createNeonBranch creates a new instance of this resource
@@ -2260,6 +3375,70 @@ func (c *mqlNeonBranch) GetDatabases() *plugin.TValue[[]any] {
 		}
 
 		return c.databases()
+	})
+}
+
+func (c *mqlNeonBranch) GetAuth() *plugin.TValue[*mqlNeonAuth] {
+	return plugin.GetOrCompute[*mqlNeonAuth](&c.Auth, func() (*mqlNeonAuth, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.branch", c.__id, "auth")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonAuth), nil
+			}
+		}
+
+		return c.auth()
+	})
+}
+
+func (c *mqlNeonBranch) GetBuckets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Buckets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.branch", c.__id, "buckets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.buckets()
+	})
+}
+
+func (c *mqlNeonBranch) GetCredentials() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Credentials, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.branch", c.__id, "credentials")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.credentials()
+	})
+}
+
+func (c *mqlNeonBranch) GetFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Functions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.branch", c.__id, "functions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.functions()
 	})
 }
 
@@ -2518,6 +3697,7 @@ type mqlNeonDatabase struct {
 	UpdatedAt plugin.TValue[*time.Time]
 	Owner     plugin.TValue[*mqlNeonRole]
 	Branch    plugin.TValue[*mqlNeonBranch]
+	DataApi   plugin.TValue[*mqlNeonDataApi]
 }
 
 // createNeonDatabase creates a new instance of this resource
@@ -2603,4 +3783,1246 @@ func (c *mqlNeonDatabase) GetBranch() *plugin.TValue[*mqlNeonBranch] {
 
 		return c.branch()
 	})
+}
+
+func (c *mqlNeonDatabase) GetDataApi() *plugin.TValue[*mqlNeonDataApi] {
+	return plugin.GetOrCompute[*mqlNeonDataApi](&c.DataApi, func() (*mqlNeonDataApi, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.database", c.__id, "dataApi")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonDataApi), nil
+			}
+		}
+
+		return c.dataApi()
+	})
+}
+
+// mqlNeonOrganizationInvitation for the neon.organization.invitation resource
+type mqlNeonOrganizationInvitation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonOrganizationInvitationInternal
+	Id        plugin.TValue[string]
+	Email     plugin.TValue[string]
+	Role      plugin.TValue[string]
+	InvitedAt plugin.TValue[*time.Time]
+	InvitedBy plugin.TValue[*mqlNeonOrganizationMember]
+}
+
+// createNeonOrganizationInvitation creates a new instance of this resource
+func createNeonOrganizationInvitation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonOrganizationInvitation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.organization.invitation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonOrganizationInvitation) MqlName() string {
+	return "neon.organization.invitation"
+}
+
+func (c *mqlNeonOrganizationInvitation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonOrganizationInvitation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNeonOrganizationInvitation) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlNeonOrganizationInvitation) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlNeonOrganizationInvitation) GetInvitedAt() *plugin.TValue[*time.Time] {
+	return &c.InvitedAt
+}
+
+func (c *mqlNeonOrganizationInvitation) GetInvitedBy() *plugin.TValue[*mqlNeonOrganizationMember] {
+	return plugin.GetOrCompute[*mqlNeonOrganizationMember](&c.InvitedBy, func() (*mqlNeonOrganizationMember, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.organization.invitation", c.__id, "invitedBy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonOrganizationMember), nil
+			}
+		}
+
+		return c.invitedBy()
+	})
+}
+
+// mqlNeonProjectAdvisorIssue for the neon.project.advisorIssue resource
+type mqlNeonProjectAdvisorIssue struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNeonProjectAdvisorIssueInternal it will be used here
+	Name        plugin.TValue[string]
+	Title       plugin.TValue[string]
+	Level       plugin.TValue[string]
+	Facing      plugin.TValue[string]
+	Categories  plugin.TValue[[]any]
+	Description plugin.TValue[string]
+	Detail      plugin.TValue[string]
+	Remediation plugin.TValue[string]
+	Metadata    plugin.TValue[any]
+}
+
+// createNeonProjectAdvisorIssue creates a new instance of this resource
+func createNeonProjectAdvisorIssue(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonProjectAdvisorIssue{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.project.advisorIssue", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonProjectAdvisorIssue) MqlName() string {
+	return "neon.project.advisorIssue"
+}
+
+func (c *mqlNeonProjectAdvisorIssue) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetFacing() *plugin.TValue[string] {
+	return &c.Facing
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetCategories() *plugin.TValue[[]any] {
+	return &c.Categories
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetDetail() *plugin.TValue[string] {
+	return &c.Detail
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetRemediation() *plugin.TValue[string] {
+	return &c.Remediation
+}
+
+func (c *mqlNeonProjectAdvisorIssue) GetMetadata() *plugin.TValue[any] {
+	return &c.Metadata
+}
+
+// mqlNeonProjectMember for the neon.project.member resource
+type mqlNeonProjectMember struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonProjectMemberInternal
+	Id                          plugin.TValue[string]
+	Email                       plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	OrgRole                     plugin.TValue[string]
+	ProjectRole                 plugin.TValue[string]
+	OrgDefaultProjectPermission plugin.TValue[string]
+	ExplicitProjectPermission   plugin.TValue[string]
+	EffectiveProjectPermission  plugin.TValue[string]
+	GrantSource                 plugin.TValue[string]
+	OrganizationMember          plugin.TValue[*mqlNeonOrganizationMember]
+}
+
+// createNeonProjectMember creates a new instance of this resource
+func createNeonProjectMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonProjectMember{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.project.member", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonProjectMember) MqlName() string {
+	return "neon.project.member"
+}
+
+func (c *mqlNeonProjectMember) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonProjectMember) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNeonProjectMember) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlNeonProjectMember) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNeonProjectMember) GetOrgRole() *plugin.TValue[string] {
+	return &c.OrgRole
+}
+
+func (c *mqlNeonProjectMember) GetProjectRole() *plugin.TValue[string] {
+	return &c.ProjectRole
+}
+
+func (c *mqlNeonProjectMember) GetOrgDefaultProjectPermission() *plugin.TValue[string] {
+	return &c.OrgDefaultProjectPermission
+}
+
+func (c *mqlNeonProjectMember) GetExplicitProjectPermission() *plugin.TValue[string] {
+	return &c.ExplicitProjectPermission
+}
+
+func (c *mqlNeonProjectMember) GetEffectiveProjectPermission() *plugin.TValue[string] {
+	return &c.EffectiveProjectPermission
+}
+
+func (c *mqlNeonProjectMember) GetGrantSource() *plugin.TValue[string] {
+	return &c.GrantSource
+}
+
+func (c *mqlNeonProjectMember) GetOrganizationMember() *plugin.TValue[*mqlNeonOrganizationMember] {
+	return plugin.GetOrCompute[*mqlNeonOrganizationMember](&c.OrganizationMember, func() (*mqlNeonOrganizationMember, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project.member", c.__id, "organizationMember")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonOrganizationMember), nil
+			}
+		}
+
+		return c.organizationMember()
+	})
+}
+
+// mqlNeonProjectOperation for the neon.project.operation resource
+type mqlNeonProjectOperation struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonProjectOperationInternal
+	Id              plugin.TValue[string]
+	Action          plugin.TValue[string]
+	Status          plugin.TValue[string]
+	Error           plugin.TValue[string]
+	FailuresCount   plugin.TValue[int64]
+	RetryAt         plugin.TValue[*time.Time]
+	CreatedAt       plugin.TValue[*time.Time]
+	UpdatedAt       plugin.TValue[*time.Time]
+	TotalDurationMs plugin.TValue[int64]
+	Branch          plugin.TValue[*mqlNeonBranch]
+	Endpoint        plugin.TValue[*mqlNeonEndpoint]
+	Project         plugin.TValue[*mqlNeonProject]
+}
+
+// createNeonProjectOperation creates a new instance of this resource
+func createNeonProjectOperation(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonProjectOperation{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.project.operation", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonProjectOperation) MqlName() string {
+	return "neon.project.operation"
+}
+
+func (c *mqlNeonProjectOperation) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonProjectOperation) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNeonProjectOperation) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlNeonProjectOperation) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlNeonProjectOperation) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+func (c *mqlNeonProjectOperation) GetFailuresCount() *plugin.TValue[int64] {
+	return &c.FailuresCount
+}
+
+func (c *mqlNeonProjectOperation) GetRetryAt() *plugin.TValue[*time.Time] {
+	return &c.RetryAt
+}
+
+func (c *mqlNeonProjectOperation) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNeonProjectOperation) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlNeonProjectOperation) GetTotalDurationMs() *plugin.TValue[int64] {
+	return &c.TotalDurationMs
+}
+
+func (c *mqlNeonProjectOperation) GetBranch() *plugin.TValue[*mqlNeonBranch] {
+	return plugin.GetOrCompute[*mqlNeonBranch](&c.Branch, func() (*mqlNeonBranch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project.operation", c.__id, "branch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonBranch), nil
+			}
+		}
+
+		return c.branch()
+	})
+}
+
+func (c *mqlNeonProjectOperation) GetEndpoint() *plugin.TValue[*mqlNeonEndpoint] {
+	return plugin.GetOrCompute[*mqlNeonEndpoint](&c.Endpoint, func() (*mqlNeonEndpoint, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project.operation", c.__id, "endpoint")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonEndpoint), nil
+			}
+		}
+
+		return c.endpoint()
+	})
+}
+
+func (c *mqlNeonProjectOperation) GetProject() *plugin.TValue[*mqlNeonProject] {
+	return plugin.GetOrCompute[*mqlNeonProject](&c.Project, func() (*mqlNeonProject, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project.operation", c.__id, "project")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonProject), nil
+			}
+		}
+
+		return c.project()
+	})
+}
+
+// mqlNeonProjectSnapshot for the neon.project.snapshot resource
+type mqlNeonProjectSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonProjectSnapshotInternal
+	Id           plugin.TValue[string]
+	Name         plugin.TValue[string]
+	Lsn          plugin.TValue[string]
+	Timestamp    plugin.TValue[*time.Time]
+	CreatedAt    plugin.TValue[*time.Time]
+	ExpiresAt    plugin.TValue[*time.Time]
+	Manual       plugin.TValue[bool]
+	FullSize     plugin.TValue[int64]
+	DiffSize     plugin.TValue[int64]
+	SourceBranch plugin.TValue[*mqlNeonBranch]
+}
+
+// createNeonProjectSnapshot creates a new instance of this resource
+func createNeonProjectSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonProjectSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.project.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonProjectSnapshot) MqlName() string {
+	return "neon.project.snapshot"
+}
+
+func (c *mqlNeonProjectSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonProjectSnapshot) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNeonProjectSnapshot) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNeonProjectSnapshot) GetLsn() *plugin.TValue[string] {
+	return &c.Lsn
+}
+
+func (c *mqlNeonProjectSnapshot) GetTimestamp() *plugin.TValue[*time.Time] {
+	return &c.Timestamp
+}
+
+func (c *mqlNeonProjectSnapshot) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNeonProjectSnapshot) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+func (c *mqlNeonProjectSnapshot) GetManual() *plugin.TValue[bool] {
+	return &c.Manual
+}
+
+func (c *mqlNeonProjectSnapshot) GetFullSize() *plugin.TValue[int64] {
+	return &c.FullSize
+}
+
+func (c *mqlNeonProjectSnapshot) GetDiffSize() *plugin.TValue[int64] {
+	return &c.DiffSize
+}
+
+func (c *mqlNeonProjectSnapshot) GetSourceBranch() *plugin.TValue[*mqlNeonBranch] {
+	return plugin.GetOrCompute[*mqlNeonBranch](&c.SourceBranch, func() (*mqlNeonBranch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.project.snapshot", c.__id, "sourceBranch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonBranch), nil
+			}
+		}
+
+		return c.sourceBranch()
+	})
+}
+
+// mqlNeonBucket for the neon.bucket resource
+type mqlNeonBucket struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonBucketInternal
+	Name        plugin.TValue[string]
+	AccessLevel plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	Branch      plugin.TValue[*mqlNeonBranch]
+}
+
+// createNeonBucket creates a new instance of this resource
+func createNeonBucket(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonBucket{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.bucket", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonBucket) MqlName() string {
+	return "neon.bucket"
+}
+
+func (c *mqlNeonBucket) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonBucket) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNeonBucket) GetAccessLevel() *plugin.TValue[string] {
+	return &c.AccessLevel
+}
+
+func (c *mqlNeonBucket) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNeonBucket) GetBranch() *plugin.TValue[*mqlNeonBranch] {
+	return plugin.GetOrCompute[*mqlNeonBranch](&c.Branch, func() (*mqlNeonBranch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.bucket", c.__id, "branch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonBranch), nil
+			}
+		}
+
+		return c.branch()
+	})
+}
+
+// mqlNeonCredential for the neon.credential resource
+type mqlNeonCredential struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonCredentialInternal
+	TokenIdShort  plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Scopes        plugin.TValue[[]any]
+	PrincipalType plugin.TValue[string]
+	CreatedAt     plugin.TValue[*time.Time]
+	LastUsedAt    plugin.TValue[*time.Time]
+	RevokedAt     plugin.TValue[*time.Time]
+	ExpiresAt     plugin.TValue[*time.Time]
+	Branch        plugin.TValue[*mqlNeonBranch]
+	Function      plugin.TValue[*mqlNeonFunction]
+}
+
+// createNeonCredential creates a new instance of this resource
+func createNeonCredential(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonCredential{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.credential", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonCredential) MqlName() string {
+	return "neon.credential"
+}
+
+func (c *mqlNeonCredential) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonCredential) GetTokenIdShort() *plugin.TValue[string] {
+	return &c.TokenIdShort
+}
+
+func (c *mqlNeonCredential) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNeonCredential) GetScopes() *plugin.TValue[[]any] {
+	return &c.Scopes
+}
+
+func (c *mqlNeonCredential) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlNeonCredential) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNeonCredential) GetLastUsedAt() *plugin.TValue[*time.Time] {
+	return &c.LastUsedAt
+}
+
+func (c *mqlNeonCredential) GetRevokedAt() *plugin.TValue[*time.Time] {
+	return &c.RevokedAt
+}
+
+func (c *mqlNeonCredential) GetExpiresAt() *plugin.TValue[*time.Time] {
+	return &c.ExpiresAt
+}
+
+func (c *mqlNeonCredential) GetBranch() *plugin.TValue[*mqlNeonBranch] {
+	return plugin.GetOrCompute[*mqlNeonBranch](&c.Branch, func() (*mqlNeonBranch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.credential", c.__id, "branch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonBranch), nil
+			}
+		}
+
+		return c.branch()
+	})
+}
+
+func (c *mqlNeonCredential) GetFunction() *plugin.TValue[*mqlNeonFunction] {
+	return plugin.GetOrCompute[*mqlNeonFunction](&c.Function, func() (*mqlNeonFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.credential", c.__id, "function")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonFunction), nil
+			}
+		}
+
+		return c.function()
+	})
+}
+
+// mqlNeonFunction for the neon.function resource
+type mqlNeonFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonFunctionInternal
+	Id                plugin.TValue[string]
+	Slug              plugin.TValue[string]
+	Name              plugin.TValue[string]
+	InvocationUrl     plugin.TValue[string]
+	CreatedAt         plugin.TValue[*time.Time]
+	ActiveDeployment  plugin.TValue[*mqlNeonFunctionDeployment]
+	CurrentDeployment plugin.TValue[*mqlNeonFunctionDeployment]
+	Branch            plugin.TValue[*mqlNeonBranch]
+}
+
+// createNeonFunction creates a new instance of this resource
+func createNeonFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.function", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonFunction) MqlName() string {
+	return "neon.function"
+}
+
+func (c *mqlNeonFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonFunction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNeonFunction) GetSlug() *plugin.TValue[string] {
+	return &c.Slug
+}
+
+func (c *mqlNeonFunction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNeonFunction) GetInvocationUrl() *plugin.TValue[string] {
+	return &c.InvocationUrl
+}
+
+func (c *mqlNeonFunction) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNeonFunction) GetActiveDeployment() *plugin.TValue[*mqlNeonFunctionDeployment] {
+	return plugin.GetOrCompute[*mqlNeonFunctionDeployment](&c.ActiveDeployment, func() (*mqlNeonFunctionDeployment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.function", c.__id, "activeDeployment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonFunctionDeployment), nil
+			}
+		}
+
+		return c.activeDeployment()
+	})
+}
+
+func (c *mqlNeonFunction) GetCurrentDeployment() *plugin.TValue[*mqlNeonFunctionDeployment] {
+	return plugin.GetOrCompute[*mqlNeonFunctionDeployment](&c.CurrentDeployment, func() (*mqlNeonFunctionDeployment, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.function", c.__id, "currentDeployment")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonFunctionDeployment), nil
+			}
+		}
+
+		return c.currentDeployment()
+	})
+}
+
+func (c *mqlNeonFunction) GetBranch() *plugin.TValue[*mqlNeonBranch] {
+	return plugin.GetOrCompute[*mqlNeonBranch](&c.Branch, func() (*mqlNeonBranch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.function", c.__id, "branch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonBranch), nil
+			}
+		}
+
+		return c.branch()
+	})
+}
+
+// mqlNeonFunctionDeployment for the neon.function.deployment resource
+type mqlNeonFunctionDeployment struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNeonFunctionDeploymentInternal it will be used here
+	Id          plugin.TValue[int64]
+	Status      plugin.TValue[string]
+	MemoryMib   plugin.TValue[int64]
+	Runtime     plugin.TValue[string]
+	CreatedAt   plugin.TValue[*time.Time]
+	Environment plugin.TValue[[]any]
+	Error       plugin.TValue[string]
+}
+
+// createNeonFunctionDeployment creates a new instance of this resource
+func createNeonFunctionDeployment(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonFunctionDeployment{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.function.deployment", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonFunctionDeployment) MqlName() string {
+	return "neon.function.deployment"
+}
+
+func (c *mqlNeonFunctionDeployment) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonFunctionDeployment) GetId() *plugin.TValue[int64] {
+	return &c.Id
+}
+
+func (c *mqlNeonFunctionDeployment) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlNeonFunctionDeployment) GetMemoryMib() *plugin.TValue[int64] {
+	return &c.MemoryMib
+}
+
+func (c *mqlNeonFunctionDeployment) GetRuntime() *plugin.TValue[string] {
+	return &c.Runtime
+}
+
+func (c *mqlNeonFunctionDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNeonFunctionDeployment) GetEnvironment() *plugin.TValue[[]any] {
+	return &c.Environment
+}
+
+func (c *mqlNeonFunctionDeployment) GetError() *plugin.TValue[string] {
+	return &c.Error
+}
+
+// mqlNeonDataApi for the neon.dataApi resource
+type mqlNeonDataApi struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonDataApiInternal
+	Url                 plugin.TValue[string]
+	Status              plugin.TValue[string]
+	DbAnonRole          plugin.TValue[string]
+	DbSchemas           plugin.TValue[[]any]
+	AvailableSchemas    plugin.TValue[[]any]
+	DbExtraSearchPath   plugin.TValue[string]
+	DbMaxRows           plugin.TValue[int64]
+	DbAggregatesEnabled plugin.TValue[bool]
+	CorsAllowedOrigins  plugin.TValue[string]
+	JwtRoleClaimKey     plugin.TValue[string]
+	JwtCacheMaxLifetime plugin.TValue[int64]
+	OpenapiMode         plugin.TValue[string]
+	ServerTimingEnabled plugin.TValue[bool]
+	Database            plugin.TValue[*mqlNeonDatabase]
+}
+
+// createNeonDataApi creates a new instance of this resource
+func createNeonDataApi(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonDataApi{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.dataApi", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonDataApi) MqlName() string {
+	return "neon.dataApi"
+}
+
+func (c *mqlNeonDataApi) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonDataApi) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlNeonDataApi) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlNeonDataApi) GetDbAnonRole() *plugin.TValue[string] {
+	return &c.DbAnonRole
+}
+
+func (c *mqlNeonDataApi) GetDbSchemas() *plugin.TValue[[]any] {
+	return &c.DbSchemas
+}
+
+func (c *mqlNeonDataApi) GetAvailableSchemas() *plugin.TValue[[]any] {
+	return &c.AvailableSchemas
+}
+
+func (c *mqlNeonDataApi) GetDbExtraSearchPath() *plugin.TValue[string] {
+	return &c.DbExtraSearchPath
+}
+
+func (c *mqlNeonDataApi) GetDbMaxRows() *plugin.TValue[int64] {
+	return &c.DbMaxRows
+}
+
+func (c *mqlNeonDataApi) GetDbAggregatesEnabled() *plugin.TValue[bool] {
+	return &c.DbAggregatesEnabled
+}
+
+func (c *mqlNeonDataApi) GetCorsAllowedOrigins() *plugin.TValue[string] {
+	return &c.CorsAllowedOrigins
+}
+
+func (c *mqlNeonDataApi) GetJwtRoleClaimKey() *plugin.TValue[string] {
+	return &c.JwtRoleClaimKey
+}
+
+func (c *mqlNeonDataApi) GetJwtCacheMaxLifetime() *plugin.TValue[int64] {
+	return &c.JwtCacheMaxLifetime
+}
+
+func (c *mqlNeonDataApi) GetOpenapiMode() *plugin.TValue[string] {
+	return &c.OpenapiMode
+}
+
+func (c *mqlNeonDataApi) GetServerTimingEnabled() *plugin.TValue[bool] {
+	return &c.ServerTimingEnabled
+}
+
+func (c *mqlNeonDataApi) GetDatabase() *plugin.TValue[*mqlNeonDatabase] {
+	return plugin.GetOrCompute[*mqlNeonDatabase](&c.Database, func() (*mqlNeonDatabase, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.dataApi", c.__id, "database")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonDatabase), nil
+			}
+		}
+
+		return c.database()
+	})
+}
+
+// mqlNeonAuth for the neon.auth resource
+type mqlNeonAuth struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNeonAuthInternal
+	AuthProvider                  plugin.TValue[string]
+	AuthProviderProjectId         plugin.TValue[string]
+	DbName                        plugin.TValue[string]
+	JwksUrl                       plugin.TValue[string]
+	BaseUrl                       plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	OwnedBy                       plugin.TValue[string]
+	TransferStatus                plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	AllowLocalhost                plugin.TValue[bool]
+	TrustedDomains                plugin.TValue[[]any]
+	EmailPasswordEnabled          plugin.TValue[bool]
+	EmailVerificationMethod       plugin.TValue[string]
+	RequireEmailVerification      plugin.TValue[bool]
+	AutoSignInAfterVerification   plugin.TValue[bool]
+	SendVerificationEmailOnSignUp plugin.TValue[bool]
+	SendVerificationEmailOnSignIn plugin.TValue[bool]
+	DisableSignUp                 plugin.TValue[bool]
+	OauthProviders                plugin.TValue[[]any]
+	Branch                        plugin.TValue[*mqlNeonBranch]
+}
+
+// createNeonAuth creates a new instance of this resource
+func createNeonAuth(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonAuth{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.auth", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonAuth) MqlName() string {
+	return "neon.auth"
+}
+
+func (c *mqlNeonAuth) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonAuth) GetAuthProvider() *plugin.TValue[string] {
+	return &c.AuthProvider
+}
+
+func (c *mqlNeonAuth) GetAuthProviderProjectId() *plugin.TValue[string] {
+	return &c.AuthProviderProjectId
+}
+
+func (c *mqlNeonAuth) GetDbName() *plugin.TValue[string] {
+	return &c.DbName
+}
+
+func (c *mqlNeonAuth) GetJwksUrl() *plugin.TValue[string] {
+	return &c.JwksUrl
+}
+
+func (c *mqlNeonAuth) GetBaseUrl() *plugin.TValue[string] {
+	return &c.BaseUrl
+}
+
+func (c *mqlNeonAuth) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNeonAuth) GetOwnedBy() *plugin.TValue[string] {
+	return &c.OwnedBy
+}
+
+func (c *mqlNeonAuth) GetTransferStatus() *plugin.TValue[string] {
+	return &c.TransferStatus
+}
+
+func (c *mqlNeonAuth) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNeonAuth) GetAllowLocalhost() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AllowLocalhost, func() (bool, error) {
+		return c.allowLocalhost()
+	})
+}
+
+func (c *mqlNeonAuth) GetTrustedDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedDomains, func() ([]any, error) {
+		return c.trustedDomains()
+	})
+}
+
+func (c *mqlNeonAuth) GetEmailPasswordEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EmailPasswordEnabled, func() (bool, error) {
+		return c.emailPasswordEnabled()
+	})
+}
+
+func (c *mqlNeonAuth) GetEmailVerificationMethod() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.EmailVerificationMethod, func() (string, error) {
+		return c.emailVerificationMethod()
+	})
+}
+
+func (c *mqlNeonAuth) GetRequireEmailVerification() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RequireEmailVerification, func() (bool, error) {
+		return c.requireEmailVerification()
+	})
+}
+
+func (c *mqlNeonAuth) GetAutoSignInAfterVerification() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AutoSignInAfterVerification, func() (bool, error) {
+		return c.autoSignInAfterVerification()
+	})
+}
+
+func (c *mqlNeonAuth) GetSendVerificationEmailOnSignUp() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendVerificationEmailOnSignUp, func() (bool, error) {
+		return c.sendVerificationEmailOnSignUp()
+	})
+}
+
+func (c *mqlNeonAuth) GetSendVerificationEmailOnSignIn() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SendVerificationEmailOnSignIn, func() (bool, error) {
+		return c.sendVerificationEmailOnSignIn()
+	})
+}
+
+func (c *mqlNeonAuth) GetDisableSignUp() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DisableSignUp, func() (bool, error) {
+		return c.disableSignUp()
+	})
+}
+
+func (c *mqlNeonAuth) GetOauthProviders() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OauthProviders, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.auth", c.__id, "oauthProviders")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.oauthProviders()
+	})
+}
+
+func (c *mqlNeonAuth) GetBranch() *plugin.TValue[*mqlNeonBranch] {
+	return plugin.GetOrCompute[*mqlNeonBranch](&c.Branch, func() (*mqlNeonBranch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("neon.auth", c.__id, "branch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNeonBranch), nil
+			}
+		}
+
+		return c.branch()
+	})
+}
+
+// mqlNeonAuthOauthProvider for the neon.auth.oauthProvider resource
+type mqlNeonAuthOauthProvider struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNeonAuthOauthProviderInternal it will be used here
+	Provider plugin.TValue[string]
+	Type     plugin.TValue[string]
+	ClientId plugin.TValue[string]
+}
+
+// createNeonAuthOauthProvider creates a new instance of this resource
+func createNeonAuthOauthProvider(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNeonAuthOauthProvider{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("neon.auth.oauthProvider", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNeonAuthOauthProvider) MqlName() string {
+	return "neon.auth.oauthProvider"
+}
+
+func (c *mqlNeonAuthOauthProvider) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNeonAuthOauthProvider) GetProvider() *plugin.TValue[string] {
+	return &c.Provider
+}
+
+func (c *mqlNeonAuthOauthProvider) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlNeonAuthOauthProvider) GetClientId() *plugin.TValue[string] {
+	return &c.ClientId
 }

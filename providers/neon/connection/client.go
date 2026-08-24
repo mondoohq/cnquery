@@ -116,6 +116,13 @@ const maxPages = 200
 // collecting every element under the given JSON key. The cursor of the last
 // page is passed back as the cursor parameter of the next request; a page
 // shorter than the requested limit ends the walk.
+//
+// Neon serves two pagination shapes under the same `pagination` object. Older
+// endpoints, such as the project list, carry the next cursor as `cursor`;
+// newer ones, such as a project's branches and an organization's members,
+// carry it as `next`. Both are read here, because an endpoint whose shape goes
+// unread looks exactly like a single short page and would silently truncate
+// the list at the first page.
 func GetPagedCursor[T any](ctx context.Context, c *NeonConnection, path string, query url.Values, key string) ([]T, error) {
 	if query == nil {
 		query = url.Values{}
@@ -152,21 +159,30 @@ func GetPagedCursor[T any](ctx context.Context, c *NeonConnection, path string, 
 		var pg struct {
 			Pagination *struct {
 				Cursor string `json:"cursor"`
+				Next   string `json:"next"`
 			} `json:"pagination"`
 		}
 		if err := json.Unmarshal(body, &pg); err != nil {
 			return nil, fmt.Errorf("neon API %s: decode pagination: %w", path, err)
 		}
-		if pg.Pagination == nil || pg.Pagination.Cursor == "" {
+		if pg.Pagination == nil {
+			break
+		}
+
+		next := pg.Pagination.Next
+		if next == "" {
+			next = pg.Pagination.Cursor
+		}
+		if next == "" {
 			break
 		}
 
 		// A cursor that comes straight back means the endpoint ignored it and
 		// would replay the same page for every further request.
-		if pg.Pagination.Cursor == sent {
+		if next == sent {
 			break
 		}
-		query.Set("cursor", pg.Pagination.Cursor)
+		query.Set("cursor", next)
 	}
 
 	return results, nil
