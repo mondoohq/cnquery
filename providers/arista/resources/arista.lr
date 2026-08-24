@@ -1592,7 +1592,7 @@ arista.eos.telnetService {
 // `idleTimeout` is the control that ends a privileged session someone walked
 // away from, and it is the reason to read this resource: EOS leaves it unset
 // by default, so a console session stays open until the operator closes it.
-arista.eos.consoleSettings {
+private arista.eos.consoleSettings {
   // Whether a `management console` block exists in the running-config
   //
   // False means the console runs on the shipped defaults rather than
