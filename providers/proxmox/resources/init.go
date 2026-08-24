@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -15,14 +16,22 @@ import (
 
 // init functions populate a resource when it was looked up by id only —
 // e.g. an ACL entry resolving its target user, group, role, or token.
+//
+// A lookup that finds nothing must return an error, never `args, nil, nil`.
+// Handing back no resource and no error tells the runtime to build the
+// resource out of the partial args it already has, which leaves every field
+// the lookup would have filled in *unset* rather than null. Reading one of
+// those fields then crosses the plugin boundary as an empty result and
+// surfaces client-side as "primitive with no type information", with nothing
+// naming the guest, user, or storage that could not be found.
 
 func initProxmoxUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	userID := args["id"].Value.(string)
-	if userID == "" {
-		return args, nil, nil
+	userID, ok := args["id"].Value.(string)
+	if !ok || userID == "" {
+		return nil, nil, errors.New("proxmox.user lookup requires a non-empty id")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	users, err := conn.GetUsers()
@@ -56,18 +65,19 @@ func initProxmoxUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		mqlUser.cachedGroups = splitProxmoxGroups(u.Groups)
 		return nil, res, nil
 	}
-	// User referenced by ACL no longer exists — return the bare resource
-	// so audits can still see the dangling reference rather than erroring.
-	return args, nil, nil
+	// A user referenced by an ACL that no longer exists is a real finding,
+	// but a husk resource is the wrong way to report it: `enable` would read
+	// false and `email` empty on a user nobody ever looked at.
+	return nil, nil, fmt.Errorf("proxmox.user %q not found", userID)
 }
 
 func initProxmoxGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	groupID := args["id"].Value.(string)
-	if groupID == "" {
-		return args, nil, nil
+	groupID, ok := args["id"].Value.(string)
+	if !ok || groupID == "" {
+		return nil, nil, errors.New("proxmox.group lookup requires a non-empty id")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	groups, err := conn.GetGroups()
@@ -90,16 +100,16 @@ func initProxmoxGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		args["memberIds"] = llx.ArrayData(memberIds, "\x02")
 		return args, nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("proxmox.group %q not found", groupID)
 }
 
 func initProxmoxRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	roleID := args["id"].Value.(string)
-	if roleID == "" {
-		return args, nil, nil
+	roleID, ok := args["id"].Value.(string)
+	if !ok || roleID == "" {
+		return nil, nil, errors.New("proxmox.role lookup requires a non-empty id")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	roles, err := conn.GetRoles()
@@ -120,16 +130,16 @@ func initProxmoxRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		args["special"] = llx.BoolData(r.Special == 1)
 		return args, nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("proxmox.role %q not found", roleID)
 }
 
 func initProxmoxStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	storageID := args["id"].Value.(string)
-	if storageID == "" {
-		return args, nil, nil
+	storageID, ok := args["id"].Value.(string)
+	if !ok || storageID == "" {
+		return nil, nil, errors.New("proxmox.storage lookup requires a non-empty id")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	s, found, err := conn.LookupStorage(storageID)
@@ -137,7 +147,7 @@ func initProxmoxStorage(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		return nil, nil, err
 	}
 	if !found {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("proxmox.storage %q not found", storageID)
 	}
 	var usagePct float64
 	if s.UsedFrac > 0 {
@@ -164,22 +174,22 @@ func initProxmoxToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	tokenID := args["id"].Value.(string)
-	if tokenID == "" {
-		return args, nil, nil
+	tokenID, ok := args["id"].Value.(string)
+	if !ok || tokenID == "" {
+		return nil, nil, errors.New("proxmox.token lookup requires a non-empty id")
 	}
 	// Token IDs are user@realm!tokenid — derive the owner to call the
 	// per-user endpoint instead of paging through every user.
 	bangIdx := strings.LastIndex(tokenID, "!")
 	if bangIdx <= 0 {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("proxmox.token id %q is malformed, expected user@realm!tokenid", tokenID)
 	}
 	owner := tokenID[:bangIdx]
 	leaf := tokenID[bangIdx+1:]
 	conn := runtime.Connection.(*connection.PveConnection)
 	tokens, err := conn.GetUserTokens(owner)
 	if err != nil {
-		return args, nil, nil
+		return nil, nil, err
 	}
 	for _, t := range tokens {
 		if t.TokenID != leaf {
@@ -190,16 +200,16 @@ func initProxmoxToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (ma
 		args["privsep"] = llx.BoolData(t.Privsep == 1)
 		return args, nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("proxmox.token %q not found for user %q", leaf, owner)
 }
 
 func initProxmoxNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["name"] == nil {
 		return args, nil, nil
 	}
-	name := args["name"].Value.(string)
-	if name == "" {
-		return args, nil, nil
+	name, ok := args["name"].Value.(string)
+	if !ok || name == "" {
+		return nil, nil, errors.New("proxmox.node lookup requires a non-empty name")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	n, found, err := conn.LookupNode(name)
@@ -207,7 +217,7 @@ func initProxmoxNode(runtime *plugin.Runtime, args map[string]*llx.RawData) (map
 		return nil, nil, err
 	}
 	if !found {
-		return args, nil, nil
+		return nil, nil, fmt.Errorf("proxmox.node %q not found", name)
 	}
 	args["status"] = llx.StringData(n.Status)
 	// The address comes from the cluster status, which a standalone host
@@ -222,9 +232,9 @@ func initProxmoxClusterHaGroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	groupID := args["id"].Value.(string)
-	if groupID == "" {
-		return args, nil, nil
+	groupID, ok := args["id"].Value.(string)
+	if !ok || groupID == "" {
+		return nil, nil, errors.New("proxmox.cluster.haGroup lookup requires a non-empty id")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	groups, err := conn.GetHAGroups()
@@ -241,16 +251,16 @@ func initProxmoxClusterHaGroup(runtime *plugin.Runtime, args map[string]*llx.Raw
 		args["comment"] = llx.StringData(g.Comment)
 		return args, nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("proxmox.cluster.haGroup %q not found", groupID)
 }
 
 func initProxmoxSdnZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["zone"] == nil {
 		return args, nil, nil
 	}
-	zoneID := args["zone"].Value.(string)
-	if zoneID == "" {
-		return args, nil, nil
+	zoneID, ok := args["zone"].Value.(string)
+	if !ok || zoneID == "" {
+		return nil, nil, errors.New("proxmox.sdn.zone lookup requires a non-empty zone")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	zones, err := conn.GetSDNZones()
@@ -272,16 +282,16 @@ func initProxmoxSdnZone(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		args["state"] = llx.StringData(z.State)
 		return args, nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("proxmox.sdn.zone %q not found", zoneID)
 }
 
 func initProxmoxSdnVnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["vnet"] == nil {
 		return args, nil, nil
 	}
-	vnetID := args["vnet"].Value.(string)
-	if vnetID == "" {
-		return args, nil, nil
+	vnetID, ok := args["vnet"].Value.(string)
+	if !ok || vnetID == "" {
+		return nil, nil, errors.New("proxmox.sdn.vnet lookup requires a non-empty vnet")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	vnets, err := conn.GetSDNVNets()
@@ -299,16 +309,16 @@ func initProxmoxSdnVnet(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 		args["type"] = llx.StringData(v.Type)
 		return args, nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("proxmox.sdn.vnet %q not found", vnetID)
 }
 
 func initProxmoxVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	want := args["id"].Value.(int64)
-	if want == 0 {
-		return args, nil, nil
+	want, ok := args["id"].Value.(int64)
+	if !ok || want == 0 {
+		return nil, nil, errors.New("proxmox.vm lookup requires a non-zero vmid")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	vms, err := conn.GetAllVMs()
@@ -336,16 +346,20 @@ func initProxmoxVm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 		args["template"] = llx.BoolData(vm.Template == 1)
 		return args, nil, nil
 	}
-	return args, nil, nil
+	// cluster.haResources reaches this path whenever an HA entry names a
+	// guest that has been destroyed. Reporting it as a blank VM would leave
+	// `node`, `status`, and `template` unset, which is indistinguishable
+	// from a stopped guest nobody has data for.
+	return nil, nil, fmt.Errorf("proxmox.vm with vmid %d not found", want)
 }
 
 func initProxmoxContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) > 1 || args["id"] == nil {
 		return args, nil, nil
 	}
-	want := args["id"].Value.(int64)
-	if want == 0 {
-		return args, nil, nil
+	want, ok := args["id"].Value.(int64)
+	if !ok || want == 0 {
+		return nil, nil, errors.New("proxmox.container lookup requires a non-zero vmid")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	cts, err := conn.GetAllContainers()
@@ -373,7 +387,7 @@ func initProxmoxContainer(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		args["template"] = llx.BoolData(ct.Template == 1)
 		return args, nil, nil
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("proxmox.container with vmid %d not found", want)
 }
 
 func initProxmoxCephFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -382,7 +396,7 @@ func initProxmoxCephFilesystem(runtime *plugin.Runtime, args map[string]*llx.Raw
 	}
 	name, ok := args["name"].Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New("proxmox.ceph.filesystem lookup requires a non-empty name")
 	}
 	conn := runtime.Connection.(*connection.PveConnection)
 	systems, err := conn.GetCephFileSystems()

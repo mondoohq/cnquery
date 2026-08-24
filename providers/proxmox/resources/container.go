@@ -81,35 +81,42 @@ func (r *mqlProxmoxContainer) ensureConfig() {
 	})
 }
 
-func (r *mqlProxmoxContainer) cfgStr(key string) string {
+// cfgStr reads a key out of the container config. A failed config read is
+// reported as an error rather than an empty value: "the key is absent" and
+// "we never got to see the config" are different answers and an audit has to
+// be able to tell them apart.
+func (r *mqlProxmoxContainer) cfgStr(key string) (string, error) {
 	r.ensureConfig()
-	if r.ctConfig == nil {
-		return ""
+	if r.configErr != nil {
+		return "", r.configErr
 	}
 	if v, ok := r.ctConfig[key]; ok {
-		return fmt.Sprintf("%v", v)
+		return fmt.Sprintf("%v", v), nil
 	}
-	return ""
+	return "", nil
 }
 
-func (r *mqlProxmoxContainer) cfgBool(key string) bool {
+// cfgBool reads a boolean-ish key out of the container config. PVE writes
+// flags as 1/0, so an absent key means the flag is off. A failed config read
+// is an error, not an off flag.
+func (r *mqlProxmoxContainer) cfgBool(key string) (bool, error) {
 	r.ensureConfig()
-	if r.ctConfig == nil {
-		return false
+	if r.configErr != nil {
+		return false, r.configErr
 	}
 	v, ok := r.ctConfig[key]
 	if !ok {
-		return false
+		return false, nil
 	}
 	switch val := v.(type) {
 	case bool:
-		return val
+		return val, nil
 	case float64:
-		return val == 1
+		return val == 1, nil
 	case string:
-		return val == "1" || val == "true"
+		return val == "1" || val == "true", nil
 	}
-	return false
+	return false, nil
 }
 
 func (r *mqlProxmoxContainer) config() (any, error) {
@@ -117,20 +124,23 @@ func (r *mqlProxmoxContainer) config() (any, error) {
 	return r.ctConfig, r.configErr
 }
 
-func (r *mqlProxmoxContainer) osType() (string, error)       { return r.cfgStr("ostype"), nil }
-func (r *mqlProxmoxContainer) hostname() (string, error)     { return r.cfgStr("hostname"), nil }
-func (r *mqlProxmoxContainer) unprivileged() (bool, error)   { return r.cfgBool("unprivileged"), nil }
-func (r *mqlProxmoxContainer) protection() (bool, error)     { return r.cfgBool("protection"), nil }
-func (r *mqlProxmoxContainer) onboot() (bool, error)         { return r.cfgBool("onboot"), nil }
-func (r *mqlProxmoxContainer) description() (string, error)  { return r.cfgStr("description"), nil }
-func (r *mqlProxmoxContainer) cmode() (string, error)        { return r.cfgStr("cmode"), nil }
-func (r *mqlProxmoxContainer) searchDomain() (string, error) { return r.cfgStr("searchdomain"), nil }
-func (r *mqlProxmoxContainer) nameserver() (string, error)   { return r.cfgStr("nameserver"), nil }
+func (r *mqlProxmoxContainer) osType() (string, error)       { return r.cfgStr("ostype") }
+func (r *mqlProxmoxContainer) hostname() (string, error)     { return r.cfgStr("hostname") }
+func (r *mqlProxmoxContainer) unprivileged() (bool, error)   { return r.cfgBool("unprivileged") }
+func (r *mqlProxmoxContainer) protection() (bool, error)     { return r.cfgBool("protection") }
+func (r *mqlProxmoxContainer) onboot() (bool, error)         { return r.cfgBool("onboot") }
+func (r *mqlProxmoxContainer) description() (string, error)  { return r.cfgStr("description") }
+func (r *mqlProxmoxContainer) cmode() (string, error)        { return r.cfgStr("cmode") }
+func (r *mqlProxmoxContainer) searchDomain() (string, error) { return r.cfgStr("searchdomain") }
+func (r *mqlProxmoxContainer) nameserver() (string, error)   { return r.cfgStr("nameserver") }
 
 // swap is configured in MB; convert to bytes for consistency with the
 // other size fields on the resource.
 func (r *mqlProxmoxContainer) swap() (int64, error) {
-	val := r.cfgStr("swap")
+	val, err := r.cfgStr("swap")
+	if err != nil {
+		return 0, err
+	}
 	if val == "" {
 		return 0, nil
 	}
@@ -142,7 +152,10 @@ func (r *mqlProxmoxContainer) swap() (int64, error) {
 }
 
 func (r *mqlProxmoxContainer) cpuLimit() (float64, error) {
-	val := r.cfgStr("cpulimit")
+	val, err := r.cfgStr("cpulimit")
+	if err != nil {
+		return 0, err
+	}
 	if val == "" {
 		return 0, nil
 	}
@@ -154,7 +167,10 @@ func (r *mqlProxmoxContainer) cpuLimit() (float64, error) {
 }
 
 func (r *mqlProxmoxContainer) cpuUnits() (int64, error) {
-	val := r.cfgStr("cpuunits")
+	val, err := r.cfgStr("cpuunits")
+	if err != nil {
+		return 0, err
+	}
 	if val == "" {
 		return 0, nil
 	}
@@ -169,7 +185,10 @@ func (r *mqlProxmoxContainer) cpuUnits() (int64, error) {
 // stores the field as one logical newline-delimited string; split it
 // and trim so audits can iterate one override at a time.
 func (r *mqlProxmoxContainer) rawLxc() ([]any, error) {
-	val := r.cfgStr("lxc")
+	val, err := r.cfgStr("lxc")
+	if err != nil {
+		return nil, err
+	}
 	if val == "" {
 		return []any{}, nil
 	}
@@ -201,7 +220,10 @@ func parseRawLxcLines(raw string) []string {
 }
 
 func (r *mqlProxmoxContainer) features() ([]any, error) {
-	val := r.cfgStr("features")
+	val, err := r.cfgStr("features")
+	if err != nil {
+		return nil, err
+	}
 	if val == "" {
 		return []any{}, nil
 	}
@@ -226,7 +248,10 @@ func (r *mqlProxmoxContainer) features() ([]any, error) {
 }
 
 func (r *mqlProxmoxContainer) tags() ([]any, error) {
-	tagStr := r.cfgStr("tags")
+	tagStr, err := r.cfgStr("tags")
+	if err != nil {
+		return nil, err
+	}
 	if tagStr == "" {
 		return []any{}, nil
 	}
@@ -239,7 +264,10 @@ func (r *mqlProxmoxContainer) tags() ([]any, error) {
 }
 
 func (r *mqlProxmoxContainer) pool() (*mqlProxmoxPool, error) {
-	id := r.cfgStr("pool")
+	id, err := r.cfgStr("pool")
+	if err != nil {
+		return nil, err
+	}
 	if id == "" {
 		r.Pool.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
