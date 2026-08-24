@@ -27,6 +27,8 @@ func (e *errMissingKey) Error() string {
 	return "cannot find key \"" + e.key + "\""
 }
 
+func (e *errMissingKey) Is(target error) bool { return target == ErrStrict }
+
 // missingKey applies the strict-mode rule for a key that is not in the map.
 //
 // Absence is the one failure a map lookup has that a field access does not: a

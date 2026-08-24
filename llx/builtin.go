@@ -915,6 +915,14 @@ func BuiltinFunctionV2(typ types.Type, name string) (*chunkHandlerV2, error) {
 	return &fh, nil
 }
 
+// ErrStrict identifies every error that exists only because strict mode is on
+// (ADR 043). Match it with errors.Is to tell "this chain would have resolved in
+// non-strict mode" apart from a genuine failure - enough to attach a "did you
+// mean `?`" hint, or to report the two classes separately.
+//
+// It is never returned on its own; the concrete errors carry the detail.
+var ErrStrict = errors.New("strict mode")
+
 // errNullBinding reports a link that could not resolve because the value it
 // reads from is null. Only produced under strict mode; see ADR 043.
 type errNullBinding struct {
@@ -924,6 +932,8 @@ type errNullBinding struct {
 func (e *errNullBinding) Error() string {
 	return "cannot access \"" + e.field + "\", the value it reads from is null"
 }
+
+func (e *errNullBinding) Is(target error) bool { return target == ErrStrict }
 
 // resolveNullBinding applies the strict-mode rule for a link whose binding came
 // back null, before the link's handler ever runs.

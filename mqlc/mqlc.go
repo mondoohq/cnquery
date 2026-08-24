@@ -275,6 +275,14 @@ func (c *compiler) markNullability(afterRef uint64, n llx.Function_Nullability) 
 
 	code := c.Result.CodeV2
 	tail := c.tailRef()
+
+	// Label moves are collected here and applied after the walk. Two chunks in
+	// this range can share a pre-mark checksum, and deleting the old key inline
+	// would then drop the label the previous iteration had just written under
+	// the new one.
+	type rename struct{ from, to string }
+	var renames []rename
+
 	for ref := afterRef + 1; ref <= tail; ref++ {
 		if !c.isInMyBlock(ref) {
 			continue
@@ -291,11 +299,27 @@ func (c *compiler) markNullability(afterRef uint64, n llx.Function_Nullability) 
 		code.Checksums[ref] = nu
 
 		if old != nu {
-			if label, ok := c.Result.Labels.Labels[old]; ok {
-				delete(c.Result.Labels.Labels, old)
-				c.Result.Labels.Labels[nu] = label
+			if _, ok := c.Result.Labels.Labels[old]; ok {
+				renames = append(renames, rename{from: old, to: nu})
 			}
 		}
+	}
+
+	if len(renames) == 0 {
+		return
+	}
+
+	// Read every label before writing any: one rename's source may be another
+	// rename's target, and interleaving the two would lose it.
+	labels := make([]string, len(renames))
+	for i, r := range renames {
+		labels[i] = c.Result.Labels.Labels[r.from]
+	}
+	for _, r := range renames {
+		delete(c.Result.Labels.Labels, r.from)
+	}
+	for i, r := range renames {
+		c.Result.Labels.Labels[r.to] = labels[i]
 	}
 }
 
