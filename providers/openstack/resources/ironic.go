@@ -104,15 +104,20 @@ func (o *mqlOpenstack) baremetalNodes() ([]any, error) {
 			"conductor":            llx.StringData(n.Conductor),
 			"protected":            llx.BoolData(n.Protected),
 			"protectedReason":      llx.StringData(n.ProtectedReason),
-			"description":          llx.StringData(n.Description),
-			"consoleEnabled":       llx.BoolData(n.ConsoleEnabled),
-			"bootInterface":        llx.StringData(n.BootInterface),
-			"deployInterface":      llx.StringData(n.DeployInterface),
-			"networkInterface":     llx.StringData(n.NetworkInterface),
-			"traits":               stringSliceData(n.Traits),
-			"instanceUuid":         llx.StringData(n.InstanceUUID),
-			"createdAt":            llx.TimeDataPtr(timePtr(n.CreatedAt)),
-			"updatedAt":            llx.TimeDataPtr(timePtr(n.UpdatedAt)),
+			// AutomatedClean is *bool in the API: absent means the node defers to the
+			// conductor default, which is neither on nor off, so it stays null.
+			"automatedClean":   llx.BoolDataPtr(n.AutomatedClean),
+			"retired":          llx.BoolData(n.Retired),
+			"retiredReason":    llx.StringData(n.RetiredReason),
+			"description":      llx.StringData(n.Description),
+			"consoleEnabled":   llx.BoolData(n.ConsoleEnabled),
+			"bootInterface":    llx.StringData(n.BootInterface),
+			"deployInterface":  llx.StringData(n.DeployInterface),
+			"networkInterface": llx.StringData(n.NetworkInterface),
+			"traits":           stringSliceData(n.Traits),
+			"instanceUuid":     llx.StringData(n.InstanceUUID),
+			"createdAt":        llx.TimeDataPtr(timePtr(n.CreatedAt)),
+			"updatedAt":        llx.TimeDataPtr(timePtr(n.UpdatedAt)),
 		})
 		if err != nil {
 			return nil, err

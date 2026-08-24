@@ -17,6 +17,20 @@ type mqlOpenstackSubnetPoolInternal struct {
 	cacheProjectID string
 }
 
+func (r *mqlOpenstackSubnetPool) addressScope() (*mqlOpenstackNetworkAddressScope, error) {
+	if r.AddressScopeId.Data == "" {
+		r.AddressScope.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(r.MqlRuntime, "openstack.network.addressScope", map[string]*llx.RawData{
+		"id": llx.StringData(r.AddressScopeId.Data),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOpenstackNetworkAddressScope), nil
+}
+
 func (r *mqlOpenstackSubnetPool) id() (string, error) {
 	return "openstack.subnetPool/" + r.Id.Data, nil
 }

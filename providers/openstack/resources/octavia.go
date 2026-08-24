@@ -374,6 +374,8 @@ func (o *mqlOpenstack) listeners() ([]any, error) {
 			"timeoutMemberConnect":  llx.IntData(int64(l.TimeoutMemberConnect)),
 			"timeoutTcpInspect":     llx.IntData(int64(l.TimeoutTCPInspect)),
 			"hstsIncludeSubdomains": llx.BoolData(l.HSTSIncludeSubdomains),
+			"hstsMaxAge":            llx.IntData(int64(l.HSTSMaxAge)),
+			"hstsPreload":           llx.BoolData(l.HSTSPreload),
 			"tags":                  stringSliceData(l.Tags),
 		})
 		if err != nil {
@@ -1172,6 +1174,22 @@ func (r *mqlOpenstackOctaviaL7Rule) l7Policy() (*mqlOpenstackOctaviaL7Policy, er
 // resolveProject is a shared helper for the many octavia accessors that
 // resolve a cached project ID into a typed openstack.project. Returns
 // (nil, nil) when the cache is empty after marking the field null.
+// hstsEnabledForMaxAge reports whether an HSTS max-age turns the header on.
+// Octavia emits Strict-Transport-Security only for a positive max-age; the
+// includeSubDomains and preload directives do nothing on their own, so reading
+// either of them as "HSTS is configured" is a false positive.
+func hstsEnabledForMaxAge(maxAge int64) bool {
+	return maxAge > 0
+}
+
+func (r *mqlOpenstackOctaviaListener) hstsEnabled() (bool, error) {
+	maxAge := r.GetHstsMaxAge()
+	if maxAge.Error != nil {
+		return false, maxAge.Error
+	}
+	return hstsEnabledForMaxAge(maxAge.Data), nil
+}
+
 func resolveProject(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOpenstackProject]) (*mqlOpenstackProject, error) {
 	if id == "" {
 		field.State = plugin.StateIsSet | plugin.StateIsNull

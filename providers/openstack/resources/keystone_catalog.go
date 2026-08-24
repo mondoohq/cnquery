@@ -225,6 +225,11 @@ type mqlOpenstackTrustInternal struct {
 	cacheTrustorUserID      string
 	cacheProjectID          string
 	cacheRedelegatedTrustID string
+	cacheRoleIDs            []string
+}
+
+func (r *mqlOpenstackTrust) roles() ([]any, error) {
+	return rolesByID(r.MqlRuntime, r.cacheRoleIDs)
 }
 
 func (o *mqlOpenstack) trusts() ([]any, error) {
@@ -248,8 +253,12 @@ func (o *mqlOpenstack) trusts() ([]any, error) {
 	out := make([]any, 0, len(items))
 	for _, t := range items {
 		roleNames := make([]string, 0, len(t.Roles))
+		roleIDs := make([]string, 0, len(t.Roles))
 		for _, role := range t.Roles {
 			roleNames = append(roleNames, role.Name)
+			if role.ID != "" {
+				roleIDs = append(roleIDs, role.ID)
+			}
 		}
 		res, err := CreateResource(o.MqlRuntime, "openstack.trust", map[string]*llx.RawData{
 			"__id":              llx.StringData("openstack.trust/" + t.ID),
@@ -258,6 +267,7 @@ func (o *mqlOpenstack) trusts() ([]any, error) {
 			"roleNames":         stringSliceData(roleNames),
 			"allowRedelegation": llx.BoolData(t.AllowRedelegation),
 			"remainingUses":     llx.IntData(int64(t.RemainingUses)),
+			"redelegationCount": llx.IntData(int64(t.RedelegationCount)),
 			"expiresAt":         llx.TimeDataPtr(timePtr(t.ExpiresAt)),
 		})
 		if err != nil {
@@ -268,6 +278,7 @@ func (o *mqlOpenstack) trusts() ([]any, error) {
 		mqlTrust.cacheTrustorUserID = t.TrustorUserID
 		mqlTrust.cacheProjectID = t.ProjectID
 		mqlTrust.cacheRedelegatedTrustID = t.RedelegatedTrustID
+		mqlTrust.cacheRoleIDs = roleIDs
 		out = append(out, mqlTrust)
 	}
 	return out, nil
