@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
 
 // A script that no longer fits on the command line does not fail loudly. The
