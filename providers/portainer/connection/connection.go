@@ -299,7 +299,7 @@ func newAPIClient(host, scheme, basePath, accessToken string, skipTLSVerify bool
 	// protected; verification stays on by default.
 	if skipTLSVerify {
 		transport.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // user-controlled --insecure flag, for instances behind a self-signed certificate
 		}
 	}
 	transport.DefaultAuthentication = runtime.ClientAuthInfoWriterFunc(
