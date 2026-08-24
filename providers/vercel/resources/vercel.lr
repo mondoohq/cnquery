@@ -76,7 +76,9 @@ private vercel.accessToken @defaults("name expiresAt") {
 // features, `requireVerifiedCommits` and `deploymentPolicy` for source and
 // deployment guardrails, `strictDeploymentProtectionSettings` and its siblings
 // for who may weaken protection, `sharedEnvironmentVariables` for secrets
-// injected across projects, `members` for the roster and roles, `projects` for
+// injected across projects, `members` for the roster and roles,
+// `pendingInvites` for invitations that have been sent and not accepted,
+// `projects` for
 // the team's projects, and `domains`, `edgeConfigs`, `logDrains`, `webhooks`,
 // `integrationConfigurations`, and `accessGroups` for the surrounding
 // configuration. Select a team with `vercel.teams.where(slug == "acme")`.
@@ -252,6 +254,13 @@ private vercel.team @defaults("slug name") {
   sharedEnvironmentVariables() []vercel.team.sharedEnvironmentVariable
   // Members of the team
   members() []vercel.team.member
+  // Outstanding email invitations to the team
+  //
+  // An invitation that has not been accepted still grants the role it carries
+  // to whoever controls the address, so an unexpired invitation to an address
+  // outside the organization is a standing path into the team. Empty when the
+  // team has no outstanding invitations.
+  pendingInvites() []vercel.team.pendingInvite
   // Projects owned by the team
   projects() []vercel.project
   // Domains registered to the team
@@ -314,6 +323,56 @@ private vercel.team.member @defaults("email role") {
   accessRequestedAt time
   // Time the member joined the team
   createdAt time
+}
+
+// Vercel Team Invitation
+//
+// An email invitation to a Vercel team that has been sent but not accepted,
+// which grants the role it carries to whoever controls the address as soon as
+// it is redeemed. The `email` field gives the address the invitation was sent
+// to, `role` and `teamRoles` give what redeeming it grants, `expired` reports
+// whether it can still be redeemed, and `isDSyncUser` distinguishes an identity
+// governed by the connected directory from one invited by hand. Select an
+// invitation with `vercel.team.pendingInvites.where(role == "OWNER")`.
+private vercel.team.pendingInvite @defaults("email role expired") {
+  // Unique invitation identifier
+  id string
+  // Address the invitation was sent to, or null when the invitation carries no address
+  email string
+  // Team role granted when the invitation is redeemed
+  //
+  // One of OWNER, MEMBER, DEVELOPER, BILLING, VIEWER, VIEWER_FOR_PLUS,
+  // SECURITY, or CONTRIBUTOR.
+  role string
+  // Every role granted when the invitation is redeemed
+  //
+  // Values are drawn from the same set as `role`, which reports the primary
+  // one. Empty when the invitation grants no roles beyond `role`.
+  teamRoles []string
+  // Fine-grained permissions granted when the invitation is redeemed
+  //
+  // Grants layered on top of the roles, for example OrgAdmin, CreateProject,
+  // EnvVariableManager, IntegrationManager, or AiGatewaySettings. Empty when
+  // the invitation carries no grants beyond its roles.
+  teamPermissions []string
+  // Whether the invited identity comes from the connected directory
+  //
+  // A directory-governed identity is created and removed by the identity
+  // provider, so it is revoked centrally. An invitation without this flag was
+  // addressed by hand and outlives any directory deprovisioning.
+  isDSyncUser bool
+  // Whether the invitation can no longer be redeemed
+  //
+  // Vercel reports this only once the invitation has expired, so a null value
+  // means the invitation is still redeemable.
+  expired bool
+  // Time the invitation was created
+  createdAt time
+  // Projects the invitation grants access to
+  //
+  // Empty when the invitation grants no project-scoped access beyond what its
+  // team roles carry.
+  projects() []vercel.project
 }
 
 // Vercel Shared Environment Variable
@@ -379,8 +438,9 @@ private vercel.team.sharedEnvironmentVariable @defaults("key type") {
 // `expirationDays` and its siblings for how long deployments are retained;
 // `connectConfigurations` and `staticIpsEnabled` for egress placement;
 // `environmentVariables` for environment variables; `deployments` for
-// deployment history; `domains` for domain bindings; and `firewall` for the Web
-// Application Firewall. Select a project with
+// deployment history; `domains` for domain bindings; `checks` for the gates
+// that hold a deployment back; and `firewall` for the Web Application Firewall.
+// Select a project with
 // `vercel.projects.where(name == "web")`.
 private vercel.project @defaults("name framework") {
   // Unique project identifier
@@ -617,6 +677,13 @@ private vercel.project @defaults("name framework") {
   domains() []vercel.project.domain
   // Firewall configuration for the project
   firewall() vercel.firewall
+  // Checks that gate the project's deployments
+  //
+  // Each check reports a result against a deployment, and `blocks` gives the
+  // point at which a failing result stops the deployment. A check whose
+  // `blocks` is none reports its result and stops nothing. Empty when the
+  // project has no checks configured.
+  checks() []vercel.project.check
   // Storage stores connected to the project
   stores() []vercel.store
   // Members with direct access to the project
@@ -674,9 +741,12 @@ private vercel.project.member @defaults("email role") {
 // Vercel Environment Variable
 //
 // A single environment variable configured for a project, including its key,
-// targets, and storage type. Values are never returned. Query `type` to find
-// plaintext secrets and `target` to find variables reaching preview or
-// development environments. Select a variable with
+// targets, and storage type. Values are never returned and are never requested.
+// Query `type`, `visibility`, and `decrypted` to separate a plaintext
+// configuration value from a secret Vercel hides after creation, `system` to
+// tell a platform-supplied variable from one the project set, and `target` and
+// `customEnvironmentIds` to find variables reaching preview or development
+// environments. Select a variable with
 // `vercel.project.environmentVariables.where(key == "DATABASE_URL")`.
 private vercel.project.environmentVariable @defaults("key type") {
   // Unique variable identifier
@@ -695,10 +765,99 @@ private vercel.project.environmentVariable @defaults("key type") {
   target []string
   // Git branch the variable is scoped to, or null when it applies to all branches
   gitBranch string
+  // Whether the stored value is readable through the API
+  //
+  // A readable value can be retrieved by anyone holding a token with access to
+  // the project, so a credential stored this way is only as protected as every
+  // token that reaches it. False for a value Vercel hides after creation.
+  decrypted bool
+  // Whether the variable is declared as configuration or as a secret
+  //
+  // One of config or secret. Null on variables created before Vercel recorded
+  // the distinction, where `type` is the only signal.
+  visibility string
+  // Whether Vercel supplies the variable rather than the project
+  //
+  // A system variable is populated by the platform, for example the deployment
+  // URL, and carries no value the project configured.
+  system bool
+  // Note describing what the variable is for, or null when unset
+  comment string
+  // Identifiers of the custom environments the variable is scoped to
+  //
+  // Empty when the variable is not scoped to any custom environment, in which
+  // case `target` gives the environments it reaches.
+  customEnvironmentIds []string
+  // Storage resource the value was populated from
+  //
+  // Carries the `type` of the linked resource, for example redis-url,
+  // postgres-url, blob-read-write-token, or integration-store-secret, together
+  // with the identifiers naming it. Null when the value was entered directly
+  // rather than linked from a store.
+  contentHint dict
   // Time the variable was created
   createdAt time
   // Time the variable was last updated
   updatedAt time
+}
+
+// Vercel Deployment Check
+//
+// A check registered against a project's deployments, which reports a pass or
+// fail result and may hold the deployment back until it passes. The `blocks`
+// field gives the point a failing result stops at, and is what separates an
+// enforced gate from one that only records a result. The `requires` field gives
+// what the check waits for before it runs, `sourceKind` gives what registered
+// it, and `timeout` gives how long a pending result is waited for. Select a
+// check with `vercel.project.checks.where(name == "lighthouse")`.
+private vercel.project.check @defaults("name blocks") {
+  // Unique check identifier
+  id string
+  // Check name
+  name string
+  // Point at which a failing result stops the deployment
+  //
+  // One of build-start, deployment-start, deployment-alias,
+  // deployment-promotion, or none. A value of none means the check records its
+  // result without holding anything back, so it enforces nothing.
+  blocks string
+  // What the check waits for before it runs
+  //
+  // One of build-ready, deployment-url, or none.
+  requires string
+  // Environments the check applies to
+  //
+  // Values are drawn from production and preview. Empty when the check applies
+  // to every environment.
+  targets []string
+  // Seconds a pending result is waited for before the check is abandoned
+  timeout int
+  // What registered the check
+  //
+  // One of integration, git-provider, webhook, or vercel.
+  sourceKind string
+  // Git provider reporting the check
+  //
+  // One of github, gitlab, or bitbucket. Null when the check does not come from
+  // a Git provider.
+  sourceProvider string
+  // Name the Git provider reports the check under
+  //
+  // Null when the check does not come from a Git provider.
+  externalCheckName string
+  // Marketplace integration that registered the check
+  //
+  // Null when the check was not registered by an integration. The scopes on the
+  // installation are what the check can reach beyond reporting its result.
+  integrationConfiguration() vercel.integrationConfiguration
+  // Whether a completed result can be requested again
+  isRerequestable bool
+  // Time the check was created
+  createdAt time
+  // Time the check was last updated
+  updatedAt time
+  // Time the check was removed, or null while it is still registered
+  deletedAt time
 }
 
 // Vercel Deployment
@@ -734,6 +893,17 @@ private vercel.deployment @defaults("name state target") {
   creatorEmail string
   // Inspector URL for build logs and details
   inspectorUrl string
+  // Progress of the checks registered against the deployment
+  //
+  // One of registered, running, or completed. Null on deployments created
+  // before Vercel recorded the state, and on deployments no check applies to.
+  checksState string
+  // Combined outcome of the checks registered against the deployment
+  //
+  // One of succeeded, failed, skipped, or canceled. A deployment serving
+  // traffic with a failed conclusion was promoted past a check that reported a
+  // failure. Null while the checks have not completed.
+  checksConclusion string
   // Time the deployment was created
   createdAt time
   // Project the deployment belongs to
@@ -896,8 +1066,9 @@ private vercel.project.domain @defaults("name") {
 
 // Vercel Edge Config
 //
-// An Edge Config store owned by a team, including item count and size. Use it to
-// inventory configuration stores and their footprint. Select a store with
+// An Edge Config store owned by a team, including item count, size, and the
+// read tokens issued for it. The `tokens` field lists the standing credentials
+// that read the store's contents. Select a store with
 // `vercel.team.edgeConfigs.where(slug == "flags")`.
 private vercel.edgeConfig @defaults("slug") {
   // Unique store identifier
@@ -912,6 +1083,31 @@ private vercel.edgeConfig @defaults("slug") {
   createdAt time
   // Time the store was last updated
   updatedAt time
+  // Read tokens issued for the store
+  //
+  // Each token reads the store's contents from anywhere it is presented, so the
+  // number of live tokens and how long they have existed is the exposure of the
+  // configuration they read. Empty when no read token has been issued.
+  tokens() []vercel.edgeConfig.token
+}
+
+// Vercel Edge Config Read Token
+//
+// A read token issued for an Edge Config store, which returns the store's
+// contents to any caller presenting it. Tokens do not expire, so `createdAt`
+// is what a rotation audit reads and `label` is what attributes a token to
+// whoever asked for it. The token itself is never returned by the API after it
+// is created and is never reported here. Select a token with
+// `vercel.team.edgeConfigs.first.tokens.where(label == "ci")`.
+private vercel.edgeConfig.token @defaults("label createdAt") {
+  // Unique token identifier
+  //
+  // Identifies the token for revocation. This is not the token value.
+  id string
+  // Label given to the token when it was issued
+  label string
+  // Time the token was issued
+  createdAt time
 }
 
 // Vercel Storage Store
@@ -1125,28 +1321,36 @@ private vercel.accessGroup.project @defaults("role") {
 //
 // Web Application Firewall configuration for a project, including whether the
 // firewall is enabled, the managed rulesets in effect, and the custom rules and
-// IP rules applied. Query `enabled` for the on/off state, `managedRulesets` and
-// `coreRuleSet` for the rulesets Vercel evaluates, `botIdEnabled` for bot
-// verification, `rules` for custom rules, `ipRules` for IP allow and deny
-// entries, and `bypassRules` for the entries that skip firewall evaluation
-// entirely.
+// IP rules applied. Query `enabled` for the on/off state, `managedRules` and
+// `coreRules` for the rulesets Vercel evaluates and what each one does on a
+// match, `botIdEnabled` for bot verification, `rules` for custom rules,
+// `ipRules` for IP allow and deny entries, and `bypassRules` for the entries
+// that skip firewall evaluation entirely.
 private vercel.firewall @defaults("enabled") {
   // Whether the firewall is enabled for the project
   enabled bool
-  // Managed rulesets and their configuration
+  // Managed ruleset configuration keyed by ruleset identifier
   //
-  // Keyed by ruleset identifier with the active state and action for each. Keys
-  // include owasp, bot_protection, ai_bots, traffic_sources, and
-  // vercel_ruleset.
-  managedRulesets dict
-  // Core rule set categories and their configuration
+  // Deprecated in favor of managedRules, which reports the same rulesets with
+  // the action and the account that last changed each one as fields.
+  managedRulesets @maturity("deprecated") dict
+  // Core rule set configuration keyed by attack class
   //
-  // Keyed by attack class with an `active` flag and an `action` for each. Keys
-  // are sqli for SQL injection, xss for cross-site scripting, rce for remote
-  // code execution, lfi and rfi for local and remote file inclusion, php, java,
-  // ma for multipart attacks, sd for scanner detection, sf for session
-  // fixation, and gen for the generic category.
-  coreRuleSet dict
+  // Deprecated in favor of coreRules, which reports the same categories with
+  // the active state and action as fields.
+  coreRuleSet @maturity("deprecated") dict
+  // Managed rulesets Vercel evaluates for the project
+  //
+  // Each entry is a ruleset Vercel maintains, with whether it is active, what
+  // it does on a match, and who last changed it. Empty when the firewall
+  // evaluates no managed ruleset.
+  managedRules() []vercel.firewall.managedRuleset
+  // Core rule set categories evaluated for the project
+  //
+  // Each entry is one attack class within the OWASP Core Rule Set, with whether
+  // it is active and whether a match is denied or only recorded. Empty when the
+  // core rule set is not configured.
+  coreRules() []vercel.firewall.coreRule
   // Whether bot verification is enabled for the project
   botIdEnabled bool
   // Request headers recorded in firewall logs
@@ -1174,6 +1378,64 @@ private vercel.firewall @defaults("enabled") {
   // Empty when no attack was detected. This reports observed traffic rather
   // than configuration, so it changes between scans.
   attackAnomalies() []dict
+}
+
+// Vercel Firewall Managed Ruleset
+//
+// One of the rulesets Vercel maintains and evaluates on the project's behalf,
+// covering the OWASP Core Rule Set, bot and AI-crawler identification, traffic
+// source reputation, and Vercel's own ruleset. The `active` field reports
+// whether it is evaluated at all and `action` reports what a match does, so a
+// ruleset that is active with an action of log records matches without stopping
+// them. The `updatedByUsername` and `updatedAt` fields attribute the last
+// change. Select a ruleset with
+// `vercel.project.firewall.managedRules.where(name == "owasp")`.
+private vercel.firewall.managedRuleset @defaults("name active action") {
+  // Ruleset identifier
+  //
+  // One of owasp for the OWASP Core Rule Set, bot_protection for verified bot
+  // identification, ai_bots for AI crawler identification, traffic_sources for
+  // source reputation, or vercel_ruleset for Vercel's own ruleset.
+  name string
+  // Whether the ruleset is evaluated
+  active bool
+  // What happens to a request the ruleset matches
+  //
+  // One of deny, challenge, or log. A value of log records the match and lets
+  // the request through, so the ruleset detects without blocking. Null when
+  // Vercel reports no action for the ruleset.
+  action string
+  // Time the ruleset configuration was last changed
+  updatedAt time
+  // Identifier of the account that last changed the ruleset configuration
+  updatedByUserId string
+  // Username of the account that last changed the ruleset configuration
+  updatedByUsername string
+}
+
+// Vercel Firewall Core Rule Set Category
+//
+// One attack class within the OWASP Core Rule Set, evaluated when the owasp
+// managed ruleset is active. The `active` field reports whether the category is
+// evaluated and `action` reports whether a match is denied or only recorded, so
+// a category set to log detects the attack class without stopping it. Select a
+// category with `vercel.project.firewall.coreRules.where(name == "sqli")`.
+private vercel.firewall.coreRule @defaults("name active action") {
+  // Attack class identifier
+  //
+  // One of sqli for SQL injection, xss for cross-site scripting, rce for remote
+  // code execution, lfi and rfi for local and remote file inclusion, php and
+  // java for language-specific attacks, ma for multipart attacks, sd for
+  // scanner detection, sf for session fixation, or gen for the generic
+  // category.
+  name string
+  // Whether the category is evaluated
+  active bool
+  // What happens to a request the category matches
+  //
+  // One of deny or log. A value of log records the match and lets the request
+  // through. Null when Vercel reports no action for the category.
+  action string
 }
 
 // Vercel Firewall System Bypass Rule
@@ -1232,6 +1494,54 @@ private vercel.firewall.rule @defaults("name action active") {
   //
   // Each group carries the conditions that must all match for the rule to apply.
   conditionGroup []dict
+  // Whether matching traffic skips every Vercel system mitigation
+  //
+  // A rule with this set exempts the traffic it matches from the platform's own
+  // attack mitigations, so that traffic reaches the deployment however the rest
+  // of the firewall is configured. Null when Vercel reports no value, which is
+  // how a rule that does not set the exemption is returned.
+  bypassSystem bool
+  // How long the action stays applied to a matching client
+  //
+  // A duration such as 1h or 24h. Null when the action applies only to the
+  // request that matched.
+  actionDuration string
+  // Destination a matching request is sent to
+  //
+  // Only set when `action` is redirect. An off-site destination here sends
+  // matching traffic to a host outside the project.
+  redirectLocation string
+  // Whether a redirect is issued as permanent rather than temporary
+  //
+  // Null when the rule does not redirect.
+  redirectPermanent bool
+  // Counting algorithm used for the rate limit
+  //
+  // One of fixed_window or token_bucket. Null when `action` is not rate_limit.
+  rateLimitAlgo string
+  // Length of the rate-limit window in seconds
+  //
+  // Null when `action` is not rate_limit.
+  rateLimitWindow int
+  // Requests allowed per window before the rate limit applies
+  //
+  // A limit set far above real traffic is a rate limit that never engages. Null
+  // when `action` is not rate_limit.
+  rateLimitLimit int
+  // Request attributes the rate limit counts separately
+  //
+  // For example ip or a header name. Empty when `action` is not rate_limit.
+  rateLimitKeys []string
+  // What happens to a request once the rate limit is exceeded
+  //
+  // One of deny, challenge, log, or rate_limit. Null when `action` is not
+  // rate_limit, and when the rule leaves the exceeded action unset.
+  rateLimitAction string
+  // Request headers recorded in firewall logs for this rule
+  //
+  // A single entry of `*` records every header. Empty when the rule records no
+  // headers beyond the firewall-wide setting.
+  logHeaders []string
 }
 
 // Vercel Firewall IP Rule

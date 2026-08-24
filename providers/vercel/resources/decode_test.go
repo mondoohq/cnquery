@@ -5,6 +5,9 @@ package resources
 
 import (
 	"encoding/json"
+	"fmt"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -412,9 +415,9 @@ func TestFirewallConfigDecodesRulesetState(t *testing.T) {
 	if len(cfg.LogHeaders.values) != 1 || cfg.LogHeaders.values[0] != "x-api-key" {
 		t.Errorf("logHeaders = %v", cfg.LogHeaders.values)
 	}
-	crs, ok := cfg.CRS.(map[string]any)
+	crs, ok := decodeAnyOrEmpty(cfg.CRS).(map[string]any)
 	if !ok || len(crs) != 2 {
-		t.Fatalf("crs should decode as an object, got %T", cfg.CRS)
+		t.Fatalf("crs should decode as an object, got %T", decodeAnyOrEmpty(cfg.CRS))
 	}
 	if len(cfg.Rules) != 1 || len(cfg.IPs) != 1 {
 		t.Errorf("rules=%d ips=%d", len(cfg.Rules), len(cfg.IPs))
@@ -475,5 +478,631 @@ func TestBypassRuleRecordPermanentEntryHasNoExpiry(t *testing.T) {
 	// null rather than collapsing to the zero time.
 	if rec.ExpiresAt.Time() != nil {
 		t.Errorf("null ExpiresAt should stay nil, got %v", rec.ExpiresAt.Time())
+	}
+}
+
+// --- firewall rule mitigation ---------------------------------------------
+
+func TestFirewallRuleMitigationDecodesFullMitigation(t *testing.T) {
+	const payload = `{
+		"id": "r1",
+		"name": "throttle",
+		"active": true,
+		"action": {"mitigate": {
+			"action": "rate_limit",
+			"actionDuration": "1h",
+			"bypassSystem": true,
+			"logHeaders": "*",
+			"rateLimit": {"algo": "token_bucket", "window": 60, "limit": 100, "keys": ["ip"], "action": "deny"},
+			"redirect": {"location": "https://example.invalid/blocked", "permanent": false}
+		}}
+	}`
+
+	var rec firewallRuleRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	mit := firewallRuleMitigation(rec.Action)
+	if mit.Action == nil || *mit.Action != "rate_limit" {
+		t.Errorf("action = %v", mit.Action)
+	}
+	if mit.BypassSystem == nil || !*mit.BypassSystem {
+		t.Fatalf("bypassSystem should decode true, got %v", mit.BypassSystem)
+	}
+	if mit.ActionDuration == nil || *mit.ActionDuration != "1h" {
+		t.Errorf("actionDuration = %v", mit.ActionDuration)
+	}
+	if len(mit.LogHeaders.values) != 1 || mit.LogHeaders.values[0] != "*" {
+		t.Errorf("logHeaders = %v", mit.LogHeaders.values)
+	}
+	if mit.RateLimit == nil {
+		t.Fatal("rateLimit should decode")
+	}
+	if mit.RateLimit.Algo == nil || *mit.RateLimit.Algo != "token_bucket" {
+		t.Errorf("rateLimit.algo = %v", mit.RateLimit.Algo)
+	}
+	if mit.RateLimit.Window == nil || *mit.RateLimit.Window != 60 {
+		t.Errorf("rateLimit.window = %v", mit.RateLimit.Window)
+	}
+	if mit.RateLimit.Limit == nil || *mit.RateLimit.Limit != 100 {
+		t.Errorf("rateLimit.limit = %v", mit.RateLimit.Limit)
+	}
+	if len(mit.RateLimit.Keys) != 1 || mit.RateLimit.Keys[0] != "ip" {
+		t.Errorf("rateLimit.keys = %v", mit.RateLimit.Keys)
+	}
+	if mit.RateLimit.Action == nil || *mit.RateLimit.Action != "deny" {
+		t.Errorf("rateLimit.action = %v", mit.RateLimit.Action)
+	}
+	if mit.Redirect == nil || mit.Redirect.Location == nil || *mit.Redirect.Location != "https://example.invalid/blocked" {
+		t.Errorf("redirect.location = %v", mit.Redirect)
+	}
+	if mit.Redirect.Permanent == nil || *mit.Redirect.Permanent {
+		t.Errorf("redirect.permanent = %v", mit.Redirect.Permanent)
+	}
+}
+
+// A rule that does not set bypassSystem must report null, never false. A
+// fabricated false would satisfy an assertion that no rule disables the system
+// mitigations without anything having been read.
+func TestFirewallRuleMitigationAbsentFieldsStayNull(t *testing.T) {
+	cases := map[string]string{
+		"bare verb":               `"deny"`,
+		"mitigate object":         `{"mitigate": {"action": "deny"}}`,
+		"inline object":           `{"action": "deny"}`,
+		"explicit null bypass":    `{"mitigate": {"action": "deny", "bypassSystem": null}}`,
+		"explicit null ratelimit": `{"mitigate": {"action": "deny", "rateLimit": null, "redirect": null}}`,
+	}
+
+	for name, raw := range cases {
+		t.Run(name, func(t *testing.T) {
+			var action any
+			if err := json.Unmarshal([]byte(raw), &action); err != nil {
+				t.Fatalf("unmarshal: %v", err)
+			}
+			mit := firewallRuleMitigation(action)
+			if mit.Action == nil || *mit.Action != "deny" {
+				t.Errorf("action = %v", mit.Action)
+			}
+			if mit.BypassSystem != nil {
+				t.Errorf("bypassSystem should stay null, got %v", *mit.BypassSystem)
+			}
+			if mit.RateLimit != nil {
+				t.Errorf("rateLimit should stay null, got %+v", mit.RateLimit)
+			}
+			if mit.Redirect != nil {
+				t.Errorf("redirect should stay null, got %+v", mit.Redirect)
+			}
+			if mit.ActionDuration != nil {
+				t.Errorf("actionDuration should stay null, got %v", *mit.ActionDuration)
+			}
+			if len(mit.LogHeaders.values) != 0 {
+				t.Errorf("logHeaders should stay empty, got %v", mit.LogHeaders.values)
+			}
+		})
+	}
+}
+
+func TestFirewallRuleMitigationBypassSystemFalseIsPreserved(t *testing.T) {
+	var action any
+	if err := json.Unmarshal([]byte(`{"mitigate": {"action": "deny", "bypassSystem": false}}`), &action); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	mit := firewallRuleMitigation(action)
+	if mit.BypassSystem == nil {
+		t.Fatal("an explicit false must decode as false, not null")
+	}
+	if *mit.BypassSystem {
+		t.Error("bypassSystem = true, want false")
+	}
+}
+
+// --- managed rulesets and core rules --------------------------------------
+
+func TestManagedRulesetDecodeAndOrdering(t *testing.T) {
+	const payload = `{
+		"vercel_ruleset": {"active": false},
+		"owasp": {"active": true, "action": "log", "updatedAt": "2026-02-03T04:05:06Z", "userId": "u_1", "username": "someone"},
+		"future_ruleset": {"active": true, "action": "deny"}
+	}`
+
+	got, err := decodeRulesetMap[managedRulesetRecord](json.RawMessage(payload))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	owasp := got["owasp"]
+	if owasp.Active == nil || !*owasp.Active {
+		t.Errorf("owasp.active = %v", owasp.Active)
+	}
+	if owasp.Action == nil || *owasp.Action != "log" {
+		t.Errorf("owasp.action = %v", owasp.Action)
+	}
+	if owasp.UpdatedAt.Time() == nil {
+		t.Error("owasp.updatedAt should decode")
+	}
+	if owasp.UserID == nil || *owasp.UserID != "u_1" {
+		t.Errorf("owasp.userId = %v", owasp.UserID)
+	}
+	if owasp.Username == nil || *owasp.Username != "someone" {
+		t.Errorf("owasp.username = %v", owasp.Username)
+	}
+
+	// a ruleset reported without an action must not gain one
+	if vr := got["vercel_ruleset"]; vr.Action != nil {
+		t.Errorf("vercel_ruleset.action should stay null, got %q", *vr.Action)
+	}
+
+	keys := orderedKeys(got, managedRuleSetOrder)
+	want := []string{"owasp", "vercel_ruleset", "future_ruleset"}
+	if len(keys) != len(want) {
+		t.Fatalf("orderedKeys = %v, want %v", keys, want)
+	}
+	for i := range want {
+		if keys[i] != want[i] {
+			t.Fatalf("orderedKeys = %v, want %v", keys, want)
+		}
+	}
+}
+
+func TestCoreRuleDecodePreservesLogAction(t *testing.T) {
+	const payload = `{"sqli": {"active": true, "action": "log"}, "xss": {"active": false, "action": "deny"}}`
+
+	got, err := decodeRulesetMap[coreRuleRecord](json.RawMessage(payload))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	sqli := got["sqli"]
+	if sqli.Active == nil || !*sqli.Active {
+		t.Errorf("sqli.active = %v", sqli.Active)
+	}
+	// an active category set to log detects without blocking; conflating that
+	// with deny is the whole point of reporting the action
+	if sqli.Action == nil || *sqli.Action != "log" {
+		t.Errorf("sqli.action = %v", sqli.Action)
+	}
+	xss := got["xss"]
+	if xss.Active == nil || *xss.Active {
+		t.Errorf("xss.active = %v", xss.Active)
+	}
+}
+
+func TestDecodeRulesetMapAbsentYieldsNoEntries(t *testing.T) {
+	for _, raw := range []string{"", "null"} {
+		got, err := decodeRulesetMap[coreRuleRecord](json.RawMessage(raw))
+		if err != nil {
+			t.Fatalf("decode(%q): %v", raw, err)
+		}
+		if len(got) != 0 {
+			t.Errorf("decode(%q) = %v, want no entries", raw, got)
+		}
+	}
+	if m := decodeAnyOrEmpty(json.RawMessage("null")); len(m.(map[string]any)) != 0 {
+		t.Errorf("decodeAnyOrEmpty(null) = %v", m)
+	}
+}
+
+// --- project environment variable sensitivity -----------------------------
+
+func TestEnvRecordDecodesSensitivityMetadata(t *testing.T) {
+	const payload = `{
+		"id": "env_1",
+		"key": "DATABASE_URL",
+		"type": "encrypted",
+		"target": ["production", "preview"],
+		"gitBranch": "main",
+		"decrypted": false,
+		"visibility": "secret",
+		"system": false,
+		"comment": "primary database",
+		"customEnvironmentIds": ["ce_1", "ce_2"],
+		"contentHint": {"type": "postgres-url", "storeId": "store_1"},
+		"createdAt": 1700000000000,
+		"updatedAt": 1700000001000
+	}`
+
+	var rec envRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	if rec.Decrypted == nil || *rec.Decrypted {
+		t.Errorf("decrypted = %v, want false", rec.Decrypted)
+	}
+	if rec.Visibility == nil || *rec.Visibility != "secret" {
+		t.Errorf("visibility = %v", rec.Visibility)
+	}
+	if rec.System == nil || *rec.System {
+		t.Errorf("system = %v, want false", rec.System)
+	}
+	if rec.Comment == nil || *rec.Comment != "primary database" {
+		t.Errorf("comment = %v", rec.Comment)
+	}
+	if len(rec.CustomEnvironmentIDs) != 2 {
+		t.Errorf("customEnvironmentIds = %v", rec.CustomEnvironmentIDs)
+	}
+	if rec.ContentHint["type"] != "postgres-url" {
+		t.Errorf("contentHint = %v", rec.ContentHint)
+	}
+}
+
+func TestEnvRecordDecryptedTrueIsPreserved(t *testing.T) {
+	var rec envRecord
+	if err := json.Unmarshal([]byte(`{"id":"env_1","key":"PUBLIC_URL","type":"plain","decrypted":true}`), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	// a readable value is the risky reading; a mistyped tag would report the
+	// safe one instead
+	if rec.Decrypted == nil {
+		t.Fatal("decrypted should decode, got null")
+	}
+	if !*rec.Decrypted {
+		t.Error("decrypted = false, want true")
+	}
+}
+
+func TestEnvRecordAbsentSensitivityStaysNull(t *testing.T) {
+	var rec envRecord
+	if err := json.Unmarshal([]byte(`{"id":"env_1","key":"LEGACY","type":"plain"}`), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if rec.Decrypted != nil {
+		t.Errorf("decrypted should stay null, got %v", *rec.Decrypted)
+	}
+	if rec.Visibility != nil {
+		t.Errorf("visibility should stay null, got %q", *rec.Visibility)
+	}
+	if rec.System != nil {
+		t.Errorf("system should stay null, got %v", *rec.System)
+	}
+	if rec.Comment != nil {
+		t.Errorf("comment should stay null, got %q", *rec.Comment)
+	}
+	if rec.ContentHint != nil {
+		t.Errorf("contentHint should stay null, got %v", rec.ContentHint)
+	}
+	if rec.CreatedAt.Time() != nil {
+		t.Error("an absent createdAt must stay null rather than becoming the zero time")
+	}
+}
+
+// The env endpoint can return values. Nothing in the provider may decode one,
+// so the record must carry no field bound to a value-bearing key however the
+// payload is shaped.
+func TestEnvRecordCarriesNoValueField(t *testing.T) {
+	assertNoJSONFields(t, reflect.TypeOf(envRecord{}), "value", "vsmValue", "legacyValue")
+
+	const payload = `{"id":"env_1","key":"SECRET","type":"encrypted","value":"zero-entropy-fake","vsmValue":"zero-entropy-fake","legacyValue":"zero-entropy-fake"}`
+	var rec envRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if strings.Contains(fmt.Sprintf("%+v", rec), "zero-entropy-fake") {
+		t.Error("a value present in the payload reached the decoded record")
+	}
+}
+
+// assertNoJSONFields fails when the struct binds any of the named JSON keys.
+func assertNoJSONFields(t *testing.T, typ reflect.Type, keys ...string) {
+	t.Helper()
+	banned := make(map[string]bool, len(keys))
+	for _, k := range keys {
+		banned[k] = true
+	}
+	for i := 0; i < typ.NumField(); i++ {
+		tag := typ.Field(i).Tag.Get("json")
+		name, _, _ := strings.Cut(tag, ",")
+		if banned[name] {
+			t.Errorf("%s binds the JSON key %q, which carries credential material", typ.Name(), name)
+		}
+	}
+}
+
+// --- pending team invitations ---------------------------------------------
+
+func TestInviteRecordDecodesGrant(t *testing.T) {
+	const payload = `{
+		"id": "inv_1",
+		"email": "invitee@example.invalid",
+		"role": "OWNER",
+		"teamRoles": ["OWNER", "SECURITY"],
+		"teamPermissions": ["OrgAdmin"],
+		"isDSyncUser": false,
+		"createdAt": 1700000000000,
+		"projects": {"prj_b": "ADMIN", "prj_a": "PROJECT_VIEWER"}
+	}`
+
+	var rec inviteRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if rec.Role == nil || *rec.Role != "OWNER" {
+		t.Errorf("role = %v", rec.Role)
+	}
+	if len(rec.TeamRoles) != 2 || len(rec.TeamPermissions) != 1 {
+		t.Errorf("teamRoles=%v teamPermissions=%v", rec.TeamRoles, rec.TeamPermissions)
+	}
+	if rec.IsDSyncUser == nil || *rec.IsDSyncUser {
+		t.Errorf("isDSyncUser = %v, want false", rec.IsDSyncUser)
+	}
+	if rec.CreatedAt.Time() == nil {
+		t.Error("createdAt should decode")
+	}
+
+	// Vercel reports expired only once the invitation has expired, so an
+	// invitation that is still redeemable must read null rather than false.
+	if rec.Expired != nil {
+		t.Errorf("expired should stay null on a live invitation, got %v", *rec.Expired)
+	}
+
+	ids := inviteProjectIDs(&rec)
+	if len(ids) != 2 || ids[0] != "prj_a" || ids[1] != "prj_b" {
+		t.Errorf("inviteProjectIDs = %v, want sorted [prj_a prj_b]", ids)
+	}
+}
+
+func TestInviteRecordExpiredIsPreserved(t *testing.T) {
+	var rec inviteRecord
+	if err := json.Unmarshal([]byte(`{"id":"inv_1","expired":true}`), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if rec.Expired == nil || !*rec.Expired {
+		t.Errorf("expired = %v, want true", rec.Expired)
+	}
+}
+
+// The invitations arrive alongside the paginated member list, so a walk over
+// several member pages can hand back the same invitations more than once.
+func TestDedupeInvites(t *testing.T) {
+	in := []inviteRecord{
+		{ID: "inv_1"}, {ID: "inv_2"}, {ID: "inv_1"}, {ID: ""}, {ID: ""}, {ID: "inv_3"},
+	}
+	got := dedupeInvites(in)
+	// two id-less records cannot be told apart and are both kept, since
+	// dropping one would under-report an outstanding invitation
+	if len(got) != 5 {
+		t.Fatalf("dedupeInvites returned %d records, want 5", len(got))
+	}
+	want := []string{"inv_1", "inv_2", "", "", "inv_3"}
+	for i := range want {
+		if got[i].ID != want[i] {
+			t.Fatalf("dedupeInvites ids = %v, want %v", got, want)
+		}
+	}
+}
+
+func TestInviteProjectIDsEmpty(t *testing.T) {
+	var rec inviteRecord
+	if ids := inviteProjectIDs(&rec); len(ids) != 0 {
+		t.Errorf("inviteProjectIDs = %v, want empty", ids)
+	}
+	rec.Projects = map[string]string{"": "ADMIN"}
+	if ids := inviteProjectIDs(&rec); len(ids) != 0 {
+		t.Errorf("an empty project id must be dropped, got %v", ids)
+	}
+}
+
+// --- deployment checks (blocking gates) -----------------------------------
+
+func TestCheckRecordDecodesBlockingGate(t *testing.T) {
+	const payload = `{
+		"id": "check_1",
+		"name": "lighthouse",
+		"blocks": "deployment-promotion",
+		"requires": "deployment-url",
+		"targets": ["production"],
+		"timeout": 600,
+		"sourceKind": "integration",
+		"sourceIntegrationConfigurationId": "icfg_1",
+		"source": {"kind": "integration", "integrationId": "int_1", "integrationConfigurationId": "icfg_1"},
+		"isRerequestable": true,
+		"createdAt": 1700000000000,
+		"updatedAt": 1700000001000
+	}`
+
+	var rec checkRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if rec.Blocks == nil || *rec.Blocks != "deployment-promotion" {
+		t.Errorf("blocks = %v", rec.Blocks)
+	}
+	if rec.Requires == nil || *rec.Requires != "deployment-url" {
+		t.Errorf("requires = %v", rec.Requires)
+	}
+	if len(rec.Targets) != 1 || rec.Targets[0] != "production" {
+		t.Errorf("targets = %v", rec.Targets)
+	}
+	if rec.Timeout == nil || *rec.Timeout != 600 {
+		t.Errorf("timeout = %v", rec.Timeout)
+	}
+	if rec.IsRerequestable == nil || !*rec.IsRerequestable {
+		t.Errorf("isRerequestable = %v", rec.IsRerequestable)
+	}
+	if rec.DeletedAt.Time() != nil {
+		t.Error("an absent deletedAt must stay null rather than becoming the zero time")
+	}
+	if id := checkIntegrationConfigurationID(&rec); id == nil || *id != "icfg_1" {
+		t.Errorf("checkIntegrationConfigurationID = %v", id)
+	}
+	if k := checkSourceKind(&rec); k == nil || *k != "integration" {
+		t.Errorf("checkSourceKind = %v", k)
+	}
+}
+
+// blocks:none is a check that reports a result and stops nothing. It must be
+// reported as the value "none" and never conflated with a check whose blocks
+// could not be read.
+func TestCheckRecordBlocksNoneIsDistinctFromAbsent(t *testing.T) {
+	var reported checkRecord
+	if err := json.Unmarshal([]byte(`{"id":"c1","name":"advisory","blocks":"none"}`), &reported); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if reported.Blocks == nil || *reported.Blocks != "none" {
+		t.Fatalf("blocks = %v, want \"none\"", reported.Blocks)
+	}
+
+	var absent checkRecord
+	if err := json.Unmarshal([]byte(`{"id":"c2","name":"unknown"}`), &absent); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if absent.Blocks != nil {
+		t.Errorf("an absent blocks must stay null, got %q", *absent.Blocks)
+	}
+}
+
+func TestCheckSourceFallsBackToSourceObject(t *testing.T) {
+	// A git-provider check carries the kind only inside the source object, and
+	// carries no integration installation at all.
+	const payload = `{
+		"id": "check_2",
+		"name": "ci",
+		"blocks": "build-start",
+		"source": {"kind": "git-provider", "provider": "github", "externalCheckName": "build"}
+	}`
+
+	var rec checkRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if k := checkSourceKind(&rec); k == nil || *k != "git-provider" {
+		t.Errorf("checkSourceKind = %v", k)
+	}
+	if rec.Source.Provider == nil || *rec.Source.Provider != "github" {
+		t.Errorf("source.provider = %v", rec.Source.Provider)
+	}
+	if rec.Source.ExternalCheckName == nil || *rec.Source.ExternalCheckName != "build" {
+		t.Errorf("source.externalCheckName = %v", rec.Source.ExternalCheckName)
+	}
+	if id := checkIntegrationConfigurationID(&rec); id != nil {
+		t.Errorf("a git-provider check names no installation, got %q", *id)
+	}
+}
+
+func TestCheckIntegrationConfigurationIDFallsBackToSourceObject(t *testing.T) {
+	var rec checkRecord
+	if err := json.Unmarshal([]byte(`{"id":"c1","source":{"kind":"integration","integrationConfigurationId":"icfg_2"}}`), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if id := checkIntegrationConfigurationID(&rec); id == nil || *id != "icfg_2" {
+		t.Errorf("checkIntegrationConfigurationID = %v", id)
+	}
+
+	var empty checkRecord
+	if err := json.Unmarshal([]byte(`{"id":"c2","sourceIntegrationConfigurationId":""}`), &empty); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if id := checkIntegrationConfigurationID(&empty); id != nil {
+		t.Errorf("an empty installation id must not resolve, got %q", *id)
+	}
+	if k := checkSourceKind(&empty); k != nil {
+		t.Errorf("an absent source kind must stay null, got %q", *k)
+	}
+}
+
+func TestDeploymentRecordDecodesChecksState(t *testing.T) {
+	const payload = `{"uid":"dpl_1","name":"web","readyState":"READY","checksState":"completed","checksConclusion":"failed"}`
+
+	var rec deploymentRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if rec.ChecksState == nil || *rec.ChecksState != "completed" {
+		t.Errorf("checksState = %v", rec.ChecksState)
+	}
+	// a deployment serving traffic with a failed conclusion was promoted past
+	// a check that reported a failure
+	if rec.ChecksConclusion == nil || *rec.ChecksConclusion != "failed" {
+		t.Errorf("checksConclusion = %v", rec.ChecksConclusion)
+	}
+
+	var absent deploymentRecord
+	if err := json.Unmarshal([]byte(`{"uid":"dpl_2","readyState":"READY"}`), &absent); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if absent.ChecksState != nil || absent.ChecksConclusion != nil {
+		t.Errorf("absent check fields must stay null, got %v/%v", absent.ChecksState, absent.ChecksConclusion)
+	}
+}
+
+// --- Edge Config read tokens ----------------------------------------------
+
+func TestDecodeEdgeConfigTokensAcceptsBothShapes(t *testing.T) {
+	const item = `{"id": "tok_1", "label": "ci", "createdAt": 1700000000000, "edgeConfigId": "ecfg_1"}`
+
+	for name, payload := range map[string]string{
+		"bare array": `[` + item + `]`,
+		"wrapped":    `{"tokens": [` + item + `]}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			got, err := decodeEdgeConfigTokens(json.RawMessage(payload))
+			if err != nil {
+				t.Fatalf("decode: %v", err)
+			}
+			if len(got) != 1 {
+				t.Fatalf("decoded %d tokens, want 1", len(got))
+			}
+			if got[0].ID != "tok_1" {
+				t.Errorf("id = %q", got[0].ID)
+			}
+			if got[0].Label == nil || *got[0].Label != "ci" {
+				t.Errorf("label = %v", got[0].Label)
+			}
+			if got[0].CreatedAt.Time() == nil {
+				t.Error("createdAt should decode; it is what a rotation audit reads")
+			}
+		})
+	}
+}
+
+func TestDecodeEdgeConfigTokensAbsent(t *testing.T) {
+	for _, raw := range []string{"", "null", "  null  "} {
+		got, err := decodeEdgeConfigTokens(json.RawMessage(raw))
+		if err != nil {
+			t.Fatalf("decode(%q): %v", raw, err)
+		}
+		if len(got) != 0 {
+			t.Errorf("decode(%q) = %v, want no tokens", raw, got)
+		}
+	}
+}
+
+// A read token is a standing credential for the store's contents. Neither the
+// token nor its masked prefix may be decoded: the mask still discloses the
+// leading characters of the secret.
+func TestEdgeConfigTokenRecordCarriesNoTokenValue(t *testing.T) {
+	assertNoJSONFields(t, reflect.TypeOf(edgeConfigTokenRecord{}), "token", "partialToken")
+
+	const payload = `[{"id":"tok_1","label":"ci","token":"zero-entropy-fake","partialToken":"zer********"}]`
+	got, err := decodeEdgeConfigTokens(json.RawMessage(payload))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if strings.Contains(fmt.Sprintf("%+v", got), "zero-entropy-fake") || strings.Contains(fmt.Sprintf("%+v", got), "zer***") {
+		t.Error("a token value present in the payload reached the decoded record")
+	}
+}
+
+// The mitigation is decoded from an already-decoded object, where every number
+// arrived as a float64. A large rate limit must survive that round trip as an
+// integer rather than being re-rendered in exponent form and rejected.
+func TestFirewallRuleMitigationLargeRateLimitRoundTrips(t *testing.T) {
+	var action any
+	if err := json.Unmarshal([]byte(`{"mitigate":{"action":"rate_limit","rateLimit":{"algo":"fixed_window","window":3600,"limit":1000000,"keys":["ip"]}}}`), &action); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	mit := firewallRuleMitigation(action)
+	if mit.RateLimit == nil {
+		t.Fatal("rateLimit should decode")
+	}
+	if mit.RateLimit.Limit == nil || *mit.RateLimit.Limit != 1000000 {
+		t.Errorf("rateLimit.limit = %v, want 1000000", mit.RateLimit.Limit)
+	}
+	if mit.RateLimit.Window == nil || *mit.RateLimit.Window != 3600 {
+		t.Errorf("rateLimit.window = %v, want 3600", mit.RateLimit.Window)
+	}
+	// the exceeded action is optional and must not be invented
+	if mit.RateLimit.Action != nil {
+		t.Errorf("rateLimit.action should stay null, got %q", *mit.RateLimit.Action)
 	}
 }

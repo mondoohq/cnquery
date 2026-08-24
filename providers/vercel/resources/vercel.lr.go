@@ -21,11 +21,13 @@ const (
 	ResourceVercelAccessToken                   string = "vercel.accessToken"
 	ResourceVercelTeam                          string = "vercel.team"
 	ResourceVercelTeamMember                    string = "vercel.team.member"
+	ResourceVercelTeamPendingInvite             string = "vercel.team.pendingInvite"
 	ResourceVercelTeamSharedEnvironmentVariable string = "vercel.team.sharedEnvironmentVariable"
 	ResourceVercelProject                       string = "vercel.project"
 	ResourceVercelProjectConnectConfiguration   string = "vercel.project.connectConfiguration"
 	ResourceVercelProjectMember                 string = "vercel.project.member"
 	ResourceVercelProjectEnvironmentVariable    string = "vercel.project.environmentVariable"
+	ResourceVercelProjectCheck                  string = "vercel.project.check"
 	ResourceVercelDeployment                    string = "vercel.deployment"
 	ResourceVercelAlias                         string = "vercel.alias"
 	ResourceVercelDomain                        string = "vercel.domain"
@@ -33,6 +35,7 @@ const (
 	ResourceVercelCertificate                   string = "vercel.certificate"
 	ResourceVercelProjectDomain                 string = "vercel.project.domain"
 	ResourceVercelEdgeConfig                    string = "vercel.edgeConfig"
+	ResourceVercelEdgeConfigToken               string = "vercel.edgeConfig.token"
 	ResourceVercelStore                         string = "vercel.store"
 	ResourceVercelLogDrain                      string = "vercel.logDrain"
 	ResourceVercelWebhook                       string = "vercel.webhook"
@@ -41,6 +44,8 @@ const (
 	ResourceVercelAccessGroupMember             string = "vercel.accessGroup.member"
 	ResourceVercelAccessGroupProject            string = "vercel.accessGroup.project"
 	ResourceVercelFirewall                      string = "vercel.firewall"
+	ResourceVercelFirewallManagedRuleset        string = "vercel.firewall.managedRuleset"
+	ResourceVercelFirewallCoreRule              string = "vercel.firewall.coreRule"
 	ResourceVercelFirewallBypassRule            string = "vercel.firewall.bypassRule"
 	ResourceVercelFirewallRule                  string = "vercel.firewall.rule"
 	ResourceVercelFirewallIpRule                string = "vercel.firewall.ipRule"
@@ -70,6 +75,10 @@ func init() {
 			// to override args, implement: initVercelTeamMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelTeamMember,
 		},
+		"vercel.team.pendingInvite": {
+			// to override args, implement: initVercelTeamPendingInvite(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelTeamPendingInvite,
+		},
 		"vercel.team.sharedEnvironmentVariable": {
 			// to override args, implement: initVercelTeamSharedEnvironmentVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelTeamSharedEnvironmentVariable,
@@ -89,6 +98,10 @@ func init() {
 		"vercel.project.environmentVariable": {
 			// to override args, implement: initVercelProjectEnvironmentVariable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelProjectEnvironmentVariable,
+		},
+		"vercel.project.check": {
+			// to override args, implement: initVercelProjectCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelProjectCheck,
 		},
 		"vercel.deployment": {
 			Init:   initVercelDeployment,
@@ -117,6 +130,10 @@ func init() {
 		"vercel.edgeConfig": {
 			// to override args, implement: initVercelEdgeConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelEdgeConfig,
+		},
+		"vercel.edgeConfig.token": {
+			// to override args, implement: initVercelEdgeConfigToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelEdgeConfigToken,
 		},
 		"vercel.store": {
 			// to override args, implement: initVercelStore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -149,6 +166,14 @@ func init() {
 		"vercel.firewall": {
 			// to override args, implement: initVercelFirewall(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createVercelFirewall,
+		},
+		"vercel.firewall.managedRuleset": {
+			// to override args, implement: initVercelFirewallManagedRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelFirewallManagedRuleset,
+		},
+		"vercel.firewall.coreRule": {
+			// to override args, implement: initVercelFirewallCoreRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createVercelFirewallCoreRule,
 		},
 		"vercel.firewall.bypassRule": {
 			// to override args, implement: initVercelFirewallBypassRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -443,6 +468,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.team.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeam).GetMembers()).ToDataRes(types.Array(types.Resource("vercel.team.member")))
 	},
+	"vercel.team.pendingInvites": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeam).GetPendingInvites()).ToDataRes(types.Array(types.Resource("vercel.team.pendingInvite")))
+	},
 	"vercel.team.projects": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeam).GetProjects()).ToDataRes(types.Array(types.Resource("vercel.project")))
 	},
@@ -502,6 +530,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.team.member.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeamMember).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.team.pendingInvite.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetId()).ToDataRes(types.String)
+	},
+	"vercel.team.pendingInvite.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetEmail()).ToDataRes(types.String)
+	},
+	"vercel.team.pendingInvite.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetRole()).ToDataRes(types.String)
+	},
+	"vercel.team.pendingInvite.teamRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetTeamRoles()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.team.pendingInvite.teamPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetTeamPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.team.pendingInvite.isDSyncUser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetIsDSyncUser()).ToDataRes(types.Bool)
+	},
+	"vercel.team.pendingInvite.expired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetExpired()).ToDataRes(types.Bool)
+	},
+	"vercel.team.pendingInvite.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.team.pendingInvite.projects": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelTeamPendingInvite).GetProjects()).ToDataRes(types.Array(types.Resource("vercel.project")))
 	},
 	"vercel.team.sharedEnvironmentVariable.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelTeamSharedEnvironmentVariable).GetId()).ToDataRes(types.String)
@@ -770,6 +825,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.firewall": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetFirewall()).ToDataRes(types.Resource("vercel.firewall"))
 	},
+	"vercel.project.checks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProject).GetChecks()).ToDataRes(types.Array(types.Resource("vercel.project.check")))
+	},
 	"vercel.project.stores": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProject).GetStores()).ToDataRes(types.Array(types.Resource("vercel.store")))
 	},
@@ -827,11 +885,71 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.project.environmentVariable.gitBranch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectEnvironmentVariable).GetGitBranch()).ToDataRes(types.String)
 	},
+	"vercel.project.environmentVariable.decrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectEnvironmentVariable).GetDecrypted()).ToDataRes(types.Bool)
+	},
+	"vercel.project.environmentVariable.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectEnvironmentVariable).GetVisibility()).ToDataRes(types.String)
+	},
+	"vercel.project.environmentVariable.system": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectEnvironmentVariable).GetSystem()).ToDataRes(types.Bool)
+	},
+	"vercel.project.environmentVariable.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectEnvironmentVariable).GetComment()).ToDataRes(types.String)
+	},
+	"vercel.project.environmentVariable.customEnvironmentIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectEnvironmentVariable).GetCustomEnvironmentIds()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.project.environmentVariable.contentHint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectEnvironmentVariable).GetContentHint()).ToDataRes(types.Dict)
+	},
 	"vercel.project.environmentVariable.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectEnvironmentVariable).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"vercel.project.environmentVariable.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelProjectEnvironmentVariable).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.project.check.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetId()).ToDataRes(types.String)
+	},
+	"vercel.project.check.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetName()).ToDataRes(types.String)
+	},
+	"vercel.project.check.blocks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetBlocks()).ToDataRes(types.String)
+	},
+	"vercel.project.check.requires": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetRequires()).ToDataRes(types.String)
+	},
+	"vercel.project.check.targets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetTargets()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.project.check.timeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetTimeout()).ToDataRes(types.Int)
+	},
+	"vercel.project.check.sourceKind": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetSourceKind()).ToDataRes(types.String)
+	},
+	"vercel.project.check.sourceProvider": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetSourceProvider()).ToDataRes(types.String)
+	},
+	"vercel.project.check.externalCheckName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetExternalCheckName()).ToDataRes(types.String)
+	},
+	"vercel.project.check.integrationConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetIntegrationConfiguration()).ToDataRes(types.Resource("vercel.integrationConfiguration"))
+	},
+	"vercel.project.check.isRerequestable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetIsRerequestable()).ToDataRes(types.Bool)
+	},
+	"vercel.project.check.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.project.check.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.project.check.deletedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelProjectCheck).GetDeletedAt()).ToDataRes(types.Time)
 	},
 	"vercel.deployment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelDeployment).GetId()).ToDataRes(types.String)
@@ -865,6 +983,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.deployment.inspectorUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelDeployment).GetInspectorUrl()).ToDataRes(types.String)
+	},
+	"vercel.deployment.checksState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDeployment).GetChecksState()).ToDataRes(types.String)
+	},
+	"vercel.deployment.checksConclusion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelDeployment).GetChecksConclusion()).ToDataRes(types.String)
 	},
 	"vercel.deployment.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelDeployment).GetCreatedAt()).ToDataRes(types.Time)
@@ -1027,6 +1151,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.edgeConfig.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelEdgeConfig).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.edgeConfig.tokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelEdgeConfig).GetTokens()).ToDataRes(types.Array(types.Resource("vercel.edgeConfig.token")))
+	},
+	"vercel.edgeConfig.token.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelEdgeConfigToken).GetId()).ToDataRes(types.String)
+	},
+	"vercel.edgeConfig.token.label": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelEdgeConfigToken).GetLabel()).ToDataRes(types.String)
+	},
+	"vercel.edgeConfig.token.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelEdgeConfigToken).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"vercel.store.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelStore).GetId()).ToDataRes(types.String)
@@ -1214,6 +1350,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"vercel.firewall.coreRuleSet": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelFirewall).GetCoreRuleSet()).ToDataRes(types.Dict)
 	},
+	"vercel.firewall.managedRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewall).GetManagedRules()).ToDataRes(types.Array(types.Resource("vercel.firewall.managedRuleset")))
+	},
+	"vercel.firewall.coreRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewall).GetCoreRules()).ToDataRes(types.Array(types.Resource("vercel.firewall.coreRule")))
+	},
 	"vercel.firewall.botIdEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelFirewall).GetBotIdEnabled()).ToDataRes(types.Bool)
 	},
@@ -1237,6 +1379,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.firewall.attackAnomalies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelFirewall).GetAttackAnomalies()).ToDataRes(types.Array(types.Dict))
+	},
+	"vercel.firewall.managedRuleset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallManagedRuleset).GetName()).ToDataRes(types.String)
+	},
+	"vercel.firewall.managedRuleset.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallManagedRuleset).GetActive()).ToDataRes(types.Bool)
+	},
+	"vercel.firewall.managedRuleset.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallManagedRuleset).GetAction()).ToDataRes(types.String)
+	},
+	"vercel.firewall.managedRuleset.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallManagedRuleset).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"vercel.firewall.managedRuleset.updatedByUserId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallManagedRuleset).GetUpdatedByUserId()).ToDataRes(types.String)
+	},
+	"vercel.firewall.managedRuleset.updatedByUsername": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallManagedRuleset).GetUpdatedByUsername()).ToDataRes(types.String)
+	},
+	"vercel.firewall.coreRule.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallCoreRule).GetName()).ToDataRes(types.String)
+	},
+	"vercel.firewall.coreRule.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallCoreRule).GetActive()).ToDataRes(types.Bool)
+	},
+	"vercel.firewall.coreRule.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallCoreRule).GetAction()).ToDataRes(types.String)
 	},
 	"vercel.firewall.bypassRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelFirewallBypassRule).GetId()).ToDataRes(types.String)
@@ -1285,6 +1454,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"vercel.firewall.rule.conditionGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelFirewallRule).GetConditionGroup()).ToDataRes(types.Array(types.Dict))
+	},
+	"vercel.firewall.rule.bypassSystem": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetBypassSystem()).ToDataRes(types.Bool)
+	},
+	"vercel.firewall.rule.actionDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetActionDuration()).ToDataRes(types.String)
+	},
+	"vercel.firewall.rule.redirectLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetRedirectLocation()).ToDataRes(types.String)
+	},
+	"vercel.firewall.rule.redirectPermanent": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetRedirectPermanent()).ToDataRes(types.Bool)
+	},
+	"vercel.firewall.rule.rateLimitAlgo": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetRateLimitAlgo()).ToDataRes(types.String)
+	},
+	"vercel.firewall.rule.rateLimitWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetRateLimitWindow()).ToDataRes(types.Int)
+	},
+	"vercel.firewall.rule.rateLimitLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetRateLimitLimit()).ToDataRes(types.Int)
+	},
+	"vercel.firewall.rule.rateLimitKeys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetRateLimitKeys()).ToDataRes(types.Array(types.String))
+	},
+	"vercel.firewall.rule.rateLimitAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetRateLimitAction()).ToDataRes(types.String)
+	},
+	"vercel.firewall.rule.logHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlVercelFirewallRule).GetLogHeaders()).ToDataRes(types.Array(types.String))
 	},
 	"vercel.firewall.ipRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlVercelFirewallIpRule).GetId()).ToDataRes(types.String)
@@ -1609,6 +1808,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelTeam).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"vercel.team.pendingInvites": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeam).PendingInvites, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vercel.team.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelTeam).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1691,6 +1894,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.team.member.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelTeamMember).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.team.pendingInvite.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.teamRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).TeamRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.teamPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).TeamPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.isDSyncUser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).IsDSyncUser, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.expired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).Expired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.team.pendingInvite.projects": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelTeamPendingInvite).Projects, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.team.sharedEnvironmentVariable.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2057,6 +2300,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelProject).Firewall, ok = plugin.RawToTValue[*mqlVercelFirewall](v.Value, v.Error)
 		return
 	},
+	"vercel.project.checks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProject).Checks, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vercel.project.stores": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProject).Stores, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -2145,12 +2392,96 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelProjectEnvironmentVariable).GitBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"vercel.project.environmentVariable.decrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectEnvironmentVariable).Decrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.project.environmentVariable.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectEnvironmentVariable).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.environmentVariable.system": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectEnvironmentVariable).System, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.project.environmentVariable.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectEnvironmentVariable).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.environmentVariable.customEnvironmentIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectEnvironmentVariable).CustomEnvironmentIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.project.environmentVariable.contentHint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectEnvironmentVariable).ContentHint, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
 	"vercel.project.environmentVariable.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProjectEnvironmentVariable).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"vercel.project.environmentVariable.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelProjectEnvironmentVariable).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.project.check.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.blocks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).Blocks, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.requires": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).Requires, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.targets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).Targets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.timeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).Timeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.sourceKind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).SourceKind, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.sourceProvider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).SourceProvider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.externalCheckName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).ExternalCheckName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.integrationConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).IntegrationConfiguration, ok = plugin.RawToTValue[*mqlVercelIntegrationConfiguration](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.isRerequestable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).IsRerequestable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.project.check.deletedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelProjectCheck).DeletedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"vercel.deployment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2199,6 +2530,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.deployment.inspectorUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelDeployment).InspectorUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.deployment.checksState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDeployment).ChecksState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.deployment.checksConclusion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelDeployment).ChecksConclusion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vercel.deployment.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2439,6 +2778,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.edgeConfig.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelEdgeConfig).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.edgeConfig.tokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelEdgeConfig).Tokens, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.edgeConfig.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelEdgeConfigToken).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.edgeConfig.token.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelEdgeConfigToken).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.edgeConfig.token.label": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelEdgeConfigToken).Label, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.edgeConfig.token.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelEdgeConfigToken).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"vercel.store.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2721,6 +3080,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlVercelFirewall).CoreRuleSet, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"vercel.firewall.managedRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewall).ManagedRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.coreRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewall).CoreRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"vercel.firewall.botIdEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelFirewall).BotIdEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -2751,6 +3118,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.firewall.attackAnomalies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelFirewall).AttackAnomalies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.managedRuleset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallManagedRuleset).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.firewall.managedRuleset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallManagedRuleset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.managedRuleset.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallManagedRuleset).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.managedRuleset.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallManagedRuleset).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.managedRuleset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallManagedRuleset).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.managedRuleset.updatedByUserId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallManagedRuleset).UpdatedByUserId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.managedRuleset.updatedByUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallManagedRuleset).UpdatedByUsername, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.coreRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallCoreRule).__id, ok = v.Value.(string)
+		return
+	},
+	"vercel.firewall.coreRule.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallCoreRule).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.coreRule.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallCoreRule).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.coreRule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallCoreRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"vercel.firewall.bypassRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2823,6 +3234,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"vercel.firewall.rule.conditionGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlVercelFirewallRule).ConditionGroup, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.bypassSystem": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).BypassSystem, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.actionDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).ActionDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.redirectLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).RedirectLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.redirectPermanent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).RedirectPermanent, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.rateLimitAlgo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).RateLimitAlgo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.rateLimitWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).RateLimitWindow, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.rateLimitLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).RateLimitLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.rateLimitKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).RateLimitKeys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.rateLimitAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).RateLimitAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"vercel.firewall.rule.logHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlVercelFirewallRule).LogHeaders, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"vercel.firewall.ipRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3196,6 +3647,7 @@ type mqlVercelTeam struct {
 	IntegrationTokensInvalidatedAt          plugin.TValue[*time.Time]
 	SharedEnvironmentVariables              plugin.TValue[[]any]
 	Members                                 plugin.TValue[[]any]
+	PendingInvites                          plugin.TValue[[]any]
 	Projects                                plugin.TValue[[]any]
 	Domains                                 plugin.TValue[[]any]
 	EdgeConfigs                             plugin.TValue[[]any]
@@ -3492,6 +3944,22 @@ func (c *mqlVercelTeam) GetMembers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlVercelTeam) GetPendingInvites() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PendingInvites, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.team", c.__id, "pendingInvites")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.pendingInvites()
+	})
+}
+
 func (c *mqlVercelTeam) GetProjects() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -3730,6 +4198,107 @@ func (c *mqlVercelTeamMember) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
+// mqlVercelTeamPendingInvite for the vercel.team.pendingInvite resource
+type mqlVercelTeamPendingInvite struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVercelTeamPendingInviteInternal
+	Id              plugin.TValue[string]
+	Email           plugin.TValue[string]
+	Role            plugin.TValue[string]
+	TeamRoles       plugin.TValue[[]any]
+	TeamPermissions plugin.TValue[[]any]
+	IsDSyncUser     plugin.TValue[bool]
+	Expired         plugin.TValue[bool]
+	CreatedAt       plugin.TValue[*time.Time]
+	Projects        plugin.TValue[[]any]
+}
+
+// createVercelTeamPendingInvite creates a new instance of this resource
+func createVercelTeamPendingInvite(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelTeamPendingInvite{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.team.pendingInvite", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelTeamPendingInvite) MqlName() string {
+	return "vercel.team.pendingInvite"
+}
+
+func (c *mqlVercelTeamPendingInvite) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelTeamPendingInvite) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVercelTeamPendingInvite) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlVercelTeamPendingInvite) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlVercelTeamPendingInvite) GetTeamRoles() *plugin.TValue[[]any] {
+	return &c.TeamRoles
+}
+
+func (c *mqlVercelTeamPendingInvite) GetTeamPermissions() *plugin.TValue[[]any] {
+	return &c.TeamPermissions
+}
+
+func (c *mqlVercelTeamPendingInvite) GetIsDSyncUser() *plugin.TValue[bool] {
+	return &c.IsDSyncUser
+}
+
+func (c *mqlVercelTeamPendingInvite) GetExpired() *plugin.TValue[bool] {
+	return &c.Expired
+}
+
+func (c *mqlVercelTeamPendingInvite) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlVercelTeamPendingInvite) GetProjects() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Projects, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.team.pendingInvite", c.__id, "projects")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.projects()
+	})
+}
+
 // mqlVercelTeamSharedEnvironmentVariable for the vercel.team.sharedEnvironmentVariable resource
 type mqlVercelTeamSharedEnvironmentVariable struct {
 	MqlRuntime *plugin.Runtime
@@ -3936,6 +4505,7 @@ type mqlVercelProject struct {
 	Aliases                              plugin.TValue[[]any]
 	Domains                              plugin.TValue[[]any]
 	Firewall                             plugin.TValue[*mqlVercelFirewall]
+	Checks                               plugin.TValue[[]any]
 	Stores                               plugin.TValue[[]any]
 	Members                              plugin.TValue[[]any]
 }
@@ -4349,6 +4919,22 @@ func (c *mqlVercelProject) GetFirewall() *plugin.TValue[*mqlVercelFirewall] {
 	})
 }
 
+func (c *mqlVercelProject) GetChecks() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Checks, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.project", c.__id, "checks")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.checks()
+	})
+}
+
 func (c *mqlVercelProject) GetStores() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Stores, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4524,13 +5110,19 @@ type mqlVercelProjectEnvironmentVariable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlVercelProjectEnvironmentVariableInternal it will be used here
-	Id        plugin.TValue[string]
-	Key       plugin.TValue[string]
-	Type      plugin.TValue[string]
-	Target    plugin.TValue[[]any]
-	GitBranch plugin.TValue[string]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	Id                   plugin.TValue[string]
+	Key                  plugin.TValue[string]
+	Type                 plugin.TValue[string]
+	Target               plugin.TValue[[]any]
+	GitBranch            plugin.TValue[string]
+	Decrypted            plugin.TValue[bool]
+	Visibility           plugin.TValue[string]
+	System               plugin.TValue[bool]
+	Comment              plugin.TValue[string]
+	CustomEnvironmentIds plugin.TValue[[]any]
+	ContentHint          plugin.TValue[any]
+	CreatedAt            plugin.TValue[*time.Time]
+	UpdatedAt            plugin.TValue[*time.Time]
 }
 
 // createVercelProjectEnvironmentVariable creates a new instance of this resource
@@ -4590,6 +5182,30 @@ func (c *mqlVercelProjectEnvironmentVariable) GetGitBranch() *plugin.TValue[stri
 	return &c.GitBranch
 }
 
+func (c *mqlVercelProjectEnvironmentVariable) GetDecrypted() *plugin.TValue[bool] {
+	return &c.Decrypted
+}
+
+func (c *mqlVercelProjectEnvironmentVariable) GetVisibility() *plugin.TValue[string] {
+	return &c.Visibility
+}
+
+func (c *mqlVercelProjectEnvironmentVariable) GetSystem() *plugin.TValue[bool] {
+	return &c.System
+}
+
+func (c *mqlVercelProjectEnvironmentVariable) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlVercelProjectEnvironmentVariable) GetCustomEnvironmentIds() *plugin.TValue[[]any] {
+	return &c.CustomEnvironmentIds
+}
+
+func (c *mqlVercelProjectEnvironmentVariable) GetContentHint() *plugin.TValue[any] {
+	return &c.ContentHint
+}
+
 func (c *mqlVercelProjectEnvironmentVariable) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
@@ -4598,24 +5214,147 @@ func (c *mqlVercelProjectEnvironmentVariable) GetUpdatedAt() *plugin.TValue[*tim
 	return &c.UpdatedAt
 }
 
+// mqlVercelProjectCheck for the vercel.project.check resource
+type mqlVercelProjectCheck struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlVercelProjectCheckInternal
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Blocks                   plugin.TValue[string]
+	Requires                 plugin.TValue[string]
+	Targets                  plugin.TValue[[]any]
+	Timeout                  plugin.TValue[int64]
+	SourceKind               plugin.TValue[string]
+	SourceProvider           plugin.TValue[string]
+	ExternalCheckName        plugin.TValue[string]
+	IntegrationConfiguration plugin.TValue[*mqlVercelIntegrationConfiguration]
+	IsRerequestable          plugin.TValue[bool]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
+	DeletedAt                plugin.TValue[*time.Time]
+}
+
+// createVercelProjectCheck creates a new instance of this resource
+func createVercelProjectCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelProjectCheck{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.project.check", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelProjectCheck) MqlName() string {
+	return "vercel.project.check"
+}
+
+func (c *mqlVercelProjectCheck) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelProjectCheck) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVercelProjectCheck) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVercelProjectCheck) GetBlocks() *plugin.TValue[string] {
+	return &c.Blocks
+}
+
+func (c *mqlVercelProjectCheck) GetRequires() *plugin.TValue[string] {
+	return &c.Requires
+}
+
+func (c *mqlVercelProjectCheck) GetTargets() *plugin.TValue[[]any] {
+	return &c.Targets
+}
+
+func (c *mqlVercelProjectCheck) GetTimeout() *plugin.TValue[int64] {
+	return &c.Timeout
+}
+
+func (c *mqlVercelProjectCheck) GetSourceKind() *plugin.TValue[string] {
+	return &c.SourceKind
+}
+
+func (c *mqlVercelProjectCheck) GetSourceProvider() *plugin.TValue[string] {
+	return &c.SourceProvider
+}
+
+func (c *mqlVercelProjectCheck) GetExternalCheckName() *plugin.TValue[string] {
+	return &c.ExternalCheckName
+}
+
+func (c *mqlVercelProjectCheck) GetIntegrationConfiguration() *plugin.TValue[*mqlVercelIntegrationConfiguration] {
+	return plugin.GetOrCompute[*mqlVercelIntegrationConfiguration](&c.IntegrationConfiguration, func() (*mqlVercelIntegrationConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.project.check", c.__id, "integrationConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlVercelIntegrationConfiguration), nil
+			}
+		}
+
+		return c.integrationConfiguration()
+	})
+}
+
+func (c *mqlVercelProjectCheck) GetIsRerequestable() *plugin.TValue[bool] {
+	return &c.IsRerequestable
+}
+
+func (c *mqlVercelProjectCheck) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlVercelProjectCheck) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlVercelProjectCheck) GetDeletedAt() *plugin.TValue[*time.Time] {
+	return &c.DeletedAt
+}
+
 // mqlVercelDeployment for the vercel.deployment resource
 type mqlVercelDeployment struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlVercelDeploymentInternal
-	Id              plugin.TValue[string]
-	Name            plugin.TValue[string]
-	Url             plugin.TValue[string]
-	State           plugin.TValue[string]
-	Target          plugin.TValue[string]
-	Source          plugin.TValue[string]
-	DeploymentType  plugin.TValue[string]
-	CreatorUid      plugin.TValue[string]
-	CreatorUsername plugin.TValue[string]
-	CreatorEmail    plugin.TValue[string]
-	InspectorUrl    plugin.TValue[string]
-	CreatedAt       plugin.TValue[*time.Time]
-	Project         plugin.TValue[*mqlVercelProject]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Url              plugin.TValue[string]
+	State            plugin.TValue[string]
+	Target           plugin.TValue[string]
+	Source           plugin.TValue[string]
+	DeploymentType   plugin.TValue[string]
+	CreatorUid       plugin.TValue[string]
+	CreatorUsername  plugin.TValue[string]
+	CreatorEmail     plugin.TValue[string]
+	InspectorUrl     plugin.TValue[string]
+	ChecksState      plugin.TValue[string]
+	ChecksConclusion plugin.TValue[string]
+	CreatedAt        plugin.TValue[*time.Time]
+	Project          plugin.TValue[*mqlVercelProject]
 }
 
 // createVercelDeployment creates a new instance of this resource
@@ -4697,6 +5436,14 @@ func (c *mqlVercelDeployment) GetCreatorEmail() *plugin.TValue[string] {
 
 func (c *mqlVercelDeployment) GetInspectorUrl() *plugin.TValue[string] {
 	return &c.InspectorUrl
+}
+
+func (c *mqlVercelDeployment) GetChecksState() *plugin.TValue[string] {
+	return &c.ChecksState
+}
+
+func (c *mqlVercelDeployment) GetChecksConclusion() *plugin.TValue[string] {
+	return &c.ChecksConclusion
 }
 
 func (c *mqlVercelDeployment) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -5216,13 +5963,14 @@ func (c *mqlVercelProjectDomain) GetUpdatedAt() *plugin.TValue[*time.Time] {
 type mqlVercelEdgeConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlVercelEdgeConfigInternal it will be used here
+	mqlVercelEdgeConfigInternal
 	Id          plugin.TValue[string]
 	Slug        plugin.TValue[string]
 	ItemCount   plugin.TValue[int64]
 	SizeInBytes plugin.TValue[int64]
 	CreatedAt   plugin.TValue[*time.Time]
 	UpdatedAt   plugin.TValue[*time.Time]
+	Tokens      plugin.TValue[[]any]
 }
 
 // createVercelEdgeConfig creates a new instance of this resource
@@ -5284,6 +6032,76 @@ func (c *mqlVercelEdgeConfig) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlVercelEdgeConfig) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
+}
+
+func (c *mqlVercelEdgeConfig) GetTokens() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Tokens, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.edgeConfig", c.__id, "tokens")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.tokens()
+	})
+}
+
+// mqlVercelEdgeConfigToken for the vercel.edgeConfig.token resource
+type mqlVercelEdgeConfigToken struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVercelEdgeConfigTokenInternal it will be used here
+	Id        plugin.TValue[string]
+	Label     plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+}
+
+// createVercelEdgeConfigToken creates a new instance of this resource
+func createVercelEdgeConfigToken(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelEdgeConfigToken{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.edgeConfig.token", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelEdgeConfigToken) MqlName() string {
+	return "vercel.edgeConfig.token"
+}
+
+func (c *mqlVercelEdgeConfigToken) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelEdgeConfigToken) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlVercelEdgeConfigToken) GetLabel() *plugin.TValue[string] {
+	return &c.Label
+}
+
+func (c *mqlVercelEdgeConfigToken) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
 }
 
 // mqlVercelStore for the vercel.store resource
@@ -5959,6 +6777,8 @@ type mqlVercelFirewall struct {
 	Enabled         plugin.TValue[bool]
 	ManagedRulesets plugin.TValue[any]
 	CoreRuleSet     plugin.TValue[any]
+	ManagedRules    plugin.TValue[[]any]
+	CoreRules       plugin.TValue[[]any]
 	BotIdEnabled    plugin.TValue[bool]
 	LogHeaders      plugin.TValue[[]any]
 	ConfigVersion   plugin.TValue[int64]
@@ -6011,6 +6831,38 @@ func (c *mqlVercelFirewall) GetManagedRulesets() *plugin.TValue[any] {
 
 func (c *mqlVercelFirewall) GetCoreRuleSet() *plugin.TValue[any] {
 	return &c.CoreRuleSet
+}
+
+func (c *mqlVercelFirewall) GetManagedRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.firewall", c.__id, "managedRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedRules()
+	})
+}
+
+func (c *mqlVercelFirewall) GetCoreRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CoreRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("vercel.firewall", c.__id, "coreRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.coreRules()
+	})
 }
 
 func (c *mqlVercelFirewall) GetBotIdEnabled() *plugin.TValue[bool] {
@@ -6081,6 +6933,129 @@ func (c *mqlVercelFirewall) GetAttackAnomalies() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.AttackAnomalies, func() ([]any, error) {
 		return c.attackAnomalies()
 	})
+}
+
+// mqlVercelFirewallManagedRuleset for the vercel.firewall.managedRuleset resource
+type mqlVercelFirewallManagedRuleset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVercelFirewallManagedRulesetInternal it will be used here
+	Name              plugin.TValue[string]
+	Active            plugin.TValue[bool]
+	Action            plugin.TValue[string]
+	UpdatedAt         plugin.TValue[*time.Time]
+	UpdatedByUserId   plugin.TValue[string]
+	UpdatedByUsername plugin.TValue[string]
+}
+
+// createVercelFirewallManagedRuleset creates a new instance of this resource
+func createVercelFirewallManagedRuleset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelFirewallManagedRuleset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.firewall.managedRuleset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelFirewallManagedRuleset) MqlName() string {
+	return "vercel.firewall.managedRuleset"
+}
+
+func (c *mqlVercelFirewallManagedRuleset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelFirewallManagedRuleset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVercelFirewallManagedRuleset) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlVercelFirewallManagedRuleset) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlVercelFirewallManagedRuleset) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlVercelFirewallManagedRuleset) GetUpdatedByUserId() *plugin.TValue[string] {
+	return &c.UpdatedByUserId
+}
+
+func (c *mqlVercelFirewallManagedRuleset) GetUpdatedByUsername() *plugin.TValue[string] {
+	return &c.UpdatedByUsername
+}
+
+// mqlVercelFirewallCoreRule for the vercel.firewall.coreRule resource
+type mqlVercelFirewallCoreRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlVercelFirewallCoreRuleInternal it will be used here
+	Name   plugin.TValue[string]
+	Active plugin.TValue[bool]
+	Action plugin.TValue[string]
+}
+
+// createVercelFirewallCoreRule creates a new instance of this resource
+func createVercelFirewallCoreRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlVercelFirewallCoreRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("vercel.firewall.coreRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlVercelFirewallCoreRule) MqlName() string {
+	return "vercel.firewall.coreRule"
+}
+
+func (c *mqlVercelFirewallCoreRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlVercelFirewallCoreRule) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlVercelFirewallCoreRule) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlVercelFirewallCoreRule) GetAction() *plugin.TValue[string] {
+	return &c.Action
 }
 
 // mqlVercelFirewallBypassRule for the vercel.firewall.bypassRule resource
@@ -6182,12 +7157,22 @@ type mqlVercelFirewallRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlVercelFirewallRuleInternal it will be used here
-	Id             plugin.TValue[string]
-	Name           plugin.TValue[string]
-	Description    plugin.TValue[string]
-	Active         plugin.TValue[bool]
-	Action         plugin.TValue[string]
-	ConditionGroup plugin.TValue[[]any]
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	Active            plugin.TValue[bool]
+	Action            plugin.TValue[string]
+	ConditionGroup    plugin.TValue[[]any]
+	BypassSystem      plugin.TValue[bool]
+	ActionDuration    plugin.TValue[string]
+	RedirectLocation  plugin.TValue[string]
+	RedirectPermanent plugin.TValue[bool]
+	RateLimitAlgo     plugin.TValue[string]
+	RateLimitWindow   plugin.TValue[int64]
+	RateLimitLimit    plugin.TValue[int64]
+	RateLimitKeys     plugin.TValue[[]any]
+	RateLimitAction   plugin.TValue[string]
+	LogHeaders        plugin.TValue[[]any]
 }
 
 // createVercelFirewallRule creates a new instance of this resource
@@ -6249,6 +7234,46 @@ func (c *mqlVercelFirewallRule) GetAction() *plugin.TValue[string] {
 
 func (c *mqlVercelFirewallRule) GetConditionGroup() *plugin.TValue[[]any] {
 	return &c.ConditionGroup
+}
+
+func (c *mqlVercelFirewallRule) GetBypassSystem() *plugin.TValue[bool] {
+	return &c.BypassSystem
+}
+
+func (c *mqlVercelFirewallRule) GetActionDuration() *plugin.TValue[string] {
+	return &c.ActionDuration
+}
+
+func (c *mqlVercelFirewallRule) GetRedirectLocation() *plugin.TValue[string] {
+	return &c.RedirectLocation
+}
+
+func (c *mqlVercelFirewallRule) GetRedirectPermanent() *plugin.TValue[bool] {
+	return &c.RedirectPermanent
+}
+
+func (c *mqlVercelFirewallRule) GetRateLimitAlgo() *plugin.TValue[string] {
+	return &c.RateLimitAlgo
+}
+
+func (c *mqlVercelFirewallRule) GetRateLimitWindow() *plugin.TValue[int64] {
+	return &c.RateLimitWindow
+}
+
+func (c *mqlVercelFirewallRule) GetRateLimitLimit() *plugin.TValue[int64] {
+	return &c.RateLimitLimit
+}
+
+func (c *mqlVercelFirewallRule) GetRateLimitKeys() *plugin.TValue[[]any] {
+	return &c.RateLimitKeys
+}
+
+func (c *mqlVercelFirewallRule) GetRateLimitAction() *plugin.TValue[string] {
+	return &c.RateLimitAction
+}
+
+func (c *mqlVercelFirewallRule) GetLogHeaders() *plugin.TValue[[]any] {
+	return &c.LogHeaders
 }
 
 // mqlVercelFirewallIpRule for the vercel.firewall.ipRule resource
