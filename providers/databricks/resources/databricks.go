@@ -102,3 +102,36 @@ func rfc3339Time(value string) *time.Time {
 	}
 	return &t
 }
+
+// nullableBool reports a boolean the API may not have answered at all. A nil
+// value marks the field null rather than returning false. MQL evaluates
+// `null && null` as true, so a fabricated false on a security toggle lets every
+// assertion written over it pass while nothing was actually read.
+func nullableBool(v *bool, state *plugin.State) (bool, error) {
+	if v == nil {
+		*state = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return *v, nil
+}
+
+// nullableString reports a string the API may not have answered at all,
+// marking the field null rather than returning an empty string.
+func nullableString(v *string, state *plugin.State) (string, error) {
+	if v == nil {
+		*state = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+	return *v, nil
+}
+
+// nullableList reports a list the API may not have answered at all. A nil
+// slice marks the field null; an allocated but empty slice stays empty,
+// because "no members" and "not read" are different answers.
+func nullableList(v []any, state *plugin.State) ([]any, error) {
+	if v == nil {
+		*state = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return v, nil
+}

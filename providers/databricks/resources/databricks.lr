@@ -9,8 +9,9 @@ option go_package = "go.mondoo.com/mql/providers/databricks/resources"
 // Entry point to a Databricks account and its workspaces. Connecting to the
 // account console exposes account-level identity and networking through the
 // users, groups, servicePrincipals, metastores, networks,
-// privateAccessSettings, and customerManagedKeys fields, and enumerates every
-// workspace through the workspaces field. Connecting to a single workspace
+// privateAccessSettings, and customerManagedKeys fields, the account console
+// access controls through the accountSettings and accountRuleSet fields, and
+// enumerates every workspace through the workspaces field. Connecting to a single workspace
 // exposes that workspace's security surface through the ipAccessLists,
 // workspaceSettings, tokens, secretScopes, clusters, clusterPolicies,
 // warehouses, catalogs, storageCredentials, credentials, connections,
@@ -104,6 +105,17 @@ databricks {
   // tokensEnabled field on workspaceSettings, which says whether tokens are
   // permitted at all: this list says who may create one once they are.
   tokenPermissions() []databricks.permission
+  // Account console access controls and account-wide security defaults
+  //
+  // Read from the account console, so this requires an account connection. The
+  // account console allowlist and the account-wide defaults it reports are not
+  // reachable from a single workspace.
+  accountSettings() databricks.accountConf
+  // Access rules attached to the account itself
+  //
+  // The grant rules on the account resource, naming the principals that hold
+  // account-level roles such as roles/account.admin.
+  accountRuleSet() databricks.ruleSet
 }
 
 // Databricks workspace
@@ -203,6 +215,12 @@ databricks.group @defaults("displayName") {
   entitlements []string
   // Cloud roles granted to the group
   roles []string
+  // Access rules deciding who may manage this group
+  //
+  // The grant rules attached to the group. A principal holding
+  // roles/group.manager here can change the group's membership, and with it
+  // everything the group has been granted.
+  ruleSet() databricks.ruleSet
 }
 
 // Databricks account service principal
@@ -233,6 +251,12 @@ databricks.servicePrincipal @defaults("displayName applicationId active") {
   secrets() []databricks.servicePrincipal.secret
   // OIDC federation policies letting external workloads authenticate as this service principal
   federationPolicies() []databricks.federationPolicy
+  // Access rules deciding who may act as this service principal
+  //
+  // The grant rules attached to the service principal. A principal holding
+  // roles/servicePrincipal.user here can authenticate as this service
+  // principal, so this is what answers who can reach everything it can reach.
+  ruleSet() databricks.ruleSet
 }
 
 // OAuth secret of a service principal
@@ -365,7 +389,9 @@ databricks.ipAccessList @defaults("label listType enabled") {
 // Security-relevant workspace configuration read from the workspace conf, such
 // as whether personal access tokens are permitted, the maximum token lifetime,
 // whether IP access lists are enforced, and whether legacy global init scripts
-// are enabled. A field is null when the corresponding conf key is unset.
+// are enabled. A field is null when the corresponding conf key is unset, and
+// the fields read from the settings API are null when the setting could not be
+// read, which is distinct from a setting that is off.
 databricks.workspaceConf @defaults("tokensEnabled ipAccessListsEnabled") {
   // Whether personal access tokens may be created in the workspace
   tokensEnabled bool
@@ -400,6 +426,32 @@ databricks.workspaceConf @defaults("tokensEnabled ipAccessListsEnabled") {
   automaticClusterUpdateEnabled() bool
   // Whether legacy access to the workspace is disabled
   disableLegacyAccess() bool
+  // Whether users may export notebooks and files from the workspace UI
+  notebookExportEnabled() bool
+  // Whether users may copy tabular data to the clipboard from the workspace UI
+  notebookTableClipboardEnabled() bool
+  // Whether users may download notebook results
+  notebookResultsDownloadEnabled() bool
+  // Whether users may download results from the SQL editor and AI/BI dashboards
+  sqlResultsDownloadEnabled() bool
+  // Whether dashboards may be delivered to email subscribers
+  //
+  // An email subscription sends dashboard results to an address that need not
+  // belong to a workspace user, which carries data out of the workspace
+  // without a further access check.
+  dashboardEmailSubscriptionsEnabled() bool
+  // Which domains AI/BI dashboards may be embedded in
+  //
+  // One of ALLOW_ALL_DOMAINS, ALLOW_APPROVED_DOMAINS, or DENY_ALL_DOMAINS.
+  // Under ALLOW_ALL_DOMAINS a dashboard can be framed by any site, so a link
+  // that leaks renders on a page its author does not control. Read together
+  // with dashboardEmbeddingApprovedDomains.
+  dashboardEmbeddingAccessPolicy() string
+  // Domains approved to embed AI/BI dashboards
+  //
+  // Consulted only when dashboardEmbeddingAccessPolicy is
+  // ALLOW_APPROVED_DOMAINS.
+  dashboardEmbeddingApprovedDomains() []string
 }
 
 // Databricks personal access token
@@ -450,6 +502,29 @@ databricks.secretScope @defaults("name backendType") {
   backendType string
   // Access-control list mapping each principal to its permission (MANAGE, READ, or WRITE)
   acls() map[string]string
+  // Secrets held in the scope
+  //
+  // The key and last-write time of every secret in the scope. The listing
+  // never returns a secret value. Read together with acls, which says who
+  // holds READ, WRITE, or MANAGE over everything listed here. Null when the
+  // scope contents could not be read, empty when the scope holds no secrets.
+  secrets() []databricks.secretScope.secret
+}
+
+// Secret held in a Databricks secret scope
+//
+// A single secret in a workspace secret scope, keyed by the scope it lives in
+// together with its key. Only the key and the time the value was last written
+// are exposed, because the secrets listing never returns the value itself.
+// What that makes auditable is the inventory: which secrets a scope holds, and
+// how long each has gone without being rewritten.
+private databricks.secretScope.secret @defaults("key lastUpdated") {
+  // Name of the scope the secret is stored in
+  scopeName string
+  // Key identifying the secret within its scope
+  key string
+  // When the secret value was last written, null when the API did not report it
+  lastUpdated time
 }
 
 // Databricks cluster policy
@@ -657,6 +732,84 @@ databricks.schema @defaults("fullName owner") {
   grants() []databricks.grant
   // Unity Catalog volumes in the schema
   volumes() []databricks.volume
+  // Unity Catalog functions in the schema
+  functions() []databricks.function
+}
+
+// Unity Catalog function
+//
+// A user-defined function registered in a Unity Catalog schema, keyed by its
+// fully qualified name (catalog.schema.function). Covers the owner, the
+// security type deciding whose privileges the body runs with, the routine
+// language and the SQL access it declares, and the privilege grants assigned
+// on it. A function whose securityType is DEFINER runs its body with the
+// owner's privileges for every caller holding EXECUTE, so the owner and the
+// grants together describe a standing privilege boundary. The function body
+// itself is not exposed. Select a function by name, for example
+// `databricks.catalogs.where(name == "main").schemas.where(name == "sales").functions.where(name == "mask_ssn")`.
+databricks.function @defaults("fullName owner securityType") {
+  // Function id, unique within the metastore
+  id string
+  // Function name relative to the parent schema
+  name string
+  // Fully qualified name (catalog.schema.function)
+  fullName string
+  // Name of the parent catalog
+  catalogName string
+  // Parent catalog
+  catalog() databricks.catalog
+  // Name of the parent schema
+  schemaName string
+  // Parent schema
+  schema() databricks.schema
+  // Principal that owns the function
+  owner string
+  // Function comment
+  comment string
+  // Whose privileges the function body runs with
+  //
+  // DEFINER, the only value Unity Catalog reports today, runs the body with
+  // the owner's privileges for every caller, so a caller holding nothing but
+  // EXECUTE reaches whatever the owner reaches. Read it together with owner
+  // and grants, which name the identity being borrowed and everyone who may
+  // borrow it.
+  securityType string
+  // Whether the routine body is SQL or EXTERNAL
+  routineBody string
+  // Language of an external routine, such as Python
+  externalLanguage string
+  // Name of the external routine
+  externalName string
+  // SQL access the routine declares
+  //
+  // One of CONTAINS_SQL, NO_SQL, or READS_SQL_DATA.
+  sqlDataAccess string
+  // Schemas whose objects the body may reference without qualification
+  sqlPath string
+  // Whether the function returns the same result for the same arguments
+  isDeterministic bool
+  // Whether the function is invoked when an argument is null
+  isNullCall bool
+  // Scalar return data type
+  dataType string
+  // Pretty-printed return data type
+  fullDataType string
+  // Parameter style, S for SQL
+  parameterStyle string
+  // Id of the metastore the function belongs to
+  metastoreId string
+  // Whether the caller sees only metadata, through the BROWSE privilege
+  browseOnly bool
+  // When the function was created
+  createdAt time
+  // Principal that created the function
+  createdBy string
+  // When the function was last modified
+  updatedAt time
+  // Principal that last modified the function
+  updatedBy string
+  // Privilege grants assigned directly on the function
+  grants() []databricks.grant
 }
 
 // Unity Catalog privilege grant
@@ -2153,4 +2306,88 @@ databricks.workspaceAssignment @defaults("principal principalType permissions") 
   // administration. UNKNOWN appears when the API reports a level this SDK
   // version does not model.
   permissions []string
+}
+
+// Databricks account console security settings
+//
+// Account-wide access controls read from the account console: whether the
+// account console IP access list is enforced and what it holds, whether the
+// compliance security profile and enhanced security monitoring are enforced on
+// new workspaces, whether legacy features are disabled for new workspaces, and
+// who may use the Personal Compute default policy. The account console
+// allowlist gates the admin console and the account API, which is a different
+// boundary from the per-workspace allowlist reported by workspaceSettings. A
+// field is null when the setting could not be read, which is distinct from a
+// setting that is off.
+databricks.accountConf @defaults("accountId ipAccessListsEnabled") {
+  // Databricks account id
+  accountId string
+  // Whether IP access lists are enforced for the account console
+  ipAccessListsEnabled() bool
+  // IP access lists registered on the account console
+  //
+  // Enforced only when ipAccessListsEnabled is true. A list is either ALLOW or
+  // BLOCK, and an ALLOW list that is present but not enforced restricts
+  // nothing.
+  ipAccessLists() []databricks.ipAccessList
+  // Whether the compliance security profile is enforced on new workspaces
+  //
+  // Enforced means a workspace admin cannot turn it off for their workspace.
+  complianceSecurityProfileEnforced() bool
+  // Compliance standards required of new workspaces
+  //
+  // Each entry is a standard such as HIPAA, PCI_DSS, FEDRAMP_MODERATE,
+  // FEDRAMP_HIGH, FEDRAMP_IL5, IRAP_PROTECTED, CANADA_PROTECTED_B, GERMANY_C5,
+  // GERMANY_TISAX, HITRUST, ISMAP, ITAR_EAR, K_FSI, or CYBER_ESSENTIAL_PLUS.
+  complianceSecurityStandards() []string
+  // Whether enhanced security monitoring is enforced on new workspaces
+  enhancedSecurityMonitoringEnforced() bool
+  // Whether legacy features are disabled for new workspaces
+  //
+  // Covers the DBFS root and mounts, the Hive metastore, no-isolation
+  // clusters, and runtime versions before 13.3 LTS.
+  legacyFeaturesDisabled() bool
+  // Who may use the Personal Compute default policy
+  //
+  // ON grants every user in every workspace access to the policy, so any user
+  // can create a single-machine compute resource. DELEGATE hands the decision
+  // to each workspace's access control list on that policy.
+  personalComputeAccess() string
+}
+
+// Databricks access-control rule set
+//
+// The grant rules attached to one account resource, keyed by the rule set
+// name. A rule set is how account roles are delegated: each grant rule names a
+// role and the principals holding it. The role roles/servicePrincipal.user on
+// a service principal's rule set is the act-as grant, and roles/group.manager
+// on a group's rule set is the membership grant, so rule sets are what answer
+// who can become an identity rather than what that identity may do.
+databricks.ruleSet @defaults("name") {
+  // Rule set name, of the form accounts/<account-id>/<resource>/ruleSets/default
+  name string
+  // Grant rules attached to the rule set, one per role and principal
+  grants []databricks.ruleSet.grant
+}
+
+// Grant rule in a Databricks access-control rule set
+//
+// One role held by one principal on the resource its rule set is attached to.
+// A principal holding roles/servicePrincipal.user on a service principal can
+// mint tokens for it and run jobs as it, inheriting everything that service
+// principal can reach.
+private databricks.ruleSet.grant @defaults("role principal") {
+  // Name of the rule set the rule belongs to
+  ruleSetName string
+  // Role granted, such as roles/servicePrincipal.user or roles/group.manager
+  role string
+  // Principal holding the role, in its qualified form such as users/someone@example.com
+  principal string
+  // Kind of principal the role is granted to
+  //
+  // One of user, group, or servicePrincipal, read from the qualified
+  // principal prefix. Null when the principal carries no recognized prefix.
+  principalType string
+  // Principal without its qualifying prefix, such as a user name or an application id
+  principalName string
 }

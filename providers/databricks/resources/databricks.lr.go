@@ -29,11 +29,13 @@ const (
 	ResourceDatabricksWorkspaceConf                string = "databricks.workspaceConf"
 	ResourceDatabricksToken                        string = "databricks.token"
 	ResourceDatabricksSecretScope                  string = "databricks.secretScope"
+	ResourceDatabricksSecretScopeSecret            string = "databricks.secretScope.secret"
 	ResourceDatabricksClusterPolicy                string = "databricks.clusterPolicy"
 	ResourceDatabricksCluster                      string = "databricks.cluster"
 	ResourceDatabricksWarehouse                    string = "databricks.warehouse"
 	ResourceDatabricksCatalog                      string = "databricks.catalog"
 	ResourceDatabricksSchema                       string = "databricks.schema"
+	ResourceDatabricksFunction                     string = "databricks.function"
 	ResourceDatabricksGrant                        string = "databricks.grant"
 	ResourceDatabricksStorageCredential            string = "databricks.storageCredential"
 	ResourceDatabricksExternalLocation             string = "databricks.externalLocation"
@@ -68,6 +70,9 @@ const (
 	ResourceDatabricksAppIntegration               string = "databricks.appIntegration"
 	ResourceDatabricksNetworkPolicy                string = "databricks.networkPolicy"
 	ResourceDatabricksWorkspaceAssignment          string = "databricks.workspaceAssignment"
+	ResourceDatabricksAccountConf                  string = "databricks.accountConf"
+	ResourceDatabricksRuleSet                      string = "databricks.ruleSet"
+	ResourceDatabricksRuleSetGrant                 string = "databricks.ruleSet.grant"
 )
 
 var resourceFactories map[string]plugin.ResourceFactory
@@ -126,6 +131,10 @@ func init() {
 			// to override args, implement: initDatabricksSecretScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatabricksSecretScope,
 		},
+		"databricks.secretScope.secret": {
+			// to override args, implement: initDatabricksSecretScopeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksSecretScopeSecret,
+		},
 		"databricks.clusterPolicy": {
 			// to override args, implement: initDatabricksClusterPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatabricksClusterPolicy,
@@ -145,6 +154,10 @@ func init() {
 		"databricks.schema": {
 			Init:   initDatabricksSchema,
 			Create: createDatabricksSchema,
+		},
+		"databricks.function": {
+			// to override args, implement: initDatabricksFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksFunction,
 		},
 		"databricks.grant": {
 			// to override args, implement: initDatabricksGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -281,6 +294,18 @@ func init() {
 		"databricks.workspaceAssignment": {
 			// to override args, implement: initDatabricksWorkspaceAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDatabricksWorkspaceAssignment,
+		},
+		"databricks.accountConf": {
+			// to override args, implement: initDatabricksAccountConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksAccountConf,
+		},
+		"databricks.ruleSet": {
+			// to override args, implement: initDatabricksRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksRuleSet,
+		},
+		"databricks.ruleSet.grant": {
+			// to override args, implement: initDatabricksRuleSetGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDatabricksRuleSetGrant,
 		},
 	}
 }
@@ -473,6 +498,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.tokenPermissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricks).GetTokenPermissions()).ToDataRes(types.Array(types.Resource("databricks.permission")))
 	},
+	"databricks.accountSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetAccountSettings()).ToDataRes(types.Resource("databricks.accountConf"))
+	},
+	"databricks.accountRuleSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricks).GetAccountRuleSet()).ToDataRes(types.Resource("databricks.ruleSet"))
+	},
 	"databricks.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspace).GetWorkspaceId()).ToDataRes(types.Int)
 	},
@@ -566,6 +597,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.group.roles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksGroup).GetRoles()).ToDataRes(types.Array(types.String))
 	},
+	"databricks.group.ruleSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksGroup).GetRuleSet()).ToDataRes(types.Resource("databricks.ruleSet"))
+	},
 	"databricks.servicePrincipal.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksServicePrincipal).GetId()).ToDataRes(types.String)
 	},
@@ -595,6 +629,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.servicePrincipal.federationPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksServicePrincipal).GetFederationPolicies()).ToDataRes(types.Array(types.Resource("databricks.federationPolicy")))
+	},
+	"databricks.servicePrincipal.ruleSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksServicePrincipal).GetRuleSet()).ToDataRes(types.Resource("databricks.ruleSet"))
 	},
 	"databricks.servicePrincipal.secret.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksServicePrincipalSecret).GetId()).ToDataRes(types.String)
@@ -737,6 +774,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.workspaceConf.disableLegacyAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspaceConf).GetDisableLegacyAccess()).ToDataRes(types.Bool)
 	},
+	"databricks.workspaceConf.notebookExportEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetNotebookExportEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.notebookTableClipboardEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetNotebookTableClipboardEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.notebookResultsDownloadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetNotebookResultsDownloadEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.sqlResultsDownloadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetSqlResultsDownloadEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.dashboardEmailSubscriptionsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetDashboardEmailSubscriptionsEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.workspaceConf.dashboardEmbeddingAccessPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetDashboardEmbeddingAccessPolicy()).ToDataRes(types.String)
+	},
+	"databricks.workspaceConf.dashboardEmbeddingApprovedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksWorkspaceConf).GetDashboardEmbeddingApprovedDomains()).ToDataRes(types.Array(types.String))
+	},
 	"databricks.token.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksToken).GetId()).ToDataRes(types.String)
 	},
@@ -769,6 +827,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.secretScope.acls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksSecretScope).GetAcls()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"databricks.secretScope.secrets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksSecretScope).GetSecrets()).ToDataRes(types.Array(types.Resource("databricks.secretScope.secret")))
+	},
+	"databricks.secretScope.secret.scopeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksSecretScopeSecret).GetScopeName()).ToDataRes(types.String)
+	},
+	"databricks.secretScope.secret.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksSecretScopeSecret).GetKey()).ToDataRes(types.String)
+	},
+	"databricks.secretScope.secret.lastUpdated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksSecretScopeSecret).GetLastUpdated()).ToDataRes(types.Time)
 	},
 	"databricks.clusterPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksClusterPolicy).GetId()).ToDataRes(types.String)
@@ -955,6 +1025,90 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"databricks.schema.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksSchema).GetVolumes()).ToDataRes(types.Array(types.Resource("databricks.volume")))
+	},
+	"databricks.schema.functions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksSchema).GetFunctions()).ToDataRes(types.Array(types.Resource("databricks.function")))
+	},
+	"databricks.function.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetId()).ToDataRes(types.String)
+	},
+	"databricks.function.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetName()).ToDataRes(types.String)
+	},
+	"databricks.function.fullName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetFullName()).ToDataRes(types.String)
+	},
+	"databricks.function.catalogName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetCatalogName()).ToDataRes(types.String)
+	},
+	"databricks.function.catalog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetCatalog()).ToDataRes(types.Resource("databricks.catalog"))
+	},
+	"databricks.function.schemaName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetSchemaName()).ToDataRes(types.String)
+	},
+	"databricks.function.schema": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetSchema()).ToDataRes(types.Resource("databricks.schema"))
+	},
+	"databricks.function.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetOwner()).ToDataRes(types.String)
+	},
+	"databricks.function.comment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetComment()).ToDataRes(types.String)
+	},
+	"databricks.function.securityType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetSecurityType()).ToDataRes(types.String)
+	},
+	"databricks.function.routineBody": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetRoutineBody()).ToDataRes(types.String)
+	},
+	"databricks.function.externalLanguage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetExternalLanguage()).ToDataRes(types.String)
+	},
+	"databricks.function.externalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetExternalName()).ToDataRes(types.String)
+	},
+	"databricks.function.sqlDataAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetSqlDataAccess()).ToDataRes(types.String)
+	},
+	"databricks.function.sqlPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetSqlPath()).ToDataRes(types.String)
+	},
+	"databricks.function.isDeterministic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetIsDeterministic()).ToDataRes(types.Bool)
+	},
+	"databricks.function.isNullCall": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetIsNullCall()).ToDataRes(types.Bool)
+	},
+	"databricks.function.dataType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetDataType()).ToDataRes(types.String)
+	},
+	"databricks.function.fullDataType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetFullDataType()).ToDataRes(types.String)
+	},
+	"databricks.function.parameterStyle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetParameterStyle()).ToDataRes(types.String)
+	},
+	"databricks.function.metastoreId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetMetastoreId()).ToDataRes(types.String)
+	},
+	"databricks.function.browseOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetBrowseOnly()).ToDataRes(types.Bool)
+	},
+	"databricks.function.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.function.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"databricks.function.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"databricks.function.updatedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetUpdatedBy()).ToDataRes(types.String)
+	},
+	"databricks.function.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksFunction).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.grant")))
 	},
 	"databricks.grant.principal": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksGrant).GetPrincipal()).ToDataRes(types.String)
@@ -2228,6 +2382,51 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"databricks.workspaceAssignment.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDatabricksWorkspaceAssignment).GetPermissions()).ToDataRes(types.Array(types.String))
 	},
+	"databricks.accountConf.accountId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetAccountId()).ToDataRes(types.String)
+	},
+	"databricks.accountConf.ipAccessListsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetIpAccessListsEnabled()).ToDataRes(types.Bool)
+	},
+	"databricks.accountConf.ipAccessLists": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetIpAccessLists()).ToDataRes(types.Array(types.Resource("databricks.ipAccessList")))
+	},
+	"databricks.accountConf.complianceSecurityProfileEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetComplianceSecurityProfileEnforced()).ToDataRes(types.Bool)
+	},
+	"databricks.accountConf.complianceSecurityStandards": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetComplianceSecurityStandards()).ToDataRes(types.Array(types.String))
+	},
+	"databricks.accountConf.enhancedSecurityMonitoringEnforced": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetEnhancedSecurityMonitoringEnforced()).ToDataRes(types.Bool)
+	},
+	"databricks.accountConf.legacyFeaturesDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetLegacyFeaturesDisabled()).ToDataRes(types.Bool)
+	},
+	"databricks.accountConf.personalComputeAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksAccountConf).GetPersonalComputeAccess()).ToDataRes(types.String)
+	},
+	"databricks.ruleSet.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRuleSet).GetName()).ToDataRes(types.String)
+	},
+	"databricks.ruleSet.grants": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRuleSet).GetGrants()).ToDataRes(types.Array(types.Resource("databricks.ruleSet.grant")))
+	},
+	"databricks.ruleSet.grant.ruleSetName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRuleSetGrant).GetRuleSetName()).ToDataRes(types.String)
+	},
+	"databricks.ruleSet.grant.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRuleSetGrant).GetRole()).ToDataRes(types.String)
+	},
+	"databricks.ruleSet.grant.principal": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRuleSetGrant).GetPrincipal()).ToDataRes(types.String)
+	},
+	"databricks.ruleSet.grant.principalType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRuleSetGrant).GetPrincipalType()).ToDataRes(types.String)
+	},
+	"databricks.ruleSet.grant.principalName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDatabricksRuleSetGrant).GetPrincipalName()).ToDataRes(types.String)
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -2404,6 +2603,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricks).TokenPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.accountSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).AccountSettings, ok = plugin.RawToTValue[*mqlDatabricksAccountConf](v.Value, v.Error)
+		return
+	},
+	"databricks.accountRuleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricks).AccountRuleSet, ok = plugin.RawToTValue[*mqlDatabricksRuleSet](v.Value, v.Error)
+		return
+	},
 	"databricks.workspace.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksWorkspace).__id, ok = v.Value.(string)
 		return
@@ -2540,6 +2747,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksGroup).Roles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.group.ruleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksGroup).RuleSet, ok = plugin.RawToTValue[*mqlDatabricksRuleSet](v.Value, v.Error)
+		return
+	},
 	"databricks.servicePrincipal.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksServicePrincipal).__id, ok = v.Value.(string)
 		return
@@ -2582,6 +2793,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.servicePrincipal.federationPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksServicePrincipal).FederationPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.servicePrincipal.ruleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksServicePrincipal).RuleSet, ok = plugin.RawToTValue[*mqlDatabricksRuleSet](v.Value, v.Error)
 		return
 	},
 	"databricks.servicePrincipal.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2796,6 +3011,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksWorkspaceConf).DisableLegacyAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"databricks.workspaceConf.notebookExportEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).NotebookExportEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.notebookTableClipboardEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).NotebookTableClipboardEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.notebookResultsDownloadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).NotebookResultsDownloadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.sqlResultsDownloadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).SqlResultsDownloadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.dashboardEmailSubscriptionsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).DashboardEmailSubscriptionsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.dashboardEmbeddingAccessPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).DashboardEmbeddingAccessPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.workspaceConf.dashboardEmbeddingApprovedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksWorkspaceConf).DashboardEmbeddingApprovedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"databricks.token.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksToken).__id, ok = v.Value.(string)
 		return
@@ -2846,6 +3089,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.secretScope.acls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksSecretScope).Acls, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"databricks.secretScope.secrets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSecretScope).Secrets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.secretScope.secret.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSecretScopeSecret).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.secretScope.secret.scopeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSecretScopeSecret).ScopeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.secretScope.secret.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSecretScopeSecret).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.secretScope.secret.lastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSecretScopeSecret).LastUpdated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"databricks.clusterPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3114,6 +3377,122 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"databricks.schema.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDatabricksSchema).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.schema.functions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksSchema).Functions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.function.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.function.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.fullName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).FullName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.catalogName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).CatalogName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.catalog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).Catalog, ok = plugin.RawToTValue[*mqlDatabricksCatalog](v.Value, v.Error)
+		return
+	},
+	"databricks.function.schemaName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).SchemaName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).Schema, ok = plugin.RawToTValue[*mqlDatabricksSchema](v.Value, v.Error)
+		return
+	},
+	"databricks.function.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).Owner, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.comment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).Comment, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.securityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).SecurityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.routineBody": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).RoutineBody, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.externalLanguage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).ExternalLanguage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.externalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).ExternalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.sqlDataAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).SqlDataAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.sqlPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).SqlPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.isDeterministic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).IsDeterministic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.function.isNullCall": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).IsNullCall, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.function.dataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).DataType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.fullDataType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).FullDataType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.parameterStyle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).ParameterStyle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.metastoreId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).MetastoreId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.browseOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).BrowseOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.function.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.function.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"databricks.function.updatedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).UpdatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.function.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksFunction).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"databricks.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4948,6 +5327,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDatabricksWorkspaceAssignment).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"databricks.accountConf.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.accountConf.accountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).AccountId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.accountConf.ipAccessListsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).IpAccessListsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.accountConf.ipAccessLists": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).IpAccessLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.accountConf.complianceSecurityProfileEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).ComplianceSecurityProfileEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.accountConf.complianceSecurityStandards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).ComplianceSecurityStandards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.accountConf.enhancedSecurityMonitoringEnforced": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).EnhancedSecurityMonitoringEnforced, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.accountConf.legacyFeaturesDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).LegacyFeaturesDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"databricks.accountConf.personalComputeAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksAccountConf).PersonalComputeAccess, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.ruleSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSet).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.ruleSet.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSet).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.ruleSet.grants": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSet).Grants, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"databricks.ruleSet.grant.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSetGrant).__id, ok = v.Value.(string)
+		return
+	},
+	"databricks.ruleSet.grant.ruleSetName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSetGrant).RuleSetName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.ruleSet.grant.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSetGrant).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.ruleSet.grant.principal": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSetGrant).Principal, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.ruleSet.grant.principalType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSetGrant).PrincipalType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"databricks.ruleSet.grant.principalName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDatabricksRuleSetGrant).PrincipalName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -5017,6 +5468,8 @@ type mqlDatabricks struct {
 	AppIntegrations           plugin.TValue[[]any]
 	NetworkPolicies           plugin.TValue[[]any]
 	TokenPermissions          plugin.TValue[[]any]
+	AccountSettings           plugin.TValue[*mqlDatabricksAccountConf]
+	AccountRuleSet            plugin.TValue[*mqlDatabricksRuleSet]
 }
 
 // createDatabricks creates a new instance of this resource
@@ -5696,6 +6149,38 @@ func (c *mqlDatabricks) GetTokenPermissions() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlDatabricks) GetAccountSettings() *plugin.TValue[*mqlDatabricksAccountConf] {
+	return plugin.GetOrCompute[*mqlDatabricksAccountConf](&c.AccountSettings, func() (*mqlDatabricksAccountConf, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "accountSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksAccountConf), nil
+			}
+		}
+
+		return c.accountSettings()
+	})
+}
+
+func (c *mqlDatabricks) GetAccountRuleSet() *plugin.TValue[*mqlDatabricksRuleSet] {
+	return plugin.GetOrCompute[*mqlDatabricksRuleSet](&c.AccountRuleSet, func() (*mqlDatabricksRuleSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks", c.__id, "accountRuleSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksRuleSet), nil
+			}
+		}
+
+		return c.accountRuleSet()
+	})
+}
+
 // mqlDatabricksWorkspace for the databricks.workspace resource
 type mqlDatabricksWorkspace struct {
 	MqlRuntime *plugin.Runtime
@@ -5982,6 +6467,7 @@ type mqlDatabricksGroup struct {
 	Members      plugin.TValue[[]any]
 	Entitlements plugin.TValue[[]any]
 	Roles        plugin.TValue[[]any]
+	RuleSet      plugin.TValue[*mqlDatabricksRuleSet]
 }
 
 // createDatabricksGroup creates a new instance of this resource
@@ -6040,6 +6526,22 @@ func (c *mqlDatabricksGroup) GetRoles() *plugin.TValue[[]any] {
 	return &c.Roles
 }
 
+func (c *mqlDatabricksGroup) GetRuleSet() *plugin.TValue[*mqlDatabricksRuleSet] {
+	return plugin.GetOrCompute[*mqlDatabricksRuleSet](&c.RuleSet, func() (*mqlDatabricksRuleSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.group", c.__id, "ruleSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksRuleSet), nil
+			}
+		}
+
+		return c.ruleSet()
+	})
+}
+
 // mqlDatabricksServicePrincipal for the databricks.servicePrincipal resource
 type mqlDatabricksServicePrincipal struct {
 	MqlRuntime *plugin.Runtime
@@ -6055,6 +6557,7 @@ type mqlDatabricksServicePrincipal struct {
 	Groups             plugin.TValue[[]any]
 	Secrets            plugin.TValue[[]any]
 	FederationPolicies plugin.TValue[[]any]
+	RuleSet            plugin.TValue[*mqlDatabricksRuleSet]
 }
 
 // createDatabricksServicePrincipal creates a new instance of this resource
@@ -6162,6 +6665,22 @@ func (c *mqlDatabricksServicePrincipal) GetFederationPolicies() *plugin.TValue[[
 		}
 
 		return c.federationPolicies()
+	})
+}
+
+func (c *mqlDatabricksServicePrincipal) GetRuleSet() *plugin.TValue[*mqlDatabricksRuleSet] {
+	return plugin.GetOrCompute[*mqlDatabricksRuleSet](&c.RuleSet, func() (*mqlDatabricksRuleSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.servicePrincipal", c.__id, "ruleSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksRuleSet), nil
+			}
+		}
+
+		return c.ruleSet()
 	})
 }
 
@@ -6552,6 +7071,13 @@ type mqlDatabricksWorkspaceConf struct {
 	RestrictWorkspaceAdminsStatus                    plugin.TValue[string]
 	AutomaticClusterUpdateEnabled                    plugin.TValue[bool]
 	DisableLegacyAccess                              plugin.TValue[bool]
+	NotebookExportEnabled                            plugin.TValue[bool]
+	NotebookTableClipboardEnabled                    plugin.TValue[bool]
+	NotebookResultsDownloadEnabled                   plugin.TValue[bool]
+	SqlResultsDownloadEnabled                        plugin.TValue[bool]
+	DashboardEmailSubscriptionsEnabled               plugin.TValue[bool]
+	DashboardEmbeddingAccessPolicy                   plugin.TValue[string]
+	DashboardEmbeddingApprovedDomains                plugin.TValue[[]any]
 }
 
 // createDatabricksWorkspaceConf creates a new instance of this resource
@@ -6646,6 +7172,48 @@ func (c *mqlDatabricksWorkspaceConf) GetDisableLegacyAccess() *plugin.TValue[boo
 	})
 }
 
+func (c *mqlDatabricksWorkspaceConf) GetNotebookExportEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NotebookExportEnabled, func() (bool, error) {
+		return c.notebookExportEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetNotebookTableClipboardEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NotebookTableClipboardEnabled, func() (bool, error) {
+		return c.notebookTableClipboardEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetNotebookResultsDownloadEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NotebookResultsDownloadEnabled, func() (bool, error) {
+		return c.notebookResultsDownloadEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetSqlResultsDownloadEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SqlResultsDownloadEnabled, func() (bool, error) {
+		return c.sqlResultsDownloadEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetDashboardEmailSubscriptionsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DashboardEmailSubscriptionsEnabled, func() (bool, error) {
+		return c.dashboardEmailSubscriptionsEnabled()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetDashboardEmbeddingAccessPolicy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.DashboardEmbeddingAccessPolicy, func() (string, error) {
+		return c.dashboardEmbeddingAccessPolicy()
+	})
+}
+
+func (c *mqlDatabricksWorkspaceConf) GetDashboardEmbeddingApprovedDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DashboardEmbeddingApprovedDomains, func() ([]any, error) {
+		return c.dashboardEmbeddingApprovedDomains()
+	})
+}
+
 // mqlDatabricksToken for the databricks.token resource
 type mqlDatabricksToken struct {
 	MqlRuntime *plugin.Runtime
@@ -6733,6 +7301,7 @@ type mqlDatabricksSecretScope struct {
 	Name        plugin.TValue[string]
 	BackendType plugin.TValue[string]
 	Acls        plugin.TValue[map[string]any]
+	Secrets     plugin.TValue[[]any]
 }
 
 // createDatabricksSecretScope creates a new instance of this resource
@@ -6779,6 +7348,76 @@ func (c *mqlDatabricksSecretScope) GetAcls() *plugin.TValue[map[string]any] {
 	return plugin.GetOrCompute[map[string]any](&c.Acls, func() (map[string]any, error) {
 		return c.acls()
 	})
+}
+
+func (c *mqlDatabricksSecretScope) GetSecrets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Secrets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.secretScope", c.__id, "secrets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.secrets()
+	})
+}
+
+// mqlDatabricksSecretScopeSecret for the databricks.secretScope.secret resource
+type mqlDatabricksSecretScopeSecret struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksSecretScopeSecretInternal it will be used here
+	ScopeName   plugin.TValue[string]
+	Key         plugin.TValue[string]
+	LastUpdated plugin.TValue[*time.Time]
+}
+
+// createDatabricksSecretScopeSecret creates a new instance of this resource
+func createDatabricksSecretScopeSecret(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksSecretScopeSecret{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.secretScope.secret", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksSecretScopeSecret) MqlName() string {
+	return "databricks.secretScope.secret"
+}
+
+func (c *mqlDatabricksSecretScopeSecret) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksSecretScopeSecret) GetScopeName() *plugin.TValue[string] {
+	return &c.ScopeName
+}
+
+func (c *mqlDatabricksSecretScopeSecret) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlDatabricksSecretScopeSecret) GetLastUpdated() *plugin.TValue[*time.Time] {
+	return &c.LastUpdated
 }
 
 // mqlDatabricksClusterPolicy for the databricks.clusterPolicy resource
@@ -7318,6 +7957,7 @@ type mqlDatabricksSchema struct {
 	Comment     plugin.TValue[string]
 	Grants      plugin.TValue[[]any]
 	Volumes     plugin.TValue[[]any]
+	Functions   plugin.TValue[[]any]
 }
 
 // createDatabricksSchema creates a new instance of this resource
@@ -7421,6 +8061,232 @@ func (c *mqlDatabricksSchema) GetVolumes() *plugin.TValue[[]any] {
 		}
 
 		return c.volumes()
+	})
+}
+
+func (c *mqlDatabricksSchema) GetFunctions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Functions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.schema", c.__id, "functions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.functions()
+	})
+}
+
+// mqlDatabricksFunction for the databricks.function resource
+type mqlDatabricksFunction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksFunctionInternal it will be used here
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	FullName         plugin.TValue[string]
+	CatalogName      plugin.TValue[string]
+	Catalog          plugin.TValue[*mqlDatabricksCatalog]
+	SchemaName       plugin.TValue[string]
+	Schema           plugin.TValue[*mqlDatabricksSchema]
+	Owner            plugin.TValue[string]
+	Comment          plugin.TValue[string]
+	SecurityType     plugin.TValue[string]
+	RoutineBody      plugin.TValue[string]
+	ExternalLanguage plugin.TValue[string]
+	ExternalName     plugin.TValue[string]
+	SqlDataAccess    plugin.TValue[string]
+	SqlPath          plugin.TValue[string]
+	IsDeterministic  plugin.TValue[bool]
+	IsNullCall       plugin.TValue[bool]
+	DataType         plugin.TValue[string]
+	FullDataType     plugin.TValue[string]
+	ParameterStyle   plugin.TValue[string]
+	MetastoreId      plugin.TValue[string]
+	BrowseOnly       plugin.TValue[bool]
+	CreatedAt        plugin.TValue[*time.Time]
+	CreatedBy        plugin.TValue[string]
+	UpdatedAt        plugin.TValue[*time.Time]
+	UpdatedBy        plugin.TValue[string]
+	Grants           plugin.TValue[[]any]
+}
+
+// createDatabricksFunction creates a new instance of this resource
+func createDatabricksFunction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksFunction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.function", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksFunction) MqlName() string {
+	return "databricks.function"
+}
+
+func (c *mqlDatabricksFunction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksFunction) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDatabricksFunction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksFunction) GetFullName() *plugin.TValue[string] {
+	return &c.FullName
+}
+
+func (c *mqlDatabricksFunction) GetCatalogName() *plugin.TValue[string] {
+	return &c.CatalogName
+}
+
+func (c *mqlDatabricksFunction) GetCatalog() *plugin.TValue[*mqlDatabricksCatalog] {
+	return plugin.GetOrCompute[*mqlDatabricksCatalog](&c.Catalog, func() (*mqlDatabricksCatalog, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.function", c.__id, "catalog")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksCatalog), nil
+			}
+		}
+
+		return c.catalog()
+	})
+}
+
+func (c *mqlDatabricksFunction) GetSchemaName() *plugin.TValue[string] {
+	return &c.SchemaName
+}
+
+func (c *mqlDatabricksFunction) GetSchema() *plugin.TValue[*mqlDatabricksSchema] {
+	return plugin.GetOrCompute[*mqlDatabricksSchema](&c.Schema, func() (*mqlDatabricksSchema, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.function", c.__id, "schema")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDatabricksSchema), nil
+			}
+		}
+
+		return c.schema()
+	})
+}
+
+func (c *mqlDatabricksFunction) GetOwner() *plugin.TValue[string] {
+	return &c.Owner
+}
+
+func (c *mqlDatabricksFunction) GetComment() *plugin.TValue[string] {
+	return &c.Comment
+}
+
+func (c *mqlDatabricksFunction) GetSecurityType() *plugin.TValue[string] {
+	return &c.SecurityType
+}
+
+func (c *mqlDatabricksFunction) GetRoutineBody() *plugin.TValue[string] {
+	return &c.RoutineBody
+}
+
+func (c *mqlDatabricksFunction) GetExternalLanguage() *plugin.TValue[string] {
+	return &c.ExternalLanguage
+}
+
+func (c *mqlDatabricksFunction) GetExternalName() *plugin.TValue[string] {
+	return &c.ExternalName
+}
+
+func (c *mqlDatabricksFunction) GetSqlDataAccess() *plugin.TValue[string] {
+	return &c.SqlDataAccess
+}
+
+func (c *mqlDatabricksFunction) GetSqlPath() *plugin.TValue[string] {
+	return &c.SqlPath
+}
+
+func (c *mqlDatabricksFunction) GetIsDeterministic() *plugin.TValue[bool] {
+	return &c.IsDeterministic
+}
+
+func (c *mqlDatabricksFunction) GetIsNullCall() *plugin.TValue[bool] {
+	return &c.IsNullCall
+}
+
+func (c *mqlDatabricksFunction) GetDataType() *plugin.TValue[string] {
+	return &c.DataType
+}
+
+func (c *mqlDatabricksFunction) GetFullDataType() *plugin.TValue[string] {
+	return &c.FullDataType
+}
+
+func (c *mqlDatabricksFunction) GetParameterStyle() *plugin.TValue[string] {
+	return &c.ParameterStyle
+}
+
+func (c *mqlDatabricksFunction) GetMetastoreId() *plugin.TValue[string] {
+	return &c.MetastoreId
+}
+
+func (c *mqlDatabricksFunction) GetBrowseOnly() *plugin.TValue[bool] {
+	return &c.BrowseOnly
+}
+
+func (c *mqlDatabricksFunction) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlDatabricksFunction) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlDatabricksFunction) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlDatabricksFunction) GetUpdatedBy() *plugin.TValue[string] {
+	return &c.UpdatedBy
+}
+
+func (c *mqlDatabricksFunction) GetGrants() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Grants, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.function", c.__id, "grants")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.grants()
 	})
 }
 
@@ -11282,4 +12148,220 @@ func (c *mqlDatabricksWorkspaceAssignment) GetDisplayName() *plugin.TValue[strin
 
 func (c *mqlDatabricksWorkspaceAssignment) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+// mqlDatabricksAccountConf for the databricks.accountConf resource
+type mqlDatabricksAccountConf struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlDatabricksAccountConfInternal
+	AccountId                          plugin.TValue[string]
+	IpAccessListsEnabled               plugin.TValue[bool]
+	IpAccessLists                      plugin.TValue[[]any]
+	ComplianceSecurityProfileEnforced  plugin.TValue[bool]
+	ComplianceSecurityStandards        plugin.TValue[[]any]
+	EnhancedSecurityMonitoringEnforced plugin.TValue[bool]
+	LegacyFeaturesDisabled             plugin.TValue[bool]
+	PersonalComputeAccess              plugin.TValue[string]
+}
+
+// createDatabricksAccountConf creates a new instance of this resource
+func createDatabricksAccountConf(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksAccountConf{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.accountConf", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksAccountConf) MqlName() string {
+	return "databricks.accountConf"
+}
+
+func (c *mqlDatabricksAccountConf) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksAccountConf) GetAccountId() *plugin.TValue[string] {
+	return &c.AccountId
+}
+
+func (c *mqlDatabricksAccountConf) GetIpAccessListsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IpAccessListsEnabled, func() (bool, error) {
+		return c.ipAccessListsEnabled()
+	})
+}
+
+func (c *mqlDatabricksAccountConf) GetIpAccessLists() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpAccessLists, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("databricks.accountConf", c.__id, "ipAccessLists")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ipAccessLists()
+	})
+}
+
+func (c *mqlDatabricksAccountConf) GetComplianceSecurityProfileEnforced() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ComplianceSecurityProfileEnforced, func() (bool, error) {
+		return c.complianceSecurityProfileEnforced()
+	})
+}
+
+func (c *mqlDatabricksAccountConf) GetComplianceSecurityStandards() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ComplianceSecurityStandards, func() ([]any, error) {
+		return c.complianceSecurityStandards()
+	})
+}
+
+func (c *mqlDatabricksAccountConf) GetEnhancedSecurityMonitoringEnforced() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.EnhancedSecurityMonitoringEnforced, func() (bool, error) {
+		return c.enhancedSecurityMonitoringEnforced()
+	})
+}
+
+func (c *mqlDatabricksAccountConf) GetLegacyFeaturesDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LegacyFeaturesDisabled, func() (bool, error) {
+		return c.legacyFeaturesDisabled()
+	})
+}
+
+func (c *mqlDatabricksAccountConf) GetPersonalComputeAccess() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PersonalComputeAccess, func() (string, error) {
+		return c.personalComputeAccess()
+	})
+}
+
+// mqlDatabricksRuleSet for the databricks.ruleSet resource
+type mqlDatabricksRuleSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksRuleSetInternal it will be used here
+	Name   plugin.TValue[string]
+	Grants plugin.TValue[[]any]
+}
+
+// createDatabricksRuleSet creates a new instance of this resource
+func createDatabricksRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksRuleSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.ruleSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksRuleSet) MqlName() string {
+	return "databricks.ruleSet"
+}
+
+func (c *mqlDatabricksRuleSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksRuleSet) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlDatabricksRuleSet) GetGrants() *plugin.TValue[[]any] {
+	return &c.Grants
+}
+
+// mqlDatabricksRuleSetGrant for the databricks.ruleSet.grant resource
+type mqlDatabricksRuleSetGrant struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDatabricksRuleSetGrantInternal it will be used here
+	RuleSetName   plugin.TValue[string]
+	Role          plugin.TValue[string]
+	Principal     plugin.TValue[string]
+	PrincipalType plugin.TValue[string]
+	PrincipalName plugin.TValue[string]
+}
+
+// createDatabricksRuleSetGrant creates a new instance of this resource
+func createDatabricksRuleSetGrant(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDatabricksRuleSetGrant{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("databricks.ruleSet.grant", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDatabricksRuleSetGrant) MqlName() string {
+	return "databricks.ruleSet.grant"
+}
+
+func (c *mqlDatabricksRuleSetGrant) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDatabricksRuleSetGrant) GetRuleSetName() *plugin.TValue[string] {
+	return &c.RuleSetName
+}
+
+func (c *mqlDatabricksRuleSetGrant) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlDatabricksRuleSetGrant) GetPrincipal() *plugin.TValue[string] {
+	return &c.Principal
+}
+
+func (c *mqlDatabricksRuleSetGrant) GetPrincipalType() *plugin.TValue[string] {
+	return &c.PrincipalType
+}
+
+func (c *mqlDatabricksRuleSetGrant) GetPrincipalName() *plugin.TValue[string] {
+	return &c.PrincipalName
 }

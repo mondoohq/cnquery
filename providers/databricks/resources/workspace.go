@@ -10,7 +10,9 @@ import (
 
 	databricks "github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/databricks-sdk-go/service/workspace"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/databricks/connection"
 	"go.mondoo.com/mql/types"
 )
@@ -130,6 +132,60 @@ func (r *mqlDatabricksSecretScope) acls() (map[string]any, error) {
 		acls[resp.Items[i].Principal] = string(resp.Items[i].Permission)
 	}
 	return acls, nil
+}
+
+// secretFields maps one secret metadata record to its MQL fields. The listing
+// endpoint returns keys and metadata only, never a value, so nothing here can
+// carry secret material. Kept apart from the API call so the absent case can
+// be asserted directly: a secret the API reports no write time for has to
+// arrive as null rather than as the zero time, which would read as a real date
+// in the year 1 and make every staleness check pass.
+func secretFields(scope string, s workspace.SecretMetadata) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		// A secret repeats along both the scope it lives in and its key, so
+		// the cache key carries both. Keying on the key alone would collapse
+		// the same key in two scopes onto one resource.
+		"__id":        llx.StringData("databricks.secretScope/" + scope + "/secret/" + s.Key),
+		"scopeName":   llx.StringData(scope),
+		"key":         llx.StringData(s.Key),
+		"lastUpdated": llx.TimeDataPtr(epochMsTime(s.LastUpdatedTimestamp)),
+	}
+}
+
+// secrets lists the secrets held in the scope. The endpoint is metadata only:
+// it returns each secret's key and the time its value was last written, and
+// there is no path from here to a value.
+//
+// Reading a scope's contents needs READ on that scope, which a workspace admin
+// enumerating scopes does not automatically hold. A caller that lacks it gets
+// null rather than an empty list, so "I could not look inside this scope" stays
+// distinct from "this scope is empty".
+func (r *mqlDatabricksSecretScope) secrets() ([]any, error) {
+	ws, err := workspaceClient(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	secrets, err := ws.Secrets.ListSecretsAll(context.Background(), workspace.ListSecretsRequest{
+		Scope: r.Name.Data,
+	})
+	if err != nil {
+		if isDatabricksUnreadable(err) {
+			r.Secrets = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	out := []any{}
+	for i := range secrets {
+		res, err := CreateResource(r.MqlRuntime, "databricks.secretScope.secret", secretFields(r.Name.Data, secrets[i]))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
 }
 
 func (r *mqlDatabricks) workspaceSettings() (*mqlDatabricksWorkspaceConf, error) {
