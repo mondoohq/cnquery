@@ -416,6 +416,17 @@ func TestParseIisSslFlags(t *testing.T) {
 		{"empty string", "", []string{}},
 		{"numeric string", "40", []string{"Ssl", "SslNegotiateCert"}},
 		{"unexpected type", true, []string{}},
+		// SslMapCert (128) is one of the five names the access section
+		// documents. It used to be absent from the table, so a server mapping
+		// client certificates to accounts reported nothing for it.
+		{"map certificate", float64(128), []string{"SslMapCert"}},
+		{"map certificate with ssl", float64(8 + 128), []string{"Ssl", "SslMapCert"}},
+		{"all five names", float64(8 + 32 + 64 + 128 + 256), []string{"Ssl", "Ssl128", "SslMapCert", "SslNegotiateCert", "SslRequireCert"}},
+		// A bit the table does not name survives as its number rather than
+		// being dropped: dropping it would report a stricter transport
+		// requirement than the one actually configured.
+		{"unnamed bit kept as a number", float64(8 + 1), []string{"1", "Ssl"}},
+		{"only an unnamed bit", float64(2), []string{"2"}},
 	}
 
 	for _, test := range tests {

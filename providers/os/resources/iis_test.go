@@ -288,6 +288,7 @@ func TestIisConfigurationSectionsReachEverySetting(t *testing.T) {
 // would leave the rest reading an empty result — reporting a host that refused
 // the collection as a host that simply does not run IIS, on which every check
 // passes. The second and later accessors are the case that matters here.
+
 // TestIisResourceOnCapture drives the resource through MQL on a payload a real
 // Windows Server 2022 produced, in its non-hardened state. Its point is the
 // enum-valued fields: every one of them used to reach a policy as a bare number

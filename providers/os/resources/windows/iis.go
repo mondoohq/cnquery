@@ -302,6 +302,7 @@ var iisSslFlagBits = []struct {
 	{8, "Ssl"},
 	{32, "SslNegotiateCert"},
 	{64, "SslRequireCert"},
+	{128, "SslMapCert"},
 	{256, "Ssl128"},
 }
 
@@ -342,10 +343,19 @@ func ParseIisSslFlags(v any) []string {
 
 func iisSslFlagNames(n int64) []string {
 	res := []string{}
+	var named int64
 	for _, flag := range iisSslFlagBits {
 		if n&flag.bit != 0 {
 			res = append(res, flag.name)
+			named |= flag.bit
 		}
+	}
+	// A bit this table does not name is kept as its number rather than dropped,
+	// the same way ConvertTo-AttributeValue keeps the residue of a flags enum.
+	// Dropping it would report a stricter transport requirement than the one
+	// actually configured.
+	if residue := n & ^named; residue != 0 {
+		res = append(res, strconv.FormatInt(residue, 10))
 	}
 	sort.Strings(res)
 	return res

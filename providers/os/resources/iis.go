@@ -90,6 +90,20 @@ func (i *mqlIis) runCollection() (*windows.IisData, error) {
 		return empty, nil
 	}
 
+	// A Windows asset reached over a connection that cannot run commands (a
+	// mounted volume, a disk image, a container filesystem) passes the check
+	// above and then cannot be read at all. Refuse before staging rather than
+	// after, for two reasons. Staging writes the script through the mounted
+	// filesystem, so a literal `C:\Windows\Temp\iis-<hash>.ps1` would be
+	// created in the mount root, and Remove needs the same capability to clean
+	// it up, so it would be left behind. And an error is the honest answer:
+	// reporting installed=false would state that the host does not run IIS,
+	// which is a fact this connection cannot establish, and every check
+	// asserting IIS is absent would pass on it.
+	if !powershell.CanStage(conn) {
+		return nil, errors.New("iis cannot be read over this connection: it requires running a PowerShell script, which this connection type does not support")
+	}
+
 	// The collection script is far too long to travel on a command line:
 	// 13,849 characters, 37,078 once Encode has widened it to UTF-16 and base64
 	// encoded it, against a ceiling of about 32k over SSH and 8,191 over WinRM.

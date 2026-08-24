@@ -2320,10 +2320,12 @@ private iis.site @defaults("name state physicalPath") {
   name string
   // Numeric site id, which also keys the site's log file directory
   id int
-  // Runtime state, one of "Started", "Stopped", "Starting" or "Stopping"
+  // Runtime state
   //
-  // Empty when the state cannot be read, which happens when the world wide web
-  // publishing service is not running.
+  // One of "Started", "Stopped", "Starting", "Stopping" or "Unknown", the
+  // members of the IIS object-state enumeration. Empty when the state cannot be
+  // read at all, which happens when the world wide web publishing service is
+  // not running; "Unknown" is IIS itself reporting that it cannot tell.
   state string
   // Filesystem path the site root maps to
   //
@@ -2360,15 +2362,19 @@ private iis.site @defaults("name state physicalPath") {
   logPeriod string
   // Size in bytes at which a log file is rolled over, when logPeriod is "MaxSize"
   logTruncateSize int
-  // Fields recorded in W3C format, as a comma-separated list
+  // Fields recorded in W3C format
   //
-  // For example "Date,Time,ClientIP,UserName,Method,UriStem,HttpStatus". Empty
-  // when the format is not W3C.
+  // Joined with a comma and a space, the way .NET renders a flags enum, for
+  // example "Date, Time, ClientIP, UserName, Method, UriStem, HttpStatus". IIS
+  // keeps the selection even while another log format is active, so this is
+  // populated regardless of logFormat. Match on the individual field names
+  // rather than comparing the whole string.
   logFields string
   // Where W3C log entries are sent
   //
-  // One of "File", "ETW" or "File,ETW". Empty on an installation that predates
-  // the setting, in which case entries go to a file.
+  // "File", "ETW", or both as "File, ETW", joined with a comma and a space the
+  // way .NET renders a flags enum. Empty on an installation that predates the
+  // setting, in which case entries go to a file.
   logTarget string
   // Whether log rollover follows local time rather than UTC
   logLocalTimeRollover bool
@@ -2458,8 +2464,12 @@ private iis.binding @defaults("protocol bindingInformation port") {
   certificateStoreName string
   // SSL binding flags
   //
-  // A bit field: 1 selects the certificate by hostname (SNI), 2 uses the
-  // central certificate store. 0 for a binding with neither.
+  // A bit field. 1 selects the certificate by hostname (SNI) and 2 uses the
+  // central certificate store. IIS 10 1809 and later add bits that disable
+  // transport features rather than select a certificate: 4 disables HTTP/2, 8
+  // disables OCSP stapling, 16 disables QUIC, 32 disables TLS 1.3 over TCP and
+  // 64 disables legacy TLS. 0 means none of them are set, so test the
+  // individual bits rather than comparing the whole value.
   sslFlags int
 }
 
@@ -2472,9 +2482,11 @@ private iis.binding @defaults("protocol bindingInformation port") {
 private iis.appPool @defaults("name state identityType") {
   // Application pool name
   name string
-  // Runtime state, one of "Started", "Stopped", "Starting" or "Stopping"
+  // Runtime state
   //
-  // Empty when the state cannot be read.
+  // One of "Started", "Stopped", "Starting", "Stopping" or "Unknown", the
+  // members of the IIS object-state enumeration. Empty when the state cannot be
+  // read at all; "Unknown" is IIS itself reporting that it cannot tell.
   state string
   // Whether the pool starts automatically with the server
   autoStart bool
@@ -2525,10 +2537,12 @@ private iis.appPool @defaults("name state identityType") {
   //
   // Empty when the pool does not recycle on a schedule.
   periodicRestartSchedule []int
-  // Recycle causes written to the event log, as a comma-separated list
+  // Recycle causes written to the event log
   //
-  // For example "Time,Requests,Memory". A recycle trigger that is not listed
-  // here recycles the pool without leaving a record of why.
+  // Joined with a comma and a space, the way .NET renders a flags enum, for
+  // example "Time, Requests, Schedule, Memory". A recycle trigger that is not
+  // listed here recycles the pool without leaving a record of why, so match on
+  // the individual cause names rather than comparing the whole string.
   logEventOnRecycle string
   // Whether a configuration change is prevented from triggering a recycle
   disallowRotationOnConfigChange bool
@@ -2635,9 +2649,11 @@ private iis.configuration @defaults("path") {
   // Transport requirements for requests (security/access/sslFlags)
   //
   // The names of the bits the attribute sets, drawn from "Ssl",
-  // "SslNegotiateCert", "SslRequireCert" and "Ssl128". IIS reports the attribute
-  // as a number on some installations and as names on others; both resolve here
-  // to names. An empty list means requests are accepted over plain HTTP.
+  // "SslNegotiateCert", "SslRequireCert", "SslMapCert" and "Ssl128". IIS reports
+  // the attribute as a number on some installations and as names on others;
+  // both resolve here to names, and a bit with no name of its own is kept as its
+  // number so it is not silently dropped. An empty list means requests are
+  // accepted over plain HTTP.
   sslFlags []string
   // Largest request body accepted, in bytes (requestLimits/maxAllowedContentLength)
   maxAllowedContentLength int
