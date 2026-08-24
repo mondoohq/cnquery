@@ -4,6 +4,7 @@
 package connection
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -144,4 +145,38 @@ func TestPlatformIDs(t *testing.T) {
 	assert.NotEqual(t,
 		NewInstancePlatformID(a.InstanceKey()),
 		NewInstancePlatformID(b.InstanceKey()))
+}
+
+func TestNewAPIRuntimeTLS(t *testing.T) {
+	t.Run("verifies certificates by default", func(t *testing.T) {
+		rt := newAPIRuntime("portainer.invalid", "https", "/api", "ptr_token", false)
+
+		tr, ok := rt.Transport.(*http.Transport)
+		require.True(t, ok, "expected the default http transport")
+		if tr.TLSClientConfig != nil {
+			assert.False(t, tr.TLSClientConfig.InsecureSkipVerify,
+				"certificate verification must stay on without --insecure")
+		}
+	})
+
+	t.Run("skips verification only when asked, keeping the transport defaults", func(t *testing.T) {
+		rt := newAPIRuntime("portainer.invalid", "https", "/api", "ptr_token", true)
+
+		tr, ok := rt.Transport.(*http.Transport)
+		require.True(t, ok)
+		require.NotNil(t, tr.TLSClientConfig)
+		assert.True(t, tr.TLSClientConfig.InsecureSkipVerify)
+
+		// the clone must keep what http.DefaultTransport carries, or an
+		// instance behind a proxy becomes unreachable on this path alone
+		def := http.DefaultTransport.(*http.Transport)
+		assert.NotNil(t, tr.Proxy, "proxy from the environment must survive")
+		assert.Equal(t, def.TLSHandshakeTimeout, tr.TLSHandshakeTimeout)
+		assert.Equal(t, def.IdleConnTimeout, tr.IdleConnTimeout)
+		assert.Equal(t, def.MaxIdleConns, tr.MaxIdleConns)
+		if def.TLSClientConfig != nil {
+			assert.False(t, def.TLSClientConfig.InsecureSkipVerify,
+				"the shared default transport must not be mutated")
+		}
+	})
 }

@@ -291,23 +291,39 @@ func (c *PortainerConnection) Hostname() string {
 // set of TLS rules. Authentication is attached to the transport rather than
 // passed per call, which lets every operation be invoked with a nil authInfo.
 func newAPIClient(host, scheme, basePath, accessToken string, skipTLSVerify bool) *apiclient.PortainerClientAPI {
+	return apiclient.New(newAPIRuntime(host, scheme, basePath, accessToken, skipTLSVerify), nil)
+}
+
+// newAPIRuntime builds the transport newAPIClient runs on. It is separate so
+// that the TLS rules it applies can be asserted without reaching an instance.
+func newAPIRuntime(host, scheme, basePath, accessToken string, skipTLSVerify bool) *httptransport.Runtime {
 	transport := httptransport.New(host, basePath, []string{scheme})
 	// Certificate verification is only skipped when the operator asked for it
 	// with --insecure/-k, which is how instances behind a self-signed
 	// certificate are reached. The convenience wrapper applies the same rule to
 	// its own transport, so both clients agree on how this connection is
 	// protected; verification stays on by default.
+	//
+	// go-openapi has already installed http.DefaultTransport here, so the TLS
+	// config is patched onto a clone of it rather than onto a bare transport.
+	// A bare one would drop the proxy read from the environment along with the
+	// dial, handshake and idle timeouts, which is the wrong trade for exactly
+	// the self-hosted instances this flag exists for.
 	if skipTLSVerify {
-		transport.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // user-controlled --insecure flag, for instances behind a self-signed certificate
+		base, ok := transport.Transport.(*http.Transport)
+		if !ok {
+			base = http.DefaultTransport.(*http.Transport)
 		}
+		patched := base.Clone()
+		patched.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // user-controlled --insecure flag, for instances behind a self-signed certificate
+		transport.Transport = patched
 	}
 	transport.DefaultAuthentication = runtime.ClientAuthInfoWriterFunc(
 		func(r runtime.ClientRequest, _ strfmt.Registry) error {
 			return r.SetHeaderParam("x-api-key", accessToken)
 		},
 	)
-	return apiclient.New(transport, nil)
+	return transport
 }
 
 // StatusCode reports the HTTP status an API error carries, which is the only
