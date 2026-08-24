@@ -4,8 +4,12 @@
 package resources
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -310,6 +314,22 @@ func (c *mqlVercelTeam) id() (string, error) {
 
 // --- team members ---------------------------------------------------------
 
+// inviteRecord is one entry of the emailInviteCodes list returned alongside
+// the team members. expired arrives only once the invitation has expired, so it
+// is a pointer and stays null while the invitation is still redeemable rather
+// than reporting a false nobody set.
+type inviteRecord struct {
+	ID              string            `json:"id"`
+	Email           *string           `json:"email"`
+	Role            *string           `json:"role"`
+	TeamRoles       []string          `json:"teamRoles"`
+	TeamPermissions []string          `json:"teamPermissions"`
+	IsDSyncUser     *bool             `json:"isDSyncUser"`
+	Expired         *bool             `json:"expired"`
+	CreatedAt       flexTime          `json:"createdAt"`
+	Projects        map[string]string `json:"projects"`
+}
+
 type memberRecord struct {
 	UID               string      `json:"uid"`
 	Email             string      `json:"email"`
@@ -332,7 +352,7 @@ type joinedFrom struct {
 
 func (c *mqlVercelTeam) members() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
-	records, err := connection.GetPaged[memberRecord](context.Background(), conn, "/v2/teams/"+c.Id.Data+"/members", nil, "members")
+	records, err := connection.GetPaged[memberRecord](context.Background(), conn, "/v3/teams/"+c.Id.Data+"/members", nil, "members")
 	if err != nil {
 		// A refused read establishes nothing about what exists, so the field
 		// is reported null rather than as an empty list that would assert
@@ -372,6 +392,104 @@ func (c *mqlVercelTeam) members() ([]any, error) {
 		res = append(res, member)
 	}
 	return res, nil
+}
+
+// mqlVercelTeamPendingInviteInternal caches the team the invitation belongs to
+// and the projects it grants, so projects() resolves without re-reading the
+// member list.
+type mqlVercelTeamPendingInviteInternal struct {
+	teamID          string
+	cacheProjectIDs []string
+}
+
+// pendingInvites lists the team invitations that have been sent and not
+// accepted. They arrive under emailInviteCodes in the same envelope as the
+// members, alongside the member pagination cursor. Whether Vercel repeats the
+// invitations on every member page or returns them only on the first is not
+// stated, so the walk collects them across pages and drops repeats by id.
+func (c *mqlVercelTeam) pendingInvites() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
+	records, err := connection.GetPaged[inviteRecord](context.Background(), conn, "/v3/teams/"+c.Id.Data+"/members", nil, "emailInviteCodes")
+	if err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			c.PendingInvites.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	res := []any{}
+	for i, rec := range dedupeInvites(records) {
+		// dedupeInvites keeps every record whose id is empty, because an absent
+		// id is not evidence that two invitations are the same one. The cache
+		// key has to keep them apart too, so it falls back to the position in
+		// the listing rather than collapsing them onto one resource.
+		key := c.Id.Data + "/invite/" + rec.ID
+		if rec.ID == "" {
+			key = c.Id.Data + "/invite/#" + strconv.Itoa(i)
+		}
+		invite, err := CreateResource(c.MqlRuntime, "vercel.team.pendingInvite", map[string]*llx.RawData{
+			"__id":            llx.StringData(key),
+			"id":              llx.StringData(rec.ID),
+			"email":           llx.StringDataPtr(rec.Email),
+			"role":            llx.StringDataPtr(rec.Role),
+			"teamRoles":       llx.ArrayData(strSliceToAny(rec.TeamRoles), types.String),
+			"teamPermissions": llx.ArrayData(strSliceToAny(rec.TeamPermissions), types.String),
+			"isDSyncUser":     llx.BoolDataPtr(rec.IsDSyncUser),
+			"expired":         llx.BoolDataPtr(rec.Expired),
+			"createdAt":       llx.TimeDataPtr(rec.CreatedAt.Time()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		mqlInvite := invite.(*mqlVercelTeamPendingInvite)
+		mqlInvite.teamID = c.Id.Data
+		mqlInvite.cacheProjectIDs = inviteProjectIDs(&rec)
+		res = append(res, invite)
+	}
+	return res, nil
+}
+
+// dedupeInvites keeps the first record for each invitation id, preserving the
+// order they arrived in. An invitation with no id cannot be deduplicated and is
+// kept, since dropping it would under-report.
+func dedupeInvites(records []inviteRecord) []inviteRecord {
+	out := make([]inviteRecord, 0, len(records))
+	seen := make(map[string]bool, len(records))
+	for _, rec := range records {
+		if rec.ID != "" {
+			if seen[rec.ID] {
+				continue
+			}
+			seen[rec.ID] = true
+		}
+		out = append(out, rec)
+	}
+	return out
+}
+
+// inviteProjectIDs lists the projects an invitation grants access to, sorted so
+// the resolved references come back in a stable order.
+func inviteProjectIDs(rec *inviteRecord) []string {
+	ids := make([]string, 0, len(rec.Projects))
+	for id := range rec.Projects {
+		if id != "" {
+			ids = append(ids, id)
+		}
+	}
+	sort.Strings(ids)
+	return ids
+}
+
+func (c *mqlVercelTeamPendingInvite) id() (string, error) {
+	return c.Id.Data, c.Id.Error
+}
+
+func (c *mqlVercelTeamPendingInvite) projects() ([]any, error) {
+	return resolveProjectRefs(c.MqlRuntime, c.teamID, c.cacheProjectIDs)
 }
 
 // --- shared environment variables -----------------------------------------
@@ -578,6 +696,7 @@ func (c *mqlVercelTeam) edgeConfigs() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		ec.(*mqlVercelEdgeConfig).teamID = c.Id.Data
 		res = append(res, ec)
 	}
 	return res, nil
@@ -585,6 +704,90 @@ func (c *mqlVercelTeam) edgeConfigs() ([]any, error) {
 
 func (c *mqlVercelEdgeConfig) id() (string, error) {
 	return c.Id.Data, c.Id.Error
+}
+
+// mqlVercelEdgeConfigInternal caches the team the store belongs to so tokens()
+// can scope its request.
+type mqlVercelEdgeConfigInternal struct {
+	teamID string
+}
+
+// edgeConfigTokenRecord is one entry of the store's read-token list. The list
+// endpoint deliberately never returns the token value, only an id to reference
+// it by and a masked prefix for display; neither the value nor the mask is
+// read here.
+type edgeConfigTokenRecord struct {
+	ID        string   `json:"id"`
+	Label     *string  `json:"label"`
+	CreatedAt flexTime `json:"createdAt"`
+}
+
+// decodeEdgeConfigTokens reads the token list, which arrives either as a bare
+// array or wrapped under a tokens key depending on the endpoint revision.
+func decodeEdgeConfigTokens(raw json.RawMessage) ([]edgeConfigTokenRecord, error) {
+	trimmed := bytes.TrimSpace(raw)
+	if len(trimmed) == 0 || string(trimmed) == "null" {
+		return nil, nil
+	}
+	if trimmed[0] == '[' {
+		var list []edgeConfigTokenRecord
+		if err := json.Unmarshal(trimmed, &list); err != nil {
+			return nil, err
+		}
+		return list, nil
+	}
+	var wrapper struct {
+		Tokens []edgeConfigTokenRecord `json:"tokens"`
+	}
+	if err := json.Unmarshal(trimmed, &wrapper); err != nil {
+		return nil, err
+	}
+	return wrapper.Tokens, nil
+}
+
+// tokens lists the read tokens issued for the store. Each token reads the
+// store's contents wherever it is presented, so the count and age are the
+// exposure; the token value itself is never returned by this endpoint and is
+// never reported.
+func (c *mqlVercelEdgeConfig) tokens() ([]any, error) {
+	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
+
+	var raw json.RawMessage
+	if err := conn.Get(context.Background(), "/v1/edge-config/"+c.Id.Data+"/tokens", connection.TeamQuery(c.teamID), &raw); err != nil {
+		// A refused read establishes nothing about what exists, so the field
+		// is reported null rather than as an empty list that would assert
+		// there is none.
+		if connection.IsForbidden(err) {
+			c.Tokens.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		// A 404 means the store has no token collection, which genuinely is
+		// none.
+		if connection.IsNotFound(err) {
+			return []any{}, nil
+		}
+		return nil, err
+	}
+
+	records, err := decodeEdgeConfigTokens(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, rec := range records {
+		token, err := CreateResource(c.MqlRuntime, "vercel.edgeConfig.token", map[string]*llx.RawData{
+			"__id":      llx.StringData(c.Id.Data + "/token/" + rec.ID),
+			"id":        llx.StringData(rec.ID),
+			"label":     llx.StringDataPtr(rec.Label),
+			"createdAt": llx.TimeDataPtr(rec.CreatedAt.Time()),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, token)
+	}
+	return res, nil
 }
 
 // --- log drains -----------------------------------------------------------
@@ -744,29 +947,39 @@ func (c *mqlVercelTeam) integrationConfigurations() ([]any, error) {
 
 	var res []any
 	for i := range records {
-		rec := records[i]
-		installationType := rec.InstallationType
-		if installationType == "" {
-			installationType = rec.Source
-		}
-		cfg, err := CreateResource(c.MqlRuntime, "vercel.integrationConfiguration", map[string]*llx.RawData{
-			"id":               llx.StringData(rec.ID),
-			"slug":             llx.StringData(rec.Slug),
-			"scopes":           llx.ArrayData(strSliceToAny(rec.Scopes), types.String),
-			"installationType": llx.StringData(installationType),
-			"projectSelection": llx.StringData(rec.ProjectSelection),
-			"createdAt":        llx.TimeDataPtr(rec.CreatedAt.Time()),
-			"updatedAt":        llx.TimeDataPtr(rec.UpdatedAt.Time()),
-		})
+		cfg, err := newVercelIntegrationConfiguration(c.MqlRuntime, c.Id.Data, &records[i])
 		if err != nil {
 			return nil, err
 		}
-		mqlCfg := cfg.(*mqlVercelIntegrationConfiguration)
-		mqlCfg.teamID = c.Id.Data
-		mqlCfg.cacheProjectIds = rec.Projects
-		res = append(res, mqlCfg)
+		res = append(res, cfg)
 	}
 	return res, nil
+}
+
+// newVercelIntegrationConfiguration maps an installation record onto the
+// resource. It is shared with the check resolver so both reach the same cached
+// resource for an installation rather than building two.
+func newVercelIntegrationConfiguration(runtime *plugin.Runtime, teamID string, rec *integrationConfigurationRecord) (*mqlVercelIntegrationConfiguration, error) {
+	installationType := rec.InstallationType
+	if installationType == "" {
+		installationType = rec.Source
+	}
+	cfg, err := CreateResource(runtime, "vercel.integrationConfiguration", map[string]*llx.RawData{
+		"id":               llx.StringData(rec.ID),
+		"slug":             llx.StringData(rec.Slug),
+		"scopes":           llx.ArrayData(strSliceToAny(rec.Scopes), types.String),
+		"installationType": llx.StringData(installationType),
+		"projectSelection": llx.StringData(rec.ProjectSelection),
+		"createdAt":        llx.TimeDataPtr(rec.CreatedAt.Time()),
+		"updatedAt":        llx.TimeDataPtr(rec.UpdatedAt.Time()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlCfg := cfg.(*mqlVercelIntegrationConfiguration)
+	mqlCfg.teamID = teamID
+	mqlCfg.cacheProjectIds = rec.Projects
+	return mqlCfg, nil
 }
 
 func (c *mqlVercelIntegrationConfiguration) id() (string, error) {

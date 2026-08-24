@@ -290,3 +290,80 @@ func TestErrorClassificationThroughWrap(t *testing.T) {
 		t.Error("IsForbidden should be false for a non-APIError")
 	}
 }
+
+// An endpoint that reports a string cursor but ignores the next parameter
+// replays the first page forever. Without the guard this loops until the
+// process is killed; with it the records are collected once.
+func TestGetPagedCursorDropsReplayedPage(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls > 8 {
+			t.Fatal("GetPagedCursor did not terminate on a stuck cursor")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, `{"items":[{"id":"a"}],"pagination":{"next":"stuck"}}`)
+	}))
+	defer srv.Close()
+
+	got, err := GetPagedCursor[pagedItem](context.Background(), testConn(srv), "/things", nil, "items")
+	if err != nil {
+		t.Fatalf("GetPagedCursor: %v", err)
+	}
+	if len(got) != 1 || got[0].ID != "a" {
+		t.Fatalf("got %v, want the replayed records collected once", got)
+	}
+	if calls != 2 {
+		t.Errorf("made %d requests, want 2 (first page then the echoed cursor)", calls)
+	}
+}
+
+// The team invitations arrive under a key that is a sibling of the paginated
+// member list, so a multi-page member walk can hand the same invitations back
+// on every page. The walk must collect them all; the caller drops repeats.
+func TestGetPagedCollectsSiblingKeyAcrossPages(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Query().Get("until") {
+		case "":
+			io.WriteString(w, `{"members":[{"id":"m1"}],"emailInviteCodes":[{"id":"inv_1"}],"pagination":{"next":100}}`)
+		case "100":
+			io.WriteString(w, `{"members":[{"id":"m2"}],"emailInviteCodes":[{"id":"inv_1"},{"id":"inv_2"}],"pagination":{"next":null}}`)
+		default:
+			t.Errorf("unexpected until cursor: %q", r.URL.Query().Get("until"))
+		}
+	}))
+	defer srv.Close()
+
+	got, err := GetPaged[pagedItem](context.Background(), testConn(srv), "/v3/teams/team_1/members", nil, "emailInviteCodes")
+	if err != nil {
+		t.Fatalf("GetPaged: %v", err)
+	}
+	want := []string{"inv_1", "inv_1", "inv_2"}
+	if len(got) != len(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i].ID != want[i] {
+			t.Fatalf("got %v, want %v", got, want)
+		}
+	}
+}
+
+// A transport failure is not an access decision. Classifying it as forbidden
+// or not-found would turn a network blip into an empty security field.
+func TestErrorClassifiersRejectTransportErrors(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	srv.Close() // refuse the connection
+
+	err := testConn(srv).Get(context.Background(), "/things", nil, nil)
+	if err == nil {
+		t.Fatal("a refused connection must surface as an error")
+	}
+	if IsForbidden(err) {
+		t.Error("a transport error must not classify as forbidden")
+	}
+	if IsNotFound(err) {
+		t.Error("a transport error must not classify as not found")
+	}
+}

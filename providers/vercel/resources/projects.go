@@ -465,14 +465,29 @@ func resolveProjectRefs(runtime *plugin.Runtime, teamID string, projectIDs []str
 
 // --- environment variables ------------------------------------------------
 
+// envRecord is one project environment variable. The value fields the endpoint
+// can carry are deliberately not declared: the request never asks for a
+// decrypted value, and nothing here reads one. Only the metadata that describes
+// how the value is stored and where it reaches is decoded.
+//
+// decrypted, system and visibility are pointers because a variable predating
+// the field is returned without it, and reporting a false there would claim the
+// value is hidden, or that it is not supplied by the platform, on a variable
+// Vercel said nothing about.
 type envRecord struct {
-	ID        string          `json:"id"`
-	Key       string          `json:"key"`
-	Type      string          `json:"type"`
-	Target    json.RawMessage `json:"target"`
-	GitBranch *string         `json:"gitBranch"`
-	CreatedAt flexTime        `json:"createdAt"`
-	UpdatedAt flexTime        `json:"updatedAt"`
+	ID                   string          `json:"id"`
+	Key                  string          `json:"key"`
+	Type                 string          `json:"type"`
+	Target               json.RawMessage `json:"target"`
+	GitBranch            *string         `json:"gitBranch"`
+	Decrypted            *bool           `json:"decrypted"`
+	Visibility           *string         `json:"visibility"`
+	System               *bool           `json:"system"`
+	Comment              *string         `json:"comment"`
+	CustomEnvironmentIDs []string        `json:"customEnvironmentIds"`
+	ContentHint          map[string]any  `json:"contentHint"`
+	CreatedAt            flexTime        `json:"createdAt"`
+	UpdatedAt            flexTime        `json:"updatedAt"`
 }
 
 // parseTargets normalizes the env target, which Vercel returns as either a
@@ -501,7 +516,11 @@ func parseTargets(raw json.RawMessage) []string {
 
 func (c *mqlVercelProject) environmentVariables() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
-	records, err := connection.GetPaged[envRecord](context.Background(), conn, "/v9/projects/"+c.Id.Data+"/env", connection.TeamQuery(c.teamID), "envs")
+	// The v10 list is the current revision and the only one carrying the
+	// sensitivity metadata below; v9 answers without decrypted, visibility,
+	// system, comment, customEnvironmentIds or contentHint. The decrypt query
+	// parameter is deliberately never set, so no value is ever requested.
+	records, err := connection.GetPaged[envRecord](context.Background(), conn, "/v10/projects/"+c.Id.Data+"/env", connection.TeamQuery(c.teamID), "envs")
 	if err != nil {
 		// A refused read establishes nothing about what exists, so the field
 		// is reported null rather than as an empty list that would assert
@@ -516,14 +535,27 @@ func (c *mqlVercelProject) environmentVariables() ([]any, error) {
 	var res []any
 	for i := range records {
 		rec := records[i]
+		var contentHint *llx.RawData
+		if rec.ContentHint == nil {
+			contentHint = llx.NilData
+		} else {
+			contentHint = llx.DictData(rec.ContentHint)
+		}
+
 		env, err := CreateResource(c.MqlRuntime, "vercel.project.environmentVariable", map[string]*llx.RawData{
-			"id":        llx.StringData(rec.ID),
-			"key":       llx.StringData(rec.Key),
-			"type":      llx.StringData(rec.Type),
-			"target":    llx.ArrayData(strSliceToAny(parseTargets(rec.Target)), types.String),
-			"gitBranch": llx.StringDataPtr(rec.GitBranch),
-			"createdAt": llx.TimeDataPtr(rec.CreatedAt.Time()),
-			"updatedAt": llx.TimeDataPtr(rec.UpdatedAt.Time()),
+			"id":                   llx.StringData(rec.ID),
+			"key":                  llx.StringData(rec.Key),
+			"type":                 llx.StringData(rec.Type),
+			"target":               llx.ArrayData(strSliceToAny(parseTargets(rec.Target)), types.String),
+			"gitBranch":            llx.StringDataPtr(rec.GitBranch),
+			"decrypted":            llx.BoolDataPtr(rec.Decrypted),
+			"visibility":           llx.StringDataPtr(rec.Visibility),
+			"system":               llx.BoolDataPtr(rec.System),
+			"comment":              llx.StringDataPtr(rec.Comment),
+			"customEnvironmentIds": llx.ArrayData(strSliceToAny(rec.CustomEnvironmentIDs), types.String),
+			"contentHint":          contentHint,
+			"createdAt":            llx.TimeDataPtr(rec.CreatedAt.Time()),
+			"updatedAt":            llx.TimeDataPtr(rec.UpdatedAt.Time()),
 		})
 		if err != nil {
 			return nil, err
@@ -568,13 +600,20 @@ type deploymentRecord struct {
 	InspectorURL string             `json:"inspectorUrl"`
 	Created      flexTime           `json:"created"`
 	CreatedAt    flexTime           `json:"createdAt"`
+	// Both check fields are pointers: a deployment created before Vercel
+	// recorded them, or one no check applies to, arrives without them, and
+	// reporting a conclusion nobody set would claim the checks passed.
+	ChecksState      *string `json:"checksState"`
+	ChecksConclusion *string `json:"checksConclusion"`
 }
 
 func (c *mqlVercelProject) deployments() ([]any, error) {
 	conn := c.MqlRuntime.Connection.(*connection.VercelConnection)
 	query := connection.TeamQuery(c.teamID)
 	query.Set("projectId", c.Id.Data)
-	records, err := connection.GetPaged[deploymentRecord](context.Background(), conn, "/v6/deployments", query, "deployments")
+	// v7 is the current revision of the deployment list; v6 is no longer in
+	// the API reference and does not report the check fields below.
+	records, err := connection.GetPaged[deploymentRecord](context.Background(), conn, "/v7/deployments", query, "deployments")
 	if err != nil {
 		return nil, err
 	}
@@ -614,18 +653,20 @@ func newVercelDeployment(runtime *plugin.Runtime, teamID, projectID string, rec 
 	}
 
 	res, err := CreateResource(runtime, "vercel.deployment", map[string]*llx.RawData{
-		"id":              llx.StringData(id),
-		"name":            llx.StringData(rec.Name),
-		"url":             llx.StringData(rec.URL),
-		"state":           llx.StringData(state),
-		"target":          llx.StringDataPtr(rec.Target),
-		"source":          llx.StringData(rec.Source),
-		"deploymentType":  llx.StringData(rec.Type),
-		"creatorUid":      llx.StringData(creatorUID),
-		"creatorUsername": llx.StringData(creatorUsername),
-		"creatorEmail":    llx.StringData(creatorEmail),
-		"inspectorUrl":    llx.StringData(rec.InspectorURL),
-		"createdAt":       llx.TimeDataPtr(created),
+		"id":               llx.StringData(id),
+		"name":             llx.StringData(rec.Name),
+		"url":              llx.StringData(rec.URL),
+		"state":            llx.StringData(state),
+		"target":           llx.StringDataPtr(rec.Target),
+		"source":           llx.StringData(rec.Source),
+		"deploymentType":   llx.StringData(rec.Type),
+		"creatorUid":       llx.StringData(creatorUID),
+		"creatorUsername":  llx.StringData(creatorUsername),
+		"creatorEmail":     llx.StringData(creatorEmail),
+		"inspectorUrl":     llx.StringData(rec.InspectorURL),
+		"checksState":      llx.StringDataPtr(rec.ChecksState),
+		"checksConclusion": llx.StringDataPtr(rec.ChecksConclusion),
+		"createdAt":        llx.TimeDataPtr(created),
 	})
 	if err != nil {
 		return nil, err

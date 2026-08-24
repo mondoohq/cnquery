@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"sort"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -17,16 +18,68 @@ import (
 // mqlVercelFirewallInternal caches the firewall scope and the rules fetched with
 // the active configuration so rules() and ipRules() avoid a second API call.
 type mqlVercelFirewallInternal struct {
-	teamID     string
-	projectID  string
-	cacheRules []firewallRuleRecord
-	cacheIPs   []firewallIPRecord
+	teamID       string
+	projectID    string
+	cacheRules   []firewallRuleRecord
+	cacheIPs     []firewallIPRecord
+	cacheManaged map[string]managedRulesetRecord
+	cacheCRS     map[string]coreRuleRecord
+}
+
+// managedRulesetRecord is one entry of the managedRules object, keyed by
+// ruleset identifier. active is the only field Vercel guarantees; action and
+// the attribution fields are absent on a ruleset that has never been
+// configured, so every one of them is a pointer and stays null when omitted.
+type managedRulesetRecord struct {
+	Active    *bool    `json:"active"`
+	Action    *string  `json:"action"`
+	UpdatedAt flexTime `json:"updatedAt"`
+	UserID    *string  `json:"userId"`
+	Username  *string  `json:"username"`
+}
+
+// coreRuleRecord is one attack-class entry of the crs object.
+type coreRuleRecord struct {
+	Active *bool   `json:"active"`
+	Action *string `json:"action"`
+}
+
+// decodeRulesetMap decodes a keyed ruleset object into records. An absent or
+// null object yields no entries rather than an error, since a project whose
+// firewall has never been configured returns neither key.
+func decodeRulesetMap[T any](raw json.RawMessage) (map[string]T, error) {
+	if len(raw) == 0 || isJSONNullRaw(raw) {
+		return nil, nil
+	}
+	var out map[string]T
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// decodeAnyOrEmpty decodes a raw object for a dict field, yielding an empty
+// object when the key was absent or null so the field renders as {} rather
+// than failing.
+func decodeAnyOrEmpty(raw json.RawMessage) any {
+	if len(raw) == 0 || isJSONNullRaw(raw) {
+		return map[string]any{}
+	}
+	var out any
+	if err := json.Unmarshal(raw, &out); err != nil || out == nil {
+		return map[string]any{}
+	}
+	return out
+}
+
+func isJSONNullRaw(raw json.RawMessage) bool {
+	return strings.TrimSpace(string(raw)) == "null"
 }
 
 type firewallConfig struct {
 	FirewallEnabled bool                 `json:"firewallEnabled"`
-	ManagedRules    any                  `json:"managedRules"`
-	CRS             any                  `json:"crs"`
+	ManagedRules    json.RawMessage      `json:"managedRules"`
+	CRS             json.RawMessage      `json:"crs"`
 	BotIDEnabled    *bool                `json:"botIdEnabled"`
 	LogHeaders      logHeaders           `json:"logHeaders"`
 	Version         *int64               `json:"version"`
@@ -75,21 +128,71 @@ type firewallIPRecord struct {
 	Notes    *string `json:"notes"`
 }
 
-// firewallRuleAction reduces a custom rule action, which may be a plain string
-// or a nested mitigation object, to its action verb.
-func firewallRuleAction(a any) string {
+// firewallMitigation is the mitigation a custom rule applies to the traffic it
+// matches. Vercel reports the action verb on every rule and omits the rest, so
+// each remaining field is a pointer that stays null when the rule does not set
+// it. bypassSystem in particular must never be reported as false on a rule
+// Vercel said nothing about: a fabricated false would let an assertion that no
+// rule bypasses the system mitigations pass without having read anything.
+type firewallMitigation struct {
+	Action         *string            `json:"action"`
+	RateLimit      *firewallRateLimit `json:"rateLimit"`
+	Redirect       *firewallRedirect  `json:"redirect"`
+	ActionDuration *string            `json:"actionDuration"`
+	BypassSystem   *bool              `json:"bypassSystem"`
+	LogHeaders     logHeaders         `json:"logHeaders"`
+}
+
+type firewallRateLimit struct {
+	Algo   *string  `json:"algo"`
+	Window *int64   `json:"window"`
+	Limit  *int64   `json:"limit"`
+	Keys   []string `json:"keys"`
+	Action *string  `json:"action"`
+}
+
+type firewallRedirect struct {
+	Location  *string `json:"location"`
+	Permanent *bool   `json:"permanent"`
+}
+
+// firewallRuleMitigation decodes a custom rule action into its mitigation. The
+// action arrives either as a bare verb string, as {"mitigate": {...}}, or as a
+// mitigation object inline, and only the object forms carry the fields beyond
+// the verb. A bare verb yields a mitigation holding just that verb, so every
+// other field stays null rather than becoming a value the rule never set.
+func firewallRuleMitigation(a any) firewallMitigation {
 	switch v := a.(type) {
 	case string:
-		return v
+		verb := v
+		return firewallMitigation{Action: &verb}
 	case map[string]any:
-		if m, ok := v["mitigate"].(map[string]any); ok {
-			if s, ok := m["action"].(string); ok {
-				return s
-			}
+		if inner, ok := v["mitigate"].(map[string]any); ok {
+			return decodeMitigation(inner)
 		}
-		if s, ok := v["action"].(string); ok {
-			return s
-		}
+		return decodeMitigation(v)
+	}
+	return firewallMitigation{}
+}
+
+// decodeMitigation round-trips the decoded object through the typed struct so
+// the mitigation fields are read by their JSON tags rather than by hand.
+func decodeMitigation(m map[string]any) firewallMitigation {
+	raw, err := json.Marshal(m)
+	if err != nil {
+		return firewallMitigation{}
+	}
+	var out firewallMitigation
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return firewallMitigation{}
+	}
+	return out
+}
+
+// firewallRuleAction reduces a custom rule action to its action verb.
+func firewallRuleAction(a any) string {
+	if v := firewallRuleMitigation(a).Action; v != nil {
+		return *v
 	}
 	return ""
 }
@@ -110,21 +213,21 @@ func (p *mqlVercelProject) firewall() (*mqlVercelFirewall, error) {
 		return nil, err
 	}
 
-	managed := cfg.ManagedRules
-	if managed == nil {
-		managed = map[string]any{}
+	managedRuleSets, err := decodeRulesetMap[managedRulesetRecord](cfg.ManagedRules)
+	if err != nil {
+		return nil, err
 	}
-	crs := cfg.CRS
-	if crs == nil {
-		crs = map[string]any{}
+	coreRules, err := decodeRulesetMap[coreRuleRecord](cfg.CRS)
+	if err != nil {
+		return nil, err
 	}
 
 	res, err := CreateResource(p.MqlRuntime, "vercel.firewall", map[string]*llx.RawData{
 		"__id":            llx.StringData(p.Id.Data + "/firewall"),
 		"enabled":         llx.BoolData(cfg.FirewallEnabled),
-		"managedRulesets": llx.DictData(managed),
-		"coreRuleSet":     llx.DictData(crs),
-		"botIdEnabled":    llx.BoolData(cfg.BotIDEnabled != nil && *cfg.BotIDEnabled),
+		"managedRulesets": llx.DictData(decodeAnyOrEmpty(cfg.ManagedRules)),
+		"coreRuleSet":     llx.DictData(decodeAnyOrEmpty(cfg.CRS)),
+		"botIdEnabled":    llx.BoolDataPtr(cfg.BotIDEnabled),
 		"logHeaders":      llx.ArrayData(strSliceToAny(cfg.LogHeaders.values), types.String),
 		"configVersion":   llx.IntData(intPtrOrZero(cfg.Version)),
 		"updatedAt":       llx.TimeDataPtr(cfg.UpdatedAt.Time()),
@@ -138,7 +241,83 @@ func (p *mqlVercelProject) firewall() (*mqlVercelFirewall, error) {
 	fw.projectID = p.Id.Data
 	fw.cacheRules = cfg.Rules
 	fw.cacheIPs = cfg.IPs
+	fw.cacheManaged = managedRuleSets
+	fw.cacheCRS = coreRules
 	return fw, nil
+}
+
+// managedRuleSetOrder is the order managed rulesets are reported in, so a scan
+// lists them the same way every time rather than in Go's map order.
+var managedRuleSetOrder = []string{"owasp", "bot_protection", "ai_bots", "traffic_sources", "vercel_ruleset"}
+
+// coreRuleOrder is the order core rule set categories are reported in.
+var coreRuleOrder = []string{"sqli", "xss", "rce", "lfi", "rfi", "php", "java", "ma", "sd", "sf", "gen"}
+
+// orderedKeys returns the keys of m, listing the ones named in order first and
+// appending any key the API added since, sorted, so a new ruleset is reported
+// rather than dropped.
+func orderedKeys[T any](m map[string]T, order []string) []string {
+	out := make([]string, 0, len(m))
+	seen := make(map[string]bool, len(m))
+	for _, k := range order {
+		if _, ok := m[k]; ok {
+			out = append(out, k)
+			seen[k] = true
+		}
+	}
+	rest := make([]string, 0, len(m))
+	for k := range m {
+		if !seen[k] {
+			rest = append(rest, k)
+		}
+	}
+	sort.Strings(rest)
+	return append(out, rest...)
+}
+
+// managedRules reports the rulesets Vercel maintains and evaluates for the
+// project. Every field but the ruleset name comes back as a pointer, so a
+// ruleset Vercel reports without an action reads null rather than as an action
+// nobody configured.
+func (f *mqlVercelFirewall) managedRules() ([]any, error) {
+	res := []any{}
+	for _, name := range orderedKeys(f.cacheManaged, managedRuleSetOrder) {
+		rec := f.cacheManaged[name]
+		ruleset, err := CreateResource(f.MqlRuntime, "vercel.firewall.managedRuleset", map[string]*llx.RawData{
+			"__id":              llx.StringData(f.projectID + "/managedRule/" + name),
+			"name":              llx.StringData(name),
+			"active":            llx.BoolDataPtr(rec.Active),
+			"action":            llx.StringDataPtr(rec.Action),
+			"updatedAt":         llx.TimeDataPtr(rec.UpdatedAt.Time()),
+			"updatedByUserId":   llx.StringDataPtr(rec.UserID),
+			"updatedByUsername": llx.StringDataPtr(rec.Username),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, ruleset)
+	}
+	return res, nil
+}
+
+// coreRules reports the OWASP Core Rule Set categories configured for the
+// project.
+func (f *mqlVercelFirewall) coreRules() ([]any, error) {
+	res := []any{}
+	for _, name := range orderedKeys(f.cacheCRS, coreRuleOrder) {
+		rec := f.cacheCRS[name]
+		rule, err := CreateResource(f.MqlRuntime, "vercel.firewall.coreRule", map[string]*llx.RawData{
+			"__id":   llx.StringData(f.projectID + "/coreRule/" + name),
+			"name":   llx.StringData(name),
+			"active": llx.BoolDataPtr(rec.Active),
+			"action": llx.StringDataPtr(rec.Action),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, rule)
+	}
+	return res, nil
 }
 
 // --- system bypass --------------------------------------------------------
@@ -268,13 +447,41 @@ func (f *mqlVercelFirewall) rules() ([]any, error) {
 	var res []any
 	for i := range f.cacheRules {
 		rec := f.cacheRules[i]
+		mit := firewallRuleMitigation(rec.Action)
+
+		var rateAlgo, rateAction, redirectLocation *string
+		var rateWindow, rateLimit *int64
+		var rateKeys []string
+		var redirectPermanent *bool
+		if mit.RateLimit != nil {
+			rateAlgo = mit.RateLimit.Algo
+			rateAction = mit.RateLimit.Action
+			rateWindow = mit.RateLimit.Window
+			rateLimit = mit.RateLimit.Limit
+			rateKeys = mit.RateLimit.Keys
+		}
+		if mit.Redirect != nil {
+			redirectLocation = mit.Redirect.Location
+			redirectPermanent = mit.Redirect.Permanent
+		}
+
 		rule, err := CreateResource(f.MqlRuntime, "vercel.firewall.rule", map[string]*llx.RawData{
-			"id":             llx.StringData(rec.ID),
-			"name":           llx.StringData(rec.Name),
-			"description":    llx.StringDataPtr(rec.Description),
-			"active":         llx.BoolData(rec.Active),
-			"action":         llx.StringData(firewallRuleAction(rec.Action)),
-			"conditionGroup": llx.ArrayData(dictSliceToAny(rec.ConditionGroup), types.Dict),
+			"id":                llx.StringData(rec.ID),
+			"name":              llx.StringData(rec.Name),
+			"description":       llx.StringDataPtr(rec.Description),
+			"active":            llx.BoolData(rec.Active),
+			"action":            llx.StringData(firewallRuleAction(rec.Action)),
+			"conditionGroup":    llx.ArrayData(dictSliceToAny(rec.ConditionGroup), types.Dict),
+			"bypassSystem":      llx.BoolDataPtr(mit.BypassSystem),
+			"actionDuration":    llx.StringDataPtr(mit.ActionDuration),
+			"redirectLocation":  llx.StringDataPtr(redirectLocation),
+			"redirectPermanent": llx.BoolDataPtr(redirectPermanent),
+			"rateLimitAlgo":     llx.StringDataPtr(rateAlgo),
+			"rateLimitWindow":   llx.IntDataPtr(rateWindow),
+			"rateLimitLimit":    llx.IntDataPtr(rateLimit),
+			"rateLimitKeys":     llx.ArrayData(strSliceToAny(rateKeys), types.String),
+			"rateLimitAction":   llx.StringDataPtr(rateAction),
+			"logHeaders":        llx.ArrayData(strSliceToAny(mit.LogHeaders.values), types.String),
 		})
 		if err != nil {
 			return nil, err
