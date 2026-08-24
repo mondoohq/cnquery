@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/types"
@@ -157,7 +158,10 @@ func initMikrotikIpPool(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 			return poolArgs(row), nil, nil
 		}
 	}
-	return args, nil, nil
+	// The listing completed and named no such pool. Falling through would build
+	// a resource carrying only the name, leaving every other field unset, so a
+	// query would read empty data rather than an error.
+	return nil, nil, fmt.Errorf("mikrotik.ip.pool %q not found", name)
 }
 
 // --- ip.service ---
@@ -288,7 +292,7 @@ func initMikrotikIpDhcpServer(runtime *plugin.Runtime, args map[string]*llx.RawD
 			return nil, res, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("mikrotik.ip.dhcp.server %q not found", name)
 }
 
 func (r *mqlMikrotikIpDhcpServer) compute_interface() (*mqlMikrotikInterface, error) {
@@ -495,5 +499,5 @@ func initMikrotikUserGroup(runtime *plugin.Runtime, args map[string]*llx.RawData
 			return userGroupArgs(row), nil, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("mikrotik.user.group %q not found", name)
 }
