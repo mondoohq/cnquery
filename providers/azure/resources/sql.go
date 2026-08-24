@@ -47,6 +47,22 @@ type mqlAzureSubscriptionSqlServiceServerInternal struct {
 	cachePrimaryUserAssignedIdentityId string
 }
 
+func (a *mqlAzureSubscriptionSqlServiceServer) diagnosticSettings() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}
+
+func (a *mqlAzureSubscriptionSqlServiceServer) diagnosticSettingsCategories() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func (a *mqlAzureSubscriptionSqlServiceServer) primaryUserAssignedIdentity() (*mqlAzureSubscriptionManagedIdentity, error) {
 	if a.cachePrimaryUserAssignedIdentityId == "" {
 		a.PrimaryUserAssignedIdentity.State = plugin.StateIsSet | plugin.StateIsNull

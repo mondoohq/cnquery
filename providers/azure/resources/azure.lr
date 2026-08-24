@@ -729,6 +729,31 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   enableAutomaticUpdates bool
   // Patch mode for the OS ("Manual", "AutomaticByOS", "AutomaticByPlatform", "ImageDefault")
   patchMode string
+  // Whether extension operations are permitted on the VM
+  //
+  // Extensions run inside the guest as root or SYSTEM, so while this is true
+  // a caller who can write to the VM resource can execute code on the host
+  // without holding any guest credential. Null when the VM reports no OS
+  // profile.
+  allowExtensionOperations bool
+  // Whether the VM waits for a provisioning signal from the guest agent; null when the VM reports no OS profile
+  requireGuestProvisionSignal bool
+  // Whether a WinRM HTTP listener is configured on the Windows VM
+  //
+  // An HTTP listener carries the remote PowerShell session, and the
+  // credentials that open it, with no transport encryption. Null on a VM that
+  // reports no Windows configuration.
+  winRmHttpListenerEnabled bool
+  // Whether a WinRM HTTPS listener is configured on the Windows VM
+  //
+  // Null on a VM that reports no Windows configuration.
+  winRmHttpsListenerEnabled bool
+  // Key Vaults supplying the certificates installed into the guest
+  //
+  // Empty when the VM installs no Key Vault certificates.
+  certificateSourceVaults() []azure.subscription.keyVaultService.vault
+  // User-assigned managed identity Azure Disk Encryption uses to reach Key Vault; null when not configured
+  encryptionIdentity() azure.subscription.managedIdentity
   // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
   vmScaleSet() azure.subscription.computeService.vmScaleSet
   // Managed identity configuration (type, system- and user-assigned identities)
@@ -6086,6 +6111,10 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // configured for anonymous public access (`allowBlobPublicAccess`). All three
   // gates must be open for anonymous internet reads to be possible.
   isPublic() bool
+  // Diagnostic settings attached to the storage account
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Log and metric categories the storage account can emit
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
 }
 
 // Azure Storage account queue
@@ -6307,6 +6336,30 @@ private azure.subscription.storageService.account.service.blobProperties @defaul
   isVersioningEnabled bool
   // Static website hosting configuration for the blob service
   staticWebsite azure.subscription.storageService.account.staticWebsiteConfig
+  // Origins allowed by the blob service CORS rules
+  //
+  // One entry per origin, gathered across every CORS rule on the blob
+  // service. Empty when CORS is not configured. An entry of "*" lets a page
+  // on any site read blob responses using the visitor's browser session.
+  corsAllowedOrigins []string
+  // Blob REST API version used for requests that do not name one; empty when unset
+  defaultServiceVersion string
+  // Whether the blob change feed is enabled
+  //
+  // The change feed is the ordered, durable record of blob create, update and
+  // delete events on the account, so it is what a data-access investigation
+  // reads after the fact.
+  changeFeedEnabled bool
+  // Days the change feed is retained; null when it is retained indefinitely or the feed is off
+  changeFeedRetentionInDays int
+  // Whether point-in-time restore is enabled for the blob service
+  restorePolicyEnabled bool
+  // Days blobs can be restored back to; null when point-in-time restore is off
+  restorePolicyDays int
+  // Earliest point in time a restore can start from; null when point-in-time restore is off
+  restorePolicyMinRestoreTime time
+  // Whether last-access-time tracking is enabled for blobs
+  lastAccessTimeTrackingEnabled bool
 }
 
 // Static website hosting configuration on a storage account
@@ -7471,6 +7524,10 @@ private azure.subscription.sqlService.server @defaults("name location properties
   tenantId string
   // Default user-assigned managed identity used by the server (null when none is set)
   primaryUserAssignedIdentity() azure.subscription.managedIdentity
+  // Diagnostic settings attached to the server
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Log and metric categories the server can emit
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
 }
 
 // Azure SQL Database server vulnerability assessment settings
@@ -10093,6 +10150,8 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
   storageAccount() azure.subscription.storageService.account
   // ID of the Log Analytics workspace logs are sent to; empty when no workspace destination is configured
   workspaceId string
+  // Log Analytics workspace logs are sent to; null when no workspace destination is configured
+  workspace() azure.subscription.monitorService.workspace
   // Name of the Event Hub logs are streamed to; empty when no Event Hub destination is configured
   eventHubName string
   // Authorization rule ID for the Event Hub destination
@@ -11629,6 +11688,23 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   kubeletIdentity() azure.subscription.managedIdentity
   // Client ID of the legacy service principal used by the cluster; empty when the cluster uses a managed identity
   servicePrincipalClientId string
+  // Administrator account provisioned on the Linux nodes; empty when the cluster carries no Linux profile
+  linuxAdminUsername string
+  // SSH public keys authorized for the administrator account on the Linux nodes
+  //
+  // One PEM-encoded public key per entry. A non-empty list means interactive
+  // login to the nodes is provisioned, reaching the host outside the
+  // Kubernetes API and therefore outside Kubernetes RBAC. Empty when the
+  // cluster carries no Linux profile.
+  linuxSshPublicKeys []string
+  // Administrator account provisioned on the Windows nodes; empty when the cluster carries no Windows profile
+  windowsAdminUsername string
+  // Trusted Access role bindings granting other Azure resources a role in the Kubernetes API
+  trustedAccessRoleBindings() []azure.subscription.aksService.cluster.trustedAccessRoleBinding
+  // Diagnostic settings attached to the cluster
+  diagnosticSettings() []azure.subscription.monitorService.diagnosticsetting
+  // Log and metric categories the cluster can emit
+  diagnosticSettingsCategories() []azure.subscription.monitorService.diagnosticSettingsCategory
   // Private endpoint connections to the cluster API server
   privateEndpointConnections() []azure.subscription.privateEndpointConnection
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -11704,6 +11780,34 @@ private azure.subscription.aksService.cluster.identityBinding @defaults("name pr
   oidcIssuerUrl string
   // Bound user-assigned managed identity
   managedIdentity() azure.subscription.managedIdentity
+}
+
+// AKS Trusted Access role binding
+//
+// Grant that lets another Azure resource call the cluster's Kubernetes API
+// under a named Kubernetes role, with no cluster credentials and no network
+// reachability to the API server. The `roles` field lists the resource-type
+// qualified role names the source holds, for example
+// "Microsoft.MachineLearningServices/workspaces/mlworkload", and
+// `sourceResourceId` is the ARM ID of the resource holding the grant.
+// `sourceMachineLearningWorkspace` resolves that source when it is an Azure
+// Machine Learning workspace, so the workspace's own public-network exposure
+// reads from the same query as the grant it holds.
+private azure.subscription.aksService.cluster.trustedAccessRoleBinding @defaults("name roles provisioningState") {
+  // Resource ID of the role binding
+  id string
+  // Name of the role binding
+  name string
+  // Resource-type qualified Kubernetes role names bound to the source resource
+  roles []string
+  // Provisioning state of the role binding
+  //
+  // One of "Canceled", "Deleting", "Failed", "Succeeded", or "Updating".
+  provisioningState string
+  // Resource ID of the Azure resource the binding grants Kubernetes API access to
+  sourceResourceId string
+  // Azure Machine Learning workspace holding the binding; null when the source is another resource type
+  sourceMachineLearningWorkspace() azure.subscription.machineLearningService.workspace
 }
 
 // Azure Kubernetes Service cluster node pool (agent pool)
@@ -11794,6 +11898,23 @@ private azure.subscription.aksService.cluster.nodePool @defaults("name mode vmSi
   enableVTPM bool
   // Whether Secure Boot is enabled on nodes (Trusted Launch)
   enableSecureBoot bool
+  // Unsafe sysctls the kubelet accepts from pods on this pool
+  //
+  // Each entry is a sysctl name or a pattern ending in `*`. The kubelet
+  // refuses these kernel parameters by default, so a non-empty list is the
+  // set of node kernel settings a pod on this pool is permitted to change.
+  // Empty when the pool carries no kubelet configuration.
+  kubeletAllowedUnsafeSysctls []string
+  // Port ranges allowed to reach the pool's nodes
+  //
+  // Each entry has `portStart`, `portEnd`, and `protocol` ("TCP" or "UDP").
+  // These ranges open ports on the nodes themselves, so they do not appear in
+  // the network security groups applied to the node subnet.
+  allowedHostPorts []dict
+  // IP tags applied to the instance-level public IPs of the pool's nodes, keyed by tag type
+  nodePublicIPTags map[string]string
+  // Application security groups the pool's nodes are associated with
+  applicationSecurityGroups() []azure.subscription.networkService.appSecurityGroup
   // Node image and Kubernetes versions recently used by the pool, available for rollback
   //
   // Each entry has `orchestratorVersion`, `nodeImageVersion`, and the
