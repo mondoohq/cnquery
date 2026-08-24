@@ -383,6 +383,7 @@ func TestInterfacesWindows(t *testing.T) {
 
 	interfaces, err := subject.Interfaces(conn, platform)
 	require.NoError(t, err)
+	// The fixture includes an adapter with a null InterfaceAlias, which is skipped.
 	assert.Len(t, interfaces, 4)
 
 	index := subject.FindInterface(interfaces, subject.Interface{Name: "Ethernet0"})

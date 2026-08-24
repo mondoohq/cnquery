@@ -81,8 +81,12 @@ func (n *neti) getWindowsGetNetIPInterfaceCmdInterfaces() (interfaces []Interfac
 	log.Trace().Interface("output", netInterfaces).Msg("os.network.interface> net interface cmd")
 
 	for _, adapter := range netInterfaces {
+		name, ok := adapter["InterfaceAlias"].(string)
+		if !ok {
+			continue
+		}
 		iinterface := Interface{
-			Name: adapter["InterfaceAlias"].(string),
+			Name: name,
 		}
 
 		// Get MAC address
