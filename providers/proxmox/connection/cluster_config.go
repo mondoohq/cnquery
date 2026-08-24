@@ -29,6 +29,27 @@ func (c *PveConnection) optionalGet(path string, result any) error {
 	return nil
 }
 
+// getIfAvailable fetches an endpoint that a given cluster may simply not
+// serve, and reports whether the read succeeded.
+//
+// Two of these routes only exist from a certain Proxmox release onward and one
+// sits behind a privilege an audit token may not hold. Both cases arrive as a
+// 404 or a 403, and neither means "the cluster has none of these". Returning
+// readable=false lets the caller report the field as null, so an unread
+// posture is never presented as an empty collection that an assertion would
+// pass over. A transport or decoding failure is still an error.
+func (c *PveConnection) getIfAvailable(path string, result any) (bool, error) {
+	if err := c.apiGet(path, result); err != nil {
+		if IsAccessDeniedOrNotFound(err) {
+			log.Debug().Err(err).Str("path", path).
+				Msg("proxmox: endpoint not available on this cluster")
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to get %s: %w", path, err)
+	}
+	return true, nil
+}
+
 // ---------------------------------------------------------------------------
 // Notification targets and matchers
 // ---------------------------------------------------------------------------

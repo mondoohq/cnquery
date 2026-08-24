@@ -63,6 +63,12 @@ type PveConnection struct {
 	// guest, a Ceph daemon, or a volume costs one sweep for the whole
 	// cluster rather than one per item.
 	nodes nodeIndex
+	// realmSync memoizes the realm-sync job listing, which both the
+	// cluster-wide accessor and the per-realm reverse edge read from.
+	realmSync realmSyncIndex
+	// realms memoizes the realm listing so a fleet of sync jobs resolving
+	// their realm costs one listing rather than one per job.
+	realms realmIndex
 	// storages memoizes the storage listing for the same reason, on behalf
 	// of the disks, mount points, and volumes that name their pool.
 	storages storageIndex

@@ -47,7 +47,11 @@ func firewallOptionsToResource(runtime *plugin.Runtime, opts map[string]any, sco
 		"macfilter":   llx.BoolData(intOrBool(opts["macfilter"])),
 		"ipfilter":    llx.BoolData(intOrBool(opts["ipfilter"])),
 		"radv":        llx.BoolData(intOrBool(opts["radv"])),
-		"config":      llx.DictData(opts),
+		// Only the vnet scope carries a forward policy; every other scope
+		// leaves these empty rather than claiming a default it has no say in.
+		"policyForward":   llx.StringData(str(opts["policy_forward"])),
+		"logLevelForward": llx.StringData(str(opts["log_level_forward"])),
+		"config":          llx.DictData(opts),
 	})
 	if err != nil {
 		return nil, err

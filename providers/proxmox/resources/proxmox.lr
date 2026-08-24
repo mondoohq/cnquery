@@ -86,6 +86,8 @@ proxmox {
   pciMappings() []proxmox.mapping.pci
   // Cluster-wide USB device mappings guests can be granted by name
   usbMappings() []proxmox.mapping.usb
+  // Scheduled imports of users and groups from directory realms
+  realmSyncJobs() []proxmox.realm.syncJob
 }
 
 // SDN controller
@@ -548,6 +550,64 @@ proxmox.cluster @defaults("name quorate") {
   // mirror /cluster/options (`default`, `restore`, `migration`, etc.).
   // Empty when no limits are set.
   bandwidthLimits() dict
+  // Fencing mode of the high-availability stack
+  //
+  // One of `watchdog`, `hardware`, or `both`. Watchdog fencing relies on
+  // the node resetting itself, so a node that hangs without triggering its
+  // watchdog can keep running guests the cluster has already recovered
+  // elsewhere. Empty when not configured; Proxmox defaults to `watchdog`.
+  fencingMode() string
+  // Policy for high-availability guests when a node shuts down
+  //
+  // One of `freeze`, `failover`, `conditional`, or `migrate`. `freeze`
+  // leaves guests down until the node returns, so a node taken out of
+  // service takes its guests with it. Empty when not configured; Proxmox
+  // defaults to `conditional`.
+  haShutdownPolicy() string
+  // WebAuthn relying party name
+  //
+  // The text identifier shown to users when they register or use a hardware
+  // security key. Empty when WebAuthn is not configured, in which case
+  // hardware second factors cannot be enrolled anywhere in the cluster.
+  webauthnRelyingParty() string
+  // WebAuthn relying party ID
+  //
+  // The bare domain name, with no protocol, port, or path, that existing
+  // credentials are bound to. Changing it invalidates every enrolled
+  // security key. Empty when WebAuthn is not configured.
+  webauthnId() string
+  // WebAuthn site origin
+  //
+  // The `https://` URL users reach the web interface at. A mismatch against
+  // the address users actually type stops their security keys from being
+  // offered at all. Empty when WebAuthn is not configured.
+  webauthnOrigin() string
+  // Whether WebAuthn accepts a subdomain of the origin
+  //
+  // Accepting subdomains widens which hostname may present the credential,
+  // so a hostile subdomain of the cluster's domain can solicit an
+  // authentication. True when the setting is absent, which is the Proxmox
+  // default. Null when WebAuthn is not configured.
+  webauthnAllowSubdomains() bool
+  // U2F application ID override
+  //
+  // Empty when not overridden, in which case U2F falls back to the origin.
+  // U2F is the predecessor of WebAuthn and is kept only for keys enrolled
+  // before WebAuthn existed.
+  u2fAppId() string
+  // U2F origin override
+  //
+  // Empty when not overridden.
+  u2fOrigin() string
+  // Guests no backup job covers
+  //
+  // Proxmox computes this by intersecting every backup job's selection,
+  // including pool membership and exclusion lists, against the live guest
+  // inventory, which the job definitions alone cannot answer. Empty when
+  // every guest is covered by at least one job. Null when the cluster does
+  // not serve the endpoint or the token cannot read it, so an unanswered
+  // question is not reported as full coverage.
+  guestsWithoutBackup() []proxmox.cluster.guestWithoutBackup
 }
 
 // Proxmox VE cluster HA resource
@@ -873,6 +933,118 @@ proxmox.vm @defaults("id name status") {
   // vendor IDs, USB bus paths, the SPICE redirection sentinel, or host
   // device paths — all of which surface direct host-USB access.
   usbDevices() []proxmox.vm.usbDevice
+
+  // --- Boot integrity and memory encryption ---
+
+  // Size and type of the EFI vars disk
+  //
+  // Either `4m` or `2m`. Secure Boot requires `4m`; Proxmox falls back to
+  // `2m` when an EFI vars disk carries no explicit setting, for backwards
+  // compatibility with guests created before `4m` existed. Null when the
+  // VM has no EFI vars disk, which is the case for every SeaBIOS guest.
+  efiType() string
+  // Whether the EFI vars disk ships pre-enrolled Secure Boot keys
+  //
+  // True when the EFI vars disk was created from the template that already
+  // holds the distribution and Microsoft Standard keys, which turns Secure
+  // Boot on inside the guest by default. False when the disk exists without
+  // the setting, the state Proxmox documents as its default. Null when the
+  // VM has no EFI vars disk, since nothing is enrolled either way. Note
+  // that a guest can still switch Secure Boot off from inside its own
+  // firmware, so this reports what the hypervisor supplied rather than what
+  // the guest currently enforces.
+  preEnrolledKeys() bool
+  // Whether a virtual TPM is attached
+  //
+  // A vTPM state disk is what lets a guest measure its boot chain and seal
+  // secrets to it. Windows 11 will not install without one, and BitLocker
+  // falls back to a recovery password when it is missing.
+  vtpmPresent() bool
+  // Virtual TPM interface version
+  //
+  // Either `v2.0` or `v1.2`. Proxmox uses `v1.2` when an attached vTPM
+  // carries no explicit version, and the version cannot be changed once the
+  // state disk exists. Null when no virtual TPM is attached.
+  vtpmVersion() string
+  // AMD SEV memory encryption type
+  //
+  // One of `std` for Secure Encrypted Virtualization, `es` for SEV with
+  // Encrypted State, or `snp` for SEV Secure Nested Paging. Null when the
+  // VM runs without SEV, leaving guest memory readable from the host.
+  sevType() string
+  // Whether SEV debugging of the guest is blocked
+  //
+  // Debugging a running SEV guest from the host defeats the point of
+  // encrypting its memory. False when SEV is configured without the
+  // setting, which is the Proxmox default. Null when the VM does not use
+  // SEV.
+  sevNoDebug() bool
+  // Whether SEV key sharing with other guests is blocked
+  //
+  // Sharing a memory encryption key lets two guests read each other's
+  // encrypted pages. False when SEV is configured without the setting,
+  // which is the Proxmox default. Null when the VM does not use SEV.
+  sevNoKeySharing() bool
+  // Whether SEV measures the kernel, initrd, and command line
+  //
+  // Without kernel hashes a direct-kernel-boot SEV guest cannot attest what
+  // it actually booted. False when SEV is configured without the setting,
+  // which is the Proxmox default. Null when the VM does not use SEV.
+  sevKernelHashes() bool
+
+  // --- CPU exposure, hotplug, and entropy ---
+
+  // Emulated CPU model
+  //
+  // The `cputype` of the CPU presented to the guest, for example `host`,
+  // `x86-64-v2-AES`, or `kvm64`. A model older than the host hides newer
+  // instructions from the guest, including the ones that carry speculative
+  // execution mitigations. Empty when the VM uses the Proxmox default.
+  cpuType() string
+  // CPU feature flags forced on or off for the guest
+  //
+  // Each entry is one flag with its sign, for example `+spec-ctrl`,
+  // `+ssbd`, `+pdpe1gb`, or `-md-clear`. These decide whether the guest can
+  // see and use the Spectre and MDS mitigations the host CPU offers, which
+  // a guest cannot enable for itself. Empty when no flags are overridden.
+  cpuFlags() []string
+  // Whether the KVM hypervisor signature is hidden from the guest
+  //
+  // Hiding the signature is normally done so a guest driver or an
+  // anti-cheat check does not detect virtualization, and also hides it from
+  // in-guest security tooling. False when the setting is absent, which is
+  // the Proxmox default.
+  cpuHidden() bool
+  // Whether KVM hardware virtualization is enabled
+  //
+  // With KVM off the VM runs under pure software emulation, which loses the
+  // hardware-enforced boundary between guest and host and rules out nested
+  // virtualization features that depend on it. True when the setting is
+  // absent, which is the Proxmox default.
+  kvmEnabled() bool
+  // Device classes that can be attached to the running guest
+  //
+  // Each entry is one hotplug class, from `network`, `disk`, `cpu`,
+  // `memory`, `usb`, and `cloudinit`. A guest with `usb` or `disk` hotplug
+  // accepts new devices without a restart, so its device inventory can
+  // change between two scans. Reports `network`, `disk`, and `usb` when the
+  // setting is absent, which is the Proxmox default; empty only when
+  // hotplug is switched off outright.
+  hotplugFeatures() []string
+  // Host device the guest draws entropy from
+  //
+  // One of `/dev/urandom`, `/dev/random`, or `/dev/hwrng`. The blocking
+  // sources let a guest starve the host and its other guests of entropy.
+  // Null when the VM has no random number generator, in which case the
+  // guest relies on whatever entropy its own kernel can gather.
+  rngSource() string
+  // Bytes of host entropy the guest may draw per period
+  //
+  // A limiter on how fast the guest can consume the host source, where zero
+  // removes the limit entirely. Null when the VM has no random number
+  // generator, and null when the generator leaves the limiter unset, since
+  // Proxmox applies its own limit in that case rather than none.
+  rngMaxBytes() int
 
   // --- Cloud-init ---
 
@@ -1558,6 +1730,13 @@ proxmox.realm @defaults("realm type default") {
   tfaType string
   // Full realm configuration as returned by /access/domains/<realm>
   config() dict
+  // Scheduled imports of users and groups from this realm
+  //
+  // Empty when nothing is scheduled against the realm, in which case its
+  // directory accounts only reach Proxmox when someone runs a sync by hand.
+  // Null when the cluster does not serve realm-sync jobs or the token
+  // cannot read them.
+  syncJobs() []proxmox.realm.syncJob
 }
 
 // Proxmox VE firewall options
@@ -1570,7 +1749,7 @@ proxmox.realm @defaults("realm type default") {
 // the raw response so audits can target keys that vary by Proxmox
 // version.
 proxmox.firewall.options @defaults("scope enable") {
-  // Scope of these options (cluster, node/<name>, vm/<id>, ct/<id>)
+  // Scope of these options (cluster, node/<name>, vm/<id>, ct/<id>, vnet/<name>)
   scope string
   // Whether the firewall is enabled at this scope
   enable bool
@@ -1592,14 +1771,26 @@ proxmox.firewall.options @defaults("scope enable") {
   ipfilter bool
   // Whether router advertisements are permitted (guest scope)
   radv bool
+  // Default policy for traffic crossing the vnet (vnet scope)
+  //
+  // Either `ACCEPT` or `DROP`. An SDN vnet filters traffic forwarded
+  // between the guests attached to it, which is a direction the cluster,
+  // node, and guest scopes have no policy for. Empty outside the vnet
+  // scope, and empty on a vnet that leaves it unset.
+  policyForward string
+  // Log level for traffic crossing the vnet (vnet scope)
+  //
+  // One of `nolog`, `emerg`, `alert`, `crit`, `err`, `warning`, `notice`,
+  // `info`, or `debug`. Empty outside the vnet scope.
+  logLevelForward string
   // Raw firewall options keyed as the API returns them
   //
   // Every option for this scope under its native API key. `enable`,
   // `policy_in`, `policy_out`, `log_level_in`, `log_level_out`, `dhcp`,
-  // `ndp`, `macfilter`, `ipfilter`, and `radv` are also surfaced as
-  // typed fields on this resource; scope-specific keys such as
-  // `log_ratelimit` (cluster) and `nf_conntrack_*` tuning (node) are
-  // available only here.
+  // `ndp`, `macfilter`, `ipfilter`, `radv`, `policy_forward`, and
+  // `log_level_forward` are also surfaced as fields on this resource;
+  // scope-specific keys such as `log_ratelimit` (cluster) and
+  // `nf_conntrack_*` tuning (node) are available only here.
   config dict
 }
 
@@ -1752,6 +1943,25 @@ proxmox.container @defaults("id name status unprivileged") {
   searchDomain() string
   // DNS nameservers configured for the container; empty inherits the host's resolver
   nameserver() string
+  // Path to a hook script run during container lifecycle events
+  //
+  // Stored as `<storage>:snippets/<file>`. The script runs as root on the
+  // hypervisor host at container start, stop, and pre-backup, so anyone who
+  // can edit the snippet can execute code outside the container. Empty when
+  // no hook script is configured.
+  hookscript() string
+  // Whether verbose start-up logging is enabled
+  //
+  // Raises the container start log to debug level, which puts the resolved
+  // configuration, including mount sources and device paths, into the host
+  // log. False when the setting is absent, which is the Proxmox default.
+  debug() bool
+  // Whether a console device is attached
+  //
+  // Controls whether `/dev/console` exists inside the container, which is
+  // what `pct console` connects to when `cmode` is set to `console`. True
+  // when the setting is absent, which is the Proxmox default.
+  consoleEnabled() bool
   // Raw `lxc.*` config lines applied verbatim to the container
   //
   // Each entry is one `lxc.<key>: <value>` line, typically used for
@@ -2219,6 +2429,21 @@ proxmox.sdn.vnet @defaults("vnet zone tag") {
   zoneRef() proxmox.sdn.zone
   // Subnets defined on this vnet
   subnets() []proxmox.sdn.subnet
+  // Firewall rules attached to this vnet
+  //
+  // The rules that filter traffic between the guests attached to the vnet,
+  // the one segmentation control point that sits below the cluster and
+  // above the individual guest. Empty when the vnet has no rules. Null when
+  // the cluster does not serve the vnet firewall or the token cannot read
+  // this vnet's scope, so an unread rule set is not reported as an open one.
+  firewallRules() []proxmox.firewall.rule
+  // Firewall options for this vnet
+  //
+  // Covers whether the vnet firewall is switched on at all and its
+  // `policyForward` default. Rules present but the firewall disabled means
+  // nothing is filtered. Null when the cluster does not serve the vnet
+  // firewall or the token cannot read this vnet's scope.
+  firewallOptions() proxmox.firewall.options
 }
 
 // Proxmox VE SDN subnet
@@ -2758,4 +2983,75 @@ proxmox.ceph.configEntry @defaults("section name value") {
   level string
   // Whether the value can change without restarting the affected daemons
   canUpdateAtRuntime bool
+}
+
+// Guest no backup job covers
+//
+// A virtual machine or container that no configured backup job selects, as
+// computed by Proxmox from the live guest inventory rather than from the job
+// definitions. The `vm` and `container` fields resolve the guest itself, so a
+// policy can read its name, node, and protection state without a second
+// lookup. Exactly one of the two is set, chosen by `type`.
+private proxmox.cluster.guestWithoutBackup @defaults("vmid name type") {
+  // VMID of the uncovered guest
+  vmid int
+  // Guest display name; empty when the guest has no name set
+  name string
+  // Guest kind, either qemu for a virtual machine or lxc for a container
+  type string
+  // Virtual machine this entry refers to when `type` is qemu; null otherwise
+  vm() proxmox.vm
+  // Container this entry refers to when `type` is lxc; null otherwise
+  container() proxmox.container
+}
+
+// Directory realm sync job
+//
+// A scheduled import of users and groups from an LDAP, Active Directory, or
+// OpenID realm into the Proxmox user database, selected by the job `id` (for
+// example `proxmox.realm.syncJob(id: "ldap-nightly")`). What the job does on
+// each run decides who holds a cluster account: `enableNew` governs whether a
+// user appearing in the directory becomes an immediately usable Proxmox
+// login, and `removeVanished` governs whether a user deleted upstream loses
+// their account, their properties, and their access-control entries. The
+// `realmRef` field resolves the realm the accounts come from.
+proxmox.realm.syncJob @defaults("id schedule enabled scope") {
+  // Job identifier
+  id string
+  // Realm the users and groups are imported from
+  realmRef() proxmox.realm
+  // Calendar schedule the job runs on, in systemd timer syntax
+  schedule string
+  // Job comment; empty when none is set
+  comment string
+  // Whether the job is enabled
+  //
+  // A disabled job keeps its schedule but never runs, so the realm's
+  // accounts stop tracking the directory. True when the setting is absent,
+  // which is the Proxmox default.
+  enabled bool
+  // What the job imports
+  //
+  // One of `users`, `groups`, or `both`. Empty when the job leaves it
+  // unset, in which case Proxmox refuses the run rather than guessing.
+  scope string
+  // What the job deletes when an entry vanishes from the directory
+  //
+  // Each entry is one of `entry`, which removes the user or group itself,
+  // `properties`, which removes attributes the directory no longer sets,
+  // and `acl`, which removes the access-control entries granted to it.
+  // Empty means nothing is removed, so a user deleted upstream keeps their
+  // Proxmox account and its cluster permissions.
+  removeVanished []string
+  // Last time the job ran; null when it has never run
+  lastRun time
+  // Next scheduled run; null when the job is disabled or has no next run
+  nextRun time
+  // Whether users created by the sync are enabled immediately
+  //
+  // With this on, every account the directory returns becomes a usable
+  // cluster login on the next run, with no review step. True when the
+  // setting is absent, which is the Proxmox default. Null when the job
+  // definition cannot be read.
+  enableNew() bool
 }
