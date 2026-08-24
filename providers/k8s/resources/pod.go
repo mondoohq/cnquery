@@ -316,6 +316,45 @@ func (k *mqlK8sPod) runtimeClassName() (string, error) {
 	return *spec.RuntimeClassName, nil
 }
 
+// runtimeClass resolves the pod's runtimeClassName to the RuntimeClass
+// object. It scans the already-fetched class list rather than calling
+// NewResource per pod, which would run the target's init before the runtime
+// cache is consulted and turn one list call into one per pod.
+func (k *mqlK8sPod) runtimeClass() (*mqlK8sRuntimeclass, error) {
+	name := k.GetRuntimeClassName()
+	if name.Error != nil {
+		return nil, name.Error
+	}
+	if name.Data == "" {
+		k.RuntimeClass.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	o, err := CreateResource(k.MqlRuntime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	classes := o.(*mqlK8s).GetRuntimeClasses()
+	if classes.Error != nil {
+		return nil, classes.Error
+	}
+
+	for i := range classes.Data {
+		rc, ok := classes.Data[i].(*mqlK8sRuntimeclass)
+		if !ok {
+			continue
+		}
+		if rc.Name.Data == name.Data {
+			return rc, nil
+		}
+	}
+
+	// The pod names a class the cluster does not have (it was deleted, or the
+	// scan cannot read the kind). That is a real state, not an error.
+	k.RuntimeClass.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
 func (k *mqlK8sPod) serviceAccountName() (string, error) {
 	spec, err := k.podSpecTyped()
 	if err != nil {

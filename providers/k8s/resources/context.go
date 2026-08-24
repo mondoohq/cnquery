@@ -268,6 +268,11 @@ func (x *mqlK8sResourcequota) context() (*mqlK8sContext, error) {
 	return nil, nil
 }
 
+func (x *mqlK8sRuntimeclass) context() (*mqlK8sContext, error) {
+	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
 func (x *mqlK8sSecret) context() (*mqlK8sContext, error) {
 	x.Context.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil

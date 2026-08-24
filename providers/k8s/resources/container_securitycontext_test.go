@@ -51,6 +51,10 @@ func TestContainerSecurityContextFields(t *testing.T) {
 		assert.Equal(t, []any{"NET_BIND_SERVICE"}, c.GetAddedCapabilities().Data)
 		assert.Equal(t, []any{"ALL"}, c.GetDroppedCapabilities().Data)
 		assert.Equal(t, "RuntimeDefault", c.GetSeccompProfileType().Data)
+		assert.Equal(t, "Localhost", c.GetAppArmorProfileType().Data)
+		assert.Equal(t, "Unmasked", c.GetProcMount().Data)
+		assert.Equal(t, "spc_t", c.GetSeLinuxType().Data)
+		assert.Equal(t, "s0:c1,c2", c.GetSeLinuxLevel().Data)
 	})
 
 	t.Run("absent security context leaves pointer fields null", func(t *testing.T) {
@@ -61,5 +65,16 @@ func TestContainerSecurityContextFields(t *testing.T) {
 		assert.Empty(t, c.GetAddedCapabilities().Data)
 		assert.Empty(t, c.GetDroppedCapabilities().Data)
 		assert.Equal(t, "", c.GetSeccompProfileType().Data)
+		// An unset confinement field must stay empty rather than reporting a
+		// default: empty means "the container asked for nothing, so the pod
+		// level decides", which is not the same as an explicit Unconfined.
+		assert.Equal(t, "", c.GetAppArmorProfileType().Data)
+		assert.Equal(t, "", c.GetProcMount().Data)
+		assert.Equal(t, "", c.GetSeLinuxType().Data)
+		assert.Equal(t, "", c.GetSeLinuxLevel().Data)
+	})
+
+	t.Run("pod requesting its own user namespace", func(t *testing.T) {
+		assert.Equal(t, false, pod.GetHostUsers().Data)
 	})
 }

@@ -177,6 +177,7 @@ k8s.configmaps 9.0.0
 k8s.container 9.0.0
 k8s.container.addedCapabilities 13.1.2
 k8s.container.allowPrivilegeEscalation 13.1.2
+k8s.container.appArmorProfileType 13.10.1
 k8s.container.args 9.0.0
 k8s.container.command 9.0.0
 k8s.container.containerImage 9.0.0
@@ -190,6 +191,7 @@ k8s.container.livenessProbe 9.0.0
 k8s.container.name 9.0.0
 k8s.container.ports 13.0.16
 k8s.container.privileged 13.1.2
+k8s.container.procMount 13.10.1
 k8s.container.readOnlyRootFilesystem 13.1.2
 k8s.container.readinessProbe 9.0.0
 k8s.container.resizePolicy 13.0.16
@@ -198,6 +200,8 @@ k8s.container.restartPolicy 13.0.16
 k8s.container.runAsGroup 13.1.2
 k8s.container.runAsNonRoot 13.1.2
 k8s.container.runAsUser 13.1.2
+k8s.container.seLinuxLevel 13.10.1
+k8s.container.seLinuxType 13.10.1
 k8s.container.seccompProfileType 13.1.2
 k8s.container.securityContext 9.0.0
 k8s.container.startupProbe 13.0.16
@@ -250,6 +254,7 @@ k8s.cronjob.hasWritableRootFilesystem 13.2.2
 k8s.cronjob.hostIPC 13.2.2
 k8s.cronjob.hostNetwork 13.2.2
 k8s.cronjob.hostPID 13.2.2
+k8s.cronjob.hostUsers 13.10.1
 k8s.cronjob.id 9.0.0
 k8s.cronjob.imageRegistries 13.3.1
 k8s.cronjob.initContainers 9.0.0
@@ -289,6 +294,7 @@ k8s.cronjob.usesSecretsAsEnv 13.3.1
 k8s.cronjob.usesUnconfinedAppArmor 13.4.1
 k8s.cronjob.usesUnconfinedSeccomp 13.3.1
 k8s.cronjob.usesUnmaskedProcMount 13.4.1
+k8s.cronjob.volumes 13.10.1
 k8s.cronjobs 9.0.0
 k8s.customresource 9.0.0
 k8s.customresource.annotations 9.0.0
@@ -331,6 +337,7 @@ k8s.daemonset.hasWritableRootFilesystem 13.2.2
 k8s.daemonset.hostIPC 13.2.2
 k8s.daemonset.hostNetwork 13.2.2
 k8s.daemonset.hostPID 13.2.2
+k8s.daemonset.hostUsers 13.10.1
 k8s.daemonset.id 9.0.0
 k8s.daemonset.imageRegistries 13.3.1
 k8s.daemonset.initContainers 9.0.0
@@ -373,6 +380,7 @@ k8s.daemonset.usesSecretsAsEnv 13.3.1
 k8s.daemonset.usesUnconfinedAppArmor 13.4.1
 k8s.daemonset.usesUnconfinedSeccomp 13.3.1
 k8s.daemonset.usesUnmaskedProcMount 13.4.1
+k8s.daemonset.volumes 13.10.1
 k8s.daemonsets 9.0.0
 k8s.deployment 9.0.0
 k8s.deployment.addedCapabilities 13.2.2
@@ -400,6 +408,7 @@ k8s.deployment.hasWritableRootFilesystem 13.2.2
 k8s.deployment.hostIPC 13.2.2
 k8s.deployment.hostNetwork 13.2.2
 k8s.deployment.hostPID 13.2.2
+k8s.deployment.hostUsers 13.10.1
 k8s.deployment.id 9.0.0
 k8s.deployment.imageRegistries 13.3.1
 k8s.deployment.initContainers 9.0.0
@@ -443,6 +452,7 @@ k8s.deployment.usesSecretsAsEnv 13.3.1
 k8s.deployment.usesUnconfinedAppArmor 13.4.1
 k8s.deployment.usesUnconfinedSeccomp 13.3.1
 k8s.deployment.usesUnmaskedProcMount 13.4.1
+k8s.deployment.volumes 13.10.1
 k8s.deployments 9.0.0
 k8s.deviceClasses 13.9.2
 k8s.deviceclass 13.9.2
@@ -511,6 +521,7 @@ k8s.endpointslice.uid 11.1.139
 k8s.ephemeralContainer 9.0.0
 k8s.ephemeralContainer.addedCapabilities 13.1.2
 k8s.ephemeralContainer.allowPrivilegeEscalation 13.1.2
+k8s.ephemeralContainer.appArmorProfileType 13.10.1
 k8s.ephemeralContainer.args 9.0.0
 k8s.ephemeralContainer.command 9.0.0
 k8s.ephemeralContainer.containerImage 9.0.0
@@ -522,10 +533,13 @@ k8s.ephemeralContainer.imagePullPolicy 9.0.0
 k8s.ephemeralContainer.name 9.0.0
 k8s.ephemeralContainer.ports 13.0.16
 k8s.ephemeralContainer.privileged 13.1.2
+k8s.ephemeralContainer.procMount 13.10.1
 k8s.ephemeralContainer.readOnlyRootFilesystem 13.1.2
 k8s.ephemeralContainer.runAsGroup 13.1.2
 k8s.ephemeralContainer.runAsNonRoot 13.1.2
 k8s.ephemeralContainer.runAsUser 13.1.2
+k8s.ephemeralContainer.seLinuxLevel 13.10.1
+k8s.ephemeralContainer.seLinuxType 13.10.1
 k8s.ephemeralContainer.seccompProfileType 13.1.2
 k8s.ephemeralContainer.securityContext 9.0.0
 k8s.ephemeralContainer.stdin 13.0.16
@@ -719,6 +733,7 @@ k8s.ingresstls.id 9.0.0
 k8s.initContainer 9.0.0
 k8s.initContainer.addedCapabilities 13.1.2
 k8s.initContainer.allowPrivilegeEscalation 13.1.2
+k8s.initContainer.appArmorProfileType 13.10.1
 k8s.initContainer.args 9.0.0
 k8s.initContainer.command 9.0.0
 k8s.initContainer.containerImage 9.0.0
@@ -732,6 +747,7 @@ k8s.initContainer.livenessProbe 13.0.16
 k8s.initContainer.name 9.0.0
 k8s.initContainer.ports 13.0.16
 k8s.initContainer.privileged 13.1.2
+k8s.initContainer.procMount 13.10.1
 k8s.initContainer.readOnlyRootFilesystem 13.1.2
 k8s.initContainer.readinessProbe 13.0.16
 k8s.initContainer.resizePolicy 13.0.16
@@ -740,6 +756,8 @@ k8s.initContainer.restartPolicy 13.0.16
 k8s.initContainer.runAsGroup 13.1.2
 k8s.initContainer.runAsNonRoot 13.1.2
 k8s.initContainer.runAsUser 13.1.2
+k8s.initContainer.seLinuxLevel 13.10.1
+k8s.initContainer.seLinuxType 13.10.1
 k8s.initContainer.seccompProfileType 13.1.2
 k8s.initContainer.securityContext 9.0.0
 k8s.initContainer.startupProbe 13.0.16
@@ -784,6 +802,7 @@ k8s.job.hasWritableRootFilesystem 13.2.2
 k8s.job.hostIPC 13.2.2
 k8s.job.hostNetwork 13.2.2
 k8s.job.hostPID 13.2.2
+k8s.job.hostUsers 13.10.1
 k8s.job.id 9.0.0
 k8s.job.imageRegistries 13.3.1
 k8s.job.initContainers 9.0.0
@@ -826,6 +845,7 @@ k8s.job.usesSecretsAsEnv 13.3.1
 k8s.job.usesUnconfinedAppArmor 13.4.1
 k8s.job.usesUnconfinedSeccomp 13.3.1
 k8s.job.usesUnmaskedProcMount 13.4.1
+k8s.job.volumes 13.10.1
 k8s.jobs 9.0.0
 k8s.lease 13.0.16
 k8s.lease.acquireTime 13.0.16
@@ -1004,6 +1024,9 @@ k8s.node.podCIDR 13.0.16
 k8s.node.podCIDRs 13.0.16
 k8s.node.providerID 13.0.16
 k8s.node.resourceVersion 9.0.0
+k8s.node.runtimeHandlers 13.10.1
+k8s.node.supportsSupplementalGroupsPolicy 13.10.1
+k8s.node.supportsUserNamespaces 13.10.1
 k8s.node.taints 11.1.138
 k8s.node.uid 9.0.0
 k8s.node.unschedulable 13.0.16
@@ -1130,6 +1153,7 @@ k8s.pod.hostIP 13.0.16
 k8s.pod.hostIPC 13.0.16
 k8s.pod.hostNetwork 13.0.16
 k8s.pod.hostPID 13.0.16
+k8s.pod.hostUsers 13.10.1
 k8s.pod.hostname 13.0.16
 k8s.pod.id 9.0.0
 k8s.pod.imagePullSecrets 13.0.16
@@ -1171,6 +1195,7 @@ k8s.pod.risksStaleImage 13.3.1
 k8s.pod.runningImageDigests 13.3.1
 k8s.pod.runsAsRoot 13.2.2
 k8s.pod.runsPrivileged 13.2.2
+k8s.pod.runtimeClass 13.10.1
 k8s.pod.runtimeClassName 13.0.16
 k8s.pod.schedulerName 13.0.16
 k8s.pod.securityContext 13.0.16
@@ -1195,6 +1220,7 @@ k8s.pod.usesSecretsAsEnv 13.3.1
 k8s.pod.usesUnconfinedAppArmor 13.4.1
 k8s.pod.usesUnconfinedSeccomp 13.3.1
 k8s.pod.usesUnmaskedProcMount 13.4.1
+k8s.pod.volumes 13.10.1
 k8s.podDisruptionBudgets 13.0.16
 k8s.poddisruptionbudget 13.0.16
 k8s.poddisruptionbudget.annotations 13.0.16
@@ -1393,6 +1419,7 @@ k8s.replicaset.hasWritableRootFilesystem 13.2.2
 k8s.replicaset.hostIPC 13.2.2
 k8s.replicaset.hostNetwork 13.2.2
 k8s.replicaset.hostPID 13.2.2
+k8s.replicaset.hostUsers 13.10.1
 k8s.replicaset.id 9.0.0
 k8s.replicaset.imageRegistries 13.3.1
 k8s.replicaset.initContainers 9.0.0
@@ -1430,6 +1457,7 @@ k8s.replicaset.usesSecretsAsEnv 13.3.1
 k8s.replicaset.usesUnconfinedAppArmor 13.4.1
 k8s.replicaset.usesUnconfinedSeccomp 13.3.1
 k8s.replicaset.usesUnmaskedProcMount 13.4.1
+k8s.replicaset.volumes 13.10.1
 k8s.replicasets 9.0.0
 k8s.resourceClaimTemplates 13.9.2
 k8s.resourceClaims 13.9.2
@@ -1525,6 +1553,24 @@ k8s.resourceslice.resourceVersion 13.9.2
 k8s.resourceslice.uid 13.9.2
 k8s.rolebindings 9.0.0
 k8s.roles 9.0.0
+k8s.runtimeClasses 13.10.1
+k8s.runtimeclass 13.10.1
+k8s.runtimeclass.annotations 13.10.1
+k8s.runtimeclass.context 13.10.1
+k8s.runtimeclass.created 13.10.1
+k8s.runtimeclass.handler 13.10.1
+k8s.runtimeclass.id 13.10.1
+k8s.runtimeclass.kind 13.10.1
+k8s.runtimeclass.labels 13.10.1
+k8s.runtimeclass.managedFields 13.10.1
+k8s.runtimeclass.manifest 13.10.1
+k8s.runtimeclass.name 13.10.1
+k8s.runtimeclass.overhead 13.10.1
+k8s.runtimeclass.ownerReferences 13.10.1
+k8s.runtimeclass.pods 13.10.1
+k8s.runtimeclass.resourceVersion 13.10.1
+k8s.runtimeclass.scheduling 13.10.1
+k8s.runtimeclass.uid 13.10.1
 k8s.secret 9.0.0
 k8s.secret.annotations 9.0.0
 k8s.secret.certificateExpiry 13.3.4
@@ -1599,6 +1645,7 @@ k8s.serviceaccount.context 13.6.1
 k8s.serviceaccount.created 9.0.0
 k8s.serviceaccount.hasWildcardPermissions 13.3.1
 k8s.serviceaccount.id 9.0.0
+k8s.serviceaccount.imagePullSecretRefs 13.10.1
 k8s.serviceaccount.imagePullSecrets 9.0.0
 k8s.serviceaccount.isClusterAdmin 13.3.1
 k8s.serviceaccount.kind 9.0.0
@@ -1610,6 +1657,7 @@ k8s.serviceaccount.namespace 9.0.0
 k8s.serviceaccount.ownerReferences 13.2.2
 k8s.serviceaccount.resourceVersion 9.0.0
 k8s.serviceaccount.roleBindings 13.3.1
+k8s.serviceaccount.secretRefs 13.10.1
 k8s.serviceaccount.secrets 9.0.0
 k8s.serviceaccount.uid 9.0.0
 k8s.serviceaccounts 9.0.0
@@ -1642,6 +1690,7 @@ k8s.statefulset.hasWritableRootFilesystem 13.2.2
 k8s.statefulset.hostIPC 13.2.2
 k8s.statefulset.hostNetwork 13.2.2
 k8s.statefulset.hostPID 13.2.2
+k8s.statefulset.hostUsers 13.10.1
 k8s.statefulset.id 9.0.0
 k8s.statefulset.imageRegistries 13.3.1
 k8s.statefulset.initContainers 9.0.0
@@ -1687,6 +1736,7 @@ k8s.statefulset.usesSecretsAsEnv 13.3.1
 k8s.statefulset.usesUnconfinedAppArmor 13.4.1
 k8s.statefulset.usesUnconfinedSeccomp 13.3.1
 k8s.statefulset.usesUnmaskedProcMount 13.4.1
+k8s.statefulset.volumes 13.10.1
 k8s.statefulsets 9.0.0
 k8s.storageClasses 11.1.139
 k8s.storageclass 11.1.139
@@ -1768,3 +1818,17 @@ k8s.userinfo.username 9.0.0
 k8s.validatingAdmissionPolicies 13.2.2
 k8s.validatingAdmissionPolicyBindings 13.2.2
 k8s.validatingWebhookConfigurations 11.1.63
+k8s.volume 13.10.1
+k8s.volume.configMaps 13.10.1
+k8s.volume.csiDriver 13.10.1
+k8s.volume.emptyDirMedium 13.10.1
+k8s.volume.emptyDirSizeLimit 13.10.1
+k8s.volume.hostPath 13.10.1
+k8s.volume.hostPathType 13.10.1
+k8s.volume.name 13.10.1
+k8s.volume.namespace 13.10.1
+k8s.volume.persistentVolumeClaim 13.10.1
+k8s.volume.secrets 13.10.1
+k8s.volume.serviceAccountTokens 13.10.1
+k8s.volume.source 13.10.1
+k8s.volume.type 13.10.1

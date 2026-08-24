@@ -22,7 +22,10 @@ type mqlK8sGatewayInternal struct {
 }
 
 func (k *mqlK8s) gateways() ([]any, error) {
-	return k8sResourceToMql(k.MqlRuntime, gvkString(gatewayv1.SchemeGroupVersion.WithKind("gateways")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
+	// Gateway API ships as CRDs, so a cluster that never installed them has no
+	// such kind. That is a cluster with no Gateways, not a failed scan, so the
+	// list degrades to empty rather than erroring.
+	return k8sOptionalResourceToMql(k.MqlRuntime, gvkString(gatewayv1.SchemeGroupVersion.WithKind("gateways")), func(kind string, resource runtime.Object, obj metav1.Object, objT metav1.Type) (any, error) {
 		ts := obj.GetCreationTimestamp()
 
 		gw, ok := resource.(*gatewayv1.Gateway)
