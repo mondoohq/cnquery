@@ -2658,13 +2658,6 @@ private aws.iam.user @defaults("arn name createdAt") {
   lastAccessedServices() []aws.iam.serviceLastAccessed
 }
 
-// IAM user access key
-//
-// Access key belonging to an IAM user, including its activation status and
-// when it was last used. The createdAt and lastUsedDate fields support
-// auditing for unrotated keys (CIS access-key rotation) and unused active
-// keys that should be deactivated. The key is selected by its accessKeyId,
-// for example AKIAIOSFODNN7EXAMPLE.
 // IAM service-specific credential
 //
 // Static credential IAM issues to one user for one service, with a user name
@@ -2720,6 +2713,13 @@ private aws.iam.user.sshPublicKey @defaults("id status uploadedAt") {
   uploadedAt time
 }
 
+// IAM user access key
+//
+// Access key belonging to an IAM user, including its activation status and
+// when it was last used. The createdAt and lastUsedDate fields support
+// auditing for unrotated keys (CIS access-key rotation) and unused active
+// keys that should be deactivated. The key is selected by its accessKeyId,
+// for example AKIAIOSFODNN7EXAMPLE.
 private aws.iam.user.accessKey @defaults("accessKeyId status lastUsedDate") {
   // Access key ID
   accessKeyId string
