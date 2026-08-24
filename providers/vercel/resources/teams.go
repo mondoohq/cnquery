@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -421,9 +422,17 @@ func (c *mqlVercelTeam) pendingInvites() ([]any, error) {
 	}
 
 	res := []any{}
-	for _, rec := range dedupeInvites(records) {
+	for i, rec := range dedupeInvites(records) {
+		// dedupeInvites keeps every record whose id is empty, because an absent
+		// id is not evidence that two invitations are the same one. The cache
+		// key has to keep them apart too, so it falls back to the position in
+		// the listing rather than collapsing them onto one resource.
+		key := c.Id.Data + "/invite/" + rec.ID
+		if rec.ID == "" {
+			key = c.Id.Data + "/invite/#" + strconv.Itoa(i)
+		}
 		invite, err := CreateResource(c.MqlRuntime, "vercel.team.pendingInvite", map[string]*llx.RawData{
-			"__id":            llx.StringData(c.Id.Data + "/invite/" + rec.ID),
+			"__id":            llx.StringData(key),
 			"id":              llx.StringData(rec.ID),
 			"email":           llx.StringDataPtr(rec.Email),
 			"role":            llx.StringDataPtr(rec.Role),

@@ -78,8 +78,8 @@ private vercel.accessToken @defaults("name expiresAt") {
 // for who may weaken protection, `sharedEnvironmentVariables` for secrets
 // injected across projects, `members` for the roster and roles,
 // `pendingInvites` for invitations that have been sent and not accepted,
-// `projects` for
-// the team's projects, and `domains`, `edgeConfigs`, `logDrains`, `webhooks`,
+// `projects` for the team's projects, and `domains`, `edgeConfigs`,
+// `logDrains`, `webhooks`,
 // `integrationConfigurations`, and `accessGroups` for the surrounding
 // configuration. Select a team with `vercel.teams.where(slug == "acme")`.
 private vercel.team @defaults("slug name") {

@@ -84,7 +84,6 @@ func (c *integrationConfigCache) get(runtime *plugin.Runtime) ([]integrationConf
 	if c.fetched {
 		return c.records, c.err
 	}
-	c.fetched = true
 
 	conn := runtime.Connection.(*connection.VercelConnection)
 	query := connection.TeamQuery(c.teamID)
@@ -94,12 +93,16 @@ func (c *integrationConfigCache) get(runtime *plugin.Runtime) ([]integrationConf
 		// A refused or absent read cannot name the installation; the reference
 		// resolves to null rather than to a resource built from the raw id.
 		if connection.IsForbidden(err) || connection.IsNotFound(err) {
+			// a refusal is a definitive answer, so it is cached like a success
+			c.fetched = true
 			return nil, nil
 		}
-		c.err = err
+		// anything else may succeed on a later read, so it is not cached: a
+		// transient failure must not poison every later caller in the scan
 		return nil, err
 	}
 	c.records = records
+	c.fetched = true
 	return c.records, nil
 }
 

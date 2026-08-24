@@ -227,7 +227,7 @@ func (p *mqlVercelProject) firewall() (*mqlVercelFirewall, error) {
 		"enabled":         llx.BoolData(cfg.FirewallEnabled),
 		"managedRulesets": llx.DictData(decodeAnyOrEmpty(cfg.ManagedRules)),
 		"coreRuleSet":     llx.DictData(decodeAnyOrEmpty(cfg.CRS)),
-		"botIdEnabled":    llx.BoolData(cfg.BotIDEnabled != nil && *cfg.BotIDEnabled),
+		"botIdEnabled":    llx.BoolDataPtr(cfg.BotIDEnabled),
 		"logHeaders":      llx.ArrayData(strSliceToAny(cfg.LogHeaders.values), types.String),
 		"configVersion":   llx.IntData(intPtrOrZero(cfg.Version)),
 		"updatedAt":       llx.TimeDataPtr(cfg.UpdatedAt.Time()),
