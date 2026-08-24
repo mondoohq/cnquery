@@ -5,7 +5,6 @@ package resources
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/llx"
@@ -74,7 +73,7 @@ func (o *mqlOktaRole) groupTargets() ([]any, error) {
 		apiSupplement := conn.ApiExtension()
 		slice, resp, err := apiSupplement.ListClientRoleGroupTargets(ctx, o.cacheClientID, roleID)
 		if err != nil {
-			if isOktaRawFeatureUnavailable(resp) {
+			if isOktaRawFeatureUnavailable(resp, err) {
 				return nil, nil
 			}
 			return nil, err
@@ -143,7 +142,7 @@ func (o *mqlOktaRole) appTargets() ([]any, error) {
 		apiSupplement := conn.ApiExtension()
 		slice, resp, err := apiSupplement.ListClientRoleAppTargets(ctx, o.cacheClientID, roleID)
 		if err != nil {
-			if isOktaRawFeatureUnavailable(resp) {
+			if isOktaRawFeatureUnavailable(resp, err) {
 				return nil, nil
 			}
 			return nil, err
@@ -198,19 +197,4 @@ func newMqlOktaRoleAppTarget(runtime *plugin.Runtime, roleID string, entry *okta
 
 func (o *mqlOktaRoleAppTarget) application() (*mqlOktaApplication, error) {
 	return resolveOktaApplicationRef(o.MqlRuntime, o.cacheApplicationID, &o.Application)
-}
-
-// isOktaRawFeatureUnavailable is the ApiExtension counterpart to
-// isOktaFeatureUnavailable: the hand-rolled fetches return a bare
-// *http.Response rather than the SDK's wrapper, but the statuses that mean
-// "nothing to report here" are the same.
-func isOktaRawFeatureUnavailable(resp *http.Response) bool {
-	if resp == nil {
-		return false
-	}
-	switch resp.StatusCode {
-	case http.StatusForbidden, http.StatusNotFound, http.StatusGone:
-		return true
-	}
-	return false
 }

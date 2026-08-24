@@ -38,7 +38,7 @@ func (m *ApiExtension) ListBehaviorRules(ctx context.Context) ([]map[string]any,
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return rules, firstResp, nil

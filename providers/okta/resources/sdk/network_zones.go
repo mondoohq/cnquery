@@ -118,7 +118,7 @@ func (m *ApiExtension) ListNetworkZones(ctx context.Context, limit int) ([]*Netw
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return zones, nil

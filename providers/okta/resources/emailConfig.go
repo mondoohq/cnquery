@@ -68,7 +68,7 @@ func (o *mqlOkta) emailServers() ([]any, error) {
 	servers, resp, err := conn.ApiExtension().ListEmailServers(ctx)
 	if err != nil {
 		// Orgs sending through Okta's own mail infrastructure have none.
-		if isOktaRawFeatureUnavailable(resp) {
+		if isOktaRawFeatureUnavailable(resp, err) {
 			return nil, nil
 		}
 		return nil, err

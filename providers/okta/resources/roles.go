@@ -12,6 +12,11 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
+// oktaCustomRoleTypePrefix is what Okta reports as the type of an assignment
+// whose privileges come from a custom role, either on its own or as the prefix
+// of a longer name.
+const oktaCustomRoleTypePrefix = "CUSTOM"
+
 type mqlOktaRoleInternal struct {
 	cacheUserID        string
 	cacheGroupID       string
@@ -160,7 +165,7 @@ func oktaRoleTypedRefs(role *okta.Role) (customRoleID, resourceSetID string) {
 		resourceSetID = lastPathSegment(h)
 	}
 
-	if strings.HasPrefix(oktaStr(role.Type), "CUSTOM") {
+	if strings.HasPrefix(oktaStr(role.Type), oktaCustomRoleTypePrefix) {
 		if h := oktaLinkHref(ap["permissions"]); h != "" {
 			customRoleID = oktaRoleIdFromPermissionsHref(h)
 		}

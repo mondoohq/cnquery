@@ -39,6 +39,7 @@ const (
 	ResourceOktaApplicationScopeConsentGrant  string = "okta.application.scopeConsentGrant"
 	ResourceOktaDomain                        string = "okta.domain"
 	ResourceOktaPolicy                        string = "okta.policy"
+	ResourceOktaPolicyMapping                 string = "okta.policy.mapping"
 	ResourceOktaPolicyRule                    string = "okta.policyRule"
 	ResourceOktaTrustedOrigin                 string = "okta.trustedOrigin"
 	ResourceOktaNetwork                       string = "okta.network"
@@ -61,6 +62,9 @@ const (
 	ResourceOktaLogStream                     string = "okta.logStream"
 	ResourceOktaApiServiceIntegration         string = "okta.apiServiceIntegration"
 	ResourceOktaAttackProtection              string = "okta.attackProtection"
+	ResourceOktaBotProtection                 string = "okta.botProtection"
+	ResourceOktaCaptcha                       string = "okta.captcha"
+	ResourceOktaPersonalSettings              string = "okta.personalSettings"
 	ResourceOktaBehaviorRule                  string = "okta.behaviorRule"
 	ResourceOktaRiskProvider                  string = "okta.riskProvider"
 	ResourceOktaDevice                        string = "okta.device"
@@ -172,6 +176,10 @@ func init() {
 			// to override args, implement: initOktaPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOktaPolicy,
 		},
+		"okta.policy.mapping": {
+			// to override args, implement: initOktaPolicyMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaPolicyMapping,
+		},
 		"okta.policyRule": {
 			// to override args, implement: initOktaPolicyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOktaPolicyRule,
@@ -259,6 +267,18 @@ func init() {
 		"okta.attackProtection": {
 			Init:   initOktaAttackProtection,
 			Create: createOktaAttackProtection,
+		},
+		"okta.botProtection": {
+			Init:   initOktaBotProtection,
+			Create: createOktaBotProtection,
+		},
+		"okta.captcha": {
+			// to override args, implement: initOktaCaptcha(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOktaCaptcha,
+		},
+		"okta.personalSettings": {
+			Init:   initOktaPersonalSettings,
+			Create: createOktaPersonalSettings,
 		},
 		"okta.behaviorRule": {
 			// to override args, implement: initOktaBehaviorRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -470,6 +490,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.realms": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOkta).GetRealms()).ToDataRes(types.Array(types.Resource("okta.realm")))
 	},
+	"okta.captchas": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOkta).GetCaptchas()).ToDataRes(types.Array(types.Resource("okta.captcha")))
+	},
 	"okta.organization.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaOrganization).GetId()).ToDataRes(types.String)
 	},
@@ -551,6 +574,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.organization.threatInsightSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaOrganization).GetThreatInsightSettings()).ToDataRes(types.Resource("okta.threatsConfiguration"))
 	},
+	"okta.organization.oktaSupportEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetOktaSupportEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.organization.oktaSupportExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetOktaSupportExpiration()).ToDataRes(types.Time)
+	},
+	"okta.organization.oktaSupportCaseNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetOktaSupportCaseNumber()).ToDataRes(types.String)
+	},
+	"okta.organization.superAdminGrantedToNewPublicClients": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetSuperAdminGrantedToNewPublicClients()).ToDataRes(types.Bool)
+	},
+	"okta.organization.thirdPartyAdminEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetThirdPartyAdminEnabled()).ToDataRes(types.Bool)
+	},
+	"okta.organization.captcha": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetCaptcha()).ToDataRes(types.Resource("okta.captcha"))
+	},
+	"okta.organization.captchaEnabledPages": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaOrganization).GetCaptchaEnabledPages()).ToDataRes(types.Array(types.String))
+	},
 	"okta.policies.password": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaPolicies).GetPassword()).ToDataRes(types.Array(types.Resource("okta.policy")))
 	},
@@ -571,6 +615,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.policies.profileEnrollment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaPolicies).GetProfileEnrollment()).ToDataRes(types.Array(types.Resource("okta.policy")))
+	},
+	"okta.policies.entityRisk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicies).GetEntityRisk()).ToDataRes(types.Array(types.Resource("okta.policy")))
+	},
+	"okta.policies.postAuthSession": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicies).GetPostAuthSession()).ToDataRes(types.Array(types.Resource("okta.policy")))
 	},
 	"okta.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaUser).GetId()).ToDataRes(types.String)
@@ -830,6 +880,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.role.appTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaRole).GetAppTargets()).ToDataRes(types.Array(types.Resource("okta.role.appTarget")))
 	},
+	"okta.role.subscriptions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaRole).GetSubscriptions()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"okta.role.appTarget.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaRoleAppTarget).GetName()).ToDataRes(types.String)
 	},
@@ -871,6 +924,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.group.owners": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaGroup).GetOwners()).ToDataRes(types.Array(types.Resource("okta.group.owner")))
+	},
+	"okta.group.applications": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaGroup).GetApplications()).ToDataRes(types.Array(types.Resource("okta.application")))
 	},
 	"okta.group.owner.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaGroupOwner).GetType()).ToDataRes(types.String)
@@ -1168,6 +1224,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"okta.policy.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaPolicy).GetRules()).ToDataRes(types.Array(types.Resource("okta.policyRule")))
+	},
+	"okta.policy.mappings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicy).GetMappings()).ToDataRes(types.Array(types.Resource("okta.policy.mapping")))
+	},
+	"okta.policy.mapping.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicyMapping).GetId()).ToDataRes(types.String)
+	},
+	"okta.policy.mapping.resourceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicyMapping).GetResourceType()).ToDataRes(types.String)
+	},
+	"okta.policy.mapping.resourceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicyMapping).GetResourceId()).ToDataRes(types.String)
+	},
+	"okta.policy.mapping.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicyMapping).GetStatus()).ToDataRes(types.String)
+	},
+	"okta.policy.mapping.application": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPolicyMapping).GetApplication()).ToDataRes(types.Resource("okta.application"))
 	},
 	"okta.policyRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaPolicyRule).GetId()).ToDataRes(types.String)
@@ -1805,6 +1879,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"okta.attackProtection.verifyKnowledgeSecondWhen2faRequired": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaAttackProtection).GetVerifyKnowledgeSecondWhen2faRequired()).ToDataRes(types.Bool)
 	},
+	"okta.botProtection.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBotProtection).GetMode()).ToDataRes(types.String)
+	},
+	"okta.botProtection.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBotProtection).GetLevel()).ToDataRes(types.String)
+	},
+	"okta.botProtection.enforcementType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBotProtection).GetEnforcementType()).ToDataRes(types.String)
+	},
+	"okta.botProtection.supportedFlows": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaBotProtection).GetSupportedFlows()).ToDataRes(types.Array(types.String))
+	},
+	"okta.captcha.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaCaptcha).GetId()).ToDataRes(types.String)
+	},
+	"okta.captcha.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaCaptcha).GetName()).ToDataRes(types.String)
+	},
+	"okta.captcha.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaCaptcha).GetType()).ToDataRes(types.String)
+	},
+	"okta.personalSettings.blockedEmailDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOktaPersonalSettings).GetBlockedEmailDomains()).ToDataRes(types.Array(types.String))
+	},
 	"okta.behaviorRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOktaBehaviorRule).GetId()).ToDataRes(types.String)
 	},
@@ -2207,6 +2305,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOkta).Realms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"okta.captchas": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOkta).Captchas, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"okta.organization.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaOrganization).__id, ok = v.Value.(string)
 		return
@@ -2319,6 +2421,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaOrganization).ThreatInsightSettings, ok = plugin.RawToTValue[*mqlOktaThreatsConfiguration](v.Value, v.Error)
 		return
 	},
+	"okta.organization.oktaSupportEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).OktaSupportEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.organization.oktaSupportExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).OktaSupportExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"okta.organization.oktaSupportCaseNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).OktaSupportCaseNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.organization.superAdminGrantedToNewPublicClients": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).SuperAdminGrantedToNewPublicClients, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.organization.thirdPartyAdminEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).ThirdPartyAdminEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"okta.organization.captcha": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).Captcha, ok = plugin.RawToTValue[*mqlOktaCaptcha](v.Value, v.Error)
+		return
+	},
+	"okta.organization.captchaEnabledPages": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaOrganization).CaptchaEnabledPages, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"okta.policies.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaPolicies).__id, ok = v.Value.(string)
 		return
@@ -2349,6 +2479,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.policies.profileEnrollment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaPolicies).ProfileEnrollment, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.policies.entityRisk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicies).EntityRisk, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.policies.postAuthSession": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicies).PostAuthSession, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2727,6 +2865,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaRole).AppTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"okta.role.subscriptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaRole).Subscriptions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"okta.role.appTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaRoleAppTarget).__id, ok = v.Value.(string)
 		return
@@ -2789,6 +2931,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.group.owners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaGroup).Owners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.group.applications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaGroup).Applications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"okta.group.owner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3225,6 +3371,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"okta.policy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.policy.mappings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicy).Mappings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.policy.mapping.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicyMapping).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.policy.mapping.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicyMapping).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.policy.mapping.resourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicyMapping).ResourceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.policy.mapping.resourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicyMapping).ResourceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.policy.mapping.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicyMapping).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.policy.mapping.application": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPolicyMapping).Application, ok = plugin.RawToTValue[*mqlOktaApplication](v.Value, v.Error)
 		return
 	},
 	"okta.policyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4163,6 +4337,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOktaAttackProtection).VerifyKnowledgeSecondWhen2faRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"okta.botProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBotProtection).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.botProtection.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBotProtection).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.botProtection.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBotProtection).Level, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.botProtection.enforcementType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBotProtection).EnforcementType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.botProtection.supportedFlows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaBotProtection).SupportedFlows, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"okta.captcha.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaCaptcha).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.captcha.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaCaptcha).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.captcha.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaCaptcha).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.captcha.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaCaptcha).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"okta.personalSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPersonalSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"okta.personalSettings.blockedEmailDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOktaPersonalSettings).BlockedEmailDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"okta.behaviorRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOktaBehaviorRule).__id, ok = v.Value.(string)
 		return
@@ -4633,6 +4851,7 @@ type mqlOkta struct {
 	EmailDomains            plugin.TValue[[]any]
 	EmailServers            plugin.TValue[[]any]
 	Realms                  plugin.TValue[[]any]
+	Captchas                plugin.TValue[[]any]
 }
 
 // createOkta creates a new instance of this resource
@@ -5136,11 +5355,27 @@ func (c *mqlOkta) GetRealms() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlOkta) GetCaptchas() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Captchas, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta", c.__id, "captchas")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.captchas()
+	})
+}
+
 // mqlOktaOrganization for the okta.organization resource
 type mqlOktaOrganization struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOktaOrganizationInternal it will be used here
+	mqlOktaOrganizationInternal
 	Id                                  plugin.TValue[string]
 	CompanyName                         plugin.TValue[string]
 	Status                              plugin.TValue[string]
@@ -5168,6 +5403,13 @@ type mqlOktaOrganization struct {
 	SendEmailForFactorResetEnabled      plugin.TValue[bool]
 	SendEmailForPasswordChangedEnabled  plugin.TValue[bool]
 	ThreatInsightSettings               plugin.TValue[*mqlOktaThreatsConfiguration]
+	OktaSupportEnabled                  plugin.TValue[bool]
+	OktaSupportExpiration               plugin.TValue[*time.Time]
+	OktaSupportCaseNumber               plugin.TValue[string]
+	SuperAdminGrantedToNewPublicClients plugin.TValue[bool]
+	ThirdPartyAdminEnabled              plugin.TValue[bool]
+	Captcha                             plugin.TValue[*mqlOktaCaptcha]
+	CaptchaEnabledPages                 plugin.TValue[[]any]
 }
 
 // createOktaOrganization creates a new instance of this resource
@@ -5365,6 +5607,58 @@ func (c *mqlOktaOrganization) GetThreatInsightSettings() *plugin.TValue[*mqlOkta
 	})
 }
 
+func (c *mqlOktaOrganization) GetOktaSupportEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OktaSupportEnabled, func() (bool, error) {
+		return c.oktaSupportEnabled()
+	})
+}
+
+func (c *mqlOktaOrganization) GetOktaSupportExpiration() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.OktaSupportExpiration, func() (*time.Time, error) {
+		return c.oktaSupportExpiration()
+	})
+}
+
+func (c *mqlOktaOrganization) GetOktaSupportCaseNumber() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.OktaSupportCaseNumber, func() (string, error) {
+		return c.oktaSupportCaseNumber()
+	})
+}
+
+func (c *mqlOktaOrganization) GetSuperAdminGrantedToNewPublicClients() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SuperAdminGrantedToNewPublicClients, func() (bool, error) {
+		return c.superAdminGrantedToNewPublicClients()
+	})
+}
+
+func (c *mqlOktaOrganization) GetThirdPartyAdminEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ThirdPartyAdminEnabled, func() (bool, error) {
+		return c.thirdPartyAdminEnabled()
+	})
+}
+
+func (c *mqlOktaOrganization) GetCaptcha() *plugin.TValue[*mqlOktaCaptcha] {
+	return plugin.GetOrCompute[*mqlOktaCaptcha](&c.Captcha, func() (*mqlOktaCaptcha, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.organization", c.__id, "captcha")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaCaptcha), nil
+			}
+		}
+
+		return c.captcha()
+	})
+}
+
+func (c *mqlOktaOrganization) GetCaptchaEnabledPages() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CaptchaEnabledPages, func() ([]any, error) {
+		return c.captchaEnabledPages()
+	})
+}
+
 // mqlOktaPolicies for the okta.policies resource
 type mqlOktaPolicies struct {
 	MqlRuntime *plugin.Runtime
@@ -5377,6 +5671,8 @@ type mqlOktaPolicies struct {
 	IdpDiscovery             plugin.TValue[[]any]
 	AccessPolicy             plugin.TValue[[]any]
 	ProfileEnrollment        plugin.TValue[[]any]
+	EntityRisk               plugin.TValue[[]any]
+	PostAuthSession          plugin.TValue[[]any]
 }
 
 // createOktaPolicies creates a new instance of this resource
@@ -5525,6 +5821,38 @@ func (c *mqlOktaPolicies) GetProfileEnrollment() *plugin.TValue[[]any] {
 		}
 
 		return c.profileEnrollment()
+	})
+}
+
+func (c *mqlOktaPolicies) GetEntityRisk() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.EntityRisk, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "entityRisk")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.entityRisk()
+	})
+}
+
+func (c *mqlOktaPolicies) GetPostAuthSession() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PostAuthSession, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policies", c.__id, "postAuthSession")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.postAuthSession()
 	})
 }
 
@@ -6372,6 +6700,7 @@ type mqlOktaRole struct {
 	Group          plugin.TValue[*mqlOktaGroup]
 	GroupTargets   plugin.TValue[[]any]
 	AppTargets     plugin.TValue[[]any]
+	Subscriptions  plugin.TValue[map[string]any]
 }
 
 // createOktaRole creates a new instance of this resource
@@ -6535,6 +6864,12 @@ func (c *mqlOktaRole) GetAppTargets() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlOktaRole) GetSubscriptions() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.Subscriptions, func() (map[string]any, error) {
+		return c.subscriptions()
+	})
+}
+
 // mqlOktaRoleAppTarget for the okta.role.appTarget resource
 type mqlOktaRoleAppTarget struct {
 	MqlRuntime *plugin.Runtime
@@ -6617,6 +6952,7 @@ type mqlOktaGroup struct {
 	Members               plugin.TValue[[]any]
 	Roles                 plugin.TValue[[]any]
 	Owners                plugin.TValue[[]any]
+	Applications          plugin.TValue[[]any]
 }
 
 // createOktaGroup creates a new instance of this resource
@@ -6733,6 +7069,22 @@ func (c *mqlOktaGroup) GetOwners() *plugin.TValue[[]any] {
 		}
 
 		return c.owners()
+	})
+}
+
+func (c *mqlOktaGroup) GetApplications() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Applications, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.group", c.__id, "applications")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applications()
 	})
 }
 
@@ -7710,6 +8062,7 @@ type mqlOktaPolicy struct {
 	Created     plugin.TValue[*time.Time]
 	LastUpdated plugin.TValue[*time.Time]
 	Rules       plugin.TValue[[]any]
+	Mappings    plugin.TValue[[]any]
 }
 
 // createOktaPolicy creates a new instance of this resource
@@ -7806,6 +8159,98 @@ func (c *mqlOktaPolicy) GetRules() *plugin.TValue[[]any] {
 		}
 
 		return c.rules()
+	})
+}
+
+func (c *mqlOktaPolicy) GetMappings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Mappings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policy", c.__id, "mappings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mappings()
+	})
+}
+
+// mqlOktaPolicyMapping for the okta.policy.mapping resource
+type mqlOktaPolicyMapping struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOktaPolicyMappingInternal
+	Id           plugin.TValue[string]
+	ResourceType plugin.TValue[string]
+	ResourceId   plugin.TValue[string]
+	Status       plugin.TValue[string]
+	Application  plugin.TValue[*mqlOktaApplication]
+}
+
+// createOktaPolicyMapping creates a new instance of this resource
+func createOktaPolicyMapping(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaPolicyMapping{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.policy.mapping", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaPolicyMapping) MqlName() string {
+	return "okta.policy.mapping"
+}
+
+func (c *mqlOktaPolicyMapping) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaPolicyMapping) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaPolicyMapping) GetResourceType() *plugin.TValue[string] {
+	return &c.ResourceType
+}
+
+func (c *mqlOktaPolicyMapping) GetResourceId() *plugin.TValue[string] {
+	return &c.ResourceId
+}
+
+func (c *mqlOktaPolicyMapping) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlOktaPolicyMapping) GetApplication() *plugin.TValue[*mqlOktaApplication] {
+	return plugin.GetOrCompute[*mqlOktaApplication](&c.Application, func() (*mqlOktaApplication, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("okta.policy.mapping", c.__id, "application")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOktaApplication), nil
+			}
+		}
+
+		return c.application()
 	})
 }
 
@@ -9990,6 +10435,168 @@ func (c *mqlOktaAttackProtection) GetPreventBruteForceLockoutFromUnknownDevices(
 
 func (c *mqlOktaAttackProtection) GetVerifyKnowledgeSecondWhen2faRequired() *plugin.TValue[bool] {
 	return &c.VerifyKnowledgeSecondWhen2faRequired
+}
+
+// mqlOktaBotProtection for the okta.botProtection resource
+type mqlOktaBotProtection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaBotProtectionInternal it will be used here
+	Mode            plugin.TValue[string]
+	Level           plugin.TValue[string]
+	EnforcementType plugin.TValue[string]
+	SupportedFlows  plugin.TValue[[]any]
+}
+
+// createOktaBotProtection creates a new instance of this resource
+func createOktaBotProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaBotProtection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.botProtection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaBotProtection) MqlName() string {
+	return "okta.botProtection"
+}
+
+func (c *mqlOktaBotProtection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaBotProtection) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlOktaBotProtection) GetLevel() *plugin.TValue[string] {
+	return &c.Level
+}
+
+func (c *mqlOktaBotProtection) GetEnforcementType() *plugin.TValue[string] {
+	return &c.EnforcementType
+}
+
+func (c *mqlOktaBotProtection) GetSupportedFlows() *plugin.TValue[[]any] {
+	return &c.SupportedFlows
+}
+
+// mqlOktaCaptcha for the okta.captcha resource
+type mqlOktaCaptcha struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaCaptchaInternal it will be used here
+	Id   plugin.TValue[string]
+	Name plugin.TValue[string]
+	Type plugin.TValue[string]
+}
+
+// createOktaCaptcha creates a new instance of this resource
+func createOktaCaptcha(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaCaptcha{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.captcha", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaCaptcha) MqlName() string {
+	return "okta.captcha"
+}
+
+func (c *mqlOktaCaptcha) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaCaptcha) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlOktaCaptcha) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlOktaCaptcha) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+// mqlOktaPersonalSettings for the okta.personalSettings resource
+type mqlOktaPersonalSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOktaPersonalSettingsInternal it will be used here
+	BlockedEmailDomains plugin.TValue[[]any]
+}
+
+// createOktaPersonalSettings creates a new instance of this resource
+func createOktaPersonalSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOktaPersonalSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("okta.personalSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOktaPersonalSettings) MqlName() string {
+	return "okta.personalSettings"
+}
+
+func (c *mqlOktaPersonalSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOktaPersonalSettings) GetBlockedEmailDomains() *plugin.TValue[[]any] {
+	return &c.BlockedEmailDomains
 }
 
 // mqlOktaBehaviorRule for the okta.behaviorRule resource

@@ -50,10 +50,23 @@ func (m *ApiExtension) ListApiTokens(ctx context.Context, limit int) ([]*ApiToke
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return result, nil
+}
+
+// nextPageURL returns the URL of the page after the one just fetched, or an
+// empty string when the walk is over. A `next` link pointing back at the URL
+// that produced it is treated as the end: following it would re-fetch the same
+// page until the page cap and report every record it holds that many times
+// over, which reads as a real collection rather than as a failure.
+func nextPageURL(current string, headers []string) string {
+	next := nextLinkURL(headers)
+	if next == current {
+		return ""
+	}
+	return next
 }
 
 // nextLinkURL parses RFC 5988 `Link` headers and returns the URL whose rel is `next`,

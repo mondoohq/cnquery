@@ -38,7 +38,7 @@ func (m *ApiExtension) ListClientRoles(ctx context.Context, clientID string) ([]
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return roles, firstResp, nil

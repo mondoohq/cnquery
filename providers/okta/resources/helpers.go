@@ -12,6 +12,7 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v6/okta"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/okta/resources/sdk"
 )
 
 // The Okta SDK is OpenAPI-generated and models most scalars as a pointer so it
@@ -274,6 +275,39 @@ func isOktaFeatureUnavailable(resp *okta.APIResponse, err error) bool {
 		return true
 	case http.StatusUnauthorized:
 		return oktaErrorCode(err) == oktaErrCodeFeatureNotEnabled
+	}
+	return false
+}
+
+// isOktaRawFeatureUnavailable is isOktaFeatureUnavailable for the endpoints
+// served outside the generated SDK. Those hand back a bare *http.Response and a
+// *sdk.APIError rather than the SDK's wrappers, but the reading is the same: an
+// org with nothing to report rather than a request that failed.
+//
+// The status can come from either argument. A caller that kept the response
+// passes it; one that only kept the error still classifies correctly, because
+// the error carries the status too. A bare 401 stays an error here as well, so
+// a dead credential is never reported as a clean, empty result.
+func isOktaRawFeatureUnavailable(resp *http.Response, err error) bool {
+	status := 0
+	if resp != nil {
+		status = resp.StatusCode
+	}
+
+	var apiErr *sdk.APIError
+	code := ""
+	if errors.As(err, &apiErr) {
+		code = apiErr.Code
+		if status == 0 {
+			status = apiErr.StatusCode
+		}
+	}
+
+	switch status {
+	case http.StatusForbidden, http.StatusNotFound, http.StatusGone:
+		return true
+	case http.StatusUnauthorized:
+		return code == oktaErrCodeFeatureNotEnabled
 	}
 	return false
 }
