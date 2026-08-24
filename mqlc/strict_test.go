@@ -59,7 +59,8 @@ func TestStrict_offMarksNothing(t *testing.T) {
 
 // TestStrict_marksEveryLink checks that strict mode marks each dereference
 // required, and that `?` flips exactly the link it is attached to - the one on
-// its left - and no others. A sticky `?` would show up here as extra OPTIONALs.
+// its left - and no others. A sticky `?` would show up here as extra optional
+// markers.
 //
 // Note what is absent: a bare resource root like `sshd.config` compiles to a
 // chunk with no Function at all, so it carries no marker and is filtered out by
