@@ -40,11 +40,41 @@ alicloud.ram {
   passwordPolicy() alicloud.ram.passwordPolicy
   // Console and credential security preferences for the account
   //
-  // Nested preferences controlling whether RAM users may manage their own
-  // access keys, MFA devices, and public keys, whether they may change their
-  // own password, the console login network masks, and the login session
-  // duration.
-  securityPreference() dict
+  // Deprecated in favor of allowUserToManageAccessKeys,
+  // allowUserToManageMfaDevices, allowUserToManagePublicKeys,
+  // allowUserToChangePassword, saveMfaTicketEnabled, loginNetworkMasks, and
+  // loginSessionDuration. Every value here is null on an account whose
+  // preferences cannot be read, and a null compares as true in an MQL `&&`
+  // assertion, so a check written against this dict passes on the accounts it
+  // was meant to catch.
+  securityPreference() @maturity("deprecated") dict
+  // Whether RAM users may create and rotate their own access keys
+  //
+  // A user who can mint their own long-lived keys can move credentials out of
+  // any console-based control, including the MFA requirement on console
+  // sign-in.
+  allowUserToManageAccessKeys() bool
+  // Whether RAM users may bind and unbind their own MFA devices
+  //
+  // A user who can unbind their own device can remove the second factor an MFA
+  // requirement was meant to enforce.
+  allowUserToManageMfaDevices() bool
+  // Whether RAM users may manage their own public keys
+  allowUserToManagePublicKeys() bool
+  // Whether RAM users may change their own console password
+  allowUserToChangePassword() bool
+  // Whether the console remembers an MFA verification for the session
+  //
+  // When on, a browser that has passed MFA once is not challenged again for the
+  // remembered period, so a stolen session skips the second factor.
+  saveMfaTicketEnabled() bool
+  // Network masks console sign-in is restricted to
+  //
+  // Console sign-in is refused from outside these CIDRs. An empty list means
+  // sign-in is accepted from anywhere on the internet.
+  loginNetworkMasks() []string
+  // Console session duration in hours before re-authentication is required
+  loginSessionDuration() int
 }
 
 // Resource Access Management user
@@ -102,15 +132,45 @@ alicloud.ram.user {
   effectivePolicies() []alicloud.ram.policy
   // Multi-factor authentication device bound to the user
   //
-  // The serialNumber and type of the bound MFA device, or null when the user
-  // has no MFA device.
-  mfaDevice() dict
+  // Deprecated in favor of mfaEnabled, mfaDeviceType, and
+  // mfaDeviceSerialNumber. This dict is null for a user with no device bound,
+  // and a null compares as true in an MQL `&&` assertion, so a check written
+  // against it passes on exactly the users it was meant to catch.
+  mfaDevice() @maturity("deprecated") dict
   // Console login profile for the user
   //
-  // Presence indicates the user can sign in to the console. Exposes userName,
-  // mfaBindRequired, passwordResetRequired, and createDate, or null when the
-  // user has no console login enabled.
-  loginProfile() dict
+  // Deprecated in favor of consoleLoginEnabled, mfaBindRequired,
+  // passwordResetRequired, and loginProfileCreateDate. This dict is null for a
+  // user with no console access, and a null compares as true in an MQL `&&`
+  // assertion.
+  loginProfile() @maturity("deprecated") dict
+  // Whether the user can sign in to the Alibaba Cloud console
+  //
+  // False for a user that holds only programmatic credentials. Console access
+  // is what the password policy, the MFA requirement, and the login network
+  // masks apply to, so it decides which account-wide controls reach this user
+  // at all.
+  consoleLoginEnabled() bool
+  // Whether the user must bind an MFA device at the next console sign-in
+  //
+  // This is the enforcement flag, not the state: a user with it set may still
+  // have no device bound today. Read mfaEnabled for whether a second factor is
+  // in place now.
+  mfaBindRequired() bool
+  // Whether the user must change their password at the next console sign-in
+  passwordResetRequired() bool
+  // Whether a multi-factor authentication device is bound to the user
+  //
+  // False for a user with console access and no second factor, which is the
+  // case a console-sign-in audit is looking for. Also false for a user with no
+  // console access at all, where the question does not arise.
+  mfaEnabled() bool
+  // Type of the bound MFA device, for example VMFA, empty when none is bound
+  mfaDeviceType() string
+  // Serial number identifying the bound MFA device, empty when none is bound
+  mfaDeviceSerialNumber() string
+  // Time the console login profile was created, null when the user has no console access
+  loginProfileCreateDate() time
 }
 
 // Resource Access Management access key
@@ -207,6 +267,37 @@ alicloud.ram.role {
   // Traverse to policyDocument alongside assumeRolePolicyDocument to see both
   // who may assume the role and what the assumed session is allowed to do.
   attachedPolicies() []alicloud.ram.policy
+  // Parsed statements of the trust policy
+  //
+  // The assume-role policy decoded into statements, so the principals and the
+  // conditions on the trust can be queried directly instead of by matching text
+  // against assumeRolePolicyDocument.
+  trustStatements() []alicloud.ram.policy.statement
+  // Principals permitted to assume the role
+  //
+  // Every principal named by an allowing trust statement, across all principal
+  // kinds, sorted and deduplicated. For example
+  // `acs:ram::123456789:root`, `acs:ram::123456789:user/deploy`,
+  // `ecs.aliyuncs.com`, or the wildcard `*`.
+  trustedPrincipals() []string
+  // Accounts permitted to assume the role
+  //
+  // The account IDs parsed out of the RAM principals in the trust policy,
+  // sorted and deduplicated. Compare against the account under audit to find a
+  // role a foreign account can assume, which is a cross-account takeover path
+  // into whatever the role's attached policies grant.
+  trustedAccountIds() []string
+  // Alibaba Cloud services permitted to assume the role
+  //
+  // The Service principals in the trust policy, for example ecs.aliyuncs.com
+  // or fc.aliyuncs.com. A service-linked role is expected to have these; a role
+  // meant for humans is not.
+  trustedServices() []string
+  // Whether any identity may assume the role
+  //
+  // True when an allowing trust statement names the wildcard `*` as a
+  // principal, which lets any Alibaba Cloud identity anywhere assume the role.
+  hasWildcardPrincipal() bool
 }
 
 // Resource Access Management permission policy
@@ -314,6 +405,14 @@ alicloud.ram.policy.statement @defaults("effect action resource") {
   // `{"IpAddress": {"acs:SourceIp": ["10.0.0.0/8"]}}`. Null when the statement
   // grants unconditionally.
   condition dict
+  // Identities the statement applies to
+  //
+  // Keyed by principal kind, for example
+  // `{"RAM": ["acs:ram::123456789:root"], "Service": ["ecs.aliyuncs.com"]}`.
+  // Null on a permission policy statement, which names actions and resources
+  // rather than principals; set on a role trust statement and on a bucket
+  // policy statement.
+  principal dict
 }
 
 // Resource Access Management password policy
@@ -369,6 +468,174 @@ alicloud.ecs {
   // instead of writing the blocks out, so a rule scoped to a list shows no CIDR
   // of its own until the list is read.
   prefixLists() []alicloud.ecs.prefixList
+  // Disk snapshots across all enabled regions
+  //
+  // A snapshot holds a copy of a disk's contents and is encrypted (or not)
+  // independently of the disk it came from, so an unencrypted snapshot of an
+  // encrypted disk defeats the disk's own encryption.
+  snapshots() []alicloud.ecs.snapshot
+  // Instance launch templates across all enabled regions
+  //
+  // A launch template fixes the image, security groups, RAM role, key pair and
+  // user data of every instance launched from it, so a weakness in a template
+  // is reproduced on each new instance rather than existing on one.
+  launchTemplates() []alicloud.ecs.launchTemplate
+}
+
+// Elastic Compute Service launch template
+//
+// A named instance launch template, keyed by launchTemplateId within its
+// region. A template holds one or more versions, each fixing the image,
+// security groups, RAM role, key pair, metadata-service settings and user data
+// of the instances launched from it. Exposes the version list and which version
+// is the default. Use it to audit the shape of instances that do not exist yet,
+// which an instance-by-instance check cannot reach.
+alicloud.ecs.launchTemplate @defaults("launchTemplateName launchTemplateId latestVersionNumber") {
+  // Region ID the template resides in, for example cn-hangzhou
+  regionId string
+  // Launch template ID, used as the lookup key within its region
+  launchTemplateId string
+  // Name of the launch template
+  launchTemplateName string
+  // Account or service that created the template
+  createdBy string
+  // Version number used when a launch does not name one
+  defaultVersionNumber int
+  // Highest version number the template has
+  //
+  // A template whose default is behind its latest launches the older shape, so
+  // a fix applied in a new version does not reach new instances until the
+  // default moves.
+  latestVersionNumber int
+  // Time the template was created
+  createTime time
+  // Time the template was last modified
+  modifiedTime time
+  // ID of the resource group the template belongs to
+  resourceGroupId string
+  // Resource group that contains the template
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the template
+  tags map[string]string
+  // Versions of the template
+  versions() []alicloud.ecs.launchTemplate.version
+  // Version launched when a launch does not name one
+  //
+  // Null when the default version could not be read. This is the version that
+  // actually shapes new instances, so it is the one an audit should read.
+  defaultVersion() alicloud.ecs.launchTemplate.version
+}
+
+// Version of an Elastic Compute Service launch template
+//
+// A single version of a launch template, keyed by the owning launchTemplateId
+// and version number. Exposes the instance shape the version launches: the
+// image, security groups, RAM role, key pair, metadata-service settings, disk
+// encryption, and user data. Use it to find a template that grants a broad RAM
+// role, leaves the metadata service on IMDSv1, or embeds a credential in user
+// data.
+alicloud.ecs.launchTemplate.version @defaults("versionNumber instanceType isDefault") {
+  // Region ID the template resides in
+  regionId string
+  // ID of the launch template the version belongs to
+  launchTemplateId string
+  // Version number
+  versionNumber int
+  // Description of the version
+  versionDescription string
+  // Whether this version launches when a launch does not name one
+  isDefault bool
+  // Account or service that created the version
+  createdBy string
+  // Time the version was created
+  createTime time
+  // Instance type launched, for example ecs.g6.large
+  instanceType string
+  // ID of the image launched
+  imageId string
+  // Image launched
+  //
+  // Null when the image has since been deleted, which also means the template
+  // can no longer launch.
+  image() alicloud.ecs.image
+  // Where the image comes from, for example system, self, others, or marketplace
+  imageOwnerAlias string
+  // Zone the instance is launched into
+  zoneId string
+  // Name of the SSH key pair installed on launch, empty when none is installed
+  keyPairName string
+  // Whether the instance inherits the password of the image
+  passwordInherit bool
+  // Security-hardening applied at launch, for example Active or Deactive
+  securityEnhancementStrategy string
+  // RAM role attached to launched instances
+  //
+  // Null when the template attaches no role. An instance carrying a role can
+  // mint credentials for it from the metadata service, so a broad role here is
+  // granted to every instance the template launches.
+  ramRole() alicloud.ram.role
+  // IDs of the security groups applied at launch
+  securityGroupIds []string
+  // Security groups applied at launch
+  //
+  // A group that has since been deleted is left out, so this can be shorter
+  // than securityGroupIds.
+  securityGroups() []alicloud.ecs.securitygroup
+  // VPC launched instances join
+  //
+  // Null when the template names no VPC, and when the VPC lies outside the
+  // scanned regions.
+  vpc() alicloud.vpc.network
+  // vSwitch launched instances join
+  //
+  // Null when the template names no vSwitch, and when the vSwitch lies outside
+  // the scanned regions.
+  vswitch() alicloud.vpc.vswitch
+  // Startup script and cloud-init data written into every launched instance
+  //
+  // The user data as plain text, decoded from the base64 form the API returns.
+  // Every instance launched from this version receives it, and any process on
+  // those instances that can reach the metadata service can read it back, so a
+  // credential embedded here is exposed on every instance the template has ever
+  // launched. Empty when the version carries no user data.
+  userData string
+  // Whether the instance metadata service is reachable, either enabled or disabled
+  httpEndpoint string
+  // Whether the metadata service demands a session token
+  //
+  // Either required, which is IMDSv2, or optional, which still answers the
+  // token-less IMDSv1 request that a server-side request forgery can reach.
+  httpTokens string
+  // Whether the metadata service requires IMDSv2
+  //
+  // False when httpTokens is optional, which leaves the instance role
+  // credentials reachable through a server-side request forgery against the
+  // workload.
+  imdsV2Required bool
+  // Hop limit for metadata service responses
+  //
+  // A limit above 1 lets a container on the instance reach the metadata
+  // service through the host's network namespace.
+  httpPutResponseHopLimit int
+  // Maximum inbound public bandwidth in Mbit/s, 0 when no public address is assigned
+  internetMaxBandwidthIn int
+  // Maximum outbound public bandwidth in Mbit/s
+  //
+  // A value above 0 assigns a public IP address to every instance the version
+  // launches.
+  internetMaxBandwidthOut int
+  // Whether launched instances are protected from release
+  deletionProtection bool
+  // Preemption strategy, for example NoSpot, SpotWithPriceLimit, or SpotAsPriceGo
+  spotStrategy string
+  // Storage category of the system disk, for example cloud_essd
+  systemDiskCategory string
+  // Whether the system disk is encrypted
+  systemDiskEncrypted bool
+  // ID of the KMS key encrypting the system disk, empty when the service-managed key is used
+  systemDiskKmsKeyId string
+  // Whether the system disk is released with the instance
+  systemDiskDeleteWithInstance bool
 }
 
 // Prefix list
@@ -643,6 +910,12 @@ alicloud.ecs.disk @defaults("diskId diskName category size status") {
   diskChargeType string
   // Tags on the disk, as key-value pairs
   tags map[string]string
+  // Snapshots taken from the disk
+  //
+  // A snapshot is encrypted independently of the disk it came from, so an
+  // encrypted disk with an unencrypted snapshot has its contents readable
+  // outside the protection the disk itself has.
+  snapshots() []alicloud.ecs.snapshot
 }
 
 // Elastic Compute Service image
@@ -696,6 +969,103 @@ alicloud.ecs.image @defaults("imageId imageName osName status") {
   usage string
   // Region ID of the image
   regionId string
+  // Accounts the image is shared with
+  //
+  // Each entry is the Alibaba Cloud account the owner granted use of the image
+  // to. isPublic covers exposure through the marketplace; this covers a share
+  // to a named account, which that check does not see.
+  sharedAccounts() []string
+  // Share groups the image is shared with
+  //
+  // Each entry names a group of accounts, for example ALL, that may use the
+  // image.
+  shareGroups() []string
+  // Whether the image is shared outside the owning account
+  //
+  // True when the image is shared with at least one account or share group.
+  // False when nothing is shared, and when the share permissions could not be
+  // read, so this must not stand alone as evidence that an image is private.
+  isShared() bool
+}
+
+// Elastic Compute Service disk snapshot
+//
+// A point-in-time copy of a disk's contents, keyed by snapshotId within its
+// region. Exposes the source disk, the encryption state and key, the retention
+// setting, and the snapshot lifecycle. Use it to find an unencrypted snapshot
+// of an encrypted disk, which puts the disk's contents outside the protection
+// the disk itself has.
+alicloud.ecs.snapshot @defaults("snapshotName snapshotId status encrypted") {
+  // Region ID the snapshot resides in, for example cn-hangzhou
+  regionId string
+  // Snapshot ID, used as the lookup key within its region
+  snapshotId string
+  // Name of the snapshot
+  snapshotName string
+  // Description of the snapshot
+  description string
+  // ID of the disk the snapshot was taken from
+  sourceDiskId string
+  // Disk the snapshot was taken from
+  //
+  // Null when the disk has since been deleted, and when it lies outside the
+  // scanned regions. Compare its encrypted field with this snapshot's to find a
+  // snapshot that is not protected to the same standard as its source.
+  disk() alicloud.ecs.disk
+  // Size of the source disk in GiB
+  sourceDiskSize string
+  // Kind of the source disk, either system or data
+  sourceDiskType string
+  // Region the snapshot was copied from, empty when it was not copied
+  sourceRegionId string
+  // ID of the snapshot this one was copied from, empty when it was not copied
+  sourceSnapshotId string
+  // Whether the snapshot contents are encrypted
+  encrypted bool
+  // ID of the KMS key that encrypts the snapshot, empty when none is used
+  kmsKeyId string
+  // KMS key that encrypts the snapshot
+  //
+  // Null when the snapshot is unencrypted, and when it is encrypted with the
+  // service-managed key rather than a customer master key.
+  kmsKey() alicloud.kms.key
+  // Whether a customer master key protects the snapshot
+  //
+  // False both for an unencrypted snapshot and for one encrypted with the
+  // service-managed key, where key rotation and revocation are not under the
+  // account's control.
+  encryptedWithCustomerKey bool
+  // Lifecycle status of the snapshot
+  //
+  // One of progressing, accomplished, or failed. Only an accomplished snapshot
+  // can be restored.
+  status string
+  // Percentage of the snapshot that has been taken, for example 100%
+  progress string
+  // Whether the snapshot can be used to create a disk or image
+  available bool
+  // Storage category of the snapshot, for example standard or flash
+  category string
+  // Days the snapshot is retained before automatic deletion, 0 when it is retained indefinitely
+  retentionDays int
+  // How the snapshot was created, either user or auto for an automatic snapshot policy
+  snapshotType string
+  // What the snapshot is used by, for example image, disk, image_disk, or none
+  usage string
+  // Size of the full snapshot in bytes
+  fullSnapshotSizeInBytes int
+  // Whether instant access is enabled for the snapshot
+  instantAccess bool
+  // Time the snapshot was created
+  creationTime time
+  // Time the snapshot was last modified
+  lastModifiedTime time
+  // ID of the resource group the snapshot belongs to
+  resourceGroupId string
+  // Resource group that contains the snapshot
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the snapshot
+  tags map[string]string
 }
 
 // Elastic Compute Service SSH key pair
@@ -924,6 +1294,12 @@ alicloud.ess.scalingGroup @defaults("name scalingGroupId lifecycleState totalCap
   // A version number, or Latest or Default. Empty when the group launches from
   // a scaling configuration.
   launchTemplateVersion string
+  // Launch template the group creates instances from
+  //
+  // Null when the group launches from a scaling configuration instead, and when
+  // the template has since been deleted. Traverse to its versions to see the
+  // image, security groups, RAM role and user data the group's instances get.
+  launchTemplate() alicloud.ecs.launchTemplate
   // Time the scaling group was created
   creationTime time
   // Time the scaling group was last modified
@@ -1106,6 +1482,299 @@ alicloud.vpc {
   vpnGateways() []alicloud.vpc.vpnGateway
   // VPN connections across all enabled regions
   vpnConnections() []alicloud.vpc.vpnConnection
+  // SSL VPN servers across all enabled regions
+  //
+  // An SSL VPN server admits individual client machines into the VPC over TLS,
+  // which is a different ingress path from the site-to-site IPsec tunnels that
+  // vpnConnections covers, and one that reaches the VPC from any address a
+  // client certificate is installed on.
+  sslVpnServers() []alicloud.vpc.sslVpnServer
+  // Customer gateways across all enabled regions
+  //
+  // A customer gateway represents the remote end of a site-to-site VPN tunnel:
+  // the public address of the on-premises or third-party device the VPC will
+  // establish a tunnel with.
+  customerGateways() []alicloud.vpc.customerGateway
+  // Express Connect physical connections across all enabled regions
+  //
+  // A leased-line circuit into Alibaba Cloud. Traffic over it bypasses the
+  // internet entirely, so no internet-facing control sees it, and the routes it
+  // carries reach the VPC through its virtual border routers.
+  physicalConnections() []alicloud.vpc.physicalConnection
+  // Virtual border routers across all enabled regions
+  //
+  // The routed hand-off between a physical connection and the Alibaba Cloud
+  // side. A router whose physical connection is owned by another account is a
+  // path into the VPC from outside this account's control.
+  virtualBorderRouters() []alicloud.vpc.virtualBorderRouter
+}
+
+// SSL VPN server
+//
+// An SSL VPN server on a VPN gateway, keyed by sslVpnServerId. Exposes the
+// client address pool, the subnets it publishes to clients, the transport and
+// cipher, the connection limit, and whether a second authentication factor is
+// demanded. Use it to find a remote-access path into a VPC that clients reach
+// with a certificate alone.
+alicloud.vpc.sslVpnServer @defaults("name sslVpnServerId clientIpPool connections") {
+  // Region ID the server runs in
+  regionId string
+  // SSL VPN server ID, used as the lookup key
+  sslVpnServerId string
+  // Name of the server
+  name string
+  // ID of the VPN gateway hosting the server
+  vpnGatewayId string
+  // VPN gateway hosting the server
+  //
+  // Null when the gateway lies outside the scanned regions.
+  vpnGateway() alicloud.vpc.vpnGateway
+  // Public address clients connect to
+  internetIp string
+  // Address pool clients are assigned from
+  clientIpPool string
+  // CIDR blocks on the Alibaba Cloud side published to clients
+  //
+  // Everything a connected client can reach. A broad local subnet gives a
+  // single client certificate reach across the whole VPC.
+  localSubnet string
+  // Port the server listens on
+  port int
+  // Transport protocol, either UDP or TCP
+  proto string
+  // Encryption algorithm negotiated with clients, for example AES-128-CBC or none
+  cipher string
+  // Whether the tunnel compresses traffic
+  compress bool
+  // Number of clients connected now
+  connections int
+  // Maximum number of simultaneous client connections
+  maxConnections int
+  // DNS servers pushed to clients, comma-separated when several
+  dnsServers string
+  // Whether clients must pass a second authentication factor
+  //
+  // False means a client certificate alone admits a machine to the VPC, so a
+  // copied certificate file is enough to reach it.
+  multiFactorAuthEnabled bool
+  // ID of the IDaaS instance providing the second factor, empty when none is configured
+  idaasInstanceId string
+  // Region of the IDaaS instance, empty when none is configured
+  idaasRegionId string
+  // Time the server was created
+  createTime time
+  // ID of the resource group the server belongs to
+  resourceGroupId string
+  // Resource group that contains the server
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Client certificates issued for the server
+  clientCerts() []alicloud.vpc.sslVpnClientCert
+}
+
+// SSL VPN client certificate
+//
+// A client certificate issued for an SSL VPN server, keyed by
+// sslVpnClientCertId. Exposes the certificate lifecycle and expiry. The private
+// key is never exposed. Use it to find certificates that have expired without
+// being revoked, or that are close to expiry.
+alicloud.vpc.sslVpnClientCert @defaults("name status endTime") {
+  // Region ID the certificate belongs to
+  regionId string
+  // Client certificate ID, used as the lookup key
+  sslVpnClientCertId string
+  // Name of the certificate
+  name string
+  // ID of the SSL VPN server the certificate is issued for
+  sslVpnServerId string
+  // Lifecycle status of the certificate
+  //
+  // One of expiring-soon, normal, or expired. A certificate reported here at
+  // all is still installed on the server, whatever its status.
+  status string
+  // Time the certificate was issued
+  createTime time
+  // Time the certificate expires
+  endTime time
+  // ID of the resource group the certificate belongs to
+  resourceGroupId string
+  // Resource group that contains the certificate
+  resourceGroup() alicloud.resourceManager.resourceGroup
+}
+
+// VPN customer gateway
+//
+// The remote end of a site-to-site VPN tunnel, keyed by customerGatewayId.
+// Exposes the public address of the on-premises or third-party device and its
+// BGP autonomous system number. The BGP authentication key is never exposed;
+// authKeyConfigured reports only whether one is set.
+alicloud.vpc.customerGateway @defaults("name customerGatewayId ipAddress") {
+  // Region ID the gateway is registered in
+  regionId string
+  // Customer gateway ID, used as the lookup key
+  customerGatewayId string
+  // Name of the gateway
+  name string
+  // Description of the gateway
+  description string
+  // Public IP address of the remote device
+  ipAddress string
+  // BGP autonomous system number of the remote device, 0 when BGP is not used
+  asn int
+  // Whether a BGP authentication key is configured
+  //
+  // The key itself is a shared secret and is never exposed. False means BGP
+  // sessions with this peer are unauthenticated, so a peer that can reach the
+  // address can inject routes.
+  authKeyConfigured bool
+  // Time the gateway was registered
+  createTime time
+  // ID of the resource group the gateway belongs to
+  resourceGroupId string
+  // Resource group that contains the gateway
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the gateway
+  tags map[string]string
+}
+
+// Express Connect physical connection
+//
+// A leased-line circuit into Alibaba Cloud, keyed by physicalConnectionId.
+// Exposes the circuit status, capacity, access point and carrier, along with
+// the virtual border routers that hand its traffic to the Alibaba Cloud side.
+// Traffic over the circuit never touches the internet, so no internet-facing
+// control sees it.
+alicloud.vpc.physicalConnection @defaults("name physicalConnectionId status bandwidth") {
+  // Region ID the circuit terminates in
+  regionId string
+  // Physical connection ID, used as the lookup key
+  physicalConnectionId string
+  // Name of the circuit
+  name string
+  // Description of the circuit
+  description string
+  // Lifecycle status of the circuit
+  //
+  // For example Initial, Approved, Allocating, Allocated, Confirmed, Enabled,
+  // or Terminated. Only an Enabled circuit carries traffic.
+  status string
+  // Commercial status of the circuit, for example Normal or FinancialLocked
+  businessStatus string
+  // Capacity of the circuit in Mbit/s
+  bandwidth int
+  // Carrier providing the line, for example CT, CU, CM, or Other
+  lineOperator string
+  // Port type of the circuit, for example 10GBase-LR
+  portType string
+  // Access point the circuit lands at
+  accessPointId string
+  // Physical location of the remote end
+  peerLocation string
+  // Circuit code assigned by the carrier
+  circuitCode string
+  // Specification of the circuit, for example 10G
+  spec string
+  // Kind of circuit, for example VPC
+  type string
+  // ID of the redundant circuit paired with this one, empty when there is none
+  //
+  // A circuit with no redundant pair is a single point of failure for
+  // everything routed over it.
+  redundantPhysicalConnectionId string
+  // ID of the parent circuit when this is a hosted connection, empty otherwise
+  parentPhysicalConnectionId string
+  // Time the circuit was created
+  creationTime time
+  // Time the circuit was enabled
+  enabledTime time
+  // Time the circuit expires
+  endTime time
+  // ID of the resource group the circuit belongs to
+  resourceGroupId string
+  // Resource group that contains the circuit
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the circuit
+  tags map[string]string
+  // Virtual border routers handing the circuit's traffic to Alibaba Cloud
+  virtualBorderRouters() []alicloud.vpc.virtualBorderRouter
+}
+
+// Virtual border router
+//
+// The routed hand-off between an Express Connect circuit and the Alibaba Cloud
+// side, keyed by vbrId. Exposes both gateway addresses of the peering, the VLAN
+// it runs on, the BFD settings, and which circuit it attaches to. Use it to
+// find a router attached to a circuit owned by another account, which is a path
+// into the network from outside this account's control.
+alicloud.vpc.virtualBorderRouter @defaults("name vbrId status vlanId") {
+  // Region ID the router runs in
+  regionId string
+  // Virtual border router ID, used as the lookup key
+  vbrId string
+  // Name of the router
+  name string
+  // Description of the router
+  description string
+  // Lifecycle status of the router
+  //
+  // For example active, terminating, terminated, recovering, or unconfirmed.
+  // Only an active router carries traffic.
+  status string
+  // VLAN the peering runs on
+  vlanId int
+  // ID of the physical connection the router attaches to
+  physicalConnectionId string
+  // Physical connection the router attaches to
+  //
+  // Null when the circuit belongs to another account, which is the hosted
+  // Express Connect arrangement, and when it lies outside the scanned regions.
+  physicalConnection() alicloud.vpc.physicalConnection
+  // Lifecycle status of the attached circuit
+  physicalConnectionStatus string
+  // Account that owns the attached circuit
+  physicalConnectionOwnerUid string
+  // Whether the attached circuit belongs to another account
+  //
+  // True on a hosted connection, where the circuit and therefore the physical
+  // path is under a third party's control.
+  crossAccountConnection bool
+  // Alibaba Cloud side address of the peering
+  localGatewayIp string
+  // Remote side address of the peering
+  peerGatewayIp string
+  // Subnet mask of the peering addresses
+  peeringSubnetMask string
+  // Whether IPv6 is enabled on the peering
+  enableIpv6 bool
+  // Alibaba Cloud side IPv6 address of the peering, empty when IPv6 is off
+  localIpv6GatewayIp string
+  // Remote side IPv6 address of the peering, empty when IPv6 is off
+  peerIpv6GatewayIp string
+  // Capacity of the router in Mbit/s
+  bandwidth int
+  // Maximum transmission unit of the peering
+  mtu int
+  // Number of missed BFD packets before the peer is declared down, 0 when BFD is off
+  detectMultiplier int
+  // Minimum BFD receive interval in milliseconds, 0 when BFD is off
+  minRxInterval int
+  // Minimum BFD transmit interval in milliseconds, 0 when BFD is off
+  minTxInterval int
+  // ID of the route table the router uses
+  routeTableId string
+  // Kind of router, for example VBR
+  type string
+  // Time the router was created
+  creationTime time
+  // Time the router was activated
+  activationTime time
+  // Time the router was terminated, null when it has not been
+  terminationTime time
+  // ID of the resource group the router belongs to
+  resourceGroupId string
+  // Resource group that contains the router
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the router
+  tags map[string]string
 }
 
 // Virtual Private Cloud network
@@ -1437,6 +2106,95 @@ alicloud.vpc.natGateway {
   accessMode dict
   // Tags attached to the NAT gateway
   tags map[string]string
+  // SNAT rules giving private addresses outbound internet access
+  //
+  // Each rule maps a source range or vSwitch onto one or more public
+  // addresses. An instance with no public address of its own still reaches the
+  // internet whenever a SNAT rule covers it, which a check on the instance's
+  // own addressing does not show.
+  snatEntries() []alicloud.vpc.natGateway.snatEntry
+  // DNAT rules forwarding inbound traffic to private addresses
+  //
+  // Each rule publishes a private address and port on a public IP. This is an
+  // inbound path from the internet that no security group audit sees, because
+  // the security group is evaluated against the private address the traffic
+  // arrives at.
+  forwardEntries() []alicloud.vpc.natGateway.forwardEntry
+}
+
+// SNAT rule of a NAT gateway
+//
+// A single source-NAT rule, keyed by snatEntryId. A rule gives a source range,
+// a vSwitch, or one network interface outbound internet access through a public
+// address. Exposes the source it covers, the public addresses it uses, and the
+// rule status. Use it to find which private workloads can reach the internet.
+alicloud.vpc.natGateway.snatEntry @defaults("snatEntryName snatIp sourceCIDR status") {
+  // SNAT rule ID, used as the lookup key
+  snatEntryId string
+  // Name of the SNAT rule
+  snatEntryName string
+  // ID of the SNAT table holding the rule
+  snatTableId string
+  // Public addresses the rule translates to, comma-separated when several
+  snatIp string
+  // Source CIDR the rule applies to, empty when the rule is scoped by vSwitch
+  sourceCIDR string
+  // ID of the vSwitch the rule applies to, empty when the rule is scoped by CIDR
+  sourceVSwitchId string
+  // vSwitch the rule applies to
+  //
+  // Null when the rule is scoped by CIDR or network interface rather than by
+  // vSwitch, and when the vSwitch lies outside the scanned regions.
+  sourceVswitch() alicloud.vpc.vswitch
+  // ID of the network interface the rule applies to, empty when it is not interface-scoped
+  networkInterfaceId string
+  // Whether the rule pins a connection to one public address
+  //
+  // Enabled when consecutive connections from the same source keep the same
+  // public address.
+  eipAffinity string
+  // Lifecycle status of the rule
+  //
+  // One of Pending, Available, or Deleting. Only an Available rule forwards
+  // traffic.
+  status string
+}
+
+// DNAT rule of a NAT gateway
+//
+// A single destination-NAT (port forwarding) rule, keyed by forwardEntryId. A
+// rule publishes a private address and port on a public IP, which is an inbound
+// path from the internet. Exposes both ends of the mapping, the protocol, and
+// whether the rule forwards every port. Use it to find private workloads
+// reachable from the internet without a public address of their own.
+alicloud.vpc.natGateway.forwardEntry @defaults("forwardEntryName externalIp externalPort internalIp status") {
+  // DNAT rule ID, used as the lookup key
+  forwardEntryId string
+  // Name of the DNAT rule
+  forwardEntryName string
+  // ID of the DNAT table holding the rule
+  forwardTableId string
+  // Public address traffic arrives at
+  externalIp string
+  // Public port traffic arrives at, or any when every port is forwarded
+  externalPort string
+  // Private address traffic is forwarded to
+  internalIp string
+  // Private port traffic is forwarded to, or any when every port is forwarded
+  internalPort string
+  // Protocol the rule forwards, one of TCP, UDP, or Any
+  ipProtocol string
+  // Whether the rule forwards every port
+  //
+  // True when the rule maps the whole port range rather than one port, which
+  // publishes every listening service on the private address rather than the
+  // one that was meant to be exposed.
+  forwardsAllPorts bool
+  // Lifecycle status of the rule
+  //
+  // One of Pending, Available, or Deleting. Only an Available rule forwards
+  // traffic.
+  status string
 }
 
 // Elastic IP address (EIP)
@@ -1884,6 +2642,46 @@ alicloud.oss.bucket.replicationRule @defaults("id targetBucket targetLocation st
 alicloud.slb {
   // CLB instances across all enabled regions
   loadBalancers() []alicloud.slb.loadBalancer
+  // Access control lists across all enabled regions
+  //
+  // An access control list holds the addresses a CLB listener allows or denies.
+  // A listener naming an allowlist that turns out to hold 0.0.0.0/0 is
+  // indistinguishable from an unrestricted listener, which the listener's own
+  // fields cannot show.
+  acls() []alicloud.slb.acl
+}
+
+// Server Load Balancer access control list
+//
+// A named list of addresses a CLB listener allows or denies, keyed by aclId
+// within its region. Exposes the address entries and the listeners bound to
+// the list. Use it to find an allowlist that admits every address, which
+// leaves a listener open despite access control reading as enabled.
+alicloud.slb.acl @defaults("aclName aclId addressIPVersion entryCount") {
+  // Region ID the list resides in, for example cn-hangzhou
+  regionId string
+  // Access control list ID, used as the lookup key within its region
+  aclId string
+  // Name of the access control list
+  aclName string
+  // IP version of the entries, either ipv4 or ipv6
+  addressIPVersion string
+  // Address entries in the list, as CIDR blocks
+  entries() []string
+  // Number of address entries in the list
+  entryCount() int
+  // Whether the list covers every address
+  //
+  // True when an entry is 0.0.0.0/0 or ::/0. On a listener whose aclType is
+  // white this makes the allowlist a no-op, so access control reads as enabled
+  // while admitting the whole internet.
+  allowsAllAddresses() bool
+  // ID of the resource group the list belongs to
+  resourceGroupId string
+  // Resource group that contains the list
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the list
+  tags map[string]string
 }
 
 // Server Load Balancer (CLB) instance
@@ -2039,6 +2837,12 @@ alicloud.slb.listener {
   aclId string
   // IDs of the access control lists bound to the listener
   aclIds []string
+  // Access control lists bound to the listener
+  //
+  // Empty when the listener names no list, and when the named lists could not
+  // be read. Traverse to allowsAllAddresses to tell an allowlist that
+  // restricts anything from one that admits every address.
+  acls() []alicloud.slb.acl
   // ID of the vServer group associated with the listener
   vServerGroupId string
   // vServer group the listener forwards to
@@ -2433,6 +3237,18 @@ alicloud.redis.instance {
   // password-free access is enabled, allowing connections from within the
   // VPC without a password.
   authEnabled() bool
+  // Whether the audit log records the commands run against the instance
+  //
+  // False when audit logging is off, and when the setting could not be read, so
+  // an "auditing is on" check fails rather than passing on an instance nobody
+  // could read. With it off there is no record of what was read or written,
+  // which is the gap a fleet-wide database-activity check is looking for.
+  auditLogEnabled() bool
+  // Days the audit log is retained
+  //
+  // Zero when audit logging is off. Entries older than this are dropped, which
+  // bounds how far back an investigation can reach.
+  auditLogRetentionDays() int
 }
 
 // ApsaraDB for MongoDB
@@ -2726,6 +3542,18 @@ alicloud.polardb.cluster {
   // Custom), dbEndpointId, addressType (the network type, Public or Private),
   // connectionString, port, readWriteMode, and nodes.
   endpoints() []dict
+  // Whether SQL audit collection is running on the cluster
+  //
+  // False when the collector is off, and when the setting could not be read, so
+  // an "auditing is on" check fails rather than passing on a cluster nobody
+  // could read. With it off there is no record of the statements run against
+  // the cluster.
+  auditLogEnabled() bool
+  // Raw state of the SQL audit collector
+  //
+  // One of Enable, Enabling, Disable, or Disabling. Only Enable means
+  // statements are being recorded now.
+  auditLogCollectorStatus() string
 }
 
 // VPC flow log
@@ -2898,6 +3726,36 @@ alicloud.kms.key {
   dkmsInstanceId string
   // Alias names that point at the key, for example alias/my-key
   aliases() []string
+  // Key policy document
+  //
+  // The resource policy attached to the key, as a JSON string. It names the
+  // identities permitted to use the key for cryptographic operations, which is
+  // a grant that the RAM policies attached to those identities do not show on
+  // their own. Empty when the key carries no policy, and on a key policy the
+  // scan is not permitted to read.
+  policy() string
+  // Parsed statements of the key policy
+  //
+  // The key policy decoded into statements, so the principals and the actions
+  // they are granted can be queried directly rather than by matching text.
+  statements() []alicloud.ram.policy.statement
+  // Accounts outside the key's own account that the key policy grants use of the key
+  //
+  // Sorted and deduplicated. A non-empty list means the key can be used to
+  // decrypt from another Alibaba Cloud account, so data encrypted with it is
+  // readable outside this account's control.
+  externalPrincipalAccountIds() []string
+  // Whether the key policy grants use of the key outside its own account
+  //
+  // True when an allowing statement names a principal in another account, or
+  // names the wildcard `*`. Note that a key with no readable policy reports
+  // false, because an unread policy must not be reported as a grant.
+  allowsExternalPrincipal() bool
+  // Whether the key policy names the wildcard as a principal
+  //
+  // True when an allowing statement grants use of the key to `*`, which admits
+  // any identity the key's resource-sharing configuration reaches.
+  hasWildcardPrincipal() bool
 }
 
 // Key Management Service secret
@@ -4119,6 +4977,44 @@ alicloud.alb {
   loadBalancers() []alicloud.alb.loadBalancer
   // ALB server groups across all enabled regions
   serverGroups() []alicloud.alb.serverGroup
+  // Custom TLS security policies across all enabled regions
+  //
+  // A security policy fixes the TLS versions and cipher suites a listener
+  // accepts. Only custom policies are listed; a listener using one of the
+  // built-in policies names it by id and has no entry here.
+  securityPolicies() []alicloud.alb.securityPolicy
+}
+
+// Application Load Balancer TLS security policy
+//
+// A custom TLS security policy, keyed by securityPolicyId within its region.
+// Exposes the TLS versions and cipher suites the policy permits. Use it to find
+// a listener that still accepts TLS 1.0 or 1.1.
+alicloud.alb.securityPolicy @defaults("securityPolicyName tlsVersions status") {
+  // Region ID the policy resides in, for example cn-hangzhou
+  regionId string
+  // Security policy ID, used as the lookup key within its region
+  securityPolicyId string
+  // Name of the security policy
+  securityPolicyName string
+  // Lifecycle status of the policy, for example Available or Configuring
+  status string
+  // TLS versions the policy accepts, for example TLSv1.2 and TLSv1.3
+  tlsVersions []string
+  // Cipher suites the policy permits
+  ciphers []string
+  // Whether the policy still accepts TLS 1.0 or TLS 1.1
+  //
+  // Both versions are deprecated and carry known weaknesses, so a listener
+  // bound to such a policy accepts connections that a current client would
+  // refuse to make.
+  allowsLegacyTls bool
+  // ID of the resource group the policy belongs to
+  resourceGroupId string
+  // Resource group that contains the policy
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the policy
+  tags map[string]string
 }
 
 // Application Load Balancer instance
@@ -4220,6 +5116,11 @@ alicloud.alb.listener {
   description string
   // TLS security policy applied to the listener, empty for non-TLS listeners
   securityPolicyId string
+  // TLS security policy applied to the listener
+  //
+  // Null for a non-TLS listener and for a listener using one of the built-in
+  // policies, which are not enumerable; securityPolicyId names those.
+  securityPolicy() alicloud.alb.securityPolicy
   // Whether HTTP/2 is enabled
   http2Enabled bool
   // Whether response gzip compression is enabled
@@ -4343,6 +5244,44 @@ alicloud.nlb {
   loadBalancers() []alicloud.nlb.loadBalancer
   // NLB server groups across all enabled regions
   serverGroups() []alicloud.nlb.serverGroup
+  // Custom TLS security policies across all enabled regions
+  //
+  // A security policy fixes the TLS versions and cipher suites a TCPSSL
+  // listener accepts. Only custom policies are listed; a listener using one of
+  // the built-in policies names it by id and has no entry here.
+  securityPolicies() []alicloud.nlb.securityPolicy
+}
+
+// Network Load Balancer TLS security policy
+//
+// A custom TLS security policy, keyed by securityPolicyId within its region.
+// Exposes the TLS versions and cipher suites the policy permits on a TCPSSL
+// listener. Use it to find a listener that still accepts TLS 1.0 or 1.1.
+alicloud.nlb.securityPolicy @defaults("securityPolicyName tlsVersions status") {
+  // Region ID the policy resides in, for example cn-hangzhou
+  regionId string
+  // Security policy ID, used as the lookup key within its region
+  securityPolicyId string
+  // Name of the security policy
+  securityPolicyName string
+  // Lifecycle status of the policy, for example Available or Configuring
+  status string
+  // TLS versions the policy accepts, for example TLSv1.2 and TLSv1.3
+  tlsVersions []string
+  // Cipher suites the policy permits
+  ciphers []string
+  // Whether the policy still accepts TLS 1.0 or TLS 1.1
+  //
+  // Both versions are deprecated and carry known weaknesses, so a listener
+  // bound to such a policy accepts connections that a current client would
+  // refuse to make.
+  allowsLegacyTls bool
+  // ID of the resource group the policy belongs to
+  resourceGroupId string
+  // Resource group that contains the policy
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the policy
+  tags map[string]string
 }
 
 // Network Load Balancer instance
@@ -4439,6 +5378,11 @@ alicloud.nlb.listener {
   description string
   // TLS security policy applied to the listener, meaningful for TCPSSL listeners
   securityPolicyId string
+  // TLS security policy applied to the listener
+  //
+  // Null for a non-TCPSSL listener and for a listener using one of the built-in
+  // policies, which are not enumerable; securityPolicyId names those.
+  securityPolicy() alicloud.nlb.securityPolicy
   // Server certificate IDs presented by a TCPSSL listener
   certificateIds []string
   // CA certificate IDs used for mutual TLS on a TCPSSL listener
@@ -4910,6 +5854,14 @@ alicloud.waf.instance {
   defenseResources() []alicloud.waf.defenseResource
   // CNAME-access domains protected by the instance
   domains() []alicloud.waf.domain
+  // Protection templates configured on the instance
+  //
+  // A template groups the rules for one protection scene (basic protection,
+  // HTTP flood protection, custom rules, and the rest) and carries its own
+  // enabled flag. An instance can have every template switched off while still
+  // reporting protected objects, so enumerate these to tell an onboarded asset
+  // from a defended one.
+  defenseTemplates() []alicloud.waf.defenseTemplate
   // Whether the instance is delivering its logs to Log Service
   //
   // True only while logStatus reports normal. A failed initialization and an
@@ -4960,6 +5912,25 @@ alicloud.waf.defenseResource {
   // instance as a whole, so an instance whose logStatus reads normal still
   // records nothing for an object left switched off.
   logDeliveryEnabled() bool
+  // Protection templates applied to the protected object
+  //
+  // Templates carry the rules WAF enforces for this object, one template per
+  // protection scene. An empty list means the object is onboarded to WAF but no
+  // protection module is bound to it.
+  templates() []alicloud.waf.defenseTemplate
+  // Protection scenes covered by an enabled template on this object
+  //
+  // Each entry is a defenseScene value such as waf_group (basic protection),
+  // cc (HTTP flood protection), or custom_acl (custom rules). A scene whose
+  // template is bound but switched off is not listed, because a disabled
+  // template inspects no traffic.
+  enabledDefenseScenes() []string
+  // Whether at least one enabled protection template is applied to the object
+  //
+  // False when the object is onboarded to WAF but every template bound to it is
+  // switched off, which is the case an onboarding check alone cannot see:
+  // traffic still flows through WAF, and nothing inspects it.
+  protectionEnabled() bool
 }
 
 // Web Application Firewall protected domain
@@ -4999,6 +5970,116 @@ alicloud.waf.domain {
   tls13Enabled() bool
   // Expiry time of the bound certificate, null when no certificate is configured
   certExpireTime() time
+}
+
+// Web Application Firewall protection template
+//
+// A single WAF 3.0 protection template, keyed by the owning instanceId and
+// templateId. A template holds the rules for one protection scene and carries
+// the switch that decides whether that scene inspects traffic at all. Exposes
+// the scene, the template origin and type, whether it is enabled, and the rules
+// it contains. Use it to find protected objects whose protection modules are
+// bound but switched off.
+alicloud.waf.defenseTemplate @defaults("templateName defenseScene templateType enabled") {
+  // Center region the template belongs to
+  regionId string
+  // ID of the WAF instance the template belongs to
+  instanceId string
+  // Template ID, used as the lookup key
+  templateId int
+  // Template name
+  templateName string
+  // Template type
+  //
+  // One of user_default (the account-wide default for the scene) or
+  // user_custom (a template bound to named protected objects).
+  templateType string
+  // Origin of the template, custom for a user-defined template
+  templateOrigin string
+  // Protection scene the template covers
+  //
+  // One of waf_group (basic protection), antiscan (scan protection),
+  // ip_blacklist, custom_acl (custom rules), whitelist, region_block (location
+  // blacklist), custom_response, cc (HTTP flood protection), tamperproof (web
+  // tamper proofing), dlp (data leak prevention), or bot_manager.
+  defenseScene string
+  // Sub-scene of the template
+  //
+  // Set only for bot management templates, where it is one of web, app, basic,
+  // or bot_custom_acl. Empty for every other scene.
+  defenseSubScene string
+  // Description of the template
+  description string
+  // Raw template status, 0 (disabled) or 1 (enabled)
+  status int
+  // Whether the template is enabled
+  //
+  // A disabled template is configured but inspects no traffic, so the scene it
+  // covers is unprotected on every object the template is bound to.
+  enabled bool
+  // Time the template was last modified
+  updateTime time
+  // Protection rules contained in the template
+  rules() []alicloud.waf.defenseRule
+}
+
+// Web Application Firewall protection rule
+//
+// A single rule inside a WAF 3.0 protection template, keyed by the owning
+// instanceId and ruleId. Exposes the rule scene, the action taken on a match,
+// the rule configuration, and whether the rule is enabled. Use it to confirm
+// that a protection template blocks rather than merely observes, and to find
+// rules left switched off.
+alicloud.waf.defenseRule @defaults("ruleName defenseScene action enabled") {
+  // Center region the rule belongs to
+  regionId string
+  // ID of the WAF instance the rule belongs to
+  instanceId string
+  // ID of the template the rule belongs to, 0 for a global or per-object rule
+  templateId int
+  // Rule ID, used as the lookup key
+  ruleId int
+  // Rule name
+  ruleName string
+  // Rule type
+  //
+  // One of whitelist (a rule that skips inspection) or defense (a rule that
+  // inspects). A whitelist rule widens what reaches the origin, so it deserves
+  // the same scrutiny as an allow rule in a firewall.
+  ruleType string
+  // Scope the rule was defined at
+  //
+  // One of template (a rule inside a protection template), resource (a rule
+  // bound to one protected object), or global.
+  defenseType string
+  // Protection scene the rule belongs to, for example custom_acl, cc, or ip_blacklist
+  defenseScene string
+  // Origin of the rule, custom for user-created or system for generated
+  defenseOrigin string
+  // Action taken when the rule matches
+  //
+  // For example block, monitor, or js (JavaScript challenge). A rule set to
+  // monitor records the match and lets the request through.
+  action string
+  // Rule configuration
+  //
+  // The condition and action detail of the rule, as returned by the API. The
+  // shape varies by defenseScene: a custom_acl rule carries its match
+  // conditions, an ip_blacklist rule carries its address list. Null when the
+  // configuration is not valid JSON.
+  config dict
+  // Description of the rule
+  description string
+  // Protected object the rule is bound to, empty for a template or global rule
+  resource string
+  // Raw rule status, 0 (disabled) or 1 (enabled)
+  status int
+  // Whether the rule is enabled
+  enabled bool
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  updateTime time
 }
 
 // Alibaba Cloud Cloud Firewall
@@ -5047,6 +6128,271 @@ alicloud.cloudFirewall {
   //
   // Null when log analysis is off or the project can no longer be read.
   logProject() alicloud.log.project
+  // VPC firewalls guarding traffic between VPCs
+  //
+  // A VPC firewall sits on an east-west path (a CEN attachment, a VPC peering,
+  // or an Express Connect circuit) rather than on the internet boundary, so
+  // controlPolicies says nothing about it. A VPC pair with no VPC firewall, or
+  // one whose firewall is switched off, moves traffic between networks with
+  // nothing inspecting it.
+  vpcFirewalls() []alicloud.cloudFirewall.vpcFirewall
+  // NAT firewalls guarding outbound traffic through a NAT gateway
+  //
+  // A NAT firewall inspects the egress path of a private subnet. Without one,
+  // an instance with no public address still reaches the internet through the
+  // NAT gateway unfiltered.
+  natFirewalls() []alicloud.cloudFirewall.natFirewall
+}
+
+// Cloud Firewall VPC firewall
+//
+// A single VPC firewall, keyed by vpcFirewallId. A VPC firewall guards the
+// east-west path between two VPCs joined by CEN, VPC peering, or Express
+// Connect. Exposes both ends of the pair, whether the firewall is switched on,
+// the strict-mode and intrusion-prevention settings, and the access-control
+// rules it enforces. Use it to find VPC pairs that carry traffic with no
+// firewall in the path, or with a firewall that only observes.
+alicloud.cloudFirewall.vpcFirewall @defaults("vpcFirewallName connectType enabled strictMode") {
+  // VPC firewall ID, used as the lookup key
+  vpcFirewallId string
+  // Name of the VPC firewall
+  vpcFirewallName string
+  // Kind of connection the firewall guards
+  //
+  // One of cen (a Cloud Enterprise Network attachment), vpcpeer (a VPC peering
+  // connection), or expressconnect (a leased-line circuit).
+  connectType string
+  // Sub-type of the connection, for further detail on the connect type
+  connectSubType string
+  // Throughput of the firewall in Mbit/s
+  bandwidth int
+  // Raw switch status of the firewall
+  //
+  // One of opened, closed, or notconfigured.
+  firewallSwitchStatus string
+  // Whether the firewall is switched on
+  //
+  // True only while firewallSwitchStatus reads opened. A configured but closed
+  // firewall enforces none of its control policies.
+  enabled bool
+  // Whether the firewall region is available
+  regionStatus string
+  // Whether strict mode is enabled
+  //
+  // In strict mode traffic is denied unless a policy allows it. With strict
+  // mode off the default is to allow, so an empty policy list means the pair is
+  // wide open rather than closed.
+  strictMode bool
+  // Whether the intrusion-prevention system blocks rather than observes
+  //
+  // False when IPS runs in monitor mode, where a detected intrusion is recorded
+  // and still delivered.
+  ipsBlocking bool
+  // Raw intrusion-prevention mode, 0 (monitor) or 1 (block)
+  ipsMode int
+  // Whether the intrusion-prevention basic rule set is enabled
+  ipsBasicRulesEnabled bool
+  // Whether virtual patching is enabled
+  //
+  // Virtual patching blocks exploitation of a known vulnerability at the
+  // firewall while the workload behind it is still unpatched.
+  ipsVirtualPatchEnabled bool
+  // Intrusion-prevention rule group, 1 (loose), 2 (medium), or 3 (strict)
+  ipsRuleClass int
+  // Region of the local VPC
+  localRegionId string
+  // Name of the local VPC
+  localVpcName string
+  // Local VPC of the guarded pair
+  //
+  // Null when the VPC lies outside the scanned regions.
+  localVpc() alicloud.vpc.network
+  // Region of the peer VPC
+  peerRegionId string
+  // ID of the peer VPC
+  //
+  // Kept as a raw value as well as a reference because the peer may belong to
+  // another Alibaba Cloud account, in which case peerVpc cannot be resolved and
+  // this is the only record of what the pair reaches.
+  peerVpcId string
+  // Name of the peer VPC
+  peerVpcName string
+  // Account that owns the peer VPC
+  peerVpcOwnerId string
+  // Whether the peer VPC belongs to a different account
+  //
+  // A cross-account pair carries traffic out of this account's control, so the
+  // rules on it are worth reading even when both ends look internal.
+  crossAccount bool
+  // Peer VPC of the guarded pair
+  //
+  // Null when the peer belongs to another account or lies outside the scanned
+  // regions.
+  peerVpc() alicloud.vpc.network
+  // Access-control rules enforced on the guarded path
+  controlPolicies() []alicloud.cloudFirewall.vpcControlPolicy
+}
+
+// Cloud Firewall VPC firewall control policy
+//
+// A single east-west access-control rule of a VPC firewall, keyed by aclUuid. A
+// rule permits or denies traffic between a source and a destination on given
+// ports and protocols. Exposes the action, both endpoints, the resolved
+// address-book members, and whether the rule is enforced. Use it to find
+// enabled rules that broadly permit traffic between VPCs (for example an accept
+// rule whose source is 0.0.0.0/0).
+alicloud.cloudFirewall.vpcControlPolicy @defaults("action source destination destPort proto enabled") {
+  // Rule UUID, used as the lookup key
+  aclUuid string
+  // ID of the VPC firewall the rule belongs to
+  vpcFirewallId string
+  // Action taken on matching traffic
+  //
+  // One of accept (allow), drop (deny), or log (monitor only).
+  action string
+  // Source address, CIDR, or address-book reference
+  source string
+  // Source type, either net (a CIDR) or group (an address book)
+  sourceType string
+  // CIDRs behind a source address book, empty when the source is a plain CIDR
+  sourceGroupCidrs []string
+  // Destination address, CIDR, domain, or address-book reference
+  destination string
+  // Destination type, one of net, group, or domain
+  destinationType string
+  // CIDRs behind a destination address book, empty when the destination is a plain CIDR
+  destinationGroupCidrs []string
+  // Destination port or port range
+  destPort string
+  // Destination port type, either port (a literal port) or group (a port address book)
+  destPortType string
+  // Ports behind a destination port address book
+  destPortGroupPorts []string
+  // Protocol, one of ANY, TCP, UDP, or ICMP
+  proto string
+  // Application-layer protocols the rule matches, for example HTTP or ANY
+  applicationNames []string
+  // Description of the rule
+  description string
+  // Whether the rule is enforced
+  //
+  // A disabled rule is configured but not applied.
+  enabled bool
+  // Rule priority order
+  order int
+  // Cumulative number of times the rule has matched traffic
+  hitTimes int
+  // Time the rule last matched traffic, null when it never has
+  lastHitTime time
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  updateTime time
+}
+
+// Cloud Firewall NAT firewall
+//
+// A single NAT firewall, keyed by proxyId. A NAT firewall inspects the traffic
+// a private subnet sends through a NAT gateway. Exposes the guarded gateway and
+// VPC, the firewall health, strict mode, and the access-control rules on the
+// egress path. Use it to find NAT gateways whose outbound traffic passes
+// uninspected.
+alicloud.cloudFirewall.natFirewall @defaults("proxyName proxyStatus enabled strictMode") {
+  // NAT firewall (proxy) ID, used as the lookup key
+  proxyId string
+  // Name of the NAT firewall
+  proxyName string
+  // Region the NAT firewall runs in
+  regionId string
+  // Health of the NAT firewall
+  //
+  // One of configuring, deleting, normal, abnormal, opening, closing, or
+  // closed.
+  proxyStatus string
+  // Whether the NAT firewall is inspecting traffic
+  //
+  // True only while proxyStatus reads normal. Every other state, including
+  // abnormal, leaves egress traffic uninspected.
+  enabled bool
+  // Whether strict mode is enabled
+  //
+  // In strict mode outbound traffic is denied unless a policy allows it. With
+  // strict mode off the default is to allow.
+  strictMode bool
+  // Detail of the failure when the firewall is in an abnormal state, empty otherwise
+  errorDetail string
+  // Name of the VPC the guarded NAT gateway belongs to
+  vpcName string
+  // VPC the guarded NAT gateway belongs to
+  //
+  // Null when the VPC lies outside the scanned regions.
+  vpc() alicloud.vpc.network
+  // Name of the guarded NAT gateway
+  natGatewayName string
+  // NAT gateway the firewall guards
+  //
+  // Null when the gateway lies outside the scanned regions or has been deleted.
+  natGateway() alicloud.vpc.natGateway
+  // Access-control rules enforced on the egress path
+  controlPolicies() []alicloud.cloudFirewall.natControlPolicy
+}
+
+// Cloud Firewall NAT firewall control policy
+//
+// A single NAT-boundary access-control rule, keyed by aclUuid. A rule permits or
+// denies traffic leaving (or entering) a NAT gateway on given ports and
+// protocols. Exposes the direction, action, both endpoints, and whether the rule
+// is enforced. Use it to find egress rules that permit unrestricted outbound
+// traffic from a private subnet.
+alicloud.cloudFirewall.natControlPolicy @defaults("direction action source destination destPort enabled") {
+  // Rule UUID, used as the lookup key
+  aclUuid string
+  // ID of the NAT gateway the rule applies to
+  natGatewayId string
+  // Traffic direction the rule applies to, either in (inbound) or out (outbound)
+  direction string
+  // Action taken on matching traffic
+  //
+  // One of accept (allow), drop (deny), or log (monitor only).
+  action string
+  // Source address, CIDR, or address-book reference
+  source string
+  // Source type, either net (a CIDR) or group (an address book)
+  sourceType string
+  // CIDRs behind a source address book, empty when the source is a plain CIDR
+  sourceGroupCidrs []string
+  // Destination address, CIDR, domain, or address-book reference
+  destination string
+  // Destination type, one of net, group, or domain
+  destinationType string
+  // CIDRs behind a destination address book, empty when the destination is a plain CIDR
+  destinationGroupCidrs []string
+  // Destination port or port range
+  destPort string
+  // Destination port type, either port (a literal port) or group (a port address book)
+  destPortType string
+  // Ports behind a destination port address book
+  destPortGroupPorts []string
+  // Protocol, one of ANY, TCP, UDP, or ICMP
+  proto string
+  // Application-layer protocols the rule matches, for example HTTP or ANY
+  applicationNames []string
+  // Description of the rule
+  description string
+  // Whether the rule is enforced
+  //
+  // A disabled rule is configured but not applied.
+  enabled bool
+  // Rule priority order
+  order int
+  // Cumulative number of times the rule has matched traffic
+  hitTimes int
+  // Time the rule last matched traffic, null when it never has
+  lastHitTime time
+  // Time the rule was created
+  createTime time
+  // Time the rule was last modified
+  updateTime time
 }
 
 // Cloud Firewall control policy
@@ -5295,6 +6641,122 @@ alicloud.cloudsso.directory @defaults("directoryId directoryName region") {
   // When enabled, the user and group population is managed by the external
   // provider, so accounts deactivated there stop being usable here.
   scimSynchronizationEnabled() bool
+  // External SAML identity provider federated with the directory
+  //
+  // Null when no identity provider has been configured, in which case sign-in
+  // is authenticated by CloudSSO's own user store and the controls of the
+  // corporate identity provider (conditional access, device posture,
+  // deprovisioning on termination) do not apply.
+  samlIdentityProvider() alicloud.cloudsso.samlIdentityProvider
+  // Whether single sign-on through an external identity provider is enabled
+  //
+  // False both when no provider is configured and when one is configured but
+  // switched off, which are the two ways sign-in falls back to the local user
+  // store.
+  ssoEnabled() bool
+  // Access-provisioning tasks recorded for the directory
+  //
+  // Each task is one grant or revocation of an access configuration on a member
+  // account. Use it to find a revocation that failed, which leaves access in
+  // place after it was meant to be withdrawn.
+  tasks() []alicloud.cloudsso.task
+}
+
+// CloudSSO external SAML identity provider
+//
+// The SAML identity provider federated with a CloudSSO directory, keyed by the
+// directoryId. Exposes the provider entity, the sign-in endpoint, the request
+// binding and signing settings, and whether federated sign-in is switched on.
+// Use it to confirm that sign-in is authenticated by the corporate identity
+// provider rather than by CloudSSO's local user store.
+alicloud.cloudsso.samlIdentityProvider @defaults("entityId ssoStatus bindingType") {
+  // ID of the directory the provider is federated with
+  directoryId string
+  // Entity ID of the identity provider, for example http://www.okta.com/exk3qwgt
+  entityId string
+  // Sign-in URL users are redirected to
+  loginUrl string
+  // Binding used to send SAML requests, either Post or Redirect
+  bindingType string
+  // Raw single sign-on status, either Enabled or Disabled
+  ssoStatus string
+  // Whether federated sign-in is switched on
+  //
+  // A provider configured but left disabled means sign-in still falls back to
+  // the local user store.
+  enabled bool
+  // Whether CloudSSO signs the SAML requests it sends
+  //
+  // Signed requests let the identity provider reject an authentication request
+  // that did not originate from this directory.
+  wantRequestSigned bool
+  // IDs of the SAML signing certificates configured for the provider
+  certificateIds []string
+  // Time the provider was first configured
+  createTime time
+  // Time the provider configuration was last modified
+  updateTime time
+}
+
+// CloudSSO access-provisioning task
+//
+// A single grant or revocation of an access configuration on a member account,
+// keyed by taskId. Exposes what was granted to whom on which target and whether
+// the operation succeeded. Use it to find a failed revocation, which leaves
+// access in place after it was meant to be withdrawn.
+alicloud.cloudsso.task @defaults("taskType status principalName targetName") {
+  // Task ID, used as the lookup key
+  taskId string
+  // Kind of operation
+  //
+  // For example ProvisionAccessConfiguration,
+  // DeprovisionAccessConfiguration, CreateAccessAssignment, or
+  // DeleteAccessAssignment.
+  taskType string
+  // Outcome of the task
+  //
+  // One of InProgress, Success, or Failed.
+  status string
+  // Whether the task completed successfully
+  //
+  // False for a task still running as well as for a failed one. A failed
+  // DeleteAccessAssignment means the access it was withdrawing is still
+  // granted.
+  succeeded bool
+  // Reason the task failed, empty when it did not
+  failureReason string
+  // ID of the user or group the task acted on
+  principalId string
+  // Name of the user or group the task acted on
+  principalName string
+  // Kind of principal, either User or Group
+  principalType string
+  // ID of the access configuration the task granted or revoked
+  //
+  // Kept as a raw value alongside accessConfiguration because a task is a
+  // historical record: the configuration it names may since have been deleted,
+  // in which case the reference resolves to null and this is all that remains.
+  accessConfigurationId string
+  // Name of the access configuration the task granted or revoked
+  accessConfigurationName string
+  // Access configuration the task granted or revoked
+  //
+  // Null when the configuration has since been deleted.
+  accessConfiguration() alicloud.cloudsso.accessConfiguration
+  // ID of the account the access was granted on or revoked from
+  targetId string
+  // Name of the account the access was granted on or revoked from
+  targetName string
+  // Resource-directory path of the target
+  targetPath string
+  // Resource-directory path name of the target
+  targetPathName string
+  // Kind of target, for example RD-Account
+  targetType string
+  // Time the task started
+  startTime time
+  // Time the task finished, null while it is still running
+  endTime time
 }
 
 // CloudSSO password policy
@@ -6082,6 +7544,11 @@ alicloud.cen.attachment @defaults("childInstanceId childInstanceType childInstan
 // Alibaba Cloud, so its connections describe reachability that security groups
 // alone do not explain.
 alicloud.vpc.vpnGateway @defaults("vpnGatewayId name status internetIp") {
+  // SSL VPN servers hosted on the gateway
+  //
+  // Empty on a gateway that terminates site-to-site tunnels only. An SSL VPN
+  // server is a remote-access path that individual client machines reach.
+  sslVpnServers() []alicloud.vpc.sslVpnServer
   // VPN gateway ID, used as the lookup key
   vpnGatewayId string
   // Name of the gateway
@@ -6157,9 +7624,12 @@ alicloud.vpc.vpnConnection @defaults("vpnConnectionId name status") {
   // Region ID the connection lives in
   regionId string
   // ID of the customer gateway representing the remote end
-  //
-  // The remote end is not modeled as a resource, so this stays a raw ID.
   customerGatewayId string
+  // Customer gateway representing the remote end
+  //
+  // Null when the gateway has since been deleted, and when it lies outside the
+  // scanned regions.
+  customerGateway() alicloud.vpc.customerGateway
   // Connection status, for example ike_sa_established or active
   status string
   // Negotiation state of the tunnel
@@ -6384,6 +7854,114 @@ alicloud.acr.repository @defaults("repoNamespaceName repoName repoType tagImmuta
   createTime time
   // Time the repository was last modified
   modifiedTime time
+  // Image tags held in the repository
+  //
+  // Each tag names the image content a deployment pulls when it references
+  // this repository by tag, and carries the scan findings for that content.
+  imageTags() []alicloud.acr.repositoryTag
+}
+
+// Container Registry image tag
+//
+// A single tag in a Container Registry repository, keyed by the owning repoId
+// and tag name. Exposes the image content the tag points at (digest, size, push
+// time) and the vulnerability scan of that content. Use it to answer whether a
+// cluster pulls an image carrying known high-severity vulnerabilities, which
+// the scan rule alone cannot say because it configures the scan rather than
+// reporting its findings.
+alicloud.acr.repositoryTag @defaults("tag status vulnerabilityCount") {
+  // ID of the registry instance holding the image
+  instanceId string
+  // ID of the repository holding the tag
+  repoId string
+  // Tag name, for example latest or v1.2.3
+  tag string
+  // Content digest the tag points at, for example sha256:abc123
+  //
+  // The digest, not the tag, identifies the bytes that run. On a repository
+  // with tagImmutability off, the same tag can point at a different digest
+  // tomorrow.
+  digest string
+  // Registry-assigned image ID
+  imageId string
+  // Size of the image in bytes
+  imageSize int
+  // Status of the image, for example NORMAL
+  status string
+  // Time the image was pushed
+  createTime time
+  // Time the image was last updated
+  updateTime time
+  // Scan status of the image
+  //
+  // One of SCANNING, COMPLETE, FAILED, or RETRYING. Empty when the registry
+  // has never scanned the image, or when the scan status cannot be read.
+  scanStatus() string
+  // Whether a vulnerability scan of this image has completed
+  //
+  // False when the image has never been scanned, when a scan is still running,
+  // and when the last scan failed. An unscanned image reports no
+  // vulnerabilities, which must not be read as a clean image.
+  scanned() bool
+  // Vulnerabilities the registry found in the image
+  //
+  // Empty on an image that has not been scanned as well as on a clean one, so
+  // read scanned alongside this.
+  vulnerabilities() []alicloud.acr.vulnerability
+  // Total number of vulnerabilities found in the image
+  vulnerabilityCount() int
+  // Number of high-severity vulnerabilities found in the image
+  highSeverityCount() int
+  // Number of medium-severity vulnerabilities found in the image
+  mediumSeverityCount() int
+  // Number of low-severity vulnerabilities found in the image
+  lowSeverityCount() int
+  // Number of vulnerabilities the scanner could not rate
+  unknownSeverityCount() int
+  // Whether the image carries a high-severity vulnerability
+  //
+  // False on an image that has never been scanned, which is a different fact
+  // from a clean image; read scanned to tell them apart.
+  hasHighSeverityVulnerabilities() bool
+}
+
+// Vulnerability found in a Container Registry image
+//
+// A single scan finding for one image tag. Exposes the CVE, its severity, the
+// package that carries it, and the version that fixes it. Use it to find images
+// running a package with a known fix available.
+alicloud.acr.vulnerability @defaults("cveName severity feature version") {
+  // CVE identifier, for example CVE-2021-3711
+  cveName string
+  // Alternative name the scanner uses for the vulnerability
+  aliasName string
+  // Severity rating
+  //
+  // One of High, Medium, Low, or Unknown.
+  severity string
+  // Description of the vulnerability
+  description string
+  // Reference URL for the vulnerability
+  cveLink string
+  // Path inside the image where the affected component was found
+  cveLocation string
+  // Package or component carrying the vulnerability
+  feature string
+  // Version of the package present in the image
+  version string
+  // Version that fixes the vulnerability, empty when no fix is published
+  //
+  // A non-empty value means the image can be rebuilt to remove the finding
+  // today.
+  versionFixed string
+  // Packaging format the version numbers follow, for example dpkg or rpm
+  versionFormat string
+  // Image layer that introduced the affected component
+  addedBy string
+  // Command that installs the fixed version, empty when no fix is published
+  fixCmd string
+  // Kind of finding, cve for a system package or sca for an application dependency
+  scanType string
 }
 
 // Container Registry replication rule

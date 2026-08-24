@@ -4,9 +4,22 @@
 package resources
 
 import (
+	"time"
+
 	tea "github.com/alibabacloud-go/tea/tea"
 	"go.mondoo.com/mql/providers/alicloud/connection"
 )
+
+// epochSeconds converts an epoch-seconds timestamp into a *time.Time, returning
+// nil when the value is nil or zero. A zero must stay null rather than becoming
+// 1 January 1970, which a report would render as a real date.
+func epochSeconds(v *int64) *time.Time {
+	if v == nil || *v == 0 {
+		return nil
+	}
+	t := time.Unix(*v, 0).UTC()
+	return &t
+}
 
 // strPtrsToStrings converts a []*string SDK slice into a []string, dropping nil
 // and empty entries so downstream resolvers are never handed a blank id.

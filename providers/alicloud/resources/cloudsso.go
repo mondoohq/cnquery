@@ -124,6 +124,7 @@ func (r *mqlAlicloudCloudsso) directories() ([]any, error) {
 // was found in, which every subsequent call against the directory needs, and
 // memoizes the sign-in preferences that back two separate fields.
 type mqlAlicloudCloudssoDirectoryInternal struct {
+	cloudssoSamlState
 	serviceRegion string
 
 	loginPreferenceOnce sync.Once

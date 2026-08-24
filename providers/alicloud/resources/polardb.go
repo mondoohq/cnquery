@@ -20,6 +20,7 @@ import (
 // its per-cluster security-posture detail calls and to resolve its typed VPC
 // and vSwitch references.
 type mqlAlicloudPolardbClusterInternal struct {
+	polardbAuditState
 	region         string
 	dbClusterId    string
 	cacheVpcID     string

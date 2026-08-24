@@ -334,20 +334,13 @@ func (r *mqlAlicloudRam) passwordPolicy() (*mqlAlicloudRamPasswordPolicy, error)
 }
 
 func (r *mqlAlicloudRam) securityPreference() (any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.RamClient()
+	sp, err := r.securityPreferences()
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := client.GetSecurityPreference()
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil || resp.Body == nil || resp.Body.SecurityPreference == nil {
+	if sp == nil {
 		return nil, nil
 	}
-	sp := resp.Body.SecurityPreference
 
 	out := map[string]any{}
 	if ak := sp.AccessKeyPreference; ak != nil {
@@ -520,6 +513,7 @@ func (r *mqlAlicloudRamUser) groups() ([]any, error) {
 // mqlAlicloudRamUserInternal memoizes the user's policy attachment list, which
 // both the policies and attachedPolicies fields read.
 type mqlAlicloudRamUserInternal struct {
+	ramUserCredentialState
 	attachmentsOnce sync.Once
 	attachments     []*ramclient.ListPoliciesForUserResponseBodyPoliciesPolicy
 	attachmentsErr  error
@@ -654,23 +648,10 @@ func (r *mqlAlicloudRamUser) effectivePolicies() ([]any, error) {
 }
 
 func (r *mqlAlicloudRamUser) mfaDevice() (any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.RamClient()
-	if err != nil {
-		return nil, err
-	}
-
-	userName := r.UserName.Data
-	resp, err := client.GetUserMFAInfo(&ramclient.GetUserMFAInfoRequest{UserName: &userName})
-	if err != nil {
-		// Users without a bound MFA device may surface an error here; treat as null.
-		log.Debug().Err(err).Str("user", userName).Msg("alicloud: could not fetch RAM user MFA info")
+	dev := r.mfaDeviceDetail()
+	if dev == nil {
 		return nil, nil
 	}
-	if resp == nil || resp.Body == nil || resp.Body.MFADevice == nil || resp.Body.MFADevice.SerialNumber == nil {
-		return nil, nil
-	}
-	dev := resp.Body.MFADevice
 	return map[string]any{
 		"serialNumber": ramStrVal(dev.SerialNumber),
 		"type":         ramStrVal(dev.Type),
@@ -678,23 +659,10 @@ func (r *mqlAlicloudRamUser) mfaDevice() (any, error) {
 }
 
 func (r *mqlAlicloudRamUser) loginProfile() (any, error) {
-	conn := r.MqlRuntime.Connection.(*connection.AlicloudConnection)
-	client, err := conn.RamClient()
-	if err != nil {
-		return nil, err
-	}
-
-	userName := r.UserName.Data
-	resp, err := client.GetLoginProfile(&ramclient.GetLoginProfileRequest{UserName: &userName})
-	if err != nil {
-		// Users with no console login profile return an EntityNotExist error; treat as null.
-		log.Debug().Err(err).Str("user", userName).Msg("alicloud: could not fetch RAM user login profile")
+	lp := r.loginProfileDetail()
+	if lp == nil {
 		return nil, nil
 	}
-	if resp == nil || resp.Body == nil || resp.Body.LoginProfile == nil {
-		return nil, nil
-	}
-	lp := resp.Body.LoginProfile
 	out := map[string]any{
 		"userName":              ramStrVal(lp.UserName),
 		"mfaBindRequired":       ramBoolPtrAny(lp.MFABindRequired),
@@ -1019,6 +987,7 @@ func (r *mqlAlicloudRamRole) assumeRolePolicyDocument() (string, error) {
 // mqlAlicloudRamRoleInternal memoizes the role's policy attachment list, which
 // both the policies and attachedPolicies fields read.
 type mqlAlicloudRamRoleInternal struct {
+	ramTrustState
 	attachmentsOnce sync.Once
 	attachments     []*ramclient.ListPoliciesForRoleResponseBodyPoliciesPolicy
 	attachmentsErr  error
@@ -1249,17 +1218,26 @@ func (r *mqlAlicloudRamPolicy) statements() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
+	return newPolicyStatements(r.MqlRuntime, r.PolicyType.Data+"/"+r.PolicyName.Data, parsed)
+}
 
+// newPolicyStatements maps parsed statements into resources. It is shared by
+// the permission policies of alicloud.ram.policy and the trust policy of
+// alicloud.ram.role, which are the same grammar read for different questions.
+// The idPrefix identifies the owning document, so a statement's cache key stays
+// unique across both.
+func newPolicyStatements(runtime *plugin.Runtime, idPrefix string, parsed []policyStatement) ([]any, error) {
 	res := make([]any, 0, len(parsed))
 	for i, s := range parsed {
-		stmt, err := CreateResource(r.MqlRuntime, "alicloud.ram.policy.statement", map[string]*llx.RawData{
-			"__id":        llx.StringData(fmt.Sprintf("%s/%s/%d", r.PolicyType.Data, r.PolicyName.Data, i)),
+		stmt, err := CreateResource(runtime, "alicloud.ram.policy.statement", map[string]*llx.RawData{
+			"__id":        llx.StringData(fmt.Sprintf("%s/%d", idPrefix, i)),
 			"effect":      llx.StringData(s.Effect),
 			"action":      llx.ArrayData(llx.TArr2Raw(s.Action), types.String),
 			"notAction":   llx.ArrayData(llx.TArr2Raw(s.NotAction), types.String),
 			"resource":    llx.ArrayData(llx.TArr2Raw(s.Resource), types.String),
 			"notResource": llx.ArrayData(llx.TArr2Raw(s.NotResource), types.String),
 			"condition":   llx.DictData(s.Condition),
+			"principal":   llx.DictData(policyPrincipalDict(s.Principal)),
 		})
 		if err != nil {
 			return nil, err
@@ -1267,6 +1245,25 @@ func (r *mqlAlicloudRamPolicy) statements() ([]any, error) {
 		res = append(res, stmt)
 	}
 	return res, nil
+}
+
+// policyPrincipalDict renders a statement's principals as a dict of JSON-native
+// values, which is what an MQL dict field carries. A statement that names no
+// principal, as every permission policy statement does, yields nil so the field
+// reads as null rather than as an empty object.
+func policyPrincipalDict(principal map[string][]string) any {
+	if len(principal) == 0 {
+		return nil
+	}
+	out := make(map[string]any, len(principal))
+	for kind, entries := range principal {
+		values := make([]any, 0, len(entries))
+		for _, e := range entries {
+			values = append(values, e)
+		}
+		out[kind] = values
+	}
+	return out
 }
 
 func (r *mqlAlicloudRamPolicy) allowsAdminAccess() (bool, error) {

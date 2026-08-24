@@ -48,6 +48,73 @@ func resolveVpcVswitch(runtime *plugin.Runtime, region, vswitchID string) (*mqlA
 	return res.(*mqlAlicloudVpcVswitch), nil
 }
 
+// resolveVpcNatGateway returns the typed NAT gateway for a native gateway id
+// within a region, or (nil, nil) when natGatewayID is empty (the caller sets
+// StateIsNull). The underlying init reuses an already-listed gateway from the
+// resource cache and otherwise fetches it via DescribeNatGateways.
+func resolveVpcNatGateway(runtime *plugin.Runtime, region, natGatewayID string) (*mqlAlicloudVpcNatGateway, error) {
+	if natGatewayID == "" {
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "alicloud.vpc.natGateway", map[string]*llx.RawData{
+		"natGatewayId": llx.StringData(natGatewayID),
+		"regionId":     llx.StringData(region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAlicloudVpcNatGateway), nil
+}
+
+// initAlicloudVpcNatGateway resolves a NAT gateway by its native id within a
+// region. It backs both direct lookups and the typed natGateway() reference,
+// reusing the cached instance when the gateway has already been listed.
+func initAlicloudVpcNatGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 2 {
+		return args, nil, nil
+	}
+
+	natGatewayID, err := requiredStringArg(args, "natGatewayId", "alicloud.vpc.natGateway")
+	if err != nil {
+		return nil, nil, err
+	}
+	region, err := requiredStringArg(args, "regionId", "alicloud.vpc.natGateway")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	key := region + "/" + natGatewayID
+	if x, ok := runtime.Resources.Get("alicloud.vpc.natGateway\x00" + key); ok {
+		return nil, x, nil
+	}
+
+	conn := runtime.Connection.(*connection.AlicloudConnection)
+	client, err := conn.VpcClient(region)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := client.DescribeNatGateways(&vpcclient.DescribeNatGatewaysRequest{
+		RegionId:     &region,
+		NatGatewayId: &natGatewayID,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp != nil && resp.Body != nil && resp.Body.NatGateways != nil {
+		for _, nat := range resp.Body.NatGateways.NatGateway {
+			if nat == nil || nat.NatGatewayId == nil || *nat.NatGatewayId != natGatewayID {
+				continue
+			}
+			res, err := newVpcNatGateway(runtime, region, nat)
+			if err != nil {
+				return nil, nil, err
+			}
+			return nil, res, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("alicloud.vpc.natGateway %q not found in region %q", natGatewayID, region)
+}
+
 // resolveVpcRouteTable returns the typed route table for a native route table id
 // within a region, or (nil, nil) when routeTableID is empty.
 func resolveVpcRouteTable(runtime *plugin.Runtime, region, routeTableID string) (*mqlAlicloudVpcRouteTable, error) {
