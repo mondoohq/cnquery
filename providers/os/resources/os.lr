@@ -2558,7 +2558,7 @@ private iis.appPool @defaults("name state identityType") {
 //
 // A field is null when its section is not declared at this scope. The ASP.NET
 // sections are not such a case: they are declared in machine.config and the
-// root web.config, and every scope here — the server's included — resolves the
+// root web.config, and every scope here (the server's included) resolves the
 // inheritance chain, so they carry the effective value at each one.
 //
 // Each field names the section and attribute it resolves. A setting with no
@@ -2668,7 +2668,7 @@ private iis.configuration @defaults("path") {
   // Level of access handlers are allowed (handlers/accessPolicy)
   //
   // This is a **flags** attribute: it holds several names at once, joined with
-  // a comma and a space in the order IIS declares them — "Read, Script" is the
+  // a comma and a space in the order IIS declares them. "Read, Script" is the
   // stock value. The names are "None", "Read", "Write", "Execute", "Source",
   // "Script", "NoRemoteWrite", "NoRemoteRead", "NoRemoteExecute" and
   // "NoRemoteScript"; "None" appears alone when nothing is set. "Write"
