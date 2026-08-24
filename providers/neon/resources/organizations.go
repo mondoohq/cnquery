@@ -185,6 +185,15 @@ type mqlNeonOrganizationMemberInternal struct {
 	cacheUserID string
 }
 
+// organizationMemberID keys a roster entry by the organization it belongs to.
+// The membership id the API returns is unique on its own, but qualifying it
+// keeps the key self-describing and matches the other organization-scoped
+// resources, so a roster entry cannot alias one read from another
+// organization.
+func organizationMemberID(orgID, memberID string) string {
+	return orgID + "/member/" + memberID
+}
+
 func (o *mqlNeonOrganization) members() ([]any, error) {
 	c := neonConn(o.MqlRuntime)
 
@@ -203,6 +212,7 @@ func (o *mqlNeonOrganization) members() ([]any, error) {
 	for i := range records {
 		rec := records[i]
 		member, err := CreateResource(o.MqlRuntime, "neon.organization.member", map[string]*llx.RawData{
+			"__id":          llx.StringData(organizationMemberID(o.Id.Data, rec.Member.ID)),
 			"id":            llx.StringData(rec.Member.ID),
 			"email":         llx.StringData(rec.User.Email),
 			"role":          llx.StringData(rec.Member.Role),

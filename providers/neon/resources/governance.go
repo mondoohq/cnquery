@@ -33,6 +33,24 @@ type advisorIssueRecord struct {
 	CacheKey    string         `json:"cache_key"`
 }
 
+// advisorIssueKey identifies one advisor finding within a project. The cache
+// key the API returns already distinguishes two findings of the same type
+// against different objects, so that is what the key is built from when it is
+// there. The issue name alone names the check, not the object it fired on, so
+// falling back to it would collapse every finding of one type in a project
+// into a single result and silently drop the rest. The detail reports the
+// object the check fired on, which is what separates them, and an index keeps
+// two findings apart where even the detail is empty.
+func advisorIssueKey(rec *advisorIssueRecord, index int) string {
+	if rec.CacheKey != "" {
+		return rec.CacheKey
+	}
+	if rec.Detail != "" {
+		return rec.Name + "/" + rec.Detail
+	}
+	return rec.Name + "/#" + itoa(int64(index))
+}
+
 func (p *mqlNeonProject) advisorIssues() ([]any, error) {
 	c := neonConn(p.MqlRuntime)
 
@@ -51,15 +69,10 @@ func (p *mqlNeonProject) advisorIssues() ([]any, error) {
 	var res []any
 	for i := range records {
 		rec := records[i]
-		// The cache key the API returns distinguishes two findings of the same
-		// type against different objects, and the project qualifies it so a
-		// finding cannot alias one in another project.
-		key := rec.CacheKey
-		if key == "" {
-			key = rec.Name
-		}
+		// The project qualifies the key so a finding cannot alias one in
+		// another project.
 		issue, err := CreateResource(p.MqlRuntime, "neon.project.advisorIssue", map[string]*llx.RawData{
-			"__id":        llx.StringData(p.Id.Data + "/advisor/" + key),
+			"__id":        llx.StringData(p.Id.Data + "/advisor/" + advisorIssueKey(&rec, i)),
 			"name":        llx.StringData(rec.Name),
 			"title":       llx.StringData(rec.Title),
 			"level":       llx.StringData(rec.Level),
@@ -176,13 +189,19 @@ func (m *mqlNeonProjectMember) organizationMember() (*mqlNeonOrganizationMember,
 // resource and reused, rather than once per member that points at it.
 func organizationMemberByUserID(runtime *plugin.Runtime, project *mqlNeonProject, userID string) (*mqlNeonOrganizationMember, error) {
 	org := project.GetOrganization()
-	if org.Error != nil || org.Data == nil {
+	// A roster the key is not allowed to read already answers as null, so an
+	// error here is a read that failed. Reporting the reference as null would
+	// present a failed read as an account holding no organization role.
+	if org.Error != nil {
+		return nil, org.Error
+	}
+	if org.Data == nil {
 		return nil, nil
 	}
 
 	members := org.Data.GetMembers()
 	if members.Error != nil {
-		return nil, nil
+		return nil, members.Error
 	}
 	for _, it := range members.Data {
 		member, ok := it.(*mqlNeonOrganizationMember)
@@ -266,12 +285,15 @@ func (i *mqlNeonOrganizationInvitation) invitedBy() (*mqlNeonOrganizationMember,
 	// The roster the organization already read answers this for every
 	// invitation, rather than a lookup per invitation.
 	members := org.GetMembers()
-	if members.Error == nil {
-		for _, it := range members.Data {
-			member, ok := it.(*mqlNeonOrganizationMember)
-			if ok && member.cacheUserID == i.cacheInvitedBy {
-				return member, nil
-			}
+	// A roster the key is not allowed to read already answers as null, so an
+	// error here is a read that failed rather than a sender who has left.
+	if members.Error != nil {
+		return nil, members.Error
+	}
+	for _, it := range members.Data {
+		member, ok := it.(*mqlNeonOrganizationMember)
+		if ok && member.cacheUserID == i.cacheInvitedBy {
+			return member, nil
 		}
 	}
 
@@ -397,15 +419,20 @@ func (o *mqlNeonProjectOperation) endpoint() (*mqlNeonEndpoint, error) {
 	// The project's endpoint list is read once and reused, rather than reading
 	// the endpoint once per operation that names one.
 	endpoints := project.GetEndpoints()
-	if endpoints.Error == nil {
-		for _, it := range endpoints.Data {
-			endpoint, ok := it.(*mqlNeonEndpoint)
-			if ok && endpoint.Id.Data == o.cacheEndpointID {
-				return endpoint, nil
-			}
+	// An endpoint list the key is not allowed to read already answers as null,
+	// so an error here is a read that failed rather than a project without
+	// endpoints.
+	if endpoints.Error != nil {
+		return nil, endpoints.Error
+	}
+	for _, it := range endpoints.Data {
+		endpoint, ok := it.(*mqlNeonEndpoint)
+		if ok && endpoint.Id.Data == o.cacheEndpointID {
+			return endpoint, nil
 		}
 	}
 
+	// An operation may name a compute endpoint that has since been deleted.
 	o.Endpoint.State = plugin.StateIsSet | plugin.StateIsNull
 	return nil, nil
 }
