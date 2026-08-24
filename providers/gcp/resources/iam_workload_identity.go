@@ -105,9 +105,13 @@ type wifPoolTrust struct {
 // Domains are sorted because the API returns them in a map, and an unordered
 // field would compare unequal to itself between two reads of the same pool.
 //
-// Only TrustAnchors are counted. Intermediate CAs build a chain up to an
-// anchor, they are not anchors themselves, so counting them would overstate how
-// many independent authorities the pool trusts.
+// Only TrustAnchors are counted. A trust anchor is what a presented chain is
+// validated up to, and the API documents its own IntermediateCas set as
+// material for building a chain to an anchor, so an intermediate is unusable
+// unless some anchor already covers it. Counting both would overstate how many
+// independent authorities the pool trusts. Note the anchor list itself may hold
+// an intermediate certificate being used as an anchor, which is still one
+// independent authority and is counted as one.
 //
 // A nil config means no additional bundle is configured, which is genuinely an
 // empty set rather than an unread value, so it yields an empty list and 0.

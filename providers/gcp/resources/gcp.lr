@@ -6803,12 +6803,16 @@ private gcp.project.iamService.workloadIdentityPool @defaults("displayName name 
   // external certificates that can federate in beyond that baseline. Empty
   // when no additional bundle is configured.
   additionalTrustDomains []string
-  // Number of CA certificates trusted across every additional trust bundle
+  // Number of trust anchor certificates across every additional trust bundle
   //
-  // Counts the root and intermediate certificates the pool accepts on top of
-  // its own trust domain. Any certificate chaining to one of them federates
-  // in, so this is the size of the added trust surface. 0 when no additional
-  // bundle is configured.
+  // Counts the trust anchors, the certificates a presented chain may be
+  // validated up to. An anchor is usually a root CA certificate but may itself
+  // be an intermediate one. Certificates held in a bundle's separate
+  // intermediate CA set are not counted, because those only help build a chain
+  // up to an anchor and cannot be validated against on their own. Any
+  // certificate chaining to one of these anchors federates in, so this is the
+  // size of the trust surface added on top of the pool's own trust domain. 0
+  // when no additional bundle is configured.
   additionalTrustAnchorCount int
   // Certificate authority pools that issue mTLS workload certificates, keyed by region
   //
