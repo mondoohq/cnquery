@@ -376,6 +376,18 @@ func (o *mqlOciObjectStorageBucket) kmsKeyId() (string, error) {
 	return *bucketInfo.KmsKeyId, nil
 }
 
+// kmsKey resolves the customer-managed key the bucket is encrypted with.
+//
+// Null for a bucket on an Oracle-managed key, which is the absence of a
+// customer key rather than an unread one.
+func (o *mqlOciObjectStorageBucket) kmsKey() (*mqlOciKmsKey, error) {
+	bucketInfo, err := o.getBucketDetails()
+	if err != nil {
+		return nil, err
+	}
+	return resolveOciKmsKey(o.MqlRuntime, ocidOrEmpty(stringValue(bucketInfo.KmsKeyId)), &o.KmsKey)
+}
+
 func (o *mqlOciObjectStorageBucket) isBucketKeyEnabled() (bool, error) {
 	bucketInfo, err := o.getBucketDetails()
 	if err != nil {

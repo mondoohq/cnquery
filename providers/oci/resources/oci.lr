@@ -76,6 +76,21 @@ private oci.compartment @defaults("id name") {
   id string
   // Compartment name
   name string
+  // Compartment this one sits directly beneath
+  //
+  // Null for the tenancy root, which has no parent, and for a compartment
+  // reached by OCID from outside the tenancy, whose parent cannot be read.
+  // Following it repeatedly walks the path a compartment sits on, which is
+  // what lets a check ask whether a resource lives anywhere under a named
+  // subtree rather than only in the one compartment it reports.
+  parent() oci.compartment
+  // Whether the caller may inspect resources in this compartment
+  //
+  // True when the requesting principal holds INSPECT on a resource in the
+  // compartment or in one beneath it. False for a compartment the caller can
+  // see the existence of but not look inside, which is the case a check for
+  // over-broad or missing grants is looking for.
+  isAccessible() bool
   // Compartment description
   description string
   // Compartment creation time
@@ -1219,6 +1234,20 @@ private oci.compute.instance @defaults("name") {
   bootVolume() oci.compute.bootVolume
   // Instance metadata key-value pairs
   metadata map[string]string
+  // Nested instance metadata beyond the flat key-value pairs
+  //
+  // Values here may be objects or arrays rather than strings, and the key
+  // names are not constrained, so this is where launch automation leaves
+  // bootstrap configuration and, often, the credentials that configuration
+  // needs. Anything readable from the instance metadata service is readable
+  // by every process on the instance.
+  extendedMetadata dict
+  // iPXE script run before the boot volume is attached
+  //
+  // Replaces the default network boot chain when set, so it decides what the
+  // instance boots and from where. Empty when the instance boots the default
+  // chain.
+  ipxeScript string
   // SSH public keys authorized for the instance
   //
   // One entry per key in the instance metadata `ssh_authorized_keys`
@@ -1326,6 +1355,12 @@ private oci.compute.vnic @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
 }
 
 // Oracle Cloud Infrastructure (OCI) Compute image
@@ -1755,6 +1790,12 @@ private oci.network.securityList @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
 }
 
 // Oracle Cloud Infrastructure (OCI) Network Security Group (virtual firewall rules for VNICs)
@@ -1800,6 +1841,12 @@ private oci.network.networkSecurityGroup @defaults("name") {
   hasStatelessRules() bool
   // VNICs this NSG is attached to (from ListNetworkSecurityGroupVnics + GetVnic)
   attachedVnics() []oci.compute.vnic
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
 }
 
 // Security rule from a VCN security list or network security group
@@ -1903,6 +1950,12 @@ private oci.network.internetGateway @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
 }
 
 // Oracle Cloud Infrastructure (OCI) NAT gateway (enables outbound internet access without inbound exposure)
@@ -1967,6 +2020,12 @@ private oci.network.routeTable @defaults("name") {
   freeformTags map[string]string
   // Defined tags for governance and cost tracking
   definedTags map[string]map[string]string
+  // System tags
+  //
+  // Tags applied automatically by Oracle, keyed by namespace. The
+  // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
+  // and the creation time in `CreatedOn`.
+  systemTags map[string]dict
 }
 
 // Oracle Cloud Infrastructure (OCI) route rule
@@ -2591,6 +2650,36 @@ private oci.kms.key @defaults("name") {
   state string
   // Whether auto key rotation is enabled
   isAutoRotationEnabled bool
+  // Interval between automatic key rotations, in days
+  //
+  // Between 60 and 365. Null when the key carries no rotation schedule, which
+  // is the case whenever `isAutoRotationEnabled` is false. Without it a key
+  // rotating yearly and a key rotating monthly read the same.
+  rotationIntervalInDays() int
+  // Time automatic rotation last ran for the key
+  //
+  // Null when automatic rotation has never run.
+  lastRotationTime() time
+  // Next estimated automatic rotation time
+  //
+  // Null when the key carries no rotation schedule.
+  nextRotationTime() time
+  // Outcome of the most recent automatic rotation
+  //
+  // One of SUCCESS, FAILED, or IN_PROGRESS. Empty when automatic rotation has
+  // never run, so a key whose schedule exists but has never fired is
+  // distinguishable from one whose last attempt failed.
+  lastRotationStatus() string
+  // Whether the key lives in the primary vault rather than a replica
+  //
+  // False when the key is the replicated copy of material created in another
+  // region. Null when the service does not report it.
+  isPrimary() bool
+  // Identifier of the replication that copied this key across regions
+  //
+  // Empty when the key's material has not been replicated out of the region
+  // it was created in.
+  replicationId() string
   // Key versions (rotation history)
   keyVersions() []oci.kms.keyVersion
   // Creation time
@@ -2679,7 +2768,16 @@ private oci.objectStorage.bucket {
   // Entity tag (ETag) for change detection
   etag() string
   // KMS key OCID for encryption
-  kmsKeyId() string
+  //
+  // Deprecated in favor of kmsKey, which resolves the same OCID to the key it
+  // names.
+  kmsKeyId() @maturity("deprecated") string
+  // Customer-managed key that encrypts the bucket
+  //
+  // Null when the bucket is encrypted with an Oracle-managed key. Resolving
+  // the key rather than reporting its OCID is what lets one query ask which
+  // buckets sit on a key whose rotation is off.
+  kmsKey() oci.kms.key
   // Whether the bucket derives a per-bucket data key from its KMS key
   //
   // A bucket key lets Object Storage encrypt objects under a key derived once
@@ -4031,7 +4129,15 @@ private oci.monitoring.alarm @defaults("name") {
   // Compartment containing the alarm
   compartment() oci.compartment
   // Metric compartment OCID being monitored
-  metricCompartmentId string
+  //
+  // Deprecated in favor of metricCompartment, which resolves the same OCID to
+  // the compartment it names.
+  metricCompartmentId @maturity("deprecated") string
+  // Compartment whose metrics the alarm evaluates
+  //
+  // An alarm watches the metrics of this compartment rather than of the one it
+  // is defined in, so this is what bounds the blast radius the alarm can see.
+  metricCompartment() oci.compartment
   // Metric namespace (e.g., oci_computeagent, oci_vcn)
   namespace string
   // Monitoring Query Language (MQL) expression
@@ -4040,6 +4146,32 @@ private oci.monitoring.alarm @defaults("name") {
   severity string
   // Notification topics the alarm publishes to
   topics() []oci.ons.topic
+  // Notification destinations the alarm publishes to
+  //
+  // One OCID per destination service, either a Notifications topic or a
+  // Streaming stream. An empty list is an alarm that fires and reaches nobody.
+  // The `topics` field resolves the Notifications entries; a stream
+  // destination is reported here only.
+  destinations []string
+  // Start of the window in which alarm notifications are suppressed
+  //
+  // Null when the alarm carries no suppression.
+  suppressionFrom time
+  // End of the window in which alarm notifications are suppressed
+  //
+  // Null when the alarm carries no suppression.
+  suppressionUntil time
+  // Reason recorded for suppressing alarm notifications
+  //
+  // Free-form text set alongside the suppression window, often a change or
+  // incident reference. Empty when the alarm carries no suppression.
+  suppressionDescription string
+  // Whether alarm notifications are suppressed right now
+  //
+  // True while the present moment falls inside the suppression window. A
+  // suppressed alarm still reports `isEnabled` true while sending nothing, so
+  // this is what separates a live control from a silenced one.
+  isSuppressed() bool
   // Whether the alarm is enabled
   isEnabled bool
   // Lifecycle state (e.g., ACTIVE, DELETING, DELETED)
@@ -4092,6 +4224,32 @@ private oci.vault.secret @defaults("name") {
   nextRotationTime time
   // Whether auto generation is enabled
   isAutoGenerationEnabled bool
+  // Whether the secret is a replica of a secret in another region
+  //
+  // Null when the service does not report it.
+  isReplica bool
+  // Whether writes to a replica are forwarded to the source secret
+  //
+  // Null when the secret carries no replication configuration.
+  isReplicationWriteForwardEnabled bool
+  // Regions the secret's material is copied into
+  //
+  // Empty when the secret is not replicated. A target outside the intended
+  // data-residency boundary is a copy of the credential beyond it.
+  replicationTargets() []oci.vault.secret.replicationTarget
+  // Name of the region holding the source secret this replica was copied from
+  //
+  // The full region name, for example us-phoenix-1. Empty when the secret is
+  // not a replica.
+  sourceRegionName string
+  // Vault holding the source secret this replica was copied from
+  //
+  // Null when the secret is not a replica.
+  sourceVault() oci.kms.vault
+  // Key encrypting the source secret this replica was copied from
+  //
+  // Null when the secret is not a replica.
+  sourceKey() oci.kms.key
   // Rotation interval in ISO 8601 duration format (e.g., P30D for 30 days)
   rotationInterval() string
   // Whether scheduled rotation is enabled
@@ -4112,6 +4270,33 @@ private oci.vault.secret @defaults("name") {
   // `Oracle-Tags` namespace records the creating principal in `CreatedBy`
   // and the creation time in `CreatedOn`.
   systemTags map[string]dict
+}
+
+// Region a vault secret is replicated into
+//
+// One target of a secret's replication configuration, naming the region the
+// secret's material is copied into together with the vault that holds it and
+// the key that encrypts it there. The `regionName` field carries the full
+// region name and stays populated even for a region the tenancy is not
+// subscribed to, where the vault and key cannot be read.
+private oci.vault.secret.replicationTarget @defaults("regionName") {
+  // Name of the region the secret is replicated into
+  //
+  // The full region name, for example us-phoenix-1.
+  regionName string
+  // Region the secret is replicated into
+  //
+  // Null when the tenancy is not subscribed to the region, which leaves
+  // `regionName` as the only record of where the copy went.
+  region() oci.region
+  // Vault in the target region that holds the replicated secret
+  //
+  // Null when the vault cannot be read from this tenancy's subscribed regions.
+  vault() oci.kms.vault
+  // Key in the target region that encrypts the replicated secret
+  //
+  // Null when the key cannot be read from this tenancy's subscribed regions.
+  key() oci.kms.key
 }
 
 // Oracle Cloud Infrastructure (OCI) vault secret version

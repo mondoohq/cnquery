@@ -241,6 +241,7 @@ func (o *mqlOciNetwork) securityLists() ([]any, error) {
 					"ingressRules":         llx.ArrayData(ingressRules, types.Resource("oci.network.securityRule")),
 					"freeformTags":         llx.MapData(strMapToAny(securityList.FreeformTags), types.String),
 					"definedTags":          llx.MapData(definedTagsToAny(securityList.DefinedTags), types.Any),
+					"systemTags":           llx.MapData(definedTagsToAny(securityList.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -582,6 +583,7 @@ func (o *mqlOciNetwork) networkSecurityGroups() ([]any, error) {
 					"created":      llx.TimeDataPtr(created),
 					"freeformTags": llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
 					"definedTags":  llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
+					"systemTags":   llx.MapData(definedTagsToAny(nsg.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -684,6 +686,7 @@ func initOciNetworkNetworkSecurityGroup(runtime *plugin.Runtime, args map[string
 		"created":      llx.TimeDataPtr(created),
 		"freeformTags": llx.MapData(strMapToAny(nsg.FreeformTags), types.String),
 		"definedTags":  llx.MapData(definedTagsToAny(nsg.DefinedTags), types.Any),
+		"systemTags":   llx.MapData(definedTagsToAny(nsg.SystemTags), types.Dict),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -926,6 +929,7 @@ func ociVnicToMql(runtime *plugin.Runtime, vnic core.Vnic) (*mqlOciComputeVnic, 
 		"created":             llx.TimeDataPtr(created),
 		"freeformTags":        llx.MapData(strMapToAny(vnic.FreeformTags), types.String),
 		"definedTags":         llx.MapData(definedTagsToAny(vnic.DefinedTags), types.Any),
+		"systemTags":          llx.MapData(definedTagsToAny(vnic.SystemTags), types.Dict),
 	})
 	if err != nil {
 		return nil, err
@@ -981,6 +985,7 @@ func (o *mqlOciNetwork) internetGateways() ([]any, error) {
 					"created":      llx.TimeDataPtr(created),
 					"freeformTags": llx.MapData(strMapToAny(igw.FreeformTags), types.String),
 					"definedTags":  llx.MapData(definedTagsToAny(igw.DefinedTags), types.Any),
+					"systemTags":   llx.MapData(definedTagsToAny(igw.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -1179,6 +1184,7 @@ func (o *mqlOciNetwork) routeTables() ([]any, error) {
 					"created":      llx.TimeDataPtr(created),
 					"freeformTags": llx.MapData(strMapToAny(rt.FreeformTags), types.String),
 					"definedTags":  llx.MapData(definedTagsToAny(rt.DefinedTags), types.Any),
+					"systemTags":   llx.MapData(definedTagsToAny(rt.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err

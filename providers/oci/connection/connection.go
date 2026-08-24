@@ -48,6 +48,16 @@ type OciConnection struct {
 	compartmentFetchErr error
 	compartmentFetchAt  time.Time
 
+	// The subset of the tree the caller holds INSPECT on, resolved once per
+	// connection and only when something asks. It cannot come from the walk
+	// above: ListCompartments fills in isAccessible only when it is asked for
+	// the accessible subset, and asking for that subset also truncates the
+	// listing to it - so a scan cannot both enumerate the whole tree and read
+	// the flag from the same call. See AccessibleCompartmentIDs.
+	accessibleLock sync.Mutex
+	accessibleIDs  map[string]struct{}
+	accessibleDone bool
+
 	// Service clients, keyed by "<service>/<region-or-endpoint>". See
 	// cachedClient in clients.go for why they are shared rather than rebuilt.
 	clients sync.Map

@@ -205,6 +205,67 @@ func compartmentIndexByID(compartments []identity.Compartment) map[string]identi
 	return index
 }
 
+// AccessibleCompartmentIDs returns the OCIDs of the compartments beneath the
+// tenancy that the caller holds INSPECT on, directly or through a
+// subcompartment.
+//
+// This is a second walk of ListCompartments, and it has to be. The listing
+// fills in isAccessible only when it is asked for the accessible subset, and
+// asking for that subset also drops every compartment outside it - so the walk
+// that enumerates the tree cannot be the one that reports the flag, and the
+// walk that reports the flag cannot enumerate the tree. Running both and
+// intersecting them is what turns "the caller can see this compartment exists"
+// and "the caller can look inside it" into two separate answers.
+//
+// It is memoized and taken lazily, so a scan that never asks about
+// accessibility never pays for it. A failure is returned rather than cached as
+// an empty set: reporting every compartment as inaccessible because Identity
+// was throttled would be a fabricated verdict, not a missing one.
+func (c *OciConnection) AccessibleCompartmentIDs(ctx context.Context) (map[string]struct{}, error) {
+	c.accessibleLock.Lock()
+	defer c.accessibleLock.Unlock()
+	if c.accessibleDone {
+		return c.accessibleIDs, nil
+	}
+
+	oClient, err := c.IdentityClient()
+	if err != nil {
+		return nil, err
+	}
+
+	ids := map[string]struct{}{}
+	var page *string
+	for {
+		response, err := oClient.ListCompartments(ctx, identity.ListCompartmentsRequest{
+			CompartmentId:          common.String(c.tenancyOcid),
+			CompartmentIdInSubtree: common.Bool(true),
+			AccessLevel:            identity.ListCompartmentsAccessLevelAccessible,
+			LifecycleState:         identity.CompartmentLifecycleStateActive,
+			Page:                   page,
+		})
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to list accessible compartments in tenancy: "+c.tenancyOcid), err)
+		}
+
+		for i := range response.Items {
+			id := response.Items[i].Id
+			if id == nil || *id == "" {
+				continue
+			}
+			ids[*id] = struct{}{}
+		}
+
+		page = response.OpcNextPage
+		if page == nil {
+			break
+		}
+	}
+
+	c.accessibleIDs = ids
+	c.accessibleDone = true
+	return ids, nil
+}
+
 func (c *OciConnection) GetRegions(ctx context.Context) ([]identity.RegionSubscription, error) {
 	oClient, err := c.IdentityClient()
 	if err != nil {

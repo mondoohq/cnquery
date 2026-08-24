@@ -74,19 +74,24 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 					nextRotation = &s.NextRotationTime.Time
 				}
 
+				replication := ociReadSecretReplication(s)
+
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.vault.secret", stringValue(s.CompartmentId), map[string]*llx.RawData{
-					"id":                      llx.StringDataPtr(s.Id),
-					"name":                    llx.StringDataPtr(s.SecretName),
-					"description":             llx.StringDataPtr(s.Description),
-					"state":                   llx.StringData(string(s.LifecycleState)),
-					"rotationStatus":          llx.StringData(string(s.RotationStatus)),
-					"lastRotationTime":        llx.TimeDataPtr(lastRotation),
-					"nextRotationTime":        llx.TimeDataPtr(nextRotation),
-					"isAutoGenerationEnabled": llx.BoolDataPtr(s.IsAutoGenerationEnabled),
-					"created":                 llx.TimeDataPtr(created),
-					"freeformTags":            llx.MapData(strMapToAny(s.FreeformTags), types.String),
-					"definedTags":             llx.MapData(definedTagsToAny(s.DefinedTags), types.Any),
-					"systemTags":              llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
+					"id":                               llx.StringDataPtr(s.Id),
+					"name":                             llx.StringDataPtr(s.SecretName),
+					"description":                      llx.StringDataPtr(s.Description),
+					"state":                            llx.StringData(string(s.LifecycleState)),
+					"rotationStatus":                   llx.StringData(string(s.RotationStatus)),
+					"lastRotationTime":                 llx.TimeDataPtr(lastRotation),
+					"nextRotationTime":                 llx.TimeDataPtr(nextRotation),
+					"isAutoGenerationEnabled":          llx.BoolDataPtr(s.IsAutoGenerationEnabled),
+					"isReplica":                        llx.BoolDataPtr(s.IsReplica),
+					"isReplicationWriteForwardEnabled": llx.BoolDataPtr(replication.WriteForwardEnabled),
+					"sourceRegionName":                 llx.StringDataPtr(replication.SourceRegion),
+					"created":                          llx.TimeDataPtr(created),
+					"freeformTags":                     llx.MapData(strMapToAny(s.FreeformTags), types.String),
+					"definedTags":                      llx.MapData(definedTagsToAny(s.DefinedTags), types.Any),
+					"systemTags":                       llx.MapData(definedTagsToAny(s.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -95,6 +100,9 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 				mqlS.cacheKeyID = stringValue(s.KeyId)
 				mqlS.cacheVaultID = stringValue(s.VaultId)
 				mqlS.cacheRegion = region
+				mqlS.cacheReplicationTargets = replication.Targets
+				mqlS.cacheSourceVaultID = replication.SourceVaultID
+				mqlS.cacheSourceKeyID = replication.SourceKeyID
 				if s.RotationConfig != nil {
 					mqlS.cacheRotationInterval = stringValue(s.RotationConfig.RotationInterval)
 					mqlS.cacheIsScheduledRotationEnabled = s.RotationConfig.IsScheduledRotationEnabled
@@ -110,6 +118,39 @@ func (o *mqlOciVault) secrets() ([]any, error) {
 		})
 }
 
+// ociSecretReplication is what a secret summary says about where its material
+// has been copied to, and where it was copied from.
+type ociSecretReplication struct {
+	// WriteForwardEnabled stays a pointer so a secret with no replication
+	// configuration reports null rather than false. "Write forwarding is off"
+	// and "there is nothing to forward to" are different answers, and MQL
+	// treats a fabricated false as a read one.
+	WriteForwardEnabled *bool
+	// SourceRegion is the full region name of the source secret, for a secret
+	// that is itself a replica. Nil otherwise.
+	SourceRegion  *string
+	Targets       []vault.ReplicationTarget
+	SourceVaultID string
+	SourceKeyID   string
+}
+
+// ociReadSecretReplication reads the replication facts off a secret summary,
+// leaving every one of them empty or nil when the service reported no
+// replication for the secret.
+func ociReadSecretReplication(s vault.SecretSummary) ociSecretReplication {
+	res := ociSecretReplication{}
+	if s.ReplicationConfig != nil {
+		res.WriteForwardEnabled = s.ReplicationConfig.IsWriteForwardEnabled
+		res.Targets = s.ReplicationConfig.ReplicationTargets
+	}
+	if s.SourceRegionInformation != nil {
+		res.SourceRegion = s.SourceRegionInformation.SourceRegion
+		res.SourceVaultID = stringValue(s.SourceRegionInformation.SourceVaultId)
+		res.SourceKeyID = stringValue(s.SourceRegionInformation.SourceKeyId)
+	}
+	return res
+}
+
 type mqlOciVaultSecretInternal struct {
 	ociCompartmentRef
 	cacheKeyID   string
@@ -120,6 +161,74 @@ type mqlOciVaultSecretInternal struct {
 	cacheRotationInterval           string
 	cacheIsScheduledRotationEnabled *bool
 	cacheTimeOfCurrentVersionExpiry *time.Time
+
+	// Replication fields from SecretSummary.ReplicationConfig and
+	// SecretSummary.SourceRegionInformation. Held rather than turned into
+	// resources at list time so the vaults and keys they name are only
+	// resolved for a query that asks for them.
+	cacheReplicationTargets []vault.ReplicationTarget
+	cacheSourceVaultID      string
+	cacheSourceKeyID        string
+}
+
+// replicationTargets reports the regions the secret's material is copied into.
+//
+// Each target names a vault and a key in the destination region. Those are
+// resolved on read rather than here, so a query that only asks which regions
+// a secret reached does not pay for the vault listings of all of them.
+func (o *mqlOciVaultSecret) replicationTargets() ([]any, error) {
+	res := make([]any, 0, len(o.cacheReplicationTargets))
+	for i := range o.cacheReplicationTargets {
+		target := o.cacheReplicationTargets[i]
+		regionName := stringValue(target.TargetRegion)
+
+		// A secret can be replicated into several regions but only once into
+		// each, so the region is what makes a target unique under its secret.
+		mqlTarget, err := CreateResource(o.MqlRuntime, "oci.vault.secret.replicationTarget", map[string]*llx.RawData{
+			"__id":       llx.StringData(o.Id.Data + "/" + regionName),
+			"regionName": llx.StringData(regionName),
+		})
+		if err != nil {
+			return nil, err
+		}
+		typed := mqlTarget.(*mqlOciVaultSecretReplicationTarget)
+		typed.cacheVaultID = stringValue(target.TargetVaultId)
+		typed.cacheKeyID = stringValue(target.TargetKeyId)
+		res = append(res, typed)
+	}
+	return res, nil
+}
+
+// sourceVault resolves the vault holding the secret this replica was copied
+// from. Null when the secret is not a replica.
+func (o *mqlOciVaultSecret) sourceVault() (*mqlOciKmsVault, error) {
+	return resolveOciVault(o.MqlRuntime, o.cacheSourceVaultID, &o.SourceVault)
+}
+
+// sourceKey resolves the key encrypting the secret this replica was copied
+// from. Null when the secret is not a replica.
+func (o *mqlOciVaultSecret) sourceKey() (*mqlOciKmsKey, error) {
+	return resolveOciKmsKey(o.MqlRuntime, o.cacheSourceKeyID, &o.SourceKey)
+}
+
+type mqlOciVaultSecretReplicationTargetInternal struct {
+	cacheVaultID string
+	cacheKeyID   string
+}
+
+// region resolves the target region from its name.
+func (o *mqlOciVaultSecretReplicationTarget) region() (*mqlOciRegion, error) {
+	return resolveOciRegionByName(o.MqlRuntime, o.RegionName.Data, &o.Region)
+}
+
+// vault resolves the vault in the target region that holds the replica.
+func (o *mqlOciVaultSecretReplicationTarget) vault() (*mqlOciKmsVault, error) {
+	return resolveOciVault(o.MqlRuntime, o.cacheVaultID, &o.Vault)
+}
+
+// key resolves the key in the target region that encrypts the replica.
+func (o *mqlOciVaultSecretReplicationTarget) key() (*mqlOciKmsKey, error) {
+	return resolveOciKmsKey(o.MqlRuntime, o.cacheKeyID, &o.Key)
 }
 
 func (o *mqlOciVaultSecret) id() (string, error) {

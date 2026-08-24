@@ -132,6 +132,55 @@ func resolveOciKmsKey(runtime *plugin.Runtime, id string, field *plugin.TValue[*
 	return resolveRef(runtime, "oci.kms.key", id, field)
 }
 
+// resolveOciRegionByName resolves a region from its full name, for example
+// us-phoenix-1.
+//
+// oci.region is keyed by the short region key - iad, phx - and not by the
+// name, so handing a name to the region init matches nothing and reports no
+// region rather than an error. The subscribed region listing carries both, so
+// the name is matched against that instead.
+//
+// A name the listing does not carry is a region the tenancy is not subscribed
+// to. That is a null region rather than a failure: the caller's own name field
+// stays populated, which keeps the destination on the record even when the
+// region resource cannot be built for it.
+func resolveOciRegionByName(runtime *plugin.Runtime, name string, field *plugin.TValue[*mqlOciRegion]) (*mqlOciRegion, error) {
+	if name == "" {
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	items, err := ociServiceCollection(runtime, "oci", func(r plugin.Resource) *plugin.TValue[[]any] {
+		return r.(*mqlOci).GetRegions()
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if region := ociRegionByName(items, name); region != nil {
+		return region, nil
+	}
+
+	log.Debug().Str("region", name).Msg("oci region not among the tenancy's subscriptions")
+	field.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
+}
+
+// ociRegionByName picks the region carrying a full region name out of a listed
+// oci.regions collection, or nil when none does.
+func ociRegionByName(items []any, name string) *mqlOciRegion {
+	for _, raw := range items {
+		region, ok := raw.(*mqlOciRegion)
+		if !ok {
+			continue
+		}
+		if strings.EqualFold(region.Name.Data, name) {
+			return region
+		}
+	}
+	return nil
+}
+
 // resolveOciSubnet resolves a typed subnet resource from a subnet OCID.
 func resolveOciSubnet(runtime *plugin.Runtime, id string, field *plugin.TValue[*mqlOciNetworkSubnet]) (*mqlOciNetworkSubnet, error) {
 	return resolveRef(runtime, "oci.network.subnet", id, field)
@@ -495,6 +544,12 @@ func (o *mqlOciOnsTopic) compartment() (*mqlOciCompartment, error) {
 
 func (o *mqlOciMonitoringAlarm) compartment() (*mqlOciCompartment, error) {
 	return resolveOciCompartment(o.MqlRuntime, o.cacheCompartmentID, &o.Compartment)
+}
+
+// metricCompartment resolves the compartment whose metrics the alarm watches,
+// which is not necessarily the compartment the alarm itself lives in.
+func (o *mqlOciMonitoringAlarm) metricCompartment() (*mqlOciCompartment, error) {
+	return resolveOciCompartment(o.MqlRuntime, o.MetricCompartmentId.Data, &o.MetricCompartment)
 }
 
 func (o *mqlOciMonitoringAlarm) topics() ([]any, error) {

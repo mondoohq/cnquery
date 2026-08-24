@@ -105,6 +105,14 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					return nil, err
 				}
 
+				// Nested values, so it cannot ride metadata's map[string]string.
+				// Left null rather than emptied when the instance carries none,
+				// so "no extended metadata" and "an empty object" stay apart.
+				extendedMetadata, err := convert.JsonToDict(instance.ExtendedMetadata)
+				if err != nil {
+					return nil, err
+				}
+
 				var timeMaintenanceRebootDue *time.Time
 				if instance.TimeMaintenanceRebootDue != nil {
 					timeMaintenanceRebootDue = &instance.TimeMaintenanceRebootDue.Time
@@ -169,6 +177,8 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					"shapeConfig":                 llx.DictData(shapeConfig),
 					"sourceDetails":               llx.DictData(sourceDetails),
 					"metadata":                    llx.MapData(metadata, types.String),
+					"extendedMetadata":            llx.DictData(extendedMetadata),
+					"ipxeScript":                  llx.StringDataPtr(instance.IpxeScript),
 					"timeMaintenanceRebootDue":    llx.TimeDataPtr(timeMaintenanceRebootDue),
 					"securityAttributes":          llx.MapData(definedTagsToAny(instance.SecurityAttributes), types.Dict),
 					"securityAttributesState":     llx.StringData(string(instance.SecurityAttributesState)),
