@@ -10,6 +10,7 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/portainer/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // userTheme reads the account's UI theme. The top-level UserTheme field is
@@ -23,14 +24,23 @@ func userTheme(u *models.PortainereeUser) string {
 }
 
 func newMqlPortainerUser(runtime *plugin.Runtime, u *models.PortainereeUser) (*mqlPortainerUser, error) {
+	// An instance that does not compute authorizations reports none at all,
+	// which is not the same as an account holding none, so an absent map stays
+	// null instead of becoming an empty list.
+	authorizations := llx.NilData
+	if names, ok := grantedAuthorizations(u.PortainerAuthorizations); ok {
+		authorizations = llx.ArrayData(names, types.String)
+	}
+
 	res, err := CreateResource(runtime, "portainer.user", map[string]*llx.RawData{
-		"__id":         llx.StringData("portainer.user/" + strconv.FormatInt(u.ID, 10)),
-		"id":           llx.IntData(u.ID),
-		"username":     llx.StringData(u.Username),
-		"role":         llx.StringData(connection.UserRole(u.Role)),
-		"useCache":     llx.BoolData(u.UseCache),
-		"theme":        llx.StringData(userTheme(u)),
-		"tokenIssueAt": llx.TimeDataPtr(unixTimePtr(u.TokenIssueAt)),
+		"__id":           llx.StringData("portainer.user/" + strconv.FormatInt(u.ID, 10)),
+		"id":             llx.IntData(u.ID),
+		"username":       llx.StringData(u.Username),
+		"role":           llx.StringData(connection.UserRole(u.Role)),
+		"useCache":       llx.BoolData(u.UseCache),
+		"theme":          llx.StringData(userTheme(u)),
+		"tokenIssueAt":   llx.TimeDataPtr(unixTimePtr(u.TokenIssueAt)),
+		"authorizations": authorizations,
 	})
 	if err != nil {
 		return nil, err

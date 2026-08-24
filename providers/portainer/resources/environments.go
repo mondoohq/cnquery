@@ -46,6 +46,16 @@ func tlsConfig(e *models.PortainereeEndpoint) (enabled, skipVerify bool) {
 	return e.TLSConfig.TLS, e.TLSConfig.TLSSkipVerify
 }
 
+// mtlsFields reports whether the environment's agent authenticates back with
+// mutual TLS. Both fields stay null when the server reports no mutual TLS state
+// for the environment, so "not reported" is never read as "not enabled".
+func mtlsFields(m *models.PortainereeMTLSStatus) (enabled, ok *llx.RawData) {
+	if m == nil {
+		return llx.NilData, llx.NilData
+	}
+	return llx.BoolData(m.Enabled), llx.BoolData(m.Ok)
+}
+
 // securitySettingsToDict flattens the per-environment container-security
 // overrides into a dict keyed by setting name. Returns nil when the endpoint
 // carries no overrides so the field resolves to an empty dict.
@@ -68,6 +78,7 @@ func securitySettingsToDict(s *models.PortainerEndpointSecuritySettings) map[str
 
 func newMqlPortainerEnvironment(runtime *plugin.Runtime, e *models.PortainereeEndpoint) (*mqlPortainerEnvironment, error) {
 	tlsEnabled, tlsSkipVerify := tlsConfig(e)
+	mtlsEnabled, mtlsOk := mtlsFields(e.MTLSStatus)
 	res, err := CreateResource(runtime, "portainer.environment", map[string]*llx.RawData{
 		"__id":                 llx.StringData("portainer.environment/" + strconv.FormatInt(e.ID, 10)),
 		"id":                   llx.IntData(e.ID),
@@ -88,6 +99,8 @@ func newMqlPortainerEnvironment(runtime *plugin.Runtime, e *models.PortainereeEn
 		"userTrusted":          llx.BoolData(e.UserTrusted),
 		"gpuManagementEnabled": llx.BoolData(e.EnableGPUManagement),
 		"securitySettings":     llx.DictData(securitySettingsToDict(e.SecuritySettings)),
+		"mtlsEnabled":          mtlsEnabled,
+		"mtlsOk":               mtlsOk,
 	})
 	if err != nil {
 		return nil, err

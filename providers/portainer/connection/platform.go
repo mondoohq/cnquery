@@ -183,6 +183,68 @@ func MembershipRole(r int64) string {
 	}
 }
 
+// RegistryType maps the Portainer registry type enum to a string. The API
+// documents seven values and rejects any other on create, so an unlisted value
+// is reported as unknown rather than guessed at.
+func RegistryType(t int64) string {
+	switch t {
+	case 1:
+		return "quay"
+	case 2:
+		return "azure"
+	case 3:
+		return "custom"
+	case 4:
+		return "gitlab"
+	case 5:
+		return "proget"
+	case 6:
+		return "dockerhub"
+	case 7:
+		return "ecr"
+	default:
+		return "unknown"
+	}
+}
+
+// StackType maps the Portainer stack type enum to a string.
+func StackType(t int64) string {
+	switch t {
+	case 1:
+		return "swarm"
+	case 2:
+		return "compose"
+	case 3:
+		return "kubernetes"
+	default:
+		return "unknown"
+	}
+}
+
+// StackStatus maps the Portainer stack status enum to a string.
+func StackStatus(s int64) string {
+	switch s {
+	case 1:
+		return "active"
+	case 2:
+		return "inactive"
+	default:
+		return "unknown"
+	}
+}
+
+// WebhookType maps the Portainer webhook type enum to a string.
+func WebhookType(t int64) string {
+	switch t {
+	case 1:
+		return "service"
+	case 2:
+		return "container"
+	default:
+		return "unknown"
+	}
+}
+
 func InstancePlatform() *inventory.Platform {
 	p := &inventory.Platform{
 		TechnologyUrlSegments: []string{"virtualization", "portainer", "instance"},
