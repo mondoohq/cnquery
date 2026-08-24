@@ -10,11 +10,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/testutils"
-	"go.mondoo.com/mql/v13/providers/os/resources/powershell"
-	"go.mondoo.com/mql/v13/providers/os/resources/windows"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/testutils"
+	"go.mondoo.com/mql/providers/os/resources/powershell"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 // The recording format, mirrored here so a recording can be built in the test
