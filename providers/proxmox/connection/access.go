@@ -5,6 +5,7 @@ package connection
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"sync"
 )
@@ -233,7 +234,10 @@ func (c *PveConnection) GetRealmSyncJobs() ([]RealmSyncJob, bool, error) {
 // the job is not readable.
 func (c *PveConnection) GetRealmSyncJob(id string) (map[string]any, error) {
 	var cfg map[string]any
-	path := fmt.Sprintf("/cluster/jobs/realm-sync/%s", id)
+	// the id comes back from the listing endpoint rather than from a user, but
+	// it is escaped anyway so that a value carrying a separator cannot reshape
+	// the request path
+	path := "/cluster/jobs/realm-sync/" + url.PathEscape(id)
 	readable, err := c.getIfAvailable(path, &cfg)
 	if err != nil {
 		return nil, err
