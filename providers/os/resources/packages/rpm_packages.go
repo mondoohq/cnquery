@@ -533,7 +533,11 @@ func (rpm *RpmPkgManager) Files(name string, version string, arch string) ([]Fil
 		return nil, err
 	}
 
-	// Return a copy so callers can't mutate the cached slice.
+	// Return a copy so callers can't mutate the cached slice. A shallow copy is
+	// enough because FileRecord is transitively value-typed: Path is a string,
+	// and PkgDigest and PkgFileInfo hold only strings and fixed-width integers.
+	// Adding a pointer, slice, or map to any of the three would make the copy
+	// share state with the cache again, and this would need to deep copy.
 	out := make([]FileRecord, len(records))
 	copy(out, records)
 	return out, nil
