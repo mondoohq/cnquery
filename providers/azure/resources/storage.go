@@ -399,6 +399,22 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) queueProperties() (*mqlAzure
 	return toMqlServiceStorageProperties(a.MqlRuntime, props.ServiceProperties, "queue", id)
 }
 
+func (a *mqlAzureSubscriptionStorageServiceAccount) diagnosticSettings() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	return getDiagnosticSettings(a.Id.Data, a.MqlRuntime, conn)
+}
+
+func (a *mqlAzureSubscriptionStorageServiceAccount) diagnosticSettingsCategories() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*connection.AzureConnection)
+	if !ok {
+		return nil, errors.New("invalid connection provided, it is not an Azure connection")
+	}
+	return getDiagnosticSettingsCategories(a.Id.Data, a.MqlRuntime, conn)
+}
+
 func (a *mqlAzureSubscriptionStorageServiceAccount) tableProperties() (*mqlAzureSubscriptionStorageServiceAccountServiceProperties, error) {
 	props, err := a.getServiceStorageProperties("table")
 	if err != nil {
@@ -808,15 +824,19 @@ func toMqlBlobServiceStorageProperties(runtime *plugin.Runtime, props table.Serv
 		return nil, err
 	}
 
-	settings, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties,
-		map[string]*llx.RawData{
-			"id":                  llx.StringData(fmt.Sprintf("%s/%s/properties", parentId, serviceType)),
-			"minuteMetrics":       llx.ResourceData(minuteMetrics, "minuteMetrics"),
-			"hourMetrics":         llx.ResourceData(hourMetrics, "hourMetrics"),
-			"logging":             llx.ResourceData(logging, "logging"),
-			"isVersioningEnabled": llx.BoolData(isVersioningEnabled),
-			"staticWebsite":       llx.ResourceData(staticWebsite, "staticWebsite"),
-		})
+	args := map[string]*llx.RawData{
+		"id":                  llx.StringData(fmt.Sprintf("%s/%s/properties", parentId, serviceType)),
+		"minuteMetrics":       llx.ResourceData(minuteMetrics, "minuteMetrics"),
+		"hourMetrics":         llx.ResourceData(hourMetrics, "hourMetrics"),
+		"logging":             llx.ResourceData(logging, "logging"),
+		"isVersioningEnabled": llx.BoolData(isVersioningEnabled),
+		"staticWebsite":       llx.ResourceData(staticWebsite, "staticWebsite"),
+	}
+	for k, v := range blobServiceDataPlaneSettings(blobProps.BlobServiceProperties).rawData() {
+		args[k] = v
+	}
+
+	settings, err := CreateResource(runtime, ResourceAzureSubscriptionStorageServiceAccountServiceBlobProperties, args)
 	if err != nil {
 		return nil, err
 	}

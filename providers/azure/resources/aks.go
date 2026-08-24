@@ -35,10 +35,11 @@ type mqlAzureSubscriptionAksServiceClusterIdentityBindingInternal struct {
 }
 
 type mqlAzureSubscriptionAksServiceClusterNodePoolInternal struct {
-	subscriptionId string
-	resourceGroup  string
-	clusterName    string
-	poolName       string
+	subscriptionId           string
+	resourceGroup            string
+	clusterName              string
+	poolName                 string
+	cacheAppSecurityGroupIds []string
 }
 
 func (a *mqlAzureSubscriptionAksService) id() (string, error) {
@@ -313,6 +314,8 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
+			linuxAdminUsername, linuxSshPublicKeys, windowsAdminUsername := aksNodeAdminAccess(entry.Properties)
+
 			secFlags := aksSecurityProfileFlags(entry.Properties.SecurityProfile)
 			azureKeyVaultKmsKeyId := secFlags.azureKeyVaultKmsKeyID
 
@@ -435,6 +438,9 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"identity":                          llx.DictData(identityDict),
 					"principalId":                       llx.StringDataPtr(principalId),
 					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
+					"linuxAdminUsername":                llx.StringData(linuxAdminUsername),
+					"linuxSshPublicKeys":                llx.ArrayData(linuxSshPublicKeys, types.String),
+					"windowsAdminUsername":              llx.StringData(windowsAdminUsername),
 				})
 			if err != nil {
 				return nil, err
@@ -569,6 +575,8 @@ func (a *mqlAzureSubscriptionAksServiceCluster) nodePools() ([]any, error) {
 				sshAccess = (*string)(props.SecurityProfile.SSHAccess)
 			}
 
+			unsafeSysctls, allowedHostPorts, nodePublicIPTags, appSecurityGroupIds := aksNodePoolHostAccess(props)
+
 			var upgradeMaxSurge, upgradeMaxUnavailable *string
 			var upgradeDrainTimeout, upgradeNodeSoak *int32
 			if props.UpgradeSettings != nil {
@@ -623,6 +631,9 @@ func (a *mqlAzureSubscriptionAksServiceCluster) nodePools() ([]any, error) {
 					"sshAccess":                        llx.StringDataPtr(sshAccess),
 					"enableVTPM":                       llx.BoolDataPtr(enableVTPM),
 					"enableSecureBoot":                 llx.BoolDataPtr(enableSecureBoot),
+					"kubeletAllowedUnsafeSysctls":      llx.ArrayData(unsafeSysctls, types.String),
+					"allowedHostPorts":                 llx.ArrayData(allowedHostPorts, types.Dict),
+					"nodePublicIPTags":                 llx.MapData(nodePublicIPTags, types.String),
 				})
 			if err != nil {
 				return nil, err
@@ -632,6 +643,7 @@ func (a *mqlAzureSubscriptionAksServiceCluster) nodePools() ([]any, error) {
 			pool.resourceGroup = resourceID.ResourceGroup
 			pool.clusterName = a.Name.Data
 			pool.poolName = convert.ToValue(entry.Name)
+			pool.cacheAppSecurityGroupIds = appSecurityGroupIds
 			res = append(res, pool)
 		}
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	appinsights "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/applicationinsights/armapplicationinsights"
 	monitor "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
+	"github.com/rs/zerolog/log"
 )
 
 func (a *mqlAzureSubscriptionMonitorService) id() (string, error) {
@@ -964,6 +965,53 @@ func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) storageAccount() (
 		return nil, nil
 	}
 	return getStorageAccount(a.StorageAccountId.Data, a.MqlRuntime, a.MqlRuntime.Connection.(*connection.AzureConnection))
+}
+
+// diagnosticWorkspaceUnreadable reports whether a failed workspace resolution
+// means the named destination could not be read, rather than that the read
+// itself broke. A deleted workspace answers 404 and one the caller cannot see
+// answers 403; both leave the destination unreadable, which the field reports
+// as null alongside the raw workspaceId. Anything else -- a server error, a
+// throttle, a transport failure -- is a broken read and must surface as an
+// error rather than be dressed up as a dangling reference.
+func diagnosticWorkspaceUnreadable(err error) bool {
+	return isAzureFeatureUnavailable(err) || isAzureAccessDenied(err)
+}
+
+// workspace resolves the Log Analytics workspace the setting streams to, or
+// null when there is no workspace destination to resolve.
+//
+// Null covers two different situations, and workspaceId is what separates
+// them. An empty workspaceId means the setting has no workspace destination at
+// all, which is ordinary: storage-only and Event Hub-only settings are common.
+// A non-empty workspaceId with a null workspace means the setting names a
+// destination that could not be read, either because it has been deleted or
+// because the caller cannot see it. That combination is worth querying for on
+// its own: logs are being routed at a workspace that is not there, so the
+// resource is effectively unlogged while its setting still looks configured.
+// Reporting it as an error instead would take the whole row down and leave the
+// dangling reference unqueryable.
+func (a *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) workspace() (*mqlAzureSubscriptionMonitorServiceWorkspace, error) {
+	if a.WorkspaceId.Error != nil {
+		return nil, a.WorkspaceId.Error
+	}
+	if a.WorkspaceId.IsNull() || a.WorkspaceId.Data == "" {
+		a.Workspace.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.monitorService.workspace", map[string]*llx.RawData{
+		"id": llx.StringData(a.WorkspaceId.Data),
+	})
+	if err != nil {
+		if diagnosticWorkspaceUnreadable(err) {
+			log.Warn().Err(err).Str("workspace", a.WorkspaceId.Data).Str("setting", a.Id.Data).
+				Msg("diagnostic setting names a log analytics workspace that could not be read")
+			a.Workspace.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionMonitorServiceWorkspace), nil
 }
 
 // diagnosticLogSettings normalizes a diagnostic setting's log categories into

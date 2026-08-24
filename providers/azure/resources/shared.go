@@ -62,6 +62,41 @@ func isAzureNotConfigured(err error) bool {
 	return azureFeatureNotApplicable(respErr.StatusCode, azureErrorCode(respErr), azureErrorSubcode(respErr))
 }
 
+// isAzureAccessDenied reports whether ARM refused the read.
+//
+// It is deliberately narrower than isAzureNotConfigured, which folds 403 in
+// with the absences. On a collection that is itself the security finding -- who
+// holds a grant, which rules exist -- a refused read must not be reported as an
+// empty collection, because "nothing is configured" and "not allowed to look"
+// would then be the same answer. A transport failure is not a refusal and does
+// not match: only an ARM response carrying 403 does.
+func isAzureAccessDenied(err error) bool {
+	var respErr *azcore.ResponseError
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	return respErr.StatusCode == http.StatusForbidden
+}
+
+// isAzureFeatureUnavailable reports whether ARM answered that the thing being
+// read is not there to read: the resource provider is not registered, the
+// resource type is not supported, or the capability is not available on this
+// resource. These are absences, not failures, so a lister may report an empty
+// collection for them.
+//
+// A refused read (403) is excluded on purpose; use isAzureAccessDenied for
+// that. A transport failure carries no ARM response and does not match.
+func isAzureFeatureUnavailable(err error) bool {
+	var respErr *azcore.ResponseError
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	if respErr.StatusCode == http.StatusNotFound {
+		return true
+	}
+	return azureFeatureNotApplicable(respErr.StatusCode, azureErrorCode(respErr), azureErrorSubcode(respErr))
+}
+
 // azureErrorCode reads the error code, falling back to the body when azcore did
 // not populate it.
 //

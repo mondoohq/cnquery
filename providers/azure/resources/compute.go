@@ -241,6 +241,8 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		}
 	}
 
+	guestAccess := vmGuestAccessSettings(vm.Properties)
+
 	identityDict, err := convert.JsonToDict(vm.Identity)
 	if err != nil {
 		return nil, err
@@ -301,6 +303,10 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 			"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
 			"identity":                      llx.DictData(identityDict),
 			"principalId":                   llx.StringDataPtr(principalId),
+			"allowExtensionOperations":      llx.BoolDataPtr(guestAccess.allowExtensionOperations),
+			"requireGuestProvisionSignal":   llx.BoolDataPtr(guestAccess.requireGuestProvisionSignal),
+			"winRmHttpListenerEnabled":      llx.BoolDataPtr(guestAccess.winRmHTTPListenerEnabled),
+			"winRmHttpsListenerEnabled":     llx.BoolDataPtr(guestAccess.winRmHTTPSListenerEnabled),
 		})
 	if err != nil {
 		return nil, err
@@ -308,6 +314,8 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 	mqlVm := res.(*mqlAzureSubscriptionComputeServiceVm)
 	mqlVm.cacheSystemData = systemDataDict
 	mqlVm.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	mqlVm.cacheCertificateSourceVaultIds = guestAccess.certificateSourceVaultIDs
+	mqlVm.cacheEncryptionIdentityId = guestAccess.encryptionIdentityID
 	return mqlVm, nil
 }
 
@@ -364,6 +372,9 @@ type mqlAzureSubscriptionComputeServiceVmInternal struct {
 	extensionsError              error
 	cacheUserAssignedIdentityIds []string
 	cacheSystemData              any
+
+	cacheCertificateSourceVaultIds []string
+	cacheEncryptionIdentityId      string
 }
 
 func (a *mqlAzureSubscriptionComputeServiceVm) fetchExtensions() ([]*compute.VirtualMachineExtension, error) {
