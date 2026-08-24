@@ -350,12 +350,22 @@ func iisSslFlagNames(n int64) []string {
 			named |= flag.bit
 		}
 	}
-	// A bit this table does not name is kept as its number rather than dropped,
-	// the same way ConvertTo-AttributeValue keeps the residue of a flags enum.
-	// Dropping it would report a stricter transport requirement than the one
-	// actually configured.
-	if residue := n & ^named; residue != 0 {
-		res = append(res, strconv.FormatInt(residue, 10))
+	// A bit this table does not name is kept rather than dropped: dropping it
+	// would report a stricter transport requirement than the one actually
+	// configured. Kept one entry per bit, not as the combined remainder, so
+	// that every element of the list is a single flag whichever branch produced
+	// it. The named branch above already yields one name per element, and a
+	// caller testing for a specific unnamed bit can compare against it
+	// directly instead of decomposing a sum. (ConvertTo-AttributeValue in
+	// iis.ps1 appends the combined remainder instead, but it is building one
+	// joined string rather than a list.)
+	if residue := n & ^named; residue > 0 {
+		for i := 0; i < 63; i++ {
+			bit := int64(1) << i
+			if residue&bit != 0 {
+				res = append(res, strconv.FormatInt(bit, 10))
+			}
+		}
 	}
 	sort.Strings(res)
 	return res

@@ -427,6 +427,11 @@ func TestParseIisSslFlags(t *testing.T) {
 		// requirement than the one actually configured.
 		{"unnamed bit kept as a number", float64(8 + 1), []string{"1", "Ssl"}},
 		{"only an unnamed bit", float64(2), []string{"2"}},
+		// Disjoint unnamed bits are reported one per entry rather than as the
+		// combined remainder, so every element of the list is a single flag and
+		// a caller can compare against one directly.
+		{"several unnamed bits", float64(2 + 4), []string{"2", "4"}},
+		{"unnamed bits beside names", float64(8 + 2 + 16), []string{"16", "2", "Ssl"}},
 	}
 
 	for _, test := range tests {

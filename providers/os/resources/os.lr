@@ -2652,8 +2652,8 @@ private iis.configuration @defaults("path") {
   // "SslNegotiateCert", "SslRequireCert", "SslMapCert" and "Ssl128". IIS reports
   // the attribute as a number on some installations and as names on others;
   // both resolve here to names, and a bit with no name of its own is kept as its
-  // number so it is not silently dropped. An empty list means requests are
-  // accepted over plain HTTP.
+  // own number, one entry per bit, so it is not silently dropped. An empty list
+  // means requests are accepted over plain HTTP.
   sslFlags []string
   // Largest request body accepted, in bytes (requestLimits/maxAllowedContentLength)
   maxAllowedContentLength int
