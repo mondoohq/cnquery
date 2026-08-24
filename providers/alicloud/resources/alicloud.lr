@@ -468,6 +468,12 @@ alicloud.ecs {
   // instead of writing the blocks out, so a rule scoped to a list shows no CIDR
   // of its own until the list is read.
   prefixLists() []alicloud.ecs.prefixList
+  // Disk snapshots across all enabled regions
+  //
+  // A snapshot holds a copy of a disk's contents and is encrypted (or not)
+  // independently of the disk it came from, so an unencrypted snapshot of an
+  // encrypted disk defeats the disk's own encryption.
+  snapshots() []alicloud.ecs.snapshot
 }
 
 // Prefix list
@@ -742,6 +748,12 @@ alicloud.ecs.disk @defaults("diskId diskName category size status") {
   diskChargeType string
   // Tags on the disk, as key-value pairs
   tags map[string]string
+  // Snapshots taken from the disk
+  //
+  // A snapshot is encrypted independently of the disk it came from, so an
+  // encrypted disk with an unencrypted snapshot has its contents readable
+  // outside the protection the disk itself has.
+  snapshots() []alicloud.ecs.snapshot
 }
 
 // Elastic Compute Service image
@@ -795,6 +807,103 @@ alicloud.ecs.image @defaults("imageId imageName osName status") {
   usage string
   // Region ID of the image
   regionId string
+  // Accounts the image is shared with
+  //
+  // Each entry is the Alibaba Cloud account the owner granted use of the image
+  // to. isPublic covers exposure through the marketplace; this covers a share
+  // to a named account, which that check does not see.
+  sharedAccounts() []string
+  // Share groups the image is shared with
+  //
+  // Each entry names a group of accounts, for example ALL, that may use the
+  // image.
+  shareGroups() []string
+  // Whether the image is shared outside the owning account
+  //
+  // True when the image is shared with at least one account or share group.
+  // False when nothing is shared, and when the share permissions could not be
+  // read, so this must not stand alone as evidence that an image is private.
+  isShared() bool
+}
+
+// Elastic Compute Service disk snapshot
+//
+// A point-in-time copy of a disk's contents, keyed by snapshotId within its
+// region. Exposes the source disk, the encryption state and key, the retention
+// setting, and the snapshot lifecycle. Use it to find an unencrypted snapshot
+// of an encrypted disk, which puts the disk's contents outside the protection
+// the disk itself has.
+alicloud.ecs.snapshot @defaults("snapshotName snapshotId status encrypted") {
+  // Region ID the snapshot resides in, for example cn-hangzhou
+  regionId string
+  // Snapshot ID, used as the lookup key within its region
+  snapshotId string
+  // Name of the snapshot
+  snapshotName string
+  // Description of the snapshot
+  description string
+  // ID of the disk the snapshot was taken from
+  sourceDiskId string
+  // Disk the snapshot was taken from
+  //
+  // Null when the disk has since been deleted, and when it lies outside the
+  // scanned regions. Compare its encrypted field with this snapshot's to find a
+  // snapshot that is not protected to the same standard as its source.
+  disk() alicloud.ecs.disk
+  // Size of the source disk in GiB
+  sourceDiskSize string
+  // Kind of the source disk, either system or data
+  sourceDiskType string
+  // Region the snapshot was copied from, empty when it was not copied
+  sourceRegionId string
+  // ID of the snapshot this one was copied from, empty when it was not copied
+  sourceSnapshotId string
+  // Whether the snapshot contents are encrypted
+  encrypted bool
+  // ID of the KMS key that encrypts the snapshot, empty when none is used
+  kmsKeyId string
+  // KMS key that encrypts the snapshot
+  //
+  // Null when the snapshot is unencrypted, and when it is encrypted with the
+  // service-managed key rather than a customer master key.
+  kmsKey() alicloud.kms.key
+  // Whether a customer master key protects the snapshot
+  //
+  // False both for an unencrypted snapshot and for one encrypted with the
+  // service-managed key, where key rotation and revocation are not under the
+  // account's control.
+  encryptedWithCustomerKey bool
+  // Lifecycle status of the snapshot
+  //
+  // One of progressing, accomplished, or failed. Only an accomplished snapshot
+  // can be restored.
+  status string
+  // Percentage of the snapshot that has been taken, for example 100%
+  progress string
+  // Whether the snapshot can be used to create a disk or image
+  available bool
+  // Storage category of the snapshot, for example standard or flash
+  category string
+  // Days the snapshot is retained before automatic deletion, 0 when it is retained indefinitely
+  retentionDays int
+  // How the snapshot was created, either user or auto for an automatic snapshot policy
+  snapshotType string
+  // What the snapshot is used by, for example image, disk, image_disk, or none
+  usage string
+  // Size of the full snapshot in bytes
+  fullSnapshotSizeInBytes int
+  // Whether instant access is enabled for the snapshot
+  instantAccess bool
+  // Time the snapshot was created
+  creationTime time
+  // Time the snapshot was last modified
+  lastModifiedTime time
+  // ID of the resource group the snapshot belongs to
+  resourceGroupId string
+  // Resource group that contains the snapshot
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the snapshot
+  tags map[string]string
 }
 
 // Elastic Compute Service SSH key pair

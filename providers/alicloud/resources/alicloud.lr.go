@@ -30,6 +30,7 @@ const (
 	ResourceAlicloudEcsInstance                   string = "alicloud.ecs.instance"
 	ResourceAlicloudEcsDisk                       string = "alicloud.ecs.disk"
 	ResourceAlicloudEcsImage                      string = "alicloud.ecs.image"
+	ResourceAlicloudEcsSnapshot                   string = "alicloud.ecs.snapshot"
 	ResourceAlicloudEcsKeypair                    string = "alicloud.ecs.keypair"
 	ResourceAlicloudEcsSecuritygroup              string = "alicloud.ecs.securitygroup"
 	ResourceAlicloudEcsSecuritygroupPermission    string = "alicloud.ecs.securitygroup.permission"
@@ -226,6 +227,10 @@ func init() {
 		"alicloud.ecs.image": {
 			Init:   initAlicloudEcsImage,
 			Create: createAlicloudEcsImage,
+		},
+		"alicloud.ecs.snapshot": {
+			// to override args, implement: initAlicloudEcsSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudEcsSnapshot,
 		},
 		"alicloud.ecs.keypair": {
 			Init:   initAlicloudEcsKeypair,
@@ -1144,6 +1149,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.prefixLists": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcs).GetPrefixLists()).ToDataRes(types.Array(types.Resource("alicloud.ecs.prefixList")))
 	},
+	"alicloud.ecs.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcs).GetSnapshots()).ToDataRes(types.Array(types.Resource("alicloud.ecs.snapshot")))
+	},
 	"alicloud.ecs.prefixList.prefixListId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsPrefixList).GetPrefixListId()).ToDataRes(types.String)
 	},
@@ -1414,6 +1422,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.disk.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsDisk).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
+	"alicloud.ecs.disk.snapshots": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsDisk).GetSnapshots()).ToDataRes(types.Array(types.Resource("alicloud.ecs.snapshot")))
+	},
 	"alicloud.ecs.image.imageId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsImage).GetImageId()).ToDataRes(types.String)
 	},
@@ -1464,6 +1475,99 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.ecs.image.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsImage).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.image.sharedAccounts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsImage).GetSharedAccounts()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ecs.image.shareGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsImage).GetShareGroups()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ecs.image.isShared": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsImage).GetIsShared()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.snapshot.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.snapshotId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSnapshotId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.snapshotName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSnapshotName()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.sourceDiskId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSourceDiskId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.disk": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetDisk()).ToDataRes(types.Resource("alicloud.ecs.disk"))
+	},
+	"alicloud.ecs.snapshot.sourceDiskSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSourceDiskSize()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.sourceDiskType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSourceDiskType()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.sourceRegionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSourceRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.sourceSnapshotId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSourceSnapshotId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.encrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetEncrypted()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.snapshot.kmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetKmsKeyId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetKmsKey()).ToDataRes(types.Resource("alicloud.kms.key"))
+	},
+	"alicloud.ecs.snapshot.encryptedWithCustomerKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetEncryptedWithCustomerKey()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.snapshot.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.progress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetProgress()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetAvailable()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.snapshot.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetCategory()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.retentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetRetentionDays()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.snapshot.snapshotType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetSnapshotType()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.usage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetUsage()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.fullSnapshotSizeInBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetFullSnapshotSizeInBytes()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.snapshot.instantAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetInstantAccess()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.snapshot.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ecs.snapshot.lastModifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetLastModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ecs.snapshot.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.snapshot.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.ecs.snapshot.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsSnapshot).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"alicloud.ecs.keypair.keyPairName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsKeypair).GetKeyPairName()).ToDataRes(types.String)
@@ -7688,6 +7792,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcs).PrefixLists, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.ecs.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcs).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.ecs.prefixList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsPrefixList).__id, ok = v.Value.(string)
 		return
@@ -8060,6 +8168,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcsDisk).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.ecs.disk.snapshots": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsDisk).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.ecs.image.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsImage).__id, ok = v.Value.(string)
 		return
@@ -8130,6 +8242,134 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.ecs.image.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsImage).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.image.sharedAccounts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsImage).SharedAccounts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.image.shareGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsImage).ShareGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.image.isShared": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsImage).IsShared, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.ecs.snapshot.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.snapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.snapshotName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SnapshotName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.sourceDiskId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SourceDiskId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.disk": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Disk, ok = plugin.RawToTValue[*mqlAlicloudEcsDisk](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.sourceDiskSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SourceDiskSize, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.sourceDiskType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SourceDiskType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.sourceRegionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SourceRegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.sourceSnapshotId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SourceSnapshotId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.encrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Encrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.kmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).KmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).KmsKey, ok = plugin.RawToTValue[*mqlAlicloudKmsKey](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.encryptedWithCustomerKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).EncryptedWithCustomerKey, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.progress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Progress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Available, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.retentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).RetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.snapshotType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).SnapshotType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.usage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Usage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.fullSnapshotSizeInBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).FullSnapshotSizeInBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.instantAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).InstantAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.lastModifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).LastModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.snapshot.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsSnapshot).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.ecs.keypair.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17506,6 +17746,7 @@ type mqlAlicloudEcs struct {
 	KeyPairs       plugin.TValue[[]any]
 	SecurityGroups plugin.TValue[[]any]
 	PrefixLists    plugin.TValue[[]any]
+	Snapshots      plugin.TValue[[]any]
 }
 
 // createAlicloudEcs creates a new instance of this resource
@@ -17638,6 +17879,22 @@ func (c *mqlAlicloudEcs) GetPrefixLists() *plugin.TValue[[]any] {
 		}
 
 		return c.prefixLists()
+	})
+}
+
+func (c *mqlAlicloudEcs) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
 	})
 }
 
@@ -18194,6 +18451,7 @@ type mqlAlicloudEcsDisk struct {
 	PerformanceLevel   plugin.TValue[string]
 	DiskChargeType     plugin.TValue[string]
 	Tags               plugin.TValue[map[string]any]
+	Snapshots          plugin.TValue[[]any]
 }
 
 // createAlicloudEcsDisk creates a new instance of this resource
@@ -18349,11 +18607,27 @@ func (c *mqlAlicloudEcsDisk) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
 
+func (c *mqlAlicloudEcsDisk) GetSnapshots() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Snapshots, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.disk", c.__id, "snapshots")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snapshots()
+	})
+}
+
 // mqlAlicloudEcsImage for the alicloud.ecs.image resource
 type mqlAlicloudEcsImage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAlicloudEcsImageInternal it will be used here
+	mqlAlicloudEcsImageInternal
 	ImageId            plugin.TValue[string]
 	ImageName          plugin.TValue[string]
 	Description        plugin.TValue[string]
@@ -18371,6 +18645,9 @@ type mqlAlicloudEcsImage struct {
 	ImageVersion       plugin.TValue[string]
 	Usage              plugin.TValue[string]
 	RegionId           plugin.TValue[string]
+	SharedAccounts     plugin.TValue[[]any]
+	ShareGroups        plugin.TValue[[]any]
+	IsShared           plugin.TValue[bool]
 }
 
 // createAlicloudEcsImage creates a new instance of this resource
@@ -18476,6 +18753,244 @@ func (c *mqlAlicloudEcsImage) GetUsage() *plugin.TValue[string] {
 
 func (c *mqlAlicloudEcsImage) GetRegionId() *plugin.TValue[string] {
 	return &c.RegionId
+}
+
+func (c *mqlAlicloudEcsImage) GetSharedAccounts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SharedAccounts, func() ([]any, error) {
+		return c.sharedAccounts()
+	})
+}
+
+func (c *mqlAlicloudEcsImage) GetShareGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ShareGroups, func() ([]any, error) {
+		return c.shareGroups()
+	})
+}
+
+func (c *mqlAlicloudEcsImage) GetIsShared() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsShared, func() (bool, error) {
+		return c.isShared()
+	})
+}
+
+// mqlAlicloudEcsSnapshot for the alicloud.ecs.snapshot resource
+type mqlAlicloudEcsSnapshot struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudEcsSnapshotInternal
+	RegionId                 plugin.TValue[string]
+	SnapshotId               plugin.TValue[string]
+	SnapshotName             plugin.TValue[string]
+	Description              plugin.TValue[string]
+	SourceDiskId             plugin.TValue[string]
+	Disk                     plugin.TValue[*mqlAlicloudEcsDisk]
+	SourceDiskSize           plugin.TValue[string]
+	SourceDiskType           plugin.TValue[string]
+	SourceRegionId           plugin.TValue[string]
+	SourceSnapshotId         plugin.TValue[string]
+	Encrypted                plugin.TValue[bool]
+	KmsKeyId                 plugin.TValue[string]
+	KmsKey                   plugin.TValue[*mqlAlicloudKmsKey]
+	EncryptedWithCustomerKey plugin.TValue[bool]
+	Status                   plugin.TValue[string]
+	Progress                 plugin.TValue[string]
+	Available                plugin.TValue[bool]
+	Category                 plugin.TValue[string]
+	RetentionDays            plugin.TValue[int64]
+	SnapshotType             plugin.TValue[string]
+	Usage                    plugin.TValue[string]
+	FullSnapshotSizeInBytes  plugin.TValue[int64]
+	InstantAccess            plugin.TValue[bool]
+	CreationTime             plugin.TValue[*time.Time]
+	LastModifiedTime         plugin.TValue[*time.Time]
+	ResourceGroupId          plugin.TValue[string]
+	ResourceGroup            plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Tags                     plugin.TValue[map[string]any]
+}
+
+// createAlicloudEcsSnapshot creates a new instance of this resource
+func createAlicloudEcsSnapshot(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudEcsSnapshot{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.ecs.snapshot", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudEcsSnapshot) MqlName() string {
+	return "alicloud.ecs.snapshot"
+}
+
+func (c *mqlAlicloudEcsSnapshot) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSnapshotId() *plugin.TValue[string] {
+	return &c.SnapshotId
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSnapshotName() *plugin.TValue[string] {
+	return &c.SnapshotName
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSourceDiskId() *plugin.TValue[string] {
+	return &c.SourceDiskId
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetDisk() *plugin.TValue[*mqlAlicloudEcsDisk] {
+	return plugin.GetOrCompute[*mqlAlicloudEcsDisk](&c.Disk, func() (*mqlAlicloudEcsDisk, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.snapshot", c.__id, "disk")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEcsDisk), nil
+			}
+		}
+
+		return c.disk()
+	})
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSourceDiskSize() *plugin.TValue[string] {
+	return &c.SourceDiskSize
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSourceDiskType() *plugin.TValue[string] {
+	return &c.SourceDiskType
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSourceRegionId() *plugin.TValue[string] {
+	return &c.SourceRegionId
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSourceSnapshotId() *plugin.TValue[string] {
+	return &c.SourceSnapshotId
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetEncrypted() *plugin.TValue[bool] {
+	return &c.Encrypted
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetKmsKeyId() *plugin.TValue[string] {
+	return &c.KmsKeyId
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetKmsKey() *plugin.TValue[*mqlAlicloudKmsKey] {
+	return plugin.GetOrCompute[*mqlAlicloudKmsKey](&c.KmsKey, func() (*mqlAlicloudKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.snapshot", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetEncryptedWithCustomerKey() *plugin.TValue[bool] {
+	return &c.EncryptedWithCustomerKey
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetProgress() *plugin.TValue[string] {
+	return &c.Progress
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetAvailable() *plugin.TValue[bool] {
+	return &c.Available
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetRetentionDays() *plugin.TValue[int64] {
+	return &c.RetentionDays
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetSnapshotType() *plugin.TValue[string] {
+	return &c.SnapshotType
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetUsage() *plugin.TValue[string] {
+	return &c.Usage
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetFullSnapshotSizeInBytes() *plugin.TValue[int64] {
+	return &c.FullSnapshotSizeInBytes
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetInstantAccess() *plugin.TValue[bool] {
+	return &c.InstantAccess
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetLastModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.LastModifiedTime
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.snapshot", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudEcsSnapshot) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAlicloudEcsKeypair for the alicloud.ecs.keypair resource
