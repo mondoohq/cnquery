@@ -250,39 +250,60 @@ type mqlOciKmsKeyInternal struct {
 	cacheVaultID            string
 	cacheManagementEndpoint string
 
-	keyShapeOnce sync.Once
-	keyShape     *keymanagement.KeyShape
-	keyShapeErr  error
+	keyDetailOnce sync.Once
+	keyDetail     *keymanagement.Key
+	keyDetailErr  error
 }
 
 func (o *mqlOciKmsKey) id() (string, error) {
 	return "oci.kms.key/" + o.Id.Data, nil
 }
 
-// getKeyShape lazily fetches the key's shape, which carries the length and
-// curve that the ListKeys summary omits. The result is cached so length() and
-// curveId() share a single GetKey call.
-func (o *mqlOciKmsKey) getKeyShape() (*keymanagement.KeyShape, error) {
-	o.keyShapeOnce.Do(func() {
+// getKeyDetail lazily fetches the key record, which carries the shape, the
+// rotation schedule, and the replication state that the ListKeys summary
+// omits. The result is cached, so every field reading from it shares one
+// GetKey call rather than issuing one apiece.
+func (o *mqlOciKmsKey) getKeyDetail() (*keymanagement.Key, error) {
+	o.keyDetailOnce.Do(func() {
 		if o.cacheManagementEndpoint == "" || o.Id.Data == "" {
 			return
 		}
 		conn := o.MqlRuntime.Connection.(*connection.OciConnection)
 		svc, err := conn.KmsManagementClient(o.cacheManagementEndpoint)
 		if err != nil {
-			o.keyShapeErr = err
+			o.keyDetailErr = err
 			return
 		}
 		resp, err := svc.GetKey(context.Background(), keymanagement.GetKeyRequest{
 			KeyId: common.String(o.Id.Data),
 		})
 		if err != nil {
-			o.keyShapeErr = err
+			o.keyDetailErr = err
 			return
 		}
-		o.keyShape = resp.Key.KeyShape
+		key := resp.Key
+		o.keyDetail = &key
 	})
-	return o.keyShape, o.keyShapeErr
+	return o.keyDetail, o.keyDetailErr
+}
+
+// getKeyShape reports the key's shape from the cached key record.
+func (o *mqlOciKmsKey) getKeyShape() (*keymanagement.KeyShape, error) {
+	key, err := o.getKeyDetail()
+	if err != nil || key == nil {
+		return nil, err
+	}
+	return key.KeyShape, nil
+}
+
+// getKeyRotation reports the key's automatic rotation schedule, or nil when it
+// carries none.
+func (o *mqlOciKmsKey) getKeyRotation() (*keymanagement.AutoKeyRotationDetails, error) {
+	key, err := o.getKeyDetail()
+	if err != nil || key == nil {
+		return nil, err
+	}
+	return key.AutoKeyRotationDetails, nil
 }
 
 func (o *mqlOciKmsKey) length() (int64, error) {
@@ -306,6 +327,92 @@ func (o *mqlOciKmsKey) curveId() (string, error) {
 		return "", nil
 	}
 	return string(shape.CurveId), nil
+}
+
+// rotationIntervalInDays reports how often the key rotates automatically.
+//
+// Null when the key carries no schedule: a key that never rotates has no
+// interval, and reporting zero days would read as one rotating constantly.
+func (o *mqlOciKmsKey) rotationIntervalInDays() (int64, error) {
+	rotation, err := o.getKeyRotation()
+	if err != nil {
+		return 0, err
+	}
+	if rotation == nil || rotation.RotationIntervalInDays == nil {
+		o.RotationIntervalInDays.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return int64(*rotation.RotationIntervalInDays), nil
+}
+
+// lastRotationTime reports when automatic rotation last ran, or null when it
+// never has.
+func (o *mqlOciKmsKey) lastRotationTime() (*time.Time, error) {
+	rotation, err := o.getKeyRotation()
+	if err != nil {
+		return nil, err
+	}
+	if rotation == nil || rotation.TimeOfLastRotation == nil {
+		o.LastRotationTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	t := rotation.TimeOfLastRotation.Time
+	return &t, nil
+}
+
+// nextRotationTime reports the next estimated automatic rotation, or null when
+// the key carries no schedule.
+func (o *mqlOciKmsKey) nextRotationTime() (*time.Time, error) {
+	rotation, err := o.getKeyRotation()
+	if err != nil {
+		return nil, err
+	}
+	if rotation == nil || rotation.TimeOfNextRotation == nil {
+		o.NextRotationTime.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	t := rotation.TimeOfNextRotation.Time
+	return &t, nil
+}
+
+// lastRotationStatus reports the outcome of the most recent automatic
+// rotation. Empty when rotation has never run for the key.
+func (o *mqlOciKmsKey) lastRotationStatus() (string, error) {
+	rotation, err := o.getKeyRotation()
+	if err != nil {
+		return "", err
+	}
+	if rotation == nil {
+		return "", nil
+	}
+	return string(rotation.LastRotationStatus), nil
+}
+
+// isPrimary reports whether the key lives in the primary vault rather than in
+// a replica of it. Null when the service does not say.
+func (o *mqlOciKmsKey) isPrimary() (bool, error) {
+	key, err := o.getKeyDetail()
+	if err != nil {
+		return false, err
+	}
+	if key == nil || key.IsPrimary == nil {
+		o.IsPrimary.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return *key.IsPrimary, nil
+}
+
+// replicationId reports the replication that copied the key across regions.
+// Empty when the key's material has not left the region it was created in.
+func (o *mqlOciKmsKey) replicationId() (string, error) {
+	key, err := o.getKeyDetail()
+	if err != nil {
+		return "", err
+	}
+	if key == nil || key.ReplicaDetails == nil {
+		return "", nil
+	}
+	return stringValue(key.ReplicaDetails.ReplicationId), nil
 }
 
 func (o *mqlOciKmsKey) keyVersions() ([]any, error) {
