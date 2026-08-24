@@ -32,7 +32,7 @@ func integrationSendsResourceTags(i admin.ThirdPartyIntegration) *bool {
 
 // thirdPartyIntegrations lists the services the project routes alerts and
 // metrics to. Every credential the record carries inline (an API token, an API
-// key, a service key, a licence key, a read and a write token, a webhook secret
+// key, a service key, a license key, a read and a write token, a webhook secret
 // and a Prometheus password) is deliberately not read; a destination address is
 // reduced to its host, since a webhook URL routinely carries its own token.
 func (r *mqlMongodbatlas) thirdPartyIntegrations() ([]any, error) {

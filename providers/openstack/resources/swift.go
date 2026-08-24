@@ -289,7 +289,7 @@ func (r *mqlOpenstackObjectstorageContainer) hasTempUrlKey() (bool, error) {
 }
 
 // hasTempUrlKey2 reports whether the second temporary-URL signing key slot is
-// set. Swift honours signatures from either slot, so a stale second key keeps
+// set. Swift honors signatures from either slot, so a stale second key keeps
 // minting valid URLs after the first is rotated. Presence only.
 func (r *mqlOpenstackObjectstorageContainer) hasTempUrlKey2() (bool, error) {
 	h, _, err := r.fetchHeader()

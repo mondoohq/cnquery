@@ -499,7 +499,7 @@ atlassian.jira.applicationRole @defaults("name") {
   groups() []string
   // Groups a newly invited user is added to when granted this role
   //
-  // Membership of any of these groups carries the product licence, and with
+  // Membership of any of these groups carries the product license, and with
   // it a login, without a separate grant. A broad or externally-synced group
   // listed here hands product access to everyone it contains.
   defaultGroups() []string

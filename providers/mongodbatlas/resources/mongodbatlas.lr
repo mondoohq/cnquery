@@ -1292,7 +1292,7 @@ private mongodbatlas.alertNotification @defaults("typeName") {
 // type. Covers the service kind, whether it is active, the regional endpoint it
 // uses, the channel or account it delivers into, and which metric categories a
 // metrics integration is allowed to send. The Atlas record carries an API
-// token, an API key, a service key, a licence key, a read and write token, a
+// token, an API key, a service key, a license key, a read and write token, a
 // webhook secret, and a password inline; none are exposed. A destination
 // address is reduced to its host, and hasSecret reports only whether a webhook
 // secret is configured. Select an integration by type, for example

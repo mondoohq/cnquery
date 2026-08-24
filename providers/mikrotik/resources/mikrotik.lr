@@ -1497,7 +1497,7 @@ mikrotik.system.script @defaults("name owner policy runCount") {
 // configuration, and the RouterOS-level account and firewall configuration
 // stops being the boundary. The boot device and boot protocol settings decide
 // whether the device will boot an image handed to it over the network, and the
-// reset button behaviour decides what a button press does. This menu is absent
+// reset button behavior decides what a button press does. This menu is absent
 // on CHR and other non-RouterBOARD builds, where the resource is null.
 mikrotik.system.routerboot @defaults("protectedRouterboot protected bootDevice") {
   // RouterBOOT protection mode
@@ -1971,7 +1971,7 @@ mikrotik.snmp.community @defaults("usesDefaultCommunityName addresses readAccess
   // SNMPv3 security level
   //
   // One of none, authorized, or private. Under none the request is neither
-  // authenticated nor encrypted, which is SNMPv1 and v2c behaviour.
+  // authenticated nor encrypted, which is SNMPv1 and v2c behavior.
   security string
   // SNMPv3 authentication protocol
   //

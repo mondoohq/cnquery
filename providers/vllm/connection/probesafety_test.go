@@ -80,7 +80,7 @@ func TestStateChangingSpecsAlwaysOverrideTheMethod(t *testing.T) {
 	}
 }
 
-// The wire behaviour that backs the invariant: a state-changing route is only
+// The wire behavior that backs the invariant: a state-changing route is only
 // ever reached with the rejected method and with no request body at all, so
 // nothing the handler would act on is ever transmitted.
 func TestStateChangingProbesNeverSendTheDocumentedMethod(t *testing.T) {

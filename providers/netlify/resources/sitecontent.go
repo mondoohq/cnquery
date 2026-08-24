@@ -40,7 +40,7 @@ func (s *mqlNetlifySite) forms() ([]any, error) {
 	res := make([]any, 0, len(records))
 	for i := range records {
 		rec := records[i]
-		// Only the form itself is modelled. Its submissions are the visitor
+		// Only the form itself is modeled. Its submissions are the visitor
 		// data it collected and are never read.
 		form, err := CreateResource(s.MqlRuntime, "netlify.site.form", map[string]*llx.RawData{
 			"__id":            llx.StringData(s.Id.Data + "/form/" + rec.ID),

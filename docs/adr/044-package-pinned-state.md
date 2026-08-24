@@ -54,7 +54,7 @@ Reading files also matches how the resource already works: `packages` parses the
 dpkg database and the rpmdb directly rather than shelling out to `dpkg-query` or
 `rpm -qa` when it can avoid it.
 
-The behaviour is verified on both connection types. The same locked host is
+The behavior is verified on both connection types. The same locked host is
 scanned as a running container and as a committed image, and both report
 `pinned: true`.
 
