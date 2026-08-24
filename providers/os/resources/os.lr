@@ -372,8 +372,21 @@ os {
   // Current date and timezone of the system
   date() os.date
   // Whether the OS is running in FIPS mode
+  //
+  // The reading of /proc/sys/crypto/fips_enabled on Linux, where "1" means FIPS
+  // mode is active and "0" means it is not. Null when that file holds neither,
+  // or could not be read at all. It is absent on a kernel built without the FIPS
+  // sysctl, and equally absent on Windows, on macOS, and in an image whose /proc
+  // was never populated, so an unread host is reported as unknown rather than as
+  // a host with FIPS switched off.
   fipsEnabled() bool
-  // Active system-wide crypto policy (e.g. "DEFAULT", "FUTURE", "FIPS", "LEGACY"); empty when not applicable
+  // Active system-wide crypto policy
+  //
+  // The policy reported by update-crypto-policies on RHEL, Fedora, and their
+  // derivatives, for example "DEFAULT", "FUTURE", "LEGACY", "FIPS", or a
+  // subpolicy such as "FIPS:OSPP". Null on systems that ship no such tool
+  // (Debian, Ubuntu, macOS, Windows), on connections that cannot run commands,
+  // and whenever the command failed or returned nothing.
   cryptoPolicy() string
 }
 

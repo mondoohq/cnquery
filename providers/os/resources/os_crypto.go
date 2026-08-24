@@ -8,17 +8,48 @@ import (
 	"strings"
 
 	"github.com/spf13/afero"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
-// parseFipsEnabled interprets the content of /proc/sys/crypto/fips_enabled.
-// The file contains "1" when FIPS mode is active and "0" otherwise.
-func parseFipsEnabled(content string) bool {
-	return strings.TrimSpace(content) == "1"
+// Both fields on this file report a security posture, so the failure mode that
+// matters is not an error, it is a confident answer nobody read. A host whose
+// procfs was never populated is not a host with FIPS switched off, and a host
+// with no update-crypto-policies is not a host whose crypto policy is the empty
+// string. Reported as false and "", those two are indistinguishable from a real
+// reading, and an audit over them passes or fails on data that does not exist.
+//
+// So every path that did not actually read a value reports null instead.
+
+// fipsSysctl is the Linux sysctl that reports whether the kernel is running in
+// FIPS mode. It holds "1" when FIPS mode is active and "0" when it is not.
+const fipsSysctl = "/proc/sys/crypto/fips_enabled"
+
+// cryptoPoliciesCmd shows the active system-wide crypto policy on RHEL, Fedora,
+// and their derivatives.
+const cryptoPoliciesCmd = "update-crypto-policies --show"
+
+// parseFipsEnabled interprets the content of fipsSysctl.
+//
+// ok is false for anything that is not one of the two documented values,
+// including an empty file. A file that says something else has not told us
+// whether FIPS is on, and guessing "off" from it would be the same invention
+// as guessing it from a file that was not there at all.
+func parseFipsEnabled(content string) (enabled bool, ok bool) {
+	switch strings.TrimSpace(content) {
+	case "1":
+		return true, true
+	case "0":
+		return false, true
+	default:
+		return false, false
+	}
 }
 
-// normalizeCryptoPolicy trims the output of `update-crypto-policies --show`
-// and returns the first line (e.g. "DEFAULT", "FUTURE", "FIPS", "FIPS:OSPP").
+// normalizeCryptoPolicy trims the output of cryptoPoliciesCmd and returns the
+// first line, e.g. "DEFAULT", "FUTURE", "FIPS", "FIPS:OSPP". It returns an empty
+// string when there was nothing to read, which callers report as null rather
+// than as a policy named "".
 func normalizeCryptoPolicy(stdout string) string {
 	trimmed := strings.TrimSpace(stdout)
 	if trimmed == "" {
@@ -30,54 +61,75 @@ func normalizeCryptoPolicy(stdout string) string {
 	return trimmed
 }
 
-// fipsEnabled reports whether the OS is running in FIPS mode.
+// fipsEnabled reports whether the OS is running in FIPS mode, by reading
+// fipsSysctl through the connection filesystem.
 //
-// On Linux this reads /proc/sys/crypto/fips_enabled through the connection
-// filesystem. When the file is absent or unreadable (non-Linux, containers
-// without procfs), it degrades gracefully to false rather than failing.
+// Null whenever that read did not produce one of the two documented values. The
+// file is absent on a kernel built without the FIPS sysctl, and equally absent
+// on Windows, on macOS, and in an image whose /proc was never populated. Those
+// are not the same fact as each other, and none of them is "FIPS is off".
 func (p *mqlOs) fipsEnabled() (bool, error) {
+	unknown := func() (bool, error) {
+		p.FipsEnabled.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+
 	conn, ok := p.MqlRuntime.Connection.(shared.Connection)
 	if !ok {
-		return false, nil
+		return unknown()
 	}
 
 	afs := &afero.Afero{Fs: conn.FileSystem()}
-	content, err := afs.ReadFile("/proc/sys/crypto/fips_enabled")
+	content, err := afs.ReadFile(fipsSysctl)
 	if err != nil {
-		// file not present / not readable (non-Linux, container without procfs)
-		return false, nil
+		return unknown()
 	}
 
-	return parseFipsEnabled(string(content)), nil
+	enabled, ok := parseFipsEnabled(string(content))
+	if !ok {
+		return unknown()
+	}
+	return enabled, nil
 }
 
 // cryptoPolicy returns the active system-wide crypto policy as reported by
-// `update-crypto-policies --show` (RHEL/Fedora). On platforms without that
-// tool, or when the command is missing/errors/exits non-zero, it returns an
-// empty string gracefully.
+// cryptoPoliciesCmd.
+//
+// Null when the policy could not be read: no run-command capability (a static
+// image), no such tool (Debian, Ubuntu, macOS, Windows), a non-zero exit, or no
+// output. An empty string would name a policy, and a check written against a
+// policy name cannot tell that apart from a system that was never asked.
 func (p *mqlOs) cryptoPolicy() (string, error) {
+	unknown := func() (string, error) {
+		p.CryptoPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return "", nil
+	}
+
 	conn, ok := p.MqlRuntime.Connection.(shared.Connection)
 	if !ok {
-		return "", nil
+		return unknown()
 	}
 
-	// systems without run-command capability (e.g. static images) can't run it
 	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
-		return "", nil
+		return unknown()
 	}
 
-	cmd, err := conn.RunCommand("update-crypto-policies --show")
-	if err != nil {
-		return "", nil
+	cmd, err := conn.RunCommand(cryptoPoliciesCmd)
+	if err != nil || cmd == nil {
+		return unknown()
 	}
-	if cmd.ExitStatus != 0 {
-		return "", nil
+	if cmd.ExitStatus != 0 || cmd.Stdout == nil {
+		return unknown()
 	}
 
 	data, err := io.ReadAll(cmd.Stdout)
 	if err != nil {
-		return "", nil
+		return unknown()
 	}
 
-	return normalizeCryptoPolicy(string(data)), nil
+	policy := normalizeCryptoPolicy(string(data))
+	if policy == "" {
+		return unknown()
+	}
+	return policy, nil
 }
