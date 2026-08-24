@@ -1,7 +1,7 @@
 {
   "provider": "gcp",
   "version": "13.37.0",
-  "generated_at": "2026-08-23T13:31:23-07:00",
+  "generated_at": "2026-08-23T20:23:17-07:00",
   "permissions": [
     "accessapproval.settings.get",
     "aiplatform.batchPredictionJobs.list",
@@ -84,6 +84,7 @@
     "cloudkms.importJobs.list",
     "cloudkms.keyRings.list",
     "cloudkms.locations.list",
+    "cloudkms.protectedResources.search",
     "cloudkms.retiredResources.list",
     "cloudscheduler.jobs.list",
     "cloudsql.backupRuns.list",
@@ -790,6 +791,12 @@
       "service": "cloudkms",
       "action": "ListLocations",
       "source_file": "kms.go"
+    },
+    {
+      "permission": "cloudkms.protectedResources.search",
+      "service": "kmsinventory",
+      "action": "CryptoKeys.GetProtectedResourcesSummary",
+      "source_file": "kms_protected_resources.go"
     },
     {
       "permission": "cloudkms.retiredResources.list",
@@ -1514,7 +1521,7 @@
     {
       "permission": "iam.serviceAccountKeys.list",
       "service": "iam",
-      "action": "ListServiceAccountKeys",
+      "action": "Keys.List",
       "source_file": "iam.go"
     },
     {

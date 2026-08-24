@@ -24,6 +24,7 @@ import (
 	iamv2 "cloud.google.com/go/iam/apiv2"
 	iamv2pb "cloud.google.com/go/iam/apiv2/iampb"
 	"google.golang.org/api/googleapi"
+	iamrest "google.golang.org/api/iam/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	policyanalyzer "google.golang.org/api/policyanalyzer/v1"
@@ -333,36 +334,40 @@ func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]any, error) {
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := conn.Credentials(admin.DefaultAuthScopes()...)
+	client, err := conn.Client(iamrest.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
 
-	adminSvc, err := admin.NewIamClient(ctx, option.WithCredentials(creds), connection.GRPCClientTraceOption())
+	iamSvc, err := iamrest.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, err
 	}
-	defer adminSvc.Close()
 
-	resp, err := adminSvc.ListServiceAccountKeys(ctx, &adminpb.ListServiceAccountKeysRequest{Name: fmt.Sprintf("projects/%s/serviceAccounts/%s", projectId, email)})
+	// The keys are read over REST rather than through the admin gRPC client
+	// because disableReason and extendedStatus exist only on the REST
+	// ServiceAccountKey. The admin protobuf message carries neither, so on the
+	// gRPC path a key Google disabled because it found the private key
+	// published is indistinguishable from one an operator disabled on purpose.
+	//
+	// Both transports are governed by iam.serviceAccountKeys.list and return
+	// the same key set with the same enum spellings. This endpoint reports every
+	// key in one response: ListServiceAccountKeysResponse has no page token, and
+	// a service account is capped well below any page limit.
+	resp, err := iamSvc.Projects.ServiceAccounts.Keys.
+		List(fmt.Sprintf("projects/%s/serviceAccounts/%s", projectId, email)).
+		Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
 	mqlKeys := make([]any, 0, len(resp.Keys))
 	for _, k := range resp.Keys {
-		keyType := k.KeyType.String()
-		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount.key", map[string]*llx.RawData{
-			"name":            llx.StringData(k.Name),
-			"keyAlgorithm":    llx.StringData(k.KeyAlgorithm.String()),
-			"validAfterTime":  llx.TimeDataPtr(timestampAsTimePtr(k.ValidAfterTime)),
-			"validBeforeTime": llx.TimeDataPtr(timestampAsTimePtr(k.ValidBeforeTime)),
-			"keyOrigin":       llx.StringData(k.KeyOrigin.String()),
-			"keyType":         llx.StringData(keyType),
-			"userManaged":     llx.BoolData(keyType == "USER_MANAGED"),
-			"disabled":        llx.BoolData(k.Disabled),
-		})
+		if k == nil {
+			continue
+		}
+		mqlKey, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.serviceAccount.key", serviceAccountKeyArgs(k))
 		if err != nil {
 			return nil, err
 		}
@@ -373,6 +378,38 @@ func (g *mqlGcpProjectIamServiceServiceAccount) keys() ([]any, error) {
 		mqlKeys = append(mqlKeys, mqlKey)
 	}
 	return mqlKeys, nil
+}
+
+// serviceAccountKeyArgs maps a service account key onto its MQL resource
+// arguments.
+//
+// extendedStatus is keyed by the detection kind (EXPOSED, COMPROMISE_DETECTED)
+// so a query can ask for one directly. An entry with an empty key is dropped
+// rather than collapsing into a "" bucket, and the first value wins for a
+// repeated key, so the map size is the number of distinct detections reported.
+func serviceAccountKeyArgs(k *iamrest.ServiceAccountKey) map[string]*llx.RawData {
+	extendedStatus := map[string]any{}
+	for _, st := range k.ExtendedStatus {
+		if st == nil || st.Key == "" {
+			continue
+		}
+		if _, seen := extendedStatus[st.Key]; seen {
+			continue
+		}
+		extendedStatus[st.Key] = st.Value
+	}
+	return map[string]*llx.RawData{
+		"name":            llx.StringData(k.Name),
+		"keyAlgorithm":    llx.StringData(k.KeyAlgorithm),
+		"validAfterTime":  llx.TimeDataPtr(parseTime(k.ValidAfterTime)),
+		"validBeforeTime": llx.TimeDataPtr(parseTime(k.ValidBeforeTime)),
+		"keyOrigin":       llx.StringData(k.KeyOrigin),
+		"keyType":         llx.StringData(k.KeyType),
+		"userManaged":     llx.BoolData(k.KeyType == "USER_MANAGED"),
+		"disabled":        llx.BoolData(k.Disabled),
+		"disableReason":   llx.StringData(k.DisableReason),
+		"extendedStatus":  llx.MapData(extendedStatus, types.String),
+	}
 }
 
 // lastAuthActivity matches the JSON shape returned by the Policy Analyzer

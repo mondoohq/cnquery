@@ -119,6 +119,11 @@ var validatedGCPPermissions = []string{
 	"cloudkms.importJobs.list",
 	"cloudkms.keyRings.list",
 	"cloudkms.locations.list",
+	// The KMS Inventory API publishes no permissions of its own; reading a key's
+	// protected-resources summary is governed by this one, the single permission
+	// in roles/cloudkms.protectedResourcesViewer (verified against the live role
+	// definition and present in queryTestablePermissions at project scope).
+	"cloudkms.protectedResources.search",
 	"cloudkms.retiredResources.list",
 	"cloudscheduler.jobs.list",
 	"cloudsql.backupRuns.list",

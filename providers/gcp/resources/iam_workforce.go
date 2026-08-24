@@ -118,7 +118,7 @@ func (g *mqlGcpOrganizationWorkforcePool) providers() ([]any, error) {
 		ShowDeleted(true).
 		Pages(ctx, func(resp *iam.ListWorkforcePoolProvidersResponse) error {
 			for _, p := range resp.WorkforcePoolProviders {
-				providerType, oidcIssuer, oidcClientId, samlMetadata := flattenWorkforceProviderConfig(p)
+				cfg := flattenWorkforceProviderConfig(p)
 
 				var extraAttributesType, extraAttributesIssuerUri string
 				if p.ExtraAttributesOauth2Client != nil {
@@ -128,24 +128,29 @@ func (g *mqlGcpOrganizationWorkforcePool) providers() ([]any, error) {
 
 				mqlProvider, err := CreateResource(g.MqlRuntime, "gcp.organization.workforcePool.provider",
 					map[string]*llx.RawData{
-						"name":                     llx.StringData(p.Name),
-						"providerId":               llx.StringData(lastSegment(p.Name)),
-						"poolId":                   llx.StringData(lastSegment(poolName)),
-						"displayName":              llx.StringData(p.DisplayName),
-						"description":              llx.StringData(p.Description),
-						"state":                    llx.StringData(p.State),
-						"disabled":                 llx.BoolData(p.Disabled),
-						"expireTime":               llx.TimeDataPtr(parseTime(p.ExpireTime)),
-						"attributeMapping":         llx.MapData(convert.MapToInterfaceMap(p.AttributeMapping), types.String),
-						"attributeCondition":       llx.StringData(p.AttributeCondition),
-						"detailedAuditLogging":     llx.BoolData(p.DetailedAuditLogging),
-						"scimUsage":                llx.StringData(p.ScimUsage),
-						"providerType":             llx.StringData(providerType),
-						"oidcIssuerUri":            llx.StringData(oidcIssuer),
-						"oidcClientId":             llx.StringData(oidcClientId),
-						"samlIdpMetadataXml":       llx.StringData(samlMetadata),
-						"extraAttributesType":      llx.StringData(extraAttributesType),
-						"extraAttributesIssuerUri": llx.StringData(extraAttributesIssuerUri),
+						"name":                 llx.StringData(p.Name),
+						"providerId":           llx.StringData(lastSegment(p.Name)),
+						"poolId":               llx.StringData(lastSegment(poolName)),
+						"displayName":          llx.StringData(p.DisplayName),
+						"description":          llx.StringData(p.Description),
+						"state":                llx.StringData(p.State),
+						"disabled":             llx.BoolData(p.Disabled),
+						"expireTime":           llx.TimeDataPtr(parseTime(p.ExpireTime)),
+						"attributeMapping":     llx.MapData(convert.MapToInterfaceMap(p.AttributeMapping), types.String),
+						"attributeCondition":   llx.StringData(p.AttributeCondition),
+						"detailedAuditLogging": llx.BoolData(p.DetailedAuditLogging),
+						"scimUsage":            llx.StringData(p.ScimUsage),
+						"providerType":         llx.StringData(cfg.providerType),
+						"oidcIssuerUri":        llx.StringData(cfg.oidcIssuer),
+						"oidcClientId":         llx.StringData(cfg.oidcClientId),
+						"samlIdpMetadataXml":   llx.StringData(cfg.samlMetadata),
+
+						"oidcHasClientSecret":               llx.BoolData(cfg.oidcHasClientSecret),
+						"oidcWebSsoResponseType":            llx.StringData(cfg.webSsoResponseType),
+						"oidcWebSsoAssertionClaimsBehavior": llx.StringData(cfg.webSsoAssertionClaimsBehavior),
+						"oidcWebSsoAdditionalScopes":        llx.ArrayData(cfg.webSsoAdditionalScopes, types.String),
+						"extraAttributesType":               llx.StringData(extraAttributesType),
+						"extraAttributesIssuerUri":          llx.StringData(extraAttributesIssuerUri),
 					})
 				if err != nil {
 					return err
@@ -164,18 +169,50 @@ func (g *mqlGcpOrganizationWorkforcePoolProvider) id() (string, error) {
 	return g.Name.Data, g.Name.Error
 }
 
+// workforceProviderConfig is the flattened per-protocol trust configuration of
+// a workforce pool provider.
+type workforceProviderConfig struct {
+	providerType                  string
+	oidcIssuer                    string
+	oidcClientId                  string
+	oidcHasClientSecret           bool
+	webSsoResponseType            string
+	webSsoAssertionClaimsBehavior string
+	webSsoAdditionalScopes        []any
+	samlMetadata                  string
+}
+
 // flattenWorkforceProviderConfig extracts the protocol discriminator and the
 // per-protocol trust fields from a WorkforcePoolProvider. Exactly one of Oidc
-// or Saml should be set; the other returns zero values.
-func flattenWorkforceProviderConfig(p *iam.WorkforcePoolProvider) (providerType, oidcIssuer, oidcClientId, samlMetadata string) {
+// or Saml should be set; the other leaves its fields at the zero value.
+//
+// oidcHasClientSecret reports only whether a secret is registered. The API
+// returns the secret as a thumbprint on read and never the plaintext, and
+// neither is exposed here: the secret is a credential, and the posture question
+// is whether one exists at all, because that is what allows the provider to use
+// the Authorization Code flow rather than the implicit flow.
+//
+// A SAML provider has no web SSO config, so its response type stays empty
+// rather than being reported as a value it does not have.
+func flattenWorkforceProviderConfig(p *iam.WorkforcePoolProvider) workforceProviderConfig {
+	var c workforceProviderConfig
+	c.webSsoAdditionalScopes = []any{}
 	switch {
 	case p.Oidc != nil:
-		providerType = "oidc"
-		oidcIssuer = p.Oidc.IssuerUri
-		oidcClientId = p.Oidc.ClientId
+		c.providerType = "oidc"
+		c.oidcIssuer = p.Oidc.IssuerUri
+		c.oidcClientId = p.Oidc.ClientId
+		c.oidcHasClientSecret = p.Oidc.ClientSecret != nil &&
+			p.Oidc.ClientSecret.Value != nil &&
+			p.Oidc.ClientSecret.Value.Thumbprint != ""
+		if ws := p.Oidc.WebSsoConfig; ws != nil {
+			c.webSsoResponseType = ws.ResponseType
+			c.webSsoAssertionClaimsBehavior = ws.AssertionClaimsBehavior
+			c.webSsoAdditionalScopes = convert.SliceAnyToInterface(ws.AdditionalScopes)
+		}
 	case p.Saml != nil:
-		providerType = "saml"
-		samlMetadata = p.Saml.IdpMetadataXml
+		c.providerType = "saml"
+		c.samlMetadata = p.Saml.IdpMetadataXml
 	}
-	return
+	return c
 }

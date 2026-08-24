@@ -5931,6 +5931,52 @@ private gcp.project.kmsService.keyring.cryptokey @defaults("name purpose") {
   // tools apply: "terraform", "config-connector", or "cloud-composer". Empty
   // when the resource carries no management signal.
   managedBy() string
+  // Resources across the organization that this key protects
+  //
+  // Null when the summary cannot be read, which covers the KMS Inventory API
+  // not being enabled on the project, the caller lacking
+  // cloudkms.protectedResources.search, and the KMS organization service agent
+  // not yet holding the org-level role the underlying asset search needs. A key
+  // that genuinely protects nothing is not null: it reports a summary whose
+  // `resourceCount` is 0.
+  protectedResources() gcp.project.kmsService.keyring.cryptokey.protectedResources
+}
+
+// Google Cloud (GCP) KMS key protected-resources summary
+//
+// Count of the Cloud resources a key protects, together with the breakdown
+// by Cloud product, resource type, and region. The counts come from Cloud
+// Asset Inventory rather than from KMS, so they cover resources anywhere in
+// the key's organization and not only its own project. A `resourceCount` of
+// 0 identifies an orphaned key that nothing encrypts, and a `projectCount`
+// above 1 shows the key's blast radius crossing project boundaries. When
+// `partialData` is true the asset search behind the summary was incomplete
+// and every count is a lower bound rather than a total.
+private gcp.project.kmsService.keyring.cryptokey.protectedResources @defaults("resourceCount projectCount partialData") {
+  // Total resources in the key's organization that the key protects
+  resourceCount int
+  // Number of distinct projects in the key's organization holding resources the key protects
+  projectCount int
+  // Resources the key protects, counted per Cloud product
+  cloudProducts map[string]string
+  // Resources the key protects, counted per resource type
+  resourceTypes map[string]string
+  // Resources the key protects, counted per region
+  locations map[string]string
+  // Whether the summary was assembled from incomplete data
+  //
+  // True when the API returned a partial-data warning, which happens when the
+  // KMS organization service agent cannot search every asset, when the project
+  // holds more assets than the analysis covers, or when the key's project sits
+  // outside an organization. The counts are lower bounds while this is true,
+  // so an orphaned key cannot be concluded from `resourceCount` alone.
+  partialData bool
+  // Warning codes the API returned alongside the summary
+  //
+  // Any of INSUFFICIENT_PERMISSIONS_PARTIAL_DATA,
+  // RESOURCE_LIMIT_EXCEEDED_PARTIAL_DATA, ORG_LESS_PROJECT_PARTIAL_DATA, or
+  // WARNING_CODE_UNSPECIFIED. Empty when the summary is complete.
+  warnings []string
 }
 
 // Google Cloud (GCP) KMS crypto key version
@@ -6661,6 +6707,25 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   userManaged bool
   // Whether the key is disabled
   disabled bool
+  // Reason the key was disabled
+  //
+  // Set only while `disabled` is true. One of
+  // SERVICE_ACCOUNT_KEY_DISABLE_REASON_UNSPECIFIED,
+  // SERVICE_ACCOUNT_KEY_DISABLE_REASON_USER_INITIATED (an administrator
+  // disabled it), SERVICE_ACCOUNT_KEY_DISABLE_REASON_EXPOSED (Google found
+  // the private key published, typically in a public code repository), or
+  // SERVICE_ACCOUNT_KEY_DISABLE_REASON_COMPROMISE_DETECTED (the key was seen
+  // in use by an attacker). Empty while the key is enabled.
+  disableReason string
+  // Exposure and compromise detections recorded against the key
+  //
+  // Keyed by SERVICE_ACCOUNT_KEY_EXTENDED_STATUS_KEY_EXPOSED or
+  // SERVICE_ACCOUNT_KEY_EXTENDED_STATUS_KEY_COMPROMISE_DETECTED, with the
+  // detection detail as the value. These entries last for the lifetime of the
+  // key, so they still report a key Google once found published after it has
+  // been re-enabled, which `disableReason` no longer does. Empty when nothing
+  // was ever detected.
+  extendedStatus map[string]string
   // Timestamp when the key was last used to authenticate (from Policy Intelligence)
   lastAuthenticatedTime() time
   // Age of the key in whole days, computed from `validAfterTime` to now (useful for key-rotation audits, e.g. a 90-day threshold)
@@ -6730,6 +6795,38 @@ private gcp.project.iamService.workloadIdentityPool @defaults("displayName name 
   //
   // One of FEDERATION_ONLY, TRUST_DOMAIN, SYSTEM_TRUST_DOMAIN, or empty/MODE_UNSPECIFIED (both unspecified values operate as FEDERATION_ONLY). FEDERATION_ONLY pools accept external workload identities (the audit hot spot); TRUST_DOMAIN and SYSTEM_TRUST_DOMAIN pools (e.g. GKE's `*.svc.id.goog` pools) do not host user-defined providers.
   mode string
+  // Extra trust domains whose certificates are accepted by the pool
+  //
+  // Trust domain names, for example `example.com`, that the pool configuration
+  // maps to an additional bundle of trusted CA certificates. A pool always
+  // trusts its own trust domain, so every entry here widens the set of
+  // external certificates that can federate in beyond that baseline. Empty
+  // when no additional bundle is configured.
+  additionalTrustDomains []string
+  // Number of trust anchor certificates across every additional trust bundle
+  //
+  // Counts the trust anchors, the certificates a presented chain may be
+  // validated up to. An anchor is usually a root CA certificate but may itself
+  // be an intermediate one. Certificates held in a bundle's separate
+  // intermediate CA set are not counted, because those only help build a chain
+  // up to an anchor and cannot be validated against on their own. Any
+  // certificate chaining to one of these anchors federates in, so this is the
+  // size of the trust surface added on top of the pool's own trust domain. 0
+  // when no additional bundle is configured.
+  additionalTrustAnchorCount int
+  // Certificate authority pools that issue mTLS workload certificates, keyed by region
+  //
+  // Maps each region to the CA pool resource path that mints workload
+  // certificates for workloads in that region. Workloads are only issued
+  // certificates from a CA pool in their own region. Empty when the pool
+  // issues no workload certificates, or issues them from the Google-managed
+  // shared authority instead.
+  certificateIssuanceCaPools map[string]string
+  // Whether workload certificates are issued by the Google-provisioned shared certificate authority
+  //
+  // Mutually exclusive with `certificateIssuanceCaPools`. False when the pool
+  // issues no workload certificates at all, or names its own authorities.
+  certificateIssuanceUsesDefaultSharedCa bool
   // Identity providers attached to this pool. Null for TRUST_DOMAIN and SYSTEM_TRUST_DOMAIN pools, which cannot host user-defined providers.
   providers() []gcp.project.iamService.workloadIdentityPool.provider
 }
@@ -6880,6 +6977,33 @@ private gcp.organization.workforcePool.provider @defaults("displayName providerT
   oidcIssuerUri string
   // For OIDC providers: the OAuth 2.0 client ID registered with the IdP
   oidcClientId string
+  // Whether a client secret is registered for the OIDC provider
+  //
+  // A client secret is what enables the Authorization Code flow for browser
+  // sign-in, so a provider without one can only use the implicit flow. The
+  // secret value is never reported, only whether one is configured.
+  oidcHasClientSecret bool
+  // OAuth 2.0 response type requested for browser sign-in
+  //
+  // Browser sign-in covers both Cloud console sign-in and gcloud sign-in
+  // through a browser. One of RESPONSE_TYPE_UNSPECIFIED, CODE (Authorization
+  // Code flow), or ID_TOKEN (implicit flow, which returns the token in the
+  // browser URL where it is exposed to browser history, referrer headers, and
+  // proxy logs). Empty for SAML providers.
+  oidcWebSsoResponseType string
+  // How OIDC claims reach attribute mapping and the attribute condition
+  //
+  // One of ASSERTION_CLAIMS_BEHAVIOR_UNSPECIFIED, ONLY_ID_TOKEN_CLAIMS, or
+  // MERGE_USER_INFO_OVER_ID_TOKEN_CLAIMS, which merges claims read from the
+  // IdP UserInfo endpoint over the ID token claims, preferring the UserInfo
+  // value where both carry the same claim. Merging is available only with the
+  // Authorization Code flow. Empty for SAML providers.
+  oidcWebSsoAssertionClaimsBehavior string
+  // OAuth 2.0 scopes requested on top of openid, profile, and email
+  //
+  // Up to 10 additional scopes may be configured. Empty when browser sign-in
+  // requests only the default scopes, and for SAML providers.
+  oidcWebSsoAdditionalScopes []string
   // For SAML providers: the SAML 2.0 IdP metadata XML document defining the trust
   samlIdpMetadataXml string
   // Attribute type the provider fetches from an external endpoint to augment group claims

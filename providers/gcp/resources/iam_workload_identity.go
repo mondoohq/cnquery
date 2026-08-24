@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -60,6 +61,8 @@ func (g *mqlGcpProjectIamService) workloadIdentityPools() ([]any, error) {
 		ShowDeleted(true).
 		Pages(ctx, func(resp *iam.ListWorkloadIdentityPoolsResponse) error {
 			for _, p := range resp.WorkloadIdentityPools {
+				trust := wifPoolTrustConfig(p.InlineTrustConfig)
+				issuance := wifPoolCertIssuance(p.InlineCertificateIssuanceConfig)
 				mqlPool, err := CreateResource(g.MqlRuntime, "gcp.project.iamService.workloadIdentityPool",
 					map[string]*llx.RawData{
 						"projectId":   llx.StringData(projectId),
@@ -71,6 +74,11 @@ func (g *mqlGcpProjectIamService) workloadIdentityPools() ([]any, error) {
 						"disabled":    llx.BoolData(p.Disabled),
 						"expireTime":  llx.TimeDataPtr(parseTime(p.ExpireTime)),
 						"mode":        llx.StringData(p.Mode),
+
+						"additionalTrustDomains":                 llx.ArrayData(trust.domains, types.String),
+						"additionalTrustAnchorCount":             llx.IntData(trust.anchorCount),
+						"certificateIssuanceCaPools":             llx.MapData(issuance.caPools, types.String),
+						"certificateIssuanceUsesDefaultSharedCa": llx.BoolData(issuance.usesDefaultSharedCa),
 					})
 				if err != nil {
 					return err
@@ -83,6 +91,70 @@ func (g *mqlGcpProjectIamService) workloadIdentityPools() ([]any, error) {
 		return nil, err
 	}
 	return pools, nil
+}
+
+// wifPoolTrust is the flattened additional-trust configuration of a pool.
+type wifPoolTrust struct {
+	domains     []any
+	anchorCount int64
+}
+
+// wifPoolTrustConfig flattens the additional trust bundles a pool configures on
+// top of its own trust domain.
+//
+// Domains are sorted because the API returns them in a map, and an unordered
+// field would compare unequal to itself between two reads of the same pool.
+//
+// Only TrustAnchors are counted. A trust anchor is what a presented chain is
+// validated up to, and the API documents its own IntermediateCas set as
+// material for building a chain to an anchor, so an intermediate is unusable
+// unless some anchor already covers it. Counting both would overstate how many
+// independent authorities the pool trusts. Note the anchor list itself may hold
+// an intermediate certificate being used as an anchor, which is still one
+// independent authority and is counted as one.
+//
+// A nil config means no additional bundle is configured, which is genuinely an
+// empty set rather than an unread value, so it yields an empty list and 0.
+func wifPoolTrustConfig(cfg *iam.InlineTrustConfig) wifPoolTrust {
+	out := wifPoolTrust{domains: []any{}}
+	if cfg == nil {
+		return out
+	}
+	names := make([]string, 0, len(cfg.AdditionalTrustBundles))
+	for domain, store := range cfg.AdditionalTrustBundles {
+		if domain == "" {
+			continue
+		}
+		names = append(names, domain)
+		out.anchorCount += int64(len(store.TrustAnchors))
+	}
+	sort.Strings(names)
+	for _, n := range names {
+		out.domains = append(out.domains, n)
+	}
+	return out
+}
+
+// wifPoolCertIssuance is the flattened mTLS workload-certificate issuance
+// configuration of a pool.
+type wifPoolCertIssuanceConfig struct {
+	caPools             map[string]any
+	usesDefaultSharedCa bool
+}
+
+// wifPoolCertIssuance flattens which certificate authorities may mint mTLS
+// workload certificates for the pool.
+//
+// A nil config means the pool issues no workload certificates, so it names no
+// authorities and does not use the shared one.
+func wifPoolCertIssuance(cfg *iam.InlineCertificateIssuanceConfig) wifPoolCertIssuanceConfig {
+	if cfg == nil {
+		return wifPoolCertIssuanceConfig{caPools: map[string]any{}}
+	}
+	return wifPoolCertIssuanceConfig{
+		caPools:             convert.MapToInterfaceMap(cfg.CaPools),
+		usesDefaultSharedCa: cfg.UseDefaultSharedCa,
+	}
 }
 
 func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) id() (string, error) {
