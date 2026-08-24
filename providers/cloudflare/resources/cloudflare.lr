@@ -23,7 +23,8 @@ cloudflare {
 	// the user the connecting token authenticates as. It requires a
 	// token with user-level access (the User API Tokens Read permission);
 	// an account-scoped token cannot list them and this returns empty.
-	// Account-owned tokens (Enterprise) are not exposed here.
+	// Account-owned tokens are listed separately, through
+	// `cloudflare.account.apiTokens`.
 	apiTokens() []cloudflare.apiToken
 }
 
@@ -118,6 +119,51 @@ private cloudflare.zone @defaults("name account.name") {
 	aiAudit() cloudflare.zone.aiAudit
 	// Precursor request-enforcement configuration for the zone
 	precursor() cloudflare.zone.precursor
+	// IP Access rules that apply to the zone
+	//
+	// The IP, IP range, ASN, and country rules evaluated ahead of the WAF for
+	// this zone, including any inherited from the account. A rule in
+	// `whitelist` mode exempts its source from the WAF, rate limiting, and the
+	// zone's security level entirely.
+	ipAccessRules() []cloudflare.ipAccessRule
+	// Zone Lockdown rules restricting URLs to named addresses
+	lockdowns() []cloudflare.zone.lockdown
+	// Registrar hold preventing the zone from being added to another account
+	hold() cloudflare.zone.hold
+	// Worker routes that intercept requests to the zone
+	//
+	// Each route binds a URL pattern to a Workers script that runs in front of
+	// every matching request. A route on a broad pattern puts its script in the
+	// request path of the whole site.
+	workerRoutes() []cloudflare.zone.workerRoute
+}
+
+// Worker route
+//
+// Binding of a URL pattern to a Workers script, selected by `pattern`. A route
+// puts its script in front of every request matching the pattern, so a route on
+// `example.com/*` runs on every request to the site, ahead of the origin and
+// with access to the request and response. `worker` resolves the script the
+// route names, and reads null when the route points at a script that no longer
+// exists, which leaves the pattern matching with nothing behind it.
+private cloudflare.zone.workerRoute @defaults("pattern scriptName") {
+	// Route identifier
+	id string
+	// URL pattern the route matches
+	//
+	// For example `example.com/*` or `api.example.com/v1/*`. Wildcards are
+	// matched against the whole request URL.
+	pattern string
+	// Name of the Workers script the route runs
+	//
+	// Empty when the route disables Workers for the pattern rather than
+	// running a script.
+	scriptName string
+	// Workers script the route runs
+	//
+	// Null when the route names no script, or names one that is not in the
+	// account's script list.
+	worker() cloudflare.workers.worker
 }
 
 // Cloudflare account
@@ -187,6 +233,37 @@ private cloudflare.zone.settings {
 	hstsPreload bool
 	// Whether the X-Content-Type-Options: nosniff header is sent alongside HSTS
 	hstsNoSniff bool
+
+	// Cipher suites the zone accepts from visitors
+	//
+	// The explicit allowlist of TLS cipher suites, by IANA name, for example
+	// ECDHE-ECDSA-AES128-GCM-SHA256. Empty means the zone accepts Cloudflare's
+	// default set for its plan. A weak suite listed here is negotiable even
+	// when minTlsVersion looks correct, because the allowlist overrides the
+	// default set rather than narrowing it.
+	ciphers []string
+
+	// Development mode (on, off)
+	//
+	// While on, Cloudflare bypasses its edge cache and disables the
+	// performance features that rewrite responses. It expires on its own after
+	// three hours, so a zone found with it on is either mid-change or has had
+	// it re-enabled.
+	developmentMode string
+
+	// Whether Network Error Logging is enabled for the zone
+	//
+	// NEL asks browsers to report failed requests back to Cloudflare. Null
+	// when the setting is not present in the zone's settings response, which
+	// is not the same as it being turned off.
+	nelEnabled bool
+
+	// Automatic rewriting of insecure JavaScript URLs (on, off)
+	//
+	// When on, Cloudflare rewrites http:// script sources in HTML responses to
+	// https://, so a page served over HTTPS does not pull scripts over plain
+	// HTTP. Off leaves mixed active content to the browser to block or not.
+	replaceInsecureJs string
 }
 
 // Cloudflare custom SSL certificate (user-uploaded)
@@ -413,6 +490,24 @@ private cloudflare.account @defaults("name") {
 	// and whether deletion protection is on, which is what stops retained
 	// logs from being removed while an investigation is open.
 	logExplorerDatasets() []cloudflare.logExplorerDataset
+
+	// Account-owned API tokens
+	//
+	// Tokens owned by the account rather than by a user, which is where
+	// long-lived automation credentials live. Each reports its validity
+	// window (`notBefore`, `expiresOn`), the IP allowlist and blocklist
+	// restricting where it may be used (`ipIn`, `ipNotIn`), when it was last
+	// used (`lastUsedOn`), and the grants that define its reach (`policies`).
+	// Token secrets are never returned by the API and are not exposed.
+	apiTokens() []cloudflare.apiToken
+
+	// Account-wide IP Access rules
+	//
+	// The IP, IP range, ASN, and country rules the account applies across all
+	// of its zones. A rule in `whitelist` mode exempts its source from the
+	// WAF, rate limiting, and the security level of every zone the account
+	// owns, so one entry can undo the firewall posture of the whole estate.
+	ipAccessRules() []cloudflare.ipAccessRule
 }
 
 // Cloudflare API Token
@@ -442,6 +537,16 @@ private cloudflare.apiToken @defaults("name status expiresOn") {
 	ipIn []string
 	// IP addresses blocked from using the token (CIDR list)
 	ipNotIn []string
+	// Time the token was last used
+	//
+	// Null when the token has never been used, which on a long-lived
+	// automation credential means it can be revoked without effect.
+	lastUsedOn time
+	// Account that owns the token
+	//
+	// Null for a user-owned token, which belongs to the authenticating user
+	// rather than to any one account.
+	accountId string
 	// Token policies
 	//
 	// Grant rules that define what the token can do. Each entry has `id`
@@ -673,6 +778,58 @@ private cloudflare.workers.worker @defaults("id") {
   createdOn time
   // Time the worker was last modified
   modifiedOn time
+
+	// Resource bindings attached to the Worker
+	//
+	// Everything the Worker's code can reach at runtime: KV namespaces, R2
+	// buckets, D1 databases, queues, Durable Objects, other Workers reached as
+	// services, mTLS certificates, and secrets. This is the Worker's blast
+	// radius, since code running under a route can use any of them.
+	bindings() []cloudflare.workers.worker.binding
+
+	// Workers that receive this Worker's logs
+	//
+	// Each entry is `{service, environment, namespace}`, naming the Worker that
+	// consumes this one's tail events. A tail consumer receives every request
+	// and response this Worker handles, so it is a path the data takes beyond
+	// the Worker itself.
+	tailConsumers() []dict
+
+	// Whether observability is turned on for the Worker
+	//
+	// False means the Worker's invocations, logs and exceptions are not
+	// retained, so there is nothing to review after an incident. Null when the
+	// Worker's settings cannot be read.
+	observabilityEnabled() bool
+}
+
+// Worker binding
+//
+// One resource the Worker's code can reach at runtime, selected by `name`, which
+// is the JavaScript variable the binding is exposed as. The `type` field names
+// the kind of resource and `target` names the specific one, so a Worker's
+// bindings together describe how far its code can reach: which buckets it can
+// write, which databases it can query, which other Workers it can invoke.
+//
+// Bindings that carry a literal value (a secret, a plain-text or JSON constant,
+// a key, an inline blob) report an empty `target`; their values are never
+// exposed.
+private cloudflare.workers.worker.binding @defaults("name type target") {
+	// JavaScript variable name the binding is exposed as
+	name string
+	// Kind of resource the binding provides
+	//
+	// For example kv_namespace, r2_bucket, d1, queue, service,
+	// durable_object_namespace, mtls_certificate, hyperdrive, vectorize,
+	// analytics_engine, secret_text, or plain_text.
+	type string
+	// The specific resource the binding points at
+	//
+	// A bucket name, a namespace id, a database id, a queue name, the name of
+	// the Worker a service binding invokes, and so on, according to `type`.
+	// Empty for a binding whose value is a literal rather than a reference,
+	// and for a kind with no single identifying field.
+	target string
 }
 
 // Cloudflare Pages page
@@ -731,6 +888,12 @@ private cloudflare.one {
 	serviceTokens() []cloudflare.one.serviceToken
 	// Access organization configuration
 	organization() cloudflare.one.organization
+	// Account-wide Gateway enforcement settings
+	//
+	// The settings every Gateway rule runs on top of, including whether TLS
+	// is decrypted, whether activity is logged, and whether antivirus, body
+	// scanning, protocol detection, browser isolation and the sandbox are on.
+	gatewayConfiguration() cloudflare.one.gatewayConfiguration
 	// Gateway rules
 	gatewayRules() []cloudflare.one.gatewayRule
 	// Gateway lists
@@ -969,6 +1132,101 @@ private cloudflare.one.organization @defaults("name authDomain") {
 	updatedAt time
 }
 
+// Account-wide Cloudflare Gateway enforcement settings
+//
+// Settings that apply to every Gateway rule in the account and decide how much
+// of a rule can actually be enforced. With `tlsDecryptEnabled` off, Gateway sees
+// only the SNI of an HTTPS connection, so every HTTP rule, DLP profile and
+// antivirus scan degrades to hostname matching. With `activityLogEnabled` off,
+// no Gateway decision is recorded, leaving no forensic trail for an
+// investigation. The antivirus, body-scanning, protocol-detection, browser
+// isolation and sandbox fields report which inspection engines are turned on.
+//
+// Reported as null when the settings cannot be read, so an unreadable account
+// is never reported as one with every control switched off.
+private cloudflare.one.gatewayConfiguration @defaults("tlsDecryptEnabled activityLogEnabled") {
+	// Whether Gateway decrypts and inspects encrypted HTTP traffic
+	//
+	// False leaves Gateway with only the SNI of a TLS connection, so HTTP
+	// rules, DLP inspection and antivirus scanning no longer see request or
+	// response bodies and silently degrade to hostname matching.
+	tlsDecryptEnabled bool
+
+	// Whether Gateway records the decisions it makes
+	//
+	// False means allowed and blocked requests leave no entry in the Gateway
+	// activity log, so there is no record of what a rule matched.
+	activityLogEnabled bool
+
+	// Whether antivirus scanning runs on downloads
+	antivirusDownloadEnabled bool
+	// Whether antivirus scanning runs on uploads
+	antivirusUploadEnabled bool
+	// Whether requests for files antivirus cannot scan are blocked
+	//
+	// False lets an unscannable file through unscanned, which is the failure
+	// mode an attacker aims for with an archive antivirus cannot open.
+	antivirusFailClosed bool
+
+	// Depth of body inspection used for DLP
+	//
+	// Either deep or shallow. Shallow inspection only reads the beginning of
+	// a request body, so a match placed later in the body is not found. Empty
+	// when body scanning is not configured.
+	bodyScanningInspectionMode string
+
+	// Whether clientless browser isolation is on
+	urlBrowserIsolationEnabled bool
+	// Whether browser isolation accepts non-identity onramps
+	nonIdentityBrowserIsolationEnabled bool
+
+	// Whether Gateway identifies protocols from the first bytes of a connection
+	//
+	// Required for dynamic inspection to find HTTP and HTTPS traffic on
+	// non-standard ports. False confines inspection to the standard ports.
+	protocolDetectionEnabled bool
+
+	// Whether the file sandbox is on
+	sandboxEnabled bool
+	// Action taken when the sandbox cannot scan a file
+	//
+	// Either allow or block. Empty when the sandbox is not configured.
+	sandboxFallbackAction string
+
+	// Whether Gateway enforces FIPS 140-2 compliant cipher suites and TLS versions
+	fipsTls bool
+
+	// Proxy inspection mode
+	//
+	// Either static, where Gateway inspects HTTP on TCP 80 and, with TLS
+	// decryption on, HTTPS on 443, or dynamic, where protocol detection finds
+	// HTTP and HTTPS on any port. Empty when inspection is not configured.
+	inspectionMode string
+
+	// Whether host filtering is available to egress policies
+	hostSelectorEnabled bool
+
+	// Whether email addresses in firewall policies match their plus and dot variants
+	extendedEmailMatchingEnabled bool
+
+	// Account-wide cap on DNS response TTLs, in seconds
+	//
+	// Null when no cap is set. Gateway rewrites DNS responses so returned
+	// record TTLs do not exceed this value.
+	maxTtlSeconds int
+
+	// Identifier of the certificate Gateway presents when intercepting TLS
+	//
+	// Empty or an all-zero UUID when the Cloudflare Root CA handles
+	// interception rather than a customer certificate.
+	interceptionCertificateId string
+
+	// Time the Gateway configuration was created
+	createdAt time
+	// Time the Gateway configuration was last updated
+	updatedAt time
+}
+
 // Cloudflare One Gateway rule
 private cloudflare.one.gatewayRule @defaults("name action") {
 	// Rule identifier
@@ -1160,6 +1418,114 @@ private cloudflare.tunnel @defaults("name status") {
 	deletedAt time
 	// Active connections for this tunnel
 	connections []cloudflare.tunnel.connection
+	// Ingress rules and origin connection settings for the tunnel
+	//
+	// The authoritative map of which internal services the tunnel publishes,
+	// and how cloudflared connects to each of them. Available only for a
+	// remotely managed cloudflared tunnel; a locally managed one keeps its
+	// configuration in a YAML file on the connector host and reports null here.
+	configuration() cloudflare.tunnel.configuration
+}
+
+// Cloudflare tunnel ingress configuration
+//
+// Configuration a remotely managed Cloudflare Tunnel runs on: the `ingress`
+// rules that decide which public hostname reaches which internal service, and
+// the origin connection settings cloudflared applies when it does. The ingress
+// list is the authoritative inventory of what a tunnel exposes, and
+// `originNoTlsVerify` reports whether cloudflared validates the origin's
+// certificate on the leg between the connector and the service, which is the
+// half of the path Cloudflare's edge certificate says nothing about.
+//
+// Reported as null for a locally managed tunnel, whose configuration lives in a
+// YAML file on the connector host and is not readable through the API.
+private cloudflare.tunnel.configuration @defaults("source ingress") {
+	// Where the tunnel's configuration is managed
+	//
+	// Either cloudflare, meaning the configuration is held in the Zero Trust
+	// dashboard and readable here, or local, meaning it lives in a YAML file
+	// on the connector host.
+	source string
+	// Version of the tunnel configuration
+	version int
+	// Public hostname to internal service mappings
+	ingress []cloudflare.tunnel.ingressRule
+
+	// Whether cloudflared skips validating the origin's TLS certificate by default
+	//
+	// True disables certificate validation on the connector-to-origin leg for
+	// every ingress rule that does not override it, so that leg is encrypted
+	// but unauthenticated. Null when the configuration does not set it.
+	originNoTlsVerify bool
+	// Path on the connector host to the CA bundle validating the origin certificate
+	//
+	// Set when the origin presents a certificate that Cloudflare does not
+	// chain to. Empty when the default trust store is used.
+	originCaPool string
+	// Hostname cloudflared expects on the origin's certificate
+	originServerName string
+	// Whether cloudflared connects to the origin over HTTP/2
+	//
+	// Null when the configuration does not set it.
+	originHttp2 bool
+	// Proxy cloudflared starts when translating HTTP traffic into TCP
+	//
+	// Empty for the regular proxy, or socks for a SOCKS5 proxy used to reach
+	// arbitrary destinations through the tunnel.
+	originProxyType string
+
+	// Whether private network routing is on for the tunnel
+	//
+	// True means WARP clients can reach the CIDR ranges routed through this
+	// tunnel directly, in addition to any public hostnames in `ingress`. Null
+	// when the configuration does not report it.
+	warpRoutingEnabled bool
+}
+
+// Cloudflare tunnel ingress rule
+//
+// One mapping in a tunnel's ingress list, from a public hostname and path to the
+// internal service that answers it. The `service` field names the destination as
+// a protocol and address, for example http://10.0.0.5:8080, ssh://10.0.0.6:22,
+// or rdp://10.0.0.7:3389, and is what shows how deep into a private network a
+// public hostname reaches. Rules are evaluated in order, and the last rule of a
+// tunnel is normally a catch-all with no hostname.
+private cloudflare.tunnel.ingressRule @defaults("hostname path service") {
+	// Public hostname routed by this rule
+	//
+	// Empty on the catch-all rule that ends every ingress list.
+	hostname string
+	// Path prefix this rule matches within the hostname
+	//
+	// Empty when the rule matches every path of the hostname.
+	path string
+	// Protocol and address of the internal service that answers
+	//
+	// For example http://10.0.0.5:8080, https://internal.local, ssh://10.0.0.6:22,
+	// or an http_status:404 response instead of a destination.
+	service string
+
+	// Whether cloudflared skips validating this origin's TLS certificate
+	//
+	// True leaves the connector-to-origin leg encrypted but unauthenticated,
+	// so anything that can answer at the address is accepted as the origin.
+	// Null when the rule does not override the tunnel-wide setting.
+	noTlsVerify bool
+	// Path on the connector host to the CA bundle validating this origin's certificate
+	caPool string
+	// Hostname cloudflared expects on this origin's certificate
+	originServerName string
+	// Host header cloudflared sends to this origin
+	httpHostHeader string
+	// Whether cloudflared reaches this origin over HTTP/2
+	//
+	// Null when the rule does not override the tunnel-wide setting.
+	http2Origin bool
+	// Whether cloudflared validates the Cf-Access-Jwt-Assertion header on requests to this origin
+	//
+	// False means a request that reaches the connector by any other route is
+	// served without an Access check. Null when the rule does not configure it.
+	accessRequired bool
 }
 
 // Cloudflare tunnel connection
@@ -1708,6 +2074,270 @@ private cloudflare.zone.wafRule @defaults("rulesetKind action description") {
 	version string
 	// Time the rule was last updated
 	lastUpdated time
+
+	// Whether a match on this rule is written to the security event log
+	//
+	// Null when the rule carries no logging block, which the API omits for
+	// rules where logging is not configurable. False means matches leave no
+	// entry in Security Events, so a block or a skip happens with no
+	// forensic trail behind it.
+	loggingEnabled bool
+
+	// Action the override substitutes for every rule of the deployed managed ruleset
+	//
+	// Set when the rule deploys a managed ruleset and overrides the action of
+	// every rule inside it, for example rewriting block to log so the ruleset
+	// still matches but no longer stops anything. Empty when the deployment
+	// carries no ruleset-wide action override.
+	overrideAction string
+
+	// Whether the override turns the deployed managed ruleset on or off as a whole
+	//
+	// False disables every rule of the managed ruleset while the deployment
+	// rule itself still reads enabled, which is one of the commonest ways a
+	// WAF is left in place but stops enforcing. Null when the deployment
+	// carries no ruleset-wide enable override.
+	overrideEnabled bool
+
+	// Sensitivity level the override applies to the deployed managed ruleset
+	//
+	// One of default, low, medium, high, or eoff. The value eoff turns the
+	// managed ruleset's detections off entirely.
+	overrideSensitivityLevel string
+
+	// Overrides applied to individual rules of the deployed managed ruleset
+	//
+	// Each entry names one rule of the managed ruleset and the action,
+	// enablement, score threshold, or sensitivity substituted for it. A rule
+	// disabled here no longer runs even though the managed ruleset it belongs
+	// to is deployed and enabled.
+	overriddenRules []cloudflare.zone.wafRule.override
+
+	// Overrides applied to whole categories of the deployed managed ruleset
+	//
+	// Each entry names one rule category (for example wordpress or joomla)
+	// and the action or enablement substituted for every rule tagged with it.
+	overriddenCategories []cloudflare.zone.wafRule.categoryOverride
+
+	// Phases a skip rule bypasses
+	//
+	// Set only on rules whose action is skip. Each entry names a ruleset
+	// phase (for example http_request_firewall_managed or http_ratelimit)
+	// that is not evaluated at all for a matching request.
+	skipPhases []string
+
+	// Security products a skip rule bypasses
+	//
+	// Set only on rules whose action is skip. Values include waf, uaBlock,
+	// bic, hot, securityLevel, rateLimit, and zoneLockdown. A skip rule
+	// naming waf turns the whole Web Application Firewall off for every
+	// request its expression matches.
+	skipProducts []string
+
+	// Managed rulesets a skip rule bypasses in full
+	//
+	// Set only on rules whose action is skip, and carries the identifiers of
+	// the managed rulesets that are skipped in their entirety.
+	skipRulesets []string
+
+	// Individual managed rules a skip rule bypasses
+	//
+	// Set only on rules whose action is skip. The dict maps a managed ruleset
+	// identifier to the list of rule identifiers within it that are skipped.
+	skipRules dict
+
+	// Requests allowed per counting period before mitigation starts
+	//
+	// Null on rules that carry no rate-limit configuration. Together with
+	// rateLimitPeriod this is the threshold a rate-limit rule enforces.
+	rateLimitRequestsPerPeriod int
+
+	// Rate-limit counting window in seconds
+	//
+	// One of 10, 60, 600, 3600, or 86400. Null on rules that carry no
+	// rate-limit configuration.
+	rateLimitPeriod int
+
+	// Fields the rate-limit counter groups requests by
+	//
+	// For example ip.src or cf.colo.id. A counter keyed on a field an
+	// attacker controls, or keyed so broadly that unrelated clients share a
+	// bucket, does not hold in practice.
+	rateLimitCharacteristics []string
+
+	// Seconds a rate-limit mitigation stays in force once the threshold is crossed
+	//
+	// Null on rules that carry no rate-limit configuration.
+	rateLimitMitigationTimeout int
+
+	// Expression selecting which requests the rate-limit counter counts
+	//
+	// When set, requests are counted only while this expression matches, which
+	// can be narrower than the rule's own expression. Empty when the rule
+	// counts every request it matches.
+	rateLimitCountingExpression string
+
+	// Whether the rate limit counts only requests that reached the origin
+	//
+	// True means cached responses are not counted, so the threshold applies to
+	// origin load rather than to total request volume. Null on rules that carry
+	// no rate-limit configuration.
+	rateLimitRequestsToOrigin bool
+}
+
+// Override applied to one rule of a deployed managed ruleset
+//
+// Substitution the deploying rule makes for a single rule of the managed
+// ruleset it deploys, selected by `ruleId`. A managed ruleset can be deployed
+// and enabled while individual rules inside it are turned off or downgraded to
+// log through these entries, so the ruleset reads as active while specific
+// detections no longer stop anything.
+private cloudflare.zone.wafRule.override @defaults("ruleId action enabled") {
+	// Identifier of the managed rule this override applies to
+	ruleId string
+	// Action substituted for the rule
+	//
+	// For example block, log, challenge, or managed_challenge. Empty when the
+	// override changes only the rule's enablement or scoring.
+	action string
+	// Whether the rule is turned on
+	//
+	// False takes the rule out of evaluation entirely. Null when the override
+	// changes only the action, score threshold, or sensitivity.
+	enabled bool
+	// Score threshold substituted for the rule
+	//
+	// Null when the override does not change scoring. A raised threshold
+	// makes the rule match less often.
+	scoreThreshold int
+	// Sensitivity level substituted for the rule
+	//
+	// One of default, low, medium, high, or eoff. The value eoff turns the
+	// rule's detections off entirely. Empty when the override does not change
+	// sensitivity.
+	sensitivityLevel string
+	// Rule status reported alongside the override
+	sensitivityStatus string
+}
+
+// Override applied to one category of a deployed managed ruleset
+//
+// Substitution the deploying rule makes for every rule of the managed ruleset
+// tagged with a given category, selected by `category`. Disabling a category
+// removes a whole class of detections while the managed ruleset itself stays
+// deployed.
+private cloudflare.zone.wafRule.categoryOverride @defaults("category action enabled") {
+	// Rule category this override applies to
+	//
+	// For example wordpress, joomla, or drupal.
+	category string
+	// Action substituted for every rule in the category
+	//
+	// Empty when the override changes only enablement.
+	action string
+	// Whether the rules in the category are turned on
+	//
+	// False removes every rule of the category from evaluation. Null when the
+	// override changes only the action.
+	enabled bool
+}
+
+// IP Access rule
+//
+// Rule evaluated ahead of the WAF that matches a request by its source: a single
+// IP, an IP range, an autonomous system number, or a country. The `mode` field
+// carries the verdict. The dangerous value is `whitelist`: a source allowed
+// there bypasses the WAF, rate limiting, and the zone's security level entirely,
+// so a stale allowlist entry for an office range or a cloud provider's ASN is an
+// unfiltered path to the origin. Rules exist at both zone and account scope, and
+// `scopeType` reports which one a rule came from.
+private cloudflare.ipAccessRule @defaults("mode target value notes") {
+	// Rule identifier
+	id string
+	// Action applied to a matching request
+	//
+	// One of block, challenge, whitelist, js_challenge, or managed_challenge.
+	// The value whitelist exempts the source from the WAF, rate limiting, and
+	// the security level rather than allowing it through a single check.
+	mode string
+	// What the rule matches on
+	//
+	// One of ip, ip6, ip_range, asn, or country.
+	target string
+	// Value matched against the request source
+	//
+	// An IP address, a CIDR range, an AS number, or a two-letter ISO-3166-1
+	// alpha-2 country code, according to `target`.
+	value string
+	// Summary recorded with the rule
+	notes string
+	// Scope the rule was defined at
+	//
+	// Either user or organization. An organization rule is defined on the
+	// account and applies to every zone it owns.
+	scopeType string
+	// Actions the rule is allowed to take
+	allowedModes []string
+	// Time the rule was created
+	createdOn time
+	// Time the rule was last modified
+	modifiedOn time
+}
+
+// Zone Lockdown rule
+//
+// Rule restricting a set of URLs to named IP addresses and ranges, used to pin
+// administrative paths such as /wp-admin or a staging host to office addresses.
+// A lockdown with `paused` true is defined but not enforced, and a
+// `configurations` list that has drifted from the addresses actually in use
+// leaves the URLs in `urls` reachable from anywhere with no other signal that
+// anything changed.
+private cloudflare.zone.lockdown @defaults("description paused urls") {
+	// Lockdown rule identifier
+	id string
+	// Summary recorded with the rule
+	description string
+	// Whether the rule is defined but not enforced
+	//
+	// True means the URLs are open to every source while the rule stays in
+	// the configuration looking like a control.
+	paused bool
+	// URL patterns the rule restricts
+	//
+	// Simple wildcard patterns, for example `example.com/wp-admin*`.
+	urls []string
+	// Addresses permitted to reach the restricted URLs
+	//
+	// Each entry is `{target, value}`, where `target` is `ip` or `ip_range`
+	// and `value` is the address or CIDR block.
+	configurations []dict
+	// Time the rule was created
+	createdOn time
+	// Time the rule was last modified
+	modifiedOn time
+}
+
+// Registrar hold on a zone
+//
+// Hold that stops the zone from being added to any Cloudflare account after it
+// is removed from this one. Without a hold, deleting a zone frees the domain for
+// anyone to re-add and start serving, which is the standard takeover path for a
+// Cloudflare-fronted domain. Reported as null when the hold state cannot be
+// read, so an unreadable zone is never reported as one with no hold.
+private cloudflare.zone.hold @defaults("enabled includeSubdomains") {
+	// Whether a hold is in force on the zone
+	enabled bool
+	// Time the hold takes effect
+	//
+	// Null when the hold is already in force or none is scheduled. A hold with
+	// a future date is not protecting the zone yet.
+	holdAfter time
+	// Whether the hold also covers subdomains of the zone
+	//
+	// Reported as the API does, a string rather than a boolean. Without it a
+	// hold on the apex still leaves every subdomain free to be claimed in
+	// another account.
+	includeSubdomains string
 }
 
 // Cloudflare email-routing configuration

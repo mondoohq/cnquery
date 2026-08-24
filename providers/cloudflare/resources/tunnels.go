@@ -12,7 +12,162 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/cloudflare/connection"
+	"go.mondoo.com/mql/types"
 )
+
+type mqlCloudflareTunnelInternal struct {
+	accountID string
+}
+
+// tunnelConfiguration is the tunnel-configuration response.
+//
+// cloudflare-go types every originRequest boolean as a plain bool, so a setting
+// the configuration does not mention decodes as false — which would report
+// "cloudflared validates the origin certificate" for an ingress rule that simply
+// inherits the tunnel-wide default, and the opposite when that default is true.
+// It also drops warp-routing entirely. Decoding the payload here with pointers
+// keeps absent distinguishable from explicitly false and preserves the field.
+type tunnelConfiguration struct {
+	TunnelID string `json:"tunnel_id"`
+	Version  int64  `json:"version"`
+	Source   string `json:"source"`
+	Config   *struct {
+		Ingress       []tunnelIngressRule  `json:"ingress"`
+		OriginRequest *tunnelOriginRequest `json:"originRequest"`
+		WarpRouting   *struct {
+			Enabled *bool `json:"enabled"`
+		} `json:"warp-routing"`
+	} `json:"config"`
+}
+
+type tunnelIngressRule struct {
+	Hostname      string               `json:"hostname"`
+	Path          string               `json:"path"`
+	Service       string               `json:"service"`
+	OriginRequest *tunnelOriginRequest `json:"originRequest"`
+}
+
+type tunnelOriginRequest struct {
+	NoTLSVerify      *bool   `json:"noTLSVerify"`
+	CAPool           *string `json:"caPool"`
+	OriginServerName *string `json:"originServerName"`
+	HTTPHostHeader   *string `json:"httpHostHeader"`
+	HTTP2Origin      *bool   `json:"http2Origin"`
+	ProxyType        *string `json:"proxyType"`
+	Access           *struct {
+		Required *bool `json:"required"`
+	} `json:"access"`
+}
+
+// configuration reads the tunnel's ingress rules and origin connection settings.
+//
+// Only a remotely managed cloudflared tunnel has a configuration to read: a WARP
+// connector has no ingress at all, and a locally managed cloudflared tunnel keeps
+// its configuration in a YAML file on the connector host. Both report null rather
+// than an empty configuration, which would read as a tunnel that publishes
+// nothing.
+func (c *mqlCloudflareTunnel) configuration() (*mqlCloudflareTunnelConfiguration, error) {
+	if c.TunnelType.Data != "cfd_tunnel" || c.accountID == "" {
+		c.Configuration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	conn := c.MqlRuntime.Connection.(*connection.CloudflareConnection)
+
+	var env struct {
+		Result tunnelConfiguration `json:"result"`
+	}
+	uri := fmt.Sprintf("accounts/%s/cfd_tunnel/%s/configurations", c.accountID, c.Id.Data)
+	if err := conn.Cf.Get(context.TODO(), uri, nil, &env); err != nil {
+		if isUnavailable(err) {
+			c.Configuration.State = plugin.StateIsNull | plugin.StateIsSet
+			return nil, nil
+		}
+		return nil, err
+	}
+	cfg := env.Result
+
+	// A locally managed tunnel answers with a null config: the ingress rules
+	// exist only on the connector host.
+	if cfg.Config == nil {
+		c.Configuration.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+
+	ingress, err := c.tunnelIngressResources(cfg.Config.Ingress)
+	if err != nil {
+		return nil, err
+	}
+
+	origin := cfg.Config.OriginRequest
+	if origin == nil {
+		origin = &tunnelOriginRequest{}
+	}
+
+	warpRouting := llx.NilData
+	if cfg.Config.WarpRouting != nil {
+		warpRouting = llx.BoolDataPtr(cfg.Config.WarpRouting.Enabled)
+	}
+
+	res, err := CreateResource(c.MqlRuntime, "cloudflare.tunnel.configuration", map[string]*llx.RawData{
+		"__id":    llx.StringData("cloudflare.tunnel.configuration@" + c.accountID + "/" + c.Id.Data),
+		"source":  llx.StringData(cfg.Source),
+		"version": llx.IntData(cfg.Version),
+		"ingress": llx.ArrayData(ingress, types.Resource("cloudflare.tunnel.ingressRule")),
+
+		"originNoTlsVerify":  llx.BoolDataPtr(origin.NoTLSVerify),
+		"originCaPool":       llx.StringDataPtr(origin.CAPool),
+		"originServerName":   llx.StringDataPtr(origin.OriginServerName),
+		"originHttp2":        llx.BoolDataPtr(origin.HTTP2Origin),
+		"originProxyType":    llx.StringDataPtr(origin.ProxyType),
+		"warpRoutingEnabled": warpRouting,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlCloudflareTunnelConfiguration), nil
+}
+
+// tunnelIngressResources builds the ingress-rule resources for one tunnel. The
+// list index is part of the cache key because ingress rules are ordered and two
+// rules may share a hostname and path.
+func (c *mqlCloudflareTunnel) tunnelIngressResources(rules []tunnelIngressRule) ([]any, error) {
+	result := make([]any, 0, len(rules))
+	for i := range rules {
+		rule := rules[i]
+
+		origin := rule.OriginRequest
+		if origin == nil {
+			origin = &tunnelOriginRequest{}
+		}
+
+		accessRequired := llx.NilData
+		if origin.Access != nil {
+			accessRequired = llx.BoolDataPtr(origin.Access.Required)
+		}
+
+		res, err := CreateResource(c.MqlRuntime, "cloudflare.tunnel.ingressRule", map[string]*llx.RawData{
+			"__id": llx.StringData(fmt.Sprintf("cloudflare.tunnel.ingressRule@%s/%s/%d/%s%s",
+				c.accountID, c.Id.Data, i, rule.Hostname, rule.Path)),
+			"hostname": llx.StringData(rule.Hostname),
+			"path":     llx.StringData(rule.Path),
+			"service":  llx.StringData(rule.Service),
+
+			"noTlsVerify":      llx.BoolDataPtr(origin.NoTLSVerify),
+			"caPool":           llx.StringDataPtr(origin.CAPool),
+			"originServerName": llx.StringDataPtr(origin.OriginServerName),
+			"httpHostHeader":   llx.StringDataPtr(origin.HTTPHostHeader),
+			"http2Origin":      llx.BoolDataPtr(origin.HTTP2Origin),
+			"accessRequired":   accessRequired,
+		})
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, res)
+	}
+	return result, nil
+}
 
 func (c *mqlCloudflareTunnel) id() (string, error) {
 	if c.Id.Error != nil {
@@ -50,7 +205,7 @@ func fetchTunnels(runtime *plugin.Runtime, accountID string) ([]any, error) {
 			return nil, err
 		}
 
-		res, err := NewResource(runtime, "cloudflare.tunnel", map[string]*llx.RawData{
+		tunnelRes, err := NewResource(runtime, "cloudflare.tunnel", map[string]*llx.RawData{
 			"id":         llx.StringData(rec.ID),
 			"name":       llx.StringData(rec.Name),
 			"tunnelType": llx.StringData(string(rec.TunType)),
@@ -66,8 +221,9 @@ func fetchTunnels(runtime *plugin.Runtime, accountID string) ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		tunnelRes.(*mqlCloudflareTunnel).accountID = accountID
 
-		result = append(result, res)
+		result = append(result, tunnelRes)
 	}
 	if err := iter.Err(); err != nil {
 		return degradedList(err)

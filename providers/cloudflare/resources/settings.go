@@ -8,7 +8,9 @@ import (
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/cloudflare/connection"
+	"go.mondoo.com/mql/types"
 )
 
 // zoneSetting is the shape of a single entry returned by the bulk zone-settings
@@ -47,6 +49,40 @@ func extractSettingInt(settings []zoneSetting, id string) int64 {
 		return int64(v)
 	}
 	return 0
+}
+
+// extractSettingStrList pulls a zone setting whose value is a JSON array of
+// strings, such as the `ciphers` allowlist. An absent setting and one set to an
+// empty array both yield an empty slice: Cloudflare represents "use the plan
+// default set" as an empty array, so the two mean the same thing here.
+func extractSettingStrList(settings []zoneSetting, id string) []string {
+	raw, ok := extractSettingValue(settings, id).([]any)
+	if !ok {
+		return nil
+	}
+	out := make([]string, 0, len(raw))
+	for _, v := range raw {
+		if str, ok := v.(string); ok {
+			out = append(out, str)
+		}
+	}
+	return out
+}
+
+// extractSettingNestedBool pulls a boolean out of a zone setting whose value is
+// an object, such as `nel` with its `{enabled: bool}` shape. It returns nil when
+// the setting is absent from the response or does not carry the key, so a
+// setting that was never reported is not reported as switched off.
+func extractSettingNestedBool(settings []zoneSetting, id, key string) *bool {
+	m, ok := extractSettingValue(settings, id).(map[string]any)
+	if !ok {
+		return nil
+	}
+	b, ok := m[key].(bool)
+	if !ok {
+		return nil
+	}
+	return &b
 }
 
 // extractHSTS pulls HSTS subfields from the `security_header` zone setting.
@@ -126,6 +162,11 @@ func (c *mqlCloudflareZone) settings() (*mqlCloudflareZoneSettings, error) {
 		"hstsIncludeSubdomains":   llx.BoolData(hstsIncludeSubdomains),
 		"hstsPreload":             llx.BoolData(hstsPreload),
 		"hstsNoSniff":             llx.BoolData(hstsNoSniff),
+
+		"ciphers":           llx.ArrayData(convert.SliceAnyToInterface(extractSettingStrList(settings, "ciphers")), types.String),
+		"developmentMode":   llx.StringData(extractSettingStr(settings, "development_mode")),
+		"nelEnabled":        llx.BoolDataPtr(extractSettingNestedBool(settings, "nel", "enabled")),
+		"replaceInsecureJs": llx.StringData(extractSettingStr(settings, "replace_insecure_js")),
 	})
 	if err != nil {
 		return nil, err
