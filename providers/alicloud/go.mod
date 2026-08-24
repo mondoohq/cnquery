@@ -39,7 +39,7 @@ require (
 	github.com/aliyun/credentials-go v1.4.13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
+	go.mondoo.com/mql v0.0.0-20260824020621-ed70b91ac183
 )
 
 require (
@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.33.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 // indirect
-	github.com/aws/smithy-go v1.27.8 // indirect
+	github.com/aws/smithy-go v1.27.9 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
@@ -128,6 +128,7 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
+	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect

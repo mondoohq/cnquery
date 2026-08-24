@@ -14,7 +14,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/snowflakedb/gosnowflake v1.19.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
+	go.mondoo.com/mql v0.0.0-20260824020621-ed70b91ac183
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/crypto v0.55.0
 )
@@ -22,10 +22,13 @@ require (
 require github.com/rs/zerolog v1.35.1
 
 require (
+	github.com/gopherjs/gopherjs v1.21.0 // indirect
 	github.com/hashicorp/terraform-json v0.28.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.11.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1 // indirect
 	github.com/hashicorp/terraform-registry-address v0.5.0 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/zclconf/go-cty v1.19.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 )
@@ -63,7 +66,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.33.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 // indirect
-	github.com/aws/smithy-go v1.27.8 // indirect
+	github.com/aws/smithy-go v1.27.9 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect

@@ -69,8 +69,8 @@ github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6 h1:w0E0fgc1YafGEh5cROhlROMWXiNoZqApk2PDN0M1+Ns=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6/go.mod h1:nuWgzSkT5PnyOd+272uUmV0dnAnAn42Mk7PiQC5VzN4=
-github.com/CycloneDX/cyclonedx-go v0.11.0 h1:GokP8FiRC+foiuwWhSSLpSD5H4hSWtGnR3wo7apkBFI=
-github.com/CycloneDX/cyclonedx-go v0.11.0/go.mod h1:vUvbCXQsEm48OI6oOlanxstwNByXjCZ2wuleUlwGEO8=
+github.com/CycloneDX/cyclonedx-go v0.12.0 h1:/7Jum36UA6V043tQZ/fE3jf+Nf9gn/qxUFfd7QReMy8=
+github.com/CycloneDX/cyclonedx-go v0.12.0/go.mod h1:V2577HhxDDCDLYfkm55WJrz16nHTfyQZwcWUBSG7Z28=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
@@ -145,8 +145,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 h1:WWkehGZ4nWtOKLMy0yi8+Rqz
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7/go.mod h1:T8AI4SbQYm9ybcVmki2T3n7Qg1g3kfWoeQlNwNYOyO8=
 github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 h1:yU/9y2r7s9kSUPbHXbpQTa4LA8kt+CMgpu1OBrhx8p4=
 github.com/aws/aws-sdk-go-v2/service/sts v1.45.7/go.mod h1:0lQTDEBArMevQXpxu443LVGjKxxEeSsSnrw9n8YiTMg=
-github.com/aws/smithy-go v1.27.8 h1:FR0dxZfIlV7Z8eh2iHfIofdunw382XsDV3Mxt9nUvRY=
-github.com/aws/smithy-go v1.27.8/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
+github.com/aws/smithy-go v1.27.9 h1:flT/ACSU1ksz3V+8wj8kN8DOB9tsc/ggWPTJXIieRpw=
+github.com/aws/smithy-go v1.27.9/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0 h1:JFWXO6QPihCknDdnL6VaQE57km4ZKheHIGd9YiOGcTo=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0/go.mod h1:046/oLyFlYdAghYQE2yHXi/E//VM5Cf3/dFmA+3CZ0c=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
@@ -769,8 +769,8 @@ github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f h1:9hiVElpCmKzsBKQHkBqZ8LGzt82iLfM8egxr4sew+Ys=
 github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f/go.mod h1:8/zr1Tv0+cKpVtGCEB/7YfRXr2TszsMxMXLaT8YuBgU=
-github.com/terminalstatic/go-xsd-validate v0.1.6 h1:TenYeQ3eY631qNi1/cTmLH/s2slHPRKTTHT+XSHkepo=
-github.com/terminalstatic/go-xsd-validate v0.1.6/go.mod h1:18lsvYFofBflqCrvo1umpABZ99+GneNTw2kEEc8UPJw=
+github.com/terminalstatic/go-xsd-validate v0.1.8 h1:UVrTCy1j3DhwaYTTUF+QYO/Nan13S0tf+Jwi+p45Bf0=
+github.com/terminalstatic/go-xsd-validate v0.1.8/go.mod h1:1kb47fi2c6onlf+B7UrrQ9VYraOhcYwFm3iG+J6F4Zo=
 github.com/tidwall/transform v0.0.0-20201103190739-32f242e2dbde h1:AMNpJRc7P+GTwVbl8DkK2I9I8BBUzNiHuH/tlxrpan0=
 github.com/tidwall/transform v0.0.0-20201103190739-32f242e2dbde/go.mod h1:MvrEmduDUz4ST5pGZ7CABCnOU5f3ZiOAZzT6b1A6nX8=
 github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0 h1:2f304B10LaZdB8kkVEaoXvAMVan2tl9AiK4G0odjQtE=
@@ -797,8 +797,10 @@ github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5t
 go.etcd.io/etcd/api/v3 v3.5.1/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.1/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
 go.etcd.io/etcd/client/v2 v2.305.1/go.mod h1:pMEacxZW7o8pg4CrFE7pquyCJJzZvkvdD2RibOCCCGs=
-go.mondoo.com/mondoo-go v0.0.0-20260821120618-ae51af2e4dae h1:WaazKGty8K3TZbiAB9fbogj9C5KPyT+l5Dbv3j/o1bk=
-go.mondoo.com/mondoo-go v0.0.0-20260821120618-ae51af2e4dae/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
+go.mondoo.com/mondoo-go v0.0.0-20260822000727-1d813d6a83c7 h1:4RpHzZRqq3RwB9Oa6kp6p8QjIHBGeAQ0cNKv/BfUCP0=
+go.mondoo.com/mondoo-go v0.0.0-20260822000727-1d813d6a83c7/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
+go.mondoo.com/mql/v13 v13.35.2 h1:oii5mnKHpUo3ol9mRTM++Ai4Zh7uKsCMODBmt42/35A=
+go.mondoo.com/mql/v13 v13.35.2/go.mod h1:NRCnjBSiOoAOdBTBlRpD6tAPDKrZttVRzDPI4W2HQoY=
 go.mondoo.com/ranger-rpc v0.8.1 h1:DynUWByDnxI4wMHbFpXUMw+lndYJ21BAHOxrhGyVCD4=
 go.mondoo.com/ranger-rpc v0.8.1/go.mod h1:HP3hjWjgRFxCFAnY86YLMiY0bU7eqhKuP8Qm+QlFBbI=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

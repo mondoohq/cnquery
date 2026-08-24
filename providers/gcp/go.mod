@@ -53,14 +53,14 @@ require (
 	cloud.google.com/go/securitycenter v1.46.0
 	cloud.google.com/go/serviceusage v1.15.0
 	cloud.google.com/go/spanner v1.94.0
-	github.com/aws/smithy-go v1.27.8
+	github.com/aws/smithy-go v1.27.9
 	github.com/cockroachdb/errors v1.14.0
 	github.com/google/go-containerregistry v0.21.9
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
+	go.mondoo.com/mql v0.0.0-20260824020621-ed70b91ac183
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.293.0
@@ -78,10 +78,10 @@ require (
 	cel.dev/expr v0.25.3 // indirect
 	cloud.google.com/go/grafeas v0.3.17 // indirect
 	cloud.google.com/go/osconfig v1.22.0 // indirect
-	github.com/CycloneDX/cyclonedx-go v0.11.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.35.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.59.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.59.0 // indirect
+	github.com/CycloneDX/cyclonedx-go v0.12.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.36.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.60.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.60.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/anchore/go-struct-converter v0.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.39 // indirect
@@ -140,14 +140,15 @@ require (
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.mondoo.com/mondoo-go v0.0.0-20260821120618-ae51af2e4dae // indirect
+	go.mondoo.com/mondoo-go v0.0.0-20260822000727-1d813d6a83c7 // indirect
+	go.mondoo.com/mql/v13 v13.35.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.45.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/telemetry v0.0.0-20260820143203-7221e139e8d6 // indirect
+	golang.org/x/telemetry v0.0.0-20260821201142-16c97dc83219 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	k8s.io/api v0.36.4 // indirect

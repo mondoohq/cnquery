@@ -8,11 +8,11 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.14
 	github.com/jcmturner/gofork v1.7.6
 	github.com/jcmturner/gokrb5/v8 v8.4.4
-	github.com/jfjallid/go-smb v0.11.0
+	github.com/jfjallid/go-smb v0.12.0
 	github.com/jfjallid/golog v0.4.0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
+	go.mondoo.com/mql v0.0.0-20260824020621-ed70b91ac183
 )
 
 require (
@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.33.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 // indirect
-	github.com/aws/smithy-go v1.27.8 // indirect
+	github.com/aws/smithy-go v1.27.9 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect
@@ -59,6 +59,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gopherjs/gopherjs v1.21.0 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-plugin v1.8.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
@@ -72,7 +73,8 @@ require (
 	github.com/jfjallid/gofork v1.7.6 // indirect
 	github.com/jfjallid/gokrb5/v9 v9.1.0 // indirect
 	github.com/jfjallid/mstypes v0.0.2 // indirect
-	github.com/jfjallid/ndr v0.1.1 // indirect
+	github.com/jfjallid/ndr v0.2.0 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -93,6 +95,7 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
+	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect

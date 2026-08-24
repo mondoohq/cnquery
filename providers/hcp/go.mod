@@ -5,12 +5,12 @@ replace go.mondoo.com/mql => ../..
 go 1.26.6
 
 require (
-	github.com/go-openapi/runtime v0.33.0
+	github.com/go-openapi/runtime v0.33.1
 	github.com/go-openapi/strfmt v0.27.0
 	github.com/hashicorp/hcp-sdk-go v0.175.0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260821110738-57a15f4f1453
+	go.mondoo.com/mql v0.0.0-20260824020621-ed70b91ac183
 )
 
 require (
@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.33.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 // indirect
-	github.com/aws/smithy-go v1.27.8 // indirect
+	github.com/aws/smithy-go v1.27.9 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect
@@ -48,27 +48,27 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-openapi/analysis v0.25.5 // indirect
+	github.com/go-openapi/analysis v0.26.0 // indirect
 	github.com/go-openapi/errors v0.22.8 // indirect
 	github.com/go-openapi/jsonpointer v1.0.0 // indirect
 	github.com/go-openapi/jsonreference v1.0.0 // indirect
-	github.com/go-openapi/loads v0.25.0 // indirect
-	github.com/go-openapi/runtime/server-middleware v0.30.0 // indirect
+	github.com/go-openapi/loads v0.25.1 // indirect
+	github.com/go-openapi/runtime/server-middleware v0.33.1 // indirect
 	github.com/go-openapi/spec v0.22.9 // indirect
 	github.com/go-openapi/swag v0.24.1 // indirect
 	github.com/go-openapi/swag/cmdutils v0.24.0 // indirect
-	github.com/go-openapi/swag/conv v0.29.0 // indirect
-	github.com/go-openapi/swag/fileutils v0.29.0 // indirect
+	github.com/go-openapi/swag/conv v0.29.1 // indirect
+	github.com/go-openapi/swag/fileutils v0.29.1 // indirect
 	github.com/go-openapi/swag/jsonname v0.26.0 // indirect
-	github.com/go-openapi/swag/jsonutils v0.29.0 // indirect
-	github.com/go-openapi/swag/loading v0.27.3 // indirect
-	github.com/go-openapi/swag/mangling v0.27.3 // indirect
+	github.com/go-openapi/swag/jsonutils v0.29.1 // indirect
+	github.com/go-openapi/swag/loading v0.28.0 // indirect
+	github.com/go-openapi/swag/mangling v0.28.0 // indirect
 	github.com/go-openapi/swag/netutils v0.24.0 // indirect
-	github.com/go-openapi/swag/pools v0.29.0 // indirect
-	github.com/go-openapi/swag/stringutils v0.29.0 // indirect
-	github.com/go-openapi/swag/typeutils v0.29.0 // indirect
-	github.com/go-openapi/swag/yamlutils v0.27.3 // indirect
-	github.com/go-openapi/validate v0.26.1 // indirect
+	github.com/go-openapi/swag/pools v0.29.1 // indirect
+	github.com/go-openapi/swag/stringutils v0.29.1 // indirect
+	github.com/go-openapi/swag/typeutils v0.29.1 // indirect
+	github.com/go-openapi/swag/yamlutils v0.28.0 // indirect
+	github.com/go-openapi/validate v0.26.3 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -76,12 +76,14 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gopherjs/gopherjs v1.21.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-plugin v1.8.0 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -105,6 +107,7 @@ require (
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 // indirect
+	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect

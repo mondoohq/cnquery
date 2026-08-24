@@ -16,8 +16,8 @@ github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk
 github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6 h1:w0E0fgc1YafGEh5cROhlROMWXiNoZqApk2PDN0M1+Ns=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6/go.mod h1:nuWgzSkT5PnyOd+272uUmV0dnAnAn42Mk7PiQC5VzN4=
-github.com/CycloneDX/cyclonedx-go v0.11.0 h1:GokP8FiRC+foiuwWhSSLpSD5H4hSWtGnR3wo7apkBFI=
-github.com/CycloneDX/cyclonedx-go v0.11.0/go.mod h1:vUvbCXQsEm48OI6oOlanxstwNByXjCZ2wuleUlwGEO8=
+github.com/CycloneDX/cyclonedx-go v0.12.0 h1:/7Jum36UA6V043tQZ/fE3jf+Nf9gn/qxUFfd7QReMy8=
+github.com/CycloneDX/cyclonedx-go v0.12.0/go.mod h1:V2577HhxDDCDLYfkm55WJrz16nHTfyQZwcWUBSG7Z28=
 github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=
@@ -75,8 +75,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 h1:WWkehGZ4nWtOKLMy0yi8+Rqz
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7/go.mod h1:T8AI4SbQYm9ybcVmki2T3n7Qg1g3kfWoeQlNwNYOyO8=
 github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 h1:yU/9y2r7s9kSUPbHXbpQTa4LA8kt+CMgpu1OBrhx8p4=
 github.com/aws/aws-sdk-go-v2/service/sts v1.45.7/go.mod h1:0lQTDEBArMevQXpxu443LVGjKxxEeSsSnrw9n8YiTMg=
-github.com/aws/smithy-go v1.27.8 h1:FR0dxZfIlV7Z8eh2iHfIofdunw382XsDV3Mxt9nUvRY=
-github.com/aws/smithy-go v1.27.8/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
+github.com/aws/smithy-go v1.27.9 h1:flT/ACSU1ksz3V+8wj8kN8DOB9tsc/ggWPTJXIieRpw=
+github.com/aws/smithy-go v1.27.9/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0 h1:JFWXO6QPihCknDdnL6VaQE57km4ZKheHIGd9YiOGcTo=
 github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.12.0/go.mod h1:046/oLyFlYdAghYQE2yHXi/E//VM5Cf3/dFmA+3CZ0c=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
@@ -199,8 +199,8 @@ github.com/google/go-containerregistry v0.21.7 h1:/vPFuVXDjtFREsVArW+0h1CIl5urnO
 github.com/google/go-containerregistry v0.21.7/go.mod h1:kjSbt7/zMsKLWfnHrIvKvhXHUw91jbe9DNjPPJ32gXE=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gopherjs/gopherjs v1.20.1 h1:22uLWFvVcxhJ+j3dJ99NNfwGyHynxCmjhYsrcwqbY60=
-github.com/gopherjs/gopherjs v1.20.1/go.mod h1:h+FTmmLgbXMmmtuZFp9bUqXciN429Wx0sJEJuMnpyfM=
+github.com/gopherjs/gopherjs v1.21.0 h1:5HEGrz+XhpCchubMGzuyLuGoCTlL/yCT7sGsT5Se/dw=
+github.com/gopherjs/gopherjs v1.21.0/go.mod h1:R2HIOen3IzYSzvmvkeD8WOfiLN9wueR/T5Y+6z326Ck=
 github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=
 github.com/hashicorp/go-hclog v1.6.3 h1:Qr2kF+eVWjTiYmU7Y31tYlP1h0q/X3Nl3tPGdaB11/k=
@@ -428,8 +428,10 @@ github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-go.mondoo.com/mondoo-go v0.0.0-20260821120618-ae51af2e4dae h1:WaazKGty8K3TZbiAB9fbogj9C5KPyT+l5Dbv3j/o1bk=
-go.mondoo.com/mondoo-go v0.0.0-20260821120618-ae51af2e4dae/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
+go.mondoo.com/mondoo-go v0.0.0-20260822000727-1d813d6a83c7 h1:4RpHzZRqq3RwB9Oa6kp6p8QjIHBGeAQ0cNKv/BfUCP0=
+go.mondoo.com/mondoo-go v0.0.0-20260822000727-1d813d6a83c7/go.mod h1:hESCStkuJqvuw0cWwVKrorQJJnGdxUnSdR4Zs1/W1W4=
+go.mondoo.com/mql/v13 v13.35.2 h1:oii5mnKHpUo3ol9mRTM++Ai4Zh7uKsCMODBmt42/35A=
+go.mondoo.com/mql/v13 v13.35.2/go.mod h1:NRCnjBSiOoAOdBTBlRpD6tAPDKrZttVRzDPI4W2HQoY=
 go.mondoo.com/ranger-rpc v0.8.1 h1:DynUWByDnxI4wMHbFpXUMw+lndYJ21BAHOxrhGyVCD4=
 go.mondoo.com/ranger-rpc v0.8.1/go.mod h1:HP3hjWjgRFxCFAnY86YLMiY0bU7eqhKuP8Qm+QlFBbI=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
