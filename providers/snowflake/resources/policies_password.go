@@ -56,10 +56,12 @@ func newMqlSnowflakePasswordPolicy(runtime *plugin.Runtime, passwordPolicy sdk.P
 	return mqlResource, nil
 }
 
-// mqlSnowflakePasswordPolicyInternal holds the owning role name that
-// ownerRole() resolves.
+// mqlSnowflakePasswordPolicyInternal holds the owning role name that the owner
+// reference resolves, and the memoized outcome of the policy's own
+// POLICY_REFERENCES lookup.
 type mqlSnowflakePasswordPolicyInternal struct {
 	cacheOwner string
+	refsMemo   policyReferenceMemo
 }
 
 func (r *mqlSnowflakePasswordPolicy) gatherPasswordPolicyDetails() error {

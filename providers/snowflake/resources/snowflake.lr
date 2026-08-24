@@ -143,6 +143,24 @@ snowflake.account {
   streamlits() []snowflake.streamlit
   // External volumes in the account (external storage backing Iceberg tables)
   externalVolumes() []snowflake.externalVolume
+  // Accounts in the organization this account belongs to
+  //
+  // Requires a session holding ORGADMIN. Null when the scanning role does not
+  // hold it, which is not the same as an organization with a single account.
+  organizationAccounts() []snowflake.organizationAccount
+  // Authentication policy attached to the account
+  //
+  // The policy every user falls under unless a policy is attached to them
+  // directly. Null when no policy is attached at the account level.
+  authenticationPolicy() snowflake.authenticationPolicy
+  // Password policy attached to the account
+  //
+  // Null when no policy is attached at the account level.
+  passwordPolicy() snowflake.passwordPolicy
+  // Session policy attached to the account
+  //
+  // Null when no policy is attached at the account level.
+  sessionPolicy() snowflake.sessionPolicy
 }
 
 // Snowflake User
@@ -269,6 +287,35 @@ snowflake.user @defaults("name") {
   // deduplicated. Privileges never attach to a user directly, so this is the
   // user's real authorization surface.
   effectiveGrants() []snowflake.grant
+  // Name of the network policy applied to the user
+  //
+  // A per-user network policy replaces the account-level policy, so a user
+  // carrying one is not restricted by the account's allowed IP ranges. Empty
+  // when the user has no override and inherits the account policy.
+  networkPolicyName() string
+  // Network policy applied to the user
+  //
+  // Null when the user has no per-user override, and also when the named policy
+  // cannot be listed by the scanning role, in which case networkPolicyName
+  // still reports that an override is set.
+  networkPolicy() snowflake.networkPolicy
+  // Authentication policy attached to the user
+  //
+  // The policy that decides which authentication methods and client types the
+  // user may sign in with, and whether a second factor is required. Null when
+  // no policy is attached to the user directly, in which case the account
+  // policy applies.
+  authenticationPolicy() snowflake.authenticationPolicy
+  // Password policy attached to the user
+  //
+  // Null when no policy is attached to the user directly, in which case the
+  // account policy applies.
+  passwordPolicy() snowflake.passwordPolicy
+  // Session policy attached to the user
+  //
+  // Null when no policy is attached to the user directly, in which case the
+  // account policy applies.
+  sessionPolicy() snowflake.sessionPolicy
 }
 
 // Snowflake Role
@@ -383,6 +430,63 @@ snowflake.securityIntegration @defaults("name") {
   saml2SignRequest() bool
   // SAML2_FORCE_AUTHN property (only set for SAML2 integrations)
   saml2ForceAuthn() bool
+  // EXTERNAL_OAUTH_ANY_ROLE_MODE property
+  //
+  // Governs whether a token issued by the external authorization server may
+  // request any role in the account, including ACCOUNTADMIN, rather than only
+  // the roles named in externalOauthAllowedRolesList. DISABLE confines a token
+  // to the allowed list, ENABLE lets it request any role, and
+  // ENABLE_FOR_PRIVILEGE lets it do so only where the session already holds the
+  // privilege. Null on integrations that do not report the property.
+  externalOauthAnyRoleMode() string
+  // EXTERNAL_OAUTH_ISSUER property, the authorization server whose signature makes a token acceptable
+  externalOauthIssuer() string
+  // EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE property
+  //
+  // The Snowflake user property a token claim is matched against, LOGIN_NAME or
+  // EMAIL_ADDRESS. Matching on an attribute a user can set for themselves lets
+  // a token be bound to a Snowflake user other than its subject.
+  externalOauthSnowflakeUserMappingAttribute() string
+  // EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM property, the token claims matched against the user attribute
+  externalOauthTokenUserMappingClaims() []string
+  // EXTERNAL_OAUTH_AUDIENCE_LIST property, the audiences a token has to carry to be accepted
+  externalOauthAudienceList() []string
+  // EXTERNAL_OAUTH_ALLOWED_ROLES_LIST property, the role names a token may request
+  externalOauthAllowedRolesList() []string
+  // EXTERNAL_OAUTH_BLOCKED_ROLES_LIST property, the role names a token may never request
+  externalOauthBlockedRolesList() []string
+  // OAUTH_CLIENT_TYPE property
+  //
+  // CONFIDENTIAL for a client that can hold a secret, PUBLIC for one that
+  // cannot and so relies on a proof key alone.
+  oauthClientType() string
+  // OAUTH_REDIRECT_URI property, the endpoint an authorization code is returned to
+  oauthRedirectUri() string
+  // OAUTH_ISSUE_REFRESH_TOKENS property
+  //
+  // Whether the integration issues refresh tokens, which outlive an access
+  // token and let a client obtain new ones with nobody present.
+  oauthIssueRefreshTokens() bool
+  // OAUTH_REFRESH_TOKEN_VALIDITY property, the lifetime of a refresh token in seconds
+  oauthRefreshTokenValidity() int
+  // OAUTH_ENFORCE_PKCE property, whether the authorization code flow requires a proof key
+  oauthEnforcePkce() bool
+  // OAUTH_USE_SECONDARY_ROLES property
+  //
+  // Whether a session opened through the integration activates the user's
+  // secondary roles, which widens the privileges available beyond the role the
+  // token asked for. Common values are IMPLICIT and NONE.
+  oauthUseSecondaryRoles() string
+  // BLOCKED_ROLES_LIST property, the role names the integration may never hand a session
+  blockedRolesList() []string
+  // SCIM_CLIENT property, the identity provider a SCIM integration accepts provisioning calls from
+  scimClient() string
+  // SYNC_PASSWORD property, whether a SCIM integration copies passwords from the identity provider
+  syncPassword() bool
+  // Role a SCIM integration acts as, which bounds the users and roles it can create and change
+  runAsRole() snowflake.role
+  // Network policy that restricts where the integration may be called from
+  networkPolicy() snowflake.networkPolicy
 }
 
 // Snowflake Password Policy
@@ -431,6 +535,11 @@ snowflake.passwordPolicy @defaults("name") {
   passwordLockoutTimeMins() int
   // Number of recent passwords to retain
   passwordHistory() int
+  // Objects the policy is attached to
+  //
+  // Each entry names the entity in refEntityName and its kind in
+  // refEntityDomain, so a policy that governs nothing returns an empty list.
+  references() []snowflake.policyReference
 }
 
 // Snowflake Network Policy
@@ -466,6 +575,10 @@ snowflake.networkPolicy @defaults("name") {
   blockedNetworkRules() []string
   // When the network policy was created
   createdAt time
+  // Network rules that hold the network identifiers allowed access
+  allowedNetworkRuleRefs() []snowflake.networkRule
+  // Network rules that hold the network identifiers denied access
+  blockedNetworkRuleRefs() []snowflake.networkRule
 }
 
 // Snowflake Procedure
@@ -813,6 +926,11 @@ snowflake.sessionPolicy @defaults("name sessionIdleTimeoutMins") {
   sessionIdleTimeoutMins() int
   // Time in minutes a UI (Snowsight) session can remain idle before being terminated (Snowflake default 240)
   sessionUiIdleTimeoutMins() int
+  // Objects the policy is attached to
+  //
+  // Each entry names the entity in refEntityName and its kind in
+  // refEntityDomain, so a policy that governs nothing returns an empty list.
+  references() []snowflake.policyReference
 }
 
 // Snowflake Share
@@ -1162,6 +1280,24 @@ snowflake.authenticationPolicy @defaults("name mfaEnrollment") {
   // policy that carries no workload identity rules, and on a Snowflake version
   // that does not report the property.
   workloadIdentityPolicy() dict
+  // Objects the policy is attached to
+  //
+  // Each entry names the entity in refEntityName and its kind in
+  // refEntityDomain, so a policy that governs nothing returns an empty list.
+  references() []snowflake.policyReference
+  // MFA_POLICY property
+  //
+  // Carries ALLOWED_METHODS, the second factors the policy accepts (such as
+  // PASSKEY, TOTP, and DUO), and ENROLLMENT, whether users have to enroll a
+  // second factor before they can sign in. Empty on Snowflake versions that do
+  // not report the property.
+  mfaPolicy() dict
+  // CLIENT_POLICY property
+  //
+  // Minimum driver versions the policy accepts, keyed by driver (such as
+  // GO_DRIVER and JDBC_DRIVER), each carrying MINIMUM_VERSION. Empty on
+  // Snowflake versions that do not report the property.
+  clientPolicy() dict
 }
 
 // Snowflake Masking Policy
@@ -1750,6 +1886,10 @@ snowflake.externalAccessIntegration @defaults("name enabled") {
   allowedAuthenticationSecrets() []string
   // Names of the API authentication integrations the integration allows
   allowedApiAuthenticationIntegrations() []string
+  // Network rules the integration allows egress to
+  allowedNetworkRuleRefs() []snowflake.networkRule
+  // Secrets the integration allows a function or procedure to read
+  allowedAuthenticationSecretRefs() []snowflake.secret
 }
 
 // Snowflake Cortex Search service
@@ -2361,4 +2501,50 @@ snowflake.applicationRole @defaults("name applicationName") {
   comment string
   // Time the application role was created
   createdAt time
+}
+
+// Snowflake Organization Account
+//
+// Account belonging to the same Snowflake organization as the account being
+// scanned, as reported to a session holding ORGADMIN. Each entry carries the
+// account name and locator, the region and edition it runs in, the URL clients
+// connect to, and whether the account itself holds ORGADMIN through isOrgAdmin,
+// which names the accounts that can create, drop, and move other accounts in
+// the organization. Select an account by name, for example
+// `snowflake.account.organizationAccounts.where(accountName == "PROD")`.
+snowflake.organizationAccount @defaults("accountName region edition isOrgAdmin") {
+  // Organization the account belongs to
+  organizationName string
+  // Account name within the organization
+  accountName string
+  // Account locator, the identifier Snowflake assigns the account
+  accountLocator string
+  // URL clients use to reach the account
+  accountUrl string
+  // Snowflake region the account runs in
+  region string
+  // Region group, reported only for organizations that span more than one region group
+  regionGroup string
+  // Snowflake edition of the account
+  //
+  // One of STANDARD, ENTERPRISE, BUSINESS_CRITICAL, or
+  // VIRTUAL_PRIVATE_SNOWFLAKE. Several account-level security controls,
+  // including customer-managed keys and private connectivity, are offered only
+  // on the higher editions.
+  edition string
+  // Comment on the account
+  comment string
+  // When the account was created
+  createdAt time
+  // Whether the account holds the ORGADMIN role
+  //
+  // An account with ORGADMIN can create, drop, and move other accounts in the
+  // organization, which makes it the organization's most privileged account.
+  isOrgAdmin bool
+  // Whether this entry is the organization account itself rather than a member account
+  isOrganizationAccount bool
+  // Whether the account is the organization's events account, which collects shared telemetry
+  isEventsAccount bool
+  // Number of reader accounts provisioned by the account
+  managedAccounts int
 }

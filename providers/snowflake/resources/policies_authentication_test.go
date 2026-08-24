@@ -215,3 +215,53 @@ func assertDictSerializable(t *testing.T, v any) {
 		t.Errorf("value %#v has type %T, which llx cannot convert to a dict", v, v)
 	}
 }
+
+// TestParseAuthPolicyStructMfaAndClientPolicy pins the two properties added
+// alongside PAT_POLICY and WORKLOAD_IDENTITY_POLICY.
+//
+// Neither value is JSON. Snowflake renders a structured DESCRIBE value the way
+// a Java map prints itself, which is what the documented CLIENT_POLICY example
+// shows, so a decoder written against JSON compiles, passes a hand-written
+// fixture, and returns nothing on every real account.
+func TestParseAuthPolicyStructMfaAndClientPolicy(t *testing.T) {
+	t.Run("MFA_POLICY", func(t *testing.T) {
+		got := parseAuthPolicyStruct("{ALLOWED_METHODS=[PASSKEY, TOTP, DUO], ENROLLMENT=REQUIRED}")
+		want := map[string]any{
+			"ALLOWED_METHODS": []any{"PASSKEY", "TOTP", "DUO"},
+			"ENROLLMENT":      "REQUIRED",
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("parseAuthPolicyStruct() = %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("CLIENT_POLICY nests one map per driver", func(t *testing.T) {
+		got := parseAuthPolicyStruct("{GO_DRIVER={MINIMUM_VERSION=3.14.1}, JDBC_DRIVER={MINIMUM_VERSION=3.13.30}}")
+		want := map[string]any{
+			"GO_DRIVER":   map[string]any{"MINIMUM_VERSION": "3.14.1"},
+			"JDBC_DRIVER": map[string]any{"MINIMUM_VERSION": "3.13.30"},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("parseAuthPolicyStruct() = %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("a version stays a string", func(t *testing.T) {
+		got := parseAuthPolicyStruct("{GO_DRIVER={MINIMUM_VERSION=3.14.1}}")
+		driver, ok := got["GO_DRIVER"].(map[string]any)
+		if !ok {
+			t.Fatalf("GO_DRIVER = %#v, want a map", got["GO_DRIVER"])
+		}
+		if _, isString := driver["MINIMUM_VERSION"].(string); !isString {
+			t.Errorf("MINIMUM_VERSION = %#v, want a string; coercing a version would drop its parts", driver["MINIMUM_VERSION"])
+		}
+	})
+
+	t.Run("an unreported property yields an empty map, not an error", func(t *testing.T) {
+		for _, in := range []string{"", "null", "not a map"} {
+			if got := parseAuthPolicyStruct(in); len(got) != 0 {
+				t.Errorf("parseAuthPolicyStruct(%q) = %#v, want empty", in, got)
+			}
+		}
+	})
+}

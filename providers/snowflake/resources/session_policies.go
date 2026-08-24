@@ -22,6 +22,7 @@ type mqlSnowflakeSessionPolicyInternal struct {
 	descLoadErr       error
 	descIdleTimeout   int64
 	descUiIdleTimeout int64
+	refsMemo          policyReferenceMemo
 }
 
 func (r *mqlSnowflakeAccount) sessionPolicies() ([]any, error) {

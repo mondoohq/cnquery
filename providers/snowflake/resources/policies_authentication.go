@@ -31,6 +31,9 @@ type mqlSnowflakeAuthenticationPolicyInternal struct {
 	descSecIntegs     []any
 	descPatPolicy     map[string]any
 	descWorkloadIdent map[string]any
+	descMfaPolicy     map[string]any
+	descClientPolicy  map[string]any
+	refsMemo          policyReferenceMemo
 }
 
 func (r *mqlSnowflakeAccount) authenticationPolicies() ([]any, error) {
@@ -114,6 +117,10 @@ func (r *mqlSnowflakeAuthenticationPolicy) gatherDescribe() error {
 			r.descPatPolicy = parseAuthPolicyStruct(row.Value)
 		case "WORKLOAD_IDENTITY_POLICY":
 			r.descWorkloadIdent = parseAuthPolicyStruct(row.Value)
+		case "MFA_POLICY":
+			r.descMfaPolicy = parseAuthPolicyStruct(row.Value)
+		case "CLIENT_POLICY":
+			r.descClientPolicy = parseAuthPolicyStruct(row.Value)
 		}
 	}
 
@@ -365,4 +372,24 @@ func (r *mqlSnowflakeAuthenticationPolicy) workloadIdentityPolicy() (any, error)
 		return map[string]any{}, nil
 	}
 	return r.descWorkloadIdent, nil
+}
+
+func (r *mqlSnowflakeAuthenticationPolicy) mfaPolicy() (any, error) {
+	if err := r.gatherDescribe(); err != nil {
+		return nil, err
+	}
+	if r.descMfaPolicy == nil {
+		return map[string]any{}, nil
+	}
+	return r.descMfaPolicy, nil
+}
+
+func (r *mqlSnowflakeAuthenticationPolicy) clientPolicy() (any, error) {
+	if err := r.gatherDescribe(); err != nil {
+		return nil, err
+	}
+	if r.descClientPolicy == nil {
+		return map[string]any{}, nil
+	}
+	return r.descClientPolicy, nil
 }
