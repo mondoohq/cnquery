@@ -24980,7 +24980,9 @@ func (c *mqlOciCompartment) GetParent() *plugin.TValue[*mqlOciCompartment] {
 }
 
 func (c *mqlOciCompartment) GetIsAccessible() *plugin.TValue[bool] {
-	return &c.IsAccessible
+	return plugin.GetOrCompute[bool](&c.IsAccessible, func() (bool, error) {
+		return c.isAccessible()
+	})
 }
 
 func (c *mqlOciCompartment) GetDescription() *plugin.TValue[string] {
