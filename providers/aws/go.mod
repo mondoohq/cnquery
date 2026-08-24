@@ -135,7 +135,7 @@ require (
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/afero v1.15.0
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260824020621-ed70b91ac183
+	go.mondoo.com/mql v0.0.0-20260824053258-a0a7399274d4
 	golang.org/x/sync v0.22.0
 	k8s.io/client-go v0.36.4
 )
