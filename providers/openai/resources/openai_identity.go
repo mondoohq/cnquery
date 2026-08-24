@@ -200,10 +200,12 @@ func openaiUserList(runtime *plugin.Runtime) ([]any, error) {
 	return users.Data, nil
 }
 
-// resolveOrganizationUser finds the organization member with the given id.
-// Admin API keys, project memberships, and group memberships all point at
-// users by id, and all of them resolve against the one organization user list.
-func resolveOrganizationUser(runtime *plugin.Runtime, userID string) (*mqlOpenaiOrganizationUser, error) {
+// findOrganizationUser looks up the organization member with the given id and
+// reports (nil, nil) when the organization does not list them. Records that
+// name a user outlive the membership they name (an audit log entry and an API
+// key both survive the member being removed), so those callers null the field
+// instead of failing the collection they are part of.
+func findOrganizationUser(runtime *plugin.Runtime, userID string) (*mqlOpenaiOrganizationUser, error) {
 	users, err := openaiUserList(runtime)
 	if err != nil {
 		return nil, err
@@ -217,7 +219,21 @@ func resolveOrganizationUser(runtime *plugin.Runtime, userID string) (*mqlOpenai
 			return u, nil
 		}
 	}
-	return nil, fmt.Errorf("openai.organizationUser with id %q not found", userID)
+	return nil, nil
+}
+
+// resolveOrganizationUser finds the organization member with the given id.
+// Admin API keys, project memberships, and group memberships all point at
+// users by id, and all of them resolve against the one organization user list.
+func resolveOrganizationUser(runtime *plugin.Runtime, userID string) (*mqlOpenaiOrganizationUser, error) {
+	user, err := findOrganizationUser(runtime, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, fmt.Errorf("openai.organizationUser with id %q not found", userID)
+	}
+	return user, nil
 }
 
 func initOpenaiOrganizationUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
@@ -354,4 +370,111 @@ func (r *mqlOpenaiAdminApiKey) owner() (*mqlOpenaiOrganizationUser, error) {
 		return nil, nil
 	}
 	return resolveOrganizationUser(r.MqlRuntime, r.cacheOwnerId)
+}
+
+type mqlOpenaiOrganizationUserRoleAssignmentInternal struct {
+	cacheGroupIDs     []string
+	cacheSourcesKnown bool
+}
+
+// roleAssignmentIsDirect reports whether an assignment source names a user
+// principal, which is what separates a role granted to the member outright
+// from one that arrives through a group. The second return value is false when
+// the API reported no assignment sources at all, where neither answer is known
+// and the field has to stay null: a fabricated false would let
+// `.all(isDirect == false)` pass without anything having been read.
+func roleAssignmentIsDirect(sources []openai.AdminOrganizationUserRoleListResponseAssignmentSource, sourcesReported bool) (bool, bool) {
+	if !sourcesReported {
+		return false, false
+	}
+	for _, src := range sources {
+		if src.PrincipalType == "user" {
+			return true, true
+		}
+	}
+	return false, true
+}
+
+// roleAssignmentGroupIDs collects the groups an inherited role arrives
+// through, in the order the API reported them.
+func roleAssignmentGroupIDs(sources []openai.AdminOrganizationUserRoleListResponseAssignmentSource) []string {
+	var groups []string
+	for _, src := range sources {
+		if src.PrincipalType == "group" && src.PrincipalID != "" {
+			groups = append(groups, src.PrincipalID)
+		}
+	}
+	return groups
+}
+
+func (r *mqlOpenaiOrganizationUser) roleAssignments() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := adminPlaneClient(conn, "openai.organizationUser.roleAssignments")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	var res []any
+	err = walkPages(
+		client.Admin.Organization.Users.Roles.ListAutoPaging(ctx, r.Id.Data, openai.AdminOrganizationUserRoleListParams{}),
+		func(role openai.AdminOrganizationUserRoleListResponse) string { return role.ID },
+		func(role openai.AdminOrganizationUserRoleListResponse) error {
+			mqlRole, err := CreateResource(r.MqlRuntime, "openai.role",
+				roleArgs(role.ID, role.Name, role.Description, role.ResourceType, role.Permissions, role.PredefinedRole))
+			if err != nil {
+				return err
+			}
+
+			sourcesReported := role.JSON.AssignmentSources.Valid()
+			isDirect, known := roleAssignmentIsDirect(role.AssignmentSources, sourcesReported)
+			var isDirectData *bool
+			if known {
+				isDirectData = &isDirect
+			}
+
+			// an assignment is scoped to the member it was read for, so a bare
+			// role id would collide across every member holding the role
+			mqlAssignment, err := CreateResource(r.MqlRuntime, "openai.organizationUser.roleAssignment", map[string]*llx.RawData{
+				"__id":     llx.StringData(r.Id.Data + "/" + role.ID),
+				"isDirect": llx.BoolDataPtr(isDirectData),
+				"role":     llx.ResourceData(mqlRole, "openai.role"),
+			})
+			if err != nil {
+				return err
+			}
+			assignment := mqlAssignment.(*mqlOpenaiOrganizationUserRoleAssignment)
+			assignment.cacheSourcesKnown = sourcesReported
+			assignment.cacheGroupIDs = roleAssignmentGroupIDs(role.AssignmentSources)
+			res = append(res, mqlAssignment)
+			return nil
+		})
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list role assignments for user %s: %w", r.Id.Data, err)
+	}
+	return res, nil
+}
+
+func (r *mqlOpenaiOrganizationUserRoleAssignment) inheritedFromGroups() ([]any, error) {
+	if !r.cacheSourcesKnown {
+		r.InheritedFromGroups.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res := []any{}
+	for _, groupID := range r.cacheGroupIDs {
+		mqlGroup, err := NewResource(r.MqlRuntime, "openai.group", map[string]*llx.RawData{
+			"id": llx.StringData(groupID),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlGroup)
+	}
+	return res, nil
 }

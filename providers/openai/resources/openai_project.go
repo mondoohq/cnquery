@@ -125,6 +125,9 @@ func (r *mqlOpenaiProject) apiKeys() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		key := mqlKey.(*mqlOpenaiProjectApiKey)
+		key.cacheOwnerId = ownerId
+		key.cacheProjectId = r.Id.Data
 		res = append(res, mqlKey)
 	}
 	if err := iter.Err(); err != nil {
@@ -278,4 +281,94 @@ func (r *mqlOpenaiProject) roles() ([]any, error) {
 		return nil, fmt.Errorf("failed to list project roles: %w", err)
 	}
 	return res, nil
+}
+
+// openaiProjectList returns the organization project collection through the
+// openai resource so the underlying list call is made once per scan.
+func openaiProjectList(runtime *plugin.Runtime) ([]any, error) {
+	obj, err := CreateResource(runtime, "openai", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	projects := obj.(*mqlOpenai).GetProjects()
+	if projects.Error != nil {
+		return nil, projects.Error
+	}
+	return projects.Data, nil
+}
+
+// resolveProject finds the project with the given id in the organization
+// project list. Resolving through the cached list keeps a reference from
+// costing a get per referring object. An audit log entry or a checkpoint grant
+// can name a project that has since been deleted, so a miss is reported as
+// (nil, nil) for the caller to null rather than as an error.
+func resolveProject(runtime *plugin.Runtime, projectID string) (*mqlOpenaiProject, error) {
+	projects, err := openaiProjectList(runtime)
+	if err != nil {
+		return nil, err
+	}
+	for i := range projects {
+		p, ok := projects[i].(*mqlOpenaiProject)
+		if !ok {
+			continue
+		}
+		if p.Id.Data == projectID {
+			return p, nil
+		}
+	}
+	return nil, nil
+}
+
+type mqlOpenaiProjectApiKeyInternal struct {
+	cacheOwnerId   string
+	cacheProjectId string
+}
+
+func (r *mqlOpenaiProjectApiKey) owner() (*mqlOpenaiOrganizationUser, error) {
+	if r.OwnerType.Data != "user" || r.cacheOwnerId == "" {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	// a key outlives the member it was issued to, so an owner who has left the
+	// organization nulls the field rather than failing the key list
+	user, err := findOrganizationUser(r.MqlRuntime, r.cacheOwnerId)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		r.Owner.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return user, nil
+}
+
+func (r *mqlOpenaiProjectApiKey) serviceAccount() (*mqlOpenaiProjectServiceAccount, error) {
+	if r.OwnerType.Data != "service_account" || r.cacheOwnerId == "" || r.cacheProjectId == "" {
+		r.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	project, err := resolveProject(r.MqlRuntime, r.cacheProjectId)
+	if err != nil {
+		return nil, err
+	}
+	if project == nil {
+		r.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	accounts := project.GetServiceAccounts()
+	if accounts.Error != nil {
+		return nil, accounts.Error
+	}
+	for i := range accounts.Data {
+		sa, ok := accounts.Data[i].(*mqlOpenaiProjectServiceAccount)
+		if !ok {
+			continue
+		}
+		if sa.Id.Data == r.cacheOwnerId {
+			return sa, nil
+		}
+	}
+	r.ServiceAccount.State = plugin.StateIsSet | plugin.StateIsNull
+	return nil, nil
 }

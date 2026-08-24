@@ -66,6 +66,10 @@ openai @defaults("organization") @maturity("preview") {
   certificates() []openai.certificate
   // Code interpreter containers
   containers() []openai.container
+  // Batch jobs submitted to the Batch API
+  batches() []openai.batch
+  // Skills available to the project
+  skills() []openai.skill
 }
 
 // OpenAI certificate
@@ -128,6 +132,30 @@ openai.container @defaults("name status networkPolicyType") @maturity("preview")
   // Empty under a disabled policy, and null when the container reports
   // no network policy.
   networkPolicyAllowedDomains []string
+  // Files present in the container
+  files() []openai.container.file
+}
+
+// OpenAI container file
+//
+// File inside a code interpreter sandbox, either uploaded into it or written
+// by the model while running code. The `source` field separates the two and
+// `path` locates the file in the sandbox, so what a model produced can be read
+// alongside the network policy that bounds where it could be sent.
+openai.container.file @defaults("path source bytes") @maturity("preview") {
+  // File identifier
+  id string
+  // Path of the file inside the container
+  path string
+  // Origin of the file
+  //
+  // For example user for a file uploaded into the container, or assistant for
+  // a file the model wrote while running code.
+  source string
+  // File size in bytes
+  bytes int
+  // Creation timestamp
+  createdAt time
 }
 
 // OpenAI spend alert
@@ -184,6 +212,99 @@ openai.model @defaults("id ownedBy") @maturity("preview") {
   // Extracted from the fine-tuned model ID. For example, a model with
   // id "ft:gpt-4o-mini:my-org:custom:abc123" has baseModel "gpt-4o-mini".
   baseModel() string
+}
+
+// OpenAI batch job
+//
+// Asynchronous job that runs a file of queued API requests at a reduced rate.
+// The `inputFile` and `outputFile` fields resolve the uploaded request file
+// and the generated result file, which are among the largest stored artifacts
+// on the platform, and `expiresAt` bounds how long the results stay
+// retrievable. The `status` and `requestCounts` fields report where a job
+// stopped and how many of its requests failed. A batch is selected by its
+// identifier, for example openai.batch(id: "batch_abc123").
+openai.batch @defaults("id endpoint status") @maturity("preview") {
+  // Batch identifier
+  id string
+  // API endpoint the queued requests are sent to
+  //
+  // For example /v1/chat/completions, /v1/embeddings, or /v1/responses.
+  endpoint string
+  // Batch status
+  //
+  // One of validating, failed, in_progress, finalizing, completed, expired,
+  // cancelling, or cancelled.
+  status string
+  // Time frame the batch is processed within
+  //
+  // Currently always 24h.
+  completionWindow string
+  // Creation timestamp
+  createdAt time
+  // Timestamp processing started, null until the batch runs
+  inProgressAt time
+  // Timestamp the batch started assembling results, null until it finalizes
+  finalizingAt time
+  // Completion timestamp, null unless the batch completed
+  completedAt time
+  // Failure timestamp, null unless the batch failed
+  failedAt time
+  // Timestamp the batch was cancelled, null unless it was cancelled
+  cancelledAt time
+  // Timestamp cancellation was requested, null unless it was requested
+  cancellingAt time
+  // Timestamp the batch expired before finishing, null unless it expired
+  expiredAt time
+  // Timestamp the batch expires at, null when the batch reports no expiration
+  expiresAt time
+  // Model the queued requests run against
+  //
+  // Null when the batch reports no model, and when the model is no longer in
+  // the account model list.
+  model() openai.model
+  // File holding the queued requests
+  //
+  // Null when the file is no longer listed in the account.
+  inputFile() openai.file
+  // File holding the results of successful requests
+  //
+  // Null until results exist, and when the file is no longer listed in the
+  // account.
+  outputFile() openai.file
+  // File holding the results of failed requests
+  //
+  // Null when no request failed, and when the file is no longer listed in the
+  // account.
+  errorFile() openai.file
+  // Request counts by outcome
+  //
+  // Keyed by total, completed, and failed.
+  requestCounts dict
+  // User-defined metadata
+  metadata dict
+}
+
+// OpenAI skill
+//
+// Reusable instruction package that a model loads and runs inside the project,
+// versioned independently of the code that calls it. The `defaultVersion`
+// field names the version a caller gets when it does not ask for one and
+// `latestVersion` the newest uploaded, so a skill whose default trails its
+// latest version runs older instructions than the ones most recently
+// published.
+openai.skill @defaults("name defaultVersion latestVersion") @maturity("preview") {
+  // Skill identifier
+  id string
+  // Skill name
+  name string
+  // Skill description
+  description string
+  // Version callers load when they do not name one
+  defaultVersion string
+  // Newest uploaded version
+  latestVersion string
+  // Creation timestamp
+  createdAt time
 }
 
 // OpenAI file
@@ -257,6 +378,44 @@ openai.fineTuningJob @defaults("id model status") @maturity("preview") {
   // failure code, `message` is the human-readable explanation, and `param`
   // is the parameter that caused the failure (empty when not parameter-specific).
   error dict
+  // Checkpoints produced by this job
+  checkpoints() []openai.fineTuningJob.checkpoint
+}
+
+// OpenAI fine-tuning checkpoint
+//
+// Model snapshot written during a fine-tuning job and callable as a model of
+// its own. The `permissions` field lists the projects the checkpoint has been
+// shared into, which is how a model trained on one project's data becomes
+// reachable from another. The `fineTunedModelCheckpoint` field is the model
+// name the checkpoint is called by.
+openai.fineTuningJob.checkpoint @defaults("fineTunedModelCheckpoint stepNumber") @maturity("preview") {
+  // Checkpoint identifier
+  id string
+  // Model name the checkpoint is called by
+  fineTunedModelCheckpoint string
+  // Training step the checkpoint was written at
+  stepNumber int
+  // Creation timestamp
+  createdAt time
+  // Projects the checkpoint is shared into (requires an admin API key)
+  permissions() []openai.fineTuningJob.checkpoint.permission
+}
+
+// OpenAI fine-tuning checkpoint permission
+//
+// Grant that makes a fine-tuned checkpoint callable from a project other than
+// the one whose data trained it. The `project` field resolves the project the
+// grant names and `createdAt` records when the sharing started.
+openai.fineTuningJob.checkpoint.permission @defaults("createdAt") @maturity("preview") {
+  // Permission identifier
+  id string
+  // Timestamp the checkpoint was shared with the project
+  createdAt time
+  // Project the checkpoint is shared into
+  //
+  // Null when the project no longer exists.
+  project() openai.project
 }
 
 // OpenAI vector store
@@ -297,6 +456,50 @@ openai.vectorStore @defaults("id name status") @maturity("preview") {
   expiresAt time
   // User-defined metadata
   metadata dict
+  // Files attached to this store
+  files() []openai.vectorStore.file
+}
+
+// OpenAI vector store file
+//
+// Membership of an uploaded file in a vector store, which is what makes the
+// file retrievable by a model through file search. The `file` field resolves
+// the upload behind the membership, so the stores a single upload is reachable
+// through can be read off one query. The `status` field reports whether the
+// file finished embedding, and `lastErrorCode` and `lastErrorMessage` explain
+// a file that did not.
+openai.vectorStore.file @defaults("id status") @maturity("preview") {
+  // Membership identifier, which is the identifier of the uploaded file
+  id string
+  // Timestamp the file was attached to the store
+  createdAt time
+  // Embedding status
+  //
+  // One of in_progress, completed, cancelled, or failed. Only completed files
+  // are retrievable through file search.
+  status string
+  // Storage the file occupies in the store, in bytes
+  //
+  // Counted after chunking and embedding, so it differs from the size of the
+  // uploaded file.
+  usageBytes int
+  // Failure code for a file that could not be embedded
+  //
+  // One of server_error, unsupported_file, or invalid_file. Null when the file
+  // reports no error.
+  lastErrorCode string
+  // Failure explanation for a file that could not be embedded, null when the file reports no error
+  lastErrorMessage string
+  // How the file was split before embedding
+  //
+  // One of static, for fixed size chunks, or other, for a file added before
+  // the store recorded a strategy. Null when the store reports no chunking
+  // strategy.
+  chunkingStrategyType string
+  // Uploaded file behind this membership
+  //
+  // Null when the file is no longer listed in the account.
+  file() openai.file
 }
 
 // OpenAI project
@@ -462,6 +665,15 @@ openai.project.apiKey @defaults("id name") @maturity("preview") {
   ownerName string
   // Owner identifier
   ownerId string
+  // Organization member that owns the key
+  //
+  // Null when a service account owns the key, and when the member has since
+  // been removed from the organization.
+  owner() openai.organizationUser
+  // Service account that owns the key
+  //
+  // Null when a member owns the key.
+  serviceAccount() openai.project.serviceAccount
 }
 
 // OpenAI project service account
@@ -520,6 +732,33 @@ openai.organizationUser @defaults("id email role") @maturity("preview") {
   // The effective set, covering roles granted to the user directly and
   // roles the user picks up through group membership.
   roles() []openai.role
+  // Role assignments held by the user (requires an admin API key)
+  //
+  // One entry per role, recording whether the role was granted to the member
+  // directly or arrives through a group.
+  roleAssignments() []openai.organizationUser.roleAssignment
+}
+
+// OpenAI role assignment
+//
+// Single role held by an organization member, together with where the grant
+// comes from. The `isDirect` field separates a role granted to the member
+// outright from one that arrives through group membership, which decides
+// whether removing the member from a group is enough to take the privilege
+// away. The `inheritedFromGroups` field names the groups that confer it.
+openai.organizationUser.roleAssignment @defaults("isDirect") @maturity("preview") {
+  // Whether the role is granted to the member directly
+  //
+  // True when an assignment source names a user principal. Null when the API
+  // reports no assignment sources for the role.
+  isDirect bool
+  // Role held through this assignment
+  role openai.role
+  // Groups that confer the role on the member
+  //
+  // Empty when no group confers it. Null when the API reports no assignment
+  // sources for the role.
+  inheritedFromGroups() []openai.group
 }
 
 // OpenAI admin API key
@@ -663,4 +902,35 @@ openai.auditLog @defaults("id type effectiveAt") @maturity("preview") {
   actorType string
   // Actor email (for session actors) or API key ID (for API key actors)
   actorId string
+  // Source address the action came from
+  //
+  // Recorded for browser session actors. Null for actions performed with an
+  // API key, where the API reports no source address.
+  actorIpAddress string
+  // Credential class behind an API key actor
+  //
+  // One of user, for a key issued to a person, or service_account, for a key
+  // issued to automation. Null when a browser session performed the action.
+  actorApiKeyType string
+  // Organization member that performed the action
+  //
+  // Resolved for session actors and for API keys issued to a person. Null for
+  // service account keys and for members who have since been removed from the
+  // organization.
+  actorUser() openai.organizationUser
+  // Project the action was scoped to
+  //
+  // Null for actions that are not scoped to a project, and for projects that
+  // no longer exist. Actions taken with an admin API key are recorded against
+  // the default project.
+  project() openai.project
+  // Change record for this entry
+  //
+  // The payload the API reports under the key named by `type`, so the shape
+  // varies by event. An api_key.created entry carries the new key identifier
+  // and the scopes requested, ip_allowlist.updated carries the address ranges
+  // before and after the edit, and the workload_identity_provider events carry
+  // the issuer and audience that were trusted. Null for event types that carry
+  // no payload, such as login.succeeded.
+  details dict
 }

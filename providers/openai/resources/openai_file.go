@@ -89,3 +89,40 @@ func initOpenaiFile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 
 	return mapFile(*f), nil, nil
 }
+
+// openaiFileList returns the account file collection through the openai
+// resource so the underlying list call is made once per scan.
+func openaiFileList(runtime *plugin.Runtime) ([]any, error) {
+	obj, err := CreateResource(runtime, "openai", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	files := obj.(*mqlOpenai).GetFiles()
+	if files.Error != nil {
+		return nil, files.Error
+	}
+	return files.Data, nil
+}
+
+// resolveFile finds the uploaded file with the given id in the account file
+// list. Resolving through the cached list keeps a reference from costing a get
+// per referring object. A reference outlives the upload it names (a batch
+// keeps its input file id after the file is deleted), so a miss is reported as
+// (nil, nil) for the caller to null rather than as an error that would take
+// the referring collection down with it.
+func resolveFile(runtime *plugin.Runtime, fileID string) (*mqlOpenaiFile, error) {
+	files, err := openaiFileList(runtime)
+	if err != nil {
+		return nil, err
+	}
+	for i := range files {
+		f, ok := files[i].(*mqlOpenaiFile)
+		if !ok {
+			continue
+		}
+		if f.Id.Data == fileID {
+			return f, nil
+		}
+	}
+	return nil, nil
+}

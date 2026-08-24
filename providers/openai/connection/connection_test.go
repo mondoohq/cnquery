@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 )
 
 func TestIsAdminToken(t *testing.T) {
@@ -91,4 +92,133 @@ func TestFetchAccountInfoCapsTheBody(t *testing.T) {
 	assert.Contains(t, err.Error(), "exceeded the 1048576 byte limit",
 		"a capped read has to name itself: the truncated JSON would otherwise fail with a generic syntax error that reads like a malformed response")
 	assert.Nil(t, info)
+}
+
+func TestResolveTokens(t *testing.T) {
+	tests := []struct {
+		name       string
+		tokenFlag  string
+		adminFlag  string
+		tokenEnv   string
+		adminEnv   string
+		wantProj   string
+		wantAdmin  string
+		reasonNote string
+	}{
+		{
+			name: "no credentials", wantProj: "", wantAdmin: "",
+		},
+		{
+			name:      "a project key stays on the data plane",
+			tokenFlag: "sk-proj-one", wantProj: "sk-proj-one", wantAdmin: "",
+		},
+		{
+			name:      "an admin key passed to --token is still detected by its prefix",
+			tokenFlag: "sk-admin-one", wantProj: "", wantAdmin: "sk-admin-one",
+			reasonNote: "sending an admin key to the data-plane endpoints would fail every call",
+		},
+		{
+			name:      "both flags fill both planes",
+			tokenFlag: "sk-proj-one", adminFlag: "sk-admin-one",
+			wantProj: "sk-proj-one", wantAdmin: "sk-admin-one",
+		},
+		{
+			name:     "both environment variables fill both planes",
+			tokenEnv: "sk-proj-one", adminEnv: "sk-admin-one",
+			wantProj: "sk-proj-one", wantAdmin: "sk-admin-one",
+		},
+		{
+			name:      "flags win over the environment",
+			tokenFlag: "sk-proj-flag", adminFlag: "sk-admin-flag",
+			tokenEnv: "sk-proj-env", adminEnv: "sk-admin-env",
+			wantProj: "sk-proj-flag", wantAdmin: "sk-admin-flag",
+		},
+		{
+			name:      "--admin-token names the plane whatever the prefix",
+			adminFlag: "sk-one", wantProj: "", wantAdmin: "sk-one",
+		},
+		{
+			name:      "an admin key in --token does not displace an explicit admin token",
+			tokenFlag: "sk-admin-one", adminFlag: "sk-admin-two",
+			wantProj: "", wantAdmin: "sk-admin-two",
+		},
+		{
+			name:     "a project key from the environment pairs with an admin flag",
+			tokenEnv: "sk-proj-one", adminFlag: "sk-admin-one",
+			wantProj: "sk-proj-one", wantAdmin: "sk-admin-one",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			proj, admin := resolveTokens(tc.tokenFlag, tc.adminFlag, tc.tokenEnv, tc.adminEnv)
+			assert.Equal(t, tc.wantProj, proj, tc.reasonNote)
+			assert.Equal(t, tc.wantAdmin, admin, tc.reasonNote)
+		})
+	}
+}
+
+func newTestConnection(t *testing.T, options map[string]string) *OpenaiConnection {
+	t.Helper()
+	// Clear the environment so an ambient key cannot leak in, and set an
+	// organization so the constructor skips its best-effort /v1/me call.
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+	t.Setenv("OPENAI_ORG_ID", "")
+	t.Setenv("OPENAI_PROJECT_ID", "")
+	opts := map[string]string{OrganizationOption: "org-test"}
+	for k, v := range options {
+		opts[k] = v
+	}
+	conn, err := NewOpenaiConnection(0, &inventory.Asset{}, &inventory.Config{Options: opts})
+	require.NoError(t, err)
+	return conn
+}
+
+func TestConnectionPlanes(t *testing.T) {
+	projectOnly := newTestConnection(t, map[string]string{TokenOption: "sk-proj-one"})
+	assert.NotNil(t, projectOnly.Client())
+	assert.Nil(t, projectOnly.AdminClient(), "a project key cannot read organization resources")
+	assert.False(t, projectOnly.IsAdminKey())
+
+	adminOnly := newTestConnection(t, map[string]string{TokenOption: "sk-admin-one"})
+	assert.Nil(t, adminOnly.Client(), "an admin key cannot read data-plane resources")
+	assert.NotNil(t, adminOnly.AdminClient())
+	assert.True(t, adminOnly.IsAdminKey())
+
+	// Both keys on one connection is what lets a query cross the two planes,
+	// such as a fine-tuning checkpoint (project key) and the projects it is
+	// shared into (admin key).
+	both := newTestConnection(t, map[string]string{
+		TokenOption:      "sk-proj-one",
+		AdminTokenOption: "sk-admin-one",
+	})
+	require.NotNil(t, both.Client())
+	require.NotNil(t, both.AdminClient())
+	assert.True(t, both.IsAdminKey())
+
+	none := newTestConnection(t, nil)
+	assert.Nil(t, none.Client())
+	assert.Nil(t, none.AdminClient())
+}
+
+func TestConnectionIdentityIsUnchangedByTheAdminToken(t *testing.T) {
+	// The platform id keys the asset. Adding a second credential to an
+	// existing connection must not re-key the asset it already scanned.
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+	t.Setenv("OPENAI_ORG_ID", "")
+	t.Setenv("OPENAI_PROJECT_ID", "")
+
+	projectOnly, err := NewOpenaiConnection(0, &inventory.Asset{}, &inventory.Config{Options: map[string]string{
+		TokenOption: "sk-proj-one",
+	}})
+	require.NoError(t, err)
+
+	withAdmin, err := NewOpenaiConnection(0, &inventory.Asset{}, &inventory.Config{Options: map[string]string{
+		TokenOption:      "sk-proj-one",
+		AdminTokenOption: "sk-admin-one",
+	}})
+	require.NoError(t, err)
+
+	assert.Equal(t, projectOnly.PlatformId(), withAdmin.PlatformId())
 }

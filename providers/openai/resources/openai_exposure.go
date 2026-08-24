@@ -153,3 +153,44 @@ func (r *mqlOpenai) containers() ([]any, error) {
 	}
 	return res, nil
 }
+
+func (r *mqlOpenaiContainer) files() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := dataPlaneClient(conn, "openai.container.files")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	var res []any
+	err = walkPages(
+		client.Containers.Files.ListAutoPaging(ctx, r.Id.Data, openai.ContainerFileListParams{}),
+		func(f openai.ContainerFileListResponse) string { return f.ID },
+		func(f openai.ContainerFileListResponse) error {
+			// the same file path exists in more than one sandbox, so the entry
+			// is keyed by container as well as by file
+			mqlFile, err := CreateResource(r.MqlRuntime, "openai.container.file", map[string]*llx.RawData{
+				"__id":      llx.StringData(r.Id.Data + "/" + f.ID),
+				"id":        llx.StringData(f.ID),
+				"path":      llx.StringData(f.Path),
+				"source":    llx.StringData(f.Source),
+				"bytes":     llx.IntData(f.Bytes),
+				"createdAt": llx.TimeDataPtr(unixToNullableTime(f.CreatedAt)),
+			})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlFile)
+			return nil
+		})
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list files in container %s: %w", r.Id.Data, err)
+	}
+	return res, nil
+}

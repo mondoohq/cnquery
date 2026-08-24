@@ -161,3 +161,108 @@ func (r *mqlOpenaiFineTuningJob) validationFile() (*mqlOpenaiFile, error) {
 	}
 	return res.(*mqlOpenaiFile), nil
 }
+
+type mqlOpenaiFineTuningJobCheckpointInternal struct {
+	cacheCheckpointModel string
+}
+
+type mqlOpenaiFineTuningJobCheckpointPermissionInternal struct {
+	cacheProjectId string
+}
+
+func (r *mqlOpenaiFineTuningJob) checkpoints() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := dataPlaneClient(conn, "openai.fineTuningJob.checkpoints")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	var res []any
+	err = walkPages(
+		client.FineTuning.Jobs.Checkpoints.ListAutoPaging(ctx, r.Id.Data, openai.FineTuningJobCheckpointListParams{}),
+		func(c openai.FineTuningJobCheckpoint) string { return c.ID },
+		func(c openai.FineTuningJobCheckpoint) error {
+			mqlCheckpoint, err := CreateResource(r.MqlRuntime, "openai.fineTuningJob.checkpoint", map[string]*llx.RawData{
+				"__id":                     llx.StringData(c.ID),
+				"id":                       llx.StringData(c.ID),
+				"fineTunedModelCheckpoint": llx.StringData(c.FineTunedModelCheckpoint),
+				"stepNumber":               llx.IntData(c.StepNumber),
+				"createdAt":                llx.TimeDataPtr(unixToNullableTime(c.CreatedAt)),
+			})
+			if err != nil {
+				return err
+			}
+			mqlCheckpoint.(*mqlOpenaiFineTuningJobCheckpoint).cacheCheckpointModel = c.FineTunedModelCheckpoint
+			res = append(res, mqlCheckpoint)
+			return nil
+		})
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list checkpoints for fine-tuning job %s: %w", r.Id.Data, err)
+	}
+	return res, nil
+}
+
+// permissions lists the projects a checkpoint has been shared into. Listing
+// the checkpoints is a project-key call while reading their permissions is an
+// admin-key one, so this field is the half of the pair that needs the admin
+// credential and it is only answerable on a connection carrying both.
+func (r *mqlOpenaiFineTuningJobCheckpoint) permissions() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := adminPlaneClient(conn, "openai.fineTuningJob.checkpoint.permissions")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil || r.cacheCheckpointModel == "" {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	var res []any
+	err = walkPages(
+		client.FineTuning.Checkpoints.Permissions.ListAutoPaging(ctx, r.cacheCheckpointModel,
+			openai.FineTuningCheckpointPermissionListParams{}),
+		func(p openai.FineTuningCheckpointPermissionListResponse) string { return p.ID },
+		func(p openai.FineTuningCheckpointPermissionListResponse) error {
+			mqlPermission, err := CreateResource(r.MqlRuntime, "openai.fineTuningJob.checkpoint.permission", map[string]*llx.RawData{
+				"__id":      llx.StringData(p.ID),
+				"id":        llx.StringData(p.ID),
+				"createdAt": llx.TimeDataPtr(unixToNullableTime(p.CreatedAt)),
+			})
+			if err != nil {
+				return err
+			}
+			mqlPermission.(*mqlOpenaiFineTuningJobCheckpointPermission).cacheProjectId = p.ProjectID
+			res = append(res, mqlPermission)
+			return nil
+		})
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list permissions for checkpoint %s: %w", r.cacheCheckpointModel, err)
+	}
+	return res, nil
+}
+
+func (r *mqlOpenaiFineTuningJobCheckpointPermission) project() (*mqlOpenaiProject, error) {
+	if r.cacheProjectId == "" {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	project, err := resolveProject(r.MqlRuntime, r.cacheProjectId)
+	if err != nil {
+		return nil, err
+	}
+	if project == nil {
+		r.Project.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return project, nil
+}
