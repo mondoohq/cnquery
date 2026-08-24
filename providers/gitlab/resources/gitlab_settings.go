@@ -24,7 +24,7 @@ func initGitlabSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	}
 
 	conn := runtime.Connection.(*connection.GitLabConnection)
-	settings, _, err := conn.Client().Settings.GetSettings()
+	settings, policy, err := getInstanceSettings(conn.Client())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -62,6 +62,11 @@ func initGitlabSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (
 	args["terminalMaxSessionTime"] = llx.IntData(settings.TerminalMaxSessionTime)
 	args["duoFeaturesEnabled"] = llx.BoolData(settings.DuoFeaturesEnabled)
 	args["lockDuoFeaturesEnabled"] = llx.BoolData(settings.LockDuoFeaturesEnabled)
+
+	// The credential-lifecycle, sign-in hardening and CI job-token settings are
+	// read from the same response through a pointer-typed view, so a release
+	// that predates one of them reports null rather than claiming it is off.
+	setInstanceSettingsPolicyArgs(args, policy)
 
 	return args, nil, nil
 }

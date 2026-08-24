@@ -1110,37 +1110,25 @@ type mqlGitlabGroupWebhookInternal struct {
 }
 
 // webhooks lists the webhooks registered at the group level. Group hooks fire
-// for events across every project in the group.
+// for events across every project in the group. The configured secret token is
+// write-only and never returned, but GitLab does report whether one is set, and
+// that is decoded separately from the SDK type so an instance that does not
+// report it leaves tokenPresent null instead of claiming no token is set.
 func (g *mqlGitlabGroup) webhooks() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.GitLabConnection)
 
-	groupID := int(g.Id.Data)
+	raw, _, err := listRawPages(conn.Client(), "groups/"+strconv.FormatInt(g.Id.Data, 10)+"/hooks", 50)
+	if err != nil {
+		return nil, err
+	}
 
-	perPage := int64(50)
-	page := int64(1)
-	var allHooks []*gitlab.GroupHook
-
-	for {
-		hooks, resp, err := conn.Client().Groups.ListGroupHooks(groupID, &gitlab.ListGroupHooksOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		allHooks = append(allHooks, hooks...)
-
-		if resp.NextPage == 0 {
-			break
-		}
-		page = resp.NextPage
+	allHooks, presence, err := decodeHooks[gitlab.GroupHook](raw)
+	if err != nil {
+		return nil, err
 	}
 
 	var mqlWebhooks []any
-	for _, hook := range allHooks {
+	for i, hook := range allHooks {
 		customHeaders := map[string]any{}
 		for _, h := range hook.CustomHeaders {
 			if h == nil {
@@ -1178,6 +1166,7 @@ func (g *mqlGitlabGroup) webhooks() ([]any, error) {
 			// from GroupHook accordingly. Null says we cannot see it; the
 			// false this used to report claimed the trigger was switched off.
 			"repositoryUpdateEvents": llx.BoolDataPtr(nil),
+			"tokenPresent":           llx.BoolDataPtr(presence[i].TokenPresent),
 			"subGroupEvents":         llx.BoolData(hook.SubGroupEvents),
 			"memberEvents":           llx.BoolData(hook.MemberEvents),
 			"projectEvents":          llx.BoolData(hook.ProjectEvents),
