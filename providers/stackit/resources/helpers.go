@@ -26,6 +26,25 @@ func bgctx() context.Context { return context.Background() }
 // The STACKIT service packages disagree on whether an optional timestamp comes
 // back as a value or a pointer (sfs returns time.Time, iaas and ske return
 // *time.Time), so accept both rather than making every caller adapt.
+// strOrNil turns a (value, ok) getter pair into a pointer, so a field the API
+// left out stays null instead of collapsing into an empty string, which a
+// query comparing against a version or a name cannot tell apart from a real
+// empty value. Callers pass a generated GetXOk() result straight through; the
+// STACKIT SDK modules return the value itself in some services and a pointer
+// to it in others, so both forms are accepted.
+func strOrNil[T string | *string](v T, ok bool) *string {
+	if !ok {
+		return nil
+	}
+	switch s := any(v).(type) {
+	case string:
+		return &s
+	case *string:
+		return s
+	}
+	return nil
+}
+
 func timeOrNil[T time.Time | *time.Time](t T, ok bool) *time.Time {
 	if !ok {
 		return nil

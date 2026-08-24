@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"fmt"
+
 	loadbalancer "github.com/stackitcloud/stackit-sdk-go/services/loadbalancer/v2api"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -53,6 +55,12 @@ func (r *mqlStackit) loadBalancers() ([]any, error) {
 type mqlStackitLoadBalancerInternal struct {
 	rawListeners   []loadbalancer.Listener
 	rawTargetPools []loadbalancer.TargetPool
+
+	// Security group ids the balancer object names inline, resolved into
+	// resources on access so the group list is fetched once per connection
+	// rather than once per balancer.
+	cacheLoadBalancerSecurityGroupId string
+	cacheTargetSecurityGroupId       string
 }
 
 func buildLoadBalancer(runtime *plugin.Runtime, lb *loadbalancer.LoadBalancer, region string) (plugin.Resource, error) {
@@ -71,9 +79,13 @@ func buildLoadBalancer(runtime *plugin.Runtime, lb *loadbalancer.LoadBalancer, r
 		"status":             llx.StringData(status),
 		"privateNetworkOnly": llx.BoolData(privateOnly),
 		"region":             llx.StringData(region),
-		"networks":           llx.ArrayData(anySliceToDict(lb.GetNetworks()), types.Dict),
-		"options":            llx.DictData(toDict(lb.GetOptions())),
-		"errors":             llx.ArrayData(anySliceToDict(lb.GetErrors()), types.Dict),
+		"privateAddress":     llx.StringData(lb.GetPrivateAddress()),
+		"labels":             labelData(lb.GetLabels()),
+		"disableTargetSecurityGroupAssignment": llx.BoolDataPtr(
+			lbDisableTargetSecurityGroupAssignment(lb)),
+		"networks": llx.ArrayData(anySliceToDict(lb.GetNetworks()), types.Dict),
+		"options":  llx.DictData(toDict(lb.GetOptions())),
+		"errors":   llx.ArrayData(anySliceToDict(lb.GetErrors()), types.Dict),
 	}
 	res, err := CreateResource(runtime, "stackit.loadBalancer", args)
 	if err != nil {
@@ -82,8 +94,75 @@ func buildLoadBalancer(runtime *plugin.Runtime, lb *loadbalancer.LoadBalancer, r
 	if mlb, ok := res.(*mqlStackitLoadBalancer); ok {
 		mlb.rawListeners = lb.GetListeners()
 		mlb.rawTargetPools = lb.GetTargetPools()
+		if sg, ok := lb.GetLoadBalancerSecurityGroupOk(); ok && sg != nil {
+			mlb.cacheLoadBalancerSecurityGroupId = sg.GetId()
+		}
+		if sg, ok := lb.GetTargetSecurityGroupOk(); ok && sg != nil {
+			mlb.cacheTargetSecurityGroupId = sg.GetId()
+		}
 	}
 	return res, nil
+}
+
+// lbDisableTargetSecurityGroupAssignment reports whether the operator opted
+// out of attaching the managed target security group to the backends, or nil
+// when the API reports no setting.
+//
+// The flag is fixed at creation and the API omits it rather than sending
+// false, so nil is the only honest reading of an absent value. Reporting false
+// would assert that the managed group is being attached on a balancer whose
+// setting was never read, which is the reassuring answer and the wrong one.
+func lbDisableTargetSecurityGroupAssignment(lb *loadbalancer.LoadBalancer) *bool {
+	if lb == nil {
+		return nil
+	}
+	disabled, ok := lb.GetDisableTargetSecurityGroupAssignmentOk()
+	if !ok {
+		return nil
+	}
+	return disabled
+}
+
+// loadBalancerSecurityGroup resolves the group STACKIT manages for the
+// balancer itself.
+func (r *mqlStackitLoadBalancer) loadBalancerSecurityGroup() (*mqlStackitSecurityGroup, error) {
+	return r.resolveSecurityGroup(r.cacheLoadBalancerSecurityGroupId, &r.LoadBalancerSecurityGroup)
+}
+
+// targetSecurityGroup resolves the group STACKIT manages for the backends.
+func (r *mqlStackitLoadBalancer) targetSecurityGroup() (*mqlStackitSecurityGroup, error) {
+	return r.resolveSecurityGroup(r.cacheTargetSecurityGroupId, &r.TargetSecurityGroup)
+}
+
+// resolveSecurityGroup turns a security group id carried on the balancer into
+// the security group resource, reading it out of the project's group list
+// rather than fetching the group once per balancer.
+//
+// A group id the list does not answer for is an error, not a null. Null is
+// what a balancer with no managed group reports, and that is precisely the
+// finding these fields exist to surface, so a failed lookup must not be able
+// to imitate it.
+func (r *mqlStackitLoadBalancer) resolveSecurityGroup(
+	id string, field *plugin.TValue[*mqlStackitSecurityGroup],
+) (*mqlStackitSecurityGroup, error) {
+	if id == "" {
+		return markNull(field)
+	}
+	groups, err := conn(r.MqlRuntime).SecurityGroups(bgctx())
+	if err != nil {
+		return nil, err
+	}
+	sg, ok := groups[id]
+	if !ok {
+		return nil, fmt.Errorf(
+			"stackit.securityGroup with id %q referenced by load balancer %q not found",
+			id, r.Name.Data)
+	}
+	res, err := buildSecurityGroup(r.MqlRuntime, &sg)
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlStackitSecurityGroup), nil
 }
 
 func (r *mqlStackitLoadBalancer) listeners() ([]any, error) {
