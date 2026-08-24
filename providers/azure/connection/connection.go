@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -43,6 +44,11 @@ type AzureConnection struct {
 	clientOptions  policy.ClientOptions
 	// Filters holds the parsed discovery filters (from inventory.Discovery.Filter).
 	Filters DiscoveryFilters
+
+	// The ARM record of the subscription this connection is scoped to, fetched
+	// once and shared through Subscription.
+	subMu     sync.Mutex
+	subRecord *subscriptions.Subscription
 }
 
 // The credentials this process has built, by the identity each signs in as.
@@ -170,6 +176,32 @@ func (p *AzureConnection) Asset() *inventory.Asset {
 
 func (p *AzureConnection) SubId() string {
 	return p.subscriptionId
+}
+
+// Subscription returns the ARM record of the subscription this connection is
+// scoped to, fetched once and cached for the connection's lifetime. Asset
+// detection, discovery, and the azure.subscription resource all read the same
+// record; without the cache each of them pays its own GET.
+//
+// A failed fetch is not cached: the next caller gets its own try, the same way
+// credentialCache treats a failed credential build.
+func (p *AzureConnection) Subscription() (subscriptions.Subscription, error) {
+	if p.subscriptionId == "" {
+		return subscriptions.Subscription{}, errors.New("connection is not scoped to a subscription")
+	}
+
+	p.subMu.Lock()
+	defer p.subMu.Unlock()
+	if p.subRecord != nil {
+		return *p.subRecord, nil
+	}
+
+	record, err := NewSubscriptionsClient(p.token, p.clientOptions).GetSubscription(p.subscriptionId)
+	if err != nil {
+		return subscriptions.Subscription{}, err
+	}
+	p.subRecord = &record
+	return record, nil
 }
 
 func (p *AzureConnection) Token() azcore.TokenCredential {

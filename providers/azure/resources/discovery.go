@@ -560,13 +560,24 @@ func subscriptionRecord(conn *connection.AzureConnection, invConfig *inventory.C
 		return sub
 	}
 
-	record, err := connection.NewSubscriptionsClient(conn.Token(), conn.ClientOptions()).GetSubscription(subId)
+	record, err := fetchSubscriptionRecord(conn, subId)
 	if err != nil {
 		log.Warn().Err(err).Str("subscription", subId).
 			Msg("could not read the subscription record, discovering without its name and tags")
 		return sub
 	}
 	return record
+}
+
+// fetchSubscriptionRecord reads one subscription's ARM record, through the
+// connection's cache when the connection is scoped to that same subscription --
+// which is every stage-2 call today, so asset detection's fetch is reused
+// rather than repeated.
+func fetchSubscriptionRecord(conn *connection.AzureConnection, subId string) (subscriptions.Subscription, error) {
+	if conn.SubId() == subId {
+		return conn.Subscription()
+	}
+	return connection.NewSubscriptionsClient(conn.Token(), conn.ClientOptions()).GetSubscription(subId)
 }
 
 // discoverResources lists the assets inside the given subscriptions for every
