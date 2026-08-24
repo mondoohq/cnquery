@@ -28,17 +28,19 @@ jobs:
       # determine-provider-release-base.sh to pick the target branch
       # before doing the full checkout. Pinned to main because on the
       # release event github.ref is the release tag (e.g. v13.35.1),
-      # and the v13 branch's tag may predate this script's existence.
+      # and the v13 branch's tag predates this script's existence.
       - name: Sparse-checkout scripts
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           sparse-checkout: '.github/scripts'
           sparse-checkout-cone-mode: false
-      # Route the provider-bump PR by comparing the release major to the
-      # major in main's go.mod. Matching -> base=main; different ->
-      # base=v{release_major} (e.g. a v13.35.1 tag while main is on v14
-      # opens the PR against v13, not main). For workflow_dispatch (no
+      # Route the provider-bump PR by asking GitHub whether a v{major}
+      # support branch exists for the release's major. If yes ->
+      # base=v{major}; if no -> base=main. So today (v13 branch exists,
+      # main tracks v14) a v13.x release routes to v13 and a v14.x
+      # release routes to main, and no config change is needed when a
+      # future v14 support branch is cut. For workflow_dispatch (no
       # release event) fall back to main.
       # Logic lives in .github/scripts/determine-provider-release-base.sh
       # and is unit-tested in .github/scripts/tests/.

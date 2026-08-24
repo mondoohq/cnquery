@@ -5,17 +5,21 @@
 # Determine base branch for the provider version-bump PR opened after
 # an mql release.
 #
-# When main's own module major matches the incoming release's major,
-# the PR opens against main. Otherwise it opens against the v{major}
-# support branch (e.g. a v13.35.1 release while main is on v14 -> v13).
+# For a release with major N, the PR opens against the v{N} support
+# branch iff one exists on the repo; otherwise it opens against main.
+# So today (v13 branch exists, main tracks v14 unversioned): a v13.x
+# release routes to v13, a v14.x release routes to main. When main
+# later moves to v15 and a v14 support branch is cut, v14 tags start
+# routing to v14 automatically -- no config bump needed.
 #
 # Inputs:
-#   $1 (required)  incoming release tag (e.g. v13.35.1 or 14.0.0-rc.1)
-#   $MAIN_GOMOD    content of main's go.mod. If unset, fetched via
-#                  `gh api` using $GH_REPO (owner/repo) and $GH_TOKEN.
+#   $1 (required)     incoming release tag (e.g. v13.35.1)
+#   $EXISTS_BRANCHES  space-separated list of branch names known to
+#                     exist. If unset, fetched via `gh api` using
+#                     $GH_REPO and $GH_TOKEN. Tests set this to run
+#                     without touching the network.
 #
-# Output: prints the base branch to stdout ("main" or "v{major}").
-#         Exits non-zero if main's module major cannot be determined.
+# Output: prints "main" or "v{major}".
 set -euo pipefail
 
 TAG="${1:?release tag required as first argument}"
@@ -23,27 +27,36 @@ TAG="${1:?release tag required as first argument}"
 V="${TAG#v}"
 RELEASE_MAJOR="${V%%.*}"
 
-if [ -z "${MAIN_GOMOD+set}" ]; then
-  # MAIN_GOMOD not passed in at all — fetch it. An explicit empty value
-  # is respected (and will fail the "Could not extract" check below), so
-  # tests can exercise failure paths without touching the network.
-  : "${GH_REPO:?GH_REPO or MAIN_GOMOD required}"
-  MAIN_GOMOD=$(gh api "/repos/${GH_REPO}/contents/go.mod?ref=main" --jq '.content' | base64 -d)
-fi
-
-# module go.mondoo.com/mql/v13  -> 13
-MAIN_MAJOR=$(printf '%s' "$MAIN_GOMOD" \
-  | grep -oE '^module go\.mondoo\.com/mql/v[0-9]+' \
-  | head -1 \
-  | grep -oE '[0-9]+$' || true)
-
-if [ -z "$MAIN_MAJOR" ]; then
-  echo "Could not extract main's module major from go.mod" >&2
+# Guard against malformed tags: the major must be a positive integer.
+if [[ ! "$RELEASE_MAJOR" =~ ^[0-9]+$ ]]; then
+  echo "Could not extract a numeric major from tag: $TAG" >&2
   exit 1
 fi
 
-if [ "$RELEASE_MAJOR" = "$MAIN_MAJOR" ]; then
-  echo main
+BRANCH="v${RELEASE_MAJOR}"
+
+# Determine whether the support branch exists.
+if [ -n "${EXISTS_BRANCHES+set}" ]; then
+  # Test mode: check against the caller-provided list.
+  BRANCH_EXISTS=0
+  for b in $EXISTS_BRANCHES; do
+    if [ "$b" = "$BRANCH" ]; then
+      BRANCH_EXISTS=1
+      break
+    fi
+  done
 else
-  echo "v${RELEASE_MAJOR}"
+  # Live mode: query GitHub. 200 -> exists, 404 -> does not.
+  : "${GH_REPO:?GH_REPO or EXISTS_BRANCHES required}"
+  if gh api "/repos/${GH_REPO}/branches/${BRANCH}" --silent >/dev/null 2>&1; then
+    BRANCH_EXISTS=1
+  else
+    BRANCH_EXISTS=0
+  fi
+fi
+
+if [ "$BRANCH_EXISTS" = "1" ]; then
+  echo "$BRANCH"
+else
+  echo main
 fi
