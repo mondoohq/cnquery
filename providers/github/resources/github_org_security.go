@@ -29,6 +29,16 @@ func (g *mqlGithubOrganization) securityManagerTeams() ([]any, error) {
 	}
 	orgLogin := g.Login.Data
 
+	// This endpoint takes no ListOptions and so cannot be paged: the SDK
+	// signature is ListSecurityManagerTeams(ctx, org), and GitHub returns the
+	// whole set. collectPages has nothing to iterate here.
+	//
+	// The method is marked deprecated in favour of ListTeamsAssignedToOrgRole,
+	// which does page. Migrating is not a like-for-like swap: that call is keyed
+	// on a numeric role id, so it first needs the security-manager role resolved
+	// out of the org role list by name. Getting that name wrong returns an empty
+	// list rather than an error, which would report "no security managers" as
+	// fact, so the swap wants verifying against a live org before it lands.
 	teams, _, err := conn.Client().Organizations.ListSecurityManagerTeams(conn.Context(), orgLogin)
 	if err != nil {
 		switch {
