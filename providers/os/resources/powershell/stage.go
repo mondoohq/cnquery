@@ -145,7 +145,8 @@ func Stage(conn shared.Connection, name, script string) (*StagedScript, error) {
 	if conn == nil {
 		return nil, errors.New("cannot stage a script without a connection")
 	}
-	path := stagedDir(conn) + pathSeparator(conn) + StagedName(name, script)
+	dir := stagedDir(conn)
+	path := dir + pathSeparator(dir) + StagedName(name, script)
 	staged := &StagedScript{Path: path, Command: StagedCommand(path), conn: conn}
 
 	// Replay: the file is not needed and cannot be written. Returning the
@@ -169,9 +170,11 @@ func Stage(conn shared.Connection, name, script string) (*StagedScript, error) {
 	return staged, nil
 }
 
-// pathSeparator matches the staging directory picked by stagedDir.
-func pathSeparator(conn shared.Connection) string {
-	if stagedDir(conn) == stagedDirWindows {
+// pathSeparator returns the separator for the staging directory it is given.
+// Taking the directory rather than the connection keeps it in step with
+// stagedDir by construction, instead of by re-deriving the same choice.
+func pathSeparator(dir string) string {
+	if dir == stagedDirWindows {
 		return `\`
 	}
 	return "/"
