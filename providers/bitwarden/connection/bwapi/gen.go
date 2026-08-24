@@ -7,10 +7,15 @@
 // models.gen.go is produced by oapi-codegen (models only, no HTTP client) and
 // must not be edited by hand.
 //
-// Regenerate with `go generate ./...` from this directory, or run:
+// Regenerate from the provider directory with:
 //
-//	oapi-codegen -config providers/bitwarden/connection/openapi/config.yaml \
-//	    providers/bitwarden/connection/openapi/swagger.json
+//	go generate ./connection/bwapi/...
+//
+// That is the only supported invocation. The config sets `output:
+// models.gen.go`, which oapi-codegen resolves against its working directory,
+// so calling the tool by hand from the repo root writes models.gen.go to the
+// repo root instead of here. The go:generate directive below is always run
+// with the working directory set to this package.
 //
 // oapi-codegen must be on PATH (installed via `go install
 // github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.0`).

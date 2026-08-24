@@ -8,4 +8,9 @@
 package: bwapi
 generate:
   models: true
+# Relative to the generator's working directory, not to this file. The
+# go:generate directive in ../bwapi/gen.go runs with that directory as CWD,
+# which is what puts models.gen.go in the bwapi package. Regenerate with
+# `go generate ./connection/bwapi/...` rather than invoking oapi-codegen
+# directly, or the file lands wherever you happened to be standing.
 output: models.gen.go

@@ -9,13 +9,17 @@ Send content, since the Public API has no endpoints for them.
 **Client note:** Bitwarden's official Public API OpenAPI v3 spec is vendored
 at `connection/openapi/swagger.json`, and a spec-tracked Go type layer is
 generated from it into the `connection/bwapi` package (models only, no HTTP
-client) with `oapi-codegen`. Regenerate with `go generate ./...` from
-`connection/bwapi`, or:
+client) with `oapi-codegen`. Regenerate from the provider directory with:
 
 ```shell
-oapi-codegen -config providers/bitwarden/connection/openapi/config.yaml \
-    providers/bitwarden/connection/openapi/swagger.json
+go generate ./connection/bwapi/...
 ```
+
+`go generate` is the only supported invocation. The generator config sets
+`output: models.gen.go`, a path oapi-codegen resolves against its working
+directory, so running the tool by hand from elsewhere writes the file to the
+wrong place. `go generate` always runs it with the working directory set to
+`connection/bwapi`.
 
 The provider keeps its own OAuth2 client-credentials transport and a
 minimal, hand-written `net/http` client (`connection/client.go`) for the read
