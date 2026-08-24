@@ -39,7 +39,7 @@ require (
 	github.com/aliyun/credentials-go v1.4.13
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
-	go.mondoo.com/mql v0.0.0-20260824020621-ed70b91ac183
+	go.mondoo.com/mql v0.0.0-20260824053258-a0a7399274d4
 )
 
 require (
@@ -128,7 +128,6 @@ require (
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
-	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
