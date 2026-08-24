@@ -93,14 +93,24 @@ arista.eos {
   sshSettings() arista.eos.sshSettings
   // SNMPv1/v2c community strings (plaintext shared secrets)
   snmpCommunities() []arista.eos.snmpCommunity
+  // SNMPv3 users, the principals that replace community strings
+  snmpUsers() []arista.eos.snmpUser
+  // SNMPv3 groups, which bind a security level to the views its members reach
+  snmpGroups() []arista.eos.snmpGroup
+  // Named MIB subtree filters that groups read and write through
+  snmpViews() []arista.eos.snmpView
   // Management telnet service configuration (insecure plaintext protocol)
   telnetService() arista.eos.telnetService
   // Password policy and account-lockout configuration
   passwordPolicy() arista.eos.passwordPolicy
   // Control-Plane Policing (CoPP) configuration
   controlPlanePolicer() arista.eos.controlPlanePolicer
+  // Management console (serial console) settings
+  consoleSettings() arista.eos.consoleSettings
   // Per-interface switchport port-security configurations
   portSecurity() []arista.eos.portSecurity
+  // Per-interface storm-control thresholds
+  stormControls() []arista.eos.stormControl
   // eAPI (management API) service configuration
   eapi() arista.eos.eapi
   // VRRP (Virtual Router Redundancy Protocol) configuration
@@ -183,6 +193,18 @@ arista.eos.user @defaults("name privilege") {
   // Computed as true when the account has no password (nopassword) and no
   // configured SSH key, so no credential exists to log in with.
   locked() bool
+  // Command-authorization role the account is assigned, resolved to the role named by role
+  //
+  // Reaching the role from the account is what lets one query ask which
+  // accounts can run a command matching a pattern, since the permit and
+  // deny regexes live on the role rather than the account.
+  //
+  // Null when the account names no role of its own, in which case the
+  // device applies the role marked default, and null when the name does
+  // not match a role defined on the device. The role field keeps the
+  // configured name in both cases, so an account pointing at a role that
+  // was never created is still visible.
+  roleRef() arista.eos.role
 }
 
 // Arista EOS command-authorization role
@@ -224,6 +246,273 @@ arista.eos.snmpSetting {
   // (whether the device is configured to send this trap), and `component`
   // (the subsystem the notification belongs to).
   notifications() []dict
+  // Destinations the device sends notifications to
+  //
+  // Which trap types are enabled says nothing about where the traps go.
+  // Each entry carries the destination's protocol version and routing
+  // instance, which together decide whether device state leaves in
+  // cleartext and across which network.
+  //
+  // Empty when the device is configured to send notifications nowhere.
+  hosts() []arista.eos.snmpHost
+  // Routing instances SNMP answers in
+  //
+  // EOS enables SNMP in the default instance and nowhere else unless told
+  // otherwise, so this reports `default` on a device that never mentions
+  // routing instances, and omits it on one that withdraws it with
+  // `no snmp-server vrf default`.
+  vrfs() []string
+  // Interface notifications are sourced from
+  //
+  // From the device-wide `snmp-server local-interface`. Empty when unset,
+  // in which case the source address follows the egress interface.
+  localInterface() string
+  // Configured system location reported over SNMP
+  //
+  // Empty when unset.
+  location() string
+  // Configured system contact reported over SNMP
+  //
+  // Empty when unset.
+  contact() string
+  // Configured chassis identifier reported over SNMP
+  //
+  // Empty when unset, in which case the device reports its serial number.
+  chassisId() string
+}
+
+// Arista EOS SNMP notification destination
+//
+// One destination the device sends traps or informs to, from an
+// `snmp-server host` line. Enumerating destinations answers where device
+// state is sent, which the trap type list alone cannot.
+//
+// `version` is the field to read first: a `v1` or `v2c` destination
+// authenticates with a community string that travels in cleartext with every
+// notification, so the device state and the credential are both exposed to
+// anything on the path. `vrf` says which network that path runs over.
+//
+// The community string itself is deliberately not a field here. For a v1 or
+// v2c destination use `community` to reach the community it names, and for a
+// v3 destination use `user`.
+private arista.eos.snmpHost @defaults("host vrf version securityLevel") {
+  // Destination hostname or address as configured
+  host string
+  // Routing instance used to reach the destination
+  //
+  // Empty means the default instance.
+  vrf string
+  // Protocol version used toward this destination
+  //
+  // One of `v1`, `v2c`, or `v3`. Reported as `v2c` when the line carries no
+  // version clause, matching the version the device actually uses.
+  version string
+  // Security level for a v3 destination
+  //
+  // One of `noauth`, `auth`, or `priv`. Empty for v1 and v2c, which have no
+  // security level. A `noauth` destination is unauthenticated even though
+  // it runs v3.
+  securityLevel string
+  // Whether the device expects the destination to acknowledge
+  //
+  // Either `traps` (fire and forget) or `informs` (acknowledged and
+  // retried). Reported as `traps` when the line omits the keyword, matching
+  // the device default.
+  notificationType string
+  // Destination UDP port
+  //
+  // Reported as 162 when the line omits the port, matching the port the
+  // device uses.
+  port int
+  // Community this destination authenticates with, resolved to the community named on the line
+  //
+  // Null for a v3 destination, which names a user instead, and null when
+  // the name does not match a community defined on the device.
+  community() arista.eos.snmpCommunity
+  // User this destination authenticates as, resolved to the user named on the line
+  //
+  // Null for a v1 or v2c destination, which names a community instead, and
+  // null when the name does not match a user defined on the device.
+  user() arista.eos.snmpUser
+}
+
+// Arista EOS SNMPv3 user
+//
+// One principal defined by an `snmp-server user` line, selected by `name`.
+// SNMPv3 replaces the shared community string with per-user credentials, so
+// a device that has moved to v3 has no communities at all and is described
+// entirely by these users and the groups they belong to.
+//
+// `securityLevel` is the field the hardening question turns on: a
+// `noAuthNoPriv` user authenticates with nothing and reads the device over
+// the wire in the clear, while `authNoPriv` authenticates but still sends
+// everything in the clear. `authAlgorithm` and `privAlgorithm` carry the
+// algorithm names, which is where a legacy `md5` or `des` shows up.
+//
+// No credential is exposed. The passphrase and the localized key that follow
+// the algorithm names on the configuration line are not read.
+private arista.eos.snmpUser @defaults("name group securityLevel") {
+  // Security name the user authenticates as
+  name string
+  // Group whose views the user inherits
+  group string
+  // Protocol version the user is defined for
+  //
+  // One of `v1`, `v2c`, or `v3`. Credentials exist only on `v3`.
+  version string
+  // Security level the user operates at
+  //
+  // One of `noAuthNoPriv`, `authNoPriv`, or `authPriv`, the level names
+  // SNMPv3 itself uses. Derived from which credential clauses the line
+  // carries: no authentication clause means `noAuthNoPriv`, and an
+  // authentication clause without a privacy clause means `authNoPriv`.
+  securityLevel string
+  // Authentication algorithm
+  //
+  // For example `md5` or `sha`. Empty when the user authenticates with
+  // nothing, which is also what `securityLevel` reports as `noAuthNoPriv`.
+  authAlgorithm string
+  // Privacy (encryption) algorithm
+  //
+  // For example `des` or `aes`. Empty when the user's traffic is not
+  // encrypted.
+  privAlgorithm string
+  // Whether the credentials are already localized to an engine
+  //
+  // True for a line carrying a `localized` clause, meaning the stored
+  // credentials are keys derived for a specific engine rather than
+  // passphrases.
+  localized bool
+  // Remote agent the user is defined against
+  //
+  // Empty for the local agent, which is the usual case. A non-empty value
+  // means the user exists to reach an agent on another device.
+  remoteAddress string
+  // Port of the remote agent
+  //
+  // 0 when the line omits it or the user is local.
+  remotePort int
+  // Group the user belongs to, resolved to the group named by group
+  //
+  // Null when the name does not match a group defined on the device, which
+  // leaves the user's read and write reach undefined.
+  groupRef() arista.eos.snmpGroup
+}
+
+// Arista EOS SNMPv3 group
+//
+// A group defined by an `snmp-server group` line, selected by `name`. The
+// group binds a required security level to the MIB views its members may
+// read, write, and be notified through, so it is where a user's actual reach
+// is decided.
+//
+// `securityLevel` is the minimum a member must meet: a group at `noauth`
+// accepts members that authenticate with nothing. `writeView` is the other
+// field to read, since a group with a write view can change device
+// configuration over SNMP.
+private arista.eos.snmpGroup @defaults("name version securityLevel") {
+  // Group name
+  name string
+  // Protocol version the group is defined for
+  //
+  // One of `v1`, `v2c`, or `v3`.
+  version string
+  // Minimum security level a member must meet
+  //
+  // One of `noauth`, `auth`, or `priv`. Empty for `v1` and `v2c` groups,
+  // which have no security level at all.
+  securityLevel string
+  // Context the group is scoped to
+  //
+  // Empty when the group is not scoped to a context.
+  context string
+  // Name of the view members read through
+  //
+  // Empty when the group grants no read access.
+  readView string
+  // Name of the view members write through
+  //
+  // Empty when the group grants no write access, which is the posture a
+  // monitoring-only group should have.
+  writeView string
+  // Name of the view members are notified through
+  //
+  // Empty when the group has no notify view.
+  notifyView string
+  // View members read through, resolved to the view named by readView
+  //
+  // Null when the group grants no read access, and null when the name does
+  // not match a view defined on the device.
+  readViewRef() arista.eos.snmpView
+  // View members write through, resolved to the view named by writeView
+  //
+  // Null when the group grants no write access, and null when the name does
+  // not match a view defined on the device.
+  writeViewRef() arista.eos.snmpView
+}
+
+// Arista EOS SNMP view
+//
+// One entry of a named MIB subtree filter, from an `snmp-server view` line.
+// A view is what bounds how much of the device an SNMP principal can see or
+// change, so a group pointed at a view rooted at `iso` reaches the whole MIB
+// tree regardless of how strong its credentials are.
+//
+// A view name may appear on several lines, one per subtree, and each is a
+// separate entry here. `included` says whether the entry adds the subtree to
+// the view or carves it out.
+private arista.eos.snmpView @defaults("name mibFamily included") {
+  // View name, as referenced by a group's read, write, or notify clause
+  name string
+  // MIB subtree the entry covers
+  //
+  // For example `iso` for the whole tree, or a narrower subtree such as
+  // `system`.
+  mibFamily string
+  // Whether the entry adds the subtree to the view or removes it
+  //
+  // True for an `included` entry and false for an `excluded` one.
+  included bool
+}
+
+// Arista EOS per-interface storm-control threshold
+//
+// One storm-control statement on one interface, the ceiling on inbound
+// flooded traffic of a single class. This is the only per-port rate control
+// against a broadcast or flood denial of service that originates inside the
+// Layer 2 domain, where no routed control can see it.
+//
+// Interfaces with no storm-control statement are absent from the collection.
+// EOS has no implicit threshold and removes the statement from the
+// configuration entirely when it is negated, so an absent interface has no
+// ceiling at all rather than a permissive one. Policies that require a
+// ceiling on every access port must check for presence, not for a value.
+//
+// An interface may carry one statement per class, so it can appear several
+// times. A statement for the `all` class overrides the broadcast and
+// multicast thresholds on the same interface.
+private arista.eos.stormControl @defaults("interface trafficClass level unit") {
+  // Parent interface name, for example `Ethernet1`
+  interface string
+  // Traffic class the ceiling applies to
+  //
+  // One of `broadcast`, `multicast`, `unknown-unicast`, or `all`.
+  trafficClass string
+  // Configured threshold
+  //
+  // A percentage of port capacity when `unit` is `percent`, where the
+  // device accepts two decimal places and a level of 100 suppresses storm
+  // control entirely. A packet count when `unit` is `pps`.
+  level float
+  // Unit the threshold is expressed in
+  //
+  // Either `percent` or `pps`. A statement written without a unit keyword
+  // is a percentage.
+  unit string
+  // Whether the ceiling bounds traffic to the control plane rather than across the port
+  //
+  // True for the `cpu` form of the statement.
+  cpu bool
 }
 
 // Arista EOS NTP configuration and authentication state
@@ -1077,6 +1366,18 @@ private arista.eos.aaa {
   rootSecretFormat string
   // Whether the default authentication list uses only the local user database (no remote AAA configured before local)
   defaultLoginPermitsLocalOnly bool
+  // Whether a password is required to enter enable mode
+  //
+  // False when no `enable secret` is configured, which lets any
+  // authenticated account escalate to enable mode without a second
+  // credential. The secret itself is never read off the device.
+  enableSecretConfigured bool
+  // Encoding of the enable secret
+  //
+  // One of `0` for cleartext, `5` for MD5-crypt, or `sha512`. A line
+  // written without an encoding selector is cleartext and is reported as
+  // `0`. Empty when no enable secret is configured.
+  enableSecretFormat string
 }
 
 // Arista EOS TACACS+ server
@@ -1194,6 +1495,50 @@ private arista.eos.sshSettings {
   hostkeyAlgorithms []string
   // Whether `fips restrictions` is enabled on the SSH service
   fipsRestrictions bool
+  // Routing instances the block enables SSH in
+  //
+  // One entry per nested `vrf` sub-block that is not shut down. Which
+  // instances a management service answers in is how EOS expresses
+  // management-plane separation, so an entry for the instance carrying
+  // production traffic means SSH is reachable from the data plane.
+  //
+  // Empty when the block names no routing instance, in which case SSH is
+  // reachable in the default instance only.
+  vrfs []string
+  // Seconds a connection has to finish authenticating before it is dropped
+  //
+  // 0 when the block does not set it, in which case the device applies its
+  // own default of 120.
+  loginTimeout int
+  // Ceiling on concurrent SSH sessions
+  //
+  // 0 means no ceiling is configured, so the service accepts as many
+  // sessions as the platform allows.
+  connectionLimit int
+  // Ceiling on concurrent SSH sessions from a single host
+  //
+  // The bound that stops one source consuming the whole allowance. 0 means
+  // no ceiling is configured.
+  connectionPerHostLimit int
+  // Whether accounts with an empty password may authenticate
+  //
+  // One of `auto`, `permit`, or `deny`. Reported as `auto` when the block
+  // does not set it, which is the EOS default.
+  emptyPasswords string
+  // SSH daemon log level
+  //
+  // Empty when the block does not set it, in which case the device applies
+  // its own default of `info`.
+  logLevel string
+  // Seconds between keepalive probes sent to an unresponsive client
+  //
+  // Paired with clientAliveCountMax, this is what ends a session whose peer
+  // has gone away without closing it. 0 when unset.
+  clientAliveInterval int
+  // Unanswered keepalive probes tolerated before the session is closed
+  //
+  // 0 when unset.
+  clientAliveCountMax int
 }
 
 // Arista EOS SNMPv1/v2c community string configuration
@@ -1234,6 +1579,41 @@ private arista.eos.telnetService {
   perHostLimit int
   // Access-list name restricting connections (empty = no ACL)
   ipAccessGroup string
+}
+
+// Arista EOS management console settings
+//
+// Settings of the `management console` block, which governs the physically
+// attached serial console. The console is a separate access path from the
+// remote services, governed by its own block and authorized separately (see
+// `authorizationConsoleCommands` on `arista.eos.aaa`), so hardening applied
+// to SSH does not reach it.
+//
+// `idleTimeout` is the control that ends a privileged session someone walked
+// away from, and it is the reason to read this resource: EOS leaves it unset
+// by default, so a console session stays open until the operator closes it.
+private arista.eos.consoleSettings {
+  // Whether a `management console` block exists in the running-config
+  //
+  // False means the console runs on the shipped defaults rather than
+  // meaning the console is unavailable.
+  configured bool
+  // Console idle timeout in minutes
+  //
+  // 0 means sessions never time out. That is both the EOS default when no
+  // timeout is configured and the meaning of an explicit `idle-timeout 0`,
+  // so read `configured` alongside it to tell the two apart.
+  idleTimeout int
+  // Absolute session timeout in minutes
+  //
+  // From `timeout <minutes> warning <minutes>`, which ends a session
+  // whether or not it is idle. 0 when the console sets no absolute
+  // timeout.
+  sessionTimeout int
+  // Minutes before the absolute timeout that a warning is issued
+  //
+  // 0 when the console sets no absolute timeout.
+  sessionTimeoutWarning int
 }
 
 // Arista EOS password policy and account-lockout configuration
@@ -1370,6 +1750,21 @@ private arista.eos.eapi @defaults("enabled httpsServerRunning httpServerRunning"
   unixSocketServerConfigured bool
   // Whether the Unix-domain-socket eAPI server is currently running
   unixSocketServerRunning bool
+  // Routing instances the configuration enables eAPI in
+  //
+  // One entry per nested `vrf` sub-block of `management api http-commands`
+  // that is not shut down. The transport fields above report which
+  // listeners are running but not where they can be reached from, and eAPI
+  // answering in the instance that carries production traffic is reachable
+  // from the data plane.
+  //
+  // Empty when the configuration names no routing instance.
+  vrfs() []string
+  // Minutes an authenticated eAPI session stays usable
+  //
+  // 0 when the configuration does not set it, in which case the device
+  // applies its own default of 1440.
+  sessionTimeout() int
 }
 
 // Arista EOS VRRP (Virtual Router Redundancy Protocol) configuration

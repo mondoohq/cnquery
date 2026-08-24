@@ -70,6 +70,7 @@ func (a *mqlAristaEos) aaa() (*mqlAristaEosAaa, error) {
 	}
 	cfg := eos.ParseAaaConfig(rc)
 	root := eos.ParseRootAccount(rc)
+	enable := eos.ParseEnableSecret(rc)
 
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.aaa", map[string]*llx.RawData{
 		"authenticationLogin":          llx.MapData(methodMapToDict(cfg.AuthenticationLogin), types.Array(types.String)),
@@ -84,6 +85,8 @@ func (a *mqlAristaEos) aaa() (*mqlAristaEosAaa, error) {
 		"rootAccountNoPassword":        llx.BoolData(root.NoPassword),
 		"rootSecretFormat":             llx.StringData(root.SecretFormat),
 		"defaultLoginPermitsLocalOnly": llx.BoolData(cfg.DefaultLoginPermitsLocalOnly),
+		"enableSecretConfigured":       llx.BoolData(enable.Configured),
+		"enableSecretFormat":           llx.StringData(enable.Format),
 	})
 	if err != nil {
 		return nil, err
