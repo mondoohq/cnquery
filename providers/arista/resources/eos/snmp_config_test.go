@@ -259,3 +259,38 @@ func TestParseSnmpConfig_IgnoresIndentedLines(t *testing.T) {
 	cfg := ParseSnmpConfig("event-handler x\n   action bash echo snmp-server user fake grp v3\n")
 	assert.Empty(t, cfg.Users)
 }
+
+// TestParseSnmpGroupsKeepsSecurityLevelsApart pins the identity dimensions a v3
+// group repeats along. One name may be defined once per security level, and
+// each definition carries its own views, so a key built from name and version
+// alone collapses them onto the first. The group granting write at priv would
+// then disappear behind a read-only one at noauth, which under-reports a
+// privilege rather than failing.
+func TestParseSnmpGroupsKeepsSecurityLevelsApart(t *testing.T) {
+	cfg := ParseSnmpConfig(`
+snmp-server group MONITORING v3 noauth read VW-READ
+snmp-server group MONITORING v3 priv read VW-READ write VW-WRITE
+`)
+
+	if len(cfg.Groups) != 2 {
+		t.Fatalf("parsed %d groups, want 2: %+v", len(cfg.Groups), cfg.Groups)
+	}
+
+	levels := map[string]SnmpGroup{}
+	for _, g := range cfg.Groups {
+		if g.Name != "MONITORING" || g.Version != "v3" {
+			t.Fatalf("unexpected group %+v", g)
+		}
+		levels[g.SecurityLevel] = g
+	}
+
+	if len(levels) != 2 {
+		t.Fatalf("groups do not differ by security level: %+v", cfg.Groups)
+	}
+	if got := levels["priv"].WriteView; got != "VW-WRITE" {
+		t.Errorf("priv group WriteView = %q, want VW-WRITE", got)
+	}
+	if got := levels["noauth"].WriteView; got != "" {
+		t.Errorf("noauth group WriteView = %q, want empty", got)
+	}
+}

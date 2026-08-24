@@ -239,7 +239,19 @@ func (a *mqlAristaEosSnmpGroup) id() (string, error) {
 	if a.Version.Error != nil {
 		return "", a.Version.Error
 	}
-	return "arista.eos.snmpGroup/" + a.Version.Data + "/" + a.Name.Data, nil
+	if a.SecurityLevel.Error != nil {
+		return "", a.SecurityLevel.Error
+	}
+	if a.Context.Error != nil {
+		return "", a.Context.Error
+	}
+	// A v3 group repeats under one name at each security level, and each
+	// definition carries its own read and write views. Keying on name and
+	// version alone collapses them onto the first, so a group granting write
+	// at priv disappears behind a read-only one at noauth. Context qualifies
+	// the same statement and is included for the same reason.
+	return "arista.eos.snmpGroup/" + a.Version.Data + "/" + a.Name.Data +
+		"/" + a.SecurityLevel.Data + "/" + a.Context.Data, nil
 }
 
 func newMqlSnmpGroup(runtime *plugin.Runtime, g eos.SnmpGroup) (*mqlAristaEosSnmpGroup, error) {

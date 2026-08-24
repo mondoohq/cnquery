@@ -516,8 +516,6 @@ private arista.eos.stormControl @defaults("interface trafficClass level unit") {
 }
 
 // Arista EOS NTP configuration and authentication state
-
-// Arista EOS NTP configuration and authentication state
 //
 // NTP service status, whether `ntp authenticate` is globally enabled, and
 // the configured NTP authentication keys, each carrying its key ID, hash
