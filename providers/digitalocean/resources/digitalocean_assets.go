@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/llx"
@@ -52,9 +53,15 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 	}
 	privConnHost := ""
 	privConnPort := int64(0)
+	// A cluster with no private endpoint has no TLS setting to report, so
+	// the flag stays null instead of claiming the VPC endpoint accepts
+	// plaintext.
+	var privConnSslEnabled *bool
 	if db.PrivateConnection != nil {
 		privConnHost = db.PrivateConnection.Host
 		privConnPort = int64(db.PrivateConnection.Port)
+		ssl := db.PrivateConnection.SSL
+		privConnSslEnabled = &ssl
 	}
 
 	dbNames := make([]interface{}, len(db.DBNames))
@@ -123,6 +130,7 @@ func databaseArgs(db *godo.Database) map[string]*llx.RawData {
 		"connectionSslEnabled":             llx.BoolData(connSslEnabled),
 		"privateConnectionHost":            llx.StringData(privConnHost),
 		"privateConnectionPort":            llx.IntData(privConnPort),
+		"privateConnectionSslEnabled":      llx.BoolDataPtr(privConnSslEnabled),
 		"storageAutoscaleEnabled":          llx.BoolData(storageAutoscaleEnabled),
 		"storageAutoscaleThresholdPercent": llx.IntDataPtr(storageThreshold),
 		"storageAutoscaleIncrementGib":     llx.IntDataPtr(storageIncrement),
@@ -502,6 +510,7 @@ func kubernetesClusterArgs(c *godo.KubernetesCluster) map[string]*llx.RawData {
 		"corednsAutoscalerEnabled":                 llx.BoolDataPtr(corednsAutoscalerEnabled),
 		"p2pOciRegistryEnabled":                    llx.BoolDataPtr(p2pOciRegistryEnabled),
 		"workerSubnetUuid":                         llx.StringData(c.WorkerSubnetUUID),
+		"isolatedWorkers":                          llx.BoolData(c.IsolatedWorkers),
 		"clusterAutoscaler":                        llx.DictData(autoscaler),
 	}
 }
@@ -560,6 +569,12 @@ func initDigitaloceanKubernetesCluster(runtime *plugin.Runtime, args map[string]
 // a refetch.
 type mqlDigitaloceanKubernetesClusterInternal struct {
 	cacheVPCUUID string
+
+	// The kubeconfig identity costs its own API call and feeds two fields,
+	// so it is fetched at most once per cluster.
+	clusterUserOnce  sync.Once
+	clusterUserValue *godo.KubernetesClusterUser
+	clusterUserErr   error
 }
 
 // newMqlKubernetesCluster builds a DOKS cluster resource, caching the VPC

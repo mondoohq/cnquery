@@ -69,6 +69,8 @@ digitalocean {
   certificates() []digitalocean.certificate
   // Container registry attached to the account
   registry() digitalocean.registry
+  // Container registries attached to the account
+  registries() []digitalocean.registry
   // Container registry repositories
   registryRepositories() []digitalocean.registry.repository
   // Reserved IPs
@@ -495,6 +497,11 @@ digitalocean.database @defaults("id name engine") {
   privateConnectionHost string
   // Private connection port (reachable within the VPC)
   privateConnectionPort int
+  // Whether the cluster's private endpoint enforces TLS/SSL
+  //
+  // Null when the cluster publishes no private endpoint, so an absent VPC
+  // endpoint stays distinguishable from one that accepts plaintext.
+  privateConnectionSslEnabled bool
   // Key eviction policy for Redis/Valkey clusters
   //
   // One of noeviction, allkeys_lru, allkeys_random, volatile_lru, volatile_random, volatile_ttl. Empty for other engines.
@@ -689,6 +696,24 @@ private digitalocean.database.pool @defaults("name mode") {
   size int
   // Connection mode (transaction, session, statement)
   mode string
+  // Whether the pool's public endpoint enforces TLS/SSL
+  //
+  // The pooler terminates its own connections, so a pool can accept
+  // plaintext in front of a cluster whose direct endpoint requires TLS.
+  // Null when the pool publishes no public endpoint.
+  sslEnabled bool
+  // Hostname of the pool's public endpoint; null when the pool publishes no public endpoint
+  host string
+  // Port of the pool's public endpoint; null when the pool publishes no public endpoint
+  port int
+  // Whether the pool's private endpoint enforces TLS/SSL
+  //
+  // Null when the pool publishes no private endpoint.
+  privateSslEnabled bool
+  // Hostname of the pool's private endpoint reachable within the VPC; null when the pool publishes no private endpoint
+  privateHost string
+  // Port of the pool's private endpoint reachable within the VPC; null when the pool publishes no private endpoint
+  privatePort int
 }
 
 // DigitalOcean managed vector database
@@ -999,6 +1024,28 @@ digitalocean.vpc @defaults("id name region") {
   default bool
   // Uniform resource name (URN) identifying the VPC across DigitalOcean APIs
   urn string
+  // Resources placed inside the VPC
+  members() []digitalocean.vpc.member
+}
+
+// Resource placed inside a DigitalOcean VPC
+//
+// One droplet, load balancer, database cluster, or other resource that
+// holds an address inside the VPC. The `urn` names the resource and
+// carries its kind, so the membership list is what proves an isolated
+// network contains only its intended workloads and nothing that was
+// attached to it later.
+private digitalocean.vpc.member @defaults("name urn") {
+  // ID of the VPC the resource is placed in
+  vpcId string
+  // Uniform resource name (URN) identifying the member across DigitalOcean APIs
+  urn string
+  // Kind of resource the URN names (e.g., "droplet", "load_balancer", "dbaas")
+  resourceType string
+  // Member name
+  name string
+  // Time the resource joined the VPC; null when the API reports no join time
+  createdAt time
 }
 
 // DigitalOcean VPC peering
@@ -1109,6 +1156,26 @@ digitalocean.kubernetes.cluster @defaults("id name version") {
   p2pOciRegistryEnabled bool
   // UUID of the VPC subnet the cluster's worker nodes are placed in
   workerSubnetUuid string
+  // Whether worker nodes are cut off from the public internet
+  //
+  // When enabled the worker nodes hold no public addresses and egress
+  // through the VPC, so a workload on them is unreachable from the
+  // internet regardless of any firewall attached to the pool.
+  isolatedWorkers bool
+  // Username the DigitalOcean-issued kubeconfig authenticates as
+  //
+  // The RBAC subject in-cluster authorization is evaluated against for
+  // anyone holding the platform-issued credential, so it is the identity
+  // a RoleBinding or ClusterRoleBinding has to name. Null when the
+  // cluster user cannot be read.
+  kubeconfigUsername() string
+  // Groups the DigitalOcean-issued kubeconfig identity belongs to
+  //
+  // Group bindings are the usual route to cluster-admin, so these decide
+  // what the platform credential can do inside the cluster. Null when the
+  // cluster user cannot be read, as distinct from an empty list, which
+  // means the identity was read and belongs to no groups.
+  kubeconfigGroups() []string
   // Cluster autoscaler tuning
   //
   // Keys: scaleDownUtilizationThreshold (fraction), scaleDownUnneededTime (duration string), expanders (list). Empty when the cluster uses platform defaults.
@@ -1499,7 +1566,11 @@ digitalocean.app @defaults("id name") {
   project() digitalocean.project
   // ID of the currently active deployment; empty when the app has never deployed
   activeDeploymentId string
-  // Custom domains attached to the app (each dict: id, name, phase, certificateExpiresAt)
+  // Custom domains attached to the app
+  //
+  // Each entry: id, name, phase, certificateExpiresAt, and
+  // minimumTlsVersion, the lowest TLS version the domain will negotiate
+  // (empty when the app leaves it at the App Platform default).
   domains []dict
   // Deployment history for the app, most recent first
   deployments() []digitalocean.app.deployment
@@ -1576,6 +1647,54 @@ digitalocean.app @defaults("id name") {
   pinnedDeployment() digitalocean.app.deployment
   // Deployment currently rolling out; null when no deployment is in flight
   inProgressDeployment() digitalocean.app.deployment
+  // Third-party services the app forwards its logs to
+  logDestinations() []digitalocean.app.logDestination
+}
+
+// Log-forwarding destination of an App Platform application
+//
+// One third-party service a component of an app ships its logs to.
+// Application logs routinely carry tokens, session identifiers, and
+// personal data, so `tlsInsecure` matters: it disables certificate
+// verification on the delivery connection, which leaves the log stream
+// open to interception. The `provider` field names the managed service
+// the logs go to, `endpoint` the address for a self-hosted destination,
+// and `headerKeys` the names of the headers attached to each delivery.
+// Header values are withheld because they carry the destination's API
+// token.
+private digitalocean.app.logDestination @defaults("name provider tlsInsecure") {
+  // ID of the app the destination is declared on
+  appId string
+  // Name of the component that ships to the destination
+  component string
+  // Operator-chosen label for the destination
+  name string
+  // Managed service the logs are shipped to
+  //
+  // One of "papertrail", "datadog", "logtail", "opensearch", or
+  // "custom" when the destination is a self-hosted endpoint.
+  provider string
+  // Address logs are delivered to for a self-hosted destination; empty for a managed service
+  endpoint string
+  // Whether certificate verification is disabled on the delivery connection
+  //
+  // True means the log stream is shipped without verifying the receiving
+  // service's certificate, so anything able to intercept the connection
+  // can read or alter it.
+  tlsInsecure bool
+  // Names of the headers attached to each delivery
+  //
+  // Header values are withheld because they routinely carry the
+  // destination's API token.
+  headerKeys []string
+  // Endpoint of the OpenSearch cluster logs are shipped to; empty for other destinations
+  opensearchEndpoint string
+  // Index or data stream logs are written to in the OpenSearch cluster; empty for other destinations
+  opensearchIndexName string
+  // Name of the managed database cluster backing the OpenSearch destination; empty when the destination is self-hosted
+  opensearchClusterName string
+  // Managed database cluster backing the OpenSearch destination; null when the destination is self-hosted
+  opensearchCluster() digitalocean.database
 }
 
 // Dedicated egress address of an App Platform application
@@ -1859,10 +1978,14 @@ digitalocean.spacesKey @defaults("name accessKey") {
   accessKey string
   // Per-bucket permission bindings
   //
-  // Each entry is a dict with `bucket` (the Spaces bucket the grant
-  // applies to; empty scopes the key to all buckets) and `permission`
-  // (one of "read", "readwrite", or "fullaccess").
-  grants []dict
+  // Deprecated in favor of bucketGrants, which resolves each grant's
+  // bucket to the bucket resource. Each entry is a dict with `bucket`
+  // (the Spaces bucket the grant applies to; empty scopes the key to all
+  // buckets) and `permission` (one of "read", "readwrite", or
+  // "fullaccess").
+  grants @maturity("deprecated") []dict
+  // Per-bucket permission bindings, with each grant resolved to its bucket
+  bucketGrants() []digitalocean.spacesKey.grant
   // Time the resource was created
   createdAt time
 }
@@ -1883,6 +2006,34 @@ digitalocean.spacesKey @defaults("name accessKey") {
 // `DIGITALOCEAN_SPACES_SECRET` environment variables; an optional
 // `DIGITALOCEAN_SPACES_REGION` scopes the listing to one region,
 // otherwise the provider iterates the known Spaces regions.
+// Permission binding on a DigitalOcean Spaces access key
+//
+// One grant on a Spaces access key, pairing the bucket it applies to
+// with the level of access it confers. The `bucket` field resolves to
+// the bucket resource, so a query can walk from a key straight to the
+// access posture of what it can reach and find a read-write grant
+// pointing at an anonymously readable bucket. A grant whose bucket name
+// is empty scopes the key to every bucket in the account, and `bucket`
+// is null on such a grant because it names no single bucket.
+private digitalocean.spacesKey.grant @defaults("bucketName permission") {
+  // Access key ID of the key the grant belongs to
+  accessKey string
+  // Name of the bucket the grant applies to; empty when the grant covers every bucket in the account
+  bucketName string
+  // Level of access the grant confers
+  //
+  // One of "read", "readwrite", or "fullaccess".
+  permission string
+  // Whether the grant covers every bucket in the account rather than one named bucket
+  allBuckets bool
+  // Bucket the grant applies to
+  //
+  // Null when the grant covers every bucket rather than one named bucket,
+  // and null when no bucket by that name is present in the account.
+  // Reading it needs the Spaces credentials the bucket listing needs.
+  bucket() digitalocean.spacesBucket
+}
+
 digitalocean.spacesBucket @defaults("name region encryptionEnabled versioningStatus") {
   // Bucket name (globally unique within DigitalOcean Spaces)
   name string
@@ -3317,6 +3468,12 @@ digitalocean.partnerAttachment @defaults("id name state") {
   children []string
   // Child attachments connected beneath this one
   childAttachments() []digitalocean.partnerAttachment
+  // CIDRs the remote side advertises into the attached VPCs
+  //
+  // The prefixes traffic leaving the VPCs is routed over. A prefix wider
+  // than what the peering was agreed to carry pulls traffic the VPC would
+  // otherwise have kept inside DigitalOcean across the partner link.
+  routes() []string
   // Time the resource was created
   createdAt time
 }

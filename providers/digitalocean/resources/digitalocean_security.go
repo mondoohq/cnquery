@@ -86,6 +86,20 @@ type mqlDigitaloceanInternal struct {
 	backupPolicyIndexOnce sync.Once
 	backupPolicyIndex     map[int64]dropletBackupPolicy
 	backupPolicyIndexErr  error
+
+	// spacesBucketIndex maps bucket name to bucket so a Spaces key grant
+	// resolves through the account's bucket listing instead of one lookup
+	// per grant.
+	spacesBucketIndexOnce sync.Once
+	spacesBucketIndex     map[string]*mqlDigitaloceanSpacesBucket
+	spacesBucketIndexErr  error
+
+	// databaseByNameIndex maps cluster name to cluster. App Platform names
+	// an OpenSearch log destination by cluster name rather than by id, so
+	// that edge cannot go through databaseIndex.
+	databaseByNameIndexOnce sync.Once
+	databaseByNameIndex     map[string]*mqlDigitaloceanDatabase
+	databaseByNameIndexErr  error
 }
 
 // partnerAttachmentByID resolves a partner attachment by its ID from the

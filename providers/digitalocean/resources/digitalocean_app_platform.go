@@ -117,6 +117,7 @@ func (r *mqlDigitaloceanAppDeployment) previousDeployment() (*mqlDigitaloceanApp
 // deployments. They are cached here so the accessors build from what the
 // listing returned rather than re-fetching the app.
 type mqlDigitaloceanAppInternal struct {
+	cacheSpec                 *godo.AppSpec
 	cacheVpcID                string
 	cacheDedicatedIps         []*godo.AppDedicatedIp
 	cacheBuildpacks           []*godo.Buildpack

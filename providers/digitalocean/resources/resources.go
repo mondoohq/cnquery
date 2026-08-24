@@ -5,7 +5,7 @@ package resources
 
 import (
 	"context"
-	"time"
+	"errors"
 
 	"github.com/digitalocean/godo"
 	"go.mondoo.com/mql/llx"
@@ -102,13 +102,27 @@ func (r *mqlDigitaloceanDatabase) pools() ([]interface{}, error) {
 
 	all := make([]interface{}, 0, len(pools))
 	for _, p := range pools {
+		// The pooler's connection URIs embed the pool user's password, so
+		// they are deliberately not surfaced; host and port are reported
+		// separately for connectivity checks. An endpoint the pool does not
+		// publish leaves its fields null rather than reporting a plaintext
+		// pool on port zero.
+		pubHost, pubPort, pubSSL := poolConnection(p.Connection)
+		privHost, privPort, privSSL := poolConnection(p.PrivateConnection)
+
 		res, err := CreateResource(r.MqlRuntime, "digitalocean.database.pool", map[string]*llx.RawData{
-			"databaseId": llx.StringData(r.Id.Data),
-			"name":       llx.StringData(p.Name),
-			"database":   llx.StringData(p.Database),
-			"user":       llx.StringData(p.User),
-			"size":       llx.IntData(int64(p.Size)),
-			"mode":       llx.StringData(p.Mode),
+			"databaseId":        llx.StringData(r.Id.Data),
+			"name":              llx.StringData(p.Name),
+			"database":          llx.StringData(p.Database),
+			"user":              llx.StringData(p.User),
+			"size":              llx.IntData(int64(p.Size)),
+			"mode":              llx.StringData(p.Mode),
+			"host":              llx.StringDataPtr(pubHost),
+			"port":              llx.IntDataPtr(pubPort),
+			"sslEnabled":        llx.BoolDataPtr(pubSSL),
+			"privateHost":       llx.StringDataPtr(privHost),
+			"privatePort":       llx.IntDataPtr(privPort),
+			"privateSslEnabled": llx.BoolDataPtr(privSSL),
 		})
 		if err != nil {
 			return nil, err
@@ -120,6 +134,22 @@ func (r *mqlDigitaloceanDatabase) pools() ([]interface{}, error) {
 
 func (r *mqlDigitaloceanDatabasePool) id() (string, error) {
 	return "digitalocean.database.pool/" + r.DatabaseId.Data + "/" + r.Name.Data, nil
+}
+
+// poolConnection reports a connection pool endpoint's host, port, and TLS
+// setting, leaving all three nil when the pool publishes no such endpoint.
+//
+// Returning nil rather than zero values is the point: a pool with no
+// private endpoint must not read as one reachable on port 0 with TLS off,
+// because a false on a TLS flag is a claim about something nobody read.
+func poolConnection(c *godo.DatabaseConnection) (host *string, port *int64, ssl *bool) {
+	if c == nil {
+		return nil, nil, nil
+	}
+	h := c.Host
+	p := int64(c.Port)
+	s := c.SSL
+	return &h, &p, &s
 }
 
 // --- VPC Peering ---
@@ -282,41 +312,36 @@ func initDigitaloceanRegistry(runtime *plugin.Runtime, args map[string]*llx.RawD
 		args["storageUsageBytes"] = llx.IntData(0)
 		args["storageUsageBytesUpdatedAt"] = llx.TimeDataPtr(nil)
 		args["region"] = llx.StringData("")
-		args["createdAt"] = llx.TimeData(time.Time{})
+		// Null rather than the zero time: an account with no registry has
+		// no creation date, and reporting 1 January year 1 as a real one
+		// would be an invented value.
+		args["createdAt"] = llx.TimeDataPtr(nil)
 		args["subscriptionTier"] = llx.StringData("")
 		args["subscription"] = llx.DictData(map[string]interface{}{})
 		return args, nil, nil
 	}
-	args["name"] = llx.StringData(reg.Name)
-	args["storageUsageBytes"] = llx.IntData(int64(reg.StorageUsageBytes))
-	args["storageUsageBytesUpdatedAt"] = llx.TimeDataPtr(timePtr(reg.StorageUsageBytesUpdatedAt))
-	args["region"] = llx.StringData(reg.Region)
-	args["createdAt"] = llx.TimeData(reg.CreatedAt)
-
-	sub, _, err := conn.Client().Registry.GetSubscription(context.Background())
-	tier := ""
-	subDict := map[string]interface{}{}
-	if err == nil && sub != nil {
-		subDict["createdAt"] = sub.CreatedAt.Format(time.RFC3339)
-		subDict["updatedAt"] = sub.UpdatedAt.Format(time.RFC3339)
-		if sub.Tier != nil {
-			tier = sub.Tier.Slug
-			subDict["tierName"] = sub.Tier.Name
-			subDict["tierSlug"] = sub.Tier.Slug
-			subDict["includedRepositories"] = int64(sub.Tier.IncludedRepositories)
-			subDict["includedStorageBytes"] = int64(sub.Tier.IncludedStorageBytes)
-			subDict["includedBandwidthBytes"] = int64(sub.Tier.IncludedBandwidthBytes)
-			subDict["monthlyPriceInCents"] = int64(sub.Tier.MonthlyPriceInCents)
-			subDict["allowStorageOverage"] = sub.Tier.AllowStorageOverage
-		}
+	if reg == nil {
+		return nil, nil, errors.New("the DigitalOcean API returned no container registry")
 	}
-	args["subscriptionTier"] = llx.StringData(tier)
-	args["subscription"] = llx.DictData(subDict)
+
+	tier, subDict := registrySubscription(conn.Client())
+	for k, v := range registryArgs(reg, tier, subDict) {
+		args[k] = v
+	}
 	return args, nil, nil
 }
 
+// id keys a registry by name so an account holding several of them does
+// not collapse them onto one cache entry.
+//
+// The empty sentinel the init returns for an account with no registry
+// keeps the bare kind as its key, because resourceID refuses to build one
+// from an empty name.
 func (r *mqlDigitaloceanRegistry) id() (string, error) {
-	return "digitalocean.registry", nil
+	if r.Name.Data == "" {
+		return "digitalocean.registry", nil
+	}
+	return resourceID("digitalocean.registry", r.Name.Data)
 }
 
 func (r *mqlDigitaloceanRegistry) repositories() ([]interface{}, error) {
@@ -633,18 +658,28 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 
 		secureHeaderKey, secureHeaderValue, secureHeaderRemoved := appSecureHeader(app.Spec)
 
-		domains := make([]interface{}, len(app.Domains))
-		for i, d := range app.Domains {
+		domains := make([]interface{}, 0, len(app.Domains))
+		for _, d := range app.Domains {
+			// godo hands back a slice of pointers; a nil entry would panic
+			// the provider and take down the whole scan.
+			if d == nil {
+				continue
+			}
 			domainName := ""
+			minimumTLSVersion := ""
 			if d.Spec != nil {
 				domainName = d.Spec.Domain
+				minimumTLSVersion = d.Spec.MinimumTLSVersion
 			}
-			domains[i] = map[string]interface{}{
+			domains = append(domains, map[string]interface{}{
 				"id":                   d.ID,
 				"name":                 domainName,
 				"phase":                string(d.Phase),
 				"certificateExpiresAt": formatDoTime(d.CertificateExpiresAt),
-			}
+				// Empty when the app leaves the domain at the App Platform
+				// default rather than pinning a floor.
+				"minimumTlsVersion": minimumTLSVersion,
+			})
 		}
 
 		vpcID := ""
@@ -696,6 +731,7 @@ func (r *mqlDigitalocean) apps() ([]interface{}, error) {
 			return nil, err
 		}
 		mqlApp := res.(*mqlDigitaloceanApp)
+		mqlApp.cacheSpec = app.Spec
 		mqlApp.cacheVpcID = vpcID
 		mqlApp.cacheDedicatedIps = app.DedicatedIps
 		mqlApp.cacheBuildpacks = buildpacks
@@ -893,46 +929,46 @@ func (r *mqlDigitalocean) spacesKeys() ([]interface{}, error) {
 	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
 	client := conn.Client()
 
-	var all []interface{}
-	opt := &godo.ListOptions{PerPage: 200}
-	for {
-		keys, resp, err := client.SpacesKeys.List(context.Background(), opt)
-		if err != nil {
-			// Spaces Keys API 404s if Spaces isn't enabled; tolerate that, but
-			// surface real failures (auth, rate-limit, network) instead of
-			// masking them as "no keys".
-			if isDoNotFound(err) {
-				return []interface{}{}, nil
-			}
-			return nil, err
+	// Walked through paginate rather than a hand-rolled loop: the previous
+	// loop read resp.Links without first checking resp, and godo returns a
+	// nil response alongside a nil error on some paths, which panics the
+	// provider and takes down the whole scan.
+	keys, err := paginate(context.Background(), client.SpacesKeys.List)
+	if err != nil {
+		// The Spaces Keys API 404s when Spaces is not enabled on the
+		// account; tolerate that, but surface real failures (denied reads,
+		// rate limits, network) instead of masking them as "no keys".
+		if isDoNotFound(err) {
+			return []interface{}{}, nil
 		}
-		for _, k := range keys {
-			grants := make([]interface{}, len(k.Grants))
-			for i, g := range k.Grants {
-				grants[i] = map[string]interface{}{
-					"bucket":     g.Bucket,
-					"permission": string(g.Permission),
-				}
+		return nil, err
+	}
+
+	all := make([]interface{}, 0, len(keys))
+	for _, k := range keys {
+		if k == nil {
+			continue
+		}
+		grants := make([]interface{}, 0, len(k.Grants))
+		for _, g := range k.Grants {
+			if g == nil {
+				continue
 			}
-			res, err := CreateResource(r.MqlRuntime, "digitalocean.spacesKey", map[string]*llx.RawData{
-				"name":      llx.StringData(k.Name),
-				"accessKey": llx.StringData(k.AccessKey),
-				"grants":    llx.ArrayData(grants, "\x13"),
-				"createdAt": llx.TimeDataPtr(parseDoTime(k.CreatedAt)),
+			grants = append(grants, map[string]interface{}{
+				"bucket":     g.Bucket,
+				"permission": string(g.Permission),
 			})
-			if err != nil {
-				return nil, err
-			}
-			all = append(all, res)
 		}
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-		page, err := resp.Links.CurrentPage()
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.spacesKey", map[string]*llx.RawData{
+			"name":      llx.StringData(k.Name),
+			"accessKey": llx.StringData(k.AccessKey),
+			"grants":    llx.ArrayData(grants, "\x13"),
+			"createdAt": llx.TimeDataPtr(parseDoTime(k.CreatedAt)),
+		})
 		if err != nil {
 			return nil, err
 		}
-		opt.Page = page + 1
+		all = append(all, res)
 	}
 	return all, nil
 }

@@ -134,3 +134,28 @@ func TestPaginate_MalformedNextLink(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, got)
 }
+
+// TestPaginate_StuckCursorIsReported guards against an endpoint that
+// ignores the page parameter and answers the same page forever while
+// still advertising a next link. Without the guard the loop never
+// terminates: the scan hangs and the accumulated slice grows until the
+// process runs out of memory. Reporting it beats returning the pages
+// collected so far, which would be a truncated list presented as a
+// complete one.
+func TestPaginate_StuckCursorIsReported(t *testing.T) {
+	calls := 0
+	_, err := paginate(context.Background(), func(ctx context.Context, opt *godo.ListOptions) ([]int, *godo.Response, error) {
+		calls++
+		if calls > 50 {
+			t.Fatal("paginate did not terminate on a repeating page")
+		}
+		// Always reports itself as page 1 with more to come.
+		return []int{calls}, &godo.Response{Links: &godo.Links{
+			Pages: &godo.Pages{Next: "https://api.example/v2/things?page=2", Last: "https://api.example/v2/things?page=9"},
+		}}, nil
+	})
+
+	require.Error(t, err, "a repeating page must be reported, not looped on")
+	assert.Contains(t, err.Error(), "repeating a page")
+	assert.Less(t, calls, 50)
+}

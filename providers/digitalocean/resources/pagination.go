@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/digitalocean/godo"
 )
@@ -51,6 +52,18 @@ func paginate[T any](ctx context.Context, list listFunc[T]) ([]T, error) {
 		if err != nil {
 			return nil, err
 		}
-		opt.Page = current + 1
+
+		// Stuck-cursor guard. An endpoint that ignores the page parameter
+		// answers the same page forever while still advertising a next
+		// link, and the loop above would then never terminate: the scan
+		// hangs and the item list grows without bound. Requiring the
+		// cursor to move forward turns that into a reported failure
+		// instead, because silently returning the pages collected so far
+		// would be a truncated list presented as a complete one.
+		next := current + 1
+		if next <= opt.Page {
+			return nil, fmt.Errorf("pagination did not advance past page %d, so the endpoint is repeating a page", opt.Page)
+		}
+		opt.Page = next
 	}
 }
