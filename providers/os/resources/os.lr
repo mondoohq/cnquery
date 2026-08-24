@@ -12132,7 +12132,7 @@ windows.defender @defaults("enabled") {
 // and whether a reboot or signature update is pending. This is the "is
 // Defender actually protecting the host right now" view, complementing the
 // policy in windows.defender.preferences.
-windows.defender.status @defaults("antivirusEnabled realTimeProtectionEnabled isTamperProtected") {
+private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEnabled isTamperProtected") {
   // Antimalware engine version
   amEngineVersion string
   // Antimalware client (product) version

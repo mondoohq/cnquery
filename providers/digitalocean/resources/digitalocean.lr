@@ -3331,7 +3331,7 @@ digitalocean.partnerAttachment @defaults("id name state") {
 // crypto-mining droplets), so this is useful for spend-anomaly auditing.
 // Amounts are USD strings as returned by the API to preserve exact
 // formatting.
-digitalocean.billing @defaults("monthToDateBalance monthToDateUsage") {
+private digitalocean.billing @defaults("monthToDateBalance monthToDateUsage") {
   // Total balance carried over at the start of the period (USD)
   accountBalance string
   // Usage accrued so far this billing period (USD)

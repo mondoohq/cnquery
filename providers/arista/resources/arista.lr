@@ -1030,7 +1030,7 @@ private arista.eos.hardware.inventoryItem @defaults("name description serialNumb
 // can authenticate against the switch's local account database alone with no
 // remote AAA source, a common hardening finding where policy requires
 // TACACS+ or RADIUS.
-arista.eos.aaa {
+private arista.eos.aaa {
   // Authentication login method lists (key = list name, e.g. "default")
   authenticationLogin map[string][]string
   // Authentication enable method lists
@@ -1173,7 +1173,7 @@ private arista.eos.aaa.serverGroup @defaults("name protocol") {
 // whether FIPS restrictions are enforced. This is the surface auditors
 // compare against SSH hardening benchmarks for weak algorithms, missing
 // idle timeouts, and non-standard ports.
-arista.eos.sshSettings {
+private arista.eos.sshSettings {
   // Whether the SSH service is enabled (no shutdown)
   enabled bool
   // Configured SSH protocol version (typically "2")
@@ -1221,7 +1221,7 @@ private arista.eos.snmpCommunity @defaults("name access acl") {
 // exists and is actually enabled, the idle timeout, session limits (global
 // and per-host), and any access-list restricting connections. Telnet is a
 // plaintext protocol, so benchmarks generally require it to be disabled.
-arista.eos.telnetService {
+private arista.eos.telnetService {
   // Whether a `management telnet` block exists in the running-config
   configured bool
   // Whether the telnet service is enabled (configured AND not shutdown)
@@ -1244,7 +1244,7 @@ arista.eos.telnetService {
 // may log in remotely, login-event logging, and the minimum-character and
 // maximum-repetition rules from the `password policy` block. Audit these to
 // confirm brute-force protection is enabled and complexity meets policy.
-arista.eos.passwordPolicy {
+private arista.eos.passwordPolicy {
   // Failures allowed before account lockout (0 = lockout not configured)
   lockoutFailure int
   // Rolling window during which failures count, in seconds
@@ -1345,7 +1345,7 @@ private arista.eos.portSecurity @defaults("interface enabled violationAction") {
 // which transports are actually listening. Common compliance audits
 // check that `httpServerConfigured` is false (no plaintext HTTP) while
 // `httpsServerConfigured` and `httpsServerRunning` are both true.
-arista.eos.eapi @defaults("enabled httpsServerRunning httpServerRunning") {
+private arista.eos.eapi @defaults("enabled httpsServerRunning httpServerRunning") {
   // Whether eAPI is enabled on the device
   enabled bool
   // Whether the plaintext HTTP eAPI server is configured
@@ -1437,7 +1437,7 @@ private arista.eos.vrrp.group @defaults("interface groupId state priority") {
 // it off, per-interface `dot1x port-control auto` lines are configured but
 // inert, so a device can carry a complete-looking 802.1X configuration and
 // enforce nothing.
-arista.eos.dot1x {
+private arista.eos.dot1x {
   // Whether 802.1X authentication is globally active (`dot1x system-auth-control`)
   systemAuthControl bool
   // Whether a RADIUS server may change or revoke an authorized session
@@ -1504,7 +1504,7 @@ private arista.eos.dot1x.interface @defaults("interface portControl hostMode") {
 //
 // `trustedInterfaces` is the field to audit: an uplink toward the real DHCP
 // server has to be trusted, and an access port facing users must not be.
-arista.eos.dhcpSnooping {
+private arista.eos.dhcpSnooping {
   // Whether DHCP snooping is globally enabled
   enabled bool
   // VLANs snooping is enabled on
@@ -1532,7 +1532,7 @@ arista.eos.dhcpSnooping {
 //
 // DAI has no device-wide on switch. It is enabled per VLAN, so `enabled` is
 // derived from whether any VLAN is covered.
-arista.eos.arpInspection {
+private arista.eos.arpInspection {
   // Whether Dynamic ARP Inspection covers at least one VLAN
   enabled bool
   // VLANs inspection is enabled on
@@ -1598,7 +1598,7 @@ private arista.eos.monitorSession.source @defaults("interface direction") {
 //
 // Collectors can be configured while sampling is off, so `enabled` and
 // `destinations` answer different questions and both are worth reading.
-arista.eos.sflow {
+private arista.eos.sflow {
   // Whether sFlow sampling is running
   enabled bool
   // One-in-N packet sampling rate (0 = unset)
@@ -1716,7 +1716,7 @@ private arista.eos.extension @defaults("name version status") {
 // and the console speed it comes up with. The image path is what a device
 // actually runs after a reload, so it is worth confirming it points at the
 // image that was reviewed rather than one staged beside it.
-arista.eos.bootConfig {
+private arista.eos.bootConfig {
   // Path to the software image loaded on next boot
   softwareImage string
   // Console baud rate
@@ -1750,7 +1750,7 @@ arista.eos.startupConfig {
 // `errors`, `disabled`, or a numeric level. An empty severity means the
 // running-config did not set that destination and the release default
 // applies, which is reported as unset rather than filled in with a guess.
-arista.eos.logging {
+private arista.eos.logging {
   // Whether system logging is enabled
   //
   // True unless `no logging on` is configured. EOS logs by default, so an

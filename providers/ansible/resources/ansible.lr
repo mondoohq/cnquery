@@ -330,7 +330,7 @@ ansible.role @defaults("name") {
 // Contents of a role's meta/main.yml: the minimum Ansible version it declares,
 // the galaxy_info block describing authorship and platform support, and the
 // names of the roles it depends on.
-ansible.role.meta @defaults("minAnsibleVersion") {
+private ansible.role.meta @defaults("minAnsibleVersion") {
   // Minimum Ansible version the role supports
   minAnsibleVersion string
   // Galaxy metadata block (author, description, license, platforms)

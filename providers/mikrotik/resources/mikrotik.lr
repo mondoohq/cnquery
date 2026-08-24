@@ -68,7 +68,7 @@ mikrotik {
 // runtime resources such as CPU, memory, storage, and uptime. The values
 // are read from `/system/identity`, `/system/resource`, and
 // `/system/routerboard`.
-mikrotik.system @defaults("identity version boardName") {
+private mikrotik.system @defaults("identity version boardName") {
   // System identity name
   identity string
   // Running RouterOS version
@@ -195,7 +195,7 @@ mikrotik.system.ntp.client @defaults("enabled status") {
 // trap configuration (community, protocol version, generators, and source
 // address). Useful for confirming that SNMP is disabled where it isn't needed
 // and that any enabled SNMP exposure is scoped and attributed.
-mikrotik.snmp @defaults("enabled contact location") {
+private mikrotik.snmp @defaults("enabled contact location") {
   // Whether the SNMP service is enabled
   enabled bool
   // Configured SNMP contact string
