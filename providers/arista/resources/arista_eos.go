@@ -62,6 +62,26 @@ type mqlAristaEosRunningConfigInternal struct {
 	hardeningDone  atomic.Bool
 	hardeningCache map[string]eos.InterfaceHardening
 	hardeningLock  sync.Mutex
+	snmpParsed     atomic.Bool
+	snmpCache      *eos.SnmpConfig
+	snmpLock       sync.Mutex
+}
+
+// fetchSnmpConfig parses the SNMP configuration once per device. The users,
+// groups, views, and notification destinations are separate collections that
+// all come out of the same walk of the running-config.
+func (a *mqlAristaEosRunningConfig) fetchSnmpConfig() *eos.SnmpConfig {
+	if a.snmpParsed.Load() {
+		return a.snmpCache
+	}
+	a.snmpLock.Lock()
+	defer a.snmpLock.Unlock()
+	if a.snmpParsed.Load() {
+		return a.snmpCache
+	}
+	a.snmpCache = eos.ParseSnmpConfig(a.fetchContent())
+	a.snmpParsed.Store(true)
+	return a.snmpCache
 }
 
 // fetchSflowConfig parses the sFlow configuration once per device.

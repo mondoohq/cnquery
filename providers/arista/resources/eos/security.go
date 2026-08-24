@@ -181,23 +181,84 @@ type SshSettings struct {
 	Macs               []string
 	HostkeyAlgorithms  []string
 	FipsRestrictions   bool
+
+	// The fields below are the containment controls: who may reach the
+	// service, from which routing instances, and how hard it may be
+	// hammered. The crypto suite above says nothing about any of them.
+
+	// Vrfs are the routing instances the block explicitly enables SSH in,
+	// via a nested `vrf <name>` sub-block that is not shut down. Empty when
+	// the block names none, in which case SSH is reachable in the default
+	// instance only.
+	Vrfs []string
+	// LoginTimeout is the `login timeout` value, the window a connection has
+	// to complete authentication before it is dropped. 0 when unset; EOS
+	// ships 120.
+	LoginTimeout int
+	// ConnectionLimit is the ceiling on concurrent SSH sessions
+	// (`connection limit`). 0 means no configured ceiling.
+	ConnectionLimit int
+	// ConnectionPerHostLimit is the per-source-host session ceiling
+	// (`connection per-host`), the bound that stops one host consuming the
+	// whole allowance. 0 means no configured ceiling.
+	ConnectionPerHostLimit int
+	// EmptyPasswords reflects `authentication empty-passwords`, one of
+	// "auto", "permit", or "deny". EOS defaults to "auto", which is what
+	// this reports when the block does not set it.
+	EmptyPasswords string
+	// LogLevel is the SSH daemon log level (`log-level`). Empty when unset;
+	// EOS ships "info".
+	LogLevel string
+	// ClientAliveInterval is the `client-alive interval` in seconds, and
+	// ClientAliveCountMax the `client-alive count-max`. Together they end a
+	// session whose peer has gone away. 0 when unset.
+	ClientAliveInterval int
+	ClientAliveCountMax int
 }
 
 func ParseSshSettings(runningConfig string) *SshSettings {
-	block := GetSection(strings.NewReader(runningConfig), "management ssh")
 	s := &SshSettings{
 		// EOS default: SSH enabled unless an explicit "shutdown" is present
 		Enabled: true,
+		// EOS default for `authentication empty-passwords`.
+		EmptyPasswords: "auto",
+		Vrfs:           []string{},
 	}
-	if block == "" {
+
+	// SectionBody keeps the block's indentation so a nested `vrf` sub-block
+	// stays distinguishable. A `no shutdown` inside one governs that routing
+	// instance, not the service as a whole, and flattening the two together
+	// would report a shut-down service as running.
+	body := SectionBody(runningConfig, "management ssh")
+	if body == "" {
 		// No explicit `management ssh` section in the diffed running-config; can
 		// still be on by default — leave Enabled=true and other fields empty.
 		return s
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(block))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+	eachSubBlock(body, func(line, block string) {
+		if name, ok := strings.CutPrefix(line, "vrf "); ok {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				return
+			}
+			// A sub-block exists to enable the service in that instance, so
+			// it counts unless it explicitly shuts it down.
+			enabled := true
+			for _, sub := range strings.Split(block, "\n") {
+				switch strings.TrimSpace(sub) {
+				case "shutdown":
+					enabled = false
+				case "no shutdown":
+					enabled = true
+				}
+			}
+			if enabled {
+				s.Vrfs = append(s.Vrfs, name)
+			}
+			return
+		}
+
 		switch {
 		case line == "shutdown":
 			s.Enabled = false
@@ -215,6 +276,35 @@ func ParseSshSettings(runningConfig string) *SshSettings {
 			if err == nil {
 				s.ServerPort = n
 			}
+		case strings.HasPrefix(line, "login timeout "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "login timeout ")))
+			if err == nil {
+				s.LoginTimeout = n
+			}
+		case strings.HasPrefix(line, "connection limit "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "connection limit ")))
+			if err == nil {
+				s.ConnectionLimit = n
+			}
+		case strings.HasPrefix(line, "connection per-host "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "connection per-host ")))
+			if err == nil {
+				s.ConnectionPerHostLimit = n
+			}
+		case strings.HasPrefix(line, "client-alive interval "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "client-alive interval ")))
+			if err == nil {
+				s.ClientAliveInterval = n
+			}
+		case strings.HasPrefix(line, "client-alive count-max "):
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "client-alive count-max ")))
+			if err == nil {
+				s.ClientAliveCountMax = n
+			}
+		case strings.HasPrefix(line, "authentication empty-passwords "):
+			s.EmptyPasswords = strings.TrimSpace(strings.TrimPrefix(line, "authentication empty-passwords "))
+		case strings.HasPrefix(line, "log-level "):
+			s.LogLevel = strings.TrimSpace(strings.TrimPrefix(line, "log-level "))
 		case strings.HasPrefix(line, "authentication mode "):
 			s.AuthenticationMode = strings.TrimSpace(strings.TrimPrefix(line, "authentication mode "))
 		case strings.HasPrefix(line, "cipher "):
@@ -228,7 +318,7 @@ func ParseSshSettings(runningConfig string) *SshSettings {
 		case line == "fips restrictions":
 			s.FipsRestrictions = true
 		}
-	}
+	})
 	return s
 }
 

@@ -21,6 +21,11 @@ const (
 	ResourceAristaEosUser                  string = "arista.eos.user"
 	ResourceAristaEosRole                  string = "arista.eos.role"
 	ResourceAristaEosSnmpSetting           string = "arista.eos.snmpSetting"
+	ResourceAristaEosSnmpHost              string = "arista.eos.snmpHost"
+	ResourceAristaEosSnmpUser              string = "arista.eos.snmpUser"
+	ResourceAristaEosSnmpGroup             string = "arista.eos.snmpGroup"
+	ResourceAristaEosSnmpView              string = "arista.eos.snmpView"
+	ResourceAristaEosStormControl          string = "arista.eos.stormControl"
 	ResourceAristaEosNtp                   string = "arista.eos.ntp"
 	ResourceAristaEosNtpServer             string = "arista.eos.ntp.server"
 	ResourceAristaEosInterface             string = "arista.eos.interface"
@@ -54,6 +59,7 @@ const (
 	ResourceAristaEosSshSettings           string = "arista.eos.sshSettings"
 	ResourceAristaEosSnmpCommunity         string = "arista.eos.snmpCommunity"
 	ResourceAristaEosTelnetService         string = "arista.eos.telnetService"
+	ResourceAristaEosConsoleSettings       string = "arista.eos.consoleSettings"
 	ResourceAristaEosPasswordPolicy        string = "arista.eos.passwordPolicy"
 	ResourceAristaEosNtpAuthKey            string = "arista.eos.ntpAuthKey"
 	ResourceAristaEosControlPlanePolicer   string = "arista.eos.controlPlanePolicer"
@@ -105,6 +111,26 @@ func init() {
 		"arista.eos.snmpSetting": {
 			// to override args, implement: initAristaEosSnmpSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosSnmpSetting,
+		},
+		"arista.eos.snmpHost": {
+			// to override args, implement: initAristaEosSnmpHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosSnmpHost,
+		},
+		"arista.eos.snmpUser": {
+			// to override args, implement: initAristaEosSnmpUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosSnmpUser,
+		},
+		"arista.eos.snmpGroup": {
+			// to override args, implement: initAristaEosSnmpGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosSnmpGroup,
+		},
+		"arista.eos.snmpView": {
+			// to override args, implement: initAristaEosSnmpView(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosSnmpView,
+		},
+		"arista.eos.stormControl": {
+			// to override args, implement: initAristaEosStormControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosStormControl,
 		},
 		"arista.eos.ntp": {
 			// to override args, implement: initAristaEosNtp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -237,6 +263,10 @@ func init() {
 		"arista.eos.telnetService": {
 			// to override args, implement: initAristaEosTelnetService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAristaEosTelnetService,
+		},
+		"arista.eos.consoleSettings": {
+			// to override args, implement: initAristaEosConsoleSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAristaEosConsoleSettings,
 		},
 		"arista.eos.passwordPolicy": {
 			// to override args, implement: initAristaEosPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -490,6 +520,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.snmpCommunities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetSnmpCommunities()).ToDataRes(types.Array(types.Resource("arista.eos.snmpCommunity")))
 	},
+	"arista.eos.snmpUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetSnmpUsers()).ToDataRes(types.Array(types.Resource("arista.eos.snmpUser")))
+	},
+	"arista.eos.snmpGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetSnmpGroups()).ToDataRes(types.Array(types.Resource("arista.eos.snmpGroup")))
+	},
+	"arista.eos.snmpViews": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetSnmpViews()).ToDataRes(types.Array(types.Resource("arista.eos.snmpView")))
+	},
 	"arista.eos.telnetService": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetTelnetService()).ToDataRes(types.Resource("arista.eos.telnetService"))
 	},
@@ -499,8 +538,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.controlPlanePolicer": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetControlPlanePolicer()).ToDataRes(types.Resource("arista.eos.controlPlanePolicer"))
 	},
+	"arista.eos.consoleSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetConsoleSettings()).ToDataRes(types.Resource("arista.eos.consoleSettings"))
+	},
 	"arista.eos.portSecurity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetPortSecurity()).ToDataRes(types.Array(types.Resource("arista.eos.portSecurity")))
+	},
+	"arista.eos.stormControls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEos).GetStormControls()).ToDataRes(types.Array(types.Resource("arista.eos.stormControl")))
 	},
 	"arista.eos.eapi": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEos).GetEapi()).ToDataRes(types.Resource("arista.eos.eapi"))
@@ -559,6 +604,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.user.locked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosUser).GetLocked()).ToDataRes(types.Bool)
 	},
+	"arista.eos.user.roleRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosUser).GetRoleRef()).ToDataRes(types.Resource("arista.eos.role"))
+	},
 	"arista.eos.role.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRole).GetName()).ToDataRes(types.String)
 	},
@@ -573,6 +621,129 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.snmpSetting.notifications": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSnmpSetting).GetNotifications()).ToDataRes(types.Array(types.Dict))
+	},
+	"arista.eos.snmpSetting.hosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpSetting).GetHosts()).ToDataRes(types.Array(types.Resource("arista.eos.snmpHost")))
+	},
+	"arista.eos.snmpSetting.vrfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpSetting).GetVrfs()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.snmpSetting.localInterface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpSetting).GetLocalInterface()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpSetting.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpSetting).GetLocation()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpSetting.contact": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpSetting).GetContact()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpSetting.chassisId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpSetting).GetChassisId()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpHost.host": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetHost()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpHost.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetVrf()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpHost.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetVersion()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpHost.securityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetSecurityLevel()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpHost.notificationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetNotificationType()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpHost.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetPort()).ToDataRes(types.Int)
+	},
+	"arista.eos.snmpHost.community": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetCommunity()).ToDataRes(types.Resource("arista.eos.snmpCommunity"))
+	},
+	"arista.eos.snmpHost.user": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpHost).GetUser()).ToDataRes(types.Resource("arista.eos.snmpUser"))
+	},
+	"arista.eos.snmpUser.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpUser.group": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetGroup()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpUser.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetVersion()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpUser.securityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetSecurityLevel()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpUser.authAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetAuthAlgorithm()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpUser.privAlgorithm": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetPrivAlgorithm()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpUser.localized": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetLocalized()).ToDataRes(types.Bool)
+	},
+	"arista.eos.snmpUser.remoteAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetRemoteAddress()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpUser.remotePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetRemotePort()).ToDataRes(types.Int)
+	},
+	"arista.eos.snmpUser.groupRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpUser).GetGroupRef()).ToDataRes(types.Resource("arista.eos.snmpGroup"))
+	},
+	"arista.eos.snmpGroup.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpGroup.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetVersion()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpGroup.securityLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetSecurityLevel()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpGroup.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetContext()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpGroup.readView": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetReadView()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpGroup.writeView": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetWriteView()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpGroup.notifyView": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetNotifyView()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpGroup.readViewRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetReadViewRef()).ToDataRes(types.Resource("arista.eos.snmpView"))
+	},
+	"arista.eos.snmpGroup.writeViewRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpGroup).GetWriteViewRef()).ToDataRes(types.Resource("arista.eos.snmpView"))
+	},
+	"arista.eos.snmpView.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpView).GetName()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpView.mibFamily": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpView).GetMibFamily()).ToDataRes(types.String)
+	},
+	"arista.eos.snmpView.included": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSnmpView).GetIncluded()).ToDataRes(types.Bool)
+	},
+	"arista.eos.stormControl.interface": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosStormControl).GetInterface()).ToDataRes(types.String)
+	},
+	"arista.eos.stormControl.trafficClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosStormControl).GetTrafficClass()).ToDataRes(types.String)
+	},
+	"arista.eos.stormControl.level": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosStormControl).GetLevel()).ToDataRes(types.Float)
+	},
+	"arista.eos.stormControl.unit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosStormControl).GetUnit()).ToDataRes(types.String)
+	},
+	"arista.eos.stormControl.cpu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosStormControl).GetCpu()).ToDataRes(types.Bool)
 	},
 	"arista.eos.ntp.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosNtp).GetStatus()).ToDataRes(types.String)
@@ -1201,6 +1372,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.aaa.defaultLoginPermitsLocalOnly": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaa).GetDefaultLoginPermitsLocalOnly()).ToDataRes(types.Bool)
 	},
+	"arista.eos.aaa.enableSecretConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetEnableSecretConfigured()).ToDataRes(types.Bool)
+	},
+	"arista.eos.aaa.enableSecretFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAaa).GetEnableSecretFormat()).ToDataRes(types.String)
+	},
 	"arista.eos.aaa.tacacsServer.host": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAaaTacacsServer).GetHost()).ToDataRes(types.String)
 	},
@@ -1285,6 +1462,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.sshSettings.fipsRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSshSettings).GetFipsRestrictions()).ToDataRes(types.Bool)
 	},
+	"arista.eos.sshSettings.vrfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetVrfs()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.sshSettings.loginTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetLoginTimeout()).ToDataRes(types.Int)
+	},
+	"arista.eos.sshSettings.connectionLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetConnectionLimit()).ToDataRes(types.Int)
+	},
+	"arista.eos.sshSettings.connectionPerHostLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetConnectionPerHostLimit()).ToDataRes(types.Int)
+	},
+	"arista.eos.sshSettings.emptyPasswords": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetEmptyPasswords()).ToDataRes(types.String)
+	},
+	"arista.eos.sshSettings.logLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetLogLevel()).ToDataRes(types.String)
+	},
+	"arista.eos.sshSettings.clientAliveInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetClientAliveInterval()).ToDataRes(types.Int)
+	},
+	"arista.eos.sshSettings.clientAliveCountMax": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosSshSettings).GetClientAliveCountMax()).ToDataRes(types.Int)
+	},
 	"arista.eos.snmpCommunity.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosSnmpCommunity).GetName()).ToDataRes(types.String)
 	},
@@ -1317,6 +1518,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.telnetService.ipAccessGroup": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosTelnetService).GetIpAccessGroup()).ToDataRes(types.String)
+	},
+	"arista.eos.consoleSettings.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosConsoleSettings).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"arista.eos.consoleSettings.idleTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosConsoleSettings).GetIdleTimeout()).ToDataRes(types.Int)
+	},
+	"arista.eos.consoleSettings.sessionTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosConsoleSettings).GetSessionTimeout()).ToDataRes(types.Int)
+	},
+	"arista.eos.consoleSettings.sessionTimeoutWarning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosConsoleSettings).GetSessionTimeoutWarning()).ToDataRes(types.Int)
 	},
 	"arista.eos.passwordPolicy.lockoutFailure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosPasswordPolicy).GetLockoutFailure()).ToDataRes(types.Int)
@@ -1440,6 +1653,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.eapi.unixSocketServerRunning": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosEapi).GetUnixSocketServerRunning()).ToDataRes(types.Bool)
+	},
+	"arista.eos.eapi.vrfs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosEapi).GetVrfs()).ToDataRes(types.Array(types.String))
+	},
+	"arista.eos.eapi.sessionTimeout": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosEapi).GetSessionTimeout()).ToDataRes(types.Int)
 	},
 	"arista.eos.vrrp.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosVrrp).GetGroups()).ToDataRes(types.Array(types.Resource("arista.eos.vrrp.group")))
@@ -1866,6 +2085,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEos).SnmpCommunities, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"arista.eos.snmpUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).SnmpUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).SnmpGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpViews": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).SnmpViews, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"arista.eos.telnetService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).TelnetService, ok = plugin.RawToTValue[*mqlAristaEosTelnetService](v.Value, v.Error)
 		return
@@ -1878,8 +2109,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEos).ControlPlanePolicer, ok = plugin.RawToTValue[*mqlAristaEosControlPlanePolicer](v.Value, v.Error)
 		return
 	},
+	"arista.eos.consoleSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).ConsoleSettings, ok = plugin.RawToTValue[*mqlAristaEosConsoleSettings](v.Value, v.Error)
+		return
+	},
 	"arista.eos.portSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEos).PortSecurity, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.stormControls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEos).StormControls, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"arista.eos.eapi": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1970,6 +2209,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosUser).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"arista.eos.user.roleRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosUser).RoleRef, ok = plugin.RawToTValue[*mqlAristaEosRole](v.Value, v.Error)
+		return
+	},
 	"arista.eos.role.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosRole).__id, ok = v.Value.(string)
 		return
@@ -1996,6 +2239,190 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.snmpSetting.notifications": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSnmpSetting).Notifications, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpSetting.hosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpSetting).Hosts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpSetting.vrfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpSetting).Vrfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpSetting.localInterface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpSetting).LocalInterface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpSetting.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpSetting).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpSetting.contact": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpSetting).Contact, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpSetting.chassisId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpSetting).ChassisId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.snmpHost.host": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).Host, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.securityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).SecurityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.notificationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).NotificationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.community": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).Community, ok = plugin.RawToTValue[*mqlAristaEosSnmpCommunity](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpHost.user": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpHost).User, ok = plugin.RawToTValue[*mqlAristaEosSnmpUser](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.snmpUser.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.group": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).Group, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.securityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).SecurityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.authAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).AuthAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.privAlgorithm": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).PrivAlgorithm, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.localized": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).Localized, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.remoteAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).RemoteAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.remotePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).RemotePort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpUser.groupRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpUser).GroupRef, ok = plugin.RawToTValue[*mqlAristaEosSnmpGroup](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.snmpGroup.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.securityLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).SecurityLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).Context, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.readView": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).ReadView, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.writeView": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).WriteView, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.notifyView": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).NotifyView, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.readViewRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).ReadViewRef, ok = plugin.RawToTValue[*mqlAristaEosSnmpView](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpGroup.writeViewRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpGroup).WriteViewRef, ok = plugin.RawToTValue[*mqlAristaEosSnmpView](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpView.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpView).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.snmpView.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpView).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpView.mibFamily": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpView).MibFamily, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.snmpView.included": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSnmpView).Included, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.stormControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosStormControl).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.stormControl.interface": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosStormControl).Interface, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.stormControl.trafficClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosStormControl).TrafficClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.stormControl.level": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosStormControl).Level, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.stormControl.unit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosStormControl).Unit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.stormControl.cpu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosStormControl).Cpu, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"arista.eos.ntp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2942,6 +3369,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosAaa).DefaultLoginPermitsLocalOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"arista.eos.aaa.enableSecretConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).EnableSecretConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aaa.enableSecretFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAaa).EnableSecretFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"arista.eos.aaa.tacacsServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAaaTacacsServer).__id, ok = v.Value.(string)
 		return
@@ -3070,6 +3505,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosSshSettings).FipsRestrictions, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"arista.eos.sshSettings.vrfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).Vrfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.sshSettings.loginTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).LoginTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.sshSettings.connectionLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).ConnectionLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.sshSettings.connectionPerHostLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).ConnectionPerHostLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.sshSettings.emptyPasswords": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).EmptyPasswords, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.sshSettings.logLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).LogLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.sshSettings.clientAliveInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).ClientAliveInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.sshSettings.clientAliveCountMax": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosSshSettings).ClientAliveCountMax, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"arista.eos.snmpCommunity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosSnmpCommunity).__id, ok = v.Value.(string)
 		return
@@ -3120,6 +3587,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.telnetService.ipAccessGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosTelnetService).IpAccessGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.consoleSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosConsoleSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"arista.eos.consoleSettings.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosConsoleSettings).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.consoleSettings.idleTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosConsoleSettings).IdleTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.consoleSettings.sessionTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosConsoleSettings).SessionTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"arista.eos.consoleSettings.sessionTimeoutWarning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosConsoleSettings).SessionTimeoutWarning, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"arista.eos.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3304,6 +3791,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.eapi.unixSocketServerRunning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosEapi).UnixSocketServerRunning, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"arista.eos.eapi.vrfs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosEapi).Vrfs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"arista.eos.eapi.sessionTimeout": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosEapi).SessionTimeout, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"arista.eos.vrrp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3814,10 +4309,15 @@ type mqlAristaEos struct {
 	Aaa                  plugin.TValue[*mqlAristaEosAaa]
 	SshSettings          plugin.TValue[*mqlAristaEosSshSettings]
 	SnmpCommunities      plugin.TValue[[]any]
+	SnmpUsers            plugin.TValue[[]any]
+	SnmpGroups           plugin.TValue[[]any]
+	SnmpViews            plugin.TValue[[]any]
 	TelnetService        plugin.TValue[*mqlAristaEosTelnetService]
 	PasswordPolicy       plugin.TValue[*mqlAristaEosPasswordPolicy]
 	ControlPlanePolicer  plugin.TValue[*mqlAristaEosControlPlanePolicer]
+	ConsoleSettings      plugin.TValue[*mqlAristaEosConsoleSettings]
 	PortSecurity         plugin.TValue[[]any]
+	StormControls        plugin.TValue[[]any]
 	Eapi                 plugin.TValue[*mqlAristaEosEapi]
 	Vrrp                 plugin.TValue[*mqlAristaEosVrrp]
 	Logging              plugin.TValue[*mqlAristaEosLogging]
@@ -4311,6 +4811,54 @@ func (c *mqlAristaEos) GetSnmpCommunities() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlAristaEos) GetSnmpUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SnmpUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "snmpUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snmpUsers()
+	})
+}
+
+func (c *mqlAristaEos) GetSnmpGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SnmpGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "snmpGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snmpGroups()
+	})
+}
+
+func (c *mqlAristaEos) GetSnmpViews() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SnmpViews, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "snmpViews")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.snmpViews()
+	})
+}
+
 func (c *mqlAristaEos) GetTelnetService() *plugin.TValue[*mqlAristaEosTelnetService] {
 	return plugin.GetOrCompute[*mqlAristaEosTelnetService](&c.TelnetService, func() (*mqlAristaEosTelnetService, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4359,6 +4907,22 @@ func (c *mqlAristaEos) GetControlPlanePolicer() *plugin.TValue[*mqlAristaEosCont
 	})
 }
 
+func (c *mqlAristaEos) GetConsoleSettings() *plugin.TValue[*mqlAristaEosConsoleSettings] {
+	return plugin.GetOrCompute[*mqlAristaEosConsoleSettings](&c.ConsoleSettings, func() (*mqlAristaEosConsoleSettings, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "consoleSettings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosConsoleSettings), nil
+			}
+		}
+
+		return c.consoleSettings()
+	})
+}
+
 func (c *mqlAristaEos) GetPortSecurity() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.PortSecurity, func() ([]any, error) {
 		if c.MqlRuntime.HasRecording {
@@ -4372,6 +4936,22 @@ func (c *mqlAristaEos) GetPortSecurity() *plugin.TValue[[]any] {
 		}
 
 		return c.portSecurity()
+	})
+}
+
+func (c *mqlAristaEos) GetStormControls() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StormControls, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos", c.__id, "stormControls")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.stormControls()
 	})
 }
 
@@ -4603,6 +5183,7 @@ type mqlAristaEosUser struct {
 	Secret     plugin.TValue[string]
 	Sshkey     plugin.TValue[string]
 	Locked     plugin.TValue[bool]
+	RoleRef    plugin.TValue[*mqlAristaEosRole]
 }
 
 // createAristaEosUser creates a new instance of this resource
@@ -4676,6 +5257,22 @@ func (c *mqlAristaEosUser) GetLocked() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlAristaEosUser) GetRoleRef() *plugin.TValue[*mqlAristaEosRole] {
+	return plugin.GetOrCompute[*mqlAristaEosRole](&c.RoleRef, func() (*mqlAristaEosRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.user", c.__id, "roleRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosRole), nil
+			}
+		}
+
+		return c.roleRef()
+	})
+}
+
 // mqlAristaEosRole for the arista.eos.role resource
 type mqlAristaEosRole struct {
 	MqlRuntime *plugin.Runtime
@@ -4740,8 +5337,14 @@ type mqlAristaEosSnmpSetting struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAristaEosSnmpSettingInternal it will be used here
-	Enabled       plugin.TValue[bool]
-	Notifications plugin.TValue[[]any]
+	Enabled        plugin.TValue[bool]
+	Notifications  plugin.TValue[[]any]
+	Hosts          plugin.TValue[[]any]
+	Vrfs           plugin.TValue[[]any]
+	LocalInterface plugin.TValue[string]
+	Location       plugin.TValue[string]
+	Contact        plugin.TValue[string]
+	ChassisId      plugin.TValue[string]
 }
 
 // createAristaEosSnmpSetting creates a new instance of this resource
@@ -4789,6 +5392,507 @@ func (c *mqlAristaEosSnmpSetting) GetNotifications() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Notifications, func() ([]any, error) {
 		return c.notifications()
 	})
+}
+
+func (c *mqlAristaEosSnmpSetting) GetHosts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hosts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.snmpSetting", c.__id, "hosts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hosts()
+	})
+}
+
+func (c *mqlAristaEosSnmpSetting) GetVrfs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vrfs, func() ([]any, error) {
+		return c.vrfs()
+	})
+}
+
+func (c *mqlAristaEosSnmpSetting) GetLocalInterface() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LocalInterface, func() (string, error) {
+		return c.localInterface()
+	})
+}
+
+func (c *mqlAristaEosSnmpSetting) GetLocation() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Location, func() (string, error) {
+		return c.location()
+	})
+}
+
+func (c *mqlAristaEosSnmpSetting) GetContact() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Contact, func() (string, error) {
+		return c.contact()
+	})
+}
+
+func (c *mqlAristaEosSnmpSetting) GetChassisId() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ChassisId, func() (string, error) {
+		return c.chassisId()
+	})
+}
+
+// mqlAristaEosSnmpHost for the arista.eos.snmpHost resource
+type mqlAristaEosSnmpHost struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAristaEosSnmpHostInternal
+	Host             plugin.TValue[string]
+	Vrf              plugin.TValue[string]
+	Version          plugin.TValue[string]
+	SecurityLevel    plugin.TValue[string]
+	NotificationType plugin.TValue[string]
+	Port             plugin.TValue[int64]
+	Community        plugin.TValue[*mqlAristaEosSnmpCommunity]
+	User             plugin.TValue[*mqlAristaEosSnmpUser]
+}
+
+// createAristaEosSnmpHost creates a new instance of this resource
+func createAristaEosSnmpHost(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosSnmpHost{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.snmpHost", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosSnmpHost) MqlName() string {
+	return "arista.eos.snmpHost"
+}
+
+func (c *mqlAristaEosSnmpHost) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosSnmpHost) GetHost() *plugin.TValue[string] {
+	return &c.Host
+}
+
+func (c *mqlAristaEosSnmpHost) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
+}
+
+func (c *mqlAristaEosSnmpHost) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAristaEosSnmpHost) GetSecurityLevel() *plugin.TValue[string] {
+	return &c.SecurityLevel
+}
+
+func (c *mqlAristaEosSnmpHost) GetNotificationType() *plugin.TValue[string] {
+	return &c.NotificationType
+}
+
+func (c *mqlAristaEosSnmpHost) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAristaEosSnmpHost) GetCommunity() *plugin.TValue[*mqlAristaEosSnmpCommunity] {
+	return plugin.GetOrCompute[*mqlAristaEosSnmpCommunity](&c.Community, func() (*mqlAristaEosSnmpCommunity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.snmpHost", c.__id, "community")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosSnmpCommunity), nil
+			}
+		}
+
+		return c.community()
+	})
+}
+
+func (c *mqlAristaEosSnmpHost) GetUser() *plugin.TValue[*mqlAristaEosSnmpUser] {
+	return plugin.GetOrCompute[*mqlAristaEosSnmpUser](&c.User, func() (*mqlAristaEosSnmpUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.snmpHost", c.__id, "user")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosSnmpUser), nil
+			}
+		}
+
+		return c.user()
+	})
+}
+
+// mqlAristaEosSnmpUser for the arista.eos.snmpUser resource
+type mqlAristaEosSnmpUser struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosSnmpUserInternal it will be used here
+	Name          plugin.TValue[string]
+	Group         plugin.TValue[string]
+	Version       plugin.TValue[string]
+	SecurityLevel plugin.TValue[string]
+	AuthAlgorithm plugin.TValue[string]
+	PrivAlgorithm plugin.TValue[string]
+	Localized     plugin.TValue[bool]
+	RemoteAddress plugin.TValue[string]
+	RemotePort    plugin.TValue[int64]
+	GroupRef      plugin.TValue[*mqlAristaEosSnmpGroup]
+}
+
+// createAristaEosSnmpUser creates a new instance of this resource
+func createAristaEosSnmpUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosSnmpUser{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.snmpUser", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosSnmpUser) MqlName() string {
+	return "arista.eos.snmpUser"
+}
+
+func (c *mqlAristaEosSnmpUser) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosSnmpUser) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosSnmpUser) GetGroup() *plugin.TValue[string] {
+	return &c.Group
+}
+
+func (c *mqlAristaEosSnmpUser) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAristaEosSnmpUser) GetSecurityLevel() *plugin.TValue[string] {
+	return &c.SecurityLevel
+}
+
+func (c *mqlAristaEosSnmpUser) GetAuthAlgorithm() *plugin.TValue[string] {
+	return &c.AuthAlgorithm
+}
+
+func (c *mqlAristaEosSnmpUser) GetPrivAlgorithm() *plugin.TValue[string] {
+	return &c.PrivAlgorithm
+}
+
+func (c *mqlAristaEosSnmpUser) GetLocalized() *plugin.TValue[bool] {
+	return &c.Localized
+}
+
+func (c *mqlAristaEosSnmpUser) GetRemoteAddress() *plugin.TValue[string] {
+	return &c.RemoteAddress
+}
+
+func (c *mqlAristaEosSnmpUser) GetRemotePort() *plugin.TValue[int64] {
+	return &c.RemotePort
+}
+
+func (c *mqlAristaEosSnmpUser) GetGroupRef() *plugin.TValue[*mqlAristaEosSnmpGroup] {
+	return plugin.GetOrCompute[*mqlAristaEosSnmpGroup](&c.GroupRef, func() (*mqlAristaEosSnmpGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.snmpUser", c.__id, "groupRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosSnmpGroup), nil
+			}
+		}
+
+		return c.groupRef()
+	})
+}
+
+// mqlAristaEosSnmpGroup for the arista.eos.snmpGroup resource
+type mqlAristaEosSnmpGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosSnmpGroupInternal it will be used here
+	Name          plugin.TValue[string]
+	Version       plugin.TValue[string]
+	SecurityLevel plugin.TValue[string]
+	Context       plugin.TValue[string]
+	ReadView      plugin.TValue[string]
+	WriteView     plugin.TValue[string]
+	NotifyView    plugin.TValue[string]
+	ReadViewRef   plugin.TValue[*mqlAristaEosSnmpView]
+	WriteViewRef  plugin.TValue[*mqlAristaEosSnmpView]
+}
+
+// createAristaEosSnmpGroup creates a new instance of this resource
+func createAristaEosSnmpGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosSnmpGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.snmpGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosSnmpGroup) MqlName() string {
+	return "arista.eos.snmpGroup"
+}
+
+func (c *mqlAristaEosSnmpGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosSnmpGroup) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosSnmpGroup) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+func (c *mqlAristaEosSnmpGroup) GetSecurityLevel() *plugin.TValue[string] {
+	return &c.SecurityLevel
+}
+
+func (c *mqlAristaEosSnmpGroup) GetContext() *plugin.TValue[string] {
+	return &c.Context
+}
+
+func (c *mqlAristaEosSnmpGroup) GetReadView() *plugin.TValue[string] {
+	return &c.ReadView
+}
+
+func (c *mqlAristaEosSnmpGroup) GetWriteView() *plugin.TValue[string] {
+	return &c.WriteView
+}
+
+func (c *mqlAristaEosSnmpGroup) GetNotifyView() *plugin.TValue[string] {
+	return &c.NotifyView
+}
+
+func (c *mqlAristaEosSnmpGroup) GetReadViewRef() *plugin.TValue[*mqlAristaEosSnmpView] {
+	return plugin.GetOrCompute[*mqlAristaEosSnmpView](&c.ReadViewRef, func() (*mqlAristaEosSnmpView, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.snmpGroup", c.__id, "readViewRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosSnmpView), nil
+			}
+		}
+
+		return c.readViewRef()
+	})
+}
+
+func (c *mqlAristaEosSnmpGroup) GetWriteViewRef() *plugin.TValue[*mqlAristaEosSnmpView] {
+	return plugin.GetOrCompute[*mqlAristaEosSnmpView](&c.WriteViewRef, func() (*mqlAristaEosSnmpView, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("arista.eos.snmpGroup", c.__id, "writeViewRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAristaEosSnmpView), nil
+			}
+		}
+
+		return c.writeViewRef()
+	})
+}
+
+// mqlAristaEosSnmpView for the arista.eos.snmpView resource
+type mqlAristaEosSnmpView struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosSnmpViewInternal it will be used here
+	Name      plugin.TValue[string]
+	MibFamily plugin.TValue[string]
+	Included  plugin.TValue[bool]
+}
+
+// createAristaEosSnmpView creates a new instance of this resource
+func createAristaEosSnmpView(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosSnmpView{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.snmpView", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosSnmpView) MqlName() string {
+	return "arista.eos.snmpView"
+}
+
+func (c *mqlAristaEosSnmpView) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosSnmpView) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAristaEosSnmpView) GetMibFamily() *plugin.TValue[string] {
+	return &c.MibFamily
+}
+
+func (c *mqlAristaEosSnmpView) GetIncluded() *plugin.TValue[bool] {
+	return &c.Included
+}
+
+// mqlAristaEosStormControl for the arista.eos.stormControl resource
+type mqlAristaEosStormControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosStormControlInternal it will be used here
+	Interface    plugin.TValue[string]
+	TrafficClass plugin.TValue[string]
+	Level        plugin.TValue[float64]
+	Unit         plugin.TValue[string]
+	Cpu          plugin.TValue[bool]
+}
+
+// createAristaEosStormControl creates a new instance of this resource
+func createAristaEosStormControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosStormControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.stormControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosStormControl) MqlName() string {
+	return "arista.eos.stormControl"
+}
+
+func (c *mqlAristaEosStormControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosStormControl) GetInterface() *plugin.TValue[string] {
+	return &c.Interface
+}
+
+func (c *mqlAristaEosStormControl) GetTrafficClass() *plugin.TValue[string] {
+	return &c.TrafficClass
+}
+
+func (c *mqlAristaEosStormControl) GetLevel() *plugin.TValue[float64] {
+	return &c.Level
+}
+
+func (c *mqlAristaEosStormControl) GetUnit() *plugin.TValue[string] {
+	return &c.Unit
+}
+
+func (c *mqlAristaEosStormControl) GetCpu() *plugin.TValue[bool] {
+	return &c.Cpu
 }
 
 // mqlAristaEosNtp for the arista.eos.ntp resource
@@ -7175,6 +8279,8 @@ type mqlAristaEosAaa struct {
 	RootAccountNoPassword        plugin.TValue[bool]
 	RootSecretFormat             plugin.TValue[string]
 	DefaultLoginPermitsLocalOnly plugin.TValue[bool]
+	EnableSecretConfigured       plugin.TValue[bool]
+	EnableSecretFormat           plugin.TValue[string]
 }
 
 // createAristaEosAaa creates a new instance of this resource
@@ -7308,6 +8414,14 @@ func (c *mqlAristaEosAaa) GetRootSecretFormat() *plugin.TValue[string] {
 
 func (c *mqlAristaEosAaa) GetDefaultLoginPermitsLocalOnly() *plugin.TValue[bool] {
 	return &c.DefaultLoginPermitsLocalOnly
+}
+
+func (c *mqlAristaEosAaa) GetEnableSecretConfigured() *plugin.TValue[bool] {
+	return &c.EnableSecretConfigured
+}
+
+func (c *mqlAristaEosAaa) GetEnableSecretFormat() *plugin.TValue[string] {
+	return &c.EnableSecretFormat
 }
 
 // mqlAristaEosAaaTacacsServer for the arista.eos.aaa.tacacsServer resource
@@ -7537,16 +8651,24 @@ type mqlAristaEosSshSettings struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAristaEosSshSettingsInternal it will be used here
-	Enabled            plugin.TValue[bool]
-	ProtocolVersion    plugin.TValue[string]
-	IdleTimeout        plugin.TValue[int64]
-	ServerPort         plugin.TValue[int64]
-	AuthenticationMode plugin.TValue[string]
-	Ciphers            plugin.TValue[[]any]
-	KeyExchange        plugin.TValue[[]any]
-	Macs               plugin.TValue[[]any]
-	HostkeyAlgorithms  plugin.TValue[[]any]
-	FipsRestrictions   plugin.TValue[bool]
+	Enabled                plugin.TValue[bool]
+	ProtocolVersion        plugin.TValue[string]
+	IdleTimeout            plugin.TValue[int64]
+	ServerPort             plugin.TValue[int64]
+	AuthenticationMode     plugin.TValue[string]
+	Ciphers                plugin.TValue[[]any]
+	KeyExchange            plugin.TValue[[]any]
+	Macs                   plugin.TValue[[]any]
+	HostkeyAlgorithms      plugin.TValue[[]any]
+	FipsRestrictions       plugin.TValue[bool]
+	Vrfs                   plugin.TValue[[]any]
+	LoginTimeout           plugin.TValue[int64]
+	ConnectionLimit        plugin.TValue[int64]
+	ConnectionPerHostLimit plugin.TValue[int64]
+	EmptyPasswords         plugin.TValue[string]
+	LogLevel               plugin.TValue[string]
+	ClientAliveInterval    plugin.TValue[int64]
+	ClientAliveCountMax    plugin.TValue[int64]
 }
 
 // createAristaEosSshSettings creates a new instance of this resource
@@ -7624,6 +8746,38 @@ func (c *mqlAristaEosSshSettings) GetHostkeyAlgorithms() *plugin.TValue[[]any] {
 
 func (c *mqlAristaEosSshSettings) GetFipsRestrictions() *plugin.TValue[bool] {
 	return &c.FipsRestrictions
+}
+
+func (c *mqlAristaEosSshSettings) GetVrfs() *plugin.TValue[[]any] {
+	return &c.Vrfs
+}
+
+func (c *mqlAristaEosSshSettings) GetLoginTimeout() *plugin.TValue[int64] {
+	return &c.LoginTimeout
+}
+
+func (c *mqlAristaEosSshSettings) GetConnectionLimit() *plugin.TValue[int64] {
+	return &c.ConnectionLimit
+}
+
+func (c *mqlAristaEosSshSettings) GetConnectionPerHostLimit() *plugin.TValue[int64] {
+	return &c.ConnectionPerHostLimit
+}
+
+func (c *mqlAristaEosSshSettings) GetEmptyPasswords() *plugin.TValue[string] {
+	return &c.EmptyPasswords
+}
+
+func (c *mqlAristaEosSshSettings) GetLogLevel() *plugin.TValue[string] {
+	return &c.LogLevel
+}
+
+func (c *mqlAristaEosSshSettings) GetClientAliveInterval() *plugin.TValue[int64] {
+	return &c.ClientAliveInterval
+}
+
+func (c *mqlAristaEosSshSettings) GetClientAliveCountMax() *plugin.TValue[int64] {
+	return &c.ClientAliveCountMax
 }
 
 // mqlAristaEosSnmpCommunity for the arista.eos.snmpCommunity resource
@@ -7779,6 +8933,70 @@ func (c *mqlAristaEosTelnetService) GetPerHostLimit() *plugin.TValue[int64] {
 
 func (c *mqlAristaEosTelnetService) GetIpAccessGroup() *plugin.TValue[string] {
 	return &c.IpAccessGroup
+}
+
+// mqlAristaEosConsoleSettings for the arista.eos.consoleSettings resource
+type mqlAristaEosConsoleSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAristaEosConsoleSettingsInternal it will be used here
+	Configured            plugin.TValue[bool]
+	IdleTimeout           plugin.TValue[int64]
+	SessionTimeout        plugin.TValue[int64]
+	SessionTimeoutWarning plugin.TValue[int64]
+}
+
+// createAristaEosConsoleSettings creates a new instance of this resource
+func createAristaEosConsoleSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAristaEosConsoleSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("arista.eos.consoleSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAristaEosConsoleSettings) MqlName() string {
+	return "arista.eos.consoleSettings"
+}
+
+func (c *mqlAristaEosConsoleSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAristaEosConsoleSettings) GetConfigured() *plugin.TValue[bool] {
+	return &c.Configured
+}
+
+func (c *mqlAristaEosConsoleSettings) GetIdleTimeout() *plugin.TValue[int64] {
+	return &c.IdleTimeout
+}
+
+func (c *mqlAristaEosConsoleSettings) GetSessionTimeout() *plugin.TValue[int64] {
+	return &c.SessionTimeout
+}
+
+func (c *mqlAristaEosConsoleSettings) GetSessionTimeoutWarning() *plugin.TValue[int64] {
+	return &c.SessionTimeoutWarning
 }
 
 // mqlAristaEosPasswordPolicy for the arista.eos.passwordPolicy resource
@@ -8143,6 +9361,8 @@ type mqlAristaEosEapi struct {
 	LocalHttpServerPort        plugin.TValue[int64]
 	UnixSocketServerConfigured plugin.TValue[bool]
 	UnixSocketServerRunning    plugin.TValue[bool]
+	Vrfs                       plugin.TValue[[]any]
+	SessionTimeout             plugin.TValue[int64]
 }
 
 // createAristaEosEapi creates a new instance of this resource
@@ -8228,6 +9448,18 @@ func (c *mqlAristaEosEapi) GetUnixSocketServerConfigured() *plugin.TValue[bool] 
 
 func (c *mqlAristaEosEapi) GetUnixSocketServerRunning() *plugin.TValue[bool] {
 	return &c.UnixSocketServerRunning
+}
+
+func (c *mqlAristaEosEapi) GetVrfs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Vrfs, func() ([]any, error) {
+		return c.vrfs()
+	})
+}
+
+func (c *mqlAristaEosEapi) GetSessionTimeout() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.SessionTimeout, func() (int64, error) {
+		return c.sessionTimeout()
+	})
 }
 
 // mqlAristaEosVrrp for the arista.eos.vrrp resource
