@@ -361,8 +361,18 @@ func (a *mqlAwsIamAccessAnalyzerAnalyzer) archiveRules() ([]any, error) {
 				return res, nil
 			}
 			var notFound *aatypes.ResourceNotFoundException
+			if errors.As(err, &notFound) {
+				return res, nil
+			}
+			// An unused-access analyzer rejects ListArchiveRules with a
+			// ValidationException, which is expected and means the analyzer has
+			// no archive rules rather than that the call failed. Log the message
+			// so a genuine schema or argument problem is still visible instead of
+			// being silently flattened into an empty list.
 			var validation *aatypes.ValidationException
-			if errors.As(err, &notFound) || errors.As(err, &validation) {
+			if errors.As(err, &validation) {
+				log.Debug().Err(err).Str("analyzer", analyzerName).Str("region", a.Region.Data).
+					Msg("archive rules are not available for this analyzer")
 				return res, nil
 			}
 			return nil, err
