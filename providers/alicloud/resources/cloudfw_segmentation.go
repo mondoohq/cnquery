@@ -289,8 +289,10 @@ func (r *mqlAlicloudCloudFirewallVpcFirewall) controlPolicies() ([]any, error) {
 			if p == nil || p.AclUuid == nil {
 				continue
 			}
+			// the listing is scoped to one firewall, so the UUID is only known to
+			// be unique within it and is qualified before it becomes a key
 			resource, err := CreateResource(r.MqlRuntime, "alicloud.cloudFirewall.vpcControlPolicy", map[string]*llx.RawData{
-				"__id":                  llx.StringDataPtr(p.AclUuid),
+				"__id":                  llx.StringData(r.VpcFirewallId.Data + "/" + tea.StringValue(p.AclUuid)),
 				"aclUuid":               llx.StringDataPtr(p.AclUuid),
 				"vpcFirewallId":         llx.StringData(r.VpcFirewallId.Data),
 				"action":                llx.StringDataPtr(p.AclAction),
@@ -447,8 +449,10 @@ func (r *mqlAlicloudCloudFirewallNatFirewall) controlPolicies() ([]any, error) {
 				if p == nil || p.AclUuid == nil {
 					continue
 				}
+				// the listing is scoped to one gateway and one direction, so the
+				// UUID is qualified with both rather than trusted to be global
 				resource, err := CreateResource(r.MqlRuntime, "alicloud.cloudFirewall.natControlPolicy", map[string]*llx.RawData{
-					"__id":                  llx.StringDataPtr(p.AclUuid),
+					"__id":                  llx.StringData(r.natGatewayID + "/" + direction + "/" + tea.StringValue(p.AclUuid)),
 					"aclUuid":               llx.StringDataPtr(p.AclUuid),
 					"natGatewayId":          llx.StringData(r.natGatewayID),
 					"direction":             llx.StringData(direction),

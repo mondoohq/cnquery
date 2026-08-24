@@ -19,6 +19,26 @@ import (
 // scan findings. Both endpoints default to 30.
 const acrTagPageSize = 100
 
+// acrVulnerabilityID builds the cache key for a single scan finding. A finding
+// is one CVE in one package, not one CVE, so the same CveName legitimately
+// appears once per affected package and the CVE alone is not an identity. The
+// key therefore carries every dimension a row varies along: the package, its
+// installed version, the image layer that introduced it, and the path it was
+// found at. Two rows agreeing on all of those are a genuine duplicate and are
+// meant to collapse. cveLocation is a path and is placed last so that the one
+// segment able to contain a separator cannot shift across a field boundary.
+func acrVulnerabilityID(repoID, tag string, v *crclient.ListRepoTagScanResultResponseBodyVulnerabilities) string {
+	return strings.Join([]string{
+		repoID,
+		tag,
+		tea.StringValue(v.CveName),
+		tea.StringValue(v.Feature),
+		tea.StringValue(v.Version),
+		tea.StringValue(v.AddedBy),
+		tea.StringValue(v.CveLocation),
+	}, "/")
+}
+
 // acrScanComplete reports whether an image scan finished. Only COMPLETE counts:
 // SCANNING and RETRYING are in progress, FAILED produced nothing, and an empty
 // status means the registry never scanned the image. All four leave the
@@ -204,7 +224,7 @@ func (r *mqlAlicloudAcrRepositoryTag) vulnerabilities() ([]any, error) {
 				continue
 			}
 			resource, err := CreateResource(r.MqlRuntime, "alicloud.acr.vulnerability", map[string]*llx.RawData{
-				"__id":          llx.StringData(r.RepoId.Data + "/" + r.Tag.Data + "/" + tea.StringValue(v.CveName)),
+				"__id":          llx.StringData(acrVulnerabilityID(r.RepoId.Data, r.Tag.Data, v)),
 				"cveName":       llx.StringDataPtr(v.CveName),
 				"aliasName":     llx.StringDataPtr(v.AliasName),
 				"severity":      llx.StringDataPtr(v.Severity),
