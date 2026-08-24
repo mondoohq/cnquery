@@ -29,8 +29,14 @@ mql shell openai
 export OPENAI_API_KEY="sk-admin-..."
 mql shell openai
 
-# Via CLI flag
-mql shell openai --token "sk-proj-..."
+# Both keys — needed where one credential reads the object and the other reads
+# its governance, such as which projects a fine-tuning checkpoint is shared into
+export OPENAI_API_KEY="sk-proj-..."
+export OPENAI_ADMIN_KEY="sk-admin-..."
+mql shell openai
+
+# Via CLI flags
+mql shell openai --token "sk-proj-..." --admin-token "sk-admin-..."
 ```
 
 ### Configuration options
@@ -38,6 +44,7 @@ mql shell openai --token "sk-proj-..."
 | Flag             | Environment Variable   | Description                                                        |
 |------------------|------------------------|--------------------------------------------------------------------|
 | `--token`        | `OPENAI_API_KEY`       | API key — project key (`sk-proj-...`) or admin key (`sk-admin-...`), auto-detected |
+| `--admin-token`  | `OPENAI_ADMIN_KEY`     | Admin key (`sk-admin-...`) used alongside `--token` so one connection reaches both planes |
 | `--organization` | `OPENAI_ORG_ID`        | Restrict queries to an organization                                |
 | `--project`      | `OPENAI_PROJECT_ID`    | Restrict queries to a project                                      |
 | `--base-url`     | `OPENAI_BASE_URL`      | Custom API endpoint (e.g., proxy)                                  |
