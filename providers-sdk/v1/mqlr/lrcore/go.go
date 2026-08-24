@@ -34,6 +34,8 @@ func Go(packageName string, ast *LR, collector *Collector, licenseHeaderTpl *tem
 		o.providerName = "provider"
 	}
 
+	o.checkOwnerFilledResourcesArePrivate(ast.Resources)
+
 	o.goCreateResource(ast.Resources)
 	o.goGetData(ast.Resources)
 	o.goSetData(ast.Resources)
@@ -568,6 +570,80 @@ func capitalizeDot(in []byte) []byte {
 
 func (r *Resource) interfaceName(b *goBuilder) string {
 	return resource2goname(r.ID, b)
+}
+
+// checkOwnerFilledResourcesArePrivate rejects a public resource that only its
+// owner's accessor can populate. A dotted path resolves to the longest matching
+// resource name, so while it is public `owner.name.field` builds a bare instance
+// that skips the accessor and reads null for every field. Marking it private
+// makes the compiler use the accessor instead; see mqlc.prefersFieldOverResource.
+func (b *goBuilder) checkOwnerFilledResourcesArePrivate(all []*Resource) {
+	byID := make(map[string]*Resource, len(all))
+	for _, r := range all {
+		byID[r.ID] = r
+	}
+
+	for _, r := range all {
+		if r.IsPrivate || !b.onlyOwnerCanFill(r) {
+			continue
+		}
+
+		dot := strings.LastIndex(r.ID, ".")
+		if dot == -1 {
+			continue
+		}
+		owner, ok := byID[r.ID[:dot]]
+		if !ok {
+			continue
+		}
+		if !b.declaresAccessorFor(owner, r.ID[dot+1:], r.ID) {
+			continue
+		}
+
+		b.errors.Add(fmt.Errorf(
+			"resource %s is public, but only the `%s` accessor on %s can fill it. "+
+				"A path like `%s.<field>` therefore compiles to a bare %s and every field reads null. Mark the resource `private`",
+			r.ID, r.ID[dot+1:], owner.ID, r.ID, r.ID))
+	}
+}
+
+// onlyOwnerCanFill reports whether a resource has no way to populate itself:
+// every field is data-only and there is no init to build it from args.
+func (b *goBuilder) onlyOwnerCanFill(r *Resource) bool {
+	if r.Body == nil || r.ListType != nil {
+		return false
+	}
+	if len(r.GetInitFields()) > 0 || b.collector.HasInit(r.interfaceName(b)) {
+		return false
+	}
+
+	fields := 0
+	for _, f := range r.Body.Fields {
+		if f.BasicField == nil || f.BasicField.ID == "" {
+			continue
+		}
+		if !f.BasicField.isStatic() {
+			return false
+		}
+		fields++
+	}
+	return fields > 0
+}
+
+// declaresAccessorFor reports whether owner declares `name` as an accessor for
+// resourceID. Only fields spelled out in the .lr count: the singular accessors lr
+// synthesizes for every `x.y` resource reach nothing.
+func (b *goBuilder) declaresAccessorFor(owner *Resource, name string, resourceID string) bool {
+	if owner.Body == nil {
+		return false
+	}
+	for _, f := range owner.Body.Fields {
+		if f.BasicField == nil || f.BasicField.ID != name {
+			continue
+		}
+		return f.BasicField.Type.Type(b.ast) == types.Resource(resourceID)
+	}
+	return false
 }
 
 var caser = cases.Title(language.English, cases.NoLower)
