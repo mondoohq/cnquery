@@ -95,8 +95,44 @@ message DisconnectRes {
 
 }
 
+// TranslationsReq asks a provider for its downgrade catalog. It carries no
+// connection: translations are a static property of the provider build, not of
+// any asset, so this can be answered without connecting to anything.
+message TranslationsReq {
+
+}
+
+// TranslationsRes is everything this provider knows about expressing its newer
+// shapes in the vocabulary of its older ones (ADR 040 part 6).
+message TranslationsRes {
+  repeated Translation translations = 1;
+}
+
+// Translation says how to rebuild one field for a reader that predates it.
+//
+// Steps are authored between *adjacent* releases, so each one is written once
+// and frozen when it ships; the compiler folds a run of them into a single
+// block per era so the reader never has to compose anything at runtime.
+message Translation {
+  // Resource owning the field, e.g. "sshd.config".
+  string resource = 1;
+  // Field this rebuilds, e.g. "cipherCount".
+  string field = 2;
+  // Version that introduced the change. Readers older than this need the
+  // translation; readers at or above it run the field directly.
+  string changed_in = 3;
+  // Block computing the field out of vocabulary that predates changed_in.
+  //
+  // Its refs are block-relative: chunk 1 is the binding (the parent resource),
+  // and the compiler relocates the whole block into the destination bundle,
+  // remapping bindings and recomputing checksums as it goes. A provider does
+  // not know, and must not care, where its block will land.
+  mql.llx.Block block = 4;
+}
+
 service ProviderPlugin {
   rpc Heartbeat(HeartbeatReq) returns (HeartbeatRes);
+  rpc Translations(TranslationsReq) returns (TranslationsRes);
   rpc ParseCLI(ParseCLIReq) returns (ParseCLIRes);
   rpc Connect(ConnectReq) returns (ConnectRes);
   rpc Disconnect(DisconnectReq) returns (DisconnectRes);

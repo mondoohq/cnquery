@@ -25,6 +25,19 @@ message Schema {
   // Resources can depend on resources from another provider,
   // this is the list of of providers the schema depends on.
   map<string, ProviderInfo> dependencies = 4;
+
+  // Version of each provider that contributed to this schema, keyed by
+  // provider id (the same string `ResourceInfo.provider` carries) and valued
+  // with that provider's semver. Read it through Schema.ProviderVersion, which
+  // also matches a legacy id against a current one.
+  //
+  // For a schema loaded from a single provider this holds one entry; the
+  // aggregate schema accumulates one entry per loaded provider. It is the
+  // *writer schema identity* of ADR 040: `min_provider_version` on a resource
+  // or field says which release introduced it, and this says which release the
+  // reader actually has, so the two together decide whether a name that failed
+  // to resolve is a typo or a version gap.
+  map<string, string> provider_versions = 5;
 }
 
 message ProviderInfo {

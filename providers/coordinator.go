@@ -277,6 +277,12 @@ func (c *coordinator) unsafeStartProvider(id string, update UpdateProvidersConfi
 			mp.Init(x.Runtime)
 		}
 
+		// Builtins never go through Provider.LoadResources, so they need the
+		// same provenance stamp applied here (ADR 040 part 1).
+		if concrete, ok := x.Runtime.Schema.(*resources.Schema); ok && x.Config != nil {
+			stampProviderVersion(concrete, x.Config.ID, x.Config.Version)
+		}
+
 		c.schema.Add(id, x.Runtime.Schema)
 		return x.Runtime, nil
 	}

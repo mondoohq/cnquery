@@ -1141,8 +1141,31 @@ func (p *Provider) LoadResources() error {
 	if err := json.Unmarshal(res, &schema); err != nil {
 		return errors.New("failed to parse provider resources json from " + path + ": " + err.Error())
 	}
+	// Stamp the reader-schema provenance (ADR 040 part 1). The installed
+	// provider binary is the authority on its own version, so we take it from
+	// the config rather than from the serialized schema, which predates this
+	// field and will not carry it for a while yet.
+	stampProviderVersion(&schema, p.ID, p.Version)
+
 	p.Schema = &schema
 	return nil
+}
+
+// stampProviderVersion records which release of a provider produced a schema,
+// keyed the same way ResourceInfo.Provider is keyed so the compiler can get
+// from a resolved (or unresolved) name back to a version. It never clobbers an
+// entry that is already there: a schema that carries its own provenance is
+// more specific than what we can infer from the installed binary.
+func stampProviderVersion(schema *resources.Schema, id string, version string) {
+	if schema == nil || id == "" || version == "" {
+		return
+	}
+	if schema.ProviderVersions == nil {
+		schema.ProviderVersions = map[string]string{}
+	}
+	if _, ok := schema.ProviderVersions[id]; !ok {
+		schema.ProviderVersions[id] = version
+	}
 }
 
 func (p *Provider) confJSONPath() string {

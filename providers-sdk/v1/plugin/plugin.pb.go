@@ -833,6 +833,174 @@ func (*DisconnectRes) Descriptor() ([]byte, []int) {
 	return file_plugin_proto_rawDescGZIP(), []int{15}
 }
 
+// TranslationsReq asks a provider for its downgrade catalog. It carries no
+// connection: translations are a static property of the provider build, not of
+// any asset, so this can be answered without connecting to anything.
+type TranslationsReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TranslationsReq) Reset() {
+	*x = TranslationsReq{}
+	mi := &file_plugin_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TranslationsReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TranslationsReq) ProtoMessage() {}
+
+func (x *TranslationsReq) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TranslationsReq.ProtoReflect.Descriptor instead.
+func (*TranslationsReq) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{16}
+}
+
+// TranslationsRes is everything this provider knows about expressing its newer
+// shapes in the vocabulary of its older ones (ADR 040 part 6).
+type TranslationsRes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Translations  []*Translation         `protobuf:"bytes,1,rep,name=translations,proto3" json:"translations,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TranslationsRes) Reset() {
+	*x = TranslationsRes{}
+	mi := &file_plugin_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TranslationsRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TranslationsRes) ProtoMessage() {}
+
+func (x *TranslationsRes) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TranslationsRes.ProtoReflect.Descriptor instead.
+func (*TranslationsRes) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *TranslationsRes) GetTranslations() []*Translation {
+	if x != nil {
+		return x.Translations
+	}
+	return nil
+}
+
+// Translation says how to rebuild one field for a reader that predates it.
+//
+// Steps are authored between *adjacent* releases, so each one is written once
+// and frozen when it ships; the compiler folds a run of them into a single
+// block per era so the reader never has to compose anything at runtime.
+type Translation struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Resource owning the field, e.g. "sshd.config".
+	Resource string `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
+	// Field this rebuilds, e.g. "cipherCount".
+	Field string `protobuf:"bytes,2,opt,name=field,proto3" json:"field,omitempty"`
+	// Version that introduced the change. Readers older than this need the
+	// translation; readers at or above it run the field directly.
+	ChangedIn string `protobuf:"bytes,3,opt,name=changed_in,json=changedIn,proto3" json:"changed_in,omitempty"`
+	// Block computing the field out of vocabulary that predates changed_in.
+	//
+	// Its refs are block-relative: chunk 1 is the binding (the parent resource),
+	// and the compiler relocates the whole block into the destination bundle,
+	// remapping bindings and recomputing checksums as it goes. A provider does
+	// not know, and must not care, where its block will land.
+	Block         *llx.Block `protobuf:"bytes,4,opt,name=block,proto3" json:"block,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Translation) Reset() {
+	*x = Translation{}
+	mi := &file_plugin_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Translation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Translation) ProtoMessage() {}
+
+func (x *Translation) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Translation.ProtoReflect.Descriptor instead.
+func (*Translation) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *Translation) GetResource() string {
+	if x != nil {
+		return x.Resource
+	}
+	return ""
+}
+
+func (x *Translation) GetField() string {
+	if x != nil {
+		return x.Field
+	}
+	return ""
+}
+
+func (x *Translation) GetChangedIn() string {
+	if x != nil {
+		return x.ChangedIn
+	}
+	return ""
+}
+
+func (x *Translation) GetBlock() *llx.Block {
+	if x != nil {
+		return x.Block
+	}
+	return nil
+}
+
 var File_plugin_proto protoreflect.FileDescriptor
 
 const file_plugin_proto_rawDesc = "" +
@@ -902,9 +1070,19 @@ const file_plugin_proto_rawDesc = "" +
 	"\n" +
 	"connection\x18\x01 \x01(\rR\n" +
 	"connection\"\x0f\n" +
-	"\rDisconnectRes2\x99\x05\n" +
+	"\rDisconnectRes\"\x11\n" +
+	"\x0fTranslationsReq\"X\n" +
+	"\x0fTranslationsRes\x12E\n" +
+	"\ftranslations\x18\x01 \x03(\v2!.cnquery.providers.v1.TranslationR\ftranslations\"\x84\x01\n" +
+	"\vTranslation\x12\x1a\n" +
+	"\bresource\x18\x01 \x01(\tR\bresource\x12\x14\n" +
+	"\x05field\x18\x02 \x01(\tR\x05field\x12\x1d\n" +
+	"\n" +
+	"changed_in\x18\x03 \x01(\tR\tchangedIn\x12$\n" +
+	"\x05block\x18\x04 \x01(\v2\x0e.mql.llx.BlockR\x05block2\xf7\x05\n" +
 	"\x0eProviderPlugin\x12S\n" +
-	"\tHeartbeat\x12\".cnquery.providers.v1.HeartbeatReq\x1a\".cnquery.providers.v1.HeartbeatRes\x12P\n" +
+	"\tHeartbeat\x12\".cnquery.providers.v1.HeartbeatReq\x1a\".cnquery.providers.v1.HeartbeatRes\x12\\\n" +
+	"\fTranslations\x12%.cnquery.providers.v1.TranslationsReq\x1a%.cnquery.providers.v1.TranslationsRes\x12P\n" +
 	"\bParseCLI\x12!.cnquery.providers.v1.ParseCLIReq\x1a!.cnquery.providers.v1.ParseCLIRes\x12M\n" +
 	"\aConnect\x12 .cnquery.providers.v1.ConnectReq\x1a .cnquery.providers.v1.ConnectRes\x12V\n" +
 	"\n" +
@@ -930,7 +1108,7 @@ func file_plugin_proto_rawDescGZIP() []byte {
 	return file_plugin_proto_rawDescData
 }
 
-var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_plugin_proto_goTypes = []any{
 	(*ParseCLIReq)(nil),             // 0: cnquery.providers.v1.ParseCLIReq
 	(*ParseCLIRes)(nil),             // 1: cnquery.providers.v1.ParseCLIRes
@@ -948,56 +1126,64 @@ var file_plugin_proto_goTypes = []any{
 	(*HeartbeatRes)(nil),            // 13: cnquery.providers.v1.HeartbeatRes
 	(*DisconnectReq)(nil),           // 14: cnquery.providers.v1.DisconnectReq
 	(*DisconnectRes)(nil),           // 15: cnquery.providers.v1.DisconnectRes
-	nil,                             // 16: cnquery.providers.v1.ParseCLIReq.FlagsEntry
-	nil,                             // 17: cnquery.providers.v1.DataReq.ArgsEntry
-	nil,                             // 18: cnquery.providers.v1.ResourceData.FieldsEntry
-	(*inventory.Asset)(nil),         // 19: cnquery.providers.v1.Asset
-	(*upstream.UpstreamConfig)(nil), // 20: mondoo.mql.upstream.v1.UpstreamConfig
-	(*inventory.Inventory)(nil),     // 21: cnquery.providers.v1.Inventory
-	(*llx.Primitive)(nil),           // 22: mql.llx.Primitive
-	(*llx.Result)(nil),              // 23: mql.llx.Result
+	(*TranslationsReq)(nil),         // 16: cnquery.providers.v1.TranslationsReq
+	(*TranslationsRes)(nil),         // 17: cnquery.providers.v1.TranslationsRes
+	(*Translation)(nil),             // 18: cnquery.providers.v1.Translation
+	nil,                             // 19: cnquery.providers.v1.ParseCLIReq.FlagsEntry
+	nil,                             // 20: cnquery.providers.v1.DataReq.ArgsEntry
+	nil,                             // 21: cnquery.providers.v1.ResourceData.FieldsEntry
+	(*inventory.Asset)(nil),         // 22: cnquery.providers.v1.Asset
+	(*upstream.UpstreamConfig)(nil), // 23: mondoo.mql.upstream.v1.UpstreamConfig
+	(*inventory.Inventory)(nil),     // 24: cnquery.providers.v1.Inventory
+	(*llx.Primitive)(nil),           // 25: mql.llx.Primitive
+	(*llx.Block)(nil),               // 26: mql.llx.Block
+	(*llx.Result)(nil),              // 27: mql.llx.Result
 }
 var file_plugin_proto_depIdxs = []int32{
-	16, // 0: cnquery.providers.v1.ParseCLIReq.flags:type_name -> cnquery.providers.v1.ParseCLIReq.FlagsEntry
-	19, // 1: cnquery.providers.v1.ParseCLIRes.asset:type_name -> cnquery.providers.v1.Asset
-	19, // 2: cnquery.providers.v1.ConnectReq.asset:type_name -> cnquery.providers.v1.Asset
-	20, // 3: cnquery.providers.v1.ConnectReq.upstream:type_name -> mondoo.mql.upstream.v1.UpstreamConfig
-	19, // 4: cnquery.providers.v1.ConnectRes.asset:type_name -> cnquery.providers.v1.Asset
-	21, // 5: cnquery.providers.v1.ConnectRes.inventory:type_name -> cnquery.providers.v1.Inventory
-	17, // 6: cnquery.providers.v1.DataReq.args:type_name -> cnquery.providers.v1.DataReq.ArgsEntry
-	22, // 7: cnquery.providers.v1.DataRes.data:type_name -> mql.llx.Primitive
+	19, // 0: cnquery.providers.v1.ParseCLIReq.flags:type_name -> cnquery.providers.v1.ParseCLIReq.FlagsEntry
+	22, // 1: cnquery.providers.v1.ParseCLIRes.asset:type_name -> cnquery.providers.v1.Asset
+	22, // 2: cnquery.providers.v1.ConnectReq.asset:type_name -> cnquery.providers.v1.Asset
+	23, // 3: cnquery.providers.v1.ConnectReq.upstream:type_name -> mondoo.mql.upstream.v1.UpstreamConfig
+	22, // 4: cnquery.providers.v1.ConnectRes.asset:type_name -> cnquery.providers.v1.Asset
+	24, // 5: cnquery.providers.v1.ConnectRes.inventory:type_name -> cnquery.providers.v1.Inventory
+	20, // 6: cnquery.providers.v1.DataReq.args:type_name -> cnquery.providers.v1.DataReq.ArgsEntry
+	25, // 7: cnquery.providers.v1.DataRes.data:type_name -> mql.llx.Primitive
 	10, // 8: cnquery.providers.v1.StoreReq.resources:type_name -> cnquery.providers.v1.ResourceData
-	18, // 9: cnquery.providers.v1.ResourceData.fields:type_name -> cnquery.providers.v1.ResourceData.FieldsEntry
-	22, // 10: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> mql.llx.Primitive
-	22, // 11: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> mql.llx.Primitive
-	23, // 12: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> mql.llx.Result
-	12, // 13: cnquery.providers.v1.ProviderPlugin.Heartbeat:input_type -> cnquery.providers.v1.HeartbeatReq
-	0,  // 14: cnquery.providers.v1.ProviderPlugin.ParseCLI:input_type -> cnquery.providers.v1.ParseCLIReq
-	2,  // 15: cnquery.providers.v1.ProviderPlugin.Connect:input_type -> cnquery.providers.v1.ConnectReq
-	14, // 16: cnquery.providers.v1.ProviderPlugin.Disconnect:input_type -> cnquery.providers.v1.DisconnectReq
-	2,  // 17: cnquery.providers.v1.ProviderPlugin.MockConnect:input_type -> cnquery.providers.v1.ConnectReq
-	4,  // 18: cnquery.providers.v1.ProviderPlugin.Shutdown:input_type -> cnquery.providers.v1.ShutdownReq
-	6,  // 19: cnquery.providers.v1.ProviderPlugin.GetData:input_type -> cnquery.providers.v1.DataReq
-	9,  // 20: cnquery.providers.v1.ProviderPlugin.StoreData:input_type -> cnquery.providers.v1.StoreReq
-	7,  // 21: cnquery.providers.v1.ProviderCallback.Collect:input_type -> cnquery.providers.v1.DataRes
-	6,  // 22: cnquery.providers.v1.ProviderCallback.GetRecording:input_type -> cnquery.providers.v1.DataReq
-	6,  // 23: cnquery.providers.v1.ProviderCallback.GetData:input_type -> cnquery.providers.v1.DataReq
-	13, // 24: cnquery.providers.v1.ProviderPlugin.Heartbeat:output_type -> cnquery.providers.v1.HeartbeatRes
-	1,  // 25: cnquery.providers.v1.ProviderPlugin.ParseCLI:output_type -> cnquery.providers.v1.ParseCLIRes
-	3,  // 26: cnquery.providers.v1.ProviderPlugin.Connect:output_type -> cnquery.providers.v1.ConnectRes
-	15, // 27: cnquery.providers.v1.ProviderPlugin.Disconnect:output_type -> cnquery.providers.v1.DisconnectRes
-	3,  // 28: cnquery.providers.v1.ProviderPlugin.MockConnect:output_type -> cnquery.providers.v1.ConnectRes
-	5,  // 29: cnquery.providers.v1.ProviderPlugin.Shutdown:output_type -> cnquery.providers.v1.ShutdownRes
-	7,  // 30: cnquery.providers.v1.ProviderPlugin.GetData:output_type -> cnquery.providers.v1.DataRes
-	11, // 31: cnquery.providers.v1.ProviderPlugin.StoreData:output_type -> cnquery.providers.v1.StoreRes
-	8,  // 32: cnquery.providers.v1.ProviderCallback.Collect:output_type -> cnquery.providers.v1.CollectRes
-	10, // 33: cnquery.providers.v1.ProviderCallback.GetRecording:output_type -> cnquery.providers.v1.ResourceData
-	7,  // 34: cnquery.providers.v1.ProviderCallback.GetData:output_type -> cnquery.providers.v1.DataRes
-	24, // [24:35] is the sub-list for method output_type
-	13, // [13:24] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	21, // 9: cnquery.providers.v1.ResourceData.fields:type_name -> cnquery.providers.v1.ResourceData.FieldsEntry
+	18, // 10: cnquery.providers.v1.TranslationsRes.translations:type_name -> cnquery.providers.v1.Translation
+	26, // 11: cnquery.providers.v1.Translation.block:type_name -> mql.llx.Block
+	25, // 12: cnquery.providers.v1.ParseCLIReq.FlagsEntry.value:type_name -> mql.llx.Primitive
+	25, // 13: cnquery.providers.v1.DataReq.ArgsEntry.value:type_name -> mql.llx.Primitive
+	27, // 14: cnquery.providers.v1.ResourceData.FieldsEntry.value:type_name -> mql.llx.Result
+	12, // 15: cnquery.providers.v1.ProviderPlugin.Heartbeat:input_type -> cnquery.providers.v1.HeartbeatReq
+	16, // 16: cnquery.providers.v1.ProviderPlugin.Translations:input_type -> cnquery.providers.v1.TranslationsReq
+	0,  // 17: cnquery.providers.v1.ProviderPlugin.ParseCLI:input_type -> cnquery.providers.v1.ParseCLIReq
+	2,  // 18: cnquery.providers.v1.ProviderPlugin.Connect:input_type -> cnquery.providers.v1.ConnectReq
+	14, // 19: cnquery.providers.v1.ProviderPlugin.Disconnect:input_type -> cnquery.providers.v1.DisconnectReq
+	2,  // 20: cnquery.providers.v1.ProviderPlugin.MockConnect:input_type -> cnquery.providers.v1.ConnectReq
+	4,  // 21: cnquery.providers.v1.ProviderPlugin.Shutdown:input_type -> cnquery.providers.v1.ShutdownReq
+	6,  // 22: cnquery.providers.v1.ProviderPlugin.GetData:input_type -> cnquery.providers.v1.DataReq
+	9,  // 23: cnquery.providers.v1.ProviderPlugin.StoreData:input_type -> cnquery.providers.v1.StoreReq
+	7,  // 24: cnquery.providers.v1.ProviderCallback.Collect:input_type -> cnquery.providers.v1.DataRes
+	6,  // 25: cnquery.providers.v1.ProviderCallback.GetRecording:input_type -> cnquery.providers.v1.DataReq
+	6,  // 26: cnquery.providers.v1.ProviderCallback.GetData:input_type -> cnquery.providers.v1.DataReq
+	13, // 27: cnquery.providers.v1.ProviderPlugin.Heartbeat:output_type -> cnquery.providers.v1.HeartbeatRes
+	17, // 28: cnquery.providers.v1.ProviderPlugin.Translations:output_type -> cnquery.providers.v1.TranslationsRes
+	1,  // 29: cnquery.providers.v1.ProviderPlugin.ParseCLI:output_type -> cnquery.providers.v1.ParseCLIRes
+	3,  // 30: cnquery.providers.v1.ProviderPlugin.Connect:output_type -> cnquery.providers.v1.ConnectRes
+	15, // 31: cnquery.providers.v1.ProviderPlugin.Disconnect:output_type -> cnquery.providers.v1.DisconnectRes
+	3,  // 32: cnquery.providers.v1.ProviderPlugin.MockConnect:output_type -> cnquery.providers.v1.ConnectRes
+	5,  // 33: cnquery.providers.v1.ProviderPlugin.Shutdown:output_type -> cnquery.providers.v1.ShutdownRes
+	7,  // 34: cnquery.providers.v1.ProviderPlugin.GetData:output_type -> cnquery.providers.v1.DataRes
+	11, // 35: cnquery.providers.v1.ProviderPlugin.StoreData:output_type -> cnquery.providers.v1.StoreRes
+	8,  // 36: cnquery.providers.v1.ProviderCallback.Collect:output_type -> cnquery.providers.v1.CollectRes
+	10, // 37: cnquery.providers.v1.ProviderCallback.GetRecording:output_type -> cnquery.providers.v1.ResourceData
+	7,  // 38: cnquery.providers.v1.ProviderCallback.GetData:output_type -> cnquery.providers.v1.DataRes
+	27, // [27:39] is the sub-list for method output_type
+	15, // [15:27] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_plugin_proto_init() }
@@ -1011,7 +1197,7 @@ func file_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plugin_proto_rawDesc), len(file_plugin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

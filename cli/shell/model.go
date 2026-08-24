@@ -1215,7 +1215,7 @@ func (m *shellModel) listResources(filter string) string {
 // default resolved from config. Queries typed at the shell carry no content of
 // their own, so the config default is all there is.
 func (m *shellModel) compilerConfig() mqlc.CompilerConfig {
-	conf := mqlc.NewConfig(m.runtime.Schema(), m.features)
+	conf := mqlc.NewConfigFrom(m.runtime, m.features)
 	conf.Strict = m.strict
 	return conf
 }

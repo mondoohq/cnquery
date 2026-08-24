@@ -142,6 +142,56 @@ message CodeBundle {
   // ref + variable name; only used during label creation and discarded 
   // afterwards
   map<uint64,string> vars = 25;
+
+  // Writer-schema identity (ADR 040 part 1): the version of every provider
+  // whose schema this bundle was compiled against, keyed by the stable provider
+  // name ("aws", "os") rather than by its module-path id, so the key survives an
+  // id migration.
+  //
+  // This says what the compiler *saw*. It is provenance, not a requirement -
+  // use min_provider_versions to decide whether a reader can execute the
+  // bundle.
+  map<string,string> provider_schemas = 26;
+
+  // Minimum version of each provider required to execute this bundle, keyed by
+  // the stable provider name.
+  //
+  // Derived at compile time as the highest `min_provider_version` over every
+  // resource and field the bundle actually touches, so it is a real
+  // requirement rather than a snapshot of the compiling machine. A reader whose
+  // provider is older than this cannot resolve every name in the bundle, and
+  // should say so instead of degrading the missing ones to null.
+  map<string,string> min_provider_versions = 27;
+
+  // Downgrade translations (ADR 040 part 6).
+  //
+  // Each entry says: a reader whose `provider` is older than `below_version`
+  // cannot make the call at `ref`, and should run the block at `block_ref`
+  // instead. The blocks themselves ship inside code_v2 as ordinary blocks with
+  // their checksums already in place; nothing points at them until a patch
+  // does, so a current reader carries them as unreachable weight and executes
+  // pristine code.
+  //
+  // Patching rewrites one chunk in place and never touches the checksum map, so
+  // a downgraded reader reports under exactly the checksums the producer
+  // shipped and scoring does not fork across versions.
+  repeated TranslationRef translations = 28;
+}
+
+// TranslationRef points one call that an older reader cannot make at a block
+// that computes the same value out of vocabulary it does have.
+message TranslationRef {
+  // Ref of the chunk in code_v2 to replace.
+  uint64 ref = 1;
+  // Provider id whose version decides whether this applies.
+  string provider = 2;
+  // Readers older than this need the translation. It is the version that
+  // introduced the change being compensated for.
+  string below_version = 3;
+  // Block ref computing the replacement. It is bound to the replaced chunk's
+  // own binding - the parent - because the field being replaced may not exist
+  // on the reader at all, so there is no old value to transform.
+  uint64 block_ref = 4;
 }
 
 message Result {

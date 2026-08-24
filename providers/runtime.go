@@ -42,10 +42,14 @@ type Runtime struct {
 	// coordinator is used to grab providers
 	coordinator ProvidersCoordinator
 	// providers for with open connections
-	providers       map[string]*ConnectedProvider
-	isClosed        bool
-	close           sync.Once
-	shutdownTimeout time.Duration
+	providers map[string]*ConnectedProvider
+	isClosed  bool
+	close     sync.Once
+	// translations is the downgrade catalog, built on first use so a compile
+	// that needs no fallbacks never starts a provider to ask.
+	translations     llx.TranslationSource
+	translationsOnce sync.Once
+	shutdownTimeout  time.Duration
 
 	// criticalErrors collects serious errors (e.g. recovered provider panics)
 	// that should be reported to an error tracker even though execution continues.
@@ -1052,7 +1056,10 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 func (r *Runtime) lookupResource(resource string) (*resources.ResourceInfo, error) {
 	info := r.coordinator.Schema().Lookup(resource)
 	if info == nil {
-		return nil, errors.New("cannot find resource '" + resource + "' in schema")
+		// Typed for the same reason a missing field is: this is what version
+		// skew looks like when a whole resource is new, and the executor has to
+		// be able to tell it apart from a genuine failure.
+		return nil, &llx.ErrResourceNotFound{Resource: resource}
 	}
 
 	// prioritize ids
@@ -1083,7 +1090,10 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	// Then find the field we are looking for
 	fieldInfo, ok := resourceInfo.Fields[field]
 	if !ok {
-		return nil, nil, nil, errors.New("cannot find field '" + field + "' in resource '" + resource + "'")
+		// Typed, because the executor has to tell this apart from other
+		// failures: a field the reader has never heard of is the signature of
+		// version skew, and only skew may be degraded rather than propagated.
+		return nil, nil, nil, &llx.ErrFieldNotFound{Resource: resource, Field: field}
 	}
 
 	fieldsPerProvider := map[string]*resources.Field{
@@ -1191,6 +1201,33 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 func (r *Runtime) Schema() resources.ResourcesSchema {
 	return r.coordinator.Schema()
+}
+
+// TranslationsFor implements llx.TranslationSource, so a compile that has a
+// runtime has the downgrade catalog too (ADR 040 part 6).
+//
+// This is what makes the mechanism reachable without any caller assembling it:
+// mql is the only compiler there is, so whatever compiles content - here or in
+// anything built on this - reaches the catalog through the runtime it already
+// has. The lookup is lazy and cached, so a compile that emits no fallbacks
+// starts no providers.
+func (r *Runtime) TranslationsFor(provider string) []*llx.TranslationStep {
+	r.translationsOnce.Do(func() {
+		r.translations = NewTranslationSource(r.coordinator)
+	})
+	return r.translations.TranslationsFor(provider)
+}
+
+// UnavailableTranslationProviders names providers whose catalog could not be
+// read during this runtime's compiles, for the one aggregate warning.
+func (r *Runtime) UnavailableTranslationProviders() UnavailableProviders {
+	if r.translations == nil {
+		return nil
+	}
+	if src, ok := r.translations.(*translationSource); ok {
+		return src.Unavailable()
+	}
+	return nil
 }
 
 func (r *Runtime) asset() *inventory.Asset {

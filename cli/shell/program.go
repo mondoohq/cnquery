@@ -217,7 +217,7 @@ func formatSuggestions(suggestions []*llx.Documentation, theme *theme.Theme) str
 
 // compilerConfig mirrors shellModel.compilerConfig for the non-interactive path.
 func (s *ShellProgram) compilerConfig() mqlc.CompilerConfig {
-	conf := mqlc.NewConfig(s.runtime.Schema(), s.features)
+	conf := mqlc.NewConfigFrom(s.runtime, s.features)
 	conf.Strict = s.strict
 	return conf
 }

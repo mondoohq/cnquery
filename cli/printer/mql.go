@@ -21,6 +21,9 @@ import (
 
 const MsgUnsupported = "unsupported platform"
 
+// MsgTranslated marks a value a downgrade translation produced.
+const MsgTranslated = "(translated for this provider version)"
+
 type printCache struct {
 	bundle         *llx.CodeBundle
 	checksumLookup map[string]uint64
@@ -406,13 +409,21 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 			res.WriteString("  " + label + print.Disabled(MsgUnsupported) + "\n")
 			continue
 		}
+		// A field this build was never going to have reads as not-measured, not
+		// as a failure: nothing went wrong here, the content is simply newer
+		// than the provider. Dimmed rather than red, and it still says which
+		// version would supply it.
+		if llx.IsUnavailable(val.Error) {
+			res.WriteString("  " + label + print.Disabled(val.Error.Error()) + "\n")
+			continue
+		}
 		if val.Error != nil {
 			res.WriteString("  " + label + print.Error(val.Error.Error()) + " ")
 			continue
 		}
 
 		data := print.data(val.Type, val.Value, k, "", &inlineCache)
-		res.WriteString(label + data + " ")
+		res.WriteString(label + data + print.translatedNote(val) + " ")
 	}
 
 	if len(nonDefaultFields) > 0 {
@@ -428,6 +439,10 @@ func (print *Printer) refMap(data map[string]any, checksum string, indent string
 
 			if plugin.IsUnsupportedProviderError(val.Error) {
 				res.WriteString(indent + "  " + label + print.Disabled(MsgUnsupported) + "\n")
+				continue
+			}
+			if llx.IsUnavailable(val.Error) {
+				res.WriteString(indent + "  " + label + print.Disabled(val.Error.Error()) + "\n")
 				continue
 			}
 			if val.Error != nil {
@@ -1042,4 +1057,18 @@ func (print *Printer) primitive(primitive *llx.Primitive, checksum string, inden
 
 func indentBlock(text string, indent string) string {
 	return strings.ReplaceAll(text, "\n", "\n"+indent)
+}
+
+// translatedNote marks a value that a downgrade translation produced rather
+// than the call the bundle was compiled with (ADR 040 part 6).
+//
+// The value is correct as far as we know, so this is a note and not an error:
+// it is dimmed and appended, never in place of the data. It exists because
+// patching decouples what ran from what is reported, and without a visible
+// marker a bad translation looks exactly like a bad provider.
+func (print *Printer) translatedNote(val *llx.RawData) string {
+	if val == nil || !val.Translated {
+		return ""
+	}
+	return " " + print.Disabled(MsgTranslated)
 }

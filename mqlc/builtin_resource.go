@@ -39,7 +39,8 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 	fieldPath, fieldinfos, ok := c.Schema.FindField(resource, id)
 	if !ok {
 		addFieldSuggestions(publicFieldsInfo(c, resource), id, c.Result)
-		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name)
+		return "", errors.New("cannot find field '" + id + "' in resource " + resource.Name +
+			c.resourceFieldSkewHint(resource))
 	}
 
 	lastRef := ref
@@ -54,6 +55,11 @@ func compileResourceDefault(c *compiler, typ types.Type, ref uint64, id string, 
 			},
 		})
 		lastRef = c.tailRef()
+		// Attach downgrade fallbacks for this field, if the provider knows how
+		// to rebuild it for readers that predate it (ADR 040 part 6). Done here,
+		// right after the chunk exists, because the translation has to point at
+		// that chunk's ref.
+		c.emitTranslations(resource.Id, p, lastRef, types.Type(fieldinfos[i].Type))
 	}
 
 	return types.Type(fieldinfos[len(fieldinfos)-1].Type), nil
