@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	subscriptions "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions/v2"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/vault"
@@ -345,4 +346,27 @@ func TestSelectAzureCredential_RejectsBadAuthMethodEvenWhenCached(t *testing.T) 
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "service-principal")
+}
+
+// A connection with no subscription has no record to fetch: the caller named
+// several subscriptions or none, and discovery enumerates them instead.
+func TestSubscriptionRequiresAScopedConnection(t *testing.T) {
+	conn := &AzureConnection{}
+	_, err := conn.Subscription()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not scoped to a subscription")
+}
+
+// A cached record is served without a client round-trip: a pre-seeded record
+// comes straight back even though the connection has no credentials to fetch
+// anything with.
+func TestSubscriptionServesTheCachedRecord(t *testing.T) {
+	name := "Production"
+	conn := &AzureConnection{
+		subscriptionId: "sub",
+		subRecord:      &subscriptions.Subscription{DisplayName: &name},
+	}
+	record, err := conn.Subscription()
+	require.NoError(t, err)
+	require.Equal(t, "Production", *record.DisplayName)
 }

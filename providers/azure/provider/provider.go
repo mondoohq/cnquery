@@ -6,8 +6,10 @@ package provider
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -300,8 +302,101 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 	return runtime.Connection.(shared.AzureConnection), nil
 }
 
+// detect gives the root asset -- the one the caller connected as, before any
+// discovery -- the identity a discovered subscription gets from subToAsset.
+//
+// It used to be a bare `return nil`, so that asset reached the client with no
+// platform, no name, and no platform id: every Azure scan carried one blank
+// entry, and `--discover none` produced nothing but the blank entry. The
+// resources were queryable the whole time, because the connection knows which
+// subscription it is on; only the asset's own identity was missing.
+//
+// A connection with no subscription is left alone deliberately. That is the
+// caller who named several subscriptions or none, where discovery enumerates
+// them and there is no single subscription for the root asset to be.
 func (s *Service) detect(asset *inventory.Asset, conn shared.AzureConnection) error {
+	azureConn, ok := conn.(*connection.AzureConnection)
+	if !ok {
+		// A snapshot connection is handed to the os provider, which detects it.
+		return nil
+	}
+
+	subID := azureConn.SubId()
+	if subID == "" {
+		return nil
+	}
+
+	var tenantID string
+	if conf := azureConn.Config(); conf != nil {
+		tenantID = conf.Options[connection.OptionTenantID]
+	}
+
+	// The record is cached on the connection, so discovery and the
+	// azure.subscription resource reuse this fetch rather than paying their
+	// own GET. Logged rather than returned on failure: ARM omits parts of the
+	// record for deleted, disabled, and cross-tenant subscriptions, and a scan
+	// must not fail because the asset could only be named by its id.
+	var displayName string
+	if sub, err := azureConn.Subscription(); err == nil {
+		if sub.DisplayName != nil {
+			displayName = *sub.DisplayName
+		}
+		if tenantID == "" && sub.TenantID != nil {
+			tenantID = *sub.TenantID
+		}
+	} else {
+		log.Debug().Err(err).Msg("could not read the subscription to name the asset")
+	}
+
+	applyAzureSubscriptionIdentity(asset, subID, tenantID, azureConn.PlatformId(), displayName)
 	return nil
+}
+
+// applyAzureSubscriptionIdentity stamps a subscription's identity onto an asset,
+// in the shape subToAsset gives a discovered subscription, so the same
+// subscription reads the same whichever way it arrived.
+//
+// displayName may be empty, in which case the id names the asset. That is also
+// what subToAsset does for a subscription whose displayName ARM omits, and it is
+// the right outcome here too: a scan should not fail because the asset could only
+// be named by its id.
+func applyAzureSubscriptionIdentity(asset *inventory.Asset, subID, tenantID, platformID, displayName string) {
+	if tenantID == "" {
+		tenantID = "unknown"
+	}
+
+	platform := &inventory.Platform{
+		TechnologyUrlSegments: []string{"azure", tenantID, subID, "account"},
+	}
+	resources.PlatformByName("azure").Apply(platform)
+
+	asset.Platform = platform
+	// Platform ids that arrived with the asset came from whoever built it,
+	// often the key an integration resolves the asset by, so they are kept.
+	// The connection's own id still has to be present for the client to
+	// recognize the discovered duplicate of this subscription.
+	if !slices.Contains(asset.PlatformIds, platformID) {
+		asset.PlatformIds = append(asset.PlatformIds, platformID)
+	}
+	if asset.Id == "" {
+		asset.Id = platformID
+	}
+	if asset.Labels == nil {
+		asset.Labels = map[string]string{}
+	}
+	if _, ok := asset.Labels[resources.SubscriptionLabel]; !ok {
+		asset.Labels[resources.SubscriptionLabel] = subID
+	}
+
+	// Only name an asset that has no name. A caller who passed --asset-name
+	// has already named this asset, and detect running afterwards must not
+	// take that back; the sibling fields above guard for the same reason.
+	if asset.Name == "" {
+		if displayName == "" {
+			displayName = subID
+		}
+		asset.Name = "Azure subscription " + displayName
+	}
 }
 
 func (s *Service) discover(conn shared.AzureConnection) (*inventory.Inventory, error) {
