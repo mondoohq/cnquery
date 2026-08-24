@@ -70,6 +70,8 @@ okta {
   emailServers() []okta.emailServer
   // Realms that partition users into separately administered populations
   realms() []okta.realm
+  // CAPTCHA provider configurations registered with the org
+  captchas() []okta.captcha
 }
 
 // Okta Organization
@@ -144,6 +146,49 @@ okta.organization @defaults("companyName") {
   sendEmailForPasswordChangedEnabled() bool
   // Okta ThreatInsight settings
   threatInsightSettings() okta.threatsConfiguration
+  // Whether Okta Support currently holds administrative access to the org
+  //
+  // True while a support access grant is in effect, which lets Okta Support
+  // staff act inside the org with administrator privileges. Null when the
+  // org does not report the setting, which is not the same as the grant
+  // being absent.
+  oktaSupportEnabled() bool
+  // When the current Okta Support access grant lapses
+  //
+  // Null when no grant is in effect, and null when the org reports a grant
+  // without an expiration.
+  oktaSupportExpiration() time
+  // Support case the Okta Support access grant was opened under
+  //
+  // Null when no grant is in effect, or when the grant carries no case
+  // number.
+  oktaSupportCaseNumber() string
+  // Whether new public client applications receive the super administrator role
+  //
+  // True when the org assigns the super administrator role by default to
+  // newly created public OAuth 2.0 client applications, so registering a
+  // client is by itself enough to hold org-wide administrative privileges.
+  // Null when the org does not report the setting.
+  superAdminGrantedToNewPublicClients() bool
+  // Whether third-party administrators are enabled for the org
+  //
+  // Third-party administrators hold administrator roles in the Admin
+  // Console but receive none of the default Okta administrator emails and
+  // cannot open support cases for the org, so an administrator population
+  // marked this way sits outside the org's notification path. Null when the
+  // org does not report the setting.
+  thirdPartyAdminEnabled() bool
+  // CAPTCHA configuration enforced across the org
+  //
+  // The single CAPTCHA instance the org applies to its end-user pages. Null
+  // when the org enforces no CAPTCHA.
+  captcha() okta.captcha
+  // Pages the org protects with CAPTCHA
+  //
+  // Values are SSR for self-service registration, SSPR for self-service
+  // password reset, and SIGN_IN for the sign-in page. An empty list means
+  // no page is protected.
+  captchaEnabledPages() []string
 }
 
 // Okta Policies
@@ -171,6 +216,21 @@ okta.policies {
   accessPolicy() []okta.policy
   // Profile enrollment policies
   profileEnrollment() []okta.policy
+  // Entity risk policies
+  //
+  // Policies that act on risk detected about a user or a session after
+  // authentication has already succeeded, so an established session can be
+  // terminated or re-challenged when a risk signal arrives rather than
+  // surviving until it expires. An org holds at most one entity risk
+  // policy. Null when the org is not licensed for it.
+  entityRisk() []okta.policy
+  // Session protection policies
+  //
+  // Policies evaluated against an established session rather than at
+  // sign-in, governing how long the session survives and what
+  // re-verification it must pass. An org holds at most one session
+  // protection policy. Null when the org is not licensed for it.
+  postAuthSession() []okta.policy
 }
 
 // Okta User
@@ -555,6 +615,19 @@ private okta.role @defaults("label status") {
   // Each entry names either one application instance or an entire catalog
   // app type.
   appTargets() []okta.role.appTarget
+  // Administrator notifications the role is subscribed to
+  //
+  // Map of notification type to subscription status, where a status is
+  // either subscribed or unsubscribed. Notification types include
+  // REPORT_SUSPICIOUS_ACTIVITY, USER_LOCKED_OUT, USER_DEPROVISION,
+  // RATELIMIT_NOTIFICATION, AD_AGENT, CONNECTOR_AGENT, and OKTA_UPDATE, and
+  // Okta adds to the set. A role unsubscribed from a security notification
+  // never learns of the events it reports, so a privileged role with
+  // REPORT_SUSPICIOUS_ACTIVITY unsubscribed is a detection gap.
+  // Subscriptions are held per role rather than per assignment, so every
+  // assignment of the same role reports the same map. Null when the org
+  // does not report them.
+  subscriptions() map[string]string
 }
 
 // Application target of an administrator role
@@ -624,6 +697,13 @@ private okta.group @defaults("name") {
   //
   // The users and groups that can manage this group's membership.
   owners() []okta.group.owner
+  // Applications assigned to the group
+  //
+  // Every application the group grants, which every member of the group
+  // receives. A broadly scoped group with an application here hands that
+  // application to everyone in it, which is the direction an assignment
+  // review has to read to find an over-broad grant.
+  applications() []okta.application
 }
 
 // Owner of an Okta group
@@ -1040,7 +1120,8 @@ private okta.policy @defaults("name") {
   // Policy type
   //
   // One of OKTA_SIGN_ON, PASSWORD, MFA_ENROLL, OAUTH_AUTHORIZATION_POLICY,
-  // IDP_DISCOVERY, ACCESS_POLICY, or PROFILE_ENROLLMENT.
+  // IDP_DISCOVERY, ACCESS_POLICY, PROFILE_ENROLLMENT, ENTITY_RISK, or
+  // POST_AUTH_SESSION.
   type string
   // Policy conditions
   //
@@ -1062,6 +1143,40 @@ private okta.policy @defaults("name") {
   lastUpdated time
   // Rules attached to the policy
   rules() []okta.policyRule
+  // Resources the policy is bound to
+  //
+  // The bindings that place a resource under this policy, which for an
+  // access policy are the applications it governs. An access policy whose
+  // rules require no multifactor authentication leaves every application
+  // listed here unprotected. Empty when the policy binds no resource.
+  mappings() []okta.policy.mapping
+}
+
+// Policy resource mapping
+//
+// Binding between a policy and one resource it governs. Access policies
+// reach applications through these bindings, so a mapping names an
+// application that inherits the policy's rules. The `resourceType` field
+// says what kind of resource the binding names, `resourceId` carries its
+// identifier, and `application` resolves the binding when it names an
+// application.
+private okta.policy.mapping @defaults("resourceType resourceId status") {
+  // Unique key for the mapping
+  id string
+  // Kind of resource the policy is bound to
+  //
+  // APP for an application binding. Okta reports other kinds as further
+  // policy types gain bindings, so the set is not closed.
+  resourceType string
+  // Identifier of the bound resource, in the namespace named by resourceType
+  resourceId string
+  // Lifecycle status of the mapping
+  status string
+  // Application the policy governs
+  //
+  // Resolves the binding when `resourceType` is APP. Null for any other kind
+  // of resource, and null for an application the org no longer exposes.
+  application() okta.application
 }
 
 // Okta policy rule
@@ -1871,6 +1986,68 @@ okta.attackProtection @defaults("preventBruteForceLockoutFromUnknownDevices") {
   preventBruteForceLockoutFromUnknownDevices bool
   // Whether a knowledge factor is verified second when 2FA is required
   verifyKnowledgeSecondWhen2faRequired bool
+}
+
+// Okta Bot Protection
+//
+// Org-wide bot detection in front of the authentication endpoints, the
+// control that stands between an automated credential-stuffing run and the
+// sign-in flow. The `mode` field reports whether a detection is acted on or
+// only recorded, `level` the detection sensitivity, `enforcementType` what
+// a detected request is met with, and `supportedFlows` which end-user flows
+// are covered at all. Every field is null when the org is not licensed for
+// bot protection, which is a different reading from protection being
+// configured and switched off.
+okta.botProtection @defaults("mode level") {
+  // Enforcement mode for bot protection
+  //
+  // Whether a detected bot is acted on or only recorded. A recording-only
+  // mode detects the same traffic and blocks none of it.
+  mode string
+  // Sensitivity of bot detection
+  level string
+  // What a request identified as a bot is met with
+  enforcementType string
+  // Authentication flows bot protection covers
+  //
+  // Values are SIGN_IN for the sign-in page, SSR for self-service
+  // registration, and SSPR for self-service password reset. A flow absent
+  // from this list is not protected.
+  supportedFlows []string
+}
+
+// CAPTCHA instance
+//
+// CAPTCHA provider configuration registered with the org and available to
+// be applied to its end-user pages. Which instance is actually enforced,
+// and on which pages, is reported by `okta.organization.captcha` and
+// `okta.organization.captchaEnabledPages`. The provider's site key and
+// secret key are not reported.
+private okta.captcha @defaults("name type") {
+  // Unique key for the CAPTCHA instance
+  id string
+  // Name of the CAPTCHA instance
+  name string
+  // CAPTCHA provider backing the instance
+  type string
+}
+
+// Okta Personal settings
+//
+// Workforce-org controls over Okta Personal, the consumer product a
+// workforce user can move application credentials into. The
+// `blockedEmailDomains` field lists the email domains barred from that
+// export, so an empty list bars none of them and every workforce user can
+// carry corporate credentials out into a personal account. Null when the
+// org is not licensed for Okta Personal.
+okta.personalSettings @defaults("blockedEmailDomains") {
+  // Email domains blocked from exporting applications to Okta Personal
+  //
+  // Accounts on these domains cannot move application credentials out of
+  // the workforce org into a personal Okta account. An empty list blocks no
+  // domain. Null when the org does not report the list at all, which is not
+  // the same reading.
+  blockedEmailDomains []string
 }
 
 // Okta Behavior Detection Rule

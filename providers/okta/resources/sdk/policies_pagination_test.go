@@ -6,6 +6,7 @@ package sdk
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -107,14 +108,71 @@ func (rt *cyclingRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	}, nil
 }
 
-// TestPaginationStopsOnCyclingLink proves the maxPages guard terminates a
-// self-referential `Link: rel="next"` cycle instead of hanging the scan.
+// TestPaginationStopsOnCyclingLink proves a self-referential `Link: rel="next"`
+// ends the walk at the repeat rather than being followed to the page cap.
+// Following it to the cap would report the cycling page's records a thousand
+// times over, which reads as a real collection rather than as a failure.
 func TestPaginationStopsOnCyclingLink(t *testing.T) {
 	t.Parallel()
 	rt := &cyclingRoundTripper{}
 	m := fakeClient(rt)
 
+	rules, err := m.ListPolicyRules(context.Background(), "pol1", 200)
+	require.NoError(t, err)
+	assert.Equal(t, 2, rt.calls, "the repeated cursor should end the walk")
+	assert.Len(t, rules, 2, "no record should be collected more than the pages that carried it")
+}
+
+// advancingRoundTripper hands back a fresh `next` cursor on every call, so the
+// walk never repeats a URL and only the page cap can stop it.
+type advancingRoundTripper struct{ calls int }
+
+func (rt *advancingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	rt.calls++
+	header := http.Header{}
+	header.Set("Link", fmt.Sprintf("<https://%s%s?after=%d>; rel=\"next\"", req.URL.Host, req.URL.Path, rt.calls))
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     header,
+		Body:       io.NopCloser(bytes.NewBufferString(`[{"id":"x"}]`)),
+		Request:    req,
+	}, nil
+}
+
+// TestPaginationStopsAtPageCap proves the maxPages bound still terminates an
+// endpoint that keeps offering a new cursor forever, which the repeated-URL
+// guard cannot see.
+func TestPaginationStopsAtPageCap(t *testing.T) {
+	t.Parallel()
+	rt := &advancingRoundTripper{}
+	m := fakeClient(rt)
+
 	_, err := m.ListPolicyRules(context.Background(), "pol1", 200)
 	require.NoError(t, err)
 	assert.Equal(t, maxPages, rt.calls, "loop should stop at the maxPages bound")
+}
+
+// TestNextPageURL covers the cursor guard on its own, including the shape that
+// ends a normal walk.
+func TestNextPageURL(t *testing.T) {
+	t.Parallel()
+
+	const current = "https://test.okta.com/api/v1/policies?after=1"
+
+	t.Run("advances to a different cursor", func(t *testing.T) {
+		next := nextPageURL(current, []string{`<https://test.okta.com/api/v1/policies?after=2>; rel="next"`})
+		assert.Equal(t, "https://test.okta.com/api/v1/policies?after=2", next)
+	})
+
+	t.Run("stops on a cursor that repeats the current page", func(t *testing.T) {
+		assert.Equal(t, "", nextPageURL(current, []string{`<` + current + `>; rel="next"`}))
+	})
+
+	t.Run("stops when no next link is offered", func(t *testing.T) {
+		assert.Equal(t, "", nextPageURL(current, []string{`<https://test.okta.com/api/v1/policies>; rel="self"`}))
+	})
+
+	t.Run("stops when there is no Link header at all", func(t *testing.T) {
+		assert.Equal(t, "", nextPageURL(current, nil))
+	})
 }

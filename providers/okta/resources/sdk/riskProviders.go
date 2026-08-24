@@ -39,7 +39,7 @@ func (m *ApiExtension) ListRiskProviders(ctx context.Context) ([]okta.RiskProvid
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return providers, firstResp, nil

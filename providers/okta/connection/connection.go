@@ -70,6 +70,25 @@ type OktaConnection struct {
 	// serve correctly. It is immutable once built, so it is shared rather than
 	// rebuilt by each caller.
 	apiExtension *sdk.ApiExtension
+	// roleSubscriptions memoizes the notification subscriptions of each role
+	// reference.
+	//
+	// Subscriptions belong to a role, not to an assignment of it, so every
+	// account holding SUPER_ADMIN reports the same set. Read from the role
+	// assignments of a directory of admins that is one request per admin for
+	// an answer that does not vary, and the count grows with the size of the
+	// admin population rather than with the number of distinct roles.
+	roleSubscriptionsMu sync.Mutex
+	roleSubscriptions   map[string]*roleSubscriptions
+}
+
+// roleSubscriptions is one memoized answer of the role-subscription endpoint,
+// including the response that came with a failure so the caller can classify
+// it the same way it would classify a fresh one.
+type roleSubscriptions struct {
+	items []okta.Subscription
+	resp  *okta.APIResponse
+	err   error
 }
 
 func NewOktaConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OktaConnection, error) {
@@ -281,4 +300,45 @@ func (c *OktaConnection) OrgSettings(ctx context.Context) (*okta.OrgSetting, err
 		c.orgSettings, c.orgErr = settings, err
 	})
 	return c.orgSettings, c.orgErr
+}
+
+// RoleSubscriptions lists the administrator notifications a role reference is
+// subscribed to, fetching each reference at most once per connection.
+//
+// roleRef is a standard role type (SUPER_ADMIN) or a custom role id. The
+// *okta.APIResponse that accompanied a failure is returned alongside the
+// error, so a caller can tell an org that does not answer for subscriptions
+// from a request that failed.
+func (c *OktaConnection) RoleSubscriptions(ctx context.Context, roleRef string) ([]okta.Subscription, *okta.APIResponse, error) {
+	c.roleSubscriptionsMu.Lock()
+	defer c.roleSubscriptionsMu.Unlock()
+
+	if cached, ok := c.roleSubscriptions[roleRef]; ok {
+		return cached.items, cached.resp, cached.err
+	}
+
+	result := &roleSubscriptions{}
+	ref := roleRef
+	items, resp, err := c.Client().SubscriptionAPI.
+		ListSubscriptionsRole(ctx, okta.ListSubscriptionsRoleRoleRefParameter{String: &ref}).
+		Execute()
+	result.resp, result.err = resp, err
+	if err == nil {
+		result.items = items
+		for resp != nil && resp.HasNextPage() {
+			var page []okta.Subscription
+			resp, err = resp.Next(&page)
+			if err != nil {
+				result.items, result.err = nil, err
+				break
+			}
+			result.items = append(result.items, page...)
+		}
+	}
+
+	if c.roleSubscriptions == nil {
+		c.roleSubscriptions = map[string]*roleSubscriptions{}
+	}
+	c.roleSubscriptions[roleRef] = result
+	return result.items, result.resp, result.err
 }

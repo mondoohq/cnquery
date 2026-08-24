@@ -69,11 +69,11 @@ func TestIsCustomRoleAssignment(t *testing.T) {
 func TestIsOktaRawFeatureUnavailable(t *testing.T) {
 	t.Parallel()
 
-	assert.False(t, isOktaRawFeatureUnavailable(nil))
-	assert.True(t, isOktaRawFeatureUnavailable(httpResponse(404)))
-	assert.True(t, isOktaRawFeatureUnavailable(httpResponse(403)))
-	assert.True(t, isOktaRawFeatureUnavailable(httpResponse(410)))
-	assert.False(t, isOktaRawFeatureUnavailable(httpResponse(200)))
-	assert.False(t, isOktaRawFeatureUnavailable(httpResponse(500)))
-	assert.False(t, isOktaRawFeatureUnavailable(httpResponse(429)))
+	assert.False(t, isOktaRawFeatureUnavailable(nil, nil))
+	assert.True(t, isOktaRawFeatureUnavailable(httpResponse(404), nil))
+	assert.True(t, isOktaRawFeatureUnavailable(httpResponse(403), nil))
+	assert.True(t, isOktaRawFeatureUnavailable(httpResponse(410), nil))
+	assert.False(t, isOktaRawFeatureUnavailable(httpResponse(200), nil))
+	assert.False(t, isOktaRawFeatureUnavailable(httpResponse(500), nil))
+	assert.False(t, isOktaRawFeatureUnavailable(httpResponse(429), nil))
 }

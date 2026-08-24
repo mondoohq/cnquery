@@ -63,7 +63,7 @@ func (m *ApiExtension) ListPolicies(ctx context.Context, policyType string, limi
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return policies, firstResp, nil
@@ -92,7 +92,7 @@ func (m *ApiExtension) ListPolicyRules(ctx context.Context, policyId string, lim
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return rules, nil

@@ -29,6 +29,8 @@ const (
 	IDP_DISCOVERY                         = "IDP_DISCOVERY"
 	ACCESS_POLICY                         = "ACCESS_POLICY"
 	PROFILE_ENROLLMENT                    = "PROFILE_ENROLLMENT"
+	ENTITY_RISK                           = "ENTITY_RISK"
+	POST_AUTH_SESSION                     = "POST_AUTH_SESSION"
 )
 
 // oktaPolicyRuleRaw captures the policy-rule fields we expose. Okta models
@@ -51,7 +53,12 @@ func (o *mqlOktaPolicies) id() (string, error) {
 	return "okta.policies", nil
 }
 
-func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]any, error) {
+// listPoliciesOfType lists every policy of one type. unavailable reports that
+// the org will not answer for the type at all, which is a different reading
+// from the org having none of them: several policy types exist only on an
+// Identity Engine org or behind a licensed feature, and those answer 404, a
+// 400 naming an invalid policy type, or 401 E0000015.
+func listPoliciesOfType(runtime *plugin.Runtime, policyType PolicyType) (list []any, unavailable bool, err error) {
 	conn := runtime.Connection.(*connection.OktaConnection)
 
 	ctx := context.Background()
@@ -61,28 +68,53 @@ func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]any, error)
 	if err != nil {
 		// handle case where no policy exists
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
-			return nil, nil
+			return nil, true, nil
 		}
 		// handle special case where the policy type does not exist
 		if resp != nil && resp.StatusCode == http.StatusBadRequest && strings.Contains(strings.ToLower(err.Error()), "invalid policy type") {
-			return nil, nil
+			return nil, true, nil
 		}
-		return nil, err
+		if isOktaRawFeatureUnavailable(resp, err) {
+			return nil, true, nil
+		}
+		return nil, false, err
 	}
 
 	if len(respList) == 0 {
-		return nil, nil
+		return nil, false, nil
 	}
 
-	list := []any{}
+	result := []any{}
 	for i := range respList {
 		r, err := newMqlOktaPolicy(runtime, respList[i])
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
-		list = append(list, r)
+		result = append(result, r)
 	}
 
+	return result, false, nil
+}
+
+// listPolicies lists a policy type every org answers for, so an unanswered
+// request is reported the way it always has been, as an empty collection.
+func listPolicies(runtime *plugin.Runtime, policyType PolicyType) ([]any, error) {
+	list, _, err := listPoliciesOfType(runtime, policyType)
+	return list, err
+}
+
+// listOptionalPolicies lists a policy type the org may not have at all,
+// reporting the field as null rather than as an empty collection when it does
+// not. An empty list would say the org has no such policy as a fact, and an
+// audit written on that list would pass without anything having been checked.
+func listOptionalPolicies(runtime *plugin.Runtime, policyType PolicyType, field *plugin.TValue[[]any]) ([]any, error) {
+	list, unavailable, err := listPoliciesOfType(runtime, policyType)
+	if err != nil {
+		return nil, err
+	}
+	if unavailable {
+		return oktaUnreadableList(field)
+	}
 	return list, nil
 }
 
@@ -112,6 +144,14 @@ func (o *mqlOktaPolicies) accessPolicy() ([]any, error) {
 
 func (o *mqlOktaPolicies) profileEnrollment() ([]any, error) {
 	return listPolicies(o.MqlRuntime, PROFILE_ENROLLMENT)
+}
+
+func (o *mqlOktaPolicies) entityRisk() ([]any, error) {
+	return listOptionalPolicies(o.MqlRuntime, ENTITY_RISK, &o.EntityRisk)
+}
+
+func (o *mqlOktaPolicies) postAuthSession() ([]any, error) {
+	return listOptionalPolicies(o.MqlRuntime, POST_AUTH_SESSION, &o.PostAuthSession)
 }
 
 func newMqlOktaPolicy(runtime *plugin.Runtime, entry *sdk.PolicyWrapper) (any, error) {

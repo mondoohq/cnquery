@@ -250,6 +250,65 @@ func (o *mqlOktaGroup) roles() ([]any, error) {
 	return list, nil
 }
 
+// applications lists every application the group grants. Okta answers with the
+// full application records rather than with ids, so the reverse edge costs one
+// request per group instead of one per application behind it.
+func (o *mqlOktaGroup) applications() ([]any, error) {
+	if o.Id.Error != nil {
+		return nil, o.Id.Error
+	}
+	if o.Id.Data == "" {
+		return []any{}, nil
+	}
+
+	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
+	client := conn.Client()
+	ctx := context.Background()
+
+	slice, resp, err := client.GroupAPI.
+		ListAssignedApplicationsForGroup(ctx, o.Id.Data).
+		Limit(queryLimit).
+		Execute()
+	if err != nil {
+		if isOktaFeatureUnavailable(resp, err) {
+			return oktaUnreadableList(&o.Applications)
+		}
+		return nil, err
+	}
+
+	list := []any{}
+	appendEntry := func(datalist []okta.ListApplications200ResponseInner) error {
+		for i := range datalist {
+			app, err := oktaApplicationFromUnion(datalist[i])
+			if err != nil {
+				return err
+			}
+			r, err := newMqlOktaApplication(o.MqlRuntime, app)
+			if err != nil {
+				return err
+			}
+			list = append(list, r)
+		}
+		return nil
+	}
+
+	if err := appendEntry(slice); err != nil {
+		return nil, err
+	}
+
+	for resp != nil && resp.HasNextPage() {
+		var page []okta.ListApplications200ResponseInner
+		resp, err = resp.Next(&page)
+		if err != nil {
+			return nil, err
+		}
+		if err := appendEntry(page); err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
 func (o *mqlOkta) groupRules() ([]any, error) {
 	conn := o.MqlRuntime.Connection.(*connection.OktaConnection)
 	client := conn.Client()

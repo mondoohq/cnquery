@@ -12,6 +12,47 @@ import (
 	"net/url"
 )
 
+// APIError is what a raw Okta endpoint answers a >= 400 status with. It keeps
+// the status code and the Okta error code from the response body so callers can
+// tell a feature the org does not have from a request that genuinely failed,
+// without matching on message text. The message is the full body, which is what
+// callers that already branch on its content read.
+type APIError struct {
+	// URL is the absolute URL the request was issued against.
+	URL string
+	// Status is the HTTP status line, e.g. "404 Not Found".
+	Status string
+	// StatusCode is the HTTP status code.
+	StatusCode int
+	// Code is the Okta error code carried in the body (for example
+	// "E0000015"), or "" when the body carries none.
+	Code string
+	// Body is the raw response body.
+	Body []byte
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("okta API request to %s failed: %s: %s", e.URL, e.Status, string(e.Body))
+}
+
+// newAPIError builds the error for a failed raw request, reading the Okta error
+// code out of the body. A body that is not an Okta error object leaves Code
+// empty rather than failing the request for a second reason.
+func newAPIError(url string, resp *http.Response, body []byte) *APIError {
+	err := &APIError{URL: url, Body: body}
+	if resp != nil {
+		err.Status = resp.Status
+		err.StatusCode = resp.StatusCode
+	}
+	var decoded struct {
+		ErrorCode string `json:"errorCode"`
+	}
+	if json.Unmarshal(body, &decoded) == nil {
+		err.Code = decoded.ErrorCode
+	}
+	return err
+}
+
 // ApiExtension handles cases where Okta's SDK doesn't expose a particular API.
 // The SDK no longer ships a public RequestExecutor, so we issue the raw
 // authenticated requests ourselves against the org host carried by the
@@ -68,7 +109,7 @@ func (m *ApiExtension) get(ctx context.Context, url string, out any) (*http.Resp
 		return resp, err
 	}
 	if resp.StatusCode >= http.StatusBadRequest {
-		return resp, fmt.Errorf("okta API request to %s failed: %s: %s", url, resp.Status, string(raw))
+		return resp, newAPIError(url, resp, raw)
 	}
 	if out != nil && len(raw) > 0 {
 		if err := json.Unmarshal(raw, out); err != nil {
@@ -90,7 +131,7 @@ func getPaged[T any](ctx context.Context, m *ApiExtension, path string) ([]T, *h
 	nextURL := m.url(path)
 	var firstResp *http.Response
 
-	for nextURL != "" {
+	for i := 0; i < maxPages && nextURL != ""; i++ {
 		var page []T
 		resp, err := m.get(ctx, nextURL, &page)
 		if firstResp == nil {
@@ -103,7 +144,7 @@ func getPaged[T any](ctx context.Context, m *ApiExtension, path string) ([]T, *h
 		if resp == nil {
 			break
 		}
-		nextURL = nextLinkURL(resp.Header.Values("Link"))
+		nextURL = nextPageURL(nextURL, resp.Header.Values("Link"))
 	}
 
 	return items, firstResp, nil
