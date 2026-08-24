@@ -173,14 +173,31 @@ type memberRecord struct {
 }
 
 type memberUserRecord struct {
-	Email  string `json:"email"`
-	HasMfa bool   `json:"has_mfa"`
+	Email         string   `json:"email"`
+	HasMfa        bool     `json:"has_mfa"`
+	DeactivatedAt neonTime `json:"deactivated_at"`
+}
+
+// mqlNeonOrganizationMemberInternal caches the account behind the membership,
+// which is what an invitation and a project membership name rather than the
+// membership id.
+type mqlNeonOrganizationMemberInternal struct {
+	cacheUserID string
+}
+
+// organizationMemberID keys a roster entry by the organization it belongs to.
+// The membership id the API returns is unique on its own, but qualifying it
+// keeps the key self-describing and matches the other organization-scoped
+// resources, so a roster entry cannot alias one read from another
+// organization.
+func organizationMemberID(orgID, memberID string) string {
+	return orgID + "/member/" + memberID
 }
 
 func (o *mqlNeonOrganization) members() ([]any, error) {
 	c := neonConn(o.MqlRuntime)
 
-	records, err := connection.GetList[memberWithUserRecord](context.Background(), c,
+	records, err := connection.GetPagedCursor[memberWithUserRecord](context.Background(), c,
 		"/organizations/"+url.PathEscape(o.Id.Data)+"/members", nil, "members")
 	if err != nil {
 		// Reading the roster takes organization admin rights.
@@ -195,16 +212,21 @@ func (o *mqlNeonOrganization) members() ([]any, error) {
 	for i := range records {
 		rec := records[i]
 		member, err := CreateResource(o.MqlRuntime, "neon.organization.member", map[string]*llx.RawData{
-			"id":       llx.StringData(rec.Member.ID),
-			"email":    llx.StringData(rec.User.Email),
-			"role":     llx.StringData(rec.Member.Role),
-			"hasMfa":   llx.BoolData(rec.User.HasMfa),
-			"joinedAt": llx.TimeDataPtr(rec.Member.JoinedAt.Time()),
+			"__id":          llx.StringData(organizationMemberID(o.Id.Data, rec.Member.ID)),
+			"id":            llx.StringData(rec.Member.ID),
+			"email":         llx.StringData(rec.User.Email),
+			"role":          llx.StringData(rec.Member.Role),
+			"hasMfa":        llx.BoolData(rec.User.HasMfa),
+			"joinedAt":      llx.TimeDataPtr(rec.Member.JoinedAt.Time()),
+			"deactivatedAt": llx.TimeDataPtr(rec.User.DeactivatedAt.Time()),
 		})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, member)
+
+		mqlMember := member.(*mqlNeonOrganizationMember)
+		mqlMember.cacheUserID = rec.Member.UserID
+		res = append(res, mqlMember)
 	}
 	return res, nil
 }

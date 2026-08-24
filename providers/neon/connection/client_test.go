@@ -274,3 +274,125 @@ func TestClassifiersRejectNonAPIErrors(t *testing.T) {
 		t.Error("IsNotFound must not match a transport error")
 	}
 }
+
+// writeNextPage answers with the newer pagination shape, which carries the next
+// cursor as `next` rather than as `cursor`. A project's branches, an
+// organization's members, and a branch's functions all use this shape.
+func writeNextPage(w http.ResponseWriter, key string, page, n int, next string) {
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{%q:[`, key)
+	for i := 0; i < n; i++ {
+		if i > 0 {
+			io.WriteString(w, ",")
+		}
+		fmt.Fprintf(w, `{"id":"p%d-%d"}`, page, i)
+	}
+	io.WriteString(w, "]")
+	if next != "" {
+		fmt.Fprintf(w, `,"pagination":{"next":%q,"sort_by":"id","sort_order":"asc"}`, next)
+	}
+	io.WriteString(w, "}")
+}
+
+func TestGetPagedCursorFollowsNextCursor(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		// The next page is requested with the `cursor` query parameter even
+		// though the response named it `next`.
+		switch r.URL.Query().Get("cursor") {
+		case "":
+			writeNextPage(w, "branches", 1, pageSize, "next-2")
+		case "next-2":
+			writeNextPage(w, "branches", 2, 4, "")
+		default:
+			t.Errorf("unexpected cursor %q", r.URL.Query().Get("cursor"))
+		}
+	}))
+	defer srv.Close()
+
+	items, err := GetPagedCursor[pagedItem](context.Background(), testConn(srv), "/branches", nil, "branches")
+	if err != nil {
+		t.Fatalf("walk: %v", err)
+	}
+	// Reading only `cursor` would stop after the first page and report the
+	// branch list as complete at pageSize entries.
+	if len(items) != pageSize+4 {
+		t.Errorf("expected %d items, got %d", pageSize+4, len(items))
+	}
+	if calls != 2 {
+		t.Errorf("expected 2 requests, got %d", calls)
+	}
+}
+
+func TestGetPagedCursorStopsOnStationaryNextCursor(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		// An endpoint that ignores the cursor replays the same page forever.
+		writeNextPage(w, "members", 1, pageSize, "stuck")
+	}))
+	defer srv.Close()
+
+	items, err := GetPagedCursor[pagedItem](context.Background(), testConn(srv), "/members", nil, "members")
+	if err != nil {
+		t.Fatalf("walk: %v", err)
+	}
+	if calls != 2 {
+		t.Errorf("expected the walk to stop after the repeated cursor, got %d requests", calls)
+	}
+	if len(items) != 2*pageSize {
+		t.Errorf("expected %d items, got %d", 2*pageSize, len(items))
+	}
+}
+
+func TestGetPagedCursorPrefersNextOverCursor(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Query().Get("cursor") {
+		case "":
+			w.Header().Set("Content-Type", "application/json")
+			io.WriteString(w, `{"items":[`)
+			for i := 0; i < pageSize; i++ {
+				if i > 0 {
+					io.WriteString(w, ",")
+				}
+				fmt.Fprintf(w, `{"id":"a-%d"}`, i)
+			}
+			io.WriteString(w, `],"pagination":{"next":"use-me","cursor":""}}`)
+		case "use-me":
+			writeNextPage(w, "items", 2, 1, "")
+		default:
+			t.Errorf("unexpected cursor %q", r.URL.Query().Get("cursor"))
+		}
+	}))
+	defer srv.Close()
+
+	items, err := GetPagedCursor[pagedItem](context.Background(), testConn(srv), "/items", nil, "items")
+	if err != nil {
+		t.Fatalf("walk: %v", err)
+	}
+	if len(items) != pageSize+1 {
+		t.Errorf("expected %d items, got %d", pageSize+1, len(items))
+	}
+}
+
+func TestGetPagedCursorStopsWhenNeitherCursorIsPresent(t *testing.T) {
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		// A full page with no pagination object at all is the last page.
+		writeNextPage(w, "items", 1, pageSize, "")
+	}))
+	defer srv.Close()
+
+	items, err := GetPagedCursor[pagedItem](context.Background(), testConn(srv), "/items", nil, "items")
+	if err != nil {
+		t.Fatalf("walk: %v", err)
+	}
+	if calls != 1 {
+		t.Errorf("expected 1 request, got %d", calls)
+	}
+	if len(items) != pageSize {
+		t.Errorf("expected %d items, got %d", pageSize, len(items))
+	}
+}

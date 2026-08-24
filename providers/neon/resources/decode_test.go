@@ -5,6 +5,8 @@ package resources
 
 import (
 	"encoding/json"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -576,5 +578,696 @@ func TestStrSliceToAny(t *testing.T) {
 	}
 	if empty := strSliceToAny(nil); len(empty) != 0 {
 		t.Fatalf("expected an empty slice for nil input, got %v", empty)
+	}
+}
+
+// --- coverage expansion ---------------------------------------------------
+
+func TestDataApiRecordDecodesPublicExposure(t *testing.T) {
+	const payload = `{
+		"url": "https://app-deadbeef.dataapi.example.test",
+		"status": "ready",
+		"available_schemas": ["public", "internal"],
+		"settings": {
+			"db_aggregates_enabled": true,
+			"db_anon_role": "authenticated",
+			"db_extra_search_path": "extensions",
+			"db_max_rows": 1000,
+			"db_schemas": ["public"],
+			"jwt_role_claim_key": ".role",
+			"jwt_cache_max_lifetime": 300,
+			"openapi_mode": "follow-privileges",
+			"server_cors_allowed_origins": "*",
+			"server_timing_enabled": true
+		}
+	}`
+
+	var rec dataApiRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if rec.Status != "ready" {
+		t.Errorf("status decoded wrong: %q", rec.Status)
+	}
+	if rec.Settings == nil {
+		t.Fatal("settings decoded as absent")
+	}
+	// The anonymous role and the CORS allowlist together are the reachable
+	// path to the data, so both tags have to hold.
+	if rec.Settings.DbAnonRole == nil || *rec.Settings.DbAnonRole != "authenticated" {
+		t.Errorf("db_anon_role decoded wrong: %v", rec.Settings.DbAnonRole)
+	}
+	if rec.Settings.ServerCorsAllowedOrigin == nil || *rec.Settings.ServerCorsAllowedOrigin != "*" {
+		t.Errorf("server_cors_allowed_origins decoded wrong: %v", rec.Settings.ServerCorsAllowedOrigin)
+	}
+	if rec.Settings.DbSchemas == nil || len(*rec.Settings.DbSchemas) != 1 || (*rec.Settings.DbSchemas)[0] != "public" {
+		t.Errorf("db_schemas decoded wrong: %v", rec.Settings.DbSchemas)
+	}
+	if rec.Settings.DbMaxRows == nil || *rec.Settings.DbMaxRows != 1000 {
+		t.Errorf("db_max_rows decoded wrong: %v", rec.Settings.DbMaxRows)
+	}
+	if rec.Settings.JwtCacheMaxLifetime == nil || *rec.Settings.JwtCacheMaxLifetime != 300 {
+		t.Errorf("jwt_cache_max_lifetime decoded wrong: %v", rec.Settings.JwtCacheMaxLifetime)
+	}
+	if rec.Settings.DbAggregatesEnabled == nil || !*rec.Settings.DbAggregatesEnabled {
+		t.Errorf("db_aggregates_enabled decoded wrong: %v", rec.Settings.DbAggregatesEnabled)
+	}
+	if rec.AvailableSchemas == nil || len(*rec.AvailableSchemas) != 2 {
+		t.Errorf("available_schemas decoded wrong: %v", rec.AvailableSchemas)
+	}
+}
+
+func TestDataApiRecordWithoutSettingsKeepsEveryFieldAbsent(t *testing.T) {
+	const payload = `{"url": "https://app-deadbeef.dataapi.example.test", "status": "pending"}`
+
+	var rec dataApiRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// An unlimited row cap and an unset CORS allowlist must stay absent. A
+	// zero row cap would read as a limit of no rows at all.
+	if rec.Settings != nil {
+		t.Errorf("settings invented: %+v", rec.Settings)
+	}
+	if rec.AvailableSchemas != nil {
+		t.Errorf("available_schemas invented: %v", rec.AvailableSchemas)
+	}
+	if llx.IntDataPtr[int64](nil) != llx.NilData {
+		t.Error("an absent row cap must report as null, not as zero")
+	}
+}
+
+func TestAdvisorIssueRecordDecodesFacing(t *testing.T) {
+	const payload = `{
+		"name": "rls_disabled_in_public",
+		"title": "RLS Disabled in Public",
+		"level": "ERROR",
+		"facing": "EXTERNAL",
+		"categories": ["SECURITY"],
+		"description": "Table is public but row level security is not enabled.",
+		"detail": "Table public.orders is exposed.",
+		"remediation": "Enable row level security on the table.",
+		"metadata": {"schema": "public", "name": "orders", "type": "table"},
+		"cache_key": "rls_disabled_in_public_public_orders"
+	}`
+
+	var rec advisorIssueRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// `facing` is what separates a finding an outside caller can reach from
+	// one confined to the project, so it carries the whole finding's weight.
+	if rec.Facing != "EXTERNAL" {
+		t.Errorf("facing decoded wrong: %q", rec.Facing)
+	}
+	if rec.Level != "ERROR" {
+		t.Errorf("level decoded wrong: %q", rec.Level)
+	}
+	if len(rec.Categories) != 1 || rec.Categories[0] != "SECURITY" {
+		t.Errorf("categories decoded wrong: %v", rec.Categories)
+	}
+	if rec.CacheKey != "rls_disabled_in_public_public_orders" {
+		t.Errorf("cache_key decoded wrong: %q", rec.CacheKey)
+	}
+	if rec.Metadata["schema"] != "public" {
+		t.Errorf("metadata decoded wrong: %v", rec.Metadata)
+	}
+	if rec.Title == "" || rec.Description == "" || rec.Remediation == "" {
+		t.Errorf("prose fields decoded wrong: %+v", rec)
+	}
+}
+
+func TestBucketRecordDecodesPublicAccessLevel(t *testing.T) {
+	const payload = `{
+		"name": "assets",
+		"access_level": "public_read",
+		"created_at": "2026-01-02T03:04:05Z"
+	}`
+
+	var rec bucketRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// A mistyped tag here reports every bucket as private.
+	if rec.AccessLevel != "public_read" {
+		t.Errorf("access_level decoded wrong: %q", rec.AccessLevel)
+	}
+	if rec.Name != "assets" {
+		t.Errorf("name decoded wrong: %q", rec.Name)
+	}
+	if rec.CreatedAt.Time() == nil {
+		t.Error("created_at decoded as absent")
+	}
+}
+
+func TestCredentialRecordDecodesScopesAndExpiry(t *testing.T) {
+	const payload = `{
+		"token_id": "deadbeefdeadbeefdeadbeefdeadbeef",
+		"token_id_short": "deadbeefdead",
+		"name": "backup writer",
+		"scopes": ["storage:read", "storage:write"],
+		"branch_id": "br-deadbeef",
+		"principal_type": "user",
+		"created_at": "2026-01-02T03:04:05Z",
+		"last_used_at": "2026-02-03T04:05:06Z"
+	}`
+
+	var rec credentialRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if len(rec.Scopes) != 2 || rec.Scopes[1] != "storage:write" {
+		t.Errorf("scopes decoded wrong: %v", rec.Scopes)
+	}
+	if rec.TokenIDShort != "deadbeefdead" {
+		t.Errorf("token_id_short decoded wrong: %q", rec.TokenIDShort)
+	}
+	// An absent expiry means the credential never expires, which is the
+	// finding. It must not decode to the zero time and read as long expired.
+	if rec.ExpiresAt.Time() != nil {
+		t.Errorf("an absent expiry must stay null, got %v", rec.ExpiresAt.Time())
+	}
+	if rec.RevokedAt.Time() != nil {
+		t.Errorf("an absent revocation must stay null, got %v", rec.RevokedAt.Time())
+	}
+	if rec.LastUsedAt.Time() == nil {
+		t.Error("last_used_at decoded as absent")
+	}
+	if rec.BranchID == nil || *rec.BranchID != "br-deadbeef" {
+		t.Errorf("branch_id decoded wrong: %v", rec.BranchID)
+	}
+	if rec.FunctionID != nil {
+		t.Errorf("function_id invented: %v", rec.FunctionID)
+	}
+}
+
+func TestAuthRecordDecodesMockProvider(t *testing.T) {
+	const payload = `{
+		"auth_provider": "mock",
+		"auth_provider_project_id": "deadbeef-0000-0000-0000-000000000000",
+		"branch_id": "br-deadbeef",
+		"db_name": "neondb",
+		"created_at": "2026-01-02T03:04:05Z",
+		"owned_by": "user",
+		"jwks_url": "https://api.example.test/.well-known/jwks.json"
+	}`
+
+	var rec authRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// A branch backed by the mock provider is not authenticating anyone, so
+	// this tag is the whole point of the resource.
+	if rec.AuthProvider != "mock" {
+		t.Errorf("auth_provider decoded wrong: %q", rec.AuthProvider)
+	}
+	if rec.OwnedBy != "user" {
+		t.Errorf("owned_by decoded wrong: %q", rec.OwnedBy)
+	}
+	if rec.JwksURL == "" {
+		t.Error("jwks_url decoded as absent")
+	}
+	if rec.TransferStatus != nil {
+		t.Errorf("transfer_status invented: %v", rec.TransferStatus)
+	}
+	if rec.BaseURL != nil {
+		t.Errorf("base_url invented: %v", rec.BaseURL)
+	}
+}
+
+func TestEmailPasswordRecordDecodesSelfRegistration(t *testing.T) {
+	const payload = `{
+		"enabled": true,
+		"email_verification_method": "otp",
+		"require_email_verification": false,
+		"auto_sign_in_after_verification": true,
+		"send_verification_email_on_sign_up": true,
+		"send_verification_email_on_sign_in": false,
+		"disable_sign_up": false
+	}`
+
+	var rec emailPasswordRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// This is the open-self-registration case: verification not required and
+	// sign-up not disabled. Both must decode as reported false, not as absent.
+	if rec.RequireEmailVerification == nil || *rec.RequireEmailVerification {
+		t.Errorf("require_email_verification decoded wrong: %v", rec.RequireEmailVerification)
+	}
+	if rec.DisableSignUp == nil || *rec.DisableSignUp {
+		t.Errorf("disable_sign_up decoded wrong: %v", rec.DisableSignUp)
+	}
+	if rec.Enabled == nil || !*rec.Enabled {
+		t.Errorf("enabled decoded wrong: %v", rec.Enabled)
+	}
+	if rec.EmailVerificationMethod == nil || *rec.EmailVerificationMethod != "otp" {
+		t.Errorf("email_verification_method decoded wrong: %v", rec.EmailVerificationMethod)
+	}
+	if rec.AutoSignInAfterVerification == nil || !*rec.AutoSignInAfterVerification {
+		t.Errorf("auto_sign_in_after_verification decoded wrong: %v", rec.AutoSignInAfterVerification)
+	}
+	if rec.SendVerificationEmailOnSignUp == nil || !*rec.SendVerificationEmailOnSignUp {
+		t.Errorf("send_verification_email_on_sign_up decoded wrong: %v", rec.SendVerificationEmailOnSignUp)
+	}
+	if rec.SendVerificationEmailOnSignIn == nil || *rec.SendVerificationEmailOnSignIn {
+		t.Errorf("send_verification_email_on_sign_in decoded wrong: %v", rec.SendVerificationEmailOnSignIn)
+	}
+}
+
+func TestEmailPasswordRecordAbsentFieldsStayNull(t *testing.T) {
+	var rec emailPasswordRecord
+	if err := json.Unmarshal([]byte(`{}`), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// A field the API stopped sending must read as unknown. Reporting it as
+	// false would claim verification is not required on a tenant that does
+	// require it.
+	if rec.RequireEmailVerification != nil || rec.DisableSignUp != nil || rec.Enabled != nil {
+		t.Errorf("absent controls were invented: %+v", rec)
+	}
+	if llx.BoolDataPtr(rec.RequireEmailVerification) != llx.NilData {
+		t.Error("an absent control must report as null")
+	}
+}
+
+func TestOauthProviderRecordDecodesSharedCredentials(t *testing.T) {
+	const payload = `{
+		"id": "google",
+		"type": "shared",
+		"client_id": "deadbeef.apps.example.test",
+		"client_secret": "deadbeefdeadbeefdeadbeefdeadbeef"
+	}`
+
+	var rec oauthProviderRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// `shared` means Neon's own development registration signs users in.
+	if rec.Type != "shared" {
+		t.Errorf("type decoded wrong: %q", rec.Type)
+	}
+	if rec.ID != "google" {
+		t.Errorf("id decoded wrong: %q", rec.ID)
+	}
+	if rec.ClientID == nil || *rec.ClientID != "deadbeef.apps.example.test" {
+		t.Errorf("client_id decoded wrong: %v", rec.ClientID)
+	}
+}
+
+func TestAuthDomainRecordDecodes(t *testing.T) {
+	const payload = `{"domain": "https://app.example.test", "auth_provider": "stack"}`
+
+	var rec authDomainRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if rec.Domain != "https://app.example.test" {
+		t.Errorf("domain decoded wrong: %q", rec.Domain)
+	}
+	if rec.AuthProvider != "stack" {
+		t.Errorf("auth_provider decoded wrong: %q", rec.AuthProvider)
+	}
+}
+
+func TestFunctionRecordDecodesInvocationSurface(t *testing.T) {
+	const payload = `{
+		"id": "fn-deadbeef",
+		"slug": "checkout",
+		"name": "Checkout handler",
+		"invocation_url": "https://br-deadbeef-checkout.functions.example.test",
+		"created_at": "2026-01-02T03:04:05Z",
+		"active_deployment": {
+			"id": 7,
+			"status": "completed",
+			"memory_mib": 512,
+			"runtime": "nodejs24",
+			"created_at": "2026-01-02T03:04:05Z",
+			"environment": ["DATABASE_URL", "STRIPE_KEY"]
+		},
+		"current_deployment": {
+			"id": 8,
+			"status": "failed",
+			"memory_mib": 512,
+			"runtime": "nodejs24",
+			"created_at": "2026-01-03T03:04:05Z",
+			"error": "build failed"
+		}
+	}`
+
+	var rec functionRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// The invocation URL is the internet-facing surface the finding is about.
+	if rec.InvocationURL != "https://br-deadbeef-checkout.functions.example.test" {
+		t.Errorf("invocation_url decoded wrong: %q", rec.InvocationURL)
+	}
+	if rec.Slug != "checkout" {
+		t.Errorf("slug decoded wrong: %q", rec.Slug)
+	}
+	if rec.ActiveDeployment == nil || rec.ActiveDeployment.ID != 7 {
+		t.Fatalf("active_deployment decoded wrong: %+v", rec.ActiveDeployment)
+	}
+	// Neon returns variable names only; the values are never sent.
+	if len(rec.ActiveDeployment.Environment) != 2 || rec.ActiveDeployment.Environment[0] != "DATABASE_URL" {
+		t.Errorf("environment decoded wrong: %v", rec.ActiveDeployment.Environment)
+	}
+	if rec.ActiveDeployment.MemoryMib == nil || *rec.ActiveDeployment.MemoryMib != 512 {
+		t.Errorf("memory_mib decoded wrong: %v", rec.ActiveDeployment.MemoryMib)
+	}
+	if rec.CurrentDeployment == nil || rec.CurrentDeployment.Status != "failed" {
+		t.Fatalf("current_deployment decoded wrong: %+v", rec.CurrentDeployment)
+	}
+	if rec.CurrentDeployment.Error == nil || *rec.CurrentDeployment.Error != "build failed" {
+		t.Errorf("deployment error decoded wrong: %v", rec.CurrentDeployment.Error)
+	}
+	// A build that has not failed must report no error rather than an empty
+	// one, and a function with no live build must report none.
+	if rec.ActiveDeployment.Error != nil {
+		t.Errorf("deployment error invented: %v", rec.ActiveDeployment.Error)
+	}
+}
+
+func TestFunctionRecordWithoutDeployments(t *testing.T) {
+	const payload = `{
+		"id": "fn-deadbeef",
+		"slug": "checkout",
+		"name": "Checkout handler",
+		"invocation_url": "https://br-deadbeef-checkout.functions.example.test",
+		"created_at": "2026-01-02T03:04:05Z"
+	}`
+
+	var rec functionRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if rec.ActiveDeployment != nil || rec.CurrentDeployment != nil {
+		t.Errorf("deployments invented: %+v %+v", rec.ActiveDeployment, rec.CurrentDeployment)
+	}
+}
+
+func TestInvitationRecordDecodesRole(t *testing.T) {
+	const payload = `{
+		"id": "deadbeef-0000-0000-0000-000000000000",
+		"email": "outsider@example.test",
+		"org_id": "org-deadbeef",
+		"invited_by": "beefdead-0000-0000-0000-000000000000",
+		"invited_at": "2026-01-02T03:04:05Z",
+		"role": "admin"
+	}`
+
+	var rec invitationRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// An outstanding admin invitation is org-wide access waiting to be claimed.
+	if rec.Role != "admin" {
+		t.Errorf("role decoded wrong: %q", rec.Role)
+	}
+	if rec.Email != "outsider@example.test" {
+		t.Errorf("email decoded wrong: %q", rec.Email)
+	}
+	if rec.InvitedBy != "beefdead-0000-0000-0000-000000000000" {
+		t.Errorf("invited_by decoded wrong: %q", rec.InvitedBy)
+	}
+	if rec.InvitedAt.Time() == nil {
+		t.Error("invited_at decoded as absent")
+	}
+}
+
+func TestOperationRecordDecodesProtectionChange(t *testing.T) {
+	const payload = `{
+		"id": "deadbeef-0000-0000-0000-000000000000",
+		"project_id": "proj-deadbeef",
+		"branch_id": "br-deadbeef",
+		"action": "timeline_update_protected_config",
+		"status": "finished",
+		"failures_count": 0,
+		"created_at": "2026-01-02T03:04:05Z",
+		"updated_at": "2026-01-02T03:04:09Z",
+		"total_duration_ms": 4200
+	}`
+
+	var rec operationRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// This action is where a branch losing its protection shows up.
+	if rec.Action != "timeline_update_protected_config" {
+		t.Errorf("action decoded wrong: %q", rec.Action)
+	}
+	if rec.Status != "finished" {
+		t.Errorf("status decoded wrong: %q", rec.Status)
+	}
+	if rec.BranchID == nil || *rec.BranchID != "br-deadbeef" {
+		t.Errorf("branch_id decoded wrong: %v", rec.BranchID)
+	}
+	if rec.EndpointID != nil {
+		t.Errorf("endpoint_id invented: %v", rec.EndpointID)
+	}
+	// A reported zero must stay a zero, and an absent count must stay absent.
+	if rec.FailuresCount == nil || *rec.FailuresCount != 0 {
+		t.Errorf("failures_count decoded wrong: %v", rec.FailuresCount)
+	}
+	if rec.TotalDurationMs == nil || *rec.TotalDurationMs != 4200 {
+		t.Errorf("total_duration_ms decoded wrong: %v", rec.TotalDurationMs)
+	}
+	if rec.RetryAt.Time() != nil {
+		t.Errorf("an absent retry must stay null, got %v", rec.RetryAt.Time())
+	}
+}
+
+func TestSnapshotRecordDecodesRetention(t *testing.T) {
+	const payload = `{
+		"id": "snap-deadbeef",
+		"name": "nightly",
+		"lsn": "0/3000000",
+		"timestamp": "2026-01-02T03:04:05Z",
+		"source_branch_id": "br-deadbeef",
+		"created_at": "2026-01-02T03:04:06Z",
+		"manual": false,
+		"full_size": 1048576,
+		"diff_size": 4096
+	}`
+
+	var rec snapshotRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if rec.SourceBranchID == nil || *rec.SourceBranchID != "br-deadbeef" {
+		t.Errorf("source_branch_id decoded wrong: %v", rec.SourceBranchID)
+	}
+	if rec.Manual == nil || *rec.Manual {
+		t.Errorf("manual decoded wrong: %v", rec.Manual)
+	}
+	if rec.FullSize == nil || *rec.FullSize != 1048576 {
+		t.Errorf("full_size decoded wrong: %v", rec.FullSize)
+	}
+	if rec.DiffSize == nil || *rec.DiffSize != 4096 {
+		t.Errorf("diff_size decoded wrong: %v", rec.DiffSize)
+	}
+	if rec.Timestamp.Time() == nil {
+		t.Error("timestamp decoded as absent")
+	}
+	// A snapshot that never expires must not report the zero time, which
+	// would read as one that expired in the year 1.
+	if rec.ExpiresAt.Time() != nil {
+		t.Errorf("an absent expiry must stay null, got %v", rec.ExpiresAt.Time())
+	}
+}
+
+func TestProjectMemberRecordDecodesEffectivePermission(t *testing.T) {
+	const payload = `{
+		"member_id": "deadbeef-0000-0000-0000-000000000000",
+		"user_id": "beefdead-0000-0000-0000-000000000000",
+		"email": "ada@example.test",
+		"name": "Ada",
+		"org_role": "admin",
+		"org_default_project_permission": "VIEWER",
+		"effective_project_permission": "ADMIN",
+		"grant_source": "org_admin_override"
+	}`
+
+	var rec projectMemberRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// Rights held only by virtue of organization administration are exactly
+	// what the project's own grant list cannot show.
+	if rec.EffectiveProjectPermission == nil || *rec.EffectiveProjectPermission != "ADMIN" {
+		t.Errorf("effective_project_permission decoded wrong: %v", rec.EffectiveProjectPermission)
+	}
+	if rec.GrantSource == nil || *rec.GrantSource != "org_admin_override" {
+		t.Errorf("grant_source decoded wrong: %v", rec.GrantSource)
+	}
+	if rec.OrgRole != "admin" {
+		t.Errorf("org_role decoded wrong: %q", rec.OrgRole)
+	}
+	if rec.UserID != "beefdead-0000-0000-0000-000000000000" {
+		t.Errorf("user_id decoded wrong: %q", rec.UserID)
+	}
+	// No explicit grant was made on the project itself.
+	if rec.ExplicitProjectPermission != nil {
+		t.Errorf("explicit_project_permission invented: %v", rec.ExplicitProjectPermission)
+	}
+	if rec.ProjectRole != nil {
+		t.Errorf("project_role invented: %v", rec.ProjectRole)
+	}
+}
+
+func TestMemberUserRecordDecodesDeactivation(t *testing.T) {
+	const payload = `{
+		"member": {
+			"id": "deadbeef-0000-0000-0000-000000000000",
+			"org_id": "org-deadbeef",
+			"user_id": "beefdead-0000-0000-0000-000000000000",
+			"role": "editor",
+			"joined_at": "2026-01-02T03:04:05Z"
+		},
+		"user": {
+			"email": "ada@example.test",
+			"has_mfa": true,
+			"deactivated_at": "2026-05-06T07:08:09Z"
+		}
+	}`
+
+	var rec memberWithUserRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	deactivated := rec.User.DeactivatedAt.Time()
+	if deactivated == nil {
+		t.Fatal("deactivated_at decoded as absent")
+	}
+	if !deactivated.Equal(time.Date(2026, 5, 6, 7, 8, 9, 0, time.UTC)) {
+		t.Errorf("deactivated_at decoded wrong: %v", deactivated)
+	}
+	// The role enum grew past admin and member; a value outside the old pair
+	// must survive the decode.
+	if rec.Member.Role != "editor" {
+		t.Errorf("role decoded wrong: %q", rec.Member.Role)
+	}
+	if rec.Member.UserID != "beefdead-0000-0000-0000-000000000000" {
+		t.Errorf("user_id decoded wrong: %q", rec.Member.UserID)
+	}
+}
+
+func TestMemberUserRecordActiveAccountStaysNull(t *testing.T) {
+	const payload = `{
+		"member": {"id": "m-1", "user_id": "u-1", "org_id": "o-1", "role": "member"},
+		"user": {"email": "ada@example.test", "has_mfa": false}
+	}`
+
+	var rec memberWithUserRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	// A live account must not report a deactivation time.
+	if rec.User.DeactivatedAt.Time() != nil {
+		t.Errorf("deactivation invented for a live account: %v", rec.User.DeactivatedAt.Time())
+	}
+}
+
+func TestVpcEndpointDetailRecordDecodesState(t *testing.T) {
+	const payload = `{
+		"vpc_endpoint_id": "vpce-deadbeef",
+		"label": "prod",
+		"state": "new",
+		"num_restricted_projects": 4,
+		"example_restricted_projects": ["proj-a", "proj-b", "proj-c"]
+	}`
+
+	var rec vpcEndpointDetailRecord
+	if err := json.Unmarshal([]byte(payload), &rec); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	// `new` means Neon has not accepted the connection, so nothing reaches the
+	// project over it.
+	if rec.State != "new" {
+		t.Errorf("state decoded wrong: %q", rec.State)
+	}
+	if rec.NumRestrictedProjects == nil || *rec.NumRestrictedProjects != 4 {
+		t.Errorf("num_restricted_projects decoded wrong: %v", rec.NumRestrictedProjects)
+	}
+	// The list is a sample capped at three, so it under-reports the count.
+	if len(rec.ExampleRestrictedProjects) != 3 {
+		t.Errorf("example_restricted_projects decoded wrong: %v", rec.ExampleRestrictedProjects)
+	}
+}
+
+// TestNoRecordDecodesSecretMaterial guards the boundary that keeps credentials
+// out of the schema. Several Neon payloads carry secrets beside the metadata
+// this provider reports: an OAuth client secret sits next to the client id, and
+// the credential issuance response returns a bearer token and an object storage
+// secret key. Decoding one is all it takes for it to reach a schema field, so
+// no record type may name one.
+func TestNoRecordDecodesSecretMaterial(t *testing.T) {
+	secretTags := map[string]bool{
+		"client_secret":        true,
+		"api_token":            true,
+		"s3_secret_access_key": true,
+		"s3_access_key_id":     true,
+		"password":             true,
+		"secret":               true,
+		"secret_access_key":    true,
+		"connection_uri":       true,
+		"connection_string":    true,
+	}
+
+	records := []any{
+		projectRecord{}, projectSettingsData{}, allowedIpsData{},
+		branchRecord{}, roleRecord{}, databaseRecord{},
+		endpointRecord{}, organizationRecord{}, memberWithUserRecord{},
+		memberRecord{}, memberUserRecord{}, apiKeyRecord{}, userRecord{},
+		permissionRecord{}, jwksRecord{}, vpcEndpointRecord{},
+		vpcEndpointDetailRecord{}, dataApiRecord{}, dataApiSettings{},
+		advisorIssueRecord{}, bucketRecord{}, credentialRecord{},
+		authRecord{}, emailPasswordRecord{}, authDomainRecord{},
+		oauthProviderRecord{}, functionRecord{}, functionDeploymentRecord{},
+		invitationRecord{}, operationRecord{}, snapshotRecord{},
+		projectMemberRecord{},
+	}
+
+	var walk func(t *testing.T, typ reflect.Type, seen map[reflect.Type]bool)
+	walk = func(t *testing.T, typ reflect.Type, seen map[reflect.Type]bool) {
+		for typ.Kind() == reflect.Ptr || typ.Kind() == reflect.Slice {
+			typ = typ.Elem()
+		}
+		if typ.Kind() != reflect.Struct || seen[typ] {
+			return
+		}
+		seen[typ] = true
+
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
+			tag, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+			if secretTags[tag] {
+				t.Errorf("%s.%s decodes secret material (json:%q); it must not reach a schema field",
+					typ.Name(), field.Name, tag)
+			}
+			walk(t, field.Type, seen)
+		}
+	}
+
+	seen := map[reflect.Type]bool{}
+	for _, rec := range records {
+		walk(t, reflect.TypeOf(rec), seen)
 	}
 }

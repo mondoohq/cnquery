@@ -498,6 +498,29 @@ type vpcEndpointRecord struct {
 	Label         string `json:"label"`
 }
 
+// vpcEndpointDetailRecord decodes the attachment state of an endpoint, which
+// the project-scoped list does not carry. It is only served under the
+// organization that owns the endpoint, scoped to the region it sits in.
+type vpcEndpointDetailRecord struct {
+	VpcEndpointID             string   `json:"vpc_endpoint_id"`
+	Label                     string   `json:"label"`
+	State                     string   `json:"state"`
+	NumRestrictedProjects     *int64   `json:"num_restricted_projects"`
+	ExampleRestrictedProjects []string `json:"example_restricted_projects"`
+}
+
+// mqlNeonVpcEndpointInternal caches what the detail read needs and memoizes it,
+// so a query touching several of the fields it backs reads it once.
+type mqlNeonVpcEndpointInternal struct {
+	cacheProjectID string
+	cacheOrgID     string
+	cacheRegionID  string
+
+	detailOnce sync.Once
+	detail     *vpcEndpointDetailRecord
+	detailErr  error
+}
+
 func (p *mqlNeonProject) vpcEndpoints() ([]any, error) {
 	c := neonConn(p.MqlRuntime)
 
@@ -523,7 +546,95 @@ func (p *mqlNeonProject) vpcEndpoints() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, endpoint)
+
+		mqlEndpoint := endpoint.(*mqlNeonVpcEndpoint)
+		mqlEndpoint.cacheProjectID = p.Id.Data
+		mqlEndpoint.cacheOrgID = p.cacheOrgID
+		mqlEndpoint.cacheRegionID = p.RegionId.Data
+		res = append(res, mqlEndpoint)
+	}
+	return res, nil
+}
+
+// fetchDetail reads the endpoint's attachment state once. The state is served
+// only under the organization that owns the endpoint, so a personal project's
+// endpoint has no read available and yields nil, which every caller reports as
+// null rather than as an endpoint in no particular state. A read that failed
+// for a reason other than access is reported as the failure it was, since an
+// endpoint reported as being in no state would read as one that is fine.
+func (v *mqlNeonVpcEndpoint) fetchDetail() (*vpcEndpointDetailRecord, error) {
+	v.detailOnce.Do(func() {
+		if v.cacheOrgID == "" || v.cacheRegionID == "" {
+			return
+		}
+
+		c := neonConn(v.MqlRuntime)
+		path := "/organizations/" + url.PathEscape(v.cacheOrgID) +
+			"/vpc/region/" + url.PathEscape(v.cacheRegionID) +
+			"/vpc_endpoints/" + url.PathEscape(v.VpcEndpointId.Data)
+
+		var rec vpcEndpointDetailRecord
+		if err := c.Get(context.Background(), path, nil, &rec); err != nil {
+			if !connection.IsForbidden(err) && !connection.IsNotFound(err) {
+				v.detailErr = err
+			}
+			return
+		}
+		v.detail = &rec
+	})
+	return v.detail, v.detailErr
+}
+
+// state reports whether Neon has accepted the endpoint's connection.
+func (v *mqlNeonVpcEndpoint) state() (string, error) {
+	detail, err := v.fetchDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail == nil {
+		v.State = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return "", nil
+	}
+	return detail.State, nil
+}
+
+// numRestrictedProjects reports how many projects are restricted to reaching
+// Neon over the endpoint.
+func (v *mqlNeonVpcEndpoint) numRestrictedProjects() (int64, error) {
+	detail, err := v.fetchDetail()
+	if err != nil {
+		return 0, err
+	}
+	if detail == nil || detail.NumRestrictedProjects == nil {
+		v.NumRestrictedProjects = plugin.TValue[int64]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return 0, nil
+	}
+	return *detail.NumRestrictedProjects, nil
+}
+
+// exampleRestrictedProjects resolves the sample of restricted projects the API
+// returns. Each is resolved from the project list the root already read.
+func (v *mqlNeonVpcEndpoint) exampleRestrictedProjects() ([]any, error) {
+	detail, err := v.fetchDetail()
+	if err != nil {
+		return nil, err
+	}
+	if detail == nil {
+		v.ExampleRestrictedProjects = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
+		return nil, nil
+	}
+
+	res := []any{}
+	for _, projectID := range detail.ExampleRestrictedProjects {
+		project, err := projectByID(v.MqlRuntime, projectID)
+		if err != nil {
+			return nil, err
+		}
+		// A project named here that the key cannot read is left out rather
+		// than reported as a project with no fields.
+		if project != nil {
+			res = append(res, project)
+		}
 	}
 	return res, nil
 }
