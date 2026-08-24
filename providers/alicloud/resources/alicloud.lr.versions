@@ -1505,6 +1505,8 @@ alicloud.polardb 13.0.0
 alicloud.polardb.cluster 13.0.0
 alicloud.polardb.cluster.accessWhitelist 13.0.0
 alicloud.polardb.cluster.aiType 13.0.0
+alicloud.polardb.cluster.auditLogCollectorStatus 13.5.1
+alicloud.polardb.cluster.auditLogEnabled 13.5.1
 alicloud.polardb.cluster.category 13.0.0
 alicloud.polardb.cluster.cpuCores 13.0.0
 alicloud.polardb.cluster.createTime 13.0.0
@@ -1696,6 +1698,8 @@ alicloud.rds.instances 13.0.0
 alicloud.redis 13.0.0
 alicloud.redis.instance 13.0.0
 alicloud.redis.instance.architectureType 13.0.0
+alicloud.redis.instance.auditLogEnabled 13.5.1
+alicloud.redis.instance.auditLogRetentionDays 13.5.1
 alicloud.redis.instance.authEnabled 13.0.0
 alicloud.redis.instance.bandwidth 13.0.0
 alicloud.redis.instance.capacity 13.0.0

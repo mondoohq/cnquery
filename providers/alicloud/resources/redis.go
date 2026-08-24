@@ -55,6 +55,7 @@ func (r *mqlAlicloudRedis) id() (string, error) {
 // client for the per-instance detail calls, and the native VPC/vSwitch ids so
 // the typed accessors can resolve them.
 type mqlAlicloudRedisInstanceInternal struct {
+	redisAuditState
 	region         string
 	cacheRegion    string
 	cacheVpcID     string

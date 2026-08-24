@@ -2944,6 +2944,18 @@ alicloud.redis.instance {
   // password-free access is enabled, allowing connections from within the
   // VPC without a password.
   authEnabled() bool
+  // Whether the audit log records the commands run against the instance
+  //
+  // False when audit logging is off, and when the setting could not be read, so
+  // an "auditing is on" check fails rather than passing on an instance nobody
+  // could read. With it off there is no record of what was read or written,
+  // which is the gap a fleet-wide database-activity check is looking for.
+  auditLogEnabled() bool
+  // Days the audit log is retained
+  //
+  // Zero when audit logging is off. Entries older than this are dropped, which
+  // bounds how far back an investigation can reach.
+  auditLogRetentionDays() int
 }
 
 // ApsaraDB for MongoDB
@@ -3237,6 +3249,18 @@ alicloud.polardb.cluster {
   // Custom), dbEndpointId, addressType (the network type, Public or Private),
   // connectionString, port, readWriteMode, and nodes.
   endpoints() []dict
+  // Whether SQL audit collection is running on the cluster
+  //
+  // False when the collector is off, and when the setting could not be read, so
+  // an "auditing is on" check fails rather than passing on a cluster nobody
+  // could read. With it off there is no record of the statements run against
+  // the cluster.
+  auditLogEnabled() bool
+  // Raw state of the SQL audit collector
+  //
+  // One of Enable, Enabling, Disable, or Disabling. Only Enable means
+  // statements are being recorded now.
+  auditLogCollectorStatus() string
 }
 
 // VPC flow log

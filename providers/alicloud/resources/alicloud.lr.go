@@ -3250,6 +3250,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.redis.instance.authEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudRedisInstance).GetAuthEnabled()).ToDataRes(types.Bool)
 	},
+	"alicloud.redis.instance.auditLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRedisInstance).GetAuditLogEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.redis.instance.auditLogRetentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudRedisInstance).GetAuditLogRetentionDays()).ToDataRes(types.Int)
+	},
 	"alicloud.mongodb.instances": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudMongodb).GetInstances()).ToDataRes(types.Array(types.Resource("alicloud.mongodb.instance")))
 	},
@@ -3513,6 +3519,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.polardb.cluster.endpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudPolardbCluster).GetEndpoints()).ToDataRes(types.Array(types.Dict))
+	},
+	"alicloud.polardb.cluster.auditLogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbCluster).GetAuditLogEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.polardb.cluster.auditLogCollectorStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudPolardbCluster).GetAuditLogCollectorStatus()).ToDataRes(types.String)
 	},
 	"alicloud.vpc.flowLog.regionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcFlowLog).GetRegionId()).ToDataRes(types.String)
@@ -10886,6 +10898,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudRedisInstance).AuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"alicloud.redis.instance.auditLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRedisInstance).AuditLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.redis.instance.auditLogRetentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudRedisInstance).AuditLogRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"alicloud.mongodb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudMongodb).__id, ok = v.Value.(string)
 		return
@@ -11252,6 +11272,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.polardb.cluster.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudPolardbCluster).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.cluster.auditLogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbCluster).AuditLogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.polardb.cluster.auditLogCollectorStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudPolardbCluster).AuditLogCollectorStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.flowLog.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24526,40 +24554,42 @@ type mqlAlicloudRedisInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudRedisInstanceInternal
-	InstanceId       plugin.TValue[string]
-	InstanceName     plugin.TValue[string]
-	InstanceStatus   plugin.TValue[string]
-	InstanceType     plugin.TValue[string]
-	InstanceClass    plugin.TValue[string]
-	ArchitectureType plugin.TValue[string]
-	EngineVersion    plugin.TValue[string]
-	RegionId         plugin.TValue[string]
-	ZoneId           plugin.TValue[string]
-	SecondaryZoneId  plugin.TValue[string]
-	Vpc              plugin.TValue[*mqlAlicloudVpcNetwork]
-	Vswitch          plugin.TValue[*mqlAlicloudVpcVswitch]
-	NetworkType      plugin.TValue[string]
-	ConnectionDomain plugin.TValue[string]
-	Port             plugin.TValue[int64]
-	PrivateIp        plugin.TValue[string]
-	Capacity         plugin.TValue[int64]
-	Bandwidth        plugin.TValue[int64]
-	Qps              plugin.TValue[int64]
-	Connections      plugin.TValue[int64]
-	ChargeType       plugin.TValue[string]
-	NodeType         plugin.TValue[string]
-	PackageType      plugin.TValue[string]
-	EditionType      plugin.TValue[string]
-	ResourceGroupId  plugin.TValue[string]
-	ResourceGroup    plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
-	CreateTime       plugin.TValue[*time.Time]
-	EndTime          plugin.TValue[*time.Time]
-	Tags             plugin.TValue[map[string]any]
-	SslEnabled       plugin.TValue[bool]
-	TdeEnabled       plugin.TValue[bool]
-	SecurityIPList   plugin.TValue[[]any]
-	SecurityGroups   plugin.TValue[[]any]
-	AuthEnabled      plugin.TValue[bool]
+	InstanceId            plugin.TValue[string]
+	InstanceName          plugin.TValue[string]
+	InstanceStatus        plugin.TValue[string]
+	InstanceType          plugin.TValue[string]
+	InstanceClass         plugin.TValue[string]
+	ArchitectureType      plugin.TValue[string]
+	EngineVersion         plugin.TValue[string]
+	RegionId              plugin.TValue[string]
+	ZoneId                plugin.TValue[string]
+	SecondaryZoneId       plugin.TValue[string]
+	Vpc                   plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch               plugin.TValue[*mqlAlicloudVpcVswitch]
+	NetworkType           plugin.TValue[string]
+	ConnectionDomain      plugin.TValue[string]
+	Port                  plugin.TValue[int64]
+	PrivateIp             plugin.TValue[string]
+	Capacity              plugin.TValue[int64]
+	Bandwidth             plugin.TValue[int64]
+	Qps                   plugin.TValue[int64]
+	Connections           plugin.TValue[int64]
+	ChargeType            plugin.TValue[string]
+	NodeType              plugin.TValue[string]
+	PackageType           plugin.TValue[string]
+	EditionType           plugin.TValue[string]
+	ResourceGroupId       plugin.TValue[string]
+	ResourceGroup         plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	CreateTime            plugin.TValue[*time.Time]
+	EndTime               plugin.TValue[*time.Time]
+	Tags                  plugin.TValue[map[string]any]
+	SslEnabled            plugin.TValue[bool]
+	TdeEnabled            plugin.TValue[bool]
+	SecurityIPList        plugin.TValue[[]any]
+	SecurityGroups        plugin.TValue[[]any]
+	AuthEnabled           plugin.TValue[bool]
+	AuditLogEnabled       plugin.TValue[bool]
+	AuditLogRetentionDays plugin.TValue[int64]
 }
 
 // createAlicloudRedisInstance creates a new instance of this resource
@@ -24788,6 +24818,18 @@ func (c *mqlAlicloudRedisInstance) GetSecurityGroups() *plugin.TValue[[]any] {
 func (c *mqlAlicloudRedisInstance) GetAuthEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.AuthEnabled, func() (bool, error) {
 		return c.authEnabled()
+	})
+}
+
+func (c *mqlAlicloudRedisInstance) GetAuditLogEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuditLogEnabled, func() (bool, error) {
+		return c.auditLogEnabled()
+	})
+}
+
+func (c *mqlAlicloudRedisInstance) GetAuditLogRetentionDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AuditLogRetentionDays, func() (int64, error) {
+		return c.auditLogRetentionDays()
 	})
 }
 
@@ -25278,46 +25320,48 @@ type mqlAlicloudPolardbCluster struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudPolardbClusterInternal
-	DbClusterId          plugin.TValue[string]
-	DbClusterDescription plugin.TValue[string]
-	DbClusterStatus      plugin.TValue[string]
-	DbType               plugin.TValue[string]
-	DbVersion            plugin.TValue[string]
-	Engine               plugin.TValue[string]
-	Category             plugin.TValue[string]
-	SubCategory          plugin.TValue[string]
-	DbNodeClass          plugin.TValue[string]
-	DbNodeNumber         plugin.TValue[int64]
-	CpuCores             plugin.TValue[string]
-	MemorySize           plugin.TValue[string]
-	StorageUsed          plugin.TValue[int64]
-	StorageMax           plugin.TValue[int64]
-	StorageType          plugin.TValue[string]
-	StoragePayType       plugin.TValue[string]
-	StorageSpace         plugin.TValue[int64]
-	RegionId             plugin.TValue[string]
-	ZoneId               plugin.TValue[string]
-	Vpc                  plugin.TValue[*mqlAlicloudVpcNetwork]
-	Vswitch              plugin.TValue[*mqlAlicloudVpcVswitch]
-	PayType              plugin.TValue[string]
-	CreateTime           plugin.TValue[*time.Time]
-	ExpireTime           plugin.TValue[*time.Time]
-	Expired              plugin.TValue[string]
-	LockMode             plugin.TValue[string]
-	DeletionLock         plugin.TValue[int64]
-	ResourceGroupId      plugin.TValue[string]
-	ResourceGroup        plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
-	ServerlessType       plugin.TValue[string]
-	DbClusterNetworkType plugin.TValue[string]
-	AiType               plugin.TValue[string]
-	HotStandbyCluster    plugin.TValue[string]
-	StrictConsistency    plugin.TValue[string]
-	Tags                 plugin.TValue[map[string]any]
-	DbNodes              plugin.TValue[[]any]
-	SslEnabled           plugin.TValue[bool]
-	TdeEnabled           plugin.TValue[bool]
-	AccessWhitelist      plugin.TValue[[]any]
-	Endpoints            plugin.TValue[[]any]
+	DbClusterId             plugin.TValue[string]
+	DbClusterDescription    plugin.TValue[string]
+	DbClusterStatus         plugin.TValue[string]
+	DbType                  plugin.TValue[string]
+	DbVersion               plugin.TValue[string]
+	Engine                  plugin.TValue[string]
+	Category                plugin.TValue[string]
+	SubCategory             plugin.TValue[string]
+	DbNodeClass             plugin.TValue[string]
+	DbNodeNumber            plugin.TValue[int64]
+	CpuCores                plugin.TValue[string]
+	MemorySize              plugin.TValue[string]
+	StorageUsed             plugin.TValue[int64]
+	StorageMax              plugin.TValue[int64]
+	StorageType             plugin.TValue[string]
+	StoragePayType          plugin.TValue[string]
+	StorageSpace            plugin.TValue[int64]
+	RegionId                plugin.TValue[string]
+	ZoneId                  plugin.TValue[string]
+	Vpc                     plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch                 plugin.TValue[*mqlAlicloudVpcVswitch]
+	PayType                 plugin.TValue[string]
+	CreateTime              plugin.TValue[*time.Time]
+	ExpireTime              plugin.TValue[*time.Time]
+	Expired                 plugin.TValue[string]
+	LockMode                plugin.TValue[string]
+	DeletionLock            plugin.TValue[int64]
+	ResourceGroupId         plugin.TValue[string]
+	ResourceGroup           plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	ServerlessType          plugin.TValue[string]
+	DbClusterNetworkType    plugin.TValue[string]
+	AiType                  plugin.TValue[string]
+	HotStandbyCluster       plugin.TValue[string]
+	StrictConsistency       plugin.TValue[string]
+	Tags                    plugin.TValue[map[string]any]
+	DbNodes                 plugin.TValue[[]any]
+	SslEnabled              plugin.TValue[bool]
+	TdeEnabled              plugin.TValue[bool]
+	AccessWhitelist         plugin.TValue[[]any]
+	Endpoints               plugin.TValue[[]any]
+	AuditLogEnabled         plugin.TValue[bool]
+	AuditLogCollectorStatus plugin.TValue[string]
 }
 
 // createAlicloudPolardbCluster creates a new instance of this resource
@@ -25560,6 +25604,18 @@ func (c *mqlAlicloudPolardbCluster) GetAccessWhitelist() *plugin.TValue[[]any] {
 func (c *mqlAlicloudPolardbCluster) GetEndpoints() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Endpoints, func() ([]any, error) {
 		return c.endpoints()
+	})
+}
+
+func (c *mqlAlicloudPolardbCluster) GetAuditLogEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AuditLogEnabled, func() (bool, error) {
+		return c.auditLogEnabled()
+	})
+}
+
+func (c *mqlAlicloudPolardbCluster) GetAuditLogCollectorStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AuditLogCollectorStatus, func() (string, error) {
+		return c.auditLogCollectorStatus()
 	})
 }
 
