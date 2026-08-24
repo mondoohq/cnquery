@@ -2178,6 +2178,33 @@ func (g *mqlGithubRepository) securityFile() (*mqlGithubFile, error) {
 
 type mqlGithubRepositoryInternal struct {
 	findSpecialFilesOnceFunc func() error
+
+	// The code scanning default-setup endpoint answers two fields,
+	// codeScanningEnabled and codeScanningDefaultSetup. Memoizing it keeps a
+	// query that reads both from spending two requests per repository, which
+	// on an organization-wide scan is the difference GitHub's secondary rate
+	// limit reacts to.
+	defaultSetupOnce sync.Once
+	defaultSetup     *github.DefaultSetupConfiguration
+	defaultSetupErr  error
+}
+
+// defaultSetupConfig returns the repository's code scanning default setup,
+// fetching it at most once. The error is returned as GitHub gave it, so
+// callers can still tell a 404 (the repository has no default setup endpoint)
+// from a 403 (the token may not read it).
+func (g *mqlGithubRepository) defaultSetupConfig() (*github.DefaultSetupConfiguration, error) {
+	g.defaultSetupOnce.Do(func() {
+		conn := g.MqlRuntime.Connection.(*connection.GithubConnection)
+		ownerLogin, repoName, err := repoOwnerAndName(g)
+		if err != nil {
+			g.defaultSetupErr = err
+			return
+		}
+		g.defaultSetup, _, g.defaultSetupErr = conn.Client().CodeScanning.GetDefaultSetupConfiguration(
+			conn.Context(), ownerLogin, repoName)
+	})
+	return g.defaultSetup, g.defaultSetupErr
 }
 
 // claimSpecialFiles assigns any of the wanted files present in a directory
@@ -2515,7 +2542,7 @@ func (g *mqlGithubRepository) codeScanningEnabled() (bool, error) {
 		return false, err
 	}
 
-	setup, _, setupErr := conn.Client().CodeScanning.GetDefaultSetupConfiguration(conn.Context(), ownerLogin, repoName)
+	setup, setupErr := g.defaultSetupConfig()
 	if setupErr == nil && setup.GetState() == "configured" {
 		return true, nil
 	}
@@ -2833,7 +2860,10 @@ func (g *mqlGithubRepository) actionsSettings() (*mqlGithubRepositoryActionsSett
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGithubRepositoryActionsSettings), nil
+	settings := res.(*mqlGithubRepositoryActionsSettings)
+	settings.ownerLogin = ownerLogin
+	settings.repoName = repoName
+	return settings, nil
 }
 
 // githubResponseStatus returns the HTTP status code of a go-github error, or

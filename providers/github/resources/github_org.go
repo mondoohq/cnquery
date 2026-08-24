@@ -773,5 +773,7 @@ func (g *mqlGithubOrganization) actionsSettings() (*mqlGithubOrganizationActions
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGithubOrganizationActionsSettings), nil
+	settings := res.(*mqlGithubOrganizationActionsSettings)
+	settings.orgLogin = orgLogin
+	return settings, nil
 }

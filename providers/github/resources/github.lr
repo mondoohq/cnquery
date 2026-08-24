@@ -249,6 +249,27 @@ github.organization @defaults("login name") {
   // external role can be scoped. Null when the organization uses GitHub's
   // default subject format.
   oidcSubjectClaimKeys() []string
+  // Teams granted the organization's security manager role
+  //
+  // A security manager team holds read access to every repository in the
+  // organization and write access to its security alerts, whatever repository
+  // permissions the team is otherwise granted, so the role is a standing
+  // org-wide read grant. Empty when no team holds the role. Null when the role
+  // cannot be read, for example without organization admin access.
+  securityManagerTeams() []github.team
+  // Dependabot secrets configured at the organization level
+  //
+  // Credentials Dependabot presents when it resolves dependencies, most often
+  // private registry passwords. Names, scope and timestamps only, never the
+  // values. A separate store from the GitHub Actions secrets that `secrets`
+  // reports.
+  dependabotSecrets() []github.dependabotSecret
+  // Immutable release enforcement across the organization's repositories
+  //
+  // Whether a published release's tag and assets can still be changed after
+  // consumers have pinned to them. Null when the setting cannot be read, for
+  // example without organization admin access.
+  immutableReleases() github.organization.immutableReleases
 }
 
 // Self-hosted runner group
@@ -692,6 +713,20 @@ private github.user @defaults("login name email company") {
   gists() []github.gist
   // User's public SSH keys
   publicKeys() []github.publicKey
+  // User's GPG keys
+  //
+  // Public GPG keys the account can sign commits and tags with. A branch
+  // protection rule or ruleset that requires signed commits is enforceable
+  // only for members who hold one, so an empty list means the account cannot
+  // contribute a commit such a rule accepts.
+  gpgKeys() []github.gpgKey
+  // User's SSH signing keys
+  //
+  // Public SSH keys registered for signing commits and tags, a separate
+  // registration from the authentication keys `publicKeys` reports. The same
+  // key material can carry both registrations, and one registered for
+  // authentication alone cannot sign.
+  sshSigningKeys() []github.sshSigningKey
 }
 
 // GitHub team
@@ -1084,6 +1119,20 @@ github.repository @defaults("fullName") {
   // external role can be scoped. Null when the repository uses the default
   // subject format, whether GitHub's or the one its organization sets.
   oidcSubjectClaimKeys() []string
+  // Code scanning default setup for the repository
+  //
+  // CodeQL default setup as configured on the repository, covering the query
+  // suite it runs and the languages it analyzes. Null when the configuration
+  // cannot be read, for example on a repository where code scanning is
+  // unavailable or with a token that lacks the `security_events` scope.
+  codeScanningDefaultSetup() github.repository.codeScanningDefaultSetup
+  // Dependabot secrets configured at the repository level
+  //
+  // Credentials Dependabot presents when it resolves this repository's
+  // dependencies, most often private registry passwords. Names and timestamps
+  // only, never the values. A separate store from the GitHub Actions secrets
+  // that `secrets` reports.
+  dependabotSecrets() []github.dependabotSecret
 }
 
 // Copilot coding agent configuration for a repository
@@ -1442,6 +1491,29 @@ private github.repositoryActionsSettings @defaults("allowedActions") {
   defaultWorkflowPermissions string
   // Whether Actions can approve pull request reviews
   canApprovePullRequestReviews bool
+  // Access other repositories have to this repository's actions and reusable workflows
+  //
+  // One of none, organization, or enterprise. A private repository set to
+  // organization lets workflows in every other repository in the organization
+  // consume its actions and reusable workflows, which widens the blast radius
+  // of a compromise here. Null when the setting does not apply, as on a public
+  // repository, or when it cannot be read.
+  accessLevel() string
+  // Action patterns permitted when allowedActions is selected
+  //
+  // The allowlist itself, as `owner/repo@ref` patterns. It is the whole content
+  // of the selected setting, so a repository reads as restricted while still
+  // permitting everything through a pattern such as `*/*`. Null when
+  // allowedActions is not selected, where no allowlist applies.
+  patternsAllowed() []string
+  // Whether actions published by GitHub are permitted when allowedActions is selected
+  //
+  // Null when allowedActions is not selected.
+  githubOwnedAllowed() bool
+  // Whether actions from Marketplace verified creators are permitted when allowedActions is selected
+  //
+  // Null when allowedActions is not selected.
+  verifiedAllowed() bool
 }
 
 // GitHub Actions settings for an organization
@@ -1464,6 +1536,21 @@ private github.organizationActionsSettings @defaults("allowedActions") {
   defaultWorkflowPermissions string
   // Whether Actions can approve pull request reviews
   canApprovePullRequestReviews bool
+  // Action patterns permitted when allowedActions is selected
+  //
+  // The allowlist itself, as `owner/repo@ref` patterns. It is the whole content
+  // of the selected setting, so an organization reads as restricted while still
+  // permitting everything through a pattern such as `*/*`. Null when
+  // allowedActions is not selected, where no allowlist applies.
+  patternsAllowed() []string
+  // Whether actions published by GitHub are permitted when allowedActions is selected
+  //
+  // Null when allowedActions is not selected.
+  githubOwnedAllowed() bool
+  // Whether actions from Marketplace verified creators are permitted when allowedActions is selected
+  //
+  // Null when allowedActions is not selected.
+  verifiedAllowed() bool
 }
 
 // GitHub repository file
@@ -2577,4 +2664,144 @@ private github.actionsVariable @defaults("name scope visibility") {
   selectedRepositoriesUrl string
   // Repositories that have access to this organization variable (only when visibility is "selected")
   selectedRepositories() []github.repository
+}
+
+// Code scanning default setup for a repository
+//
+// CodeQL default setup as configured on a repository, covering the query suite
+// it runs and the languages it analyzes. A repository that runs code scanning
+// from its own Actions workflow (advanced setup) reports a `state` of
+// not-configured here while still scanning, so read this alongside
+// `codeScanningEnabled` rather than on its own.
+private github.repository.codeScanningDefaultSetup @defaults("state querySuite") {
+  // Whether default setup is configured
+  //
+  // One of configured or not-configured.
+  state string
+  // Query suite the default setup runs
+  //
+  // One of default or extended. The extended suite adds queries of lower
+  // severity and lower precision than the default one, so a repository on the
+  // default suite is scanned more narrowly. GitHub reports a suite even where
+  // `state` is not-configured, describing what default setup would run rather
+  // than what runs today, so read it together with `state`.
+  querySuite string
+  // Languages the default setup analyzes
+  //
+  // A language absent from this list is not analyzed by default setup. GitHub
+  // reports the eligible languages even where `state` is not-configured, so as
+  // with `querySuite` this describes the configuration rather than proving that
+  // anything is being scanned.
+  languages []string
+  // Last time the default setup configuration changed
+  updatedAt time
+}
+
+// Immutable release enforcement for an organization
+//
+// Whether releases published in the organization's repositories are immutable,
+// meaning a published tag and its assets cannot be replaced after consumers
+// have pinned to them. `enforcedRepositories` reports the scope, and
+// `selectedRepositories` resolves the repositories covered when that scope is
+// selected.
+private github.organization.immutableReleases @defaults("enforcedRepositories") {
+  // Scope of immutable release enforcement
+  //
+  // One of all, none, or selected.
+  enforcedRepositories string
+  // Repositories immutable releases are enforced on
+  //
+  // Null when `enforcedRepositories` is not selected, where the scope alone
+  // determines coverage.
+  selectedRepositories() []github.repository
+}
+
+// Dependabot secret
+//
+// Credential Dependabot presents when it resolves dependencies, usually the
+// password for a private package registry. Only the name, scope, visibility and
+// timestamps are reported, never the value. Dependabot keeps its own secret
+// store, separate from GitHub Actions, so a secret here is not readable by a
+// workflow run and an Actions secret is not readable by Dependabot. For an
+// organization secret, `visibility` controls which repositories can consume it
+// and `selectedRepositories` resolves the allowed set when visibility is
+// selected.
+private github.dependabotSecret @defaults("name scope visibility") {
+  // Secret name
+  name string
+  // Scope of the secret (organization, repository)
+  scope string
+  // Owning organization login (set for organization scope)
+  organizationName string
+  // Owning repository name (set for repository scope)
+  repositoryName string
+  // Owning repository owner login (set for repository scope)
+  repositoryOwner string
+  // Secret create time
+  createdAt time
+  // Secret last update time
+  updatedAt time
+  // Visibility of an organization secret (all, private, selected); empty for repository scope
+  visibility string
+  // Repositories that have access to this organization secret (only when visibility is "selected")
+  selectedRepositories() []github.repository
+}
+
+// GPG key
+//
+// Public GPG key registered on a user account for signing commits and tags.
+// Only public key material is reported. `canSignCommits` answers whether the
+// key or one of its subkeys carries the signing capability, which is what a
+// rule requiring signed commits depends on, and differs from `canSign`, which
+// covers the primary key alone.
+private github.gpgKey @defaults("keyId canSignCommits expired") {
+  // Key ID assigned by GitHub
+  id int
+  // Long key ID of the GPG key
+  keyId string
+  // Armored public key
+  publicKey string
+  // Email addresses attached to the key, mapped to whether GitHub verified each one
+  emails map[string]bool
+  // Whether the primary key carries the signing capability
+  canSign bool
+  // Whether the key or any of its subkeys carries the signing capability
+  //
+  // What a branch protection rule or ruleset requiring signed commits depends
+  // on. A primary key that cannot sign is still usable when it has a signing
+  // subkey, which is the layout a key generated with GnuPG defaults has.
+  canSignCommits bool
+  // Time the key was created
+  createdAt time
+  // Time the key expires, null when the key does not expire
+  expiresAt time
+  // Whether the key's expiry has passed
+  //
+  // False for a key with no expiry, which never expires.
+  expired bool
+  // Approximate age of the key in days since createdAt (-1 if createdAt is unknown)
+  ageInDays int
+  // The user this key belongs to
+  user() github.user
+}
+
+// SSH signing key
+//
+// Public SSH key registered on a user account for signing commits and tags.
+// This registration is separate from the authentication keys `publicKeys`
+// reports: the same key material can carry both, and one registered for
+// authentication alone cannot sign.
+private github.sshSigningKey @defaults("title ageInDays") {
+  // Key ID assigned by GitHub
+  id int
+  // Title given to the key
+  title string
+  // The public SSH key
+  key string
+  // Time the key was created
+  createdAt time
+  // Approximate age of the key in days since createdAt (-1 if createdAt is unknown)
+  ageInDays int
+  // The user this key belongs to
+  user() github.user
 }
