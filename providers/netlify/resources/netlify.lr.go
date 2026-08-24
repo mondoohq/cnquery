@@ -20,11 +20,20 @@ const (
 	ResourceNetlifyUser                 string = "netlify.user"
 	ResourceNetlifyAccount              string = "netlify.account"
 	ResourceNetlifyAccountMember        string = "netlify.account.member"
+	ResourceNetlifyAccountAuditEvent    string = "netlify.account.auditEvent"
 	ResourceNetlifyEnvVar               string = "netlify.envVar"
 	ResourceNetlifySite                 string = "netlify.site"
 	ResourceNetlifySiteBuildHook        string = "netlify.site.buildHook"
 	ResourceNetlifySiteNotificationHook string = "netlify.site.notificationHook"
 	ResourceNetlifySiteSnippet          string = "netlify.site.snippet"
+	ResourceNetlifySiteDeploy           string = "netlify.site.deploy"
+	ResourceNetlifySiteDeployedBranch   string = "netlify.site.deployedBranch"
+	ResourceNetlifySiteForm             string = "netlify.site.form"
+	ResourceNetlifySiteAsset            string = "netlify.site.asset"
+	ResourceNetlifySiteSplitTest        string = "netlify.site.splitTest"
+	ResourceNetlifySiteServiceInstance  string = "netlify.site.serviceInstance"
+	ResourceNetlifySiteDevServer        string = "netlify.site.devServer"
+	ResourceNetlifySiteAgentRunner      string = "netlify.site.agentRunner"
 	ResourceNetlifyDnsZone              string = "netlify.dnsZone"
 	ResourceNetlifyDnsZoneRecord        string = "netlify.dnsZone.record"
 	ResourceNetlifyDeployKey            string = "netlify.deployKey"
@@ -50,6 +59,10 @@ func init() {
 			// to override args, implement: initNetlifyAccountMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetlifyAccountMember,
 		},
+		"netlify.account.auditEvent": {
+			// to override args, implement: initNetlifyAccountAuditEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifyAccountAuditEvent,
+		},
 		"netlify.envVar": {
 			// to override args, implement: initNetlifyEnvVar(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetlifyEnvVar,
@@ -69,6 +82,38 @@ func init() {
 		"netlify.site.snippet": {
 			// to override args, implement: initNetlifySiteSnippet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createNetlifySiteSnippet,
+		},
+		"netlify.site.deploy": {
+			Init:   initNetlifySiteDeploy,
+			Create: createNetlifySiteDeploy,
+		},
+		"netlify.site.deployedBranch": {
+			// to override args, implement: initNetlifySiteDeployedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifySiteDeployedBranch,
+		},
+		"netlify.site.form": {
+			// to override args, implement: initNetlifySiteForm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifySiteForm,
+		},
+		"netlify.site.asset": {
+			// to override args, implement: initNetlifySiteAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifySiteAsset,
+		},
+		"netlify.site.splitTest": {
+			// to override args, implement: initNetlifySiteSplitTest(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifySiteSplitTest,
+		},
+		"netlify.site.serviceInstance": {
+			// to override args, implement: initNetlifySiteServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifySiteServiceInstance,
+		},
+		"netlify.site.devServer": {
+			// to override args, implement: initNetlifySiteDevServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifySiteDevServer,
+		},
+		"netlify.site.agentRunner": {
+			// to override args, implement: initNetlifySiteAgentRunner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createNetlifySiteAgentRunner,
 		},
 		"netlify.dnsZone": {
 			Init:   initNetlifyDnsZone,
@@ -279,6 +324,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.account.environmentVariables": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccount).GetEnvironmentVariables()).ToDataRes(types.Array(types.Resource("netlify.envVar")))
 	},
+	"netlify.account.auditEvents": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccount).GetAuditEvents()).ToDataRes(types.Array(types.Resource("netlify.account.auditEvent")))
+	},
 	"netlify.account.member.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetId()).ToDataRes(types.String)
 	},
@@ -314,6 +362,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"netlify.account.member.avatarUrl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyAccountMember).GetAvatarUrl()).ToDataRes(types.String)
+	},
+	"netlify.account.auditEvent.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountAuditEvent).GetId()).ToDataRes(types.String)
+	},
+	"netlify.account.auditEvent.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountAuditEvent).GetAction()).ToDataRes(types.String)
+	},
+	"netlify.account.auditEvent.logType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountAuditEvent).GetLogType()).ToDataRes(types.String)
+	},
+	"netlify.account.auditEvent.actorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountAuditEvent).GetActorName()).ToDataRes(types.String)
+	},
+	"netlify.account.auditEvent.actorEmail": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountAuditEvent).GetActorEmail()).ToDataRes(types.String)
+	},
+	"netlify.account.auditEvent.timestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountAuditEvent).GetTimestamp()).ToDataRes(types.Time)
+	},
+	"netlify.account.auditEvent.actor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifyAccountAuditEvent).GetActor()).ToDataRes(types.Resource("netlify.account.member"))
 	},
 	"netlify.envVar.key": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyEnvVar).GetKey()).ToDataRes(types.String)
@@ -444,6 +513,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.site.stopBuilds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySite).GetStopBuilds()).ToDataRes(types.Bool)
 	},
+	"netlify.site.installationId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetInstallationId()).ToDataRes(types.Int)
+	},
+	"netlify.site.capabilities": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetCapabilities()).ToDataRes(types.Dict)
+	},
+	"netlify.site.certificateState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetCertificateState()).ToDataRes(types.String)
+	},
+	"netlify.site.certificateDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetCertificateDomains()).ToDataRes(types.Array(types.String))
+	},
+	"netlify.site.certificateExpiresAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetCertificateExpiresAt()).ToDataRes(types.Time)
+	},
 	"netlify.site.passwordProtected": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySite).GetPasswordProtected()).ToDataRes(types.Bool)
 	},
@@ -464,6 +548,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"netlify.site.dnsZones": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySite).GetDnsZones()).ToDataRes(types.Array(types.Resource("netlify.dnsZone")))
+	},
+	"netlify.site.deploys": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetDeploys()).ToDataRes(types.Array(types.Resource("netlify.site.deploy")))
+	},
+	"netlify.site.deployedBranches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetDeployedBranches()).ToDataRes(types.Array(types.Resource("netlify.site.deployedBranch")))
+	},
+	"netlify.site.forms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetForms()).ToDataRes(types.Array(types.Resource("netlify.site.form")))
+	},
+	"netlify.site.assets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetAssets()).ToDataRes(types.Array(types.Resource("netlify.site.asset")))
+	},
+	"netlify.site.splitTests": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetSplitTests()).ToDataRes(types.Array(types.Resource("netlify.site.splitTest")))
+	},
+	"netlify.site.serviceInstances": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetServiceInstances()).ToDataRes(types.Array(types.Resource("netlify.site.serviceInstance")))
+	},
+	"netlify.site.devServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetDevServers()).ToDataRes(types.Array(types.Resource("netlify.site.devServer")))
+	},
+	"netlify.site.agentRunners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySite).GetAgentRunners()).ToDataRes(types.Array(types.Resource("netlify.site.agentRunner")))
 	},
 	"netlify.site.buildHook.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySiteBuildHook).GetId()).ToDataRes(types.String)
@@ -489,6 +597,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"netlify.site.notificationHook.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySiteNotificationHook).GetDisabled()).ToDataRes(types.Bool)
 	},
+	"netlify.site.notificationHook.destinationHost": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteNotificationHook).GetDestinationHost()).ToDataRes(types.String)
+	},
+	"netlify.site.notificationHook.hasSigningSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteNotificationHook).GetHasSigningSecret()).ToDataRes(types.Bool)
+	},
 	"netlify.site.notificationHook.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySiteNotificationHook).GetCreatedAt()).ToDataRes(types.Time)
 	},
@@ -512,6 +626,246 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"netlify.site.snippet.goalPosition": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifySiteSnippet).GetGoalPosition()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetState()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetContext()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetTitle()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetBranch()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.commitRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetCommitRef()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.commitUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetCommitUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.deployUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetDeployUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.deploySslUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetDeploySslUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.reviewId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetReviewId()).ToDataRes(types.Int)
+	},
+	"netlify.site.deploy.reviewUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetReviewUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.draft": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetDraft()).ToDataRes(types.Bool)
+	},
+	"netlify.site.deploy.locked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetLocked()).ToDataRes(types.Bool)
+	},
+	"netlify.site.deploy.skipped": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetSkipped()).ToDataRes(types.Bool)
+	},
+	"netlify.site.deploy.framework": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetFramework()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.errorMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetErrorMessage()).ToDataRes(types.String)
+	},
+	"netlify.site.deploy.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.deploy.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.deploy.publishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetPublishedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.deploy.site": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeploy).GetSite()).ToDataRes(types.Resource("netlify.site"))
+	},
+	"netlify.site.deployedBranch.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeployedBranch).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.deployedBranch.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeployedBranch).GetName()).ToDataRes(types.String)
+	},
+	"netlify.site.deployedBranch.slug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeployedBranch).GetSlug()).ToDataRes(types.String)
+	},
+	"netlify.site.deployedBranch.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeployedBranch).GetUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.deployedBranch.sslUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeployedBranch).GetSslUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.deployedBranch.deploy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDeployedBranch).GetDeploy()).ToDataRes(types.Resource("netlify.site.deploy"))
+	},
+	"netlify.site.form.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteForm).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.form.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteForm).GetName()).ToDataRes(types.String)
+	},
+	"netlify.site.form.paths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteForm).GetPaths()).ToDataRes(types.Array(types.String))
+	},
+	"netlify.site.form.submissionCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteForm).GetSubmissionCount()).ToDataRes(types.Int)
+	},
+	"netlify.site.form.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteForm).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.asset.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.asset.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetName()).ToDataRes(types.String)
+	},
+	"netlify.site.asset.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetState()).ToDataRes(types.String)
+	},
+	"netlify.site.asset.contentType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetContentType()).ToDataRes(types.String)
+	},
+	"netlify.site.asset.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.asset.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetKey()).ToDataRes(types.String)
+	},
+	"netlify.site.asset.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetVisibility()).ToDataRes(types.String)
+	},
+	"netlify.site.asset.size": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetSize()).ToDataRes(types.Int)
+	},
+	"netlify.site.asset.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.asset.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAsset).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.splitTest.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.splitTest.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetName()).ToDataRes(types.String)
+	},
+	"netlify.site.splitTest.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetPath()).ToDataRes(types.String)
+	},
+	"netlify.site.splitTest.active": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetActive()).ToDataRes(types.Bool)
+	},
+	"netlify.site.splitTest.branches": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetBranches()).ToDataRes(types.Array(types.Dict))
+	},
+	"netlify.site.splitTest.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.splitTest.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.splitTest.unpublishedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteSplitTest).GetUnpublishedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.serviceInstance.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.serviceInstance.serviceSlug": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetServiceSlug()).ToDataRes(types.String)
+	},
+	"netlify.site.serviceInstance.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetServiceName()).ToDataRes(types.String)
+	},
+	"netlify.site.serviceInstance.servicePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetServicePath()).ToDataRes(types.String)
+	},
+	"netlify.site.serviceInstance.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.serviceInstance.environmentVariableNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetEnvironmentVariableNames()).ToDataRes(types.Array(types.String))
+	},
+	"netlify.site.serviceInstance.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.serviceInstance.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteServiceInstance).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.devServer.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.devServer.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetBranch()).ToDataRes(types.String)
+	},
+	"netlify.site.devServer.url": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.devServer.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetState()).ToDataRes(types.String)
+	},
+	"netlify.site.devServer.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetTitle()).ToDataRes(types.String)
+	},
+	"netlify.site.devServer.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.devServer.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.devServer.liveAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetLiveAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.devServer.doneAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteDevServer).GetDoneAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.agentRunner.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetId()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetState()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.title": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetTitle()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.branch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetBranch()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.resultBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetResultBranch()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.prUrl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetPrUrl()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.prBranch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetPrBranch()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.prState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetPrState()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.prNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetPrNumber()).ToDataRes(types.Int)
+	},
+	"netlify.site.agentRunner.currentTask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetCurrentTask()).ToDataRes(types.String)
+	},
+	"netlify.site.agentRunner.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.agentRunner.updatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.agentRunner.doneAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetDoneAt()).ToDataRes(types.Time)
+	},
+	"netlify.site.agentRunner.site": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlNetlifySiteAgentRunner).GetSite()).ToDataRes(types.Resource("netlify.site"))
 	},
 	"netlify.dnsZone.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlNetlifyDnsZone).GetId()).ToDataRes(types.String)
@@ -771,6 +1125,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifyAccount).EnvironmentVariables, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"netlify.account.auditEvents": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccount).AuditEvents, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"netlify.account.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyAccountMember).__id, ok = v.Value.(string)
 		return
@@ -821,6 +1179,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"netlify.account.member.avatarUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifyAccountMember).AvatarUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.auditEvent.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.account.auditEvent.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.auditEvent.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.auditEvent.logType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).LogType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.auditEvent.actorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).ActorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.auditEvent.actorEmail": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).ActorEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.account.auditEvent.timestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).Timestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.account.auditEvent.actor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifyAccountAuditEvent).Actor, ok = plugin.RawToTValue[*mqlNetlifyAccountMember](v.Value, v.Error)
 		return
 	},
 	"netlify.envVar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1003,6 +1393,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifySite).StopBuilds, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"netlify.site.installationId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).InstallationId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"netlify.site.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).Capabilities, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.certificateState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).CertificateState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.certificateDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).CertificateDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.certificateExpiresAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).CertificateExpiresAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"netlify.site.passwordProtected": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifySite).PasswordProtected, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -1029,6 +1439,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"netlify.site.dnsZones": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifySite).DnsZones, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).Deploys, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deployedBranches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).DeployedBranches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.forms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).Forms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.assets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).Assets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTests": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).SplitTests, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstances": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).ServiceInstances, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).DevServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySite).AgentRunners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"netlify.site.buildHook.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1071,6 +1513,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlNetlifySiteNotificationHook).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"netlify.site.notificationHook.destinationHost": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteNotificationHook).DestinationHost, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.notificationHook.hasSigningSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteNotificationHook).HasSigningSecret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"netlify.site.notificationHook.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifySiteNotificationHook).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -1105,6 +1555,358 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"netlify.site.snippet.goalPosition": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlNetlifySiteSnippet).GoalPosition, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.deploy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Context, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.commitRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).CommitRef, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.commitUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).CommitUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.deployUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).DeployUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.deploySslUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).DeploySslUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.reviewId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).ReviewId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.reviewUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).ReviewUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.draft": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Draft, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.locked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Locked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.skipped": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Skipped, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.framework": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Framework, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.errorMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).ErrorMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.publishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).PublishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deploy.site": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeploy).Site, ok = plugin.RawToTValue[*mqlNetlifySite](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deployedBranch.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeployedBranch).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.deployedBranch.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeployedBranch).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deployedBranch.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeployedBranch).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deployedBranch.slug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeployedBranch).Slug, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deployedBranch.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeployedBranch).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deployedBranch.sslUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeployedBranch).SslUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.deployedBranch.deploy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDeployedBranch).Deploy, ok = plugin.RawToTValue[*mqlNetlifySiteDeploy](v.Value, v.Error)
+		return
+	},
+	"netlify.site.form.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteForm).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.form.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteForm).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.form.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteForm).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.form.paths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteForm).Paths, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.form.submissionCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteForm).SubmissionCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"netlify.site.form.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteForm).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.asset.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.contentType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).ContentType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).Visibility, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.size": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).Size, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.asset.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAsset).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.splitTest.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.active": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.branches": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).Branches, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.splitTest.unpublishedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteSplitTest).UnpublishedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.serviceInstance.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.serviceSlug": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).ServiceSlug, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.servicePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).ServicePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.environmentVariableNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).EnvironmentVariableNames, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.serviceInstance.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteServiceInstance).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.devServer.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.url": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).Url, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.liveAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).LiveAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.devServer.doneAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteDevServer).DoneAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).__id, ok = v.Value.(string)
+		return
+	},
+	"netlify.site.agentRunner.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.title": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).Title, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.branch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).Branch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.resultBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).ResultBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.prUrl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).PrUrl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.prBranch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).PrBranch, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.prState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).PrState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.prNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).PrNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.currentTask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).CurrentTask, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.doneAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).DoneAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"netlify.site.agentRunner.site": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlNetlifySiteAgentRunner).Site, ok = plugin.RawToTValue[*mqlNetlifySite](v.Value, v.Error)
 		return
 	},
 	"netlify.dnsZone.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1490,6 +2292,7 @@ type mqlNetlifyAccount struct {
 	Members                      plugin.TValue[[]any]
 	Sites                        plugin.TValue[[]any]
 	EnvironmentVariables         plugin.TValue[[]any]
+	AuditEvents                  plugin.TValue[[]any]
 }
 
 // createNetlifyAccount creates a new instance of this resource
@@ -1681,6 +2484,22 @@ func (c *mqlNetlifyAccount) GetEnvironmentVariables() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlNetlifyAccount) GetAuditEvents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditEvents, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.account", c.__id, "auditEvents")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.auditEvents()
+	})
+}
+
 // mqlNetlifyAccountMember for the netlify.account.member resource
 type mqlNetlifyAccountMember struct {
 	MqlRuntime *plugin.Runtime
@@ -1783,6 +2602,97 @@ func (c *mqlNetlifyAccountMember) GetLastActivityDate() *plugin.TValue[*time.Tim
 
 func (c *mqlNetlifyAccountMember) GetAvatarUrl() *plugin.TValue[string] {
 	return &c.AvatarUrl
+}
+
+// mqlNetlifyAccountAuditEvent for the netlify.account.auditEvent resource
+type mqlNetlifyAccountAuditEvent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNetlifyAccountAuditEventInternal
+	Id         plugin.TValue[string]
+	Action     plugin.TValue[string]
+	LogType    plugin.TValue[string]
+	ActorName  plugin.TValue[string]
+	ActorEmail plugin.TValue[string]
+	Timestamp  plugin.TValue[*time.Time]
+	Actor      plugin.TValue[*mqlNetlifyAccountMember]
+}
+
+// createNetlifyAccountAuditEvent creates a new instance of this resource
+func createNetlifyAccountAuditEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifyAccountAuditEvent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.account.auditEvent", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifyAccountAuditEvent) MqlName() string {
+	return "netlify.account.auditEvent"
+}
+
+func (c *mqlNetlifyAccountAuditEvent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifyAccountAuditEvent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifyAccountAuditEvent) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlNetlifyAccountAuditEvent) GetLogType() *plugin.TValue[string] {
+	return &c.LogType
+}
+
+func (c *mqlNetlifyAccountAuditEvent) GetActorName() *plugin.TValue[string] {
+	return &c.ActorName
+}
+
+func (c *mqlNetlifyAccountAuditEvent) GetActorEmail() *plugin.TValue[string] {
+	return &c.ActorEmail
+}
+
+func (c *mqlNetlifyAccountAuditEvent) GetTimestamp() *plugin.TValue[*time.Time] {
+	return &c.Timestamp
+}
+
+func (c *mqlNetlifyAccountAuditEvent) GetActor() *plugin.TValue[*mqlNetlifyAccountMember] {
+	return plugin.GetOrCompute[*mqlNetlifyAccountMember](&c.Actor, func() (*mqlNetlifyAccountMember, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.account.auditEvent", c.__id, "actor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetlifyAccountMember), nil
+			}
+		}
+
+		return c.actor()
+	})
 }
 
 // mqlNetlifyEnvVar for the netlify.envVar resource
@@ -1908,6 +2818,11 @@ type mqlNetlifySite struct {
 	PublicRepo                plugin.TValue[bool]
 	PrivateLogs               plugin.TValue[bool]
 	StopBuilds                plugin.TValue[bool]
+	InstallationId            plugin.TValue[int64]
+	Capabilities              plugin.TValue[any]
+	CertificateState          plugin.TValue[string]
+	CertificateDomains        plugin.TValue[[]any]
+	CertificateExpiresAt      plugin.TValue[*time.Time]
 	PasswordProtected         plugin.TValue[bool]
 	DeployKey                 plugin.TValue[*mqlNetlifyDeployKey]
 	EnvironmentVariables      plugin.TValue[[]any]
@@ -1915,6 +2830,14 @@ type mqlNetlifySite struct {
 	NotificationHooks         plugin.TValue[[]any]
 	Snippets                  plugin.TValue[[]any]
 	DnsZones                  plugin.TValue[[]any]
+	Deploys                   plugin.TValue[[]any]
+	DeployedBranches          plugin.TValue[[]any]
+	Forms                     plugin.TValue[[]any]
+	Assets                    plugin.TValue[[]any]
+	SplitTests                plugin.TValue[[]any]
+	ServiceInstances          plugin.TValue[[]any]
+	DevServers                plugin.TValue[[]any]
+	AgentRunners              plugin.TValue[[]any]
 }
 
 // createNetlifySite creates a new instance of this resource
@@ -2114,6 +3037,32 @@ func (c *mqlNetlifySite) GetStopBuilds() *plugin.TValue[bool] {
 	return &c.StopBuilds
 }
 
+func (c *mqlNetlifySite) GetInstallationId() *plugin.TValue[int64] {
+	return &c.InstallationId
+}
+
+func (c *mqlNetlifySite) GetCapabilities() *plugin.TValue[any] {
+	return &c.Capabilities
+}
+
+func (c *mqlNetlifySite) GetCertificateState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.CertificateState, func() (string, error) {
+		return c.certificateState()
+	})
+}
+
+func (c *mqlNetlifySite) GetCertificateDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CertificateDomains, func() ([]any, error) {
+		return c.certificateDomains()
+	})
+}
+
+func (c *mqlNetlifySite) GetCertificateExpiresAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.CertificateExpiresAt, func() (*time.Time, error) {
+		return c.certificateExpiresAt()
+	})
+}
+
 func (c *mqlNetlifySite) GetPasswordProtected() *plugin.TValue[bool] {
 	return &c.PasswordProtected
 }
@@ -2214,6 +3163,134 @@ func (c *mqlNetlifySite) GetDnsZones() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlNetlifySite) GetDeploys() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Deploys, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "deploys")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deploys()
+	})
+}
+
+func (c *mqlNetlifySite) GetDeployedBranches() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DeployedBranches, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "deployedBranches")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.deployedBranches()
+	})
+}
+
+func (c *mqlNetlifySite) GetForms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Forms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "forms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.forms()
+	})
+}
+
+func (c *mqlNetlifySite) GetAssets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Assets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "assets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.assets()
+	})
+}
+
+func (c *mqlNetlifySite) GetSplitTests() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SplitTests, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "splitTests")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.splitTests()
+	})
+}
+
+func (c *mqlNetlifySite) GetServiceInstances() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServiceInstances, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "serviceInstances")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serviceInstances()
+	})
+}
+
+func (c *mqlNetlifySite) GetDevServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DevServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "devServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.devServers()
+	})
+}
+
+func (c *mqlNetlifySite) GetAgentRunners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AgentRunners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site", c.__id, "agentRunners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.agentRunners()
+	})
+}
+
 // mqlNetlifySiteBuildHook for the netlify.site.buildHook resource
 type mqlNetlifySiteBuildHook struct {
 	MqlRuntime *plugin.Runtime
@@ -2283,12 +3360,14 @@ type mqlNetlifySiteNotificationHook struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlNetlifySiteNotificationHookInternal it will be used here
-	Id        plugin.TValue[string]
-	Type      plugin.TValue[string]
-	Event     plugin.TValue[string]
-	Disabled  plugin.TValue[bool]
-	CreatedAt plugin.TValue[*time.Time]
-	UpdatedAt plugin.TValue[*time.Time]
+	Id               plugin.TValue[string]
+	Type             plugin.TValue[string]
+	Event            plugin.TValue[string]
+	Disabled         plugin.TValue[bool]
+	DestinationHost  plugin.TValue[string]
+	HasSigningSecret plugin.TValue[bool]
+	CreatedAt        plugin.TValue[*time.Time]
+	UpdatedAt        plugin.TValue[*time.Time]
 }
 
 // createNetlifySiteNotificationHook creates a new instance of this resource
@@ -2342,6 +3421,14 @@ func (c *mqlNetlifySiteNotificationHook) GetEvent() *plugin.TValue[string] {
 
 func (c *mqlNetlifySiteNotificationHook) GetDisabled() *plugin.TValue[bool] {
 	return &c.Disabled
+}
+
+func (c *mqlNetlifySiteNotificationHook) GetDestinationHost() *plugin.TValue[string] {
+	return &c.DestinationHost
+}
+
+func (c *mqlNetlifySiteNotificationHook) GetHasSigningSecret() *plugin.TValue[bool] {
+	return &c.HasSigningSecret
 }
 
 func (c *mqlNetlifySiteNotificationHook) GetCreatedAt() *plugin.TValue[*time.Time] {
@@ -2424,6 +3511,794 @@ func (c *mqlNetlifySiteSnippet) GetGoal() *plugin.TValue[string] {
 
 func (c *mqlNetlifySiteSnippet) GetGoalPosition() *plugin.TValue[string] {
 	return &c.GoalPosition
+}
+
+// mqlNetlifySiteDeploy for the netlify.site.deploy resource
+type mqlNetlifySiteDeploy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNetlifySiteDeployInternal
+	Id           plugin.TValue[string]
+	State        plugin.TValue[string]
+	Context      plugin.TValue[string]
+	Title        plugin.TValue[string]
+	Branch       plugin.TValue[string]
+	CommitRef    plugin.TValue[string]
+	CommitUrl    plugin.TValue[string]
+	DeployUrl    plugin.TValue[string]
+	DeploySslUrl plugin.TValue[string]
+	ReviewId     plugin.TValue[int64]
+	ReviewUrl    plugin.TValue[string]
+	Draft        plugin.TValue[bool]
+	Locked       plugin.TValue[bool]
+	Skipped      plugin.TValue[bool]
+	Framework    plugin.TValue[string]
+	ErrorMessage plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	PublishedAt  plugin.TValue[*time.Time]
+	Site         plugin.TValue[*mqlNetlifySite]
+}
+
+// createNetlifySiteDeploy creates a new instance of this resource
+func createNetlifySiteDeploy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteDeploy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.deploy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteDeploy) MqlName() string {
+	return "netlify.site.deploy"
+}
+
+func (c *mqlNetlifySiteDeploy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteDeploy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteDeploy) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlNetlifySiteDeploy) GetContext() *plugin.TValue[string] {
+	return &c.Context
+}
+
+func (c *mqlNetlifySiteDeploy) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlNetlifySiteDeploy) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlNetlifySiteDeploy) GetCommitRef() *plugin.TValue[string] {
+	return &c.CommitRef
+}
+
+func (c *mqlNetlifySiteDeploy) GetCommitUrl() *plugin.TValue[string] {
+	return &c.CommitUrl
+}
+
+func (c *mqlNetlifySiteDeploy) GetDeployUrl() *plugin.TValue[string] {
+	return &c.DeployUrl
+}
+
+func (c *mqlNetlifySiteDeploy) GetDeploySslUrl() *plugin.TValue[string] {
+	return &c.DeploySslUrl
+}
+
+func (c *mqlNetlifySiteDeploy) GetReviewId() *plugin.TValue[int64] {
+	return &c.ReviewId
+}
+
+func (c *mqlNetlifySiteDeploy) GetReviewUrl() *plugin.TValue[string] {
+	return &c.ReviewUrl
+}
+
+func (c *mqlNetlifySiteDeploy) GetDraft() *plugin.TValue[bool] {
+	return &c.Draft
+}
+
+func (c *mqlNetlifySiteDeploy) GetLocked() *plugin.TValue[bool] {
+	return &c.Locked
+}
+
+func (c *mqlNetlifySiteDeploy) GetSkipped() *plugin.TValue[bool] {
+	return &c.Skipped
+}
+
+func (c *mqlNetlifySiteDeploy) GetFramework() *plugin.TValue[string] {
+	return &c.Framework
+}
+
+func (c *mqlNetlifySiteDeploy) GetErrorMessage() *plugin.TValue[string] {
+	return &c.ErrorMessage
+}
+
+func (c *mqlNetlifySiteDeploy) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNetlifySiteDeploy) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlNetlifySiteDeploy) GetPublishedAt() *plugin.TValue[*time.Time] {
+	return &c.PublishedAt
+}
+
+func (c *mqlNetlifySiteDeploy) GetSite() *plugin.TValue[*mqlNetlifySite] {
+	return plugin.GetOrCompute[*mqlNetlifySite](&c.Site, func() (*mqlNetlifySite, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site.deploy", c.__id, "site")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetlifySite), nil
+			}
+		}
+
+		return c.site()
+	})
+}
+
+// mqlNetlifySiteDeployedBranch for the netlify.site.deployedBranch resource
+type mqlNetlifySiteDeployedBranch struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNetlifySiteDeployedBranchInternal
+	Id     plugin.TValue[string]
+	Name   plugin.TValue[string]
+	Slug   plugin.TValue[string]
+	Url    plugin.TValue[string]
+	SslUrl plugin.TValue[string]
+	Deploy plugin.TValue[*mqlNetlifySiteDeploy]
+}
+
+// createNetlifySiteDeployedBranch creates a new instance of this resource
+func createNetlifySiteDeployedBranch(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteDeployedBranch{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.deployedBranch", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteDeployedBranch) MqlName() string {
+	return "netlify.site.deployedBranch"
+}
+
+func (c *mqlNetlifySiteDeployedBranch) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteDeployedBranch) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteDeployedBranch) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNetlifySiteDeployedBranch) GetSlug() *plugin.TValue[string] {
+	return &c.Slug
+}
+
+func (c *mqlNetlifySiteDeployedBranch) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlNetlifySiteDeployedBranch) GetSslUrl() *plugin.TValue[string] {
+	return &c.SslUrl
+}
+
+func (c *mqlNetlifySiteDeployedBranch) GetDeploy() *plugin.TValue[*mqlNetlifySiteDeploy] {
+	return plugin.GetOrCompute[*mqlNetlifySiteDeploy](&c.Deploy, func() (*mqlNetlifySiteDeploy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site.deployedBranch", c.__id, "deploy")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetlifySiteDeploy), nil
+			}
+		}
+
+		return c.deploy()
+	})
+}
+
+// mqlNetlifySiteForm for the netlify.site.form resource
+type mqlNetlifySiteForm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetlifySiteFormInternal it will be used here
+	Id              plugin.TValue[string]
+	Name            plugin.TValue[string]
+	Paths           plugin.TValue[[]any]
+	SubmissionCount plugin.TValue[int64]
+	CreatedAt       plugin.TValue[*time.Time]
+}
+
+// createNetlifySiteForm creates a new instance of this resource
+func createNetlifySiteForm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteForm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.form", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteForm) MqlName() string {
+	return "netlify.site.form"
+}
+
+func (c *mqlNetlifySiteForm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteForm) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteForm) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNetlifySiteForm) GetPaths() *plugin.TValue[[]any] {
+	return &c.Paths
+}
+
+func (c *mqlNetlifySiteForm) GetSubmissionCount() *plugin.TValue[int64] {
+	return &c.SubmissionCount
+}
+
+func (c *mqlNetlifySiteForm) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlNetlifySiteAsset for the netlify.site.asset resource
+type mqlNetlifySiteAsset struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetlifySiteAssetInternal it will be used here
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	State       plugin.TValue[string]
+	ContentType plugin.TValue[string]
+	Url         plugin.TValue[string]
+	Key         plugin.TValue[string]
+	Visibility  plugin.TValue[string]
+	Size        plugin.TValue[int64]
+	CreatedAt   plugin.TValue[*time.Time]
+	UpdatedAt   plugin.TValue[*time.Time]
+}
+
+// createNetlifySiteAsset creates a new instance of this resource
+func createNetlifySiteAsset(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteAsset{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.asset", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteAsset) MqlName() string {
+	return "netlify.site.asset"
+}
+
+func (c *mqlNetlifySiteAsset) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteAsset) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteAsset) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNetlifySiteAsset) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlNetlifySiteAsset) GetContentType() *plugin.TValue[string] {
+	return &c.ContentType
+}
+
+func (c *mqlNetlifySiteAsset) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlNetlifySiteAsset) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlNetlifySiteAsset) GetVisibility() *plugin.TValue[string] {
+	return &c.Visibility
+}
+
+func (c *mqlNetlifySiteAsset) GetSize() *plugin.TValue[int64] {
+	return &c.Size
+}
+
+func (c *mqlNetlifySiteAsset) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNetlifySiteAsset) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlNetlifySiteSplitTest for the netlify.site.splitTest resource
+type mqlNetlifySiteSplitTest struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetlifySiteSplitTestInternal it will be used here
+	Id            plugin.TValue[string]
+	Name          plugin.TValue[string]
+	Path          plugin.TValue[string]
+	Active        plugin.TValue[bool]
+	Branches      plugin.TValue[[]any]
+	CreatedAt     plugin.TValue[*time.Time]
+	UpdatedAt     plugin.TValue[*time.Time]
+	UnpublishedAt plugin.TValue[*time.Time]
+}
+
+// createNetlifySiteSplitTest creates a new instance of this resource
+func createNetlifySiteSplitTest(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteSplitTest{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.splitTest", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteSplitTest) MqlName() string {
+	return "netlify.site.splitTest"
+}
+
+func (c *mqlNetlifySiteSplitTest) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteSplitTest) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteSplitTest) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlNetlifySiteSplitTest) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlNetlifySiteSplitTest) GetActive() *plugin.TValue[bool] {
+	return &c.Active
+}
+
+func (c *mqlNetlifySiteSplitTest) GetBranches() *plugin.TValue[[]any] {
+	return &c.Branches
+}
+
+func (c *mqlNetlifySiteSplitTest) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNetlifySiteSplitTest) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlNetlifySiteSplitTest) GetUnpublishedAt() *plugin.TValue[*time.Time] {
+	return &c.UnpublishedAt
+}
+
+// mqlNetlifySiteServiceInstance for the netlify.site.serviceInstance resource
+type mqlNetlifySiteServiceInstance struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetlifySiteServiceInstanceInternal it will be used here
+	Id                       plugin.TValue[string]
+	ServiceSlug              plugin.TValue[string]
+	ServiceName              plugin.TValue[string]
+	ServicePath              plugin.TValue[string]
+	Url                      plugin.TValue[string]
+	EnvironmentVariableNames plugin.TValue[[]any]
+	CreatedAt                plugin.TValue[*time.Time]
+	UpdatedAt                plugin.TValue[*time.Time]
+}
+
+// createNetlifySiteServiceInstance creates a new instance of this resource
+func createNetlifySiteServiceInstance(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteServiceInstance{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.serviceInstance", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteServiceInstance) MqlName() string {
+	return "netlify.site.serviceInstance"
+}
+
+func (c *mqlNetlifySiteServiceInstance) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetServiceSlug() *plugin.TValue[string] {
+	return &c.ServiceSlug
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetServicePath() *plugin.TValue[string] {
+	return &c.ServicePath
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetEnvironmentVariableNames() *plugin.TValue[[]any] {
+	return &c.EnvironmentVariableNames
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNetlifySiteServiceInstance) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+// mqlNetlifySiteDevServer for the netlify.site.devServer resource
+type mqlNetlifySiteDevServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlNetlifySiteDevServerInternal it will be used here
+	Id        plugin.TValue[string]
+	Branch    plugin.TValue[string]
+	Url       plugin.TValue[string]
+	State     plugin.TValue[string]
+	Title     plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	UpdatedAt plugin.TValue[*time.Time]
+	LiveAt    plugin.TValue[*time.Time]
+	DoneAt    plugin.TValue[*time.Time]
+}
+
+// createNetlifySiteDevServer creates a new instance of this resource
+func createNetlifySiteDevServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteDevServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.devServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteDevServer) MqlName() string {
+	return "netlify.site.devServer"
+}
+
+func (c *mqlNetlifySiteDevServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteDevServer) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteDevServer) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlNetlifySiteDevServer) GetUrl() *plugin.TValue[string] {
+	return &c.Url
+}
+
+func (c *mqlNetlifySiteDevServer) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlNetlifySiteDevServer) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlNetlifySiteDevServer) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNetlifySiteDevServer) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlNetlifySiteDevServer) GetLiveAt() *plugin.TValue[*time.Time] {
+	return &c.LiveAt
+}
+
+func (c *mqlNetlifySiteDevServer) GetDoneAt() *plugin.TValue[*time.Time] {
+	return &c.DoneAt
+}
+
+// mqlNetlifySiteAgentRunner for the netlify.site.agentRunner resource
+type mqlNetlifySiteAgentRunner struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlNetlifySiteAgentRunnerInternal
+	Id           plugin.TValue[string]
+	State        plugin.TValue[string]
+	Title        plugin.TValue[string]
+	Branch       plugin.TValue[string]
+	ResultBranch plugin.TValue[string]
+	PrUrl        plugin.TValue[string]
+	PrBranch     plugin.TValue[string]
+	PrState      plugin.TValue[string]
+	PrNumber     plugin.TValue[int64]
+	CurrentTask  plugin.TValue[string]
+	CreatedAt    plugin.TValue[*time.Time]
+	UpdatedAt    plugin.TValue[*time.Time]
+	DoneAt       plugin.TValue[*time.Time]
+	Site         plugin.TValue[*mqlNetlifySite]
+}
+
+// createNetlifySiteAgentRunner creates a new instance of this resource
+func createNetlifySiteAgentRunner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlNetlifySiteAgentRunner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("netlify.site.agentRunner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlNetlifySiteAgentRunner) MqlName() string {
+	return "netlify.site.agentRunner"
+}
+
+func (c *mqlNetlifySiteAgentRunner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetTitle() *plugin.TValue[string] {
+	return &c.Title
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetBranch() *plugin.TValue[string] {
+	return &c.Branch
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetResultBranch() *plugin.TValue[string] {
+	return &c.ResultBranch
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetPrUrl() *plugin.TValue[string] {
+	return &c.PrUrl
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetPrBranch() *plugin.TValue[string] {
+	return &c.PrBranch
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetPrState() *plugin.TValue[string] {
+	return &c.PrState
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetPrNumber() *plugin.TValue[int64] {
+	return &c.PrNumber
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetCurrentTask() *plugin.TValue[string] {
+	return &c.CurrentTask
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetUpdatedAt() *plugin.TValue[*time.Time] {
+	return &c.UpdatedAt
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetDoneAt() *plugin.TValue[*time.Time] {
+	return &c.DoneAt
+}
+
+func (c *mqlNetlifySiteAgentRunner) GetSite() *plugin.TValue[*mqlNetlifySite] {
+	return plugin.GetOrCompute[*mqlNetlifySite](&c.Site, func() (*mqlNetlifySite, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("netlify.site.agentRunner", c.__id, "site")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlNetlifySite), nil
+			}
+		}
+
+		return c.site()
+	})
 }
 
 // mqlNetlifyDnsZone for the netlify.dnsZone resource

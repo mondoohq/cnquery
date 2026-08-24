@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -23,6 +24,14 @@ import (
 type mqlNetlifySiteInternal struct {
 	cacheAccountID   string
 	cacheDeployKeyID string
+
+	// The site's TLS certificate is a single record behind its own endpoint
+	// that several fields read from, so it is fetched once for the site rather
+	// than once per field. certErr holds a genuine failure; a site with no
+	// certificate leaves both nil.
+	certOnce sync.Once
+	cert     *sniCertificateRecord
+	certErr  error
 }
 
 type siteRecord struct {
@@ -51,6 +60,10 @@ type siteRecord struct {
 	CreatedAt                 netlifyTime        `json:"created_at"`
 	UpdatedAt                 netlifyTime        `json:"updated_at"`
 	BuildSettings             *buildSettingsData `json:"build_settings"`
+
+	// Capabilities is the plan entitlement map, whose value shape varies by
+	// capability name, so it is carried as raw JSON and reported as a dict.
+	Capabilities json.RawMessage `json:"capabilities"`
 
 	// Password is the site's visitor password as the API reports it. It is
 	// held as raw JSON so the value never lands in a field, and so an absent
@@ -119,6 +132,7 @@ type buildSettingsData struct {
 	SkipPrs             *bool    `json:"skip_prs"`
 	SkipAutomaticBuilds *bool    `json:"skip_automatic_builds"`
 	DeployKeyID         string   `json:"deploy_key_id"`
+	InstallationID      *int64   `json:"installation_id"`
 }
 
 // sites lists the account's sites, narrowed to the site a discovered asset is
@@ -198,6 +212,8 @@ func newNetlifySite(runtime *plugin.Runtime, rec *siteRecord) (*mqlNetlifySite, 
 		"idDomain":                  llx.StringData(rec.IDDomain),
 		"stopBuilds":                llx.BoolData(build.StopBuilds),
 		"passwordProtected":         optionalBool(sitePasswordProtected(rec.Password)),
+		"installationId":            optionalInt(build.InstallationID),
+		"capabilities":              rawJSONToDict(rec.Capabilities),
 	})
 	if err != nil {
 		return nil, err
@@ -407,6 +423,76 @@ type notificationHookRecord struct {
 	Disabled  bool        `json:"disabled"`
 	CreatedAt netlifyTime `json:"created_at"`
 	UpdatedAt netlifyTime `json:"updated_at"`
+
+	// Data is the hook's delivery configuration. It carries the full webhook
+	// address, whose path and query are the bearer part of it, and the secret
+	// that signs deliveries. It is held as raw JSON so neither ever lands in a
+	// field; only the destination host and whether a secret is set are
+	// reported, through hookDestination.
+	Data json.RawMessage `json:"data"`
+}
+
+// hookSecretKeys are the keys a notification hook's delivery settings hold
+// signing or bearer material under. The webhook signing secret is the one that
+// matters here: a receiver cannot tell a signed delivery from a forged request
+// without it.
+var hookSecretKeys = []string{"jwt_secret", "signing_secret", "secret", "token", "access_token"}
+
+// hookDestination reports where a notification hook delivers and whether its
+// deliveries are signed, from the raw delivery settings the API returned.
+//
+// Both are null when the API reported no delivery settings at all, because a
+// token that cannot read them is indistinguishable from a hook that has none,
+// and reporting false would say the deliveries are known to be unsigned.
+//
+// The host is reported without the path or query string. A webhook address
+// carries its authorization in the path for most receivers, so the full URL is
+// a credential while the host alone is the destination.
+func hookDestination(raw json.RawMessage) (host *string, hasSigningSecret *bool) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+
+	var fields map[string]any
+	if err := json.Unmarshal(raw, &fields); err != nil || fields == nil {
+		// Settings were reported in a shape we cannot read. Nothing about them
+		// is known, so nothing is claimed.
+		return nil, nil
+	}
+
+	secret := false
+	for _, key := range hookSecretKeys {
+		if isNonEmptyValue(fields[key]) {
+			secret = true
+			break
+		}
+	}
+
+	if raw, ok := fields["url"].(string); ok && raw != "" {
+		if parsed, err := url.Parse(raw); err == nil && parsed.Hostname() != "" {
+			h := parsed.Hostname()
+			return &h, &secret
+		}
+	}
+	return nil, &secret
+}
+
+// isNonEmptyValue reports whether a decoded JSON value carries something. A key
+// present with an empty string or an explicit null is the API saying the
+// setting is not configured.
+func isNonEmptyValue(v any) bool {
+	switch t := v.(type) {
+	case nil:
+		return false
+	case string:
+		return t != ""
+	case bool:
+		return t
+	case float64:
+		return t != 0
+	default:
+		return true
+	}
 }
 
 func (s *mqlNetlifySite) notificationHooks() ([]any, error) {
@@ -427,15 +513,16 @@ func (s *mqlNetlifySite) notificationHooks() ([]any, error) {
 	var res []any
 	for i := range records {
 		rec := records[i]
-		// The hook's data carries the delivery target, which for a webhook or
-		// a chat integration is a bearer secret, so it is left out.
+		host, hasSigningSecret := hookDestination(rec.Data)
 		hook, err := CreateResource(s.MqlRuntime, "netlify.site.notificationHook", map[string]*llx.RawData{
-			"id":        llx.StringData(rec.ID),
-			"type":      llx.StringData(rec.Type),
-			"event":     llx.StringData(rec.Event),
-			"disabled":  llx.BoolData(rec.Disabled),
-			"createdAt": llx.TimeDataPtr(rec.CreatedAt.Time()),
-			"updatedAt": llx.TimeDataPtr(rec.UpdatedAt.Time()),
+			"id":               llx.StringData(rec.ID),
+			"type":             llx.StringData(rec.Type),
+			"event":            llx.StringData(rec.Event),
+			"disabled":         llx.BoolData(rec.Disabled),
+			"destinationHost":  optionalString(host),
+			"hasSigningSecret": optionalBool(hasSigningSecret),
+			"createdAt":        llx.TimeDataPtr(rec.CreatedAt.Time()),
+			"updatedAt":        llx.TimeDataPtr(rec.UpdatedAt.Time()),
 		})
 		if err != nil {
 			return nil, err

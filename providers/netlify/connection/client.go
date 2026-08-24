@@ -121,6 +121,19 @@ const maxPages = 200
 // returns every record. Endpoints that ignore paging return their single
 // response unchanged.
 func GetPaged[T any](ctx context.Context, c *NetlifyConnection, path string, query url.Values) ([]T, error) {
+	return GetPagedLimit[T](ctx, c, path, query, maxPages*pageSize)
+}
+
+// GetPagedLimit walks the same pagination as GetPaged but stops once maxRecords
+// have been collected, and reports at most that many.
+//
+// Endpoints backed by an append-only history, such as a site's deploys or an
+// account's audit log, grow without bound, and reading all of one costs a
+// request per hundred records. Callers of those bound the walk and say in the
+// schema which records the bound keeps, so a truncated list is a documented
+// window rather than a silent omission. Netlify returns these newest first, so
+// the bound keeps the most recent records.
+func GetPagedLimit[T any](ctx context.Context, c *NetlifyConnection, path string, query url.Values, maxRecords int) ([]T, error) {
 	if query == nil {
 		query = url.Values{}
 	}
@@ -150,6 +163,11 @@ func GetPaged[T any](ctx context.Context, c *NetlifyConnection, path string, que
 		}
 
 		results = append(results, batch...)
+
+		if len(results) >= maxRecords {
+			results = results[:maxRecords]
+			break
+		}
 
 		// A short page is the last page.
 		if len(batch) < pageSize {

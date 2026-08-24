@@ -76,7 +76,8 @@ private netlify.user @defaults("email fullName") {
 // `members` field lists the roster with each member's role and enrollment, and
 // `environmentVariables` covers the variables shared across the account's
 // sites. The `rolesAllowed` field reports the roles the account's plan permits,
-// which bounds how finely access can be split. Select an account with
+// which bounds how finely access can be split, and `auditEvents` is the record
+// of who changed any of it. Select an account with
 // `netlify.accounts.where(slug == "acme")`.
 private netlify.account @defaults("slug name") {
   // Unique account identifier
@@ -157,6 +158,14 @@ private netlify.account @defaults("slug name") {
   sites() []netlify.site
   // Environment variables shared across the account's sites
   environmentVariables() []netlify.envVar
+  // Recorded changes to the account and its sites
+  //
+  // The record of who changed team membership, environment variables, deploy
+  // keys, or build settings, and when. Narrowed to the most recent 1000 events,
+  // newest first. The audit log is plan-gated, so it reads null on an account
+  // whose plan does not include it and on a token that cannot administer the
+  // account.
+  auditEvents() []netlify.account.auditEvent
 }
 
 // Member of a Netlify account
@@ -204,6 +213,38 @@ private netlify.account.member @defaults("email role") {
   lastActivityDate time
   // URL of the member avatar image
   avatarUrl string
+}
+
+// Audit event on a Netlify account
+//
+// A single recorded change to the account or one of its sites, with who made
+// it and when. Use `action` to find membership, environment variable, deploy
+// key, and build setting changes, `actorEmail` to attribute one to a person who
+// may no longer be on the roster, and `timestamp` to place it against an
+// incident. Select the changes made by one person with
+// `netlify.accounts { auditEvents.where(actorEmail == "ops@example.com") }`.
+private netlify.account.auditEvent @defaults("action actorEmail timestamp") {
+  // Unique audit event identifier
+  id string
+  // What was done, for example user_invited or env_var_updated
+  action string
+  // Category the event belongs to, for example team or site
+  logType string
+  // Display name of the person or token that made the change
+  actorName string
+  // Email address of the person or token that made the change
+  //
+  // Recorded on the event itself, so it still attributes a change made by
+  // someone who has since left the account.
+  actorEmail string
+  // Time the change was made
+  timestamp time
+  // Member who made the change
+  //
+  // Resolved against the account roster, so an actor who has since left the
+  // account does not appear. Null when the roster is not readable with this
+  // token, in which case actorEmail and actorName still attribute the change.
+  actor() netlify.account.member
 }
 
 // Netlify Environment Variable
@@ -254,8 +295,11 @@ private netlify.envVar @defaults("key isSecret") {
 // suspended, and `preventNonGitProdDeploys` for whether production can be
 // published outside of git. The `environmentVariables`, `buildHooks`,
 // `notificationHooks`, and `snippets` fields cover what a deploy injects and
-// what can trigger one. Select a site with
-// `netlify.sites.where(name == "www")`.
+// what can trigger one. The `certificateState`, `certificateDomains`, and
+// `certificateExpiresAt` fields describe the certificate the site is actually
+// reached over, and `deploys`, `deployedBranches`, `devServers`, `splitTests`,
+// and `assets` enumerate the addresses the site answers on beyond its own.
+// Select a site with `netlify.sites.where(name == "www")`.
 //
 // The `privateLogs`, `skipPrs`, and `skipAutomaticBuilds` controls are
 // tri-state: true, false, or null when the site has never set the control and
@@ -355,6 +399,36 @@ private netlify.site @defaults("name url") {
   privateLogs bool
   // Whether automatic builds are suspended for the site
   stopBuilds bool
+  // Git provider app installation the build authenticates with
+  //
+  // Numeric identifier of the GitHub or GitLab App installation that grants
+  // Netlify access to the repository. Anyone who can start a build on the site
+  // borrows that access, so the installation is the route from a Netlify
+  // account into source control. Null when the site builds without an app
+  // installation, such as one deployed by hand.
+  installationId int
+  // Platform features the site's plan makes available
+  //
+  // Keyed by capability name, such as asset_optimization, background_functions,
+  // or form_processing, with whatever entitlement detail the API reports for
+  // it. A capability the site does not carry cannot be turned on at all, which
+  // separates a control that is switched off from one the plan does not offer.
+  capabilities dict
+  // State of the TLS certificate served for the site
+  //
+  // For example issued or pending. Null when the site has no certificate, or
+  // when the token cannot read it.
+  certificateState() string
+  // Domains the site's TLS certificate is valid for
+  //
+  // A name the site answers on that is missing from this list is reached over a
+  // certificate that does not cover it. Null when the site has no certificate.
+  certificateDomains() []string
+  // Time the site's TLS certificate expires
+  //
+  // Null when the site has no certificate. Netlify renews the certificates it
+  // issues, but an uploaded certificate is renewed by whoever supplied it.
+  certificateExpiresAt() time
   // Whether the site is gated behind a visitor password
   //
   // Reported per site, unlike the account-wide hasSitePassword rollup, so a
@@ -379,6 +453,52 @@ private netlify.site @defaults("name url") {
   snippets() []netlify.site.snippet
   // Netlify-managed DNS zones serving the site
   dnsZones() []netlify.dnsZone
+  // Deploys of the site that completed and are still served
+  //
+  // Narrowed to deploys that reached the ready state and to the most recent 500
+  // of those, which keeps a long-lived site from reading its whole build
+  // history. A deploy whose `context` is deploy-preview and whose `reviewId` is
+  // set is a build of an unmerged pull request published on its own address.
+  deploys() []netlify.site.deploy
+  // Branches of the repository that currently answer on a deploy address
+  //
+  // Reports which branches are being served, which is the fact that
+  // `allowedBranches` states as intent. A branch answering on a live address
+  // that `allowedBranches` does not list is drift between the two.
+  deployedBranches() []netlify.site.deployedBranch
+  // Forms the site accepts visitor submissions on
+  //
+  // Every form is a path that takes user-submitted data and a store that
+  // retains it. Submissions themselves are not exposed.
+  forms() []netlify.site.form
+  // Files uploaded to the site outside of a deploy
+  //
+  // Each asset carries its own `visibility`, so a file uploaded as public is
+  // served to anyone who has its address regardless of the site's own access
+  // controls.
+  assets() []netlify.site.asset
+  // Split tests routing a share of the site's traffic to another branch
+  //
+  // An active split test serves real visitors from a branch build, so a branch
+  // kept out of the review process can still be reaching production traffic.
+  splitTests() []netlify.site.splitTest
+  // Third-party add-on integrations installed on the site
+  //
+  // An add-on injects its own environment variables and page snippets and holds
+  // its own credentials with the third party. Only the names of the variables
+  // it injects are reported, never their values.
+  serviceInstances() []netlify.site.serviceInstance
+  // Development servers running for the site's branches
+  //
+  // A development server publishes a live address for one branch while it runs,
+  // which reaches anyone who has the address.
+  devServers() []netlify.site.devServer
+  // Agent runners working on the site's repository
+  //
+  // An agent runner writes to the repository on its own and opens pull requests
+  // from what it produced, so its output enters the codebase through a path no
+  // person authored.
+  agentRunners() []netlify.site.agentRunner
 }
 
 // Build hook of a Netlify site
@@ -402,11 +522,12 @@ private netlify.site.buildHook @defaults("title branch") {
 // Notification hook of a Netlify site
 //
 // An outgoing notification fired when a site event occurs, such as a completed
-// deploy or a submitted form. Use `type` to see where the notification is sent,
-// for example email, slack, or a generic webhook URL, `event` for what triggers
-// it, and `disabled` to find hooks that are configured but inactive. The hook's
-// delivery settings can carry a bearer secret and are deliberately not exposed
-// here.
+// deploy or a submitted form. Use `type` to see how the notification is sent,
+// for example email, slack, or a generic webhook, `destinationHost` for where
+// it lands, `hasSigningSecret` for whether the receiver can tell a real
+// delivery from a forged one, `event` for what triggers it, and `disabled` to
+// find hooks that are configured but inactive. The full delivery address and
+// the signing secret itself are credentials and are not exposed.
 private netlify.site.notificationHook @defaults("type event") {
   // Unique hook identifier
   id string
@@ -416,6 +537,18 @@ private netlify.site.notificationHook @defaults("type event") {
   event string
   // Whether the hook is configured but inactive
   disabled bool
+  // Host the notification is delivered to
+  //
+  // The host of the hook's delivery URL, with the path and any query string
+  // left out because they carry the bearer part of a webhook address. Null for
+  // a hook with no URL destination, such as one delivered by email.
+  destinationHost string
+  // Whether the hook is configured with a secret that signs its deliveries
+  //
+  // An unsigned webhook cannot be told apart from a forged request by whatever
+  // receives it. Only the presence of the secret is reported, never its value.
+  // Null when the token cannot read the hook's delivery settings.
+  hasSigningSecret bool
   // Time the hook was created
   createdAt time
   // Time the hook was last updated
@@ -443,6 +576,271 @@ private netlify.site.snippet @defaults("title") {
   goal string
   // Location the goal markup is injected at, either head or body
   goalPosition string
+}
+
+// Deploy of a Netlify site
+//
+// A single build of the site that Netlify published, and the address it is
+// served on. Use `context` to tell a production build from a deploy-preview or
+// a branch-deploy, `reviewId` and `reviewUrl` to tie a preview to the pull
+// request it was built from, `deployUrl` for the address that build answers on,
+// `branch` and `commitRef` for the source it was produced from, and `locked`
+// for whether the production deploy is pinned so a later build does not
+// replace it. A preview of an unmerged pull request is served on a public
+// address with the site's environment behind it, so
+// `netlify.sites { deploys.where(context == "deploy-preview") { deployUrl } }`
+// enumerates that surface.
+private netlify.site.deploy @defaults("context branch state") {
+  // Unique deploy identifier
+  id string
+  // Lifecycle state of the deploy, for example ready, building, or error
+  state string
+  // Deploy context, for example production, deploy-preview, or branch-deploy
+  //
+  // A deploy-preview build comes from a pull request that has not been merged,
+  // and it runs and serves with the site's deploy-preview environment.
+  context string
+  // Human-readable deploy title, usually the commit subject
+  title string
+  // Branch the deploy was built from
+  branch string
+  // Commit the deploy was built from
+  commitRef string
+  // URL of the commit at the source control provider
+  commitUrl string
+  // Permanent address this specific deploy answers on
+  //
+  // Every deploy keeps its own address after a newer one is published, so an
+  // old build stays reachable by anyone who has the address.
+  deployUrl string
+  // HTTPS address this specific deploy answers on
+  deploySslUrl string
+  // Number of the pull request the deploy was built from, or null when it was not
+  reviewId int
+  // URL of the pull request the deploy was built from
+  reviewUrl string
+  // Whether the deploy was produced as a draft rather than published
+  draft bool
+  // Whether the deploy is pinned in place
+  //
+  // A locked production deploy stays published until it is unlocked, so a later
+  // build, including a fix, does not go live on its own.
+  locked bool
+  // Whether the build was skipped rather than run
+  skipped bool
+  // Framework the build was detected as using, for example next
+  framework string
+  // Reason the deploy failed, or null when it did not
+  errorMessage string
+  // Time the deploy was created
+  createdAt time
+  // Time the deploy was last updated
+  updatedAt time
+  // Time the deploy was published, or null when it never was
+  publishedAt time
+  // Site the deploy belongs to
+  site() netlify.site
+}
+
+// Deployed branch of a Netlify site
+//
+// A branch of the site's repository that currently answers on its own address.
+// Where `allowedBranches` on the site states which branches may deploy, this
+// states which ones actually are, so the difference between the two is drift.
+// Use `url` and `sslUrl` for the address the branch is reachable on.
+private netlify.site.deployedBranch @defaults("name url") {
+  // Unique deployed branch identifier
+  id string
+  // Branch name
+  name string
+  // URL-safe form of the branch name, which forms its address
+  slug string
+  // Address the branch is served on
+  url string
+  // HTTPS address the branch is served on
+  sslUrl string
+  // Deploy currently published for the branch
+  //
+  // Null when the branch's deploy is outside the window the site's deploy list
+  // covers, or when it is not readable with this token.
+  deploy() netlify.site.deploy
+}
+
+// Form on a Netlify site
+//
+// A form Netlify accepts visitor submissions on, with the paths that submit to
+// it and how many submissions are being retained. Every form is somewhere the
+// site takes user-supplied data and holds it, so `submissionCount` is the
+// retention question and `paths` is the intake surface. The submissions
+// themselves are deliberately not exposed.
+private netlify.site.form @defaults("name submissionCount") {
+  // Unique form identifier
+  id string
+  // Form name, taken from the form's name attribute
+  name string
+  // Paths on the site that submit to the form
+  paths []string
+  // Number of submissions Netlify is retaining for the form
+  submissionCount int
+  // Time the form was first seen in a deploy
+  createdAt time
+}
+
+// Asset uploaded to a Netlify site
+//
+// A file uploaded to the site outside of a deploy, such as an image referenced
+// from the CMS. Use `visibility` to find files served to anyone who has their
+// address rather than only to signed-in visitors, and `contentType` and `size`
+// for what is being held.
+private netlify.site.asset @defaults("name visibility") {
+  // Unique asset identifier
+  id string
+  // File name of the asset
+  name string
+  // Lifecycle state of the asset, for example uploaded
+  state string
+  // MIME type the asset is served as
+  contentType string
+  // Address the asset is served on
+  url string
+  // Storage key the asset is held under
+  key string
+  // Who the asset is served to, either public or private
+  //
+  // A public asset is served to anyone holding its address, whatever access
+  // controls the rest of the site carries.
+  visibility string
+  // Size of the asset in bytes
+  size int
+  // Time the asset was uploaded
+  createdAt time
+  // Time the asset was last updated
+  updatedAt time
+}
+
+// Split test on a Netlify site
+//
+// A rule routing a share of the site's visitors to a build of another branch.
+// An active split test means a branch is serving real production traffic, so a
+// branch held outside the review process still reaches visitors. Use `active`
+// to find the running ones and `branches` for the split each one applies.
+private netlify.site.splitTest @defaults("name active") {
+  // Unique split test identifier
+  id string
+  // Split test name
+  name string
+  // Path the split applies to
+  path string
+  // Whether the split test is currently routing traffic
+  active bool
+  // Branches the traffic is split across
+  //
+  // Each entry carries the branch the share is routed to and the percentage of
+  // visitors it receives, in the shape the API reports them.
+  branches []dict
+  // Time the split test was created
+  createdAt time
+  // Time the split test was last updated
+  updatedAt time
+  // Time the split test was unpublished, or null when it never was
+  unpublishedAt time
+}
+
+// Add-on integration installed on a Netlify site
+//
+// A third-party service installed on the site, which injects its own
+// environment variables and page snippets and holds its own credentials with
+// that service. Use `serviceName` and `serviceSlug` to identify the integration
+// and `environmentVariableNames` to attribute an injected variable to the
+// add-on that owns it. The values of those variables, the add-on's own
+// configuration, and its authorization address are credentials and are not
+// exposed.
+private netlify.site.serviceInstance @defaults("serviceName serviceSlug") {
+  // Unique service instance identifier
+  id string
+  // Machine-readable identifier of the add-on, for example fauna
+  serviceSlug string
+  // Display name of the add-on
+  serviceName string
+  // Path on the site the add-on is mounted at
+  servicePath string
+  // Address of the add-on's own endpoint
+  url string
+  // Names of the environment variables the add-on injects into the site
+  //
+  // Names only. The values are credentials held by the add-on and are not
+  // reported.
+  environmentVariableNames []string
+  // Time the add-on was installed
+  createdAt time
+  // Time the add-on was last updated
+  updatedAt time
+}
+
+// Development server of a Netlify site
+//
+// A server Netlify runs for one branch of the site so it can be previewed
+// while it is being worked on. A running development server answers on a live
+// address, so it is another way the branch reaches whoever holds that address.
+// Use `state` to find the running ones and `branch` for what each is serving.
+private netlify.site.devServer @defaults("branch state") {
+  // Unique development server identifier
+  id string
+  // Branch the development server is serving
+  branch string
+  // Address the development server answers on
+  url string
+  // Lifecycle state, for example live, starting, error, or done
+  state string
+  // Human-readable title of the development server
+  title string
+  // Time the development server was created
+  createdAt time
+  // Time the development server was last updated
+  updatedAt time
+  // Time the development server started answering, or null when it never did
+  liveAt time
+  // Time the development server stopped, or null when it is still running
+  doneAt time
+}
+
+// Agent runner of a Netlify site
+//
+// An autonomous agent Netlify runs against the site's repository, which writes
+// code and opens pull requests from what it produced. Its output enters the
+// codebase through a path no person authored, so `prUrl`, `prState`, and
+// `prNumber` are worth reconciling against what the repository's review rules
+// require. Use `state` to find the ones still running and `branch` and
+// `resultBranch` for the branches it read from and wrote to.
+private netlify.site.agentRunner @defaults("title state prState") {
+  // Unique agent runner identifier
+  id string
+  // Lifecycle state of the runner, for example live or error
+  state string
+  // Human-readable title of the run
+  title string
+  // Branch the run started from
+  branch string
+  // Branch the run wrote its result to
+  resultBranch string
+  // URL of the pull request the run opened
+  prUrl string
+  // Branch the run opened its pull request from
+  prBranch string
+  // State of the pull request the run opened, for example open or merged
+  prState string
+  // Number of the pull request the run opened, or null when it opened none
+  prNumber int
+  // What the run is currently working on
+  currentTask string
+  // Time the run was created
+  createdAt time
+  // Time the run was last updated
+  updatedAt time
+  // Time the run finished, or null when it is still going
+  doneAt time
+  // Site the run works on
+  site() netlify.site
 }
 
 // Netlify DNS Zone
