@@ -1975,9 +1975,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mikrotik.interface.sstpServer.verifyClientCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikInterfaceSstpServer).GetVerifyClientCertificate()).ToDataRes(types.String)
 	},
-	"mikrotik.interface.sstpServer.certificate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikInterfaceSstpServer).GetCertificate()).ToDataRes(types.String)
-	},
 	"mikrotik.interface.sstpServer.certificateRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikInterfaceSstpServer).GetCertificateRef()).ToDataRes(types.Resource("mikrotik.certificate"))
 	},
@@ -2025,9 +2022,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mikrotik.interface.ovpnServer.requireClientCertificate": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikInterfaceOvpnServer).GetRequireClientCertificate()).ToDataRes(types.Bool)
-	},
-	"mikrotik.interface.ovpnServer.certificate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikInterfaceOvpnServer).GetCertificate()).ToDataRes(types.String)
 	},
 	"mikrotik.interface.ovpnServer.certificateRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikInterfaceOvpnServer).GetCertificateRef()).ToDataRes(types.Resource("mikrotik.certificate"))
@@ -2134,9 +2128,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mikrotik.ip.ipsec.peer.exchangeMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikIpIpsecPeer).GetExchangeMode()).ToDataRes(types.String)
 	},
-	"mikrotik.ip.ipsec.peer.profile": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikIpIpsecPeer).GetProfile()).ToDataRes(types.String)
-	},
 	"mikrotik.ip.ipsec.peer.profileRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikIpIpsecPeer).GetProfileRef()).ToDataRes(types.Resource("mikrotik.ip.ipsec.profile"))
 	},
@@ -2151,9 +2142,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mikrotik.ip.ipsec.peer.comment": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikIpIpsecPeer).GetComment()).ToDataRes(types.String)
-	},
-	"mikrotik.ip.ipsec.identity.peer": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikIpIpsecIdentity).GetPeer()).ToDataRes(types.String)
 	},
 	"mikrotik.ip.ipsec.identity.peerRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikIpIpsecIdentity).GetPeerRef()).ToDataRes(types.Resource("mikrotik.ip.ipsec.peer"))
@@ -2188,11 +2176,11 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"mikrotik.ip.ipsec.identity.remoteId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikIpIpsecIdentity).GetRemoteId()).ToDataRes(types.String)
 	},
-	"mikrotik.ip.ipsec.identity.certificate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikIpIpsecIdentity).GetCertificate()).ToDataRes(types.String)
+	"mikrotik.ip.ipsec.identity.certificateRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetCertificateRef()).ToDataRes(types.Resource("mikrotik.certificate"))
 	},
-	"mikrotik.ip.ipsec.identity.remoteCertificate": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikIpIpsecIdentity).GetRemoteCertificate()).ToDataRes(types.String)
+	"mikrotik.ip.ipsec.identity.remoteCertificateRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlMikrotikIpIpsecIdentity).GetRemoteCertificateRef()).ToDataRes(types.Resource("mikrotik.certificate"))
 	},
 	"mikrotik.ip.ipsec.identity.notrackChain": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikIpIpsecIdentity).GetNotrackChain()).ToDataRes(types.String)
@@ -2238,9 +2226,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"mikrotik.system.logging.rule.topics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikSystemLoggingRule).GetTopics()).ToDataRes(types.Array(types.String))
-	},
-	"mikrotik.system.logging.rule.action": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlMikrotikSystemLoggingRule).GetAction()).ToDataRes(types.String)
 	},
 	"mikrotik.system.logging.rule.actionRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlMikrotikSystemLoggingRule).GetActionRef()).ToDataRes(types.Resource("mikrotik.system.logging.action"))
@@ -4799,10 +4784,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMikrotikInterfaceSstpServer).VerifyClientCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"mikrotik.interface.sstpServer.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikInterfaceSstpServer).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"mikrotik.interface.sstpServer.certificateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotikInterfaceSstpServer).CertificateRef, ok = plugin.RawToTValue[*mqlMikrotikCertificate](v.Value, v.Error)
 		return
@@ -4869,10 +4850,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mikrotik.interface.ovpnServer.requireClientCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotikInterfaceOvpnServer).RequireClientCertificate, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"mikrotik.interface.ovpnServer.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikInterfaceOvpnServer).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mikrotik.interface.ovpnServer.certificateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5027,10 +5004,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMikrotikIpIpsecPeer).ExchangeMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"mikrotik.ip.ipsec.peer.profile": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikIpIpsecPeer).Profile, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
 	"mikrotik.ip.ipsec.peer.profileRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotikIpIpsecPeer).ProfileRef, ok = plugin.RawToTValue[*mqlMikrotikIpIpsecProfile](v.Value, v.Error)
 		return
@@ -5053,10 +5026,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mikrotik.ip.ipsec.identity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotikIpIpsecIdentity).__id, ok = v.Value.(string)
-		return
-	},
-	"mikrotik.ip.ipsec.identity.peer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikIpIpsecIdentity).Peer, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mikrotik.ip.ipsec.identity.peerRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5103,12 +5072,12 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlMikrotikIpIpsecIdentity).RemoteId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"mikrotik.ip.ipsec.identity.certificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikIpIpsecIdentity).Certificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"mikrotik.ip.ipsec.identity.certificateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).CertificateRef, ok = plugin.RawToTValue[*mqlMikrotikCertificate](v.Value, v.Error)
 		return
 	},
-	"mikrotik.ip.ipsec.identity.remoteCertificate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikIpIpsecIdentity).RemoteCertificate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"mikrotik.ip.ipsec.identity.remoteCertificateRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlMikrotikIpIpsecIdentity).RemoteCertificateRef, ok = plugin.RawToTValue[*mqlMikrotikCertificate](v.Value, v.Error)
 		return
 	},
 	"mikrotik.ip.ipsec.identity.notrackChain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5177,10 +5146,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"mikrotik.system.logging.rule.topics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlMikrotikSystemLoggingRule).Topics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
-		return
-	},
-	"mikrotik.system.logging.rule.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlMikrotikSystemLoggingRule).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"mikrotik.system.logging.rule.actionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10592,7 +10557,6 @@ type mqlMikrotikInterfaceSstpServer struct {
 	Enabled                 plugin.TValue[bool]
 	Port                    plugin.TValue[int64]
 	VerifyClientCertificate plugin.TValue[string]
-	Certificate             plugin.TValue[string]
 	CertificateRef          plugin.TValue[*mqlMikrotikCertificate]
 	Authentication          plugin.TValue[[]any]
 	TlsVersion              plugin.TValue[string]
@@ -10648,10 +10612,6 @@ func (c *mqlMikrotikInterfaceSstpServer) GetPort() *plugin.TValue[int64] {
 
 func (c *mqlMikrotikInterfaceSstpServer) GetVerifyClientCertificate() *plugin.TValue[string] {
 	return &c.VerifyClientCertificate
-}
-
-func (c *mqlMikrotikInterfaceSstpServer) GetCertificate() *plugin.TValue[string] {
-	return &c.Certificate
 }
 
 func (c *mqlMikrotikInterfaceSstpServer) GetCertificateRef() *plugin.TValue[*mqlMikrotikCertificate] {
@@ -10720,7 +10680,6 @@ type mqlMikrotikInterfaceOvpnServer struct {
 	Protocol                 plugin.TValue[string]
 	Mode                     plugin.TValue[string]
 	RequireClientCertificate plugin.TValue[bool]
-	Certificate              plugin.TValue[string]
 	CertificateRef           plugin.TValue[*mqlMikrotikCertificate]
 	Ciphers                  plugin.TValue[[]any]
 	Auth                     plugin.TValue[[]any]
@@ -10785,10 +10744,6 @@ func (c *mqlMikrotikInterfaceOvpnServer) GetMode() *plugin.TValue[string] {
 
 func (c *mqlMikrotikInterfaceOvpnServer) GetRequireClientCertificate() *plugin.TValue[bool] {
 	return &c.RequireClientCertificate
-}
-
-func (c *mqlMikrotikInterfaceOvpnServer) GetCertificate() *plugin.TValue[string] {
-	return &c.Certificate
 }
 
 func (c *mqlMikrotikInterfaceOvpnServer) GetCertificateRef() *plugin.TValue[*mqlMikrotikCertificate] {
@@ -11029,7 +10984,6 @@ type mqlMikrotikIpIpsecPeer struct {
 	LocalAddress       plugin.TValue[string]
 	Port               plugin.TValue[int64]
 	ExchangeMode       plugin.TValue[string]
-	Profile            plugin.TValue[string]
 	ProfileRef         plugin.TValue[*mqlMikrotikIpIpsecProfile]
 	Passive            plugin.TValue[bool]
 	SendInitialContact plugin.TValue[bool]
@@ -11089,10 +11043,6 @@ func (c *mqlMikrotikIpIpsecPeer) GetExchangeMode() *plugin.TValue[string] {
 	return &c.ExchangeMode
 }
 
-func (c *mqlMikrotikIpIpsecPeer) GetProfile() *plugin.TValue[string] {
-	return &c.Profile
-}
-
 func (c *mqlMikrotikIpIpsecPeer) GetProfileRef() *plugin.TValue[*mqlMikrotikIpIpsecProfile] {
 	return plugin.GetOrCompute[*mqlMikrotikIpIpsecProfile](&c.ProfileRef, func() (*mqlMikrotikIpIpsecProfile, error) {
 		if c.MqlRuntime.HasRecording {
@@ -11130,23 +11080,22 @@ type mqlMikrotikIpIpsecIdentity struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlMikrotikIpIpsecIdentityInternal
-	Peer                plugin.TValue[string]
-	PeerRef             plugin.TValue[*mqlMikrotikIpIpsecPeer]
-	AuthMethod          plugin.TValue[string]
-	HasSecret           plugin.TValue[bool]
-	GeneratePolicy      plugin.TValue[string]
-	PolicyTemplateGroup plugin.TValue[string]
-	MatchBy             plugin.TValue[string]
-	ModeConfig          plugin.TValue[string]
-	MyIdType            plugin.TValue[string]
-	MyId                plugin.TValue[string]
-	RemoteIdType        plugin.TValue[string]
-	RemoteId            plugin.TValue[string]
-	Certificate         plugin.TValue[string]
-	RemoteCertificate   plugin.TValue[string]
-	NotrackChain        plugin.TValue[string]
-	Disabled            plugin.TValue[bool]
-	Comment             plugin.TValue[string]
+	PeerRef              plugin.TValue[*mqlMikrotikIpIpsecPeer]
+	AuthMethod           plugin.TValue[string]
+	HasSecret            plugin.TValue[bool]
+	GeneratePolicy       plugin.TValue[string]
+	PolicyTemplateGroup  plugin.TValue[string]
+	MatchBy              plugin.TValue[string]
+	ModeConfig           plugin.TValue[string]
+	MyIdType             plugin.TValue[string]
+	MyId                 plugin.TValue[string]
+	RemoteIdType         plugin.TValue[string]
+	RemoteId             plugin.TValue[string]
+	CertificateRef       plugin.TValue[*mqlMikrotikCertificate]
+	RemoteCertificateRef plugin.TValue[*mqlMikrotikCertificate]
+	NotrackChain         plugin.TValue[string]
+	Disabled             plugin.TValue[bool]
+	Comment              plugin.TValue[string]
 }
 
 // createMikrotikIpIpsecIdentity creates a new instance of this resource
@@ -11179,10 +11128,6 @@ func (c *mqlMikrotikIpIpsecIdentity) MqlName() string {
 
 func (c *mqlMikrotikIpIpsecIdentity) MqlID() string {
 	return c.__id
-}
-
-func (c *mqlMikrotikIpIpsecIdentity) GetPeer() *plugin.TValue[string] {
-	return &c.Peer
 }
 
 func (c *mqlMikrotikIpIpsecIdentity) GetPeerRef() *plugin.TValue[*mqlMikrotikIpIpsecPeer] {
@@ -11241,12 +11186,36 @@ func (c *mqlMikrotikIpIpsecIdentity) GetRemoteId() *plugin.TValue[string] {
 	return &c.RemoteId
 }
 
-func (c *mqlMikrotikIpIpsecIdentity) GetCertificate() *plugin.TValue[string] {
-	return &c.Certificate
+func (c *mqlMikrotikIpIpsecIdentity) GetCertificateRef() *plugin.TValue[*mqlMikrotikCertificate] {
+	return plugin.GetOrCompute[*mqlMikrotikCertificate](&c.CertificateRef, func() (*mqlMikrotikCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.ip.ipsec.identity", c.__id, "certificateRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikCertificate), nil
+			}
+		}
+
+		return c.certificateRef()
+	})
 }
 
-func (c *mqlMikrotikIpIpsecIdentity) GetRemoteCertificate() *plugin.TValue[string] {
-	return &c.RemoteCertificate
+func (c *mqlMikrotikIpIpsecIdentity) GetRemoteCertificateRef() *plugin.TValue[*mqlMikrotikCertificate] {
+	return plugin.GetOrCompute[*mqlMikrotikCertificate](&c.RemoteCertificateRef, func() (*mqlMikrotikCertificate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("mikrotik.ip.ipsec.identity", c.__id, "remoteCertificateRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlMikrotikCertificate), nil
+			}
+		}
+
+		return c.remoteCertificateRef()
+	})
 }
 
 func (c *mqlMikrotikIpIpsecIdentity) GetNotrackChain() *plugin.TValue[string] {
@@ -11361,7 +11330,6 @@ type mqlMikrotikSystemLoggingRule struct {
 	__id       string
 	mqlMikrotikSystemLoggingRuleInternal
 	Topics    plugin.TValue[[]any]
-	Action    plugin.TValue[string]
 	ActionRef plugin.TValue[*mqlMikrotikSystemLoggingAction]
 	Prefix    plugin.TValue[string]
 	Disabled  plugin.TValue[bool]
@@ -11402,10 +11370,6 @@ func (c *mqlMikrotikSystemLoggingRule) MqlID() string {
 
 func (c *mqlMikrotikSystemLoggingRule) GetTopics() *plugin.TValue[[]any] {
 	return &c.Topics
-}
-
-func (c *mqlMikrotikSystemLoggingRule) GetAction() *plugin.TValue[string] {
-	return &c.Action
 }
 
 func (c *mqlMikrotikSystemLoggingRule) GetActionRef() *plugin.TValue[*mqlMikrotikSystemLoggingAction] {

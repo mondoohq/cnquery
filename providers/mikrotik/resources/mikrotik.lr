@@ -1668,8 +1668,6 @@ mikrotik.interface.sstpServer @defaults("enabled port verifyClientCertificate") 
   // One of no, yes, or quiet. With no, client authentication rests entirely on
   // the PPP credentials.
   verifyClientCertificate string
-  // Name of the certificate the server presents
-  certificate string
   // Certificate the server presents, resolved in the device certificate store
   //
   // Null when no certificate is bound, in which case the server cannot serve
@@ -1722,9 +1720,10 @@ mikrotik.interface.ovpnServer @defaults("enabled port requireClientCertificate")
   //
   // With this off, PPP credentials are the only client authentication.
   requireClientCertificate bool
-  // Name of the certificate the server presents
-  certificate string
   // Certificate the server presents, resolved in the device certificate store
+  //
+  // Null when no certificate is bound, in which case the server cannot serve
+  // TLS at all.
   certificateRef() mikrotik.certificate
   // Ciphers the server offers
   //
@@ -1852,9 +1851,11 @@ mikrotik.ip.ipsec.peer @defaults("name address exchangeMode disabled") {
   // the identity and, with pre-shared key authentication, a hash an attacker
   // can grind offline.
   exchangeMode string
-  // Name of the key exchange profile the peer uses
-  profile string
   // Key exchange profile the peer uses, resolved in the profile list
+  //
+  // RouterOS always binds a peer to a profile and ships an undeletable
+  // `default` one, so a null here means the peer names a profile that is no
+  // longer in the profile list.
   profileRef() mikrotik.ip.ipsec.profile
   // Whether the device waits to be contacted rather than initiating
   passive bool
@@ -1876,11 +1877,15 @@ mikrotik.ip.ipsec.peer @defaults("name address exchangeMode disabled") {
 // matching a policy configured in advance, so the pair of them together means
 // a peer that knows the key can choose what it reaches. `hasSecret` reports
 // that a pre-shared key is configured; the key itself, the EAP password, and
-// the raw key material are never read.
-mikrotik.ip.ipsec.identity @defaults("peer authMethod generatePolicy disabled") {
-  // Name of the peer the identity authenticates
-  peer string
+// the raw key material are never read. `peerRef` resolves the peer the
+// identity authenticates, and `certificateRef` and `remoteCertificateRef`
+// resolve the certificates in the device certificate store so their expiry,
+// key size, and issuer can be checked in the same query.
+mikrotik.ip.ipsec.identity @defaults("authMethod generatePolicy hasSecret disabled") {
   // Peer the identity authenticates, resolved in the peer list
+  //
+  // RouterOS requires every identity to name a peer, so a null here means the
+  // identity names a peer that is no longer in the peer list.
   peerRef() mikrotik.ip.ipsec.peer
   // Authentication method
   //
@@ -1915,10 +1920,15 @@ mikrotik.ip.ipsec.identity @defaults("peer authMethod generatePolicy disabled") 
   remoteIdType string
   // Identity expected from the peer
   remoteId string
-  // Name of the certificate the device presents
-  certificate string
-  // Name of the certificate expected from the peer
-  remoteCertificate string
+  // Certificate the device presents, resolved in the device certificate store
+  //
+  // Null when the identity presents no certificate, which is the case for
+  // pre-shared-key authentication.
+  certificateRef() mikrotik.certificate
+  // Certificate expected from the peer, resolved in the device certificate store
+  //
+  // Null when the identity expects no certificate from the peer.
+  remoteCertificateRef() mikrotik.certificate
   // Firewall chain traffic for this identity bypasses connection tracking in
   notrackChain string
   // Whether the identity is disabled
@@ -1988,18 +1998,19 @@ mikrotik.snmp.community @defaults("usesDefaultCommunityName addresses readAccess
 // action. RouterOS ships with everything going to a memory-only action that a
 // reboot erases, so whether a rule routes `system`, `error`, `critical`, and
 // `account` to an action with a remote target is the difference between a
-// device that keeps an audit trail and one that does not. The `action` field
-// carries the action name and `actionRef` resolves it so its target can be
-// read in the same query.
-mikrotik.system.logging.rule @defaults("topics action disabled") {
+// device that keeps an audit trail and one that does not. `actionRef` resolves
+// the action the rule routes to, so its target can be read in the same query.
+mikrotik.system.logging.rule @defaults("topics disabled invalid") {
   // Log topics the rule routes
   //
   // For example system, error, critical, account, info, warning, firewall, or
   // a negated topic such as !debug.
   topics []string
-  // Name of the logging action entries are routed to
-  action string
   // Logging action entries are routed to, resolved in the action list
+  //
+  // RouterOS always binds a rule to an action, so a null here means the rule
+  // names an action that is no longer in the action list, which RouterOS also
+  // reports through `invalid`.
   actionRef() mikrotik.system.logging.action
   // Prefix added to entries routed by the rule
   prefix string

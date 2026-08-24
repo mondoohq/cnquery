@@ -80,7 +80,6 @@ func ipsecPeerArgs(row map[string]string) map[string]*llx.RawData {
 		"localAddress":       llx.StringData(row["local-address"]),
 		"port":               intField(row, "port"),
 		"exchangeMode":       llx.StringData(row["exchange-mode"]),
-		"profile":            llx.StringData(row["profile"]),
 		"passive":            boolField(row, "passive"),
 		"sendInitialContact": boolField(row, "send-initial-contact"),
 		"disabled":           boolField(row, "disabled"),
@@ -135,13 +134,24 @@ func (r *mqlMikrotikIpIpsecPeer) profileRef() (*mqlMikrotikIpIpsecProfile, error
 // --- ip.ipsec.identity ---
 
 type mqlMikrotikIpIpsecIdentityInternal struct {
-	cachePeer string
+	cachePeer              string
+	cacheCertificate       string
+	cacheRemoteCertificate string
+}
+
+// cacheRefs stores the names the identity points at, so peerRef,
+// certificateRef and remoteCertificateRef can resolve them without the raw
+// names being carried as fields that duplicate what the references already
+// report.
+func (r *mqlMikrotikIpIpsecIdentity) cacheRefs(row map[string]string) {
+	r.cachePeer = row["peer"]
+	r.cacheCertificate = certificateRefName(row["certificate"])
+	r.cacheRemoteCertificate = certificateRefName(row["remote-certificate"])
 }
 
 func ipsecIdentityArgs(row map[string]string) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"__id":       llx.StringData(rowID("mikrotik.ip.ipsec.identity/", row, row["peer"])),
-		"peer":       llx.StringData(row["peer"]),
 		"authMethod": llx.StringData(row["auth-method"]),
 		// the pre-shared key, the EAP password, and the raw key material are
 		// never read; only whether a key is configured at all
@@ -154,8 +164,6 @@ func ipsecIdentityArgs(row map[string]string) map[string]*llx.RawData {
 		"myId":                llx.StringData(row["my-id"]),
 		"remoteIdType":        llx.StringData(row["remote-id-type"]),
 		"remoteId":            llx.StringData(row["remote-id"]),
-		"certificate":         llx.StringData(row["certificate"]),
-		"remoteCertificate":   llx.StringData(row["remote-certificate"]),
 		"notrackChain":        llx.StringData(row["notrack-chain"]),
 		"disabled":            boolField(row, "disabled"),
 		"comment":             llx.StringData(row["comment"]),
@@ -167,7 +175,7 @@ func newMikrotikIpsecIdentity(runtime *plugin.Runtime, row map[string]string) (p
 	if err != nil {
 		return nil, err
 	}
-	res.(*mqlMikrotikIpIpsecIdentity).cachePeer = row["peer"]
+	res.(*mqlMikrotikIpIpsecIdentity).cacheRefs(row)
 	return res, nil
 }
 
@@ -202,4 +210,24 @@ func (r *mqlMikrotikIpIpsecIdentity) peerRef() (*mqlMikrotikIpIpsecPeer, error) 
 		}
 	}
 	return null()
+}
+
+// certificateRef resolves the certificate the identity presents against the
+// already-cached /certificate listing.
+func (r *mqlMikrotikIpIpsecIdentity) certificateRef() (*mqlMikrotikCertificate, error) {
+	if r.cacheCertificate == "" {
+		r.CertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return certificateByName(r.MqlRuntime, r.cacheCertificate)
+}
+
+// remoteCertificateRef resolves the certificate the identity expects from the
+// peer against the already-cached /certificate listing.
+func (r *mqlMikrotikIpIpsecIdentity) remoteCertificateRef() (*mqlMikrotikCertificate, error) {
+	if r.cacheRemoteCertificate == "" {
+		r.RemoteCertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return certificateByName(r.MqlRuntime, r.cacheRemoteCertificate)
 }

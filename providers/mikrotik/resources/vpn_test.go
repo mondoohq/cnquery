@@ -102,7 +102,9 @@ func TestSstpServerArgs(t *testing.T) {
 	assert.Equal(t, int64(443), args["port"].Value)
 	// with verification off, anyone who passes PPP auth gets a tunnel
 	assert.Equal(t, "no", args["verifyClientCertificate"].Value)
-	assert.Equal(t, "sstp-server", args["certificate"].Value)
+	// the certificate name is carried only by certificateRef, never as a
+	// field that duplicates it
+	assert.NotContains(t, args, "certificate")
 	assert.Equal(t, false, args["pfs"].Value)
 }
 
@@ -136,6 +138,7 @@ func TestOvpnServerArgs(t *testing.T) {
 	assert.Equal(t, "udp", args["protocol"].Value)
 	// without a client certificate, PPP credentials are the only client auth
 	assert.Equal(t, false, args["requireClientCertificate"].Value)
+	assert.NotContains(t, args, "certificate")
 	// RouterOS names the cipher attribute in the singular
 	assert.Equal(t, []any{"blowfish128", "aes128-cbc"}, args["ciphers"].Value)
 	assert.Equal(t, []any{"sha1", "md5"}, args["auth"].Value)

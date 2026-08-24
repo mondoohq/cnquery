@@ -107,7 +107,6 @@ func loggingRuleArgs(row map[string]string) map[string]*llx.RawData {
 	return map[string]*llx.RawData{
 		"__id":     llx.StringData(rowID("mikrotik.system.logging.rule/", row, row["topics"], row["action"])),
 		"topics":   listField(row, "topics"),
-		"action":   llx.StringData(row["action"]),
 		"prefix":   llx.StringData(row["prefix"]),
 		"disabled": boolField(row, "disabled"),
 		"invalid":  boolField(row, "invalid"),

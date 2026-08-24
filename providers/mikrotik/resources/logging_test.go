@@ -105,7 +105,8 @@ func TestLoggingRuleArgs(t *testing.T) {
 
 	assert.Equal(t, "mikrotik.system.logging.rule/*5", args["__id"].Value)
 	assert.Equal(t, []any{"system", "error", "critical", "account"}, args["topics"].Value)
-	assert.Equal(t, "remote", args["action"].Value)
+	// the action name is carried only by actionRef
+	assert.NotContains(t, args, "action")
 	assert.Equal(t, false, args["disabled"].Value)
 }
 

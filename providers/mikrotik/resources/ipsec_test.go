@@ -82,7 +82,8 @@ func TestIpsecPeerArgs(t *testing.T) {
 	assert.Equal(t, "branch-office", args["name"].Value)
 	// aggressive mode exposes a hash an attacker can grind offline
 	assert.Equal(t, "aggressive", args["exchangeMode"].Value)
-	assert.Equal(t, "default", args["profile"].Value)
+	// the profile name is carried only by profileRef
+	assert.NotContains(t, args, "profile")
 	assert.Equal(t, int64(500), args["port"].Value)
 	assert.Equal(t, false, args["passive"].Value)
 }
@@ -103,6 +104,8 @@ func TestIpsecIdentityArgs(t *testing.T) {
 	args := ipsecIdentityArgs(row)
 
 	assert.Equal(t, "mikrotik.ip.ipsec.identity/*4", args["__id"].Value)
+	// the peer name is carried only by peerRef
+	assert.NotContains(t, args, "peer")
 	// pre-shared-key plus generate-policy is the pair that matters
 	assert.Equal(t, "pre-shared-key", args["authMethod"].Value)
 	assert.Equal(t, "port-override", args["generatePolicy"].Value)
@@ -127,7 +130,10 @@ func TestIpsecIdentityArgsNoSecret(t *testing.T) {
 
 	assert.Equal(t, "mikrotik.ip.ipsec.identity/branch-office", args["__id"].Value)
 	assert.Equal(t, false, args["hasSecret"].Value)
-	assert.Equal(t, "ipsec-local", args["certificate"].Value)
+	// the certificate names are carried only by certificateRef and
+	// remoteCertificateRef
+	assert.NotContains(t, args, "certificate")
+	assert.NotContains(t, args, "remoteCertificate")
 }
 
 func TestIpsecIdentityArgsAbsentAttributes(t *testing.T) {
@@ -138,4 +144,45 @@ func TestIpsecIdentityArgsAbsentAttributes(t *testing.T) {
 	assert.Nil(t, args["hasSecret"].Value)
 	assert.Nil(t, args["disabled"].Value)
 	assert.Equal(t, "", args["generatePolicy"].Value)
+}
+
+func TestIpsecIdentityCacheRefs(t *testing.T) {
+	id := &mqlMikrotikIpIpsecIdentity{}
+	id.cacheRefs(map[string]string{
+		"peer":               "branch-office",
+		"certificate":        "ipsec-local",
+		"remote-certificate": "ipsec-branch",
+	})
+
+	assert.Equal(t, "branch-office", id.cachePeer)
+	assert.Equal(t, "ipsec-local", id.cacheCertificate)
+	// RouterOS names the peer certificate attribute with a dash
+	assert.Equal(t, "ipsec-branch", id.cacheRemoteCertificate)
+}
+
+func TestIpsecIdentityCacheRefsUnset(t *testing.T) {
+	// a pre-shared-key identity names no certificate at all, and RouterOS
+	// writes the "none" sentinel into a certificate property with nothing
+	// bound; both must resolve to null rather than to a certificate lookup
+	id := &mqlMikrotikIpIpsecIdentity{}
+	id.cacheRefs(map[string]string{
+		"peer":               "branch-office",
+		"remote-certificate": "none",
+	})
+
+	assert.Equal(t, "branch-office", id.cachePeer)
+	assert.Equal(t, "", id.cacheCertificate)
+	assert.Equal(t, "", id.cacheRemoteCertificate)
+}
+
+func TestIpsecIdentityCacheRefsAbsentPeer(t *testing.T) {
+	// RouterOS requires an identity to name a peer, so an empty cache means
+	// the device reported nothing and peerRef resolves to null rather than
+	// scanning the peer list for an empty name
+	id := &mqlMikrotikIpIpsecIdentity{}
+	id.cacheRefs(map[string]string{})
+
+	assert.Equal(t, "", id.cachePeer)
+	assert.Equal(t, "", id.cacheCertificate)
+	assert.Equal(t, "", id.cacheRemoteCertificate)
 }
