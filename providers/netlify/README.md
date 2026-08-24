@@ -166,6 +166,106 @@ mql> netlify.dnsZones { name records.where(type == "CNAME" && managed == false) 
 mql> netlify.deployKeys.where(sites.length == 0) { id createdAt }
 ```
 
+**Deploy previews of unmerged pull requests, live on their own address**
+
+```shell
+mql> netlify.sites {
+       name
+       deploys.where(context == "deploy-preview" && reviewId != null) { deployUrl reviewUrl branch }
+     }
+```
+
+**Production deploys pinned in place, so a later build does not go live**
+
+```shell
+mql> netlify.sites { name deploys.where(context == "production" && locked == true) { title publishedAt } }
+```
+
+**TLS certificates expiring soon, and names they do not cover**
+
+```shell
+mql> netlify.sites { name certificateState certificateExpiresAt certificateDomains }
+mql> netlify.sites.where(certificateState != "issued") { name certificateState customDomain }
+```
+
+**Branches serving a live address that the allowed list does not name**
+
+```shell
+mql> netlify.sites { name allowedBranches deployedBranches { name url } }
+```
+
+**Development servers currently answering on a live address**
+
+```shell
+mql> netlify.sites { name devServers.where(state == "live") { branch url title } }
+```
+
+**Webhook notifications nothing can verify the origin of**
+
+```shell
+mql> netlify.sites {
+       name
+       notificationHooks.where(type == "url" && hasSigningSecret != true) { destinationHost event }
+     }
+```
+
+**Files uploaded to a site and served to anyone holding the address**
+
+```shell
+mql> netlify.sites { name assets.where(visibility == "public") { name contentType url } }
+```
+
+**Forms retaining visitor submissions**
+
+```shell
+mql> netlify.sites { name forms.where(submissionCount > 0) { name paths submissionCount } }
+```
+
+**Split tests routing production traffic to another branch**
+
+```shell
+mql> netlify.sites { name splitTests.where(active == true) { name path branches } }
+```
+
+**Add-ons injecting environment variables into a site**
+
+```shell
+mql> netlify.sites { name serviceInstances { serviceName environmentVariableNames } }
+```
+
+Only the names of the injected variables are reported. Their values are the
+add-on's own credentials and are never read.
+
+**Agent runs that opened a pull request against the repository**
+
+```shell
+mql> netlify.sites { name agentRunners { title state prUrl prState resultBranch } }
+```
+
+**Who changed the account, and when**
+
+```shell
+mql> netlify.accounts { slug auditEvents.where(logType == "team") { action actorEmail timestamp } }
+mql> netlify.accounts { slug auditEvents { action actor { email role mfaEnabled } } }
+```
+
+The audit log is plan-gated and needs administrative rights, so it reads null on
+an account whose plan does not include it. It is read newest first and bounded
+to the most recent 1000 events, the same way a site's deploys are bounded to
+the most recent 500.
+
+**The git provider app installation a build authenticates with**
+
+```shell
+mql> netlify.sites.where(installationId != null) { name repoPath installationId }
+```
+
+**Whether a security feature is even available on the site's plan**
+
+```shell
+mql> netlify.sites { name capabilities }
+```
+
 **Cross-resource traversal**
 
 Sites, accounts, DNS zones, and deploy keys reference each other, so a query can
@@ -175,6 +275,8 @@ start from any of them:
 mql> netlify.dnsZones { name site { name forceSsl } }
 mql> netlify.sites { name account { slug typeName } }
 mql> netlify.sites { name deployKey { id createdAt } }
+mql> netlify.sites { deployedBranches { name deploy { context locked } } }
+mql> netlify.sites { agentRunners { title site { name repoPath } } }
 ```
 
 ## Verification
@@ -197,6 +299,12 @@ administrative rights to read the roster.
 
 **`netlify API /accounts: 401`** - the token is expired or was revoked. Issue a
 new one under User settings > Applications.
+
+**A list reads null rather than empty** - several endpoints are plan-gated:
+split tests, development servers, agent runners, and the account audit log
+answer with a denial on a plan that does not include them, and on a token
+without administrative rights. Those lists report null so that neither case is
+mistaken for a site or account that genuinely has none.
 
 **Fields come back null on an account or site** - the token's account role does
 not grant the read. Reads that are denied stay null rather than reporting an

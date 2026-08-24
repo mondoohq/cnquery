@@ -233,3 +233,71 @@ func TestSiteFilterReadsTheDiscoveredSite(t *testing.T) {
 		t.Fatalf("expected an unscoped connection to report no site, got %q", got)
 	}
 }
+
+func TestGetPagedLimitStopsAtTheRecordCap(t *testing.T) {
+	// An append-only endpoint keeps answering with full pages, so the walk has
+	// to stop on the cap rather than on a short page. It must also report
+	// exactly the cap, not the whole last page it read past it.
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		writeItems(w, page, pageSize)
+	}))
+	defer srv.Close()
+
+	got, err := GetPagedLimit[pagedItem](context.Background(), testConn(srv), "/deploys", nil, 250)
+	if err != nil {
+		t.Fatalf("GetPagedLimit: %v", err)
+	}
+	if len(got) != 250 {
+		t.Fatalf("expected 250 records, got %d", len(got))
+	}
+	if calls != 3 {
+		t.Fatalf("expected 3 page requests, got %d", calls)
+	}
+	// Newest first, so the cap keeps the most recent records.
+	if got[0].ID != "p1-0" {
+		t.Fatalf("dropped the newest records: %q", got[0].ID)
+	}
+}
+
+func TestGetPagedLimitStopsOnAStuckCursor(t *testing.T) {
+	// An endpoint that ignores the page parameter answers every request with
+	// the first page. Without the guard the cap alone would still be reached,
+	// by counting the same records over and over.
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		writeItems(w, 1, pageSize)
+	}))
+	defer srv.Close()
+
+	got, err := GetPagedLimit[pagedItem](context.Background(), testConn(srv), "/deploys", nil, 1000)
+	if err != nil {
+		t.Fatalf("GetPagedLimit: %v", err)
+	}
+	if len(got) != pageSize {
+		t.Fatalf("expected %d records, got %d", pageSize, len(got))
+	}
+	if calls != 2 {
+		t.Fatalf("expected 2 page requests before the repeat was detected, got %d", calls)
+	}
+}
+
+func TestGetPagedLimitShortPageWins(t *testing.T) {
+	// A cap larger than the data must not change the plain behavior: the walk
+	// still ends on the short page.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		writeItems(w, 1, 2)
+	}))
+	defer srv.Close()
+
+	got, err := GetPagedLimit[pagedItem](context.Background(), testConn(srv), "/deploys", nil, 500)
+	if err != nil {
+		t.Fatalf("GetPagedLimit: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expected 2 records, got %d", len(got))
+	}
+}

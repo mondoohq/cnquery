@@ -74,6 +74,43 @@ func optionalBool(v *bool) *llx.RawData {
 	return llx.BoolData(*v)
 }
 
+// optionalString reports a value the API omits as null rather than as the empty
+// string, so a field it did not report stays apart from one reported as blank.
+func optionalString(v *string) *llx.RawData {
+	if v == nil {
+		return llx.NilData
+	}
+	return llx.StringData(*v)
+}
+
+// optionalInt reports a value the API omits as null rather than as zero, which
+// would otherwise read as a real count or identifier of zero.
+func optionalInt(v *int64) *llx.RawData {
+	if v == nil {
+		return llx.NilData
+	}
+	return llx.IntData(*v)
+}
+
+// rawJSONToDict decodes a JSON value whose shape varies by key into a dict. A
+// value the API did not report stays null rather than becoming an empty map,
+// which would read as a record that carries nothing rather than one that was
+// never asked about.
+func rawJSONToDict(raw json.RawMessage) *llx.RawData {
+	if len(raw) == 0 {
+		return llx.NilData
+	}
+	var v any
+	if err := json.Unmarshal(raw, &v); err != nil {
+		log.Warn().Msg("netlify> could not decode a JSON value; reporting it as null")
+		return llx.NilData
+	}
+	if v == nil {
+		return llx.NilData
+	}
+	return llx.DictData(v)
+}
+
 // mapStrToAny widens a string map into the any-valued map llx.MapData expects.
 func mapStrToAny(in map[string]string) map[string]any {
 	out := make(map[string]any, len(in))
@@ -135,6 +172,8 @@ func findCachedResource[T any](list *plugin.TValue[[]any], id func(T) string, wa
 func netlifyAccountID(a *mqlNetlifyAccount) string     { return a.Id.Data }
 func netlifySiteID(s *mqlNetlifySite) string           { return s.Id.Data }
 func netlifyDeployKeyID(k *mqlNetlifyDeployKey) string { return k.Id.Data }
+
+func netlifySiteDeployID(d *mqlNetlifySiteDeploy) string { return d.Id.Data }
 
 // --- root resource --------------------------------------------------------
 
