@@ -330,3 +330,39 @@ func TestIsNotFound(t *testing.T) {
 		})
 	}
 }
+
+func TestStrOrNil(t *testing.T) {
+	version := "7.2.4"
+
+	t.Run("value form: absent stays null", func(t *testing.T) {
+		if got := strOrNil("", false); got != nil {
+			t.Fatalf("strOrNil(\"\", false) = %q, want null", *got)
+		}
+	})
+	t.Run("value form: present", func(t *testing.T) {
+		got := strOrNil(version, true)
+		if got == nil || *got != version {
+			t.Fatalf("strOrNil(%q, true) = %v, want %q", version, got, version)
+		}
+	})
+	t.Run("pointer form: absent stays null", func(t *testing.T) {
+		if got := strOrNil((*string)(nil), false); got != nil {
+			t.Fatalf("strOrNil(nil, false) = %q, want null", *got)
+		}
+	})
+	t.Run("pointer form: present", func(t *testing.T) {
+		got := strOrNil(&version, true)
+		if got == nil || *got != version {
+			t.Fatalf("strOrNil(&%q, true) = %v, want %q", version, got, version)
+		}
+	})
+	t.Run("an empty string the API did report is not the same as an absent one", func(t *testing.T) {
+		got := strOrNil("", true)
+		if got == nil {
+			t.Fatal("strOrNil(\"\", true) = null, want a reported empty string")
+		}
+		if *got != "" {
+			t.Fatalf("strOrNil(\"\", true) = %q, want %q", *got, "")
+		}
+	})
+}

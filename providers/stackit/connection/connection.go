@@ -80,6 +80,10 @@ type StackitConnection struct {
 	routingTables     map[string]iaas.RoutingTable
 	routingTablesErr  error
 
+	securityGroupsOnce sync.Once
+	securityGroups     map[string]iaas.SecurityGroup
+	securityGroupsErr  error
+
 	iaasOnce             sync.Once
 	iaasClient           *iaas.APIClient
 	iaasErr              error
@@ -293,6 +297,44 @@ func (c *StackitConnection) captureProjectMetadata(resp *resourcemanager.GetProj
 			c.projectParent = parent.GetId()
 		}
 	}
+}
+
+// SecurityGroups returns every security group in the connected project and
+// region, keyed by security group ID.
+//
+// Resolving a group reference through this map costs one list call for the
+// whole connection no matter how many objects point at a group. Going through
+// the resource runtime instead would run the security group's init once per
+// reference, because a resource's init runs before the runtime cache is
+// consulted, turning a single list into one GET per referring object.
+//
+// Failures are returned rather than flattened into an empty map. A caller
+// resolving a group the API named cannot tell an unreadable list from a
+// balancer with no group assigned once the error is gone, and those two
+// answers carry opposite security meanings.
+func (c *StackitConnection) SecurityGroups(ctx context.Context) (map[string]iaas.SecurityGroup, error) {
+	c.securityGroupsOnce.Do(func() {
+		c.securityGroups, c.securityGroupsErr = c.loadSecurityGroups(ctx)
+	})
+	return c.securityGroups, c.securityGroupsErr
+}
+
+func (c *StackitConnection) loadSecurityGroups(ctx context.Context) (map[string]iaas.SecurityGroup, error) {
+	client, err := c.IaaS()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.DefaultAPI.ListSecurityGroups(ctx, c.projectID, c.region).Execute()
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]iaas.SecurityGroup{}
+	for _, sg := range resp.GetItems() {
+		if id := sg.GetId(); id != "" {
+			out[id] = sg
+		}
+	}
+	return out, nil
 }
 
 // NetworkAreaRoutingTables returns the routing tables defined on the network

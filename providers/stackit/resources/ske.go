@@ -50,6 +50,25 @@ type mqlStackitSkeClusterInternal struct {
 	nodepoolExpiration           map[string]ske.ExpirationStatusNodepool
 }
 
+// skeAutoUpdate reads the two automatic-patching flags out of the cluster's
+// maintenance window, returning nil for either one the API does not report.
+//
+// A cluster can carry no maintenance window at all, and a window can name one
+// flag without the other. Neither case means the update is switched off, so
+// both yield nil: a false here would report automatic patching as disabled on
+// a cluster whose setting was never read, and an assertion that the flag is
+// true would then fail on clusters that may well be patching.
+func skeAutoUpdate(cluster *ske.Cluster) (kubernetes *bool, machineImage *bool) {
+	if cluster == nil {
+		return nil, nil
+	}
+	maintenance, ok := cluster.GetMaintenanceOk()
+	if !ok || maintenance == nil {
+		return nil, nil
+	}
+	return maintenance.AutoUpdate.KubernetesVersion, maintenance.AutoUpdate.MachineImageVersion
+}
+
 func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Resource, error) {
 	var aggregated string
 	var creationTime *time.Time
@@ -150,6 +169,8 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 		}
 	}
 
+	autoUpdateKubernetes, autoUpdateMachineImage := skeAutoUpdate(cluster)
+
 	args := map[string]*llx.RawData{
 		"name":                             llx.StringData(cluster.GetName()),
 		"status":                           llx.StringData(aggregated),
@@ -157,6 +178,8 @@ func buildSkeCluster(runtime *plugin.Runtime, cluster *ske.Cluster) (plugin.Reso
 		"kubernetesVersion":                llx.StringData(kVersion),
 		"hibernations":                     llx.ArrayData(hibernations, types.Dict),
 		"maintenance":                      llx.DictData(toDict(cluster.GetMaintenance())),
+		"autoUpdateKubernetes":             llx.BoolDataPtr(autoUpdateKubernetes),
+		"autoUpdateMachineImage":           llx.BoolDataPtr(autoUpdateMachineImage),
 		"extensions":                       llx.DictData(toDict(cluster.GetExtensions())),
 		"network":                          llx.DictData(toDict(cluster.GetNetwork())),
 		"creationTime":                     llx.TimeDataPtr(creationTime),

@@ -165,6 +165,14 @@ private stackit.server @defaults("id name status machineType") {
   volumeIds []string
   // Volumes attached to the server
   volumes() []stackit.volume
+  // Whether the boot volume is deleted when the server is terminated
+  //
+  // Decides whether the boot disk and the data on it survive deletion of the
+  // server, which is the difference between a disk being available for
+  // forensic review afterwards and being destroyed with the instance. Null
+  // when the server boots straight from an image and so has no boot volume,
+  // and when the API reports no setting for it.
+  bootVolumeDeleteOnTermination bool
   // Security group IDs attached to the server
   securityGroupIds []string
   // Security groups attached to the server
@@ -175,6 +183,17 @@ private stackit.server @defaults("id name status machineType") {
   serviceAccounts() []stackit.serviceAccount
   // Network interfaces attached to the server
   networkInterfaces() []stackit.nic
+  // Whether the STACKIT server agent is provisioned on the server
+  //
+  // The agent is what the Server Backup and Server Update services talk to,
+  // so a server without it reports no backups and no update runs regardless
+  // of how those services are configured. Read it alongside `backups` and
+  // `updates` to tell an empty result that reflects the configuration from
+  // one that reflects a server nothing can be collected from. Null when the
+  // API reports no provisioning setting, in which case the outcome follows
+  // the default of the image the server booted from and is not readable from
+  // the server itself.
+  agentProvisioned bool
   // Point-in-time backups taken from the server by the Server Backup service
   backups() []stackit.server.backup
   // Recurring backup schedules attached to the server
@@ -830,6 +849,12 @@ private stackit.loadBalancer @defaults("name status externalAddress") {
   name string
   // External (public) IPv4/IPv6 address (empty if private only)
   externalAddress string
+  // Private address inside the attached network (empty if none)
+  //
+  // Transient address the balancer answers on from within the network. It
+  // can change at any time, so it identifies the balancer's private entry
+  // point rather than serving as a stable key.
+  privateAddress string
   // Plan ID (sizing tier)
   planId string
   // Status (STATUS_READY, STATUS_PENDING, STATUS_ERROR, STATUS_TERMINATING, STATUS_UNSPECIFIED)
@@ -855,6 +880,29 @@ private stackit.loadBalancer @defaults("name status externalAddress") {
   options dict
   // Errors reported during creation/operation [{type, description}]
   errors []dict
+  // Security group STACKIT manages for the load balancer itself
+  //
+  // Group that permits traffic from the balancer out to the backend targets.
+  // Null when the balancer has none assigned.
+  loadBalancerSecurityGroup() stackit.securityGroup
+  // Security group STACKIT manages for the backend targets
+  //
+  // Group that allows the targets to receive traffic from the balancer. It
+  // is attached to the targets automatically unless
+  // `disableTargetSecurityGroupAssignment` is set, in which case reaching
+  // the backends is left to whatever groups the operator attached by hand.
+  // Null when the balancer has none assigned.
+  targetSecurityGroup() stackit.securityGroup
+  // Whether the managed target security group is left off the backends
+  //
+  // Set at creation and not changeable afterwards. When true, STACKIT does
+  // not attach `targetSecurityGroup` to the targets and connectivity to them
+  // depends entirely on the groups and routes the operator configured, so
+  // the backends can be left reachable by more than the balancer. Null when
+  // the API reports no setting for it.
+  disableTargetSecurityGroupAssignment bool
+  // User-defined labels
+  labels map[string]string
   // Internet-exposure breakdown (public address combined with the access-control allow-list)
   exposure() stackit.network.exposure
 }
@@ -969,7 +1017,25 @@ private stackit.ske.cluster @defaults("name kubernetesVersion status") {
   // Hibernation schedules [{start, end, timezone}]
   hibernations []dict
   // Maintenance window {timeWindow, autoUpdate: {kubernetesVersion, machineImageVersion}}
+  //
+  // See `autoUpdateKubernetes` and `autoUpdateMachineImage` for the two
+  // automatic-patching controls read out of this window.
   maintenance dict
+  // Whether the maintenance window applies Kubernetes patch releases automatically
+  //
+  // When enabled, STACKIT moves the control plane and node pools onto new
+  // patch releases of the running Kubernetes minor version inside the
+  // maintenance window, which is what keeps a cluster off a version that has
+  // passed the date in `kubernetesExpirationDate`. Null when the cluster
+  // carries no maintenance window, and when the window reports no setting
+  // for it.
+  autoUpdateKubernetes bool
+  // Whether the maintenance window applies node machine image updates automatically
+  //
+  // Covers the operating system image the worker nodes run, patched
+  // independently of the Kubernetes version. Null when the cluster carries
+  // no maintenance window, and when the window reports no setting for it.
+  autoUpdateMachineImage bool
   // Extension add-ons keyed by acl, observability, dns, and applicationLoadBalancer
   //
   // Dict of the cluster's enabled add-ons. The `acl` key holds the
@@ -1744,6 +1810,13 @@ private stackit.openSearch.instance @defaults("id name status planName") {
   planId string
   // Service offering name (e.g., opensearch)
   offeringName string
+  // Engine version of the service offering
+  //
+  // Version of the OpenSearch release the instance runs. `offeringName` names
+  // the engine but not its version, and `imageUrl` carries the version only
+  // inside an opaque image path, so this is the field to compare against an
+  // end-of-life list. Null when the API reports no version for the instance.
+  offeringVersion string
   // Cloud-Foundry-style organization GUID
   cfOrganizationGuid string
   // Cloud-Foundry-style space GUID
@@ -1812,6 +1885,13 @@ private stackit.mariaDb.instance @defaults("id name status planName") {
   planId string
   // Service offering name
   offeringName string
+  // Engine version of the service offering
+  //
+  // Version of the MariaDB release the instance runs. `offeringName` names
+  // the engine but not its version, and `imageUrl` carries the version only
+  // inside an opaque image path, so this is the field to compare against an
+  // end-of-life list. Null when the API reports no version for the instance.
+  offeringVersion string
   // Cloud-Foundry-style organization GUID
   cfOrganizationGuid string
   // Cloud-Foundry-style space GUID
@@ -1868,6 +1948,13 @@ private stackit.redis.instance @defaults("id name status planName") {
   planId string
   // Service offering name
   offeringName string
+  // Engine version of the service offering
+  //
+  // Version of the Redis release the instance runs. `offeringName` names
+  // the engine but not its version, and `imageUrl` carries the version only
+  // inside an opaque image path, so this is the field to compare against an
+  // end-of-life list. Null when the API reports no version for the instance.
+  offeringVersion string
   // Cloud-Foundry-style organization GUID
   cfOrganizationGuid string
   // Cloud-Foundry-style space GUID
@@ -1942,6 +2029,13 @@ private stackit.rabbitMq.instance @defaults("id name status planName") {
   planId string
   // Service offering name
   offeringName string
+  // Engine version of the service offering
+  //
+  // Version of the RabbitMQ release the instance runs. `offeringName` names
+  // the engine but not its version, and `imageUrl` carries the version only
+  // inside an opaque image path, so this is the field to compare against an
+  // end-of-life list. Null when the API reports no version for the instance.
+  offeringVersion string
   // Cloud-Foundry-style organization GUID
   cfOrganizationGuid string
   // Cloud-Foundry-style space GUID
@@ -2011,6 +2105,13 @@ private stackit.logMe.instance @defaults("id name status planName") {
   planId string
   // Service offering name
   offeringName string
+  // Engine version of the service offering
+  //
+  // Version of the LogMe release the instance runs. `offeringName` names
+  // the engine but not its version, and `imageUrl` carries the version only
+  // inside an opaque image path, so this is the field to compare against an
+  // end-of-life list. Null when the API reports no version for the instance.
+  offeringVersion string
   // Cloud-Foundry-style organization GUID
   cfOrganizationGuid string
   // Cloud-Foundry-style space GUID

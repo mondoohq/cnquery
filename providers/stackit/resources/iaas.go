@@ -52,6 +52,54 @@ type mqlStackitServerInternal struct {
 	cacheNics                []any
 }
 
+// serverAgentProvisioned reports whether the STACKIT server agent is
+// provisioned on the server, or nil when the API says nothing about it.
+//
+// The agent is the precondition for the Server Backup and Server Update
+// services: without it neither collects anything, so an empty backups() or
+// updates() describes the server rather than the backup configuration. The
+// API omits the setting when provisioning follows the boot image's own
+// default, and that outcome is not readable from the server object. Nil there
+// keeps "the agent is off" apart from "we cannot tell" instead of folding
+// both into a false the API never reported.
+func serverAgentProvisioned(s *iaas.Server) *bool {
+	if s == nil {
+		return nil
+	}
+	agent, ok := s.GetAgentOk()
+	if !ok || agent == nil {
+		return nil
+	}
+	provisioned, ok := agent.GetProvisionedOk()
+	if !ok {
+		return nil
+	}
+	return provisioned
+}
+
+// serverBootVolumeDeleteOnTermination reports whether the boot volume is
+// deleted along with the server, or nil when the server has no boot volume or
+// the API reports no setting for it.
+//
+// A server booted straight from an image carries no boot volume at all and the
+// question does not apply to it. Both that case and an unreported setting
+// yield nil rather than false, so a server whose disk retention is unknown
+// does not read as one that keeps its disk.
+func serverBootVolumeDeleteOnTermination(s *iaas.Server) *bool {
+	if s == nil {
+		return nil
+	}
+	boot, ok := s.GetBootVolumeOk()
+	if !ok || boot == nil {
+		return nil
+	}
+	deleteOnTermination, ok := boot.GetDeleteOnTerminationOk()
+	if !ok {
+		return nil
+	}
+	return deleteOnTermination
+}
+
 func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, error) {
 	nics := []any{}
 	if v, ok := s.GetNicsOk(); ok {
@@ -97,9 +145,12 @@ func buildServer(runtime *plugin.Runtime, s *iaas.Server) (plugin.Resource, erro
 		"imageId":          llx.StringData(s.GetImageId()),
 		"volumeIds":        strSliceData(s.GetVolumes()),
 		"securityGroupIds": strSliceData(s.GetSecurityGroups()),
-		"userData":         llx.StringData(string(s.GetUserData())),
-		"labels":           labelData(s.GetLabels()),
-		"metadata":         metadataData(s.GetMetadata()),
+		"agentProvisioned": llx.BoolDataPtr(serverAgentProvisioned(s)),
+		"bootVolumeDeleteOnTermination": llx.BoolDataPtr(
+			serverBootVolumeDeleteOnTermination(s)),
+		"userData": llx.StringData(string(s.GetUserData())),
+		"labels":   labelData(s.GetLabels()),
+		"metadata": metadataData(s.GetMetadata()),
 	}
 	res, err := CreateResource(runtime, "stackit.server", args)
 	if err != nil {

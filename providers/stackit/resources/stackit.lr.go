@@ -740,6 +740,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.server.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetVolumes()).ToDataRes(types.Array(types.Resource("stackit.volume")))
 	},
+	"stackit.server.bootVolumeDeleteOnTermination": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServer).GetBootVolumeDeleteOnTermination()).ToDataRes(types.Bool)
+	},
 	"stackit.server.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
@@ -754,6 +757,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.server.networkInterfaces": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetNetworkInterfaces()).ToDataRes(types.Array(types.Resource("stackit.nic")))
+	},
+	"stackit.server.agentProvisioned": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitServer).GetAgentProvisioned()).ToDataRes(types.Bool)
 	},
 	"stackit.server.backups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitServer).GetBackups()).ToDataRes(types.Array(types.Resource("stackit.server.backup")))
@@ -1346,6 +1352,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.loadBalancer.externalAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancer).GetExternalAddress()).ToDataRes(types.String)
 	},
+	"stackit.loadBalancer.privateAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetPrivateAddress()).ToDataRes(types.String)
+	},
 	"stackit.loadBalancer.planId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancer).GetPlanId()).ToDataRes(types.String)
 	},
@@ -1372,6 +1381,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.loadBalancer.errors": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancer).GetErrors()).ToDataRes(types.Array(types.Dict))
+	},
+	"stackit.loadBalancer.loadBalancerSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetLoadBalancerSecurityGroup()).ToDataRes(types.Resource("stackit.securityGroup"))
+	},
+	"stackit.loadBalancer.targetSecurityGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetTargetSecurityGroup()).ToDataRes(types.Resource("stackit.securityGroup"))
+	},
+	"stackit.loadBalancer.disableTargetSecurityGroupAssignment": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetDisableTargetSecurityGroupAssignment()).ToDataRes(types.Bool)
+	},
+	"stackit.loadBalancer.labels": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLoadBalancer).GetLabels()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"stackit.loadBalancer.exposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLoadBalancer).GetExposure()).ToDataRes(types.Resource("stackit.network.exposure"))
@@ -1444,6 +1465,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.ske.cluster.maintenance": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetMaintenance()).ToDataRes(types.Dict)
+	},
+	"stackit.ske.cluster.autoUpdateKubernetes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetAutoUpdateKubernetes()).ToDataRes(types.Bool)
+	},
+	"stackit.ske.cluster.autoUpdateMachineImage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitSkeCluster).GetAutoUpdateMachineImage()).ToDataRes(types.Bool)
 	},
 	"stackit.ske.cluster.extensions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitSkeCluster).GetExtensions()).ToDataRes(types.Dict)
@@ -2081,6 +2108,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.openSearch.instance.offeringName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetOfferingName()).ToDataRes(types.String)
 	},
+	"stackit.openSearch.instance.offeringVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitOpenSearchInstance).GetOfferingVersion()).ToDataRes(types.String)
+	},
 	"stackit.openSearch.instance.cfOrganizationGuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitOpenSearchInstance).GetCfOrganizationGuid()).ToDataRes(types.String)
 	},
@@ -2126,6 +2156,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.mariaDb.instance.offeringName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetOfferingName()).ToDataRes(types.String)
 	},
+	"stackit.mariaDb.instance.offeringVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitMariaDbInstance).GetOfferingVersion()).ToDataRes(types.String)
+	},
 	"stackit.mariaDb.instance.cfOrganizationGuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitMariaDbInstance).GetCfOrganizationGuid()).ToDataRes(types.String)
 	},
@@ -2164,6 +2197,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.redis.instance.offeringName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetOfferingName()).ToDataRes(types.String)
+	},
+	"stackit.redis.instance.offeringVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRedisInstance).GetOfferingVersion()).ToDataRes(types.String)
 	},
 	"stackit.redis.instance.cfOrganizationGuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRedisInstance).GetCfOrganizationGuid()).ToDataRes(types.String)
@@ -2213,6 +2249,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"stackit.rabbitMq.instance.offeringName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetOfferingName()).ToDataRes(types.String)
 	},
+	"stackit.rabbitMq.instance.offeringVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitRabbitMqInstance).GetOfferingVersion()).ToDataRes(types.String)
+	},
 	"stackit.rabbitMq.instance.cfOrganizationGuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitRabbitMqInstance).GetCfOrganizationGuid()).ToDataRes(types.String)
 	},
@@ -2257,6 +2296,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"stackit.logMe.instance.offeringName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetOfferingName()).ToDataRes(types.String)
+	},
+	"stackit.logMe.instance.offeringVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlStackitLogMeInstance).GetOfferingVersion()).ToDataRes(types.String)
 	},
 	"stackit.logMe.instance.cfOrganizationGuid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlStackitLogMeInstance).GetCfOrganizationGuid()).ToDataRes(types.String)
@@ -3283,6 +3325,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitServer).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"stackit.server.bootVolumeDeleteOnTermination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServer).BootVolumeDeleteOnTermination, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"stackit.server.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServer).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -3301,6 +3347,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.server.networkInterfaces": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitServer).NetworkInterfaces, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.server.agentProvisioned": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitServer).AgentProvisioned, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.server.backups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4167,6 +4217,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitLoadBalancer).ExternalAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.loadBalancer.privateAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).PrivateAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.loadBalancer.planId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLoadBalancer).PlanId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -4201,6 +4255,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.loadBalancer.errors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLoadBalancer).Errors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.loadBalancerSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).LoadBalancerSecurityGroup, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.targetSecurityGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).TargetSecurityGroup, ok = plugin.RawToTValue[*mqlStackitSecurityGroup](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.disableTargetSecurityGroupAssignment": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).DisableTargetSecurityGroupAssignment, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.loadBalancer.labels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLoadBalancer).Labels, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"stackit.loadBalancer.exposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -4313,6 +4383,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.ske.cluster.maintenance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitSkeCluster).Maintenance, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.autoUpdateKubernetes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).AutoUpdateKubernetes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"stackit.ske.cluster.autoUpdateMachineImage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitSkeCluster).AutoUpdateMachineImage, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"stackit.ske.cluster.extensions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5263,6 +5341,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitOpenSearchInstance).OfferingName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.openSearch.instance.offeringVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitOpenSearchInstance).OfferingVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.openSearch.instance.cfOrganizationGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitOpenSearchInstance).CfOrganizationGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5331,6 +5413,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitMariaDbInstance).OfferingName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.mariaDb.instance.offeringVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitMariaDbInstance).OfferingVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.mariaDb.instance.cfOrganizationGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitMariaDbInstance).CfOrganizationGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5389,6 +5475,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.redis.instance.offeringName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRedisInstance).OfferingName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.redis.instance.offeringVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRedisInstance).OfferingVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.redis.instance.cfOrganizationGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5463,6 +5553,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlStackitRabbitMqInstance).OfferingName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"stackit.rabbitMq.instance.offeringVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitRabbitMqInstance).OfferingVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"stackit.rabbitMq.instance.cfOrganizationGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitRabbitMqInstance).CfOrganizationGuid, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -5529,6 +5623,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"stackit.logMe.instance.offeringName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlStackitLogMeInstance).OfferingName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"stackit.logMe.instance.offeringVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlStackitLogMeInstance).OfferingVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"stackit.logMe.instance.cfOrganizationGuid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7440,35 +7538,37 @@ type mqlStackitServer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitServerInternal
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Status            plugin.TValue[string]
-	PowerStatus       plugin.TValue[string]
-	MachineType       plugin.TValue[string]
-	AvailabilityZone  plugin.TValue[string]
-	CreatedAt         plugin.TValue[*time.Time]
-	LaunchedAt        plugin.TValue[*time.Time]
-	UpdatedAt         plugin.TValue[*time.Time]
-	ErrorMessage      plugin.TValue[string]
-	ConfigDrive       plugin.TValue[bool]
-	KeypairName       plugin.TValue[string]
-	KeyPair           plugin.TValue[*mqlStackitKeyPair]
-	ImageId           plugin.TValue[string]
-	Image             plugin.TValue[*mqlStackitImage]
-	VolumeIds         plugin.TValue[[]any]
-	Volumes           plugin.TValue[[]any]
-	SecurityGroupIds  plugin.TValue[[]any]
-	SecurityGroups    plugin.TValue[[]any]
-	Exposure          plugin.TValue[*mqlStackitNetworkExposure]
-	ServiceAccounts   plugin.TValue[[]any]
-	NetworkInterfaces plugin.TValue[[]any]
-	Backups           plugin.TValue[[]any]
-	BackupSchedules   plugin.TValue[[]any]
-	Updates           plugin.TValue[[]any]
-	UpdateSchedules   plugin.TValue[[]any]
-	UserData          plugin.TValue[string]
-	Labels            plugin.TValue[map[string]any]
-	Metadata          plugin.TValue[map[string]any]
+	Id                            plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Status                        plugin.TValue[string]
+	PowerStatus                   plugin.TValue[string]
+	MachineType                   plugin.TValue[string]
+	AvailabilityZone              plugin.TValue[string]
+	CreatedAt                     plugin.TValue[*time.Time]
+	LaunchedAt                    plugin.TValue[*time.Time]
+	UpdatedAt                     plugin.TValue[*time.Time]
+	ErrorMessage                  plugin.TValue[string]
+	ConfigDrive                   plugin.TValue[bool]
+	KeypairName                   plugin.TValue[string]
+	KeyPair                       plugin.TValue[*mqlStackitKeyPair]
+	ImageId                       plugin.TValue[string]
+	Image                         plugin.TValue[*mqlStackitImage]
+	VolumeIds                     plugin.TValue[[]any]
+	Volumes                       plugin.TValue[[]any]
+	BootVolumeDeleteOnTermination plugin.TValue[bool]
+	SecurityGroupIds              plugin.TValue[[]any]
+	SecurityGroups                plugin.TValue[[]any]
+	Exposure                      plugin.TValue[*mqlStackitNetworkExposure]
+	ServiceAccounts               plugin.TValue[[]any]
+	NetworkInterfaces             plugin.TValue[[]any]
+	AgentProvisioned              plugin.TValue[bool]
+	Backups                       plugin.TValue[[]any]
+	BackupSchedules               plugin.TValue[[]any]
+	Updates                       plugin.TValue[[]any]
+	UpdateSchedules               plugin.TValue[[]any]
+	UserData                      plugin.TValue[string]
+	Labels                        plugin.TValue[map[string]any]
+	Metadata                      plugin.TValue[map[string]any]
 }
 
 // createStackitServer creates a new instance of this resource
@@ -7612,6 +7712,10 @@ func (c *mqlStackitServer) GetVolumes() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlStackitServer) GetBootVolumeDeleteOnTermination() *plugin.TValue[bool] {
+	return &c.BootVolumeDeleteOnTermination
+}
+
 func (c *mqlStackitServer) GetSecurityGroupIds() *plugin.TValue[[]any] {
 	return &c.SecurityGroupIds
 }
@@ -7678,6 +7782,10 @@ func (c *mqlStackitServer) GetNetworkInterfaces() *plugin.TValue[[]any] {
 
 		return c.networkInterfaces()
 	})
+}
+
+func (c *mqlStackitServer) GetAgentProvisioned() *plugin.TValue[bool] {
+	return &c.AgentProvisioned
 }
 
 func (c *mqlStackitServer) GetBackups() *plugin.TValue[[]any] {
@@ -9775,18 +9883,23 @@ type mqlStackitLoadBalancer struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlStackitLoadBalancerInternal
-	Name               plugin.TValue[string]
-	ExternalAddress    plugin.TValue[string]
-	PlanId             plugin.TValue[string]
-	Status             plugin.TValue[string]
-	PrivateNetworkOnly plugin.TValue[bool]
-	Region             plugin.TValue[string]
-	Listeners          plugin.TValue[[]any]
-	Networks           plugin.TValue[[]any]
-	TargetPools        plugin.TValue[[]any]
-	Options            plugin.TValue[any]
-	Errors             plugin.TValue[[]any]
-	Exposure           plugin.TValue[*mqlStackitNetworkExposure]
+	Name                                 plugin.TValue[string]
+	ExternalAddress                      plugin.TValue[string]
+	PrivateAddress                       plugin.TValue[string]
+	PlanId                               plugin.TValue[string]
+	Status                               plugin.TValue[string]
+	PrivateNetworkOnly                   plugin.TValue[bool]
+	Region                               plugin.TValue[string]
+	Listeners                            plugin.TValue[[]any]
+	Networks                             plugin.TValue[[]any]
+	TargetPools                          plugin.TValue[[]any]
+	Options                              plugin.TValue[any]
+	Errors                               plugin.TValue[[]any]
+	LoadBalancerSecurityGroup            plugin.TValue[*mqlStackitSecurityGroup]
+	TargetSecurityGroup                  plugin.TValue[*mqlStackitSecurityGroup]
+	DisableTargetSecurityGroupAssignment plugin.TValue[bool]
+	Labels                               plugin.TValue[map[string]any]
+	Exposure                             plugin.TValue[*mqlStackitNetworkExposure]
 }
 
 // createStackitLoadBalancer creates a new instance of this resource
@@ -9832,6 +9945,10 @@ func (c *mqlStackitLoadBalancer) GetName() *plugin.TValue[string] {
 
 func (c *mqlStackitLoadBalancer) GetExternalAddress() *plugin.TValue[string] {
 	return &c.ExternalAddress
+}
+
+func (c *mqlStackitLoadBalancer) GetPrivateAddress() *plugin.TValue[string] {
+	return &c.PrivateAddress
 }
 
 func (c *mqlStackitLoadBalancer) GetPlanId() *plugin.TValue[string] {
@@ -9892,6 +10009,46 @@ func (c *mqlStackitLoadBalancer) GetOptions() *plugin.TValue[any] {
 
 func (c *mqlStackitLoadBalancer) GetErrors() *plugin.TValue[[]any] {
 	return &c.Errors
+}
+
+func (c *mqlStackitLoadBalancer) GetLoadBalancerSecurityGroup() *plugin.TValue[*mqlStackitSecurityGroup] {
+	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.LoadBalancerSecurityGroup, func() (*mqlStackitSecurityGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.loadBalancer", c.__id, "loadBalancerSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitSecurityGroup), nil
+			}
+		}
+
+		return c.loadBalancerSecurityGroup()
+	})
+}
+
+func (c *mqlStackitLoadBalancer) GetTargetSecurityGroup() *plugin.TValue[*mqlStackitSecurityGroup] {
+	return plugin.GetOrCompute[*mqlStackitSecurityGroup](&c.TargetSecurityGroup, func() (*mqlStackitSecurityGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("stackit.loadBalancer", c.__id, "targetSecurityGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlStackitSecurityGroup), nil
+			}
+		}
+
+		return c.targetSecurityGroup()
+	})
+}
+
+func (c *mqlStackitLoadBalancer) GetDisableTargetSecurityGroupAssignment() *plugin.TValue[bool] {
+	return &c.DisableTargetSecurityGroupAssignment
+}
+
+func (c *mqlStackitLoadBalancer) GetLabels() *plugin.TValue[map[string]any] {
+	return &c.Labels
 }
 
 func (c *mqlStackitLoadBalancer) GetExposure() *plugin.TValue[*mqlStackitNetworkExposure] {
@@ -10146,6 +10303,8 @@ type mqlStackitSkeCluster struct {
 	NodePools                        plugin.TValue[[]any]
 	Hibernations                     plugin.TValue[[]any]
 	Maintenance                      plugin.TValue[any]
+	AutoUpdateKubernetes             plugin.TValue[bool]
+	AutoUpdateMachineImage           plugin.TValue[bool]
 	Extensions                       plugin.TValue[any]
 	Network                          plugin.TValue[any]
 	CreationTime                     plugin.TValue[*time.Time]
@@ -10247,6 +10406,14 @@ func (c *mqlStackitSkeCluster) GetHibernations() *plugin.TValue[[]any] {
 
 func (c *mqlStackitSkeCluster) GetMaintenance() *plugin.TValue[any] {
 	return &c.Maintenance
+}
+
+func (c *mqlStackitSkeCluster) GetAutoUpdateKubernetes() *plugin.TValue[bool] {
+	return &c.AutoUpdateKubernetes
+}
+
+func (c *mqlStackitSkeCluster) GetAutoUpdateMachineImage() *plugin.TValue[bool] {
+	return &c.AutoUpdateMachineImage
 }
 
 func (c *mqlStackitSkeCluster) GetExtensions() *plugin.TValue[any] {
@@ -12627,6 +12794,7 @@ type mqlStackitOpenSearchInstance struct {
 	PlanName           plugin.TValue[string]
 	PlanId             plugin.TValue[string]
 	OfferingName       plugin.TValue[string]
+	OfferingVersion    plugin.TValue[string]
 	CfOrganizationGuid plugin.TValue[string]
 	CfSpaceGuid        plugin.TValue[string]
 	DashboardUrl       plugin.TValue[string]
@@ -12696,6 +12864,10 @@ func (c *mqlStackitOpenSearchInstance) GetPlanId() *plugin.TValue[string] {
 
 func (c *mqlStackitOpenSearchInstance) GetOfferingName() *plugin.TValue[string] {
 	return &c.OfferingName
+}
+
+func (c *mqlStackitOpenSearchInstance) GetOfferingVersion() *plugin.TValue[string] {
+	return &c.OfferingVersion
 }
 
 func (c *mqlStackitOpenSearchInstance) GetCfOrganizationGuid() *plugin.TValue[string] {
@@ -12808,6 +12980,7 @@ type mqlStackitMariaDbInstance struct {
 	PlanName           plugin.TValue[string]
 	PlanId             plugin.TValue[string]
 	OfferingName       plugin.TValue[string]
+	OfferingVersion    plugin.TValue[string]
 	CfOrganizationGuid plugin.TValue[string]
 	CfSpaceGuid        plugin.TValue[string]
 	DashboardUrl       plugin.TValue[string]
@@ -12875,6 +13048,10 @@ func (c *mqlStackitMariaDbInstance) GetPlanId() *plugin.TValue[string] {
 
 func (c *mqlStackitMariaDbInstance) GetOfferingName() *plugin.TValue[string] {
 	return &c.OfferingName
+}
+
+func (c *mqlStackitMariaDbInstance) GetOfferingVersion() *plugin.TValue[string] {
+	return &c.OfferingVersion
 }
 
 func (c *mqlStackitMariaDbInstance) GetCfOrganizationGuid() *plugin.TValue[string] {
@@ -12975,6 +13152,7 @@ type mqlStackitRedisInstance struct {
 	PlanName           plugin.TValue[string]
 	PlanId             plugin.TValue[string]
 	OfferingName       plugin.TValue[string]
+	OfferingVersion    plugin.TValue[string]
 	CfOrganizationGuid plugin.TValue[string]
 	CfSpaceGuid        plugin.TValue[string]
 	DashboardUrl       plugin.TValue[string]
@@ -13045,6 +13223,10 @@ func (c *mqlStackitRedisInstance) GetPlanId() *plugin.TValue[string] {
 
 func (c *mqlStackitRedisInstance) GetOfferingName() *plugin.TValue[string] {
 	return &c.OfferingName
+}
+
+func (c *mqlStackitRedisInstance) GetOfferingVersion() *plugin.TValue[string] {
+	return &c.OfferingVersion
 }
 
 func (c *mqlStackitRedisInstance) GetCfOrganizationGuid() *plugin.TValue[string] {
@@ -13163,6 +13345,7 @@ type mqlStackitRabbitMqInstance struct {
 	PlanName           plugin.TValue[string]
 	PlanId             plugin.TValue[string]
 	OfferingName       plugin.TValue[string]
+	OfferingVersion    plugin.TValue[string]
 	CfOrganizationGuid plugin.TValue[string]
 	CfSpaceGuid        plugin.TValue[string]
 	DashboardUrl       plugin.TValue[string]
@@ -13232,6 +13415,10 @@ func (c *mqlStackitRabbitMqInstance) GetPlanId() *plugin.TValue[string] {
 
 func (c *mqlStackitRabbitMqInstance) GetOfferingName() *plugin.TValue[string] {
 	return &c.OfferingName
+}
+
+func (c *mqlStackitRabbitMqInstance) GetOfferingVersion() *plugin.TValue[string] {
+	return &c.OfferingVersion
 }
 
 func (c *mqlStackitRabbitMqInstance) GetCfOrganizationGuid() *plugin.TValue[string] {
@@ -13339,6 +13526,7 @@ type mqlStackitLogMeInstance struct {
 	PlanName               plugin.TValue[string]
 	PlanId                 plugin.TValue[string]
 	OfferingName           plugin.TValue[string]
+	OfferingVersion        plugin.TValue[string]
 	CfOrganizationGuid     plugin.TValue[string]
 	CfSpaceGuid            plugin.TValue[string]
 	DashboardUrl           plugin.TValue[string]
@@ -13411,6 +13599,10 @@ func (c *mqlStackitLogMeInstance) GetPlanId() *plugin.TValue[string] {
 
 func (c *mqlStackitLogMeInstance) GetOfferingName() *plugin.TValue[string] {
 	return &c.OfferingName
+}
+
+func (c *mqlStackitLogMeInstance) GetOfferingVersion() *plugin.TValue[string] {
+	return &c.OfferingVersion
 }
 
 func (c *mqlStackitLogMeInstance) GetCfOrganizationGuid() *plugin.TValue[string] {
