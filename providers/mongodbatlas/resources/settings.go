@@ -36,6 +36,14 @@ func (r *mqlMongodbatlas) projectSettings() (*mqlMongodbatlasProjectConfig, erro
 		"isRealtimePerformancePanelEnabled":           llx.BoolData(s.GetIsRealtimePerformancePanelEnabled()),
 		"isSchemaAdvisorEnabled":                      llx.BoolData(s.GetIsSchemaAdvisorEnabled()),
 		"isCollectDatabaseSpecificsStatisticsEnabled": llx.BoolData(s.GetIsCollectDatabaseSpecificsStatisticsEnabled()),
+		// The four flags below are read as pointers so a setting the API did
+		// not report stays null. A fabricated false on
+		// isDataExplorerGenAISampleDocumentPassingEnabled would report "sample
+		// documents are not sent" as fact on a project where it was never read.
+		"isDataExplorerGenAISampleDocumentPassingEnabled": llx.BoolDataPtr(s.IsDataExplorerGenAISampleDocumentPassingEnabled),
+		"isClusterAiAssistantEnabled":                     llx.BoolDataPtr(s.IsClusterAiAssistantEnabled),
+		"isNativeRerankingEnabled":                        llx.BoolDataPtr(s.IsNativeRerankingEnabled),
+		"isDataValidationEnabled":                         llx.BoolDataPtr(s.IsDataValidationEnabled),
 	})
 	if err != nil {
 		return nil, err

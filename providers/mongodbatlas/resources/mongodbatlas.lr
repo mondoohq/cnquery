@@ -11,11 +11,17 @@ option go_package = "go.mondoo.com/mql/providers/mongodbatlas/resources"
 // through the organizationName, multiFactorAuthRequired, apiAccessListRequired,
 // restrictEmployeeAccess, orgUsers, teams, apiKeys, serviceAccounts,
 // resourcePolicies, and federationSettings fields, and enumerates every project
-// through the projects field. Connecting to a single project exposes that
-// project's security surface through the clusters, databaseUsers,
-// customDatabaseRoles, ipAccessList, projectSettings, auditing,
-// encryptionAtRest, backupCompliancePolicy, pushBasedLogExport,
-// privateEndpoints, networkPeerings, and cloudProviderAccessRoles fields.
+// through the projects field, along with the organization's AI model API keys
+// through aiModelApiKeys. Connecting to a single project exposes that project's
+// security surface through the clusters, databaseUsers, customDatabaseRoles,
+// ipAccessList, projectSettings, auditing, encryptionAtRest,
+// backupCompliancePolicy, pushBasedLogExport, privateEndpoints,
+// networkPeerings, and cloudProviderAccessRoles fields, who reaches it through
+// projectUsers, projectTeams, and projectInvitations, its external
+// authentication through userSecurity, its detection and telemetry surface
+// through alertConfigs, thirdPartyIntegrations, and metricIntegrations, its
+// patching cadence through maintenanceWindow, and the data it federates out to
+// customer cloud storage through dataFederations.
 mongodbatlas {
   // Organization id
   organizationId() string
@@ -88,6 +94,59 @@ mongodbatlas {
   cloudProviderAccessRoles() []mongodbatlas.cloudProviderAccessRole
   // Identity federation settings for the organization
   federationSettings() mongodbatlas.federationConfig
+  // Alert configurations defined on the project
+  //
+  // Detection coverage for the project. Each configuration names the event
+  // type that triggers it, whether it is enabled, the matchers that narrow it
+  // to particular objects, and the targets that receive the notification.
+  // Reading the set is how a check for coverage of events such as
+  // JOINED_GROUP, USER_ROLES_CHANGED_AUDIT, or NO_PRIMARY is written.
+  alertConfigs() []mongodbatlas.alertConfig
+  // Third-party service integrations configured on the project
+  //
+  // Every service the project routes alerts and metrics to, including webhook,
+  // Slack, PagerDuty, Datadog, New Relic, Opsgenie, Splunk On-Call, Prometheus,
+  // and Microsoft Teams. Credential material is never exposed; hasSecret
+  // reports only whether a webhook secret is configured, and a destination
+  // address is reduced to its host through endpointHost.
+  thirdPartyIntegrations() []mongodbatlas.thirdPartyIntegration
+  // OpenTelemetry metric integrations configured on the project
+  //
+  // Telemetry export over OTLP, a destination set kept separately from the
+  // third-party service integrations. Each entry names the protocol, the
+  // authentication method, the collector host, and which metric categories
+  // leave the project. Header values are redacted by Atlas and only the header
+  // names are exposed.
+  metricIntegrations() []mongodbatlas.metricIntegration
+  // Members holding a role on the project
+  //
+  // Project-scoped membership as the project sees it, including members whose
+  // organization membership is still PENDING.
+  projectUsers() []mongodbatlas.projectUser
+  // Teams granted a role on the project
+  projectTeams() []mongodbatlas.projectTeam
+  // Invitations to the project that have not been accepted
+  //
+  // An invitation that was sent and never accepted is a standing grant to
+  // whoever controls the invited address, carrying the roles it was issued with
+  // until it expires or is withdrawn.
+  projectInvitations() []mongodbatlas.projectInvitation
+  // LDAP and customer X.509 authentication settings for the project
+  userSecurity() mongodbatlas.userSecurityConfig
+  // Maintenance window configured for the project
+  maintenanceWindow() mongodbatlas.maintenanceWindowConfig
+  // Federated database instances in the project
+  //
+  // Each instance queries data held in customer cloud storage under a cloud
+  // provider access role, which is a data path that neither the cluster
+  // settings nor the network settings describe.
+  dataFederations() []mongodbatlas.dataFederation
+  // AI model API keys registered on the organization
+  //
+  // Credentials Atlas holds for an embedding or reranking service. The key
+  // secret is never exposed; status and lastUsedAt are what identify a stale or
+  // unattended credential.
+  aiModelApiKeys() []mongodbatlas.aiModelApiKey
 }
 
 // MongoDB Atlas project
@@ -420,6 +479,20 @@ mongodbatlas.cluster @defaults("name mongoDBMajorVersion encryptionAtRestProvide
   backupSchedule() mongodbatlas.backupScheduleConfig
   // Atlas Search and Atlas Vector Search indexes on the cluster
   searchIndexes() []mongodbatlas.searchIndex
+  // Advanced configuration in effect for the cluster
+  //
+  // The process-level settings that the cluster listing does not carry,
+  // including whether server-side JavaScript execution is allowed, whether
+  // queries requiring a collection scan are refused, the cipher suites the
+  // cluster actually offers, the oplog retention window, and the default write
+  // concern.
+  advancedConfiguration() mongodbatlas.clusterAdvancedConfig
+  // Online archives defined on the cluster
+  //
+  // Archived documents leave the cluster for a separate store with its own
+  // retention rule and query path, which the cluster backup, encryption, and
+  // network settings do not cover.
+  onlineArchives() []mongodbatlas.onlineArchive
 }
 
 // Cloud backup schedule for a cluster
@@ -618,6 +691,12 @@ mongodbatlas.databaseUser @defaults("username databaseName") {
   scopes []dict
   // Clusters the user is scoped to, empty when the user may access all clusters in the project
   scopedClusters() []mongodbatlas.cluster
+  // Managed X.509 certificates issued to the user
+  //
+  // Empty for a user that does not authenticate by certificate. Each entry
+  // carries the certificate subject and the notAfter expiry, which is what
+  // x509Type on its own cannot report.
+  certificates() []mongodbatlas.databaseUserCertificate
   // Labels attached to the user, as key/value pairs
   labels map[string]string
   // Time after which the user is automatically deleted, null when permanent
@@ -665,6 +744,18 @@ mongodbatlas.projectConfig @defaults("isDataExplorerEnabled") {
   isSchemaAdvisorEnabled bool
   // Whether collection of database-specific statistics is enabled
   isCollectDatabaseSpecificsStatisticsEnabled bool
+  // Whether sample field values are sent with Data Explorer generative AI requests
+  //
+  // Distinct from isDataExplorerGenAIFeaturesEnabled, which only enables the
+  // feature in the console. This flag is the one that sends real document
+  // values to a third-party model.
+  isDataExplorerGenAISampleDocumentPassingEnabled bool
+  // Whether the AI Cluster Assistant is enabled for the project
+  isClusterAiAssistantEnabled bool
+  // Whether native reranking with third-party models in the aggregation pipeline is enabled
+  isNativeRerankingEnabled bool
+  // Whether data validation is enabled for every cluster in the project
+  isDataValidationEnabled bool
 }
 
 // MongoDB Atlas database auditing configuration
@@ -815,6 +906,12 @@ mongodbatlas.federationConfig @defaults("id identityProviderStatus") {
   identityProvider() mongodbatlas.identityProvider
   // Identity providers linked to the federation
   identityProviders() []mongodbatlas.identityProvider
+  // Organizations connected to the federation
+  //
+  // The connection between an organization and the federation, carrying the
+  // domain restriction, the roles every federated user receives on sign-in, and
+  // the mappings from identity provider group to Atlas role.
+  connectedOrgConfigs() []mongodbatlas.connectedOrgConfig
 }
 
 // MongoDB Atlas identity provider
@@ -939,4 +1036,557 @@ mongodbatlas.resourcePolicy @defaults("name id") {
   lastUpdatedDate time
   // Policy statements, each with its id and Cedar policy body
   policies []dict
+}
+
+// MongoDB Atlas cluster advanced configuration
+//
+// The process-level settings in effect for one cluster, which the cluster
+// listing does not carry. Covers whether the cluster executes server-side
+// JavaScript, whether it refuses queries that require a collection scan, the
+// minimum TLS version and the cipher suites actually offered when the cipher
+// mode is CUSTOM, the oplog retention window that bounds how far a
+// point-in-time restore reaches, the default write concern applied when a
+// driver names none, and the query-plan logging verbosity. A setting the
+// cluster leaves at the Atlas default reads null rather than a value.
+private mongodbatlas.clusterAdvancedConfig @defaults("javascriptEnabled noTableScan minimumEnabledTlsProtocol") {
+  // Whether the cluster executes operations that run server-side JavaScript
+  javascriptEnabled bool
+  // Whether the cluster refuses any query that would require a collection scan
+  noTableScan bool
+  // Minimum TLS version the cluster accepts for incoming connections
+  minimumEnabledTlsProtocol string
+  // TLS cipher suite configuration mode (DEFAULT or CUSTOM)
+  tlsCipherConfigMode string
+  // Cipher suites offered for TLS 1.2, empty unless tlsCipherConfigMode is CUSTOM
+  customOpensslCipherConfigTls12 []string
+  // Cipher suites offered for TLS 1.3, empty unless tlsCipherConfigMode is CUSTOM
+  customOpensslCipherConfigTls13 []string
+  // Write acknowledgement applied when a driver names none
+  defaultWriteConcern string
+  // Default time limit in milliseconds for an individual read operation
+  defaultMaxTimeMS int
+  // Minimum oplog retention in hours, null when Atlas calculates the window
+  oplogMinRetentionHours float
+  // Oplog storage limit in megabytes, null when Atlas calculates the size
+  oplogSizeMB int
+  // Query statistics log verbosity
+  //
+  // 1 disables query-shape logging and 3 enables it, which writes redacted and
+  // anonymized query shapes into the cluster logs.
+  queryStatsLogVerbosity int
+  // Lifetime in seconds after which a multi-document transaction is aborted
+  transactionLifetimeLimitSeconds int
+  // Minimum retention in seconds for change stream pre-images and post-images
+  changeStreamOptionsPreAndPostImagesExpireAfterSeconds int
+  // Number of threads used per shard for chunk migration
+  chunkMigrationConcurrency int
+  // Number of documents per database sampled when the BI Connector builds its schema
+  sampleSizeBIConnector int
+  // Interval in seconds at which the BI Connector re-samples data
+  sampleRefreshIntervalBIConnector int
+}
+
+// MongoDB Atlas online archive
+//
+// An archiving rule on one cluster collection, keyed by archive id. Documents
+// matching the rule move out of the cluster into a separate managed store with
+// its own retention and its own query endpoint, so the cluster's backup,
+// encryption, and network settings stop applying to them. Covers the source
+// database and collection, the archiving criteria and the schedule they run on,
+// whether the rule is paused, the region the archive is processed in, and the
+// expiry rule that deletes archived data.
+mongodbatlas.onlineArchive @defaults("databaseName collectionName state") {
+  // Archive id
+  id string
+  // Source database
+  databaseName string
+  // Source collection
+  collectionName string
+  // Source collection type (STANDARD or TIMESERIES)
+  collectionType string
+  // Current state (such as ACTIVE, PAUSED, or DELETED)
+  state string
+  // Whether archiving is paused
+  paused bool
+  // Name of the archive's federated data set
+  dataSetName string
+  // How documents are selected for archiving (DATE or CUSTOM)
+  criteriaType string
+  // Document field holding the date that a DATE criteria compares
+  criteriaDateField string
+  // Age in days at which a DATE criteria archives a document
+  criteriaExpireAfterDays int
+  // Query selecting the documents a CUSTOM criteria archives
+  criteriaQuery string
+  // Age in days at which archived data is deleted, null when it is kept indefinitely
+  expireAfterDays int
+  // Cloud provider the archive is processed in
+  dataProcessCloudProvider string
+  // Region the archive is processed in
+  dataProcessRegion string
+  // Schedule the archiving runs on (DEFAULT, DAILY, WEEKLY, or MONTHLY)
+  scheduleType string
+  // Fields the archive is partitioned by, each with fieldName, fieldType, and order
+  partitionFields []dict
+}
+
+// MongoDB Atlas managed X.509 certificate
+//
+// One certificate Atlas issued to a database user for X.509 authentication,
+// keyed by certificate id. Covers the subject the certificate authenticates as,
+// when it was issued, and when it expires. A user whose x509Type is MANAGED but
+// whose certificates have all passed their notAfter can no longer authenticate,
+// and one that expires soon is a scheduled outage.
+private mongodbatlas.databaseUserCertificate @defaults("subject notAfter") {
+  // Certificate id
+  id int
+  // Distinguished name the certificate authenticates as
+  subject string
+  // Time the certificate was issued
+  createdAt time
+  // Time the certificate expires
+  notAfter time
+}
+
+// MongoDB Atlas LDAP and X.509 user security settings
+//
+// The project's external authentication configuration. Covers the LDAP host
+// used for authentication and authorization, the account Atlas binds with, the
+// authorization query template, the username-to-distinguished-name mappings,
+// and whether a customer certificate authority is configured for X.509
+// database users. The LDAP bind password and the certificate authority material
+// are never exposed; ldapCaCertificateConfigured and customerX509CasConfigured
+// report only whether each is set. An LDAP host reachable on a port that does
+// not carry TLS makes the credentials that cross it readable in transit.
+mongodbatlas.userSecurityConfig @defaults("ldapAuthenticationEnabled ldapHostname ldapPort") {
+  // Whether database users may authenticate against the LDAP host
+  ldapAuthenticationEnabled bool
+  // Whether MongoDB Cloud resource authorization is resolved through LDAP groups
+  ldapAuthorizationEnabled bool
+  // Hostname or address of the LDAP host
+  ldapHostname string
+  // Port the LDAP host listens on
+  //
+  // 636 is the LDAPS port; 389 is plaintext LDAP, over which the bind
+  // credentials and the directory responses cross the network unprotected.
+  ldapPort int
+  // Distinguished name Atlas binds to the LDAP host as
+  ldapBindUsername string
+  // Query template Atlas runs to resolve the groups of an authenticated user
+  ldapAuthzQueryTemplate string
+  // Whether a certificate authority is configured for verifying the LDAP host
+  ldapCaCertificateConfigured bool
+  // Username to distinguished name mappings, each with match, ldapQuery, and substitution
+  ldapUserToDnMappings []dict
+  // Whether a customer certificate authority is configured for X.509 database users
+  customerX509CasConfigured bool
+}
+
+// MongoDB Atlas maintenance window
+//
+// The weekly window in which Atlas applies maintenance to the project's
+// clusters. Covers the day and hour it starts, the hours maintenance is kept
+// out of, whether the window auto-defers on first use, and how many times the
+// currently scheduled maintenance has been deferred. Repeated deferral is how a
+// cluster stays on an unpatched build, and numberOfDeferrals is what makes that
+// countable.
+mongodbatlas.maintenanceWindowConfig @defaults("dayOfWeek hourOfDay numberOfDeferrals") {
+  // Day of the week the window starts on, 1 for Sunday through 7 for Saturday
+  dayOfWeek int
+  // Hour of the day the window starts at, on a 24-hour clock
+  hourOfDay int
+  // Number of times the currently scheduled maintenance has been deferred
+  numberOfDeferrals int
+  // Whether Atlas defers all maintenance windows for one week after they are enabled
+  autoDeferOnceEnabled bool
+  // Whether Atlas starts the maintenance window as soon as it can
+  startAsap bool
+  // Time zone the window is expressed in
+  timeZoneId string
+  // Hour of the day the protected period starts at, null when none is set
+  protectedHoursStartHourOfDay int
+  // Hour of the day the protected period ends at, null when none is set
+  protectedHoursEndHourOfDay int
+}
+
+// MongoDB Atlas alert configuration
+//
+// One alert rule on the project, keyed by configuration id. Covers the event
+// type that fires it, whether it is enabled, the matchers that limit it to
+// particular objects, the metric threshold that a metric alert compares
+// against, and the notification targets it reaches. The set of configurations
+// is the project's detection coverage, so an event type that no enabled
+// configuration names is an event nobody is told about. Select a configuration
+// by event type, for example
+// `mongodbatlas.alertConfigs.where(eventTypeName == "NO_PRIMARY")`.
+mongodbatlas.alertConfig @defaults("eventTypeName enabled") {
+  // Alert configuration id
+  id string
+  // Event type that triggers the alert
+  eventTypeName string
+  // Whether the configuration is enabled
+  enabled bool
+  // Severity the event is raised at when the configuration overrides the default
+  severityOverride string
+  // Rules narrowing which objects the configuration applies to, each with fieldName, operator, and value
+  matchers []dict
+  // Metric the alert compares, for a metric-threshold alert
+  thresholdMetricName string
+  // Comparison the metric threshold applies (such as GREATER_THAN)
+  thresholdOperator string
+  // Value the metric is compared against
+  thresholdValue float
+  // Unit the threshold value is expressed in
+  thresholdUnits string
+  // Time the configuration was created
+  created time
+  // Time the configuration was last changed
+  updated time
+  // Targets that receive the alert
+  notifications() []mongodbatlas.alertNotification
+}
+
+// MongoDB Atlas alert notification target
+//
+// One destination an alert configuration delivers to. Covers the target kind,
+// the address or channel it reaches, the roles it is limited to for a role-based
+// target, and the delay and repeat intervals. Only non-credential fields are
+// exposed: the Atlas notification record carries API tokens, integration keys,
+// and a webhook secret inline, and none of those are read. A webhook target
+// reports only its host through webhookUrlHost, and hasWebhookSecret reports
+// whether the delivery is signed.
+private mongodbatlas.alertNotification @defaults("typeName") {
+  // Kind of target (such as EMAIL, GROUP, ORG, USER, TEAM, SLACK, or WEBHOOK)
+  typeName string
+  // Email address the notification is sent to
+  emailAddress string
+  // Whether email delivery is enabled for a user, group, or organization target
+  emailEnabled bool
+  // Whether text message delivery is enabled for a user, group, or organization target
+  smsEnabled bool
+  // Roles the notification is limited to, empty when every role receives it
+  roles []string
+  // Slack channel the notification is sent to
+  channelName string
+  // Team the notification is sent to
+  teamName string
+  // Atlas username the notification is sent to
+  username string
+  // Minutes Atlas waits after the condition is detected before notifying
+  delayMin int
+  // Minutes between repeat notifications while the alert is unacknowledged
+  intervalMin int
+  // Third-party integration whose credentials the delivery uses
+  integrationId string
+  // Atlas identifier for this notification method
+  notifierId string
+  // Host of the webhook the notification is posted to, null for a non-webhook target
+  webhookUrlHost string
+  // Whether the webhook delivery is signed with a secret
+  hasWebhookSecret bool
+}
+
+// MongoDB Atlas third-party service integration
+//
+// One service the project routes alerts and metrics to, keyed by integration
+// type. Covers the service kind, whether it is active, the regional endpoint it
+// uses, the channel or account it delivers into, and which metric categories a
+// metrics integration is allowed to send. The Atlas record carries an API
+// token, an API key, a service key, a licence key, a read and write token, a
+// webhook secret, and a password inline; none are exposed. A destination
+// address is reduced to its host, and hasSecret reports only whether a webhook
+// secret is configured. Select an integration by type, for example
+// `mongodbatlas.thirdPartyIntegrations.where(type == "WEBHOOK")`.
+mongodbatlas.thirdPartyIntegration @defaults("type endpointHost") {
+  // Integration id
+  id string
+  // Service kind (such as WEBHOOK, SLACK, DATADOG, PAGER_DUTY, PROMETHEUS, or MICROSOFT_TEAMS)
+  type string
+  // Whether the integration is active, null for a kind that carries no enabled flag
+  enabled bool
+  // Regional endpoint the service is reached through
+  region string
+  // Host the integration delivers to, null when the kind carries no destination address
+  endpointHost string
+  // Whether a webhook secret is configured, so deliveries are signed
+  hasSecret bool
+  // Slack channel notifications are delivered to
+  channelName string
+  // Slack team the channel belongs to
+  teamName string
+  // Account the integration reports into
+  accountId string
+  // Username the integration authenticates as
+  username string
+  // How the service is discovered, for a Prometheus integration
+  serviceDiscovery string
+  // Whether collection latency metrics, including database and collection names, are sent
+  sendCollectionLatencyMetrics bool
+  // Whether database metrics, including database names, are sent
+  sendDatabaseMetrics bool
+  // Whether query shape metrics, including query hashes, are sent
+  sendQueryStatsMetrics bool
+  // Whether project and cluster resource tags are sent alongside the metrics
+  sendUserProvidedResourceTags bool
+}
+
+// MongoDB Atlas metric integration
+//
+// One OpenTelemetry export destination on the project, keyed by integration id.
+// Covers the protocol, the provider the collector belongs to, the
+// authentication method used against it, the aggregation temporality, and which
+// metric categories are exported. Header values are redacted by Atlas and only
+// the header names are exposed, and the collector address is reduced to its
+// host. This is a separate export path from the third-party service
+// integrations, so both have to be read to see everywhere project telemetry
+// goes.
+mongodbatlas.metricIntegration @defaults("providerType integrationType endpointHost") {
+  // Metric integration id
+  id string
+  // Protocol used to export (such as OTLP)
+  integrationType string
+  // Third-party service the collector belongs to
+  providerType string
+  // Authentication method used against the collector endpoint
+  authType string
+  // Host of the collector endpoint
+  endpointHost string
+  // Temporality the exported metrics are reported with
+  aggregationTemporality string
+  // Metric categories exported to the collector
+  metricSelection []string
+  // Names of the HTTP headers sent with the export, the values of which Atlas redacts
+  headerNames []string
+}
+
+// MongoDB Atlas project member
+//
+// A user holding at least one role on the project, keyed by user id. Covers the
+// login name, the project roles held, the organization membership status, the
+// last authentication time, and the invitation fields for a member who has been
+// invited but has never signed in. Project-scoped access is otherwise only
+// visible from the organization side, which a project-scoped credential cannot
+// read. Select a member by username, for example
+// `mongodbatlas.projectUsers.where(username == "alice@example.com")`.
+mongodbatlas.projectUser @defaults("username roles orgMembershipStatus") {
+  // User id
+  id string
+  // Login name (email)
+  username string
+  // Roles the user holds on the project
+  roles []string
+  // Organization membership status (ACTIVE or PENDING)
+  orgMembershipStatus string
+  // Time the user last authenticated, null when they never have
+  lastAuth time
+  // Time the user account was created
+  createdAt time
+  // Time the invitation was sent, null for a member who is not pending
+  invitationCreatedAt time
+  // Time the invitation expires, null for a member who is not pending
+  invitationExpiresAt time
+  // Login name of the member who sent the invitation
+  inviterUsername string
+  // Country the user account is registered in
+  country string
+}
+
+// MongoDB Atlas project team grant
+//
+// A team granted roles on the project. The grant is what gives every member of
+// the team the named roles, so a team with a broad membership and a
+// GROUP_OWNER grant reaches further than any individual assignment shows.
+// Resolving the team itself needs organization access, so team is null when the
+// connected credential is scoped to the project.
+private mongodbatlas.projectTeam @defaults("roles") {
+  // Roles the team holds on the project
+  roles []string
+  // Team the roles are granted to
+  team() mongodbatlas.team
+}
+
+// MongoDB Atlas project invitation
+//
+// An invitation to the project that has been sent and not accepted, keyed by
+// invitation id. Covers the invited address, the roles the invitation carries,
+// who sent it, when it was sent, and when it expires. Until it expires or is
+// withdrawn, it is a standing grant to whoever controls the invited address.
+mongodbatlas.projectInvitation @defaults("username roles expiresAt") {
+  // Invitation id
+  id string
+  // Address the invitation was sent to
+  username string
+  // Roles the invitation grants on acceptance
+  roles []string
+  // Login name of the member who sent the invitation
+  inviterUsername string
+  // Time the invitation was sent
+  createdAt time
+  // Time the invitation expires
+  expiresAt time
+}
+
+// MongoDB Atlas connected organization
+//
+// The link between one organization and an identity federation, keyed by
+// organization id. Covers whether sign-in is restricted to the federated
+// domains, which domains those are, the roles every federated user receives on
+// sign-in regardless of any mapping, whether just-in-time user provisioning is
+// switched off, the identity provider that authenticates sign-in, the providers
+// authorized for database access, and the mappings from provider group to Atlas
+// role. postAuthRoleGrants is a blanket grant, so a privileged role listed
+// there reaches every user the provider authenticates.
+mongodbatlas.connectedOrgConfig @defaults("orgId domainRestrictionEnabled") {
+  // Organization id
+  orgId string
+  // Whether sign-in is restricted to users in the allowed domains
+  domainRestrictionEnabled bool
+  // Domains the organization has claimed for federated sign-in
+  domainAllowList []string
+  // Roles granted to every federated user on sign-in, independent of any role mapping
+  postAuthRoleGrants []string
+  // Whether just-in-time provisioning of new users is disabled
+  instantUserProvisioningDisabled bool
+  // Login names of users that exist both inside and outside the federation
+  conflictingUsernames []string
+  // Identity provider that authenticates sign-in for the organization
+  identityProvider() mongodbatlas.identityProvider
+  // Identity providers authorized to grant database access
+  dataAccessIdentityProviders() []mongodbatlas.identityProvider
+  // Mappings from identity provider group to Atlas roles
+  roleMappings() []mongodbatlas.roleMapping
+}
+
+// MongoDB Atlas federation role mapping
+//
+// A rule granting Atlas roles to the members of one identity provider group,
+// keyed by mapping id. Covers the external group name and the organization and
+// project roles it confers. This is what answers which provider group grants a
+// privileged role, which the federation-wide hasRoleMappings flag can only say
+// exists. Select a mapping by group, for example
+// `mongodbatlas.federationSettings.connectedOrgConfigs.first.roleMappings.where(externalGroupName == "atlas-admins")`.
+mongodbatlas.roleMapping @defaults("externalGroupName orgRoles") {
+  // Role mapping id
+  id string
+  // Name of the identity provider group the mapping matches
+  externalGroupName string
+  // Organization roles the mapping grants (such as ORG_OWNER)
+  orgRoles []string
+  // Project-scoped roles the mapping grants
+  projectRoles() []mongodbatlas.roleMapping.projectRole
+}
+
+// MongoDB Atlas role mapping project grant
+//
+// The roles one federation role mapping grants on a single project, together
+// with the project they apply to.
+private mongodbatlas.roleMapping.projectRole @defaults("roles") {
+  // Roles granted on the project (such as GROUP_OWNER)
+  roles []string
+  // Project the roles apply to
+  project() mongodbatlas.project
+}
+
+// MongoDB Atlas AI model API key
+//
+// A credential the organization holds for an embedding or reranking service,
+// keyed by key id. Covers the name it was registered under, its status, the
+// cloud and geography it is scoped to, the endpoint it reaches, who created it
+// and when, and when it was last used. The key secret is never exposed. A key
+// whose lastUsedAt is null or long past is an unattended credential that still
+// authorizes calls, and status is what separates a disabled key from a live
+// one.
+mongodbatlas.aiModelApiKey @defaults("name status lastUsedAt") {
+  // API key id
+  id string
+  // Name the key was registered under
+  name string
+  // Current status of the key
+  status string
+  // Cloud provider the key is scoped to, ANY when it is cloud-agnostic
+  cloud string
+  // Geography the key is scoped to, ANY when it is geography-agnostic
+  geography string
+  // Service endpoint the key reaches
+  endpoint string
+  // Name or id of the user that created the key
+  createdBy string
+  // Time the key was created
+  createdAt time
+  // Time the key was last used, null when it has never been used
+  lastUsedAt time
+  // Project the key belongs to, null for an organization-wide key
+  project() mongodbatlas.project
+}
+
+// MongoDB Atlas federated database instance
+//
+// A federated database instance in the project, keyed by tenant name. It serves
+// queries over data that lives outside the cluster, in customer cloud storage
+// and in other Atlas clusters, so the stores it reads and the cloud provider
+// access role it assumes describe a data path the cluster and network settings
+// do not. Covers the tenant name and state, the hostnames clients connect to,
+// the region queries are processed in, the private endpoints that reach it, and
+// the store definitions behind it. Select an instance by name, for example
+// `mongodbatlas.dataFederations.where(name == "analytics")`.
+mongodbatlas.dataFederation @defaults("name state cloudProvider") {
+  // Tenant name
+  name string
+  // Current state (such as ACTIVE or DELETED)
+  state string
+  // Hostnames clients connect to the instance on
+  hostnames []string
+  // Cloud provider queries are processed in
+  cloudProvider string
+  // Region queries are processed in
+  region string
+  // Bucket Atlas writes to when it validates the AWS role, empty for other providers
+  awsTestS3Bucket string
+  // Private endpoints that reach the instance, keyed by hostname
+  privateEndpointHostnames map[string]string
+  // Cloud provider access role the instance assumes to read its stores
+  cloudProviderAccessRole() mongodbatlas.cloudProviderAccessRole
+  // Stores the instance reads from
+  stores() []mongodbatlas.dataFederation.store
+}
+
+// MongoDB Atlas federated database store
+//
+// One backing store a federated database instance reads, keyed by store name.
+// Covers the provider it lives on, the bucket or container and prefix it reads,
+// the region, whether the bucket is treated as public so Atlas reads it without
+// credentials, and whether TLS verification is waived when reaching an HTTP
+// store. A public store or one reached with allowInsecure set is data leaving
+// the project boundary without the controls the rest of it has.
+private mongodbatlas.dataFederation.store @defaults("name provider bucket") {
+  // Store name
+  name string
+  // Provider the store lives on (such as s3, azure, gcs, atlas, http, or dls)
+  provider string
+  // Bucket the store reads, for an object storage provider
+  bucket string
+  // Container the store reads, for an Azure store
+  containerName string
+  // Region the store lives in
+  region string
+  // Prefix within the bucket or container that the store is limited to
+  prefix string
+  // Character separating the path segments Atlas maps to collection names
+  delimiter string
+  // Whether the bucket is read as public, so Atlas reaches it without credentials
+  public bool
+  // Whether TLS verification is waived when reaching an HTTP store
+  allowInsecure bool
+  // Format assumed for a file whose extension does not name one
+  defaultFormat string
+  // URLs an HTTP store reads
+  urls []string
+  // Service URL an Azure store is reached through
+  serviceUrl string
+  // Whether object tags are read alongside the objects
+  includeTags bool
+  // Cluster an Atlas store reads from
+  clusterName string
+  // Additional storage classes the store reads from
+  additionalStorageClasses []string
 }

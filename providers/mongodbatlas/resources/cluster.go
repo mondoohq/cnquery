@@ -129,7 +129,9 @@ func newMqlMongodbatlasCluster(runtime *plugin.Runtime, pid string, c admin.Clus
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlMongodbatlasCluster), nil
+	cluster := res.(*mqlMongodbatlasCluster)
+	cluster.cacheProjectID = pid
+	return cluster, nil
 }
 
 // initMongodbatlasCluster resolves a single cluster by name within the connected
