@@ -26,6 +26,8 @@ const (
 	ResourceAlicloudRamPolicyStatement            string = "alicloud.ram.policy.statement"
 	ResourceAlicloudRamPasswordPolicy             string = "alicloud.ram.passwordPolicy"
 	ResourceAlicloudEcs                           string = "alicloud.ecs"
+	ResourceAlicloudEcsLaunchTemplate             string = "alicloud.ecs.launchTemplate"
+	ResourceAlicloudEcsLaunchTemplateVersion      string = "alicloud.ecs.launchTemplate.version"
 	ResourceAlicloudEcsPrefixList                 string = "alicloud.ecs.prefixList"
 	ResourceAlicloudEcsInstance                   string = "alicloud.ecs.instance"
 	ResourceAlicloudEcsDisk                       string = "alicloud.ecs.disk"
@@ -211,6 +213,14 @@ func init() {
 		"alicloud.ecs": {
 			// to override args, implement: initAlicloudEcs(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudEcs,
+		},
+		"alicloud.ecs.launchTemplate": {
+			// to override args, implement: initAlicloudEcsLaunchTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudEcsLaunchTemplate,
+		},
+		"alicloud.ecs.launchTemplate.version": {
+			// to override args, implement: initAlicloudEcsLaunchTemplateVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudEcsLaunchTemplateVersion,
 		},
 		"alicloud.ecs.prefixList": {
 			// to override args, implement: initAlicloudEcsPrefixList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1152,6 +1162,147 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.ecs.snapshots": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcs).GetSnapshots()).ToDataRes(types.Array(types.Resource("alicloud.ecs.snapshot")))
 	},
+	"alicloud.ecs.launchTemplates": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcs).GetLaunchTemplates()).ToDataRes(types.Array(types.Resource("alicloud.ecs.launchTemplate")))
+	},
+	"alicloud.ecs.launchTemplate.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.launchTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetLaunchTemplateId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.launchTemplateName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetLaunchTemplateName()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.defaultVersionNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetDefaultVersionNumber()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.launchTemplate.latestVersionNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetLatestVersionNumber()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.launchTemplate.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ecs.launchTemplate.modifiedTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetModifiedTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ecs.launchTemplate.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.ecs.launchTemplate.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.ecs.launchTemplate.versions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetVersions()).ToDataRes(types.Array(types.Resource("alicloud.ecs.launchTemplate.version")))
+	},
+	"alicloud.ecs.launchTemplate.defaultVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplate).GetDefaultVersion()).ToDataRes(types.Resource("alicloud.ecs.launchTemplate.version"))
+	},
+	"alicloud.ecs.launchTemplate.version.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.launchTemplateId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetLaunchTemplateId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.versionNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetVersionNumber()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.launchTemplate.version.versionDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetVersionDescription()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.isDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetIsDefault()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.launchTemplate.version.createdBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetCreatedBy()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.ecs.launchTemplate.version.instanceType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetInstanceType()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.imageId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetImageId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetImage()).ToDataRes(types.Resource("alicloud.ecs.image"))
+	},
+	"alicloud.ecs.launchTemplate.version.imageOwnerAlias": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetImageOwnerAlias()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.zoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetZoneId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.keyPairName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetKeyPairName()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.passwordInherit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetPasswordInherit()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.launchTemplate.version.securityEnhancementStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSecurityEnhancementStrategy()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.ramRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetRamRole()).ToDataRes(types.Resource("alicloud.ram.role"))
+	},
+	"alicloud.ecs.launchTemplate.version.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
+	},
+	"alicloud.ecs.launchTemplate.version.securityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSecurityGroups()).ToDataRes(types.Array(types.Resource("alicloud.ecs.securitygroup")))
+	},
+	"alicloud.ecs.launchTemplate.version.vpc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
+	},
+	"alicloud.ecs.launchTemplate.version.vswitch": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetVswitch()).ToDataRes(types.Resource("alicloud.vpc.vswitch"))
+	},
+	"alicloud.ecs.launchTemplate.version.userData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetUserData()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetHttpEndpoint()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.httpTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetHttpTokens()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.imdsV2Required": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetImdsV2Required()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.launchTemplate.version.httpPutResponseHopLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetHttpPutResponseHopLimit()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.launchTemplate.version.internetMaxBandwidthIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetInternetMaxBandwidthIn()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.launchTemplate.version.internetMaxBandwidthOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetInternetMaxBandwidthOut()).ToDataRes(types.Int)
+	},
+	"alicloud.ecs.launchTemplate.version.deletionProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetDeletionProtection()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.launchTemplate.version.spotStrategy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSpotStrategy()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskCategory": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSystemDiskCategory()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskEncrypted": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSystemDiskEncrypted()).ToDataRes(types.Bool)
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskKmsKeyId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSystemDiskKmsKeyId()).ToDataRes(types.String)
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskDeleteWithInstance": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEcsLaunchTemplateVersion).GetSystemDiskDeleteWithInstance()).ToDataRes(types.Bool)
+	},
 	"alicloud.ecs.prefixList.prefixListId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEcsPrefixList).GetPrefixListId()).ToDataRes(types.String)
 	},
@@ -1760,6 +1911,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.ess.scalingGroup.launchTemplateVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEssScalingGroup).GetLaunchTemplateVersion()).ToDataRes(types.String)
+	},
+	"alicloud.ess.scalingGroup.launchTemplate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudEssScalingGroup).GetLaunchTemplate()).ToDataRes(types.Resource("alicloud.ecs.launchTemplate"))
 	},
 	"alicloud.ess.scalingGroup.creationTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudEssScalingGroup).GetCreationTime()).ToDataRes(types.Time)
@@ -7796,6 +7950,202 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudEcs).Snapshots, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"alicloud.ecs.launchTemplates": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcs).LaunchTemplates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.ecs.launchTemplate.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.launchTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).LaunchTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.launchTemplateName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).LaunchTemplateName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.defaultVersionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).DefaultVersionNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.latestVersionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).LatestVersionNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.modifiedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).ModifiedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.defaultVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplate).DefaultVersion, ok = plugin.RawToTValue[*mqlAlicloudEcsLaunchTemplateVersion](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.launchTemplateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).LaunchTemplateId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.versionNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).VersionNumber, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.versionDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).VersionDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.isDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).IsDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.createdBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).CreatedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.instanceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).InstanceType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.imageId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).ImageId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).Image, ok = plugin.RawToTValue[*mqlAlicloudEcsImage](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.imageOwnerAlias": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).ImageOwnerAlias, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.zoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).ZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.keyPairName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).KeyPairName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.passwordInherit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).PasswordInherit, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.securityEnhancementStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SecurityEnhancementStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.ramRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).RamRole, ok = plugin.RawToTValue[*mqlAlicloudRamRole](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.securityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.vpc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).Vpc, ok = plugin.RawToTValue[*mqlAlicloudVpcNetwork](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.vswitch": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).Vswitch, ok = plugin.RawToTValue[*mqlAlicloudVpcVswitch](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.userData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).UserData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.httpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).HttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.imdsV2Required": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).ImdsV2Required, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.httpPutResponseHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).HttpPutResponseHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.internetMaxBandwidthIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).InternetMaxBandwidthIn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.internetMaxBandwidthOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).InternetMaxBandwidthOut, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.deletionProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).DeletionProtection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.spotStrategy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SpotStrategy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskCategory": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SystemDiskCategory, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskEncrypted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SystemDiskEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskKmsKeyId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SystemDiskKmsKeyId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ecs.launchTemplate.version.systemDiskDeleteWithInstance": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEcsLaunchTemplateVersion).SystemDiskDeleteWithInstance, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"alicloud.ecs.prefixList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEcsPrefixList).__id, ok = v.Value.(string)
 		return
@@ -8646,6 +8996,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.ess.scalingGroup.launchTemplateVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudEssScalingGroup).LaunchTemplateVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.ess.scalingGroup.launchTemplate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudEssScalingGroup).LaunchTemplate, ok = plugin.RawToTValue[*mqlAlicloudEcsLaunchTemplate](v.Value, v.Error)
 		return
 	},
 	"alicloud.ess.scalingGroup.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17740,13 +18094,14 @@ type mqlAlicloudEcs struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAlicloudEcsInternal it will be used here
-	Instances      plugin.TValue[[]any]
-	Disks          plugin.TValue[[]any]
-	Images         plugin.TValue[[]any]
-	KeyPairs       plugin.TValue[[]any]
-	SecurityGroups plugin.TValue[[]any]
-	PrefixLists    plugin.TValue[[]any]
-	Snapshots      plugin.TValue[[]any]
+	Instances       plugin.TValue[[]any]
+	Disks           plugin.TValue[[]any]
+	Images          plugin.TValue[[]any]
+	KeyPairs        plugin.TValue[[]any]
+	SecurityGroups  plugin.TValue[[]any]
+	PrefixLists     plugin.TValue[[]any]
+	Snapshots       plugin.TValue[[]any]
+	LaunchTemplates plugin.TValue[[]any]
 }
 
 // createAlicloudEcs creates a new instance of this resource
@@ -17896,6 +18251,436 @@ func (c *mqlAlicloudEcs) GetSnapshots() *plugin.TValue[[]any] {
 
 		return c.snapshots()
 	})
+}
+
+func (c *mqlAlicloudEcs) GetLaunchTemplates() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LaunchTemplates, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs", c.__id, "launchTemplates")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.launchTemplates()
+	})
+}
+
+// mqlAlicloudEcsLaunchTemplate for the alicloud.ecs.launchTemplate resource
+type mqlAlicloudEcsLaunchTemplate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudEcsLaunchTemplateInternal
+	RegionId             plugin.TValue[string]
+	LaunchTemplateId     plugin.TValue[string]
+	LaunchTemplateName   plugin.TValue[string]
+	CreatedBy            plugin.TValue[string]
+	DefaultVersionNumber plugin.TValue[int64]
+	LatestVersionNumber  plugin.TValue[int64]
+	CreateTime           plugin.TValue[*time.Time]
+	ModifiedTime         plugin.TValue[*time.Time]
+	ResourceGroupId      plugin.TValue[string]
+	ResourceGroup        plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Tags                 plugin.TValue[map[string]any]
+	Versions             plugin.TValue[[]any]
+	DefaultVersion       plugin.TValue[*mqlAlicloudEcsLaunchTemplateVersion]
+}
+
+// createAlicloudEcsLaunchTemplate creates a new instance of this resource
+func createAlicloudEcsLaunchTemplate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudEcsLaunchTemplate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.ecs.launchTemplate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) MqlName() string {
+	return "alicloud.ecs.launchTemplate"
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetLaunchTemplateId() *plugin.TValue[string] {
+	return &c.LaunchTemplateId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetLaunchTemplateName() *plugin.TValue[string] {
+	return &c.LaunchTemplateName
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetDefaultVersionNumber() *plugin.TValue[int64] {
+	return &c.DefaultVersionNumber
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetLatestVersionNumber() *plugin.TValue[int64] {
+	return &c.LatestVersionNumber
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetModifiedTime() *plugin.TValue[*time.Time] {
+	return &c.ModifiedTime
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetVersions() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Versions, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate", c.__id, "versions")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.versions()
+	})
+}
+
+func (c *mqlAlicloudEcsLaunchTemplate) GetDefaultVersion() *plugin.TValue[*mqlAlicloudEcsLaunchTemplateVersion] {
+	return plugin.GetOrCompute[*mqlAlicloudEcsLaunchTemplateVersion](&c.DefaultVersion, func() (*mqlAlicloudEcsLaunchTemplateVersion, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate", c.__id, "defaultVersion")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEcsLaunchTemplateVersion), nil
+			}
+		}
+
+		return c.defaultVersion()
+	})
+}
+
+// mqlAlicloudEcsLaunchTemplateVersion for the alicloud.ecs.launchTemplate.version resource
+type mqlAlicloudEcsLaunchTemplateVersion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudEcsLaunchTemplateVersionInternal
+	RegionId                     plugin.TValue[string]
+	LaunchTemplateId             plugin.TValue[string]
+	VersionNumber                plugin.TValue[int64]
+	VersionDescription           plugin.TValue[string]
+	IsDefault                    plugin.TValue[bool]
+	CreatedBy                    plugin.TValue[string]
+	CreateTime                   plugin.TValue[*time.Time]
+	InstanceType                 plugin.TValue[string]
+	ImageId                      plugin.TValue[string]
+	Image                        plugin.TValue[*mqlAlicloudEcsImage]
+	ImageOwnerAlias              plugin.TValue[string]
+	ZoneId                       plugin.TValue[string]
+	KeyPairName                  plugin.TValue[string]
+	PasswordInherit              plugin.TValue[bool]
+	SecurityEnhancementStrategy  plugin.TValue[string]
+	RamRole                      plugin.TValue[*mqlAlicloudRamRole]
+	SecurityGroupIds             plugin.TValue[[]any]
+	SecurityGroups               plugin.TValue[[]any]
+	Vpc                          plugin.TValue[*mqlAlicloudVpcNetwork]
+	Vswitch                      plugin.TValue[*mqlAlicloudVpcVswitch]
+	UserData                     plugin.TValue[string]
+	HttpEndpoint                 plugin.TValue[string]
+	HttpTokens                   plugin.TValue[string]
+	ImdsV2Required               plugin.TValue[bool]
+	HttpPutResponseHopLimit      plugin.TValue[int64]
+	InternetMaxBandwidthIn       plugin.TValue[int64]
+	InternetMaxBandwidthOut      plugin.TValue[int64]
+	DeletionProtection           plugin.TValue[bool]
+	SpotStrategy                 plugin.TValue[string]
+	SystemDiskCategory           plugin.TValue[string]
+	SystemDiskEncrypted          plugin.TValue[bool]
+	SystemDiskKmsKeyId           plugin.TValue[string]
+	SystemDiskDeleteWithInstance plugin.TValue[bool]
+}
+
+// createAlicloudEcsLaunchTemplateVersion creates a new instance of this resource
+func createAlicloudEcsLaunchTemplateVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudEcsLaunchTemplateVersion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.ecs.launchTemplate.version", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) MqlName() string {
+	return "alicloud.ecs.launchTemplate.version"
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetLaunchTemplateId() *plugin.TValue[string] {
+	return &c.LaunchTemplateId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetVersionNumber() *plugin.TValue[int64] {
+	return &c.VersionNumber
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetVersionDescription() *plugin.TValue[string] {
+	return &c.VersionDescription
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetIsDefault() *plugin.TValue[bool] {
+	return &c.IsDefault
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetCreatedBy() *plugin.TValue[string] {
+	return &c.CreatedBy
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetInstanceType() *plugin.TValue[string] {
+	return &c.InstanceType
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetImageId() *plugin.TValue[string] {
+	return &c.ImageId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetImage() *plugin.TValue[*mqlAlicloudEcsImage] {
+	return plugin.GetOrCompute[*mqlAlicloudEcsImage](&c.Image, func() (*mqlAlicloudEcsImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate.version", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEcsImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetImageOwnerAlias() *plugin.TValue[string] {
+	return &c.ImageOwnerAlias
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetZoneId() *plugin.TValue[string] {
+	return &c.ZoneId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetKeyPairName() *plugin.TValue[string] {
+	return &c.KeyPairName
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetPasswordInherit() *plugin.TValue[bool] {
+	return &c.PasswordInherit
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSecurityEnhancementStrategy() *plugin.TValue[string] {
+	return &c.SecurityEnhancementStrategy
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetRamRole() *plugin.TValue[*mqlAlicloudRamRole] {
+	return plugin.GetOrCompute[*mqlAlicloudRamRole](&c.RamRole, func() (*mqlAlicloudRamRole, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate.version", c.__id, "ramRole")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudRamRole), nil
+			}
+		}
+
+		return c.ramRole()
+	})
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSecurityGroupIds() *plugin.TValue[[]any] {
+	return &c.SecurityGroupIds
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate.version", c.__id, "securityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.securityGroups()
+	})
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetVpc() *plugin.TValue[*mqlAlicloudVpcNetwork] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcNetwork](&c.Vpc, func() (*mqlAlicloudVpcNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate.version", c.__id, "vpc")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcNetwork), nil
+			}
+		}
+
+		return c.vpc()
+	})
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetVswitch() *plugin.TValue[*mqlAlicloudVpcVswitch] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVswitch](&c.Vswitch, func() (*mqlAlicloudVpcVswitch, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ecs.launchTemplate.version", c.__id, "vswitch")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVswitch), nil
+			}
+		}
+
+		return c.vswitch()
+	})
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetUserData() *plugin.TValue[string] {
+	return &c.UserData
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetHttpEndpoint() *plugin.TValue[string] {
+	return &c.HttpEndpoint
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetHttpTokens() *plugin.TValue[string] {
+	return &c.HttpTokens
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetImdsV2Required() *plugin.TValue[bool] {
+	return &c.ImdsV2Required
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
+	return &c.HttpPutResponseHopLimit
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetInternetMaxBandwidthIn() *plugin.TValue[int64] {
+	return &c.InternetMaxBandwidthIn
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetInternetMaxBandwidthOut() *plugin.TValue[int64] {
+	return &c.InternetMaxBandwidthOut
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetDeletionProtection() *plugin.TValue[bool] {
+	return &c.DeletionProtection
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSpotStrategy() *plugin.TValue[string] {
+	return &c.SpotStrategy
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSystemDiskCategory() *plugin.TValue[string] {
+	return &c.SystemDiskCategory
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSystemDiskEncrypted() *plugin.TValue[bool] {
+	return &c.SystemDiskEncrypted
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSystemDiskKmsKeyId() *plugin.TValue[string] {
+	return &c.SystemDiskKmsKeyId
+}
+
+func (c *mqlAlicloudEcsLaunchTemplateVersion) GetSystemDiskDeleteWithInstance() *plugin.TValue[bool] {
+	return &c.SystemDiskDeleteWithInstance
 }
 
 // mqlAlicloudEcsPrefixList for the alicloud.ecs.prefixList resource
@@ -19538,6 +20323,7 @@ type mqlAlicloudEssScalingGroup struct {
 	ResourceGroup              plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
 	LaunchTemplateId           plugin.TValue[string]
 	LaunchTemplateVersion      plugin.TValue[string]
+	LaunchTemplate             plugin.TValue[*mqlAlicloudEcsLaunchTemplate]
 	CreationTime               plugin.TValue[*time.Time]
 	ModificationTime           plugin.TValue[*time.Time]
 	Vpc                        plugin.TValue[*mqlAlicloudVpcNetwork]
@@ -19681,6 +20467,22 @@ func (c *mqlAlicloudEssScalingGroup) GetLaunchTemplateId() *plugin.TValue[string
 
 func (c *mqlAlicloudEssScalingGroup) GetLaunchTemplateVersion() *plugin.TValue[string] {
 	return &c.LaunchTemplateVersion
+}
+
+func (c *mqlAlicloudEssScalingGroup) GetLaunchTemplate() *plugin.TValue[*mqlAlicloudEcsLaunchTemplate] {
+	return plugin.GetOrCompute[*mqlAlicloudEcsLaunchTemplate](&c.LaunchTemplate, func() (*mqlAlicloudEcsLaunchTemplate, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.ess.scalingGroup", c.__id, "launchTemplate")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudEcsLaunchTemplate), nil
+			}
+		}
+
+		return c.launchTemplate()
+	})
 }
 
 func (c *mqlAlicloudEssScalingGroup) GetCreationTime() *plugin.TValue[*time.Time] {

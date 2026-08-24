@@ -474,6 +474,168 @@ alicloud.ecs {
   // independently of the disk it came from, so an unencrypted snapshot of an
   // encrypted disk defeats the disk's own encryption.
   snapshots() []alicloud.ecs.snapshot
+  // Instance launch templates across all enabled regions
+  //
+  // A launch template fixes the image, security groups, RAM role, key pair and
+  // user data of every instance launched from it, so a weakness in a template
+  // is reproduced on each new instance rather than existing on one.
+  launchTemplates() []alicloud.ecs.launchTemplate
+}
+
+// Elastic Compute Service launch template
+//
+// A named instance launch template, keyed by launchTemplateId within its
+// region. A template holds one or more versions, each fixing the image,
+// security groups, RAM role, key pair, metadata-service settings and user data
+// of the instances launched from it. Exposes the version list and which version
+// is the default. Use it to audit the shape of instances that do not exist yet,
+// which an instance-by-instance check cannot reach.
+alicloud.ecs.launchTemplate @defaults("launchTemplateName launchTemplateId latestVersionNumber") {
+  // Region ID the template resides in, for example cn-hangzhou
+  regionId string
+  // Launch template ID, used as the lookup key within its region
+  launchTemplateId string
+  // Name of the launch template
+  launchTemplateName string
+  // Account or service that created the template
+  createdBy string
+  // Version number used when a launch does not name one
+  defaultVersionNumber int
+  // Highest version number the template has
+  //
+  // A template whose default is behind its latest launches the older shape, so
+  // a fix applied in a new version does not reach new instances until the
+  // default moves.
+  latestVersionNumber int
+  // Time the template was created
+  createTime time
+  // Time the template was last modified
+  modifiedTime time
+  // ID of the resource group the template belongs to
+  resourceGroupId string
+  // Resource group that contains the template
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the template
+  tags map[string]string
+  // Versions of the template
+  versions() []alicloud.ecs.launchTemplate.version
+  // Version launched when a launch does not name one
+  //
+  // Null when the default version could not be read. This is the version that
+  // actually shapes new instances, so it is the one an audit should read.
+  defaultVersion() alicloud.ecs.launchTemplate.version
+}
+
+// Version of an Elastic Compute Service launch template
+//
+// A single version of a launch template, keyed by the owning launchTemplateId
+// and version number. Exposes the instance shape the version launches: the
+// image, security groups, RAM role, key pair, metadata-service settings, disk
+// encryption, and user data. Use it to find a template that grants a broad RAM
+// role, leaves the metadata service on IMDSv1, or embeds a credential in user
+// data.
+alicloud.ecs.launchTemplate.version @defaults("versionNumber instanceType isDefault") {
+  // Region ID the template resides in
+  regionId string
+  // ID of the launch template the version belongs to
+  launchTemplateId string
+  // Version number
+  versionNumber int
+  // Description of the version
+  versionDescription string
+  // Whether this version launches when a launch does not name one
+  isDefault bool
+  // Account or service that created the version
+  createdBy string
+  // Time the version was created
+  createTime time
+  // Instance type launched, for example ecs.g6.large
+  instanceType string
+  // ID of the image launched
+  imageId string
+  // Image launched
+  //
+  // Null when the image has since been deleted, which also means the template
+  // can no longer launch.
+  image() alicloud.ecs.image
+  // Where the image comes from, for example system, self, others, or marketplace
+  imageOwnerAlias string
+  // Zone the instance is launched into
+  zoneId string
+  // Name of the SSH key pair installed on launch, empty when none is installed
+  keyPairName string
+  // Whether the instance inherits the password of the image
+  passwordInherit bool
+  // Security-hardening applied at launch, for example Active or Deactive
+  securityEnhancementStrategy string
+  // RAM role attached to launched instances
+  //
+  // Null when the template attaches no role. An instance carrying a role can
+  // mint credentials for it from the metadata service, so a broad role here is
+  // granted to every instance the template launches.
+  ramRole() alicloud.ram.role
+  // IDs of the security groups applied at launch
+  securityGroupIds []string
+  // Security groups applied at launch
+  //
+  // A group that has since been deleted is left out, so this can be shorter
+  // than securityGroupIds.
+  securityGroups() []alicloud.ecs.securitygroup
+  // VPC launched instances join
+  //
+  // Null when the template names no VPC, and when the VPC lies outside the
+  // scanned regions.
+  vpc() alicloud.vpc.network
+  // vSwitch launched instances join
+  //
+  // Null when the template names no vSwitch, and when the vSwitch lies outside
+  // the scanned regions.
+  vswitch() alicloud.vpc.vswitch
+  // Startup script and cloud-init data written into every launched instance
+  //
+  // The user data as plain text, decoded from the base64 form the API returns.
+  // Every instance launched from this version receives it, and any process on
+  // those instances that can reach the metadata service can read it back, so a
+  // credential embedded here is exposed on every instance the template has ever
+  // launched. Empty when the version carries no user data.
+  userData string
+  // Whether the instance metadata service is reachable, either enabled or disabled
+  httpEndpoint string
+  // Whether the metadata service demands a session token
+  //
+  // Either required, which is IMDSv2, or optional, which still answers the
+  // token-less IMDSv1 request that a server-side request forgery can reach.
+  httpTokens string
+  // Whether the metadata service requires IMDSv2
+  //
+  // False when httpTokens is optional, which leaves the instance role
+  // credentials reachable through a server-side request forgery against the
+  // workload.
+  imdsV2Required bool
+  // Hop limit for metadata service responses
+  //
+  // A limit above 1 lets a container on the instance reach the metadata
+  // service through the host's network namespace.
+  httpPutResponseHopLimit int
+  // Maximum inbound public bandwidth in Mbit/s, 0 when no public address is assigned
+  internetMaxBandwidthIn int
+  // Maximum outbound public bandwidth in Mbit/s
+  //
+  // A value above 0 assigns a public IP address to every instance the version
+  // launches.
+  internetMaxBandwidthOut int
+  // Whether launched instances are protected from release
+  deletionProtection bool
+  // Preemption strategy, for example NoSpot, SpotWithPriceLimit, or SpotAsPriceGo
+  spotStrategy string
+  // Storage category of the system disk, for example cloud_essd
+  systemDiskCategory string
+  // Whether the system disk is encrypted
+  systemDiskEncrypted bool
+  // ID of the KMS key encrypting the system disk, empty when the service-managed key is used
+  systemDiskKmsKeyId string
+  // Whether the system disk is released with the instance
+  systemDiskDeleteWithInstance bool
 }
 
 // Prefix list
@@ -1132,6 +1294,12 @@ alicloud.ess.scalingGroup @defaults("name scalingGroupId lifecycleState totalCap
   // A version number, or Latest or Default. Empty when the group launches from
   // a scaling configuration.
   launchTemplateVersion string
+  // Launch template the group creates instances from
+  //
+  // Null when the group launches from a scaling configuration instead, and when
+  // the template has since been deleted. Traverse to its versions to see the
+  // image, security groups, RAM role and user data the group's instances get.
+  launchTemplate() alicloud.ecs.launchTemplate
   // Time the scaling group was created
   creationTime time
   // Time the scaling group was last modified
