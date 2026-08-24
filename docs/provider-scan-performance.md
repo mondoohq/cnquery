@@ -219,7 +219,7 @@ id. A user with no registration record is a legitimate state (the report omits
 people who never registered a method) and now returns null rather than a 404.
 Measured: 58 → 10 calls, 47s → 18s, the same 24 ids byte-identical, and both 404s
 gone. Unlike vSphere this is a real wall-clock win — these requests were
-serialized, not parallelised. (#10055.)
+serialized, not parallelized. (#10055.)
 
 ms365 is structurally among the healthiest: no init adopts the scanned
 asset's identity, so root cause 3 cannot occur, and only 3 of its 23 inits reach
@@ -417,7 +417,7 @@ helpers built a fresh one per command; `esxiClient()` returned a new client per
 accessor call on top. That was 275 executor constructions — 550 setup calls, 36%
 of the scan's traffic.
 
-The reason it is not simply a win: the calls were already heavily parallelised,
+The reason it is not simply a win: the calls were already heavily parallelized,
 so removing 834 of them changed no timings, and `Executor.Run` mutates a shared
 `CommandInfo` map, so sharing an executor required a mutex that serializes
 esxcli commands within a host. Fewer calls, less concurrency, same duration.
