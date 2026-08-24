@@ -44,6 +44,14 @@ type mqlSnowflakeAccountInternal struct {
 	cachedDatabaseIndex  memoIndex[sdk.Database]
 	cachedSchemaIndex    memoIndex[sdk.Schema]
 	cachedWarehouseIndex memoIndex[sdk.Warehouse]
+
+	cachedNetworkPolicyIndex memoIndex[*mqlSnowflakeNetworkPolicy]
+	cachedNetworkRuleIndex   memoIndex[*mqlSnowflakeNetworkRule]
+	cachedSecretIndex        memoIndex[*mqlSnowflakeSecret]
+
+	policyAttachmentsOnce      sync.Once
+	cachedPolicyAttachments    *policyAttachments
+	cachedPolicyAttachmentsErr error
 }
 
 // showAccountParameters fetches the account-level parameters from Snowflake,

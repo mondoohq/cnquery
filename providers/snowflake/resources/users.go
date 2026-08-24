@@ -179,3 +179,86 @@ func (r *mqlSnowflakeUser) defaultWarehouseRef() (*mqlSnowflakeWarehouse, error)
 	}
 	return wh.(*mqlSnowflakeWarehouse), nil
 }
+
+// snowflakeParameterValue is one row of SHOW PARAMETERS, reduced to what a
+// parameter lookup needs.
+type snowflakeParameterValue struct {
+	key   string
+	value string
+	level string
+}
+
+// parameterLevelUser is what SHOW PARAMETERS reports in the level column for a
+// parameter set on the user itself.
+//
+// The statement reports the effective value, so a user who has never been given
+// a network policy still reports the account's in the value column, with the
+// level naming where the value came from. Reading the value without the level
+// would report every user in an account that has a network policy as carrying a
+// per-user override, which is the exact opposite of the answer wanted: an
+// override is what lets a user out of the account's restriction.
+const parameterLevelUser = string(sdk.ParameterTypeUser)
+
+// userParameterOverride returns the value of a parameter set on the user
+// itself. It reports false when the parameter is absent, and when it is present
+// but inherited rather than overridden.
+func userParameterOverride(params []snowflakeParameterValue, key string) (string, bool) {
+	for _, p := range params {
+		if !strings.EqualFold(strings.TrimSpace(p.key), key) {
+			continue
+		}
+		if !strings.EqualFold(strings.TrimSpace(p.level), parameterLevelUser) {
+			continue
+		}
+		return strings.TrimSpace(p.value), true
+	}
+	return "", false
+}
+
+// parameterValues reduces the parameter resources of a scope to the fields a
+// lookup reads.
+func parameterValues(entries []any) []snowflakeParameterValue {
+	out := make([]snowflakeParameterValue, 0, len(entries))
+	for _, entry := range entries {
+		p, ok := entry.(*mqlSnowflakeParameter)
+		if !ok || p == nil {
+			continue
+		}
+		out = append(out, snowflakeParameterValue{
+			key:   p.Key.Data,
+			value: p.Value.Data,
+			level: p.Level.Data,
+		})
+	}
+	return out
+}
+
+func (r *mqlSnowflakeUser) networkPolicyName() (string, error) {
+	params := r.GetParameters()
+	if params.Error != nil {
+		return "", params.Error
+	}
+	value, _ := userParameterOverride(parameterValues(params.Data), "NETWORK_POLICY")
+	return value, nil
+}
+
+func (r *mqlSnowflakeUser) networkPolicy() (*mqlSnowflakeNetworkPolicy, error) {
+	name := r.GetNetworkPolicyName()
+	if name.Error != nil {
+		return nil, name.Error
+	}
+	if name.Data == "" {
+		r.NetworkPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	policy, err := networkPolicyByName(r.MqlRuntime, name.Data)
+	if err != nil {
+		return nil, err
+	}
+	if policy == nil {
+		r.NetworkPolicy.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return policy, nil
+}
