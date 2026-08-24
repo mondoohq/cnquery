@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	mql "go.mondoo.com/mql"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -34,7 +33,7 @@ func writeVarFixture(t *testing.T) string {
 	return dir
 }
 
-func newRuntimeForDir(t *testing.T, dir string, features []byte) *plugin.Runtime {
+func newRuntimeForDir(t *testing.T, dir string) *plugin.Runtime {
 	t.Helper()
 	asset := &inventory.Asset{
 		Connections: []*inventory.Config{
@@ -43,7 +42,6 @@ func newRuntimeForDir(t *testing.T, dir string, features []byte) *plugin.Runtime
 	}
 	conn, err := connection.NewHclConnection(1, asset)
 	require.NoError(t, err)
-	conn.SetFeatures(features)
 	return &plugin.Runtime{
 		Connection: conn,
 		Resources:  &syncx.Map[plugin.Resource]{},
@@ -52,12 +50,12 @@ func newRuntimeForDir(t *testing.T, dir string, features []byte) *plugin.Runtime
 
 // TestTerraformResources_VarResolution exercises the full reported scenario end
 // to end: terraform.resources must return the resource block (the fix for the
-// intermittently-empty list, mondoohq/mql#8966), and with the
-// TerraformResolveVars feature active arguments() must resolve var.ingress_cidr
-// to the .tfvars override 0.0.0.0/0 — so the security check is non-vacuous.
+// intermittently-empty list, mondoohq/mql#8966), and arguments() must resolve
+// var.ingress_cidr to the .tfvars override 0.0.0.0/0 — so the security check is
+// non-vacuous.
 func TestTerraformResources_VarResolution(t *testing.T) {
 	dir := writeVarFixture(t)
-	rt := newRuntimeForDir(t, dir, []byte{byte(mql.TerraformResolveVars)})
+	rt := newRuntimeForDir(t, dir)
 
 	// terraform.resources init -> the list must contain the resource block.
 	args, _, err := initTerraformResources(rt, map[string]*llx.RawData{})
@@ -77,12 +75,13 @@ func TestTerraformResources_VarResolution(t *testing.T) {
 		"var.ingress_cidr must resolve to the .tfvars override")
 }
 
-// TestTerraformResources_VarResolutionDisabled documents the opt-out: with the
-// feature inactive, arguments() surfaces the raw reference string instead of the
-// resolved value, but the resources list is still populated.
-func TestTerraformResources_VarResolutionDisabled(t *testing.T) {
+// TestTerraformResources_ArgumentReferences documents the unresolved view:
+// argumentReferences() surfaces the raw reference string even though
+// arguments() resolves it, so a policy can still tell that a value is
+// parameterized.
+func TestTerraformResources_ArgumentReferences(t *testing.T) {
 	dir := writeVarFixture(t)
-	rt := newRuntimeForDir(t, dir, nil)
+	rt := newRuntimeForDir(t, dir)
 
 	args, _, err := initTerraformResources(rt, map[string]*llx.RawData{})
 	require.NoError(t, err)
@@ -90,8 +89,8 @@ func TestTerraformResources_VarResolutionDisabled(t *testing.T) {
 	require.Len(t, list, 1, "terraform.resources must not be empty")
 
 	block := list[0].(*mqlTerraformBlock)
-	arguments, err := block.arguments()
+	refs, err := block.argumentReferences()
 	require.NoError(t, err)
-	require.Equal(t, []any{"var.ingress_cidr"}, arguments["cidr_blocks"],
-		"with the feature off, the reference string is surfaced verbatim")
+	require.Equal(t, []any{"var.ingress_cidr"}, refs["cidr_blocks"],
+		"argumentReferences must surface the reference string verbatim")
 }

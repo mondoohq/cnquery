@@ -17,7 +17,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
-	mql "go.mondoo.com/mql"
 	"go.mondoo.com/mql/checksums"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -568,16 +567,13 @@ func (t *mqlTerraformBlock) attributes() (map[string]any, error) {
 }
 
 // evalContext returns the HCL evaluation context used to resolve this block's
-// argument expressions. When the TerraformResolveVars feature flag is
-// active, it returns the connection's context that resolves var.*/local.*
-// references; otherwise it returns nil, preserving the historical behavior of
-// surfacing those references as strings.
+// argument expressions: the connection's context that resolves var.*/local.*
+// references to their effective values. It returns nil for connections that
+// carry no such context (plan and state assets, which have no HCL parser), in
+// which case references are surfaced as strings.
 func (t *mqlTerraformBlock) evalContext() *hcl.EvalContext {
 	conn, ok := t.MqlRuntime.Connection.(*connection.Connection)
 	if !ok || conn == nil {
-		return nil
-	}
-	if !mql.Features(conn.Features()).IsActive(mql.TerraformResolveVars) {
 		return nil
 	}
 	return conn.VariableEvalContext()
@@ -600,9 +596,9 @@ func (t *mqlTerraformBlock) arguments() (map[string]any, error) {
 }
 
 // argumentReferences returns the block's arguments with variable and local
-// references left unresolved (e.g. "var.bucket_acl"), regardless of the
-// TerraformResolveVars feature flag. Use it to inspect that a value is
-// parameterized even when arguments() resolves to the effective value.
+// references left unresolved (e.g. "var.bucket_acl"). Use it to inspect that a
+// value is parameterized even though arguments() resolves it to the effective
+// value.
 func (t *mqlTerraformBlock) argumentReferences() (map[string]any, error) {
 	var hclBlock *hcl.Block
 	if t.block.State == plugin.StateIsSet {
@@ -680,8 +676,8 @@ func (t *mqlTerraformBlock) values() (map[string]any, error) {
 }
 
 // hclEvalContextOrDefault returns ctx when it carries resolved variable/local
-// values, or a functions-only context (the historical, no-resolution behavior)
-// when ctx is nil.
+// values, or a functions-only context (no var.*/local.* resolution, as used by
+// argumentReferences and by plan/state assets) when ctx is nil.
 func hclEvalContextOrDefault(ctx *hcl.EvalContext) *hcl.EvalContext {
 	if ctx != nil {
 		return ctx
@@ -786,11 +782,10 @@ func getCtyValue(expr hcl.Expression, ctx *hcl.EvalContext) any {
 		}
 		return results
 	case *hclsyntax.ScopeTraversalExpr:
-		// When the eval context carries resolved var.*/local.* values (the
-		// TerraformResolveVars feature flag), resolve the traversal to its
-		// effective value. If it can't be resolved (no such variable/local,
-		// data/resource references, …), fall back to surfacing the reference as
-		// a dotted string below.
+		// When the eval context carries resolved var.*/local.* values, resolve
+		// the traversal to its effective value. If it can't be resolved (no
+		// such variable/local, data/resource references, …), fall back to
+		// surfacing the reference as a dotted string below.
 		if ctx != nil && len(ctx.Variables) > 0 {
 			if val, diags := t.Value(ctx); !diags.HasErrors() {
 				return ctyValueToGo(val)

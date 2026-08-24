@@ -94,7 +94,8 @@ const (
 
 	// Resolve var.* and local.* references in Terraform HCL block arguments to their effective values (variable defaults overridden by .tfvars, locals evaluated from those). Unresolvable references fall back to their reference string; the unresolved view stays available via terraform.block.argumentReferences.
 	// start:  v13.x
-	// status: new
+	// end: v13.x => this is the default now, no need to set it anymore
+	// status: builtin
 	TerraformResolveVars Feature = 17
 
 	// Compute a checksum for every row while writing the scan database, so an unchanged scan is detectable. Nothing else changes - every scan still uploads and is processed in full.
@@ -161,7 +162,6 @@ var AvailableFeatures = Features{
 	byte(UploadResultsV2),
 	byte(BiosUUIDAsID),
 	byte(ExchangeTokenForToken),
-	byte(TerraformResolveVars),
 	byte(ScanContentModeShadow),
 	byte(ScanContentModeServerCompare),
 	byte(ScanContentModeClientCompare),

@@ -251,8 +251,7 @@ func TestGetCtyValue_UnaryOp_UnboundOperand(t *testing.T) {
 }
 
 // resolvingCtx builds an eval context with resolved var.*/local.* values,
-// mimicking what Connection.VariableEvalContext produces when the
-// TerraformResolveVars feature flag is active.
+// mimicking what Connection.VariableEvalContext produces for an HCL asset.
 func resolvingCtx(vars, locals map[string]cty.Value) *hcl.EvalContext {
 	ctx := &hcl.EvalContext{Functions: hclFunctions(), Variables: map[string]cty.Value{}}
 	if len(vars) > 0 {
