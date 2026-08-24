@@ -19,6 +19,12 @@ import (
 // ecsSnapshotPageSize is the page size used when enumerating snapshots.
 const ecsSnapshotPageSize = 100
 
+// ecsImageSharePageGuard bounds the image share permission walk. The endpoint
+// reports no cursor and its TotalCount cannot be attributed to either of the
+// two lists it returns, so the walk ends on an empty page; this stops a server
+// that ignores PageNumber from looping forever.
+const ecsImageSharePageGuard = 100
+
 // ecsImageIsShared reports whether an image is usable outside the owning
 // account. Either a named account or a share group is enough; an image with
 // neither is private to its owner.
@@ -70,7 +76,6 @@ func (r *mqlAlicloudEcsImage) sharePermission() ([]any, []any) {
 		}
 
 		pageNumber := int32(1)
-		collected := int32(0)
 		for {
 			resp, err := client.DescribeImageSharePermission(&ecsclient.DescribeImageSharePermissionRequest{
 				RegionId:   tea.String(region),
@@ -99,16 +104,30 @@ func (r *mqlAlicloudEcsImage) sharePermission() ([]any, []any) {
 					accounts++
 				}
 			}
+			groups := 0
 			if resp.Body.ShareGroups != nil {
 				for _, g := range resp.Body.ShareGroups.ShareGroup {
 					if g == nil || tea.StringValue(g.Group) == "" {
 						continue
 					}
 					r.shareGroupList = append(r.shareGroupList, tea.StringValue(g.Group))
+					groups++
 				}
 			}
-			collected += int32(accounts)
-			if accounts == 0 || collected >= tea.Int32Value(resp.Body.TotalCount) {
+			// Terminate on a page that carried nothing, not on a count compared
+			// against TotalCount. The response documents TotalCount only as
+			// "the total number of records" and the endpoint returns two
+			// independent lists, so it is not knowable from the SDK whether it
+			// counts accounts alone or accounts and groups together. Comparing
+			// against it either stops early and drops shares, or never matches.
+			// A page with neither an account nor a group is the honest end of
+			// the walk, and pageGuard stops a server that ignores PageNumber.
+			if accounts == 0 && groups == 0 {
+				return
+			}
+			if pageNumber >= ecsImageSharePageGuard {
+				log.Warn().Str("image", r.ImageId.Data).
+					Msg("alicloud> stopped reading image share permissions at the page guard, the list may be incomplete")
 				return
 			}
 			pageNumber++

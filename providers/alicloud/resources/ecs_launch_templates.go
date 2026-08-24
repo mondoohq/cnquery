@@ -73,6 +73,7 @@ func (r *mqlAlicloudEcs) launchTemplates() ([]any, error) {
 		}
 
 		pageNumber := int32(1)
+		collected := int32(0)
 		for {
 			resp, err := client.DescribeLaunchTemplates(&ecsclient.DescribeLaunchTemplatesRequest{
 				RegionId:   tea.String(region),
@@ -121,8 +122,12 @@ func (r *mqlAlicloudEcs) launchTemplates() ([]any, error) {
 				mqlTemplate.region = region
 				res = append(res, mqlTemplate)
 			}
-			total := tea.Int32Value(resp.Body.TotalCount)
-			if len(items) == 0 || pageNumber*ecsLaunchTemplatePageSize >= total {
+			// count what actually arrived: the server may cap PageSize below the
+			// requested value, and multiplying the requested size by the page
+			// number would then overstate progress and stop early, dropping
+			// templates without any sign that the walk was short
+			collected += int32(len(items))
+			if len(items) == 0 || collected >= tea.Int32Value(resp.Body.TotalCount) {
 				break
 			}
 			pageNumber++
@@ -142,6 +147,7 @@ func (r *mqlAlicloudEcsLaunchTemplate) versions() ([]any, error) {
 
 	res := []any{}
 	pageNumber := int32(1)
+	collected := int32(0)
 	for {
 		resp, err := client.DescribeLaunchTemplateVersions(&ecsclient.DescribeLaunchTemplateVersionsRequest{
 			RegionId:         tea.String(r.region),
@@ -166,8 +172,10 @@ func (r *mqlAlicloudEcsLaunchTemplate) versions() ([]any, error) {
 			}
 			res = append(res, mqlVersion)
 		}
-		total := tea.Int32Value(resp.Body.TotalCount)
-		if len(items) == 0 || pageNumber*ecsLaunchTemplatePageSize >= total {
+		// see the note in launchTemplates: the requested page size is not a
+		// reliable measure of how many records have been seen
+		collected += int32(len(items))
+		if len(items) == 0 || collected >= tea.Int32Value(resp.Body.TotalCount) {
 			break
 		}
 		pageNumber++

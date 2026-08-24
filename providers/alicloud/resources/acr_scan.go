@@ -296,7 +296,3 @@ func (r *mqlAlicloudAcrRepositoryTag) hasHighSeverityVulnerabilities() (bool, er
 	}
 	return counts["high"] > 0, nil
 }
-
-func (r *mqlAlicloudAcrVulnerability) id() (string, error) {
-	return r.CveName.Data, nil
-}
