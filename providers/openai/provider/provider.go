@@ -44,6 +44,10 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options[connection.TokenOption] = string(token.Value)
 	}
 
+	if adminToken, ok := flags["admin-token"]; ok {
+		conf.Options[connection.AdminTokenOption] = string(adminToken.Value)
+	}
+
 	if org, ok := flags["organization"]; ok {
 		conf.Options[connection.OrganizationOption] = string(org.Value)
 	}

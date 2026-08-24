@@ -97,3 +97,39 @@ func (r *mqlOpenaiModel) baseModel() (string, error) {
 	}
 	return "", nil
 }
+
+// openaiModelList returns the account model collection through the openai
+// resource so the underlying list call is made once per scan.
+func openaiModelList(runtime *plugin.Runtime) ([]any, error) {
+	obj, err := CreateResource(runtime, "openai", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, err
+	}
+	models := obj.(*mqlOpenai).GetModels()
+	if models.Error != nil {
+		return nil, models.Error
+	}
+	return models.Data, nil
+}
+
+// resolveModel finds the model with the given id in the account model list.
+// Resolving through the cached list keeps a reference from costing a get per
+// referring object. A model named by a stored object can be retired from the
+// catalog, so a miss is reported as (nil, nil) for the caller to null rather
+// than as an error.
+func resolveModel(runtime *plugin.Runtime, modelID string) (*mqlOpenaiModel, error) {
+	models, err := openaiModelList(runtime)
+	if err != nil {
+		return nil, err
+	}
+	for i := range models {
+		m, ok := models[i].(*mqlOpenaiModel)
+		if !ok {
+			continue
+		}
+		if m.Id.Data == modelID {
+			return m, nil
+		}
+	}
+	return nil, nil
+}

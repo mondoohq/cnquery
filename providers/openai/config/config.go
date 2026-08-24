@@ -27,12 +27,17 @@ in an OpenAI account.
 Examples:
   cnspec shell openai --token <API-KEY>
   cnspec scan openai --token <ADMIN-API-KEY> --organization <ORG-ID>
+  cnspec scan openai --token <PROJECT-API-KEY> --admin-token <ADMIN-API-KEY>
   cnspec scan openai --project <PROJECT-ID>
 
 Notes:
   If you set the OPENAI_API_KEY environment variable, you can omit the token flag. Both
   project keys (sk-proj-...) and admin keys (sk-admin-...) are accepted and detected
   automatically; organization resources require an admin key.
+
+  Pass both keys, with the admin key in --admin-token (or OPENAI_ADMIN_KEY), to reach
+  resources that need one credential for the object and the other for its governance,
+  such as which projects a fine-tuning checkpoint is shared into.
 `,
 			Discovery: []string{},
 			Flags: []plugin.Flag{
@@ -40,6 +45,11 @@ Notes:
 					Long: "token",
 					Type: plugin.FlagType_String,
 					Desc: "OpenAI API key — project key (sk-proj-...) or admin key (sk-admin-...), auto-detected",
+				},
+				{
+					Long: "admin-token",
+					Type: plugin.FlagType_String,
+					Desc: "OpenAI admin API key (sk-admin-...) to use alongside --token (or set OPENAI_ADMIN_KEY env var)",
 				},
 				{
 					Long: "organization",

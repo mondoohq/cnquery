@@ -22,6 +22,7 @@ import (
 
 const (
 	TokenOption        = "token"
+	AdminTokenOption   = "admin-token"
 	OrganizationOption = "organization"
 	ProjectOption      = "project"
 	BaseURLOption      = "base-url"
@@ -48,11 +49,51 @@ func isAdminToken(token string) bool {
 	return strings.HasPrefix(token, "sk-admin-")
 }
 
-func NewOpenaiConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OpenaiConnection, error) {
-	token := conf.Options[TokenOption]
-	if token == "" {
-		token = os.Getenv("OPENAI_API_KEY")
+// resolveTokens sorts the configured credentials into the two planes an OpenAI
+// account exposes. A project key reads models, files, vector stores, batches
+// and fine-tuning; an admin key reads organization configuration, membership
+// and projects. Several reads need both halves at once: listing the
+// checkpoints of a fine-tuning job is a project-key call while reading which
+// projects those checkpoints are shared into is an admin-key one.
+//
+// --admin-token names the plane outright, so its value is used as the admin
+// key whatever its prefix. --token keeps the behavior it has always had and
+// auto-detects an admin key from its prefix, which is why a key passed there
+// still lands in the admin slot rather than being sent to endpoints it cannot
+// read.
+func resolveTokens(tokenFlag, adminFlag, tokenEnv, adminEnv string) (projectToken string, adminToken string) {
+	adminToken = firstNonEmpty(adminFlag, adminEnv)
+	projectToken = firstNonEmpty(tokenFlag, tokenEnv)
+
+	if isAdminToken(projectToken) {
+		if adminToken == "" {
+			adminToken = projectToken
+		}
+		projectToken = ""
 	}
+	return projectToken, adminToken
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func NewOpenaiConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*OpenaiConnection, error) {
+	projectToken, adminToken := resolveTokens(
+		conf.Options[TokenOption],
+		conf.Options[AdminTokenOption],
+		os.Getenv("OPENAI_API_KEY"),
+		os.Getenv("OPENAI_ADMIN_KEY"),
+	)
+	// the org probe and the platform id are keyed off one credential; prefer
+	// the project key so a connection that gains an admin key keeps the
+	// platform id it already had
+	token := firstNonEmpty(projectToken, adminToken)
 
 	org := conf.Options[OrganizationOption]
 	if org == "" {
@@ -86,24 +127,28 @@ func NewOpenaiConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		tokenHash = hex.EncodeToString(sum[:8])
 	}
 
-	adminKey := isAdminToken(token)
-
 	var client *openai.Client
 	var adminClient *openai.Client
 
-	if token != "" {
-		if adminKey {
-			opts := make([]option.RequestOption, 0, len(sharedOpts)+1)
-			opts = append(opts, option.WithAdminAPIKey(token))
-			opts = append(opts, sharedOpts...)
-			c := openai.NewClient(opts...)
-			adminClient = &c
-		} else {
-			opts := make([]option.RequestOption, 0, len(sharedOpts)+1)
-			opts = append(opts, option.WithAPIKey(token))
-			opts = append(opts, sharedOpts...)
-			c := openai.NewClient(opts...)
+	// One client carries both credentials. Every generated method marks which
+	// credential its endpoint accepts, so the SDK sends the admin key to the
+	// organization endpoints and the project key to the rest, and a connection
+	// given both keys can walk a query that crosses the two planes.
+	if projectToken != "" || adminToken != "" {
+		opts := make([]option.RequestOption, 0, len(sharedOpts)+2)
+		if projectToken != "" {
+			opts = append(opts, option.WithAPIKey(projectToken))
+		}
+		if adminToken != "" {
+			opts = append(opts, option.WithAdminAPIKey(adminToken))
+		}
+		opts = append(opts, sharedOpts...)
+		c := openai.NewClient(opts...)
+		if projectToken != "" {
 			client = &c
+		}
+		if adminToken != "" {
+			adminClient = &c
 		}
 	}
 
@@ -116,7 +161,7 @@ func NewOpenaiConnection(id uint32, asset *inventory.Asset, conf *inventory.Conf
 		organization: org,
 		project:      project,
 		tokenHash:    tokenHash,
-		isAdminKey:   adminKey,
+		isAdminKey:   adminToken != "",
 	}
 
 	if conn.organization == "" && token != "" {

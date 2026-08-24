@@ -109,3 +109,86 @@ func initOpenaiVectorStore(runtime *plugin.Runtime, args map[string]*llx.RawData
 	}
 	return mapVectorStore(*vs), nil, nil
 }
+
+type mqlOpenaiVectorStoreFileInternal struct {
+	cacheFileID string
+}
+
+// vectorStoreFileArgs builds the resource args for an openai.vectorStore.file.
+// The same uploaded file is attached to several stores, so the membership is
+// keyed by store as well as by file while `id` stays the plain file identifier.
+func vectorStoreFileArgs(storeID string, f openai.VectorStoreFile) map[string]*llx.RawData {
+	// The last error object is absent while a file embedded cleanly. Reporting
+	// "" for it would claim a file reported an error code with an empty value.
+	var lastErrorCode, lastErrorMessage *string
+	if f.JSON.LastError.Valid() && f.LastError.Code != "" {
+		lastErrorCode = &f.LastError.Code
+		lastErrorMessage = &f.LastError.Message
+	}
+
+	var chunkingStrategyType *string
+	if f.JSON.ChunkingStrategy.Valid() && f.ChunkingStrategy.Type != "" {
+		chunkingStrategyType = &f.ChunkingStrategy.Type
+	}
+
+	return map[string]*llx.RawData{
+		"__id":                 llx.StringData(storeID + "/" + f.ID),
+		"id":                   llx.StringData(f.ID),
+		"createdAt":            llx.TimeDataPtr(unixToNullableTime(f.CreatedAt)),
+		"status":               llx.StringData(string(f.Status)),
+		"usageBytes":           llx.IntData(f.UsageBytes),
+		"lastErrorCode":        llx.StringDataPtr(lastErrorCode),
+		"lastErrorMessage":     llx.StringDataPtr(lastErrorMessage),
+		"chunkingStrategyType": llx.StringDataPtr(chunkingStrategyType),
+	}
+}
+
+func (r *mqlOpenaiVectorStore) files() ([]any, error) {
+	conn := openaiConn(r.MqlRuntime)
+	client, err := dataPlaneClient(conn, "openai.vectorStore.files")
+	if err != nil {
+		return nil, err
+	}
+	if client == nil {
+		return []any{}, nil
+	}
+	ctx := context.Background()
+
+	var res []any
+	err = walkPages(
+		client.VectorStores.Files.ListAutoPaging(ctx, r.Id.Data, openai.VectorStoreFileListParams{}),
+		func(f openai.VectorStoreFile) string { return f.ID },
+		func(f openai.VectorStoreFile) error {
+			mqlFile, err := CreateResource(r.MqlRuntime, "openai.vectorStore.file",
+				vectorStoreFileArgs(r.Id.Data, f))
+			if err != nil {
+				return err
+			}
+			mqlFile.(*mqlOpenaiVectorStoreFile).cacheFileID = f.ID
+			res = append(res, mqlFile)
+			return nil
+		})
+	if err != nil {
+		if isAccessDenied(err) {
+			return []any{}, nil
+		}
+		return nil, fmt.Errorf("failed to list files in vector store %s: %w", r.Id.Data, err)
+	}
+	return res, nil
+}
+
+func (r *mqlOpenaiVectorStoreFile) file() (*mqlOpenaiFile, error) {
+	if r.cacheFileID == "" {
+		r.File.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	file, err := resolveFile(r.MqlRuntime, r.cacheFileID)
+	if err != nil {
+		return nil, err
+	}
+	if file == nil {
+		r.File.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return file, nil
+}

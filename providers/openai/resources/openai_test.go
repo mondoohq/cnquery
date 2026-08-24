@@ -260,3 +260,28 @@ func TestOpenaiModelBaseModel(t *testing.T) {
 		assert.Equal(t, tc.want, got, tc.id)
 	}
 }
+
+func TestBothPlanesOnADualKeyConnection(t *testing.T) {
+	// Reading which projects a fine-tuning checkpoint is shared into needs the
+	// project key for the checkpoint list and the admin key for its
+	// permissions, so both helpers have to answer on one connection.
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+	t.Setenv("OPENAI_ORG_ID", "")
+	t.Setenv("OPENAI_PROJECT_ID", "")
+	conf := &inventory.Config{Options: map[string]string{
+		connection.OrganizationOption: "org-test",
+		connection.TokenOption:        "sk-proj-abc",
+		connection.AdminTokenOption:   "sk-admin-abc",
+	}}
+	conn, err := connection.NewOpenaiConnection(0, &inventory.Asset{}, conf)
+	require.NoError(t, err)
+
+	dataClient, err := dataPlaneClient(conn, "openai.fineTuningJob.checkpoints")
+	require.NoError(t, err)
+	assert.NotNil(t, dataClient)
+
+	adminClient, err := adminPlaneClient(conn, "openai.fineTuningJob.checkpoint.permissions")
+	require.NoError(t, err)
+	assert.NotNil(t, adminClient)
+}
