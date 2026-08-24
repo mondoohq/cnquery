@@ -6,10 +6,12 @@ package connection
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -66,7 +68,7 @@ func (c *Client) get(ctx context.Context, path string, query url.Values, out any
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return errors.Newf("zoom API request to %s failed with status %d: %s", path, resp.StatusCode, string(body))
+		return newAPIError(path, resp.StatusCode, body)
 	}
 
 	if out == nil || len(body) == 0 {
@@ -76,6 +78,116 @@ func (c *Client) get(ctx context.Context, path string, query url.Values, out any
 		return errors.Wrapf(err, "failed to decode zoom API response from %s", path)
 	}
 	return nil
+}
+
+// APIError is a non-2xx response from the Zoom API. Zoom carries its own
+// error code in the response body alongside the HTTP status, and the two do
+// not agree: an endpoint the account's plan does not include answers with an
+// HTTP 4xx whose body code is 200. Classifying on this type rather than on a
+// message match is what keeps a transport failure, which is wrapped as
+// something else entirely and never as an *APIError, from being read as an
+// answer the API actually gave.
+type APIError struct {
+	// Path is the API path that produced the error.
+	Path string
+	// StatusCode is the HTTP status of the response.
+	StatusCode int
+	// Code is Zoom's own error code from the response body, or 0 when the
+	// body carried no code.
+	Code int
+	// Message is Zoom's error message from the response body.
+	Message string
+	// Body is the raw response body, kept for errors Zoom did not encode as
+	// a code/message pair.
+	Body string
+}
+
+func (e *APIError) Error() string {
+	if e.Message != "" {
+		return fmt.Sprintf("zoom API request to %s failed with status %d (code %d): %s", e.Path, e.StatusCode, e.Code, e.Message)
+	}
+	return fmt.Sprintf("zoom API request to %s failed with status %d: %s", e.Path, e.StatusCode, e.Body)
+}
+
+// newAPIError builds an *APIError from a non-2xx response, decoding Zoom's
+// code/message envelope when the body carries one. A body that is not that
+// envelope is preserved verbatim rather than discarded.
+func newAPIError(path string, statusCode int, body []byte) *APIError {
+	e := &APIError{Path: path, StatusCode: statusCode, Body: string(body)}
+	var envelope struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(body, &envelope); err == nil {
+		e.Code = envelope.Code
+		e.Message = envelope.Message
+	}
+	return e
+}
+
+// planRestrictedCode is the code Zoom returns in the body of an error response
+// for an endpoint the account's plan does not include ("Only available for
+// paid account"). It collides numerically with HTTP 200, which is harmless
+// here: a successful response never produces an *APIError.
+const planRestrictedCode = 200
+
+// IsPlanRestricted reports whether err is Zoom refusing an endpoint because
+// the account's plan does not include it. Callers use it to report the
+// posture as unread (null) rather than as an empty result, which would claim
+// the account has none of whatever was being listed.
+func IsPlanRestricted(err error) bool {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+	return apiErr.Code == planRestrictedCode
+}
+
+// IsNotFound reports whether err is a 404 from the Zoom API.
+func IsNotFound(err error) bool {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+	return apiErr.StatusCode == http.StatusNotFound
+}
+
+// IsForbidden reports whether err is the Zoom API refusing the request for
+// want of authorization. A missing OAuth scope is a configuration problem the
+// user has to fix, so callers surface it rather than degrading it to a null
+// or an empty list.
+func IsForbidden(err error) bool {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+	return apiErr.StatusCode == http.StatusUnauthorized || apiErr.StatusCode == http.StatusForbidden
+}
+
+// maxPages caps how many pages a single paginated walk will request. Zoom's
+// page size for these endpoints is 300, so the cap sits far above any real
+// account while still bounding a cursor that never terminates.
+const maxPages = 1000
+
+// walkPages drives a Zoom `next_page_token` cursor. fetch is called with the
+// token of the page to read and returns the token of the page after it, or an
+// empty string when the walk is done. An endpoint that echoes back the token
+// it was given instead of advancing would otherwise re-read the same page up
+// to the cap, multiplying every record, so a repeated token ends the walk the
+// same way an empty one does.
+func walkPages(fetch func(token string) (string, error)) error {
+	token := ""
+	for i := 0; i < maxPages; i++ {
+		next, err := fetch(token)
+		if err != nil {
+			return err
+		}
+		if next == "" || next == token {
+			return nil
+		}
+		token = next
+	}
+	return errors.Newf("zoom API pagination did not terminate within %d pages", maxPages)
 }
 
 // ---- Users ----
@@ -95,11 +207,18 @@ type User struct {
 	// responses return `login_types`, an array of integers; the singular
 	// `login_type` the docs once described is a query parameter, not a
 	// response field.
-	LoginTypes    []int64    `json:"login_types"`
-	RoleID        string     `json:"role_id"`
-	GroupIDs      []string   `json:"group_ids"`
-	LastLoginTime *time.Time `json:"last_login_time"`
+	LoginTypes []int64  `json:"login_types"`
+	RoleID     string   `json:"role_id"`
+	GroupIDs   []string `json:"group_ids"`
+	// LastClientVersion is the Zoom client build the user last signed in
+	// with, the only per-user signal of an outdated client on the account.
+	LastClientVersion string     `json:"last_client_version"`
+	LastLoginTime     *time.Time `json:"last_login_time"`
+	// CreatedAt is when the user's most recent login type was created, which
+	// is not the same instant as when the user was provisioned. Zoom reports
+	// the latter separately as user_created_at.
 	CreatedAt     *time.Time `json:"created_at"`
+	UserCreatedAt *time.Time `json:"user_created_at"`
 }
 
 // UsersListResponse is the paginated response of the List Users endpoint.
@@ -110,11 +229,18 @@ type UsersListResponse struct {
 	Users         []User `json:"users"`
 }
 
-// ListUsers returns one page of provisioned users. Pass an empty
+// UserStatuses are the provisioning states a Zoom user can be in. The List
+// Users endpoint answers for exactly one of them per call and defaults to
+// active, so reading the account's full roster means asking for each in turn:
+// a deactivated user still holds their group memberships and a pending user
+// still holds a claim on an account email address.
+var UserStatuses = []string{"active", "inactive", "pending"}
+
+// ListUsers returns one page of users in the given status. Pass an empty
 // nextPageToken to fetch the first page.
-func (c *Client) ListUsers(ctx context.Context, pageSize int, nextPageToken string) (*UsersListResponse, error) {
+func (c *Client) ListUsers(ctx context.Context, status string, pageSize int, nextPageToken string) (*UsersListResponse, error) {
 	q := url.Values{}
-	q.Set("status", "active")
+	q.Set("status", status)
 	q.Set("page_size", strconv.Itoa(pageSize))
 	if nextPageToken != "" {
 		q.Set("next_page_token", nextPageToken)
@@ -125,6 +251,26 @@ func (c *Client) ListUsers(ctx context.Context, pageSize int, nextPageToken stri
 		return nil, err
 	}
 	return &out, nil
+}
+
+// ListAllUsers returns every user provisioned on the account, in every
+// status, paginating each status in turn.
+func (c *Client) ListAllUsers(ctx context.Context, pageSize int) ([]User, error) {
+	var all []User
+	for _, status := range UserStatuses {
+		err := walkPages(func(token string) (string, error) {
+			list, err := c.ListUsers(ctx, status, pageSize, token)
+			if err != nil {
+				return "", err
+			}
+			all = append(all, list.Users...)
+			return list.NextPageToken, nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return all, nil
 }
 
 // GetUser fetches a single user by ID or email.
@@ -185,19 +331,124 @@ type AccountSettings struct {
 		// control. It applies to any signed-in Zoom user, not only to users on
 		// this account.
 		EnforceLogin bool `json:"enforce_login"`
+		// JoinBeforeHost lets participants start a meeting without the host
+		// present, which bypasses the host's admission of arrivals.
+		JoinBeforeHost *bool `json:"join_before_host"`
 	} `json:"schedule_meeting"`
-	Recording struct {
-		CloudRecording bool `json:"cloud_recording"`
-	} `json:"recording"`
-	Security struct {
-		// SignAgainPeriodForInactivityOnClient and
-		// SignAgainPeriodForInactivityOnWeb are the periods of inactivity, in
-		// minutes, after which a signed-in user is automatically signed out of
-		// the Zoom client and the Zoom web portal respectively. Zoom enforces
-		// the two separately, and reports 0 for whichever is switched off.
-		SignAgainPeriodForInactivityOnClient int64 `json:"sign_again_period_for_inactivity_on_client"`
-		SignAgainPeriodForInactivityOnWeb    int64 `json:"sign_again_period_for_inactivity_on_web"`
-	} `json:"security"`
+	Recording AccountRecordingSettings `json:"recording"`
+	Security  AccountSecuritySettings  `json:"security"`
+}
+
+// AccountRecordingSettings is the `recording` section of the un-optioned Get
+// Account Settings response: what may be recorded, who may reach a recording
+// once it exists, and how long it is kept. Every field beyond CloudRecording
+// is a pointer so that a key the account's plan does not report stays null
+// instead of reporting the permissive reading as fact.
+type AccountRecordingSettings struct {
+	CloudRecording bool  `json:"cloud_recording"`
+	LocalRecording *bool `json:"local_recording"`
+	// CloudRecordingDownload allows viewers to download a cloud recording
+	// rather than only stream it.
+	CloudRecordingDownload *bool `json:"cloud_recording_download"`
+	// AccountUserAccessRecording restricts cloud recordings to account
+	// members, so a shared link cannot be opened from outside the account.
+	AccountUserAccessRecording *bool `json:"account_user_access_recording"`
+	// AutoDeleteCmr and AutoDeleteCmrDays are Zoom's cloud-recording
+	// retention control: whether recordings are deleted automatically, and
+	// after how many days.
+	AutoDeleteCmr     *bool  `json:"auto_delete_cmr"`
+	AutoDeleteCmrDays *int64 `json:"auto_delete_cmr_days"`
+	// RequiredPasswordForExistingCloudRecordings applies a passcode
+	// requirement to recordings that were already made, not only to new ones.
+	RequiredPasswordForExistingCloudRecordings *bool `json:"required_password_for_existing_cloud_recordings"`
+	RecordingDisclaimer                        *bool `json:"recording_disclaimer"`
+	// AutoRecording is one of local, cloud, or none.
+	AutoRecording          *string `json:"auto_recording"`
+	IPAddressAccessControl struct {
+		Enable *bool `json:"enable"`
+		// IPAddressesOrRanges is a comma-separated list of addresses and
+		// ranges, not a JSON array.
+		IPAddressesOrRanges *string `json:"ip_addresses_or_ranges"`
+	} `json:"ip_address_access_control"`
+}
+
+// AccountSecuritySettings is the `security` section of the un-optioned Get
+// Account Settings response, which is where workforce identity posture lives:
+// two-factor enforcement, the password rules applied to Zoom-managed
+// credentials, and the single sign-on requirement. Zoom documents the same
+// keys at the top level of the `?option=security` view of the endpoint.
+type AccountSecuritySettings struct {
+	// SignAgainPeriodForInactivityOnClient and
+	// SignAgainPeriodForInactivityOnWeb are the periods of inactivity, in
+	// minutes, after which a signed-in user is automatically signed out of
+	// the Zoom client and the Zoom web portal respectively. Zoom enforces
+	// the two separately, and reports 0 for whichever is switched off.
+	SignAgainPeriodForInactivityOnClient int64 `json:"sign_again_period_for_inactivity_on_client"`
+	SignAgainPeriodForInactivityOnWeb    int64 `json:"sign_again_period_for_inactivity_on_web"`
+	// SignInWithTwoFactorAuth is one of all, group, role, or none. Zoom only
+	// returns SignInWithTwoFactorAuthGroups when the mode is group, and
+	// SignInWithTwoFactorAuthRoles when the mode is role.
+	SignInWithTwoFactorAuth       *string                    `json:"sign_in_with_two_factor_auth"`
+	SignInWithTwoFactorAuthGroups []string                   `json:"sign_in_with_two_factor_auth_groups"`
+	SignInWithTwoFactorAuthRoles  []string                   `json:"sign_in_with_two_factor_auth_roles"`
+	PasswordRequirement           AccountPasswordRequirement `json:"password_requirement"`
+	SignInWithSso                 AccountSsoSettings         `json:"signin_with_sso"`
+}
+
+// AccountPasswordRequirement is the rule set applied to the passwords of
+// users who sign in with a Zoom-managed credential rather than through an
+// identity provider.
+type AccountPasswordRequirement struct {
+	MinimumPasswordLength *int64 `json:"minimum_password_length"`
+	HaveSpecialCharacter  *bool  `json:"have_special_character"`
+	// ConsecutiveCharactersLength caps runs of consecutive characters
+	// (abcde...). Zoom reports 0 when the rule is switched off.
+	ConsecutiveCharactersLength *int64 `json:"consecutive_characters_length"`
+	WeakEnhanceDetection        *bool  `json:"weak_enhance_detection"`
+	// ExpiredRule is the number of days after which a password expires, and
+	// FormerRule the number of previous passwords that cannot be reused.
+	// Zoom reports 0 for whichever rule is switched off.
+	ExpiredRule *int64 `json:"expired_rule"`
+	FormerRule  *int64 `json:"former_rule"`
+	// FirstLoginRule requires a new user to change their password on first
+	// sign-in.
+	FirstLoginRule *bool `json:"first_login_rule"`
+}
+
+// AccountSsoSettings is the account's single sign-on requirement, including
+// the users exempted from it.
+type AccountSsoSettings struct {
+	Enable *bool `json:"enable"`
+	// RequireSsoForDomains forces users whose email address is on one of
+	// Domains to sign in through the identity provider.
+	RequireSsoForDomains *bool    `json:"require_sso_for_domains"`
+	Domains              []string `json:"domains"`
+	// SsoBypassUsers are the users allowed to sign in without going through
+	// the identity provider even when the requirement is on.
+	SsoBypassUsers []SsoBypassUser `json:"sso_bypass_users"`
+}
+
+// SsoBypassUser identifies a user exempted from the account's single sign-on
+// requirement.
+type SsoBypassUser struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+}
+
+// SplitIPRanges splits Zoom's comma-separated ip_addresses_or_ranges encoding
+// into one entry per address or range, discarding empty segments so a
+// trailing comma or an all-whitespace value yields no entries rather than an
+// empty-string entry that would read as a configured range.
+func SplitIPRanges(v string) []string {
+	out := []string{}
+	for _, part := range strings.Split(v, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		out = append(out, part)
+	}
+	return out
 }
 
 // GetAccountSettings fetches the un-optioned account settings: the recording
@@ -410,4 +661,152 @@ func (c *Client) ListGroupMembers(ctx context.Context, groupID string, pageSize 
 		return nil, err
 	}
 	return &out, nil
+}
+
+// ---- Account lock settings ----
+
+// AccountLockSettings is the subset of the un-optioned Get Account Lock
+// Settings response this provider reads. A locked setting is one an account
+// admin has fixed for everyone: users and groups cannot override it. Without
+// it every account default is advisory, because an unlocked waiting room can
+// be switched off per user. Every field is a pointer so a section the
+// response omits stays null rather than reporting "not locked" as fact.
+type AccountLockSettings struct {
+	ScheduleMeeting struct {
+		EnforceLogin          *bool `json:"enforce_login"`
+		MeetingAuthentication *bool `json:"meeting_authentication"`
+		JoinBeforeHost        *bool `json:"join_before_host"`
+	} `json:"schedule_meeting"`
+	Recording struct {
+		CloudRecording *bool `json:"cloud_recording"`
+		LocalRecording *bool `json:"local_recording"`
+		AutoDeleteCmr  *bool `json:"auto_delete_cmr"`
+	} `json:"recording"`
+}
+
+// GetAccountLockSettings fetches the un-optioned lock settings: which
+// schedule-meeting and recording defaults users cannot override.
+func (c *Client) GetAccountLockSettings(ctx context.Context, accountID string) (*AccountLockSettings, error) {
+	var out AccountLockSettings
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/lock_settings", nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// MeetingSecurityLockSettings is the meeting-security view of the lock
+// settings endpoint, which like the settings endpoint returns the
+// meeting_security object only for `?option=meeting_security`.
+//
+// Zoom's published specs disagree on the type of the meeting_security
+// encryption_type lock, one documenting a string and the other a boolean, so
+// it is deliberately left unmapped: a mismatched type fails the decode of the
+// whole response and would take every other lock down with it.
+type MeetingSecurityLockSettings struct {
+	WaitingRoom     *bool `json:"waiting_room"`
+	MeetingPassword *bool `json:"meeting_password"`
+	PmiPassword     *bool `json:"pmi_password"`
+	E2eeAvailable   *bool `json:"end_to_end_encrypted_meetings"`
+}
+
+// meetingSecurityLockResponse wraps the meeting_security object the lock
+// settings endpoint nests its meeting-security view under.
+type meetingSecurityLockResponse struct {
+	MeetingSecurity MeetingSecurityLockSettings `json:"meeting_security"`
+}
+
+// GetAccountMeetingSecurityLock fetches which of the account's
+// meeting-security defaults are locked against per-user and per-group
+// override.
+func (c *Client) GetAccountMeetingSecurityLock(ctx context.Context, accountID string) (*MeetingSecurityLockSettings, error) {
+	var out meetingSecurityLockResponse
+	q := url.Values{"option": {optionMeetingSecurity}}
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/lock_settings", q, &out); err != nil {
+		return nil, err
+	}
+	return &out.MeetingSecurity, nil
+}
+
+// ---- Domains ----
+
+// ManagedDomain is a domain the account has claimed. Anyone who signs up with
+// an email address on a managed domain is placed on this account, so a stale
+// or wrongly verified entry is a standing path onto the account.
+type ManagedDomain struct {
+	Domain string `json:"domain"`
+	Status string `json:"status"`
+}
+
+// ManagedDomainsResponse is the response of the Get Account's Managed Domains
+// endpoint. Zoom does not paginate it.
+type ManagedDomainsResponse struct {
+	Domains      []ManagedDomain `json:"domains"`
+	TotalRecords int             `json:"total_records"`
+}
+
+// GetManagedDomains returns the domains the account has claimed. Zoom offers
+// the endpoint only to paid accounts, so callers check IsPlanRestricted.
+func (c *Client) GetManagedDomains(ctx context.Context, accountID string) (*ManagedDomainsResponse, error) {
+	var out ManagedDomainsResponse
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/managed_domains", nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// TrustedDomainsResponse is the response of the Get Account's Trusted Domains
+// endpoint. Zoom does not paginate it.
+type TrustedDomainsResponse struct {
+	TrustedDomains []string `json:"trusted_domains"`
+}
+
+// GetTrustedDomains returns the domains the account trusts. Zoom offers the
+// endpoint only to paid accounts, so callers check IsPlanRestricted.
+func (c *Client) GetTrustedDomains(ctx context.Context, accountID string) (*TrustedDomainsResponse, error) {
+	var out TrustedDomainsResponse
+	if err := c.get(ctx, "/accounts/"+url.PathEscape(accountID)+"/trusted_domains", nil, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ---- Membership walks ----
+
+// ListAllRoleMembers returns the IDs of every user assigned the given role.
+func (c *Client) ListAllRoleMembers(ctx context.Context, roleID string, pageSize int) ([]string, error) {
+	var ids []string
+	err := walkPages(func(token string) (string, error) {
+		list, err := c.ListRoleMembers(ctx, roleID, pageSize, token)
+		if err != nil {
+			return "", err
+		}
+		for _, m := range list.Members {
+			ids = append(ids, m.ID)
+		}
+		return list.NextPageToken, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
+}
+
+// ListAllGroupMembers returns the IDs of every user belonging to the given
+// group.
+func (c *Client) ListAllGroupMembers(ctx context.Context, groupID string, pageSize int) ([]string, error) {
+	var ids []string
+	err := walkPages(func(token string) (string, error) {
+		list, err := c.ListGroupMembers(ctx, groupID, pageSize, token)
+		if err != nil {
+			return "", err
+		}
+		for _, m := range list.Members {
+			ids = append(ids, m.ID)
+		}
+		return list.NextPageToken, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

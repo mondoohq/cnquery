@@ -154,3 +154,91 @@ func TestUserRecordIgnoresSingularLoginType(t *testing.T) {
 		t.Error("ssoLinked: got true, want false")
 	}
 }
+
+// Zoom does not return an ID for a user in the pending status, so a roster
+// that includes pending users cannot key every entry on the ID alone. Two
+// pending users keyed on the same empty string would collide in the resource
+// cache and the second would silently take on the first one's fields.
+func TestUserCacheKey(t *testing.T) {
+	tests := []struct {
+		name string
+		user connection.User
+		want string
+	}{
+		{
+			name: "an active user is keyed on its id",
+			user: connection.User{ID: "z9f8abc", Email: "jane@example.com"},
+			want: "z9f8abc",
+		},
+		{
+			name: "a pending user has no id and is keyed on its email",
+			user: connection.User{Email: "new@example.com"},
+			want: "email/new@example.com",
+		},
+		{
+			// The prefix is what keeps a user keyed by email from colliding
+			// with a user whose ID happens to be that same string.
+			name: "the email key is namespaced away from the id space",
+			user: connection.User{ID: "email/new@example.com"},
+			want: "email/new@example.com",
+		},
+		{
+			name: "a record with neither is not addressable",
+			user: connection.User{},
+			want: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := userCacheKey(&tc.user); got != tc.want {
+				t.Errorf("userCacheKey: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// created_at and user_created_at are different instants: Zoom documents the
+// first as when the user's most recent login type was created and the second
+// as when the user was provisioned. Decoding one into the other reports the
+// wrong account age.
+func TestUserRecordDecodesCreationTimestampsSeparately(t *testing.T) {
+	const payload = `{
+		"id": "z9f8abc",
+		"created_at": "2024-05-06T07:08:09Z",
+		"user_created_at": "2021-01-02T03:04:05Z",
+		"last_client_version": "5.17.11.31580(mac)"
+	}`
+
+	var u connection.User
+	if err := json.Unmarshal([]byte(payload), &u); err != nil {
+		t.Fatalf("failed to decode user payload: %v", err)
+	}
+
+	if u.CreatedAt == nil || u.CreatedAt.Year() != 2024 {
+		t.Errorf("createdAt: got %v, want 2024", u.CreatedAt)
+	}
+	if u.UserCreatedAt == nil || u.UserCreatedAt.Year() != 2021 {
+		t.Errorf("userCreatedAt: got %v, want 2021", u.UserCreatedAt)
+	}
+	if u.LastClientVersion != "5.17.11.31580(mac)" {
+		t.Errorf("lastClientVersion: got %q", u.LastClientVersion)
+	}
+}
+
+// A user who has never signed in with a Zoom client reports no version and no
+// provisioning timestamp; an absent timestamp must stay null rather than
+// becoming the zero time, which would report 1 January year 1 as a real date.
+func TestUserRecordAbsentProvisioningFields(t *testing.T) {
+	var u connection.User
+	if err := json.Unmarshal([]byte(`{"id": "z9f8abc"}`), &u); err != nil {
+		t.Fatalf("failed to decode user payload: %v", err)
+	}
+
+	if u.UserCreatedAt != nil {
+		t.Errorf("userCreatedAt: got %v, want nil", *u.UserCreatedAt)
+	}
+	if u.LastClientVersion != "" {
+		t.Errorf("lastClientVersion: got %q, want empty", u.LastClientVersion)
+	}
+}

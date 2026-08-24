@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
+
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/zoom/connection"
@@ -91,23 +93,49 @@ func initZoomRole(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[st
 // access can be audited directly from the role.
 func (r *mqlZoomRole) members() ([]any, error) {
 	conn := r.MqlRuntime.Connection.(*connection.ZoomConnection)
-	client := conn.Client()
 
-	var memberIds []string
-	nextPageToken := ""
-	for {
-		list, err := client.ListRoleMembers(context.Background(), r.Id.Data, roleMembersPageSize, nextPageToken)
-		if err != nil {
-			return nil, err
-		}
-		for _, m := range list.Members {
-			memberIds = append(memberIds, m.ID)
-		}
-		if list.NextPageToken == "" {
-			break
-		}
-		nextPageToken = list.NextPageToken
+	memberIds, err := conn.Client().ListAllRoleMembers(context.Background(), r.Id.Data, roleMembersPageSize)
+	if err != nil {
+		return nil, err
+	}
+	return resolveZoomUsers(r.MqlRuntime, conn, memberIds)
+}
+
+// resolveZoomRoles turns a list of role IDs into typed zoom.role resources.
+// The account's role list is read at most once per connection, so resolving N
+// references costs one List Roles call rather than N Get Role calls. A role
+// the list does not carry falls back to a direct lookup, and an ID that
+// resolves to nothing is skipped rather than failing the whole list.
+func resolveZoomRoles(runtime *plugin.Runtime, conn *connection.ZoomConnection, roleIds []string) ([]any, error) {
+	if len(roleIds) == 0 {
+		return []any{}, nil
 	}
 
-	return resolveZoomUsers(r.MqlRuntime, conn, memberIds)
+	index, err := conn.RoleIndex(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]any, 0, len(roleIds))
+	for _, id := range roleIds {
+		if role, ok := index[id]; ok {
+			res, err := newMqlZoomRole(runtime, role)
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+			continue
+		}
+
+		res, err := NewResource(runtime, "zoom.role", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			// A stale or deleted role ID should not fail the whole list.
+			log.Debug().Err(err).Str("role", id).Msg("zoom> unable to resolve role")
+			continue
+		}
+		all = append(all, res)
+	}
+	return all, nil
 }

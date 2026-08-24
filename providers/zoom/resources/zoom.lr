@@ -14,7 +14,12 @@ option go_package = "go.mondoo.com/mql/providers/zoom/resources"
 // membership lists, so admin-equivalent access and account-wide meeting
 // defaults can be audited from a single query surface.
 zoom @maturity("experimental") {
-  // Active users provisioned on the account (excludes inactive and pending)
+  // Users provisioned on the account, in every status
+  //
+  // Covers active, deactivated, and pending users alike, so a dormant account
+  // that still holds its group memberships and a pending account that still
+  // holds a claim on an email address are both visible. Each user carries its
+  // own status.
   users() []zoom.user
   // Roles that can be assigned to users
   roles() []zoom.role
@@ -31,7 +36,15 @@ zoom @maturity("experimental") {
 // passcode requirements, encryption type), whether cloud recording is
 // enabled, whether meetings require participants to be signed in or
 // authenticated, and the inactivity periods after which the web portal
-// and the desktop client sign a user out.
+// and the desktop client sign a user out. It also covers the workforce
+// identity posture applied to the account's own users: two-factor
+// enforcement, the password rules applied to Zoom-managed credentials, the
+// single sign-on requirement and the users exempted from it, and the domains
+// the account claims and trusts. The cloud-recording fields describe what may
+// be recorded, who can reach a recording, and how long it is kept. The
+// `*Locked` fields report which of these defaults an admin has fixed for
+// everyone, since an unlocked default can be overridden per user or per
+// group.
 zoom.account @defaults("id accountName") @maturity("experimental") {
   // Zoom account ID
   id string
@@ -39,6 +52,12 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
   accountName string
   // Email address of the account owner
   ownerEmail string
+  // Account owner
+  //
+  // The user who owns the account, resolved from the owner's email address so
+  // that the owner's own status, sign-in methods, and assigned role can be
+  // read alongside the account settings.
+  owner() zoom.user
   // Whether the waiting room is enabled by default for new meetings
   meetingWaitingRoomEnabled() bool
   // Whether a passcode is required to join meetings by default
@@ -74,6 +93,127 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
   // 0 when the setting is switched off, so no timeout is enforced on the
   // client. Otherwise one of 5, 10, 15, 30, 45, 60, 90, or 120.
   signInSessionTimeoutClientMinutes() int
+  // Two-factor authentication enforcement
+  //
+  // One of `all` (required of every user), `group` (required only of the
+  // members of twoFactorAuthGroups), `role` (required only of the holders of
+  // twoFactorAuthRoles), or `none`. Null when the account does not report the
+  // setting.
+  twoFactorAuthMode() string
+  // Groups whose members must sign in with two-factor authentication
+  //
+  // Zoom reports the group list only while twoFactorAuthMode is `group`, so
+  // this is empty for every other mode.
+  twoFactorAuthGroups() []zoom.group
+  // Roles whose holders must sign in with two-factor authentication
+  //
+  // Zoom reports the role list only while twoFactorAuthMode is `role`, so
+  // this is empty for every other mode.
+  twoFactorAuthRoles() []zoom.role
+  // Minimum length required of a Zoom-managed password
+  //
+  // 0 when no minimum is enforced. The password rules apply to users who sign
+  // in with a Zoom-managed credential, not to users who authenticate through
+  // an identity provider.
+  passwordMinimumLength() int
+  // Whether a Zoom-managed password must contain a special character
+  passwordSpecialCharacterRequired() bool
+  // Longest run of consecutive characters allowed in a Zoom-managed password
+  //
+  // 0 when the rule is switched off, so a password may run straight through a
+  // sequence such as `abcde`.
+  passwordMaxConsecutiveCharacters() int
+  // Whether Zoom-managed passwords are checked against a weak-password dictionary
+  passwordWeakDetectionEnabled() bool
+  // Number of days after which a Zoom-managed password expires
+  //
+  // 0 when passwords never expire.
+  passwordExpiryDays() int
+  // Number of previous passwords a user may not reuse
+  //
+  // 0 when reuse is unrestricted.
+  passwordHistoryCount() int
+  // Whether a new user must change their password at first sign-in
+  passwordChangeRequiredOnFirstSignIn() bool
+  // Whether users may sign in through single sign-on
+  ssoSignInEnabled() bool
+  // Whether users on the account's single sign-on domains must authenticate through the identity provider
+  ssoRequiredForDomains() bool
+  // Email domains whose users must authenticate through the identity provider
+  ssoRequiredDomains() []string
+  // Users exempted from the single sign-on requirement
+  //
+  // These users may sign in with a Zoom-managed credential even while single
+  // sign-on is required for their email domain, so each one is a standing
+  // exception to the identity provider's controls.
+  ssoBypassUsers() []zoom.user
+  // Domains the account has claimed, keyed by domain name
+  //
+  // Each value is the domain's verification status, for example `verified`.
+  // Anyone who signs up with an email address on a claimed domain is placed
+  // on this account, so a domain the organization no longer owns is a
+  // standing path onto it. Null when the account's plan does not expose
+  // managed domains.
+  managedDomains() map[string]string
+  // Domains the account trusts
+  //
+  // Null when the account's plan does not expose trusted domains.
+  trustedDomains() []string
+  // Whether participants may start a meeting before the host joins
+  joinBeforeHostEnabled() bool
+  // Automatic recording default applied to new meetings
+  //
+  // One of `local`, `cloud`, or `none`.
+  autoRecordingMode() string
+  // Whether hosts and participants may record a meeting to a local file
+  localRecordingEnabled() bool
+  // Whether cloud recordings are deleted automatically after a set period
+  recordingAutoDeleteEnabled() bool
+  // Number of days after which cloud recordings are deleted automatically
+  //
+  // Carries a value only while recordingAutoDeleteEnabled is true.
+  recordingAutoDeleteDays() int
+  // Whether recordings made before the passcode requirement was switched on also require a passcode
+  //
+  // A passcode requirement applied only to new recordings leaves everything
+  // recorded earlier reachable by link alone.
+  recordingExistingPasscodeRequired() bool
+  // Whether cloud recordings are reachable only from allowed IP ranges
+  recordingIpAccessControlEnabled() bool
+  // IP addresses and ranges allowed to reach cloud recordings
+  //
+  // Empty when none are configured, which leaves cloud recordings reachable
+  // from anywhere even while recordingIpAccessControlEnabled is true.
+  recordingIpAccessRanges() []string
+  // Whether cloud recordings are reachable only by members of this account
+  recordingAccountMembersOnly() bool
+  // Whether viewers may download a cloud recording rather than only stream it
+  recordingDownloadEnabled() bool
+  // Whether participants are shown a disclaimer before a recording starts
+  recordingDisclaimerEnabled() bool
+  // Whether the waiting room default is fixed for the whole account
+  //
+  // A locked default cannot be overridden by a group or by an individual
+  // user, so an unlocked default describes only what a setting starts out as.
+  waitingRoomLocked() bool
+  // Whether the meeting passcode requirement is fixed for the whole account
+  meetingPasscodeLocked() bool
+  // Whether the Personal Meeting ID passcode requirement is fixed for the whole account
+  pmiPasscodeLocked() bool
+  // Whether the availability of end-to-end encryption is fixed for the whole account
+  meetingE2eeAvailableLocked() bool
+  // Whether the signed-in-users-only requirement is fixed for the whole account
+  meetingSignedInUsersOnlyLocked() bool
+  // Whether the participant authentication requirement is fixed for the whole account
+  meetingAuthenticationRequiredLocked() bool
+  // Whether the join-before-host setting is fixed for the whole account
+  joinBeforeHostLocked() bool
+  // Whether cloud recording is fixed for the whole account
+  cloudRecordingLocked() bool
+  // Whether local recording is fixed for the whole account
+  localRecordingLocked() bool
+  // Whether the cloud-recording auto-delete setting is fixed for the whole account
+  recordingAutoDeleteLocked() bool
 }
 
 // Zoom user
@@ -83,6 +223,9 @@ zoom.account @defaults("id accountName") @maturity("experimental") {
 // `type`, `status`, and sign-in methods (`loginTypes` and `ssoLinked`),
 // along with the `role` that governs their admin privileges and the
 // `groups` whose meeting-security overrides apply to their meetings.
+// `lastLoginTime` and `lastClientVersion` describe the user's most recent
+// sign-in. Users in every status are listed, so a `pending` user, which
+// Zoom returns without an ID, is identified by `email` instead.
 zoom.user @defaults("id email type") @maturity("experimental") {
   init(id? string)
   // Zoom user ID
@@ -119,8 +262,17 @@ zoom.user @defaults("id email type") @maturity("experimental") {
   ssoLinked bool
   // Timestamp of the user's last login
   lastLoginTime time
-  // Timestamp the user was created
+  // Timestamp the user's most recent sign-in method was created
+  //
+  // Zoom reports the moment the user was provisioned on the account
+  // separately, as userCreatedAt.
   createdAt time
+  // Timestamp the user was provisioned on the account
+  userCreatedAt time
+  // Zoom client version the user last signed in with
+  //
+  // Empty when the user has never signed in with a Zoom client.
+  lastClientVersion string
   // Role ID assigned to the user
   //
   // Deprecated in favor of role.

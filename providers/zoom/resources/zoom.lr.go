@@ -136,6 +136,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"zoom.account.ownerEmail": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccount).GetOwnerEmail()).ToDataRes(types.String)
 	},
+	"zoom.account.owner": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetOwner()).ToDataRes(types.Resource("zoom.user"))
+	},
 	"zoom.account.meetingWaitingRoomEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccount).GetMeetingWaitingRoomEnabled()).ToDataRes(types.Bool)
 	},
@@ -165,6 +168,117 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"zoom.account.signInSessionTimeoutClientMinutes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomAccount).GetSignInSessionTimeoutClientMinutes()).ToDataRes(types.Int)
+	},
+	"zoom.account.twoFactorAuthMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetTwoFactorAuthMode()).ToDataRes(types.String)
+	},
+	"zoom.account.twoFactorAuthGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetTwoFactorAuthGroups()).ToDataRes(types.Array(types.Resource("zoom.group")))
+	},
+	"zoom.account.twoFactorAuthRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetTwoFactorAuthRoles()).ToDataRes(types.Array(types.Resource("zoom.role")))
+	},
+	"zoom.account.passwordMinimumLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPasswordMinimumLength()).ToDataRes(types.Int)
+	},
+	"zoom.account.passwordSpecialCharacterRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPasswordSpecialCharacterRequired()).ToDataRes(types.Bool)
+	},
+	"zoom.account.passwordMaxConsecutiveCharacters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPasswordMaxConsecutiveCharacters()).ToDataRes(types.Int)
+	},
+	"zoom.account.passwordWeakDetectionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPasswordWeakDetectionEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.passwordExpiryDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPasswordExpiryDays()).ToDataRes(types.Int)
+	},
+	"zoom.account.passwordHistoryCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPasswordHistoryCount()).ToDataRes(types.Int)
+	},
+	"zoom.account.passwordChangeRequiredOnFirstSignIn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPasswordChangeRequiredOnFirstSignIn()).ToDataRes(types.Bool)
+	},
+	"zoom.account.ssoSignInEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetSsoSignInEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.ssoRequiredForDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetSsoRequiredForDomains()).ToDataRes(types.Bool)
+	},
+	"zoom.account.ssoRequiredDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetSsoRequiredDomains()).ToDataRes(types.Array(types.String))
+	},
+	"zoom.account.ssoBypassUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetSsoBypassUsers()).ToDataRes(types.Array(types.Resource("zoom.user")))
+	},
+	"zoom.account.managedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetManagedDomains()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"zoom.account.trustedDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetTrustedDomains()).ToDataRes(types.Array(types.String))
+	},
+	"zoom.account.joinBeforeHostEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetJoinBeforeHostEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.autoRecordingMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetAutoRecordingMode()).ToDataRes(types.String)
+	},
+	"zoom.account.localRecordingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetLocalRecordingEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.recordingAutoDeleteEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingAutoDeleteEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.recordingAutoDeleteDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingAutoDeleteDays()).ToDataRes(types.Int)
+	},
+	"zoom.account.recordingExistingPasscodeRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingExistingPasscodeRequired()).ToDataRes(types.Bool)
+	},
+	"zoom.account.recordingIpAccessControlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingIpAccessControlEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.recordingIpAccessRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingIpAccessRanges()).ToDataRes(types.Array(types.String))
+	},
+	"zoom.account.recordingAccountMembersOnly": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingAccountMembersOnly()).ToDataRes(types.Bool)
+	},
+	"zoom.account.recordingDownloadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingDownloadEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.recordingDisclaimerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingDisclaimerEnabled()).ToDataRes(types.Bool)
+	},
+	"zoom.account.waitingRoomLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetWaitingRoomLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.meetingPasscodeLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetMeetingPasscodeLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.pmiPasscodeLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetPmiPasscodeLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.meetingE2eeAvailableLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetMeetingE2eeAvailableLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.meetingSignedInUsersOnlyLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetMeetingSignedInUsersOnlyLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.meetingAuthenticationRequiredLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetMeetingAuthenticationRequiredLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.joinBeforeHostLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetJoinBeforeHostLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.cloudRecordingLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetCloudRecordingLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.localRecordingLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetLocalRecordingLocked()).ToDataRes(types.Bool)
+	},
+	"zoom.account.recordingAutoDeleteLocked": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomAccount).GetRecordingAutoDeleteLocked()).ToDataRes(types.Bool)
 	},
 	"zoom.user.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomUser).GetId()).ToDataRes(types.String)
@@ -201,6 +315,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"zoom.user.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomUser).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"zoom.user.userCreatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomUser).GetUserCreatedAt()).ToDataRes(types.Time)
+	},
+	"zoom.user.lastClientVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlZoomUser).GetLastClientVersion()).ToDataRes(types.String)
 	},
 	"zoom.user.roleId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlZoomUser).GetRoleId()).ToDataRes(types.String)
@@ -300,6 +420,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlZoomAccount).OwnerEmail, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"zoom.account.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).Owner, ok = plugin.RawToTValue[*mqlZoomUser](v.Value, v.Error)
+		return
+	},
 	"zoom.account.meetingWaitingRoomEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoomAccount).MeetingWaitingRoomEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -338,6 +462,154 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zoom.account.signInSessionTimeoutClientMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoomAccount).SignInSessionTimeoutClientMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.twoFactorAuthMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).TwoFactorAuthMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zoom.account.twoFactorAuthGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).TwoFactorAuthGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zoom.account.twoFactorAuthRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).TwoFactorAuthRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zoom.account.passwordMinimumLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PasswordMinimumLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.passwordSpecialCharacterRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PasswordSpecialCharacterRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.passwordMaxConsecutiveCharacters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PasswordMaxConsecutiveCharacters, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.passwordWeakDetectionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PasswordWeakDetectionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.passwordExpiryDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PasswordExpiryDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.passwordHistoryCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PasswordHistoryCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.passwordChangeRequiredOnFirstSignIn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PasswordChangeRequiredOnFirstSignIn, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.ssoSignInEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).SsoSignInEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.ssoRequiredForDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).SsoRequiredForDomains, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.ssoRequiredDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).SsoRequiredDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zoom.account.ssoBypassUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).SsoBypassUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zoom.account.managedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).ManagedDomains, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"zoom.account.trustedDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).TrustedDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zoom.account.joinBeforeHostEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).JoinBeforeHostEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.autoRecordingMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).AutoRecordingMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"zoom.account.localRecordingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).LocalRecordingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingAutoDeleteEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingAutoDeleteEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingAutoDeleteDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingAutoDeleteDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingExistingPasscodeRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingExistingPasscodeRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingIpAccessControlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingIpAccessControlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingIpAccessRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingIpAccessRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingAccountMembersOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingAccountMembersOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingDownloadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingDownloadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingDisclaimerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingDisclaimerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.waitingRoomLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).WaitingRoomLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.meetingPasscodeLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).MeetingPasscodeLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.pmiPasscodeLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).PmiPasscodeLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.meetingE2eeAvailableLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).MeetingE2eeAvailableLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.meetingSignedInUsersOnlyLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).MeetingSignedInUsersOnlyLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.meetingAuthenticationRequiredLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).MeetingAuthenticationRequiredLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.joinBeforeHostLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).JoinBeforeHostLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.cloudRecordingLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).CloudRecordingLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.localRecordingLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).LocalRecordingLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"zoom.account.recordingAutoDeleteLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomAccount).RecordingAutoDeleteLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"zoom.user.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -390,6 +662,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"zoom.user.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlZoomUser).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"zoom.user.userCreatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomUser).UserCreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"zoom.user.lastClientVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlZoomUser).LastClientVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"zoom.user.roleId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -596,19 +876,57 @@ type mqlZoomAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlZoomAccountInternal
-	Id                                plugin.TValue[string]
-	AccountName                       plugin.TValue[string]
-	OwnerEmail                        plugin.TValue[string]
-	MeetingWaitingRoomEnabled         plugin.TValue[bool]
-	MeetingPasscodeRequired           plugin.TValue[bool]
-	MeetingPmiPasscodeRequired        plugin.TValue[bool]
-	MeetingEncryptionType             plugin.TValue[string]
-	MeetingE2eeAvailable              plugin.TValue[bool]
-	MeetingAuthenticationRequired     plugin.TValue[bool]
-	MeetingSignedInUsersOnly          plugin.TValue[bool]
-	CloudRecordingEnabled             plugin.TValue[bool]
-	SignInSessionTimeoutWebMinutes    plugin.TValue[int64]
-	SignInSessionTimeoutClientMinutes plugin.TValue[int64]
+	Id                                  plugin.TValue[string]
+	AccountName                         plugin.TValue[string]
+	OwnerEmail                          plugin.TValue[string]
+	Owner                               plugin.TValue[*mqlZoomUser]
+	MeetingWaitingRoomEnabled           plugin.TValue[bool]
+	MeetingPasscodeRequired             plugin.TValue[bool]
+	MeetingPmiPasscodeRequired          plugin.TValue[bool]
+	MeetingEncryptionType               plugin.TValue[string]
+	MeetingE2eeAvailable                plugin.TValue[bool]
+	MeetingAuthenticationRequired       plugin.TValue[bool]
+	MeetingSignedInUsersOnly            plugin.TValue[bool]
+	CloudRecordingEnabled               plugin.TValue[bool]
+	SignInSessionTimeoutWebMinutes      plugin.TValue[int64]
+	SignInSessionTimeoutClientMinutes   plugin.TValue[int64]
+	TwoFactorAuthMode                   plugin.TValue[string]
+	TwoFactorAuthGroups                 plugin.TValue[[]any]
+	TwoFactorAuthRoles                  plugin.TValue[[]any]
+	PasswordMinimumLength               plugin.TValue[int64]
+	PasswordSpecialCharacterRequired    plugin.TValue[bool]
+	PasswordMaxConsecutiveCharacters    plugin.TValue[int64]
+	PasswordWeakDetectionEnabled        plugin.TValue[bool]
+	PasswordExpiryDays                  plugin.TValue[int64]
+	PasswordHistoryCount                plugin.TValue[int64]
+	PasswordChangeRequiredOnFirstSignIn plugin.TValue[bool]
+	SsoSignInEnabled                    plugin.TValue[bool]
+	SsoRequiredForDomains               plugin.TValue[bool]
+	SsoRequiredDomains                  plugin.TValue[[]any]
+	SsoBypassUsers                      plugin.TValue[[]any]
+	ManagedDomains                      plugin.TValue[map[string]any]
+	TrustedDomains                      plugin.TValue[[]any]
+	JoinBeforeHostEnabled               plugin.TValue[bool]
+	AutoRecordingMode                   plugin.TValue[string]
+	LocalRecordingEnabled               plugin.TValue[bool]
+	RecordingAutoDeleteEnabled          plugin.TValue[bool]
+	RecordingAutoDeleteDays             plugin.TValue[int64]
+	RecordingExistingPasscodeRequired   plugin.TValue[bool]
+	RecordingIpAccessControlEnabled     plugin.TValue[bool]
+	RecordingIpAccessRanges             plugin.TValue[[]any]
+	RecordingAccountMembersOnly         plugin.TValue[bool]
+	RecordingDownloadEnabled            plugin.TValue[bool]
+	RecordingDisclaimerEnabled          plugin.TValue[bool]
+	WaitingRoomLocked                   plugin.TValue[bool]
+	MeetingPasscodeLocked               plugin.TValue[bool]
+	PmiPasscodeLocked                   plugin.TValue[bool]
+	MeetingE2eeAvailableLocked          plugin.TValue[bool]
+	MeetingSignedInUsersOnlyLocked      plugin.TValue[bool]
+	MeetingAuthenticationRequiredLocked plugin.TValue[bool]
+	JoinBeforeHostLocked                plugin.TValue[bool]
+	CloudRecordingLocked                plugin.TValue[bool]
+	LocalRecordingLocked                plugin.TValue[bool]
+	RecordingAutoDeleteLocked           plugin.TValue[bool]
 }
 
 // createZoomAccount creates a new instance of this resource
@@ -653,6 +971,22 @@ func (c *mqlZoomAccount) GetAccountName() *plugin.TValue[string] {
 
 func (c *mqlZoomAccount) GetOwnerEmail() *plugin.TValue[string] {
 	return &c.OwnerEmail
+}
+
+func (c *mqlZoomAccount) GetOwner() *plugin.TValue[*mqlZoomUser] {
+	return plugin.GetOrCompute[*mqlZoomUser](&c.Owner, func() (*mqlZoomUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zoom.account", c.__id, "owner")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlZoomUser), nil
+			}
+		}
+
+		return c.owner()
+	})
 }
 
 func (c *mqlZoomAccount) GetMeetingWaitingRoomEnabled() *plugin.TValue[bool] {
@@ -715,27 +1049,281 @@ func (c *mqlZoomAccount) GetSignInSessionTimeoutClientMinutes() *plugin.TValue[i
 	})
 }
 
+func (c *mqlZoomAccount) GetTwoFactorAuthMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TwoFactorAuthMode, func() (string, error) {
+		return c.twoFactorAuthMode()
+	})
+}
+
+func (c *mqlZoomAccount) GetTwoFactorAuthGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TwoFactorAuthGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zoom.account", c.__id, "twoFactorAuthGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.twoFactorAuthGroups()
+	})
+}
+
+func (c *mqlZoomAccount) GetTwoFactorAuthRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TwoFactorAuthRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zoom.account", c.__id, "twoFactorAuthRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.twoFactorAuthRoles()
+	})
+}
+
+func (c *mqlZoomAccount) GetPasswordMinimumLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordMinimumLength, func() (int64, error) {
+		return c.passwordMinimumLength()
+	})
+}
+
+func (c *mqlZoomAccount) GetPasswordSpecialCharacterRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordSpecialCharacterRequired, func() (bool, error) {
+		return c.passwordSpecialCharacterRequired()
+	})
+}
+
+func (c *mqlZoomAccount) GetPasswordMaxConsecutiveCharacters() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordMaxConsecutiveCharacters, func() (int64, error) {
+		return c.passwordMaxConsecutiveCharacters()
+	})
+}
+
+func (c *mqlZoomAccount) GetPasswordWeakDetectionEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordWeakDetectionEnabled, func() (bool, error) {
+		return c.passwordWeakDetectionEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetPasswordExpiryDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordExpiryDays, func() (int64, error) {
+		return c.passwordExpiryDays()
+	})
+}
+
+func (c *mqlZoomAccount) GetPasswordHistoryCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordHistoryCount, func() (int64, error) {
+		return c.passwordHistoryCount()
+	})
+}
+
+func (c *mqlZoomAccount) GetPasswordChangeRequiredOnFirstSignIn() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PasswordChangeRequiredOnFirstSignIn, func() (bool, error) {
+		return c.passwordChangeRequiredOnFirstSignIn()
+	})
+}
+
+func (c *mqlZoomAccount) GetSsoSignInEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SsoSignInEnabled, func() (bool, error) {
+		return c.ssoSignInEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetSsoRequiredForDomains() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SsoRequiredForDomains, func() (bool, error) {
+		return c.ssoRequiredForDomains()
+	})
+}
+
+func (c *mqlZoomAccount) GetSsoRequiredDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SsoRequiredDomains, func() ([]any, error) {
+		return c.ssoRequiredDomains()
+	})
+}
+
+func (c *mqlZoomAccount) GetSsoBypassUsers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SsoBypassUsers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("zoom.account", c.__id, "ssoBypassUsers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ssoBypassUsers()
+	})
+}
+
+func (c *mqlZoomAccount) GetManagedDomains() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ManagedDomains, func() (map[string]any, error) {
+		return c.managedDomains()
+	})
+}
+
+func (c *mqlZoomAccount) GetTrustedDomains() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TrustedDomains, func() ([]any, error) {
+		return c.trustedDomains()
+	})
+}
+
+func (c *mqlZoomAccount) GetJoinBeforeHostEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.JoinBeforeHostEnabled, func() (bool, error) {
+		return c.joinBeforeHostEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetAutoRecordingMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AutoRecordingMode, func() (string, error) {
+		return c.autoRecordingMode()
+	})
+}
+
+func (c *mqlZoomAccount) GetLocalRecordingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocalRecordingEnabled, func() (bool, error) {
+		return c.localRecordingEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingAutoDeleteEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecordingAutoDeleteEnabled, func() (bool, error) {
+		return c.recordingAutoDeleteEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingAutoDeleteDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RecordingAutoDeleteDays, func() (int64, error) {
+		return c.recordingAutoDeleteDays()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingExistingPasscodeRequired() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecordingExistingPasscodeRequired, func() (bool, error) {
+		return c.recordingExistingPasscodeRequired()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingIpAccessControlEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecordingIpAccessControlEnabled, func() (bool, error) {
+		return c.recordingIpAccessControlEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingIpAccessRanges() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RecordingIpAccessRanges, func() ([]any, error) {
+		return c.recordingIpAccessRanges()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingAccountMembersOnly() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecordingAccountMembersOnly, func() (bool, error) {
+		return c.recordingAccountMembersOnly()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingDownloadEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecordingDownloadEnabled, func() (bool, error) {
+		return c.recordingDownloadEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingDisclaimerEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecordingDisclaimerEnabled, func() (bool, error) {
+		return c.recordingDisclaimerEnabled()
+	})
+}
+
+func (c *mqlZoomAccount) GetWaitingRoomLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.WaitingRoomLocked, func() (bool, error) {
+		return c.waitingRoomLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetMeetingPasscodeLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetingPasscodeLocked, func() (bool, error) {
+		return c.meetingPasscodeLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetPmiPasscodeLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.PmiPasscodeLocked, func() (bool, error) {
+		return c.pmiPasscodeLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetMeetingE2eeAvailableLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetingE2eeAvailableLocked, func() (bool, error) {
+		return c.meetingE2eeAvailableLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetMeetingSignedInUsersOnlyLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetingSignedInUsersOnlyLocked, func() (bool, error) {
+		return c.meetingSignedInUsersOnlyLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetMeetingAuthenticationRequiredLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.MeetingAuthenticationRequiredLocked, func() (bool, error) {
+		return c.meetingAuthenticationRequiredLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetJoinBeforeHostLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.JoinBeforeHostLocked, func() (bool, error) {
+		return c.joinBeforeHostLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetCloudRecordingLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CloudRecordingLocked, func() (bool, error) {
+		return c.cloudRecordingLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetLocalRecordingLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LocalRecordingLocked, func() (bool, error) {
+		return c.localRecordingLocked()
+	})
+}
+
+func (c *mqlZoomAccount) GetRecordingAutoDeleteLocked() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RecordingAutoDeleteLocked, func() (bool, error) {
+		return c.recordingAutoDeleteLocked()
+	})
+}
+
 // mqlZoomUser for the zoom.user resource
 type mqlZoomUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlZoomUserInternal
-	Id            plugin.TValue[string]
-	Email         plugin.TValue[string]
-	FirstName     plugin.TValue[string]
-	LastName      plugin.TValue[string]
-	DisplayName   plugin.TValue[string]
-	Type          plugin.TValue[int64]
-	Status        plugin.TValue[string]
-	Verified      plugin.TValue[bool]
-	LoginTypes    plugin.TValue[[]any]
-	SsoLinked     plugin.TValue[bool]
-	LastLoginTime plugin.TValue[*time.Time]
-	CreatedAt     plugin.TValue[*time.Time]
-	RoleId        plugin.TValue[string]
-	Role          plugin.TValue[*mqlZoomRole]
-	GroupIds      plugin.TValue[[]any]
-	Groups        plugin.TValue[[]any]
+	Id                plugin.TValue[string]
+	Email             plugin.TValue[string]
+	FirstName         plugin.TValue[string]
+	LastName          plugin.TValue[string]
+	DisplayName       plugin.TValue[string]
+	Type              plugin.TValue[int64]
+	Status            plugin.TValue[string]
+	Verified          plugin.TValue[bool]
+	LoginTypes        plugin.TValue[[]any]
+	SsoLinked         plugin.TValue[bool]
+	LastLoginTime     plugin.TValue[*time.Time]
+	CreatedAt         plugin.TValue[*time.Time]
+	UserCreatedAt     plugin.TValue[*time.Time]
+	LastClientVersion plugin.TValue[string]
+	RoleId            plugin.TValue[string]
+	Role              plugin.TValue[*mqlZoomRole]
+	GroupIds          plugin.TValue[[]any]
+	Groups            plugin.TValue[[]any]
 }
 
 // createZoomUser creates a new instance of this resource
@@ -821,6 +1409,14 @@ func (c *mqlZoomUser) GetLastLoginTime() *plugin.TValue[*time.Time] {
 
 func (c *mqlZoomUser) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
+}
+
+func (c *mqlZoomUser) GetUserCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.UserCreatedAt
+}
+
+func (c *mqlZoomUser) GetLastClientVersion() *plugin.TValue[string] {
+	return &c.LastClientVersion
 }
 
 func (c *mqlZoomUser) GetRoleId() *plugin.TValue[string] {
