@@ -77,6 +77,7 @@ func (s *mqlNetlifySite) certificateExpiresAt() (*time.Time, error) {
 		return nil, err
 	}
 	if rec == nil {
+		s.CertificateExpiresAt = plugin.TValue[*time.Time]{State: plugin.StateIsSet | plugin.StateIsNull}
 		return nil, nil
 	}
 	return rec.ExpiresAt.Time(), nil
