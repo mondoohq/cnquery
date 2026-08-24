@@ -139,6 +139,7 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features mql.Features
 		runtime:     runtime,
 		theme:       theme,
 		features:    features,
+		strict:      strict,
 		keyMap:      DefaultKeyMap(),
 		input:       ta,
 		completer:   completer,
