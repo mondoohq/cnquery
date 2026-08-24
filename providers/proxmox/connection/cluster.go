@@ -99,3 +99,30 @@ func (c *PveConnection) GetHAGroups() ([]HAGroup, error) {
 	}
 	return groups, nil
 }
+
+// ---------------------------------------------------------------------------
+// Guests no backup job covers
+// ---------------------------------------------------------------------------
+
+// NotBackedUpGuest is a guest that no configured backup job selects.
+//
+// Proxmox computes this itself by intersecting every job's selection mode
+// (all, pool, explicit vmid list, exclusion list) against the live guest
+// inventory, which is not reproducible from the backup job definitions alone.
+type NotBackedUpGuest struct {
+	VMID int    `json:"vmid"`
+	Name string `json:"name"`
+	Type string `json:"type"` // qemu or lxc
+}
+
+// GetGuestsNotBackedUp lists the guests no backup job covers. The second
+// return value is false when the cluster does not serve the endpoint, which
+// keeps "we could not ask" distinct from "every guest is covered".
+func (c *PveConnection) GetGuestsNotBackedUp() ([]NotBackedUpGuest, bool, error) {
+	var guests []NotBackedUpGuest
+	readable, err := c.getIfAvailable("/cluster/backup-info/not-backed-up", &guests)
+	if err != nil {
+		return nil, false, err
+	}
+	return guests, readable, nil
+}
