@@ -1398,6 +1398,19 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// GetIamPolicy is called on a service account; the real permission is the
 		// resource-scoped form, not the auto-derived "iam.iamPolicy.get".
 		"GetIamPolicy": "iam.serviceAccounts.getIamPolicy",
+		// Service account keys are listed over REST as
+		// Projects.ServiceAccounts.Keys.List, whose resource segment is the bare
+		// "Keys"; the real permission names the parent resource type.
+		"Keys.List": "iam.serviceAccountKeys.list",
+	},
+	"kmsinventory": {
+		// The KMS Inventory API has no IAM permissions of its own. Reading a
+		// key's protected-resources summary is governed by the same permission
+		// as searching protected resources, which is the single permission in
+		// roles/cloudkms.protectedResourcesViewer. The generic derivation
+		// lowercases the whole method name into
+		// "kmsinventory.cryptoKeys.getprotectedresourcessummary".
+		"CryptoKeys.GetProtectedResourcesSummary": "cloudkms.protectedResources.search",
 	},
 	"certificatemanager": {
 		// The Certificate Manager IAM permissions use abbreviated, all-lowercase

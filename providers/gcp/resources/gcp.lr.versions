@@ -304,7 +304,11 @@ gcp.organization.workforcePool.provider.extraAttributesIssuerUri 13.32.1
 gcp.organization.workforcePool.provider.extraAttributesType 13.32.1
 gcp.organization.workforcePool.provider.name 13.32.1
 gcp.organization.workforcePool.provider.oidcClientId 13.32.1
+gcp.organization.workforcePool.provider.oidcHasClientSecret 13.37.1
 gcp.organization.workforcePool.provider.oidcIssuerUri 13.32.1
+gcp.organization.workforcePool.provider.oidcWebSsoAdditionalScopes 13.37.1
+gcp.organization.workforcePool.provider.oidcWebSsoAssertionClaimsBehavior 13.37.1
+gcp.organization.workforcePool.provider.oidcWebSsoResponseType 13.37.1
 gcp.organization.workforcePool.provider.poolId 13.32.1
 gcp.organization.workforcePool.provider.providerId 13.32.1
 gcp.organization.workforcePool.provider.providerType 13.32.1
@@ -3720,7 +3724,9 @@ gcp.project.iamService.serviceAccount.impersonators 13.34.2
 gcp.project.iamService.serviceAccount.isDefault 13.18.1
 gcp.project.iamService.serviceAccount.key 9.0.0
 gcp.project.iamService.serviceAccount.key.ageInDays 13.18.1
+gcp.project.iamService.serviceAccount.key.disableReason 13.37.1
 gcp.project.iamService.serviceAccount.key.disabled 9.0.0
+gcp.project.iamService.serviceAccount.key.extendedStatus 13.37.1
 gcp.project.iamService.serviceAccount.key.keyAlgorithm 9.0.0
 gcp.project.iamService.serviceAccount.key.keyOrigin 9.0.0
 gcp.project.iamService.serviceAccount.key.keyType 9.0.0
@@ -3738,6 +3744,10 @@ gcp.project.iamService.serviceAccount.projectId 9.0.0
 gcp.project.iamService.serviceAccount.uniqueId 9.0.0
 gcp.project.iamService.serviceAccounts 9.0.0
 gcp.project.iamService.workloadIdentityPool 13.13.4
+gcp.project.iamService.workloadIdentityPool.additionalTrustAnchorCount 13.37.1
+gcp.project.iamService.workloadIdentityPool.additionalTrustDomains 13.37.1
+gcp.project.iamService.workloadIdentityPool.certificateIssuanceCaPools 13.37.1
+gcp.project.iamService.workloadIdentityPool.certificateIssuanceUsesDefaultSharedCa 13.37.1
 gcp.project.iamService.workloadIdentityPool.description 13.13.4
 gcp.project.iamService.workloadIdentityPool.disabled 13.13.4
 gcp.project.iamService.workloadIdentityPool.displayName 13.13.4
@@ -3884,6 +3894,14 @@ gcp.project.kmsService.keyring.cryptokey.name 9.0.0
 gcp.project.kmsService.keyring.cryptokey.nextRotation 9.0.0
 gcp.project.kmsService.keyring.cryptokey.primary 9.0.0
 gcp.project.kmsService.keyring.cryptokey.primaryState 13.18.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources 13.37.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources.cloudProducts 13.37.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources.locations 13.37.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources.partialData 13.37.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources.projectCount 13.37.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources.resourceCount 13.37.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources.resourceTypes 13.37.1
+gcp.project.kmsService.keyring.cryptokey.protectedResources.warnings 13.37.1
 gcp.project.kmsService.keyring.cryptokey.public 13.12.2
 gcp.project.kmsService.keyring.cryptokey.purpose 9.0.0
 gcp.project.kmsService.keyring.cryptokey.resourcePath 9.0.0

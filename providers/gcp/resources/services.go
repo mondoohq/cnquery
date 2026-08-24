@@ -39,6 +39,7 @@ const (
 	service_cloudfunctions      = "cloudfunctions.googleapis.com"
 	service_logging             = "logging.googleapis.com"
 	service_kms                 = "cloudkms.googleapis.com"
+	service_kmsinventory        = "kmsinventory.googleapis.com"
 	service_sqladmin            = "sqladmin.googleapis.com"
 	service_storage             = "storage.googleapis.com"
 	service_iam                 = "iam.googleapis.com"

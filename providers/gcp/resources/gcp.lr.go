@@ -157,6 +157,7 @@ const (
 	ResourceGcpProjectKmsService                                                       string = "gcp.project.kmsService"
 	ResourceGcpProjectKmsServiceKeyring                                                string = "gcp.project.kmsService.keyring"
 	ResourceGcpProjectKmsServiceKeyringCryptokey                                       string = "gcp.project.kmsService.keyring.cryptokey"
+	ResourceGcpProjectKmsServiceKeyringCryptokeyProtectedResources                     string = "gcp.project.kmsService.keyring.cryptokey.protectedResources"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersion                                string = "gcp.project.kmsService.keyring.cryptokey.version"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestation                     string = "gcp.project.kmsService.keyring.cryptokey.version.attestation"
 	ResourceGcpProjectKmsServiceKeyringCryptokeyVersionAttestationCertificatechains    string = "gcp.project.kmsService.keyring.cryptokey.version.attestation.certificatechains"
@@ -1071,6 +1072,10 @@ func init() {
 		"gcp.project.kmsService.keyring.cryptokey": {
 			Init:   initGcpProjectKmsServiceKeyringCryptokey,
 			Create: createGcpProjectKmsServiceKeyringCryptokey,
+		},
+		"gcp.project.kmsService.keyring.cryptokey.protectedResources": {
+			// to override args, implement: initGcpProjectKmsServiceKeyringCryptokeyProtectedResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectKmsServiceKeyringCryptokeyProtectedResources,
 		},
 		"gcp.project.kmsService.keyring.cryptokey.version": {
 			// to override args, implement: initGcpProjectKmsServiceKeyringCryptokeyVersion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8007,6 +8012,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.kmsService.keyring.cryptokey.managedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetManagedBy()).ToDataRes(types.String)
 	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokey).GetProtectedResources()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey.protectedResources"))
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.resourceCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).GetResourceCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.projectCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).GetProjectCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.cloudProducts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).GetCloudProducts()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.resourceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).GetResourceTypes()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.locations": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).GetLocations()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.partialData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).GetPartialData()).ToDataRes(types.Bool)
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.warnings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).GetWarnings()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.resourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).GetResourcePath()).ToDataRes(types.String)
 	},
@@ -8589,6 +8618,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.serviceAccount.key.disabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetDisabled()).ToDataRes(types.Bool)
 	},
+	"gcp.project.iamService.serviceAccount.key.disableReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetDisableReason()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.serviceAccount.key.extendedStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetExtendedStatus()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"gcp.project.iamService.serviceAccount.key.lastAuthenticatedTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetLastAuthenticatedTime()).ToDataRes(types.Time)
 	},
@@ -8645,6 +8680,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.workloadIdentityPool.mode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetMode()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.workloadIdentityPool.additionalTrustDomains": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetAdditionalTrustDomains()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.workloadIdentityPool.additionalTrustAnchorCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetAdditionalTrustAnchorCount()).ToDataRes(types.Int)
+	},
+	"gcp.project.iamService.workloadIdentityPool.certificateIssuanceCaPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetCertificateIssuanceCaPools()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"gcp.project.iamService.workloadIdentityPool.certificateIssuanceUsesDefaultSharedCa": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetCertificateIssuanceUsesDefaultSharedCa()).ToDataRes(types.Bool)
 	},
 	"gcp.project.iamService.workloadIdentityPool.providers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).GetProviders()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.workloadIdentityPool.provider")))
@@ -8783,6 +8830,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.organization.workforcePool.provider.oidcClientId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetOidcClientId()).ToDataRes(types.String)
+	},
+	"gcp.organization.workforcePool.provider.oidcHasClientSecret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetOidcHasClientSecret()).ToDataRes(types.Bool)
+	},
+	"gcp.organization.workforcePool.provider.oidcWebSsoResponseType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetOidcWebSsoResponseType()).ToDataRes(types.String)
+	},
+	"gcp.organization.workforcePool.provider.oidcWebSsoAssertionClaimsBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetOidcWebSsoAssertionClaimsBehavior()).ToDataRes(types.String)
+	},
+	"gcp.organization.workforcePool.provider.oidcWebSsoAdditionalScopes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetOidcWebSsoAdditionalScopes()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.organization.workforcePool.provider.samlIdpMetadataXml": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpOrganizationWorkforcePoolProvider).GetSamlIdpMetadataXml()).ToDataRes(types.String)
@@ -26623,6 +26682,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokey).ProtectedResources, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.resourceCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).ResourceCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.projectCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).ProjectCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.cloudProducts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).CloudProducts, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.resourceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).ResourceTypes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.locations": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).Locations, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.partialData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).PartialData, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.kmsService.keyring.cryptokey.protectedResources.warnings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources).Warnings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.kmsService.keyring.cryptokey.version.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectKmsServiceKeyringCryptokeyVersion).__id, ok = v.Value.(string)
 		return
@@ -27487,6 +27582,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"gcp.project.iamService.serviceAccount.key.disableReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccountKey).DisableReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.serviceAccount.key.extendedStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceServiceAccountKey).ExtendedStatus, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iamService.serviceAccount.key.lastAuthenticatedTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).LastAuthenticatedTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
@@ -27569,6 +27672,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.workloadIdentityPool.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.additionalTrustDomains": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).AdditionalTrustDomains, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.additionalTrustAnchorCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).AdditionalTrustAnchorCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.certificateIssuanceCaPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).CertificateIssuanceCaPools, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.workloadIdentityPool.certificateIssuanceUsesDefaultSharedCa": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceWorkloadIdentityPool).CertificateIssuanceUsesDefaultSharedCa, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.workloadIdentityPool.providers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -27765,6 +27884,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.organization.workforcePool.provider.oidcClientId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpOrganizationWorkforcePoolProvider).OidcClientId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.workforcePool.provider.oidcHasClientSecret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationWorkforcePoolProvider).OidcHasClientSecret, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.workforcePool.provider.oidcWebSsoResponseType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationWorkforcePoolProvider).OidcWebSsoResponseType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.workforcePool.provider.oidcWebSsoAssertionClaimsBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationWorkforcePoolProvider).OidcWebSsoAssertionClaimsBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.organization.workforcePool.provider.oidcWebSsoAdditionalScopes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpOrganizationWorkforcePoolProvider).OidcWebSsoAdditionalScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.organization.workforcePool.provider.samlIdpMetadataXml": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61372,6 +61507,7 @@ type mqlGcpProjectKmsServiceKeyringCryptokey struct {
 	IamPolicy                     plugin.TValue[[]any]
 	Public                        plugin.TValue[bool]
 	ManagedBy                     plugin.TValue[string]
+	ProtectedResources            plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources]
 }
 
 // createGcpProjectKmsServiceKeyringCryptokey creates a new instance of this resource
@@ -61515,6 +61651,96 @@ func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetManagedBy() *plugin.TValue[
 	return plugin.GetOrCompute[string](&c.ManagedBy, func() (string, error) {
 		return c.managedBy()
 	})
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokey) GetProtectedResources() *plugin.TValue[*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources] {
+	return plugin.GetOrCompute[*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources](&c.ProtectedResources, func() (*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.kmsService.keyring.cryptokey", c.__id, "protectedResources")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources), nil
+			}
+		}
+
+		return c.protectedResources()
+	})
+}
+
+// mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources for the gcp.project.kmsService.keyring.cryptokey.protectedResources resource
+type mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResourcesInternal it will be used here
+	ResourceCount plugin.TValue[int64]
+	ProjectCount  plugin.TValue[int64]
+	CloudProducts plugin.TValue[map[string]any]
+	ResourceTypes plugin.TValue[map[string]any]
+	Locations     plugin.TValue[map[string]any]
+	PartialData   plugin.TValue[bool]
+	Warnings      plugin.TValue[[]any]
+}
+
+// createGcpProjectKmsServiceKeyringCryptokeyProtectedResources creates a new instance of this resource
+func createGcpProjectKmsServiceKeyringCryptokeyProtectedResources(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.kmsService.keyring.cryptokey.protectedResources", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) MqlName() string {
+	return "gcp.project.kmsService.keyring.cryptokey.protectedResources"
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) GetResourceCount() *plugin.TValue[int64] {
+	return &c.ResourceCount
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) GetProjectCount() *plugin.TValue[int64] {
+	return &c.ProjectCount
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) GetCloudProducts() *plugin.TValue[map[string]any] {
+	return &c.CloudProducts
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) GetResourceTypes() *plugin.TValue[map[string]any] {
+	return &c.ResourceTypes
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) GetLocations() *plugin.TValue[map[string]any] {
+	return &c.Locations
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) GetPartialData() *plugin.TValue[bool] {
+	return &c.PartialData
+}
+
+func (c *mqlGcpProjectKmsServiceKeyringCryptokeyProtectedResources) GetWarnings() *plugin.TValue[[]any] {
+	return &c.Warnings
 }
 
 // mqlGcpProjectKmsServiceKeyringCryptokeyVersion for the gcp.project.kmsService.keyring.cryptokey.version resource
@@ -63666,6 +63892,8 @@ type mqlGcpProjectIamServiceServiceAccountKey struct {
 	KeyType               plugin.TValue[string]
 	UserManaged           plugin.TValue[bool]
 	Disabled              plugin.TValue[bool]
+	DisableReason         plugin.TValue[string]
+	ExtendedStatus        plugin.TValue[map[string]any]
 	LastAuthenticatedTime plugin.TValue[*time.Time]
 	AgeInDays             plugin.TValue[int64]
 }
@@ -63737,6 +63965,14 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetUserManaged() *plugin.TVal
 
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisabled() *plugin.TValue[bool] {
 	return &c.Disabled
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccountKey) GetDisableReason() *plugin.TValue[string] {
+	return &c.DisableReason
+}
+
+func (c *mqlGcpProjectIamServiceServiceAccountKey) GetExtendedStatus() *plugin.TValue[map[string]any] {
+	return &c.ExtendedStatus
 }
 
 func (c *mqlGcpProjectIamServiceServiceAccountKey) GetLastAuthenticatedTime() *plugin.TValue[*time.Time] {
@@ -63840,16 +64076,20 @@ type mqlGcpProjectIamServiceWorkloadIdentityPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpProjectIamServiceWorkloadIdentityPoolInternal it will be used here
-	ProjectId   plugin.TValue[string]
-	Name        plugin.TValue[string]
-	PoolId      plugin.TValue[string]
-	DisplayName plugin.TValue[string]
-	Description plugin.TValue[string]
-	State       plugin.TValue[string]
-	Disabled    plugin.TValue[bool]
-	ExpireTime  plugin.TValue[*time.Time]
-	Mode        plugin.TValue[string]
-	Providers   plugin.TValue[[]any]
+	ProjectId                              plugin.TValue[string]
+	Name                                   plugin.TValue[string]
+	PoolId                                 plugin.TValue[string]
+	DisplayName                            plugin.TValue[string]
+	Description                            plugin.TValue[string]
+	State                                  plugin.TValue[string]
+	Disabled                               plugin.TValue[bool]
+	ExpireTime                             plugin.TValue[*time.Time]
+	Mode                                   plugin.TValue[string]
+	AdditionalTrustDomains                 plugin.TValue[[]any]
+	AdditionalTrustAnchorCount             plugin.TValue[int64]
+	CertificateIssuanceCaPools             plugin.TValue[map[string]any]
+	CertificateIssuanceUsesDefaultSharedCa plugin.TValue[bool]
+	Providers                              plugin.TValue[[]any]
 }
 
 // createGcpProjectIamServiceWorkloadIdentityPool creates a new instance of this resource
@@ -63923,6 +64163,22 @@ func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetExpireTime() *plugin.TV
 
 func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetMode() *plugin.TValue[string] {
 	return &c.Mode
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetAdditionalTrustDomains() *plugin.TValue[[]any] {
+	return &c.AdditionalTrustDomains
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetAdditionalTrustAnchorCount() *plugin.TValue[int64] {
+	return &c.AdditionalTrustAnchorCount
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetCertificateIssuanceCaPools() *plugin.TValue[map[string]any] {
+	return &c.CertificateIssuanceCaPools
+}
+
+func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetCertificateIssuanceUsesDefaultSharedCa() *plugin.TValue[bool] {
+	return &c.CertificateIssuanceUsesDefaultSharedCa
 }
 
 func (c *mqlGcpProjectIamServiceWorkloadIdentityPool) GetProviders() *plugin.TValue[[]any] {
@@ -64198,24 +64454,28 @@ type mqlGcpOrganizationWorkforcePoolProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlGcpOrganizationWorkforcePoolProviderInternal it will be used here
-	Name                     plugin.TValue[string]
-	ProviderId               plugin.TValue[string]
-	PoolId                   plugin.TValue[string]
-	DisplayName              plugin.TValue[string]
-	Description              plugin.TValue[string]
-	State                    plugin.TValue[string]
-	Disabled                 plugin.TValue[bool]
-	ExpireTime               plugin.TValue[*time.Time]
-	AttributeMapping         plugin.TValue[map[string]any]
-	AttributeCondition       plugin.TValue[string]
-	DetailedAuditLogging     plugin.TValue[bool]
-	ScimUsage                plugin.TValue[string]
-	ProviderType             plugin.TValue[string]
-	OidcIssuerUri            plugin.TValue[string]
-	OidcClientId             plugin.TValue[string]
-	SamlIdpMetadataXml       plugin.TValue[string]
-	ExtraAttributesType      plugin.TValue[string]
-	ExtraAttributesIssuerUri plugin.TValue[string]
+	Name                              plugin.TValue[string]
+	ProviderId                        plugin.TValue[string]
+	PoolId                            plugin.TValue[string]
+	DisplayName                       plugin.TValue[string]
+	Description                       plugin.TValue[string]
+	State                             plugin.TValue[string]
+	Disabled                          plugin.TValue[bool]
+	ExpireTime                        plugin.TValue[*time.Time]
+	AttributeMapping                  plugin.TValue[map[string]any]
+	AttributeCondition                plugin.TValue[string]
+	DetailedAuditLogging              plugin.TValue[bool]
+	ScimUsage                         plugin.TValue[string]
+	ProviderType                      plugin.TValue[string]
+	OidcIssuerUri                     plugin.TValue[string]
+	OidcClientId                      plugin.TValue[string]
+	OidcHasClientSecret               plugin.TValue[bool]
+	OidcWebSsoResponseType            plugin.TValue[string]
+	OidcWebSsoAssertionClaimsBehavior plugin.TValue[string]
+	OidcWebSsoAdditionalScopes        plugin.TValue[[]any]
+	SamlIdpMetadataXml                plugin.TValue[string]
+	ExtraAttributesType               plugin.TValue[string]
+	ExtraAttributesIssuerUri          plugin.TValue[string]
 }
 
 // createGcpOrganizationWorkforcePoolProvider creates a new instance of this resource
@@ -64313,6 +64573,22 @@ func (c *mqlGcpOrganizationWorkforcePoolProvider) GetOidcIssuerUri() *plugin.TVa
 
 func (c *mqlGcpOrganizationWorkforcePoolProvider) GetOidcClientId() *plugin.TValue[string] {
 	return &c.OidcClientId
+}
+
+func (c *mqlGcpOrganizationWorkforcePoolProvider) GetOidcHasClientSecret() *plugin.TValue[bool] {
+	return &c.OidcHasClientSecret
+}
+
+func (c *mqlGcpOrganizationWorkforcePoolProvider) GetOidcWebSsoResponseType() *plugin.TValue[string] {
+	return &c.OidcWebSsoResponseType
+}
+
+func (c *mqlGcpOrganizationWorkforcePoolProvider) GetOidcWebSsoAssertionClaimsBehavior() *plugin.TValue[string] {
+	return &c.OidcWebSsoAssertionClaimsBehavior
+}
+
+func (c *mqlGcpOrganizationWorkforcePoolProvider) GetOidcWebSsoAdditionalScopes() *plugin.TValue[[]any] {
+	return &c.OidcWebSsoAdditionalScopes
 }
 
 func (c *mqlGcpOrganizationWorkforcePoolProvider) GetSamlIdpMetadataXml() *plugin.TValue[string] {
