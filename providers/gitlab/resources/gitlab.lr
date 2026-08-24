@@ -15,7 +15,13 @@ option go_package = "go.mondoo.com/mql/providers/gitlab/resources"
 // domain allow/deny lists, password-complexity minimums, token and SSH
 // key expiration enforcement, default project and group visibility, and
 // SSRF-relevant toggles that let hooks and integrations reach the local
-// network.
+// network. It also covers the credential lifecycle policy (token expiry
+// ceilings, runner token rotation, and the SSH key algorithms and sizes the
+// instance will accept), sign-in hardening (lockout thresholds, concurrent
+// sign-in IP limits, and whether users linked to an identity provider keep a
+// local password fallback), the instance-wide CI job token allowlist
+// enforcement, and the instance-scope CI/CD variables, system hooks, and
+// OAuth applications registered on it.
 gitlab.settings @defaults("requireTwoFactorAuthentication") {
   // Settings ID
   id int
@@ -88,6 +94,150 @@ gitlab.settings @defaults("requireTwoFactorAuthentication") {
   //
   // Reads false on instances that do not report this setting.
   lockDuoFeaturesEnabled bool
+  // Whether new personal access tokens must be given an expiration date
+  //
+  // Distinct from enforcePatExpiration, which decides whether a token that has
+  // already passed its expiry stops working. Null on instances that do not
+  // report the setting.
+  requirePersonalAccessTokenExpiry bool
+  // Maximum lifetime, in days, allowed for a personal access token
+  //
+  // Null when the instance sets no ceiling on token lifetime, and on instances
+  // that do not report the setting.
+  maxPersonalAccessTokenLifetime int
+  // Whether service account access tokens are forced to expire
+  //
+  // Null on instances that do not report the setting.
+  serviceAccessTokensExpirationEnforced bool
+  // Whether runner registration tokens are still accepted
+  //
+  // The legacy registration flow uses one long-lived, non-expiring token shared
+  // across every runner registered with it, so a leaked copy keeps working
+  // until the token is rotated by hand. True leaves that path open alongside
+  // the newer per-runner authentication tokens. Null on instances that do not
+  // report the setting.
+  allowRunnerRegistrationToken bool
+  // Rotation interval, in seconds, for instance runner authentication tokens
+  //
+  // Null when no rotation interval is configured, and on instances that do not
+  // report the setting.
+  runnerTokenExpirationInterval int
+  // Rotation interval, in seconds, for group runner authentication tokens
+  //
+  // Null when no rotation interval is configured, and on instances that do not
+  // report the setting.
+  groupRunnerTokenExpirationInterval int
+  // Rotation interval, in seconds, for project runner authentication tokens
+  //
+  // Null when no rotation interval is configured, and on instances that do not
+  // report the setting.
+  projectRunnerTokenExpirationInterval int
+  // Minimum RSA key size, in bits, accepted for uploaded SSH keys
+  //
+  // A value of -1 refuses RSA keys outright and 0 accepts any size. Any other
+  // value is the minimum bit length. Null on instances that do not report the
+  // setting.
+  rsaKeyRestriction int
+  // Minimum DSA key size, in bits, accepted for uploaded SSH keys
+  //
+  // A value of -1 refuses DSA keys outright and 0 accepts any size. Any other
+  // value is the minimum bit length. Null on instances that do not report the
+  // setting.
+  dsaKeyRestriction int
+  // Minimum ECDSA key size, in bits, accepted for uploaded SSH keys
+  //
+  // A value of -1 refuses ECDSA keys outright and 0 accepts any size. Any other
+  // value is the minimum bit length. Null on instances that do not report the
+  // setting.
+  ecdsaKeyRestriction int
+  // Minimum ECDSA key size, in bits, accepted for uploaded FIDO security key SSH keys
+  //
+  // A value of -1 refuses ECDSA security keys outright and 0 accepts any size.
+  // Any other value is the minimum bit length. Null on instances that do not
+  // report the setting.
+  ecdsaSkKeyRestriction int
+  // Whether Ed25519 SSH keys are accepted, expressed as a size restriction
+  //
+  // A value of -1 refuses Ed25519 keys and 0 accepts them. Ed25519 has a fixed
+  // key size, so no other value carries meaning. Null on instances that do not
+  // report the setting.
+  ed25519KeyRestriction int
+  // Whether Ed25519 FIDO security key SSH keys are accepted, expressed as a size restriction
+  //
+  // A value of -1 refuses Ed25519 security keys and 0 accepts them. Null on
+  // instances that do not report the setting.
+  ed25519SkKeyRestriction int
+  // Number of failed sign-in attempts before an account is locked
+  //
+  // Null when the instance does not lock accounts after repeated failures, and
+  // on instances that do not report the setting.
+  maxLoginAttempts int
+  // Minutes a locked account stays locked after too many failed sign-in attempts
+  //
+  // Null when a locked account is never released automatically, and on
+  // instances that do not report the setting.
+  failedLoginAttemptsUnlockPeriodInMinutes int
+  // Whether the number of IP addresses one user may sign in from is capped
+  //
+  // Null on instances that do not report the setting.
+  uniqueIpsLimitEnabled bool
+  // Maximum number of distinct IP addresses a single user may sign in from
+  //
+  // Takes effect only while uniqueIpsLimitEnabled is true. Null on instances
+  // that do not report the setting.
+  uniqueIpsLimitPerUser int
+  // Window, in seconds, over which distinct sign-in IP addresses are counted
+  //
+  // Takes effect only while uniqueIpsLimitEnabled is true. Null on instances
+  // that do not report the setting.
+  uniqueIpsLimitTimeWindow int
+  // Whether users linked to an identity provider are barred from signing in with a local password
+  //
+  // False leaves a password fallback in place for those users, so the identity
+  // provider's own controls, including its multi-factor requirement, can be
+  // sidestepped. Null on instances that do not report the setting.
+  disablePasswordAuthenticationForUsersWithSsoIdentities bool
+  // Whether a CAPTCHA is presented after repeated failed sign-in attempts
+  //
+  // Null on instances that do not report the setting.
+  loginRecaptchaProtectionEnabled bool
+  // Whether administrators must re-authenticate before using administrator rights
+  //
+  // False lets an account that holds administrator rights exercise them
+  // continuously for the whole session. Null on instances that do not report
+  // the setting.
+  adminMode bool
+  // Whether a web session expires a fixed time after sign-in rather than after idle time
+  //
+  // Null on instances that do not report the setting.
+  sessionExpireFromInit bool
+  // Whether accounts that have not signed in for a set period are deactivated automatically
+  //
+  // Null on instances that do not report the setting.
+  deactivateDormantUsers bool
+  // Days of inactivity before an account is treated as dormant
+  //
+  // Takes effect only while deactivateDormantUsers is true. Null on instances
+  // that do not report the setting.
+  deactivateDormantUsersPeriod int
+  // Whether every project on the instance must keep its inbound CI job token allowlist switched on
+  //
+  // The instance-wide backstop behind the per-project ciJobTokenScopeEnabled
+  // setting. False lets an individual project opt out and accept a job token
+  // issued to any other project on the instance. Null on instances that do not
+  // report the setting.
+  enforceCiInboundJobTokenScopeEnabled bool
+  // Whether packages may be pulled from the package registry without authentication
+  //
+  // True lets a project make its published packages readable by anyone who can
+  // reach the instance. Null on instances that do not report the setting.
+  packageRegistryAllowAnyoneToPullOption bool
+  // CI/CD variables defined at instance scope
+  variables() []gitlab.settings.variable
+  // System hooks registered on the instance
+  systemHooks() []gitlab.settings.systemHook
+  // OAuth applications registered on the instance
+  applications() []gitlab.settings.application
 }
 
 // GitLab user
@@ -716,6 +866,20 @@ gitlab.project @defaults("fullName visibility webURL") {
   securityAndComplianceAccessLevel string
   // Whether CI job tokens are scoped to an allowlist of projects
   ciJobTokenScopeEnabled bool
+  // Components that make up the subject claim of the CI/CD ID token
+  //
+  // GitLab mints an OIDC token for each job whose subject claim is built from
+  // these components, and a cloud trust policy grants access by matching on
+  // it. The default set is project_path, ref_type, and ref. Adding components
+  // narrows what a pipeline of this project can assume, and removing them
+  // widens it. Null when the token cannot read the project's CI/CD settings.
+  ciIdTokenSubClaimComponents() []string
+  // Whether pipelines for a merge request from a fork run in this project
+  //
+  // True lets a merge request opened from an untrusted fork execute in this
+  // project's CI context, where it reaches the project's protected variables
+  // and runners. Null when the token cannot read the project's CI/CD settings.
+  ciAllowForkPipelinesToRunInParentProject() bool
   // Whether job logs and artifacts are visible to non-members
   publicJobs bool
   // Whether server-side secret push protection is enabled
@@ -1259,6 +1423,13 @@ private gitlab.project.webhook @defaults("url sslVerification") {
   // temporarily_disabled (auto-paused after recent failures, with
   // disabledUntil giving the resume time).
   alertStatus string
+  // Whether a secret token is configured on the webhook
+  //
+  // The receiver uses that token to confirm a payload really came from GitLab.
+  // Without one, anything that learns the webhook URL can post a payload the
+  // receiver treats as genuine. The token value is write-only and is never
+  // returned. Null on instances that do not report token presence.
+  tokenPresent bool
   // The project this webhook is registered against
   project() gitlab.project
 }
@@ -1662,6 +1833,13 @@ private gitlab.group.webhook @defaults("url sslVerification") {
   createdAt time
   // Alert status of the webhook
   alertStatus string
+  // Whether a secret token is configured on the webhook
+  //
+  // The receiver uses that token to confirm a payload really came from GitLab.
+  // Without one, anything that learns the webhook URL can post a payload the
+  // receiver treats as genuine. The token value is write-only and is never
+  // returned. Null on instances that do not report token presence.
+  tokenPresent bool
   // The group this webhook is registered against
   group() gitlab.group
 }
@@ -2747,4 +2925,128 @@ private gitlab.project.accessRequest @defaults("username state requestedAt") {
   accessLevel int
   // User making the request
   user() gitlab.user
+}
+
+// Instance-scope CI/CD variable
+//
+// A CI/CD variable defined at instance scope, which is injected into every
+// pipeline that runs anywhere on the instance and therefore has the widest
+// blast radius of any variable tier. The `key` field names the variable and
+// `masked`, `protected`, and `variableType` describe how its value is handled.
+// The value itself is never reported.
+private gitlab.settings.variable @defaults("key masked protected") {
+  // Variable key
+  key string
+  // Variable type, either env_var or file
+  variableType string
+  // Whether the variable is exposed only to pipelines on protected branches and tags
+  protected bool
+  // Whether the variable value is masked in job logs
+  masked bool
+  // Whether the variable is passed to jobs without variable expansion
+  raw bool
+  // Variable description
+  description string
+}
+
+// GitLab system hook
+//
+// An instance-wide hook that receives events from every project and group on
+// the instance, a tier above the project and group webhooks. The `url` field
+// is the destination, `sslVerification` reports whether GitLab validates that
+// endpoint's certificate, and `tokenPresent` reports whether a secret token is
+// configured for the receiver to authenticate payloads with.
+private gitlab.settings.systemHook @defaults("url sslVerification tokenPresent") {
+  // System hook ID
+  id int
+  // Destination URL the hook posts to
+  url string
+  // Hook display name
+  name string
+  // Hook description
+  description string
+  // Whether TLS certificate verification is enabled for hook delivery
+  //
+  // When false, GitLab does not validate the receiving endpoint's TLS
+  // certificate, which permits man-in-the-middle interception of the payload
+  // and any secret token sent with it.
+  sslVerification bool
+  // Whether push events trigger the hook
+  pushEvents bool
+  // Whether tag push events trigger the hook
+  tagPushEvents bool
+  // Whether merge request events trigger the hook
+  mergeRequestsEvents bool
+  // Whether repository update events trigger the hook
+  //
+  // Null on instances that do not report the trigger, so that a hook whose
+  // state could not be read is not reported as having the trigger switched off.
+  repositoryUpdateEvents bool
+  // Whether a secret token is configured on the hook
+  //
+  // The receiver uses that token to confirm a payload really came from GitLab.
+  // Without one, anything that learns the hook URL can post a payload the
+  // receiver treats as genuine. The token value is write-only and is never
+  // returned. Null on instances that do not report token presence.
+  tokenPresent bool
+  // URL variables interpolated into the hook URL
+  //
+  // Keyed by variable name, with the value substituted into `{name}`
+  // placeholders in the hook url. Values GitLab treats as secret are redacted,
+  // so they may be empty or masked.
+  urlVariables map[string]string
+  // Hook creation time
+  createdAt time
+}
+
+// GitLab OAuth application
+//
+// An OAuth application registered on the instance, which can exchange an
+// authorization for a token that acts on a user's behalf. The `confidential`
+// field reports whether the application is able to hold a client secret and
+// `redirectUris` lists the destinations an authorization code may be returned
+// to, the pair that decides whether an intercepted authorization can be
+// redeemed by someone else. The client secret is never reported.
+private gitlab.settings.application @defaults("name confidential redirectUris") {
+  // Application ID
+  id int
+  // OAuth client identifier issued to the application
+  clientId string
+  // Application display name
+  name string
+  // Whether the application is able to hold a client secret
+  //
+  // False marks a public client, such as a single-page or mobile app, which
+  // cannot authenticate itself when redeeming an authorization code.
+  confidential bool
+  // Destinations an authorization code may be returned to
+  //
+  // One entry per redirect URI configured on the application. A wildcard or
+  // otherwise broad entry lets an authorization code be delivered to a host
+  // the application does not control.
+  redirectUris []string
+  // OAuth scopes the application may request
+  //
+  // Null on instances that do not report scopes when listing applications.
+  scopes []string
+}
+
+// GitLab Instance Metadata
+//
+// Version, revision, and edition of the GitLab instance under scan. The
+// version is what a published advisory is matched against, and `enterprise`
+// records whether the instance runs a licensed edition, which decides whether
+// an empty result from a Premium or Ultimate only collection means the
+// instance is clean or simply not licensed for the feature. Readable with any
+// authenticated token, unlike gitlab.settings, which needs an administrator.
+gitlab.metadata @defaults("version enterprise") {
+  // GitLab version the instance runs
+  version string
+  // Revision of the build the instance runs
+  revision string
+  // Whether the instance runs a licensed Enterprise Edition build
+  //
+  // False means Community Edition, where Premium and Ultimate features are
+  // absent rather than merely unconfigured.
+  enterprise bool
 }

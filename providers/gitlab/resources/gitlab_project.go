@@ -5,6 +5,7 @@ package resources
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -26,8 +27,19 @@ import (
 type mqlGitlabProjectInternal struct {
 	detailsOnce       sync.Once
 	details           *gitlab.Project
+	detailsCI         *projectCIPolicy
 	detailsErr        error
 	detailsStatusCode int
+}
+
+// projectCIPolicy is the pointer-typed view of the project CI/CD settings this
+// provider reports as posture. GitLab omits these attributes for a token below
+// the Maintainer role, and the SDK types them as a plain bool and slice, so an
+// omitted attribute would otherwise read as "fork pipelines cannot run here"
+// on a project nobody was actually allowed to check.
+type projectCIPolicy struct {
+	IDTokenSubClaimComponents       []string `json:"ci_id_token_sub_claim_components"`
+	AllowForkPipelinesToRunInParent *bool    `json:"ci_allow_fork_pipelines_to_run_in_parent_project"`
 }
 
 // projectDetails returns the full *gitlab.Project payload, fetching it on
@@ -38,8 +50,8 @@ type mqlGitlabProjectInternal struct {
 // (silent null) from real transport errors (propagate).
 func (p *mqlGitlabProject) projectDetails(conn *connection.GitLabConnection) (*gitlab.Project, error) {
 	p.detailsOnce.Do(func() {
-		projectID := int(p.Id.Data)
-		project, resp, err := conn.Client().Projects.GetProject(projectID, nil)
+		var raw json.RawMessage
+		resp, err := getRawJSON(conn.Client(), "projects/"+strconv.FormatInt(p.Id.Data, 10), nil, &raw)
 		if resp != nil {
 			p.detailsStatusCode = resp.StatusCode
 		}
@@ -47,7 +59,20 @@ func (p *mqlGitlabProject) projectDetails(conn *connection.GitLabConnection) (*g
 			p.detailsErr = err
 			return
 		}
+
+		project := &gitlab.Project{}
+		if err := json.Unmarshal(raw, project); err != nil {
+			p.detailsErr = err
+			return
+		}
+		ci := &projectCIPolicy{}
+		if err := json.Unmarshal(raw, ci); err != nil {
+			p.detailsErr = err
+			return
+		}
+
 		p.details = project
+		p.detailsCI = ci
 	})
 	return p.details, p.detailsErr
 }
@@ -457,6 +482,58 @@ func (p *mqlGitlabProject) mergeMethod() (string, error) {
 	}
 
 	return mergeMethodString, nil
+}
+
+// ciIdTokenSubClaimComponents reports the components GitLab builds the subject
+// claim of a job's OIDC token from, which is what a cloud trust policy matches
+// on. Null when the shared project payload did not carry the attribute, either
+// because the token cannot read the project's CI/CD settings or because the
+// instance predates the setting.
+func (p *mqlGitlabProject) ciIdTokenSubClaimComponents() ([]any, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	if _, err := p.projectDetails(conn); err != nil {
+		if p.detailsStatusCode == 403 || p.detailsStatusCode == 404 {
+			p.CiIdTokenSubClaimComponents.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if p.detailsCI == nil || p.detailsCI.IDTokenSubClaimComponents == nil {
+		p.CiIdTokenSubClaimComponents.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	components := make([]any, 0, len(p.detailsCI.IDTokenSubClaimComponents))
+	for _, c := range p.detailsCI.IDTokenSubClaimComponents {
+		components = append(components, c)
+	}
+	return components, nil
+}
+
+// ciAllowForkPipelinesToRunInParentProject reports whether a merge request from
+// a fork runs its pipeline in this project, where it reaches this project's
+// protected variables and runners. Null when the shared project payload did not
+// carry the attribute rather than false, which would claim the fork path is
+// closed on a project the token cannot read.
+func (p *mqlGitlabProject) ciAllowForkPipelinesToRunInParentProject() (bool, error) {
+	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
+
+	if _, err := p.projectDetails(conn); err != nil {
+		if p.detailsStatusCode == 403 || p.detailsStatusCode == 404 {
+			p.CiAllowForkPipelinesToRunInParentProject.State = plugin.StateIsSet | plugin.StateIsNull
+			return false, nil
+		}
+		return false, err
+	}
+
+	if p.detailsCI == nil || p.detailsCI.AllowForkPipelinesToRunInParent == nil {
+		p.CiAllowForkPipelinesToRunInParentProject.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+
+	return *p.detailsCI.AllowForkPipelinesToRunInParent, nil
 }
 
 // protectedBranches fetches protected branch settings
@@ -1060,40 +1137,25 @@ func (h *mqlGitlabProjectWebhook) project() (*mqlGitlabProject, error) {
 	return mqlProject.(*mqlGitlabProject), nil
 }
 
-// webhooks fetches the webhooks for a project. The list/get hook responses
-// from GitLab never include the configured secret token (write-only field), so
-// we cannot expose token presence or value here - sslVerification + the per-event
-// trigger flags are the auditable surface.
+// webhooks fetches the webhooks for a project. The configured secret token is
+// write-only and never returned, but GitLab does report whether one is set, and
+// that is decoded separately from the SDK type so an instance that does not
+// report it leaves tokenPresent null instead of claiming no token is set.
 func (p *mqlGitlabProject) webhooks() ([]any, error) {
 	conn := p.MqlRuntime.Connection.(*connection.GitLabConnection)
 
-	projectID := int(p.Id.Data)
+	raw, _, err := listRawPages(conn.Client(), "projects/"+strconv.FormatInt(p.Id.Data, 10)+"/hooks", 50)
+	if err != nil {
+		return nil, err
+	}
 
-	perPage := int64(50)
-	page := int64(1)
-	var allHooks []*gitlab.ProjectHook
-
-	for {
-		hooks, resp, err := conn.Client().Projects.ListProjectHooks(projectID, &gitlab.ListProjectHooksOptions{
-			ListOptions: gitlab.ListOptions{
-				Page:    page,
-				PerPage: perPage,
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		allHooks = append(allHooks, hooks...)
-
-		if resp.NextPage == 0 {
-			break
-		}
-		page = resp.NextPage
+	allHooks, presence, err := decodeHooks[gitlab.ProjectHook](raw)
+	if err != nil {
+		return nil, err
 	}
 
 	var mqlWebhooks []any
-	for _, hook := range allHooks {
+	for i, hook := range allHooks {
 		customHeaders := map[string]any{}
 		for _, h := range hook.CustomHeaders {
 			if h == nil {
@@ -1131,6 +1193,7 @@ func (p *mqlGitlabProject) webhooks() ([]any, error) {
 			"milestoneEvents":           llx.BoolData(hook.MilestoneEvents),
 			"emojiEvents":               llx.BoolData(hook.EmojiEvents),
 			"repositoryUpdateEvents":    llx.BoolData(hook.RepositoryUpdateEvents),
+			"tokenPresent":              llx.BoolDataPtr(presence[i].TokenPresent),
 			"branchFilterStrategy":      llx.StringData(hook.BranchFilterStrategy),
 			"customWebhookTemplate":     llx.StringData(hook.CustomWebhookTemplate),
 			"customHeaders":             llx.MapData(customHeaders, types.String),
