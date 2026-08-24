@@ -36,7 +36,7 @@ func (d *mqlDns) dnssec(params any) (*mqlDnsDnssecConfig, error) {
 	for _, key := range keyRecords {
 		flags := int(key.Flags)
 		keyResource, err := CreateResource(d.MqlRuntime, "dns.dnssecKey", map[string]*llx.RawData{
-			"__id":          llx.StringData(fmt.Sprintf("dns.dnssecKey/%d/%d/%s", key.Algorithm, key.Flags, key.PublicKey)),
+			"__id":          llx.StringData(fmt.Sprintf("dns.dnssecKey/%s/%d/%d/%s", d.Fqdn.Data, key.Algorithm, key.Flags, key.PublicKey)),
 			"flags":         llx.IntData(int64(flags)),
 			"protocol":      llx.IntData(int64(key.Protocol)),
 			"algorithm":     llx.IntData(int64(key.Algorithm)),
@@ -285,8 +285,8 @@ func (d *mqlDns) dnssecValidation(fqdn string) (*mqlDnsDnssecValidationResult, e
 		expiration := sig.Expiration
 
 		res, err := CreateResource(d.MqlRuntime, "dns.rrsigRecord", map[string]*llx.RawData{
-			"__id": llx.StringData(fmt.Sprintf("dns.rrsigRecord/%s/%s/%d/%s",
-				sig.Name, sig.TypeCovered, sig.Algorithm, sig.Fingerprint)),
+			"__id": llx.StringData(fmt.Sprintf("dns.rrsigRecord/%s/%s/%s/%d/%s",
+				fqdn, sig.Name, sig.TypeCovered, sig.Algorithm, sig.Fingerprint)),
 			"name":          llx.StringData(sig.Name),
 			"typeCovered":   llx.StringData(sig.TypeCovered),
 			"algorithm":     llx.IntData(int64(sig.Algorithm)),
