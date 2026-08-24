@@ -17,6 +17,37 @@ import (
 // mapFunctions are all the handlers for builtin array methods
 var mapFunctions map[string]chunkHandlerV2 //nolint:unused
 
+// errMissingKey reports a key lookup that named something the map does not
+// contain. Only produced under strict mode; see ADR 043.
+type errMissingKey struct {
+	key string
+}
+
+func (e *errMissingKey) Error() string {
+	return "cannot find key \"" + e.key + "\""
+}
+
+func (e *errMissingKey) Is(target error) bool { return target == ErrStrict }
+
+// missingKey applies the strict-mode rule for a key that is not in the map.
+//
+// Absence is the one failure a map lookup has that a field access does not: a
+// field is declared and always resolves, while naming a key is a claim that may
+// simply be false. Under strict mode that claim is checked, which is what turns
+// a mistyped `params.PermitRootLogn == "no"` into an error instead of a silent
+// false. A key that is present but holds null does not come through here - that
+// is a resolved value, and only dereferencing it errors.
+func missingKey(chunk *Chunk, key string, typ types.Type) (*RawData, uint64, error) {
+	switch chunk.Function.GetNullability() {
+	case Function_NULLABILITY_REQUIRED:
+		return nil, 0, &errMissingKey{key: key}
+	case Function_NULLABILITY_OPTIONAL:
+		return &RawData{Type: typ, ShortCircuited: true}, 0, nil
+	default:
+		return &RawData{Type: typ}, 0, nil
+	}
+}
+
 func mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	args := chunk.Function.Args
 	// TODO: all this needs to go into the compile phase
@@ -58,9 +89,13 @@ func mapGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*Ra
 	if !ok {
 		return nil, 0, errors.New("failed to typecast " + bind.Type.Label() + " into map")
 	}
+	v, present := m[key]
+	if !present {
+		return missingKey(chunk, key, childType)
+	}
 	return &RawData{
 		Type:  childType,
-		Value: m[key],
+		Value: v,
 	}, 0, nil
 }
 
@@ -407,8 +442,13 @@ func dictGetIndex(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 		}
 		// ^^ TODO
 
+		key := string(args[0].Value)
+		v, present := x[key]
+		if !present {
+			return missingKey(chunk, key, bind.Type)
+		}
 		return &RawData{
-			Value: x[string(args[0].Value)],
+			Value: v,
 			Type:  bind.Type,
 		}, 0, nil
 

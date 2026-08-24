@@ -77,7 +77,9 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 	}
 
 	if conf.DoAst {
-		b, err := mqlc.Compile(conf.Command, nil, mqlc.NewConfig(runtime.Schema(), conf.Features))
+		compilerConf := mqlc.NewConfig(runtime.Schema(), conf.Features)
+		compilerConf.Strict = conf.Strict
+		b, err := mqlc.Compile(conf.Command, nil, compilerConf)
 		if err != nil {
 			return errors.Wrap(err, "failed to compile command")
 		}
@@ -92,8 +94,10 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 			return errors.Wrap(err, "failed to parse command")
 		}
 
-		conf := mqlc.NewConfig(runtime.Schema(), conf.Features)
-		conf.EnableStats()
+		compilerConf := mqlc.NewConfig(runtime.Schema(), conf.Features)
+		compilerConf.Strict = conf.Strict
+		compilerConf.EnableStats()
+		conf := compilerConf
 		_, err = mqlc.CompileAST(ast, nil, conf)
 		if err != nil {
 			return errors.Wrap(err, "failed to compile command")
@@ -175,6 +179,7 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 		shellOptions := []shell.Option{}
 		shellOptions = append(shellOptions, shell.WithOnClose(onCloseHandler))
 		shellOptions = append(shellOptions, shell.WithFeatures(conf.Features))
+		shellOptions = append(shellOptions, shell.WithStrict(conf.Strict))
 		shellOptions = append(shellOptions, shell.WithOutput(out))
 		// `run` is meant for non-interactive/scripted use, so we don't cap the
 		// output like the interactive shell does. Users piping or processing the

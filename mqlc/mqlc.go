@@ -91,6 +91,13 @@ type CompilerConfig struct {
 	UseAssetContext bool
 	Stats           CompilerStats
 	Features        mql.Features
+	// Strict compiles under ADR 043 strict mode: every link in an access chain
+	// must resolve, and `?` is how the author marks one optional. It is
+	// deliberately not a feature flag - strictness is a property of the content
+	// being compiled (a policy declares it), not of the client running it, so it
+	// is set per compile. Off by default, which reproduces today's behavior
+	// exactly: nothing is marked and the runtime keeps propagating null.
+	Strict bool
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -233,6 +240,87 @@ func (c *compiler) addArgumentPlaceholder(typ types.Type, checksum string) {
 
 func (c *compiler) tailRef() uint64 {
 	return c.block.TailRef(c.blockRef)
+}
+
+// linkNullability is the marker a single link in an access chain should carry.
+// Only dereferences go through here; operators are compiled elsewhere and stay
+// unmarked, which is what keeps `a.f == "no"` returning false on a null `f`
+// instead of erroring (ADR 043 §3).
+func (c *compiler) linkNullability(optional bool) llx.Function_Nullability {
+	if !c.Strict {
+		return llx.Function_NULLABILITY_UNSPECIFIED
+	}
+	if optional {
+		return llx.Function_NULLABILITY_OPTIONAL
+	}
+	return llx.Function_NULLABILITY_REQUIRED
+}
+
+// markNullability stamps every chunk emitted after afterRef with a strict-mode
+// marker, and refreshes their checksums.
+//
+// Chunks are checksummed by Block.AddChunk at insertion time, so marking one
+// afterwards means recomputing. That is only sound while nothing downstream has
+// been added yet - dependents fold this checksum into their own - so callers
+// must stamp a link immediately after emitting it and before compiling the next.
+// A link can emit more than one chunk (a nested field path), hence the range.
+//
+// Labels registered inline during compilation are keyed by checksum, so they
+// move with it; the bulk of labeling runs as a post-pass over the final
+// checksums and needs nothing here.
+func (c *compiler) markNullability(afterRef uint64, n llx.Function_Nullability) {
+	if n == llx.Function_NULLABILITY_UNSPECIFIED {
+		return
+	}
+
+	code := c.Result.CodeV2
+	tail := c.tailRef()
+
+	// Label moves are collected here and applied after the walk. Two chunks in
+	// this range can share a pre-mark checksum, and deleting the old key inline
+	// would then drop the label the previous iteration had just written under
+	// the new one.
+	type rename struct{ from, to string }
+	var renames []rename
+
+	for ref := afterRef + 1; ref <= tail; ref++ {
+		if !c.isInMyBlock(ref) {
+			continue
+		}
+		chunk := code.Chunk(ref)
+		// Primitives have no binding and cannot fail to resolve.
+		if chunk == nil || chunk.Function == nil || chunk.Function.Nullability == n {
+			continue
+		}
+
+		old := code.Checksums[ref]
+		chunk.Function.Nullability = n
+		nu := chunk.ChecksumV2(c.blockRef, code)
+		code.Checksums[ref] = nu
+
+		if old != nu {
+			if _, ok := c.Result.Labels.Labels[old]; ok {
+				renames = append(renames, rename{from: old, to: nu})
+			}
+		}
+	}
+
+	if len(renames) == 0 {
+		return
+	}
+
+	// Read every label before writing any: one rename's source may be another
+	// rename's target, and interleaving the two would lose it.
+	labels := make([]string, len(renames))
+	for i, r := range renames {
+		labels[i] = c.Result.Labels.Labels[r.from]
+	}
+	for _, r := range renames {
+		delete(c.Result.Labels.Labels, r.from)
+	}
+	for i, r := range renames {
+		c.Result.Labels.Labels[r.to] = labels[i]
+	}
 }
 
 // tailDataRef returns overrideTailDataRef if set (consuming it),
@@ -1296,18 +1384,22 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 	// Support easy accessors for dicts and maps, e.g:
 	// json.params { A.B.C } => json.params { _["A"]["B"]["C"] }
 	if callBinding != nil && callBinding.typ == types.Dict {
-		funcID := "[]"
-		if call != nil && call.IsConditional {
-			funcID = "[]?"
-		}
-
+		// Optionality is carried by Function.nullability, which compileOperand
+		// stamps onto this chunk once it returns. The old `[]?` spelling was
+		// unreachable from here anyway: it keyed off a Function call's
+		// IsConditional, which the parser never sets.
 		c.addChunk(&llx.Chunk{
 			Call: llx.Chunk_FUNCTION,
-			Id:   funcID,
+			Id:   "[]",
 			Function: &llx.Function{
 				Type:    string(callBinding.typ),
 				Binding: callBinding.ref,
 				Args:    []*llx.Primitive{llx.StringPrimitive(id)},
+				// This is a key lookup even though it reads like a field, so it
+				// is a dereference and carries the marker. Set in the literal
+				// rather than stamped afterwards because compileOperand only
+				// stamps roots that the author marked optional.
+				Nullability: c.linkNullability(false),
 			},
 		})
 		c.standalone = false
@@ -1459,6 +1551,10 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 	calls := operand.Calls
 	c.comment = operand.Comments
 
+	// Anything the root value emits sits after this point. Captured up front so
+	// the root can be marked with the same range walk the links use.
+	rootStart := c.tailRef()
+
 	// value:        bool | string | regex | number | array | map | ident
 	// so all simple values are compiled into primitives and identifiers
 	// into function calls
@@ -1498,6 +1594,21 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		res = llx.RefPrimitiveV2(ref)
 	}
 
+	// `a?` / `a?.b`: the mark guards the root value, so it lands on whatever
+	// chunk the value produced.
+	//
+	// Only optional is ever stamped here. Required is applied per link inside the
+	// loop below, and must not be applied to a root, because ProcessOperators
+	// rewrites `a == b` into an operand whose root value *is* the operator
+	// (parser/operators.go:165-175). Marking roots required would mark every
+	// comparison, and a null operand would start erroring instead of returning
+	// false - the opposite of ADR 043 §3. The one root that genuinely is a
+	// dereference, the bare-word dict accessor inside a block, is marked at its
+	// own emission site in compileIdentifier.
+	if operand.ValueIsConditional {
+		c.markNullability(rootStart, llx.Function_NULLABILITY_OPTIONAL)
+	}
+
 	// operand:      value [ call | accessor | '.' ident ]+ [ block ]
 	// dealing with all call types
 	for len(calls) > 0 {
@@ -1509,6 +1620,13 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 		if call.Comments != "" {
 			c.comment = call.Comments
 		}
+
+		// Everything emitted from here until the next iteration belongs to this
+		// link, and carries this link's nullability. A link can emit several
+		// chunks (a nested field path), which is why this is a starting point
+		// rather than a single ref.
+		linkStart := c.tailRef()
+		linkNullability := c.linkNullability(call.IsConditional)
 
 		if call.Accessor != nil {
 			// turn accessor into a regular function and call that
@@ -1537,6 +1655,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			if call != nil && len(calls) > 0 {
 				calls = calls[1:]
 			}
+			c.markNullability(linkStart, linkNullability)
 			ref = c.tailRef()
 			res = llx.RefPrimitiveV2(ref)
 			continue
@@ -1546,7 +1665,6 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			var found bool
 			var resType types.Type
 			id := *call.Ident
-			isConditionalCall := call.IsConditional
 
 			if id == "." {
 				// We get this from the parser if the user called the dot-accessor
@@ -1577,13 +1695,14 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 
 				// Support easy accessors for dicts and maps, e.g:
 				// json.params.A.B.C => json.params["A"]["B"]["C"]
-				funcID := "[]"
-				if isConditionalCall {
-					funcID = "[]?"
-				}
+				//
+				// Optionality used to be spelled here as a separate `[]?` chunk
+				// id. It now rides on Function.nullability like every other link,
+				// so this emits a plain `[]`. The `[]?` handler stays registered
+				// in llx for bundles that were compiled before the switch.
 				c.addChunk(&llx.Chunk{
 					Call: llx.Chunk_FUNCTION,
-					Id:   funcID,
+					Id:   "[]",
 					Function: &llx.Function{
 						Type:    string(typ.Child()),
 						Binding: ref,
@@ -1598,6 +1717,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 			if call != nil && len(calls) > 0 {
 				calls = calls[1:]
 			}
+			c.markNullability(linkStart, linkNullability)
 			ref = c.tailDataRef()
 			res = llx.RefPrimitiveV2(ref)
 

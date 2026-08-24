@@ -52,7 +52,9 @@ func (e *Env) Compile(src string, opts ...CompileOption) (*Query, error) {
 		return nil, err
 	}
 
-	bundle, err := mqlc.Compile(src, mqlc.SimpleProps(props), mqlc.NewConfig(e.schema(), e.features))
+	conf := mqlc.NewConfig(e.schema(), e.features)
+	conf.Strict = e.strict
+	bundle, err := mqlc.Compile(src, mqlc.SimpleProps(props), conf)
 	if err != nil {
 		return nil, &CompileError{Source: src, Err: err}
 	}

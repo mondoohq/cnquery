@@ -33,11 +33,20 @@ func (e *Executor) Exec(query string, props mqlc.PropsHandler) (*llx.RawData, er
 }
 
 func Exec(query string, runtime llx.Runtime, features mql.Features, props mqlc.PropsHandler) (*llx.RawData, error) {
+	return ExecStrict(query, runtime, features, props, false)
+}
+
+// ExecStrict is Exec with an explicit ADR 043 strict-mode setting. Exec keeps its
+// signature and stays non-strict, which is the right default for a caller that
+// has no content declaring otherwise.
+func ExecStrict(query string, runtime llx.Runtime, features mql.Features, props mqlc.PropsHandler, strict bool) (*llx.RawData, error) {
 	if props == nil {
 		props = mqlc.EmptyPropsHandler
 	}
 
-	bundle, err := mqlc.Compile(query, props, mqlc.NewConfig(runtime.Schema(), features))
+	conf := mqlc.NewConfig(runtime.Schema(), features)
+	conf.Strict = strict
+	bundle, err := mqlc.Compile(query, props, conf)
 	if err != nil {
 		return nil, errors.New("failed to compile: " + err.Error())
 	}

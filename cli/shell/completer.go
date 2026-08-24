@@ -24,16 +24,18 @@ type Suggestion struct {
 type Completer struct {
 	schema   resources.ResourcesSchema
 	features mql.Features
+	strict   bool
 	sortFn   func(a, b *llx.Documentation) int
 }
 
 // NewCompleter creates a new Mondoo completer object
-func NewCompleter(schema resources.ResourcesSchema, features mql.Features, connectedProviders []string) *Completer {
+func NewCompleter(schema resources.ResourcesSchema, features mql.Features, strict bool, connectedProviders []string) *Completer {
 	sortFn := byProviderSortFn(connectedProviders)
 
 	return &Completer{
 		schema:   schema,
 		features: features,
+		strict:   strict,
 		sortFn:   sortFn,
 	}
 }
@@ -60,7 +62,7 @@ func (c *Completer) Complete(text string) []Suggestion {
 		}
 	}
 
-	bundle, _ := mqlc.Compile(text, nil, mqlc.NewConfig(c.schema, c.features))
+	bundle, _ := mqlc.Compile(text, nil, c.compilerConfig())
 	if bundle != nil && len(bundle.Suggestions) > 0 {
 		// reorder suggestions to put the ones from connected providers first
 		slices.SortFunc(bundle.Suggestions, c.sortFn)
@@ -89,4 +91,10 @@ func byProviderSortFn(connectedProviders []string) func(a, b *llx.Documentation)
 		}
 		return 0
 	}
+}
+
+func (c *Completer) compilerConfig() mqlc.CompilerConfig {
+	conf := mqlc.NewConfig(c.schema, c.features)
+	conf.Strict = c.strict
+	return conf
 }

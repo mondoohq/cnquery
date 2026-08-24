@@ -24,6 +24,17 @@ type RawData struct {
 	Type  types.Type `json:"type"`
 	Value any        `json:"value"`
 	Error error      `json:"-"`
+	// ShortCircuited marks a null that an optional link (`?`) produced rather
+	// than a null that was genuinely read. Under ADR 043 strict mode a required
+	// link errors on a null binding, but passes a short-circuited one straight
+	// through - that is what makes `a?.b.c` yield null when `a` is null while
+	// still erroring when `a` is set and `b` is null, the same as optional
+	// chaining in JavaScript.
+	//
+	// It is execution state, not data: it never crosses the plugin boundary and
+	// is never recorded, because only the VM creates it and only within a single
+	// chain evaluation.
+	ShortCircuited bool `json:"-"`
 }
 
 // a helper structure exclusively used for json unmarshalling of errors

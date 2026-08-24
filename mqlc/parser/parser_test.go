@@ -161,9 +161,11 @@ func TestParser_ParseValues(t *testing.T) {
 			Value: vIdent("name"),
 			Calls: []*Call{callIdent("last")},
 		}}},
+		// the `?` guards `name`, the link to its left; see TestParser_OptionalChaining
 		{"name?.last", &Expression{Operand: &Operand{
-			Value: vIdent("name"),
-			Calls: []*Call{callConditionalIdent("last")},
+			Value:              vIdent("name"),
+			ValueIsConditional: true,
+			Calls:              []*Call{callIdent("last")},
 		}}},
 		{"name[1]", &Expression{Operand: &Operand{
 			Value: vIdent("name"),
@@ -362,4 +364,95 @@ func TestParser_Multiline(t *testing.T) {
 			{Operand: &Operand{Value: vInt(2)}},
 		}},
 	})
+}
+
+// TestParser_OptionalChaining pins every position a `?` can occupy. The mark
+// always attaches to the link on its left - the last call, or the root value if
+// there is no call yet - so `?.b`, `?["k"]`, `? { … }` and a trailing `b?` all
+// go through one rule.
+func TestParser_OptionalChaining(t *testing.T) {
+	runParserTests(t, []parserTest{
+		// The mark guards `a`, the link to its left, not `b`.
+		{"a?.b", &Expression{Operand: &Operand{
+			Value:              vIdent("a"),
+			ValueIsConditional: true,
+			Calls:              []*Call{callIdent("b")},
+		}}},
+		// `?` is not sticky: only the marked link is optional, so a null `b` in
+		// `a?.b.c` still errors in strict mode (as it does in JavaScript).
+		{"a?.b.c", &Expression{Operand: &Operand{
+			Value:              vIdent("a"),
+			ValueIsConditional: true,
+			Calls:              []*Call{callIdent("b"), callIdent("c")},
+		}}},
+		{"a?.b?.c", &Expression{Operand: &Operand{
+			Value:              vIdent("a"),
+			ValueIsConditional: true,
+			Calls:              []*Call{callConditionalIdent("b"), callIdent("c")},
+		}}},
+		{"a.b?.c", &Expression{Operand: &Operand{
+			Value: vIdent("a"),
+			Calls: []*Call{callConditionalIdent("b"), callIdent("c")},
+		}}},
+
+		// bracket accessors
+		{"a?['k']", &Expression{Operand: &Operand{
+			Value:              vIdent("a"),
+			ValueIsConditional: true,
+			Calls: []*Call{{
+				Accessor: &Expression{Operand: &Operand{Value: vString("k")}},
+			}},
+		}}},
+		{"a['k']?.c", &Expression{Operand: &Operand{
+			Value: vIdent("a"),
+			Calls: []*Call{
+				{
+					Accessor:      &Expression{Operand: &Operand{Value: vString("k")}},
+					IsConditional: true,
+				},
+				callIdent("c"),
+			},
+		}}},
+
+		// blocks
+		{"a? { b }", &Expression{Operand: &Operand{
+			Value:              vIdent("a"),
+			ValueIsConditional: true,
+			Block: []*Expression{
+				{Operand: &Operand{Value: vIdent("b")}},
+			},
+		}}},
+		{"a { b }", &Expression{Operand: &Operand{
+			Value: vIdent("a"),
+			Block: []*Expression{
+				{Operand: &Operand{Value: vIdent("b")}},
+			},
+		}}},
+
+		// trailing `?`, the only way to mark a terminal lookup optional
+		{"a.b?", &Expression{Operand: &Operand{
+			Value: vIdent("a"),
+			Calls: []*Call{callConditionalIdent("b")},
+		}}},
+		{"a?", &Expression{Operand: &Operand{
+			Value:              vIdent("a"),
+			ValueIsConditional: true,
+		}}},
+	})
+}
+
+// TestParser_OptionalChaining_trailingWithOperator is separate because the
+// expression carries an operation, which runParserTests' single-operand shape
+// cannot express. A trailing `?` used to be swallowed silently here.
+func TestParser_OptionalChaining_trailingWithOperator(t *testing.T) {
+	res, err := Parse(`a.b? == "no"`)
+	require.NoError(t, err)
+	require.Len(t, res.Expressions, 1)
+
+	op := res.Expressions[0].Operand
+	require.NotNil(t, op)
+	require.Len(t, op.Calls, 1)
+	assert.True(t, op.Calls[0].IsConditional, "trailing `?` must survive an operator following it")
+	require.Len(t, res.Expressions[0].Operations, 1)
+	assert.Equal(t, OpEqual, res.Expressions[0].Operations[0].Operator)
 }

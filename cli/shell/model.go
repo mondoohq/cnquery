@@ -51,6 +51,7 @@ type shellModel struct {
 	runtime  llx.Runtime
 	theme    *ShellTheme
 	features mql.Features
+	strict   bool
 	keyMap   KeyMap
 
 	// Input handling
@@ -97,7 +98,7 @@ type shellModel struct {
 // newShellModel creates a new shell model
 // connectedProviderIDs can be provided to filter autocomplete suggestions to only
 // show resources from connected providers. If nil, all resources are shown.
-func newShellModel(runtime llx.Runtime, theme *ShellTheme, features mql.Features, initialCmd string, connectedProviderIDs []string) *shellModel {
+func newShellModel(runtime llx.Runtime, theme *ShellTheme, features mql.Features, strict bool, initialCmd string, connectedProviderIDs []string) *shellModel {
 	// Create textarea for input
 	ta := textarea.New()
 	ta.Placeholder = ""
@@ -127,7 +128,7 @@ func newShellModel(runtime llx.Runtime, theme *ShellTheme, features mql.Features
 	// show resources from connected providers in autocomplete
 	schema := runtime.Schema()
 	theme.PolicyPrinter.SetSchema(schema)
-	completer := NewCompleter(schema, features, connectedProviderIDs)
+	completer := NewCompleter(schema, features, strict, connectedProviderIDs)
 
 	// Create spinner for query execution
 	sp := spinner.New()
@@ -539,7 +540,7 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 	m.query += " " + input
 
 	// Try to compile
-	code, err := mqlc.Compile(m.query, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	code, err := mqlc.Compile(m.query, nil, m.compilerConfig())
 	if err != nil {
 		if e, ok := err.(*parser.ErrIncomplete); ok {
 			// Incomplete query - enter multiline mode
@@ -580,7 +581,7 @@ func (m *shellModel) executeQuery(input string) (tea.Model, tea.Cmd) {
 		tea.Println(echoInput),
 		m.spinner.Tick,
 		func() tea.Msg {
-			code, err := mqlc.Compile(queryToRun, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+			code, err := mqlc.Compile(queryToRun, nil, m.compilerConfig())
 			if err != nil {
 				return queryResultMsg{code: code, err: err}
 			}
@@ -802,7 +803,7 @@ func (m *shellModel) updateCompletions() {
 
 	// Check for compile errors (for inline feedback)
 	fullQuery := m.query + " " + input
-	_, err := mqlc.Compile(fullQuery, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	_, err := mqlc.Compile(fullQuery, nil, m.compilerConfig())
 	if err != nil {
 		// Ignore incomplete errors - those are expected for multi-line
 		if _, ok := err.(*parser.ErrIncomplete); !ok {
@@ -867,7 +868,7 @@ func (m *shellModel) recompileForErrors() {
 
 	// Check for compile errors
 	fullQuery := m.query + " " + input
-	_, err := mqlc.Compile(fullQuery, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+	_, err := mqlc.Compile(fullQuery, nil, m.compilerConfig())
 	if err != nil {
 		// Ignore incomplete errors - those are expected for multi-line
 		if _, ok := err.(*parser.ErrIncomplete); !ok {
@@ -935,7 +936,7 @@ func (m *shellModel) showAssetInfo() tea.Cmd {
 	return func() tea.Msg {
 		// Query for asset information using proper MQL syntax
 		query := "asset.name asset.platform asset.version"
-		code, err := mqlc.Compile(query, nil, mqlc.NewConfig(m.runtime.Schema(), m.features))
+		code, err := mqlc.Compile(query, nil, m.compilerConfig())
 		if err != nil {
 			return printOutputMsg{output: m.theme.ErrorText("Failed to get asset info: " + err.Error())}
 		}
@@ -1207,4 +1208,13 @@ func (m *shellModel) listResources(filter string) string {
 	}
 
 	return b.String()
+}
+
+// compilerConfig is the shell's compile settings, including the strict-mode
+// default resolved from config. Queries typed at the shell carry no content of
+// their own, so the config default is all there is.
+func (m *shellModel) compilerConfig() mqlc.CompilerConfig {
+	conf := mqlc.NewConfig(m.runtime.Schema(), m.features)
+	conf.Strict = m.strict
+	return conf
 }

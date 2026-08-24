@@ -24,7 +24,69 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// protolint:disable:next ENUM_FIELD_NAMES_PREFIX
+// How this call behaves when it cannot resolve. See ADR 043 (strict mode).
+// A link fails to resolve when its binding is null, or - for a map or dict -
+// when the key it names is absent.
+type Function_Nullability int32
+
+const (
+	// Non-strict: a link that cannot resolve yields null, as it always has.
+	Function_NULLABILITY_UNSPECIFIED Function_Nullability = 0
+	// Strict: a link that cannot resolve is an error. A binding that is a
+	// short-circuited null (produced by an upstream NULLABILITY_OPTIONAL link)
+	// still passes straight through.
+	Function_NULLABILITY_REQUIRED Function_Nullability = 1
+	// The author wrote `?` before this link. It never errors, and a null result
+	// is marked short-circuited so the rest of the chain passes it through.
+	Function_NULLABILITY_OPTIONAL Function_Nullability = 2
+)
+
+// Enum value maps for Function_Nullability.
+var (
+	Function_Nullability_name = map[int32]string{
+		0: "NULLABILITY_UNSPECIFIED",
+		1: "NULLABILITY_REQUIRED",
+		2: "NULLABILITY_OPTIONAL",
+	}
+	Function_Nullability_value = map[string]int32{
+		"NULLABILITY_UNSPECIFIED": 0,
+		"NULLABILITY_REQUIRED":    1,
+		"NULLABILITY_OPTIONAL":    2,
+	}
+)
+
+func (x Function_Nullability) Enum() *Function_Nullability {
+	p := new(Function_Nullability)
+	*p = x
+	return p
+}
+
+func (x Function_Nullability) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Function_Nullability) Descriptor() protoreflect.EnumDescriptor {
+	return file_llx_proto_enumTypes[0].Descriptor()
+}
+
+func (Function_Nullability) Type() protoreflect.EnumType {
+	return &file_llx_proto_enumTypes[0]
+}
+
+func (x Function_Nullability) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Function_Nullability.Descriptor instead.
+func (Function_Nullability) EnumDescriptor() ([]byte, []int) {
+	return file_llx_proto_rawDescGZIP(), []int{2, 0}
+}
+
+// These values predate the CALL_ prefix rule and renaming them is a wire
+// change, so it stays suppressed. Block form rather than `disable:next`:
+// protolint takes the expected prefix from the preceding enum, so adding
+// Function.Nullability above made a one-line suppression stop covering these.
+// protolint:disable ENUM_FIELD_NAMES_PREFIX
 type Chunk_Call int32
 
 const (
@@ -59,11 +121,11 @@ func (x Chunk_Call) String() string {
 }
 
 func (Chunk_Call) Descriptor() protoreflect.EnumDescriptor {
-	return file_llx_proto_enumTypes[0].Descriptor()
+	return file_llx_proto_enumTypes[1].Descriptor()
 }
 
 func (Chunk_Call) Type() protoreflect.EnumType {
-	return &file_llx_proto_enumTypes[0]
+	return &file_llx_proto_enumTypes[1]
 }
 
 func (x Chunk_Call) Number() protoreflect.EnumNumber {
@@ -212,7 +274,8 @@ type Function struct {
 	Args  []*Primitive           `protobuf:"bytes,3,rep,name=args,proto3" json:"args,omitempty"`
 	// FIXME: this is a suggestion to allow function calls to be bound
 	// to non-local references; Remove this comment or remove the feature
-	Binding       uint64 `protobuf:"varint,4,opt,name=binding,proto3" json:"binding,omitempty"`
+	Binding       uint64               `protobuf:"varint,4,opt,name=binding,proto3" json:"binding,omitempty"`
+	Nullability   Function_Nullability `protobuf:"varint,5,opt,name=nullability,proto3,enum=mql.llx.Function_Nullability" json:"nullability,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -268,12 +331,20 @@ func (x *Function) GetBinding() uint64 {
 	return 0
 }
 
+func (x *Function) GetNullability() Function_Nullability {
+	if x != nil {
+		return x.Nullability
+	}
+	return Function_NULLABILITY_UNSPECIFIED
+}
+
 type Chunk struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Call          Chunk_Call             `protobuf:"varint,1,opt,name=call,proto3,enum=mql.llx.Chunk_Call" json:"call,omitempty"`
-	Id            string                 `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Primitive     *Primitive             `protobuf:"bytes,3,opt,name=primitive,proto3" json:"primitive,omitempty"`
-	Function      *Function              `protobuf:"bytes,4,opt,name=function,proto3" json:"function,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// protolint:enable ENUM_FIELD_NAMES_PREFIX
+	Call          Chunk_Call `protobuf:"varint,1,opt,name=call,proto3,enum=mql.llx.Chunk_Call" json:"call,omitempty"`
+	Id            string     `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Primitive     *Primitive `protobuf:"bytes,3,opt,name=primitive,proto3" json:"primitive,omitempty"`
+	Function      *Function  `protobuf:"bytes,4,opt,name=function,proto3" json:"function,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1382,11 +1453,16 @@ const file_llx_proto_rawDesc = "" +
 	"AssetValue\x12#\n" +
 	"\rresource_type\x18\x01 \x01(\tR\fresourceType\x12\x1f\n" +
 	"\vresource_id\x18\x02 \x01(\tR\n" +
-	"resourceId\"`\n" +
+	"resourceId\"\x81\x02\n" +
 	"\bFunction\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12&\n" +
 	"\x04args\x18\x03 \x03(\v2\x12.mql.llx.PrimitiveR\x04args\x12\x18\n" +
-	"\abinding\x18\x04 \x01(\x04R\abinding\"\xd4\x01\n" +
+	"\abinding\x18\x04 \x01(\x04R\abinding\x12?\n" +
+	"\vnullability\x18\x05 \x01(\x0e2\x1d.mql.llx.Function.NullabilityR\vnullability\"^\n" +
+	"\vNullability\x12\x1b\n" +
+	"\x17NULLABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14NULLABILITY_REQUIRED\x10\x01\x12\x18\n" +
+	"\x14NULLABILITY_OPTIONAL\x10\x02\"\xd4\x01\n" +
 	"\x05Chunk\x12'\n" +
 	"\x04call\x18\x01 \x01(\x0e2\x13.mql.llx.Chunk.CallR\x04call\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x120\n" +
@@ -1542,78 +1618,80 @@ func file_llx_proto_rawDescGZIP() []byte {
 	return file_llx_proto_rawDescData
 }
 
-var file_llx_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_llx_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_llx_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_llx_proto_goTypes = []any{
-	(Chunk_Call)(0),           // 0: mql.llx.Chunk.Call
-	(*Primitive)(nil),         // 1: mql.llx.Primitive
-	(*AssetValue)(nil),        // 2: mql.llx.AssetValue
-	(*Function)(nil),          // 3: mql.llx.Function
-	(*Chunk)(nil),             // 4: mql.llx.Chunk
-	(*AssertionMessage)(nil),  // 5: mql.llx.AssertionMessage
-	(*CodeV1)(nil),            // 6: mql.llx.CodeV1
-	(*Block)(nil),             // 7: mql.llx.Block
-	(*CodeV2)(nil),            // 8: mql.llx.CodeV2
-	(*Labels)(nil),            // 9: mql.llx.Labels
-	(*Documentation)(nil),     // 10: mql.llx.Documentation
-	(*CodeBundle)(nil),        // 11: mql.llx.CodeBundle
-	(*Result)(nil),            // 12: mql.llx.Result
-	(*ResourceRecording)(nil), // 13: mql.llx.ResourceRecording
-	(*Rating)(nil),            // 14: mql.llx.Rating
-	(*AssessmentItem)(nil),    // 15: mql.llx.AssessmentItem
-	(*Assessment)(nil),        // 16: mql.llx.Assessment
-	(*IP)(nil),                // 17: mql.llx.IP
-	nil,                       // 18: mql.llx.Primitive.MapEntry
-	nil,                       // 19: mql.llx.CodeV1.ChecksumsEntry
-	nil,                       // 20: mql.llx.CodeV1.AssertionsEntry
-	nil,                       // 21: mql.llx.CodeV2.ChecksumsEntry
-	nil,                       // 22: mql.llx.CodeV2.AssertionsEntry
-	nil,                       // 23: mql.llx.Labels.LabelsEntry
-	nil,                       // 24: mql.llx.CodeBundle.PropsEntry
-	nil,                       // 25: mql.llx.CodeBundle.AssertionsEntry
-	nil,                       // 26: mql.llx.CodeBundle.AutoExpandEntry
-	nil,                       // 27: mql.llx.CodeBundle.VarsEntry
-	nil,                       // 28: mql.llx.ResourceRecording.FieldsEntry
+	(Function_Nullability)(0), // 0: mql.llx.Function.Nullability
+	(Chunk_Call)(0),           // 1: mql.llx.Chunk.Call
+	(*Primitive)(nil),         // 2: mql.llx.Primitive
+	(*AssetValue)(nil),        // 3: mql.llx.AssetValue
+	(*Function)(nil),          // 4: mql.llx.Function
+	(*Chunk)(nil),             // 5: mql.llx.Chunk
+	(*AssertionMessage)(nil),  // 6: mql.llx.AssertionMessage
+	(*CodeV1)(nil),            // 7: mql.llx.CodeV1
+	(*Block)(nil),             // 8: mql.llx.Block
+	(*CodeV2)(nil),            // 9: mql.llx.CodeV2
+	(*Labels)(nil),            // 10: mql.llx.Labels
+	(*Documentation)(nil),     // 11: mql.llx.Documentation
+	(*CodeBundle)(nil),        // 12: mql.llx.CodeBundle
+	(*Result)(nil),            // 13: mql.llx.Result
+	(*ResourceRecording)(nil), // 14: mql.llx.ResourceRecording
+	(*Rating)(nil),            // 15: mql.llx.Rating
+	(*AssessmentItem)(nil),    // 16: mql.llx.AssessmentItem
+	(*Assessment)(nil),        // 17: mql.llx.Assessment
+	(*IP)(nil),                // 18: mql.llx.IP
+	nil,                       // 19: mql.llx.Primitive.MapEntry
+	nil,                       // 20: mql.llx.CodeV1.ChecksumsEntry
+	nil,                       // 21: mql.llx.CodeV1.AssertionsEntry
+	nil,                       // 22: mql.llx.CodeV2.ChecksumsEntry
+	nil,                       // 23: mql.llx.CodeV2.AssertionsEntry
+	nil,                       // 24: mql.llx.Labels.LabelsEntry
+	nil,                       // 25: mql.llx.CodeBundle.PropsEntry
+	nil,                       // 26: mql.llx.CodeBundle.AssertionsEntry
+	nil,                       // 27: mql.llx.CodeBundle.AutoExpandEntry
+	nil,                       // 28: mql.llx.CodeBundle.VarsEntry
+	nil,                       // 29: mql.llx.ResourceRecording.FieldsEntry
 }
 var file_llx_proto_depIdxs = []int32{
-	1,  // 0: mql.llx.Primitive.array:type_name -> mql.llx.Primitive
-	18, // 1: mql.llx.Primitive.map:type_name -> mql.llx.Primitive.MapEntry
-	1,  // 2: mql.llx.Function.args:type_name -> mql.llx.Primitive
-	0,  // 3: mql.llx.Chunk.call:type_name -> mql.llx.Chunk.Call
-	1,  // 4: mql.llx.Chunk.primitive:type_name -> mql.llx.Primitive
-	3,  // 5: mql.llx.Chunk.function:type_name -> mql.llx.Function
-	4,  // 6: mql.llx.CodeV1.code:type_name -> mql.llx.Chunk
-	19, // 7: mql.llx.CodeV1.checksums:type_name -> mql.llx.CodeV1.ChecksumsEntry
-	6,  // 8: mql.llx.CodeV1.functions:type_name -> mql.llx.CodeV1
-	20, // 9: mql.llx.CodeV1.assertions:type_name -> mql.llx.CodeV1.AssertionsEntry
-	4,  // 10: mql.llx.Block.chunks:type_name -> mql.llx.Chunk
-	7,  // 11: mql.llx.CodeV2.blocks:type_name -> mql.llx.Block
-	21, // 12: mql.llx.CodeV2.checksums:type_name -> mql.llx.CodeV2.ChecksumsEntry
-	22, // 13: mql.llx.CodeV2.assertions:type_name -> mql.llx.CodeV2.AssertionsEntry
-	23, // 14: mql.llx.Labels.labels:type_name -> mql.llx.Labels.LabelsEntry
-	8,  // 15: mql.llx.CodeBundle.code_v2:type_name -> mql.llx.CodeV2
-	10, // 16: mql.llx.CodeBundle.suggestions:type_name -> mql.llx.Documentation
-	9,  // 17: mql.llx.CodeBundle.labels:type_name -> mql.llx.Labels
-	24, // 18: mql.llx.CodeBundle.props:type_name -> mql.llx.CodeBundle.PropsEntry
-	25, // 19: mql.llx.CodeBundle.assertions:type_name -> mql.llx.CodeBundle.AssertionsEntry
-	26, // 20: mql.llx.CodeBundle.auto_expand:type_name -> mql.llx.CodeBundle.AutoExpandEntry
-	27, // 21: mql.llx.CodeBundle.vars:type_name -> mql.llx.CodeBundle.VarsEntry
-	1,  // 22: mql.llx.Result.data:type_name -> mql.llx.Primitive
-	28, // 23: mql.llx.ResourceRecording.fields:type_name -> mql.llx.ResourceRecording.FieldsEntry
-	1,  // 24: mql.llx.AssessmentItem.expected:type_name -> mql.llx.Primitive
-	1,  // 25: mql.llx.AssessmentItem.actual:type_name -> mql.llx.Primitive
-	1,  // 26: mql.llx.AssessmentItem.data:type_name -> mql.llx.Primitive
-	15, // 27: mql.llx.Assessment.results:type_name -> mql.llx.AssessmentItem
-	1,  // 28: mql.llx.Primitive.MapEntry.value:type_name -> mql.llx.Primitive
-	5,  // 29: mql.llx.CodeV1.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	5,  // 30: mql.llx.CodeV2.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	5,  // 31: mql.llx.CodeBundle.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
-	12, // 32: mql.llx.ResourceRecording.FieldsEntry.value:type_name -> mql.llx.Result
-	33, // [33:33] is the sub-list for method output_type
-	33, // [33:33] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	2,  // 0: mql.llx.Primitive.array:type_name -> mql.llx.Primitive
+	19, // 1: mql.llx.Primitive.map:type_name -> mql.llx.Primitive.MapEntry
+	2,  // 2: mql.llx.Function.args:type_name -> mql.llx.Primitive
+	0,  // 3: mql.llx.Function.nullability:type_name -> mql.llx.Function.Nullability
+	1,  // 4: mql.llx.Chunk.call:type_name -> mql.llx.Chunk.Call
+	2,  // 5: mql.llx.Chunk.primitive:type_name -> mql.llx.Primitive
+	4,  // 6: mql.llx.Chunk.function:type_name -> mql.llx.Function
+	5,  // 7: mql.llx.CodeV1.code:type_name -> mql.llx.Chunk
+	20, // 8: mql.llx.CodeV1.checksums:type_name -> mql.llx.CodeV1.ChecksumsEntry
+	7,  // 9: mql.llx.CodeV1.functions:type_name -> mql.llx.CodeV1
+	21, // 10: mql.llx.CodeV1.assertions:type_name -> mql.llx.CodeV1.AssertionsEntry
+	5,  // 11: mql.llx.Block.chunks:type_name -> mql.llx.Chunk
+	8,  // 12: mql.llx.CodeV2.blocks:type_name -> mql.llx.Block
+	22, // 13: mql.llx.CodeV2.checksums:type_name -> mql.llx.CodeV2.ChecksumsEntry
+	23, // 14: mql.llx.CodeV2.assertions:type_name -> mql.llx.CodeV2.AssertionsEntry
+	24, // 15: mql.llx.Labels.labels:type_name -> mql.llx.Labels.LabelsEntry
+	9,  // 16: mql.llx.CodeBundle.code_v2:type_name -> mql.llx.CodeV2
+	11, // 17: mql.llx.CodeBundle.suggestions:type_name -> mql.llx.Documentation
+	10, // 18: mql.llx.CodeBundle.labels:type_name -> mql.llx.Labels
+	25, // 19: mql.llx.CodeBundle.props:type_name -> mql.llx.CodeBundle.PropsEntry
+	26, // 20: mql.llx.CodeBundle.assertions:type_name -> mql.llx.CodeBundle.AssertionsEntry
+	27, // 21: mql.llx.CodeBundle.auto_expand:type_name -> mql.llx.CodeBundle.AutoExpandEntry
+	28, // 22: mql.llx.CodeBundle.vars:type_name -> mql.llx.CodeBundle.VarsEntry
+	2,  // 23: mql.llx.Result.data:type_name -> mql.llx.Primitive
+	29, // 24: mql.llx.ResourceRecording.fields:type_name -> mql.llx.ResourceRecording.FieldsEntry
+	2,  // 25: mql.llx.AssessmentItem.expected:type_name -> mql.llx.Primitive
+	2,  // 26: mql.llx.AssessmentItem.actual:type_name -> mql.llx.Primitive
+	2,  // 27: mql.llx.AssessmentItem.data:type_name -> mql.llx.Primitive
+	16, // 28: mql.llx.Assessment.results:type_name -> mql.llx.AssessmentItem
+	2,  // 29: mql.llx.Primitive.MapEntry.value:type_name -> mql.llx.Primitive
+	6,  // 30: mql.llx.CodeV1.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	6,  // 31: mql.llx.CodeV2.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	6,  // 32: mql.llx.CodeBundle.AssertionsEntry.value:type_name -> mql.llx.AssertionMessage
+	13, // 33: mql.llx.ResourceRecording.FieldsEntry.value:type_name -> mql.llx.Result
+	34, // [34:34] is the sub-list for method output_type
+	34, // [34:34] is the sub-list for method input_type
+	34, // [34:34] is the sub-list for extension type_name
+	34, // [34:34] is the sub-list for extension extendee
+	0,  // [0:34] is the sub-list for field type_name
 }
 
 func init() { file_llx_proto_init() }
@@ -1626,7 +1704,7 @@ func file_llx_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_llx_proto_rawDesc), len(file_llx_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   0,
