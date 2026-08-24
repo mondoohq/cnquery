@@ -656,7 +656,10 @@ mikrotik.ip.service @defaults("name port disabled") {
   // Certificate bound to the service, resolved in the device certificate store
   //
   // Null when the service has no certificate bound, which for www-ssl and
-  // api-ssl means the service cannot serve TLS at all.
+  // api-ssl means the service cannot serve TLS at all. The name carries the
+  // Ref suffix because the deprecated raw `certificate` field still holds the
+  // plain name; sibling resources that never shipped a raw name spell the
+  // equivalent field `certificate`.
   certificateRef() mikrotik.certificate
 }
 
@@ -1655,7 +1658,7 @@ mikrotik.interface.pptpServer @defaults("enabled authentication") {
 // SSTP server settings read from `/interface/sstp-server/server`. SSTP runs
 // over TLS, so the server's posture is the certificate it presents and whether
 // it checks the client's: with `verifyClientCertificate` off, anyone who can
-// reach the port and pass PPP authentication gets a tunnel. `certificateRef`
+// reach the port and pass PPP authentication gets a tunnel. `certificate`
 // resolves the presented certificate in the device certificate store so its
 // expiry, key size, and issuer can be checked.
 mikrotik.interface.sstpServer @defaults("enabled port verifyClientCertificate") {
@@ -1672,7 +1675,7 @@ mikrotik.interface.sstpServer @defaults("enabled port verifyClientCertificate") 
   //
   // Null when no certificate is bound, in which case the server cannot serve
   // TLS at all.
-  certificateRef() mikrotik.certificate
+  certificate() mikrotik.certificate
   // PPP authentication methods the server accepts
   authentication []string
   // Minimum accepted TLS version
@@ -1724,7 +1727,7 @@ mikrotik.interface.ovpnServer @defaults("enabled port requireClientCertificate")
   //
   // Null when no certificate is bound, in which case the server cannot serve
   // TLS at all.
-  certificateRef() mikrotik.certificate
+  certificate() mikrotik.certificate
   // Ciphers the server offers
   //
   // For example aes256-gcm, aes256-cbc, aes128-cbc, or blowfish128. blowfish128
@@ -1834,7 +1837,7 @@ mikrotik.ip.ipsec.profile @defaults("name encAlgorithms dhGroups hashAlgorithm")
 // `/ip/ipsec/peer`. The `name` field selects the peer and exposes the remote
 // address, the local address the device negotiates from, the exchange mode,
 // and whether the peer is passive, meaning the device waits to be contacted
-// rather than initiating. The `profileRef` field resolves the key exchange
+// rather than initiating. The `profile` field resolves the key exchange
 // profile, which is where the peer's crypto strength actually lives.
 mikrotik.ip.ipsec.peer @defaults("name address exchangeMode disabled") {
   // Peer name
@@ -1856,7 +1859,7 @@ mikrotik.ip.ipsec.peer @defaults("name address exchangeMode disabled") {
   // RouterOS always binds a peer to a profile and ships an undeletable
   // `default` one, so a null here means the peer names a profile that is no
   // longer in the profile list.
-  profileRef() mikrotik.ip.ipsec.profile
+  profile() mikrotik.ip.ipsec.profile
   // Whether the device waits to be contacted rather than initiating
   passive bool
   // Whether an initial contact notification is sent
@@ -1877,8 +1880,8 @@ mikrotik.ip.ipsec.peer @defaults("name address exchangeMode disabled") {
 // matching a policy configured in advance, so the pair of them together means
 // a peer that knows the key can choose what it reaches. `hasSecret` reports
 // that a pre-shared key is configured; the key itself, the EAP password, and
-// the raw key material are never read. `peerRef` resolves the peer the
-// identity authenticates, and `certificateRef` and `remoteCertificateRef`
+// the raw key material are never read. `peer` resolves the peer the
+// identity authenticates, and `certificate` and `remoteCertificate`
 // resolve the certificates in the device certificate store so their expiry,
 // key size, and issuer can be checked in the same query.
 mikrotik.ip.ipsec.identity @defaults("authMethod generatePolicy hasSecret disabled") {
@@ -1886,7 +1889,7 @@ mikrotik.ip.ipsec.identity @defaults("authMethod generatePolicy hasSecret disabl
   //
   // RouterOS requires every identity to name a peer, so a null here means the
   // identity names a peer that is no longer in the peer list.
-  peerRef() mikrotik.ip.ipsec.peer
+  peer() mikrotik.ip.ipsec.peer
   // Authentication method
   //
   // For example pre-shared-key, pre-shared-key-xauth, rsa-signature,
@@ -1924,11 +1927,11 @@ mikrotik.ip.ipsec.identity @defaults("authMethod generatePolicy hasSecret disabl
   //
   // Null when the identity presents no certificate, which is the case for
   // pre-shared-key authentication.
-  certificateRef() mikrotik.certificate
+  certificate() mikrotik.certificate
   // Certificate expected from the peer, resolved in the device certificate store
   //
   // Null when the identity expects no certificate from the peer.
-  remoteCertificateRef() mikrotik.certificate
+  remoteCertificate() mikrotik.certificate
   // Firewall chain traffic for this identity bypasses connection tracking in
   notrackChain string
   // Whether the identity is disabled
@@ -1998,7 +2001,7 @@ mikrotik.snmp.community @defaults("usesDefaultCommunityName addresses readAccess
 // action. RouterOS ships with everything going to a memory-only action that a
 // reboot erases, so whether a rule routes `system`, `error`, `critical`, and
 // `account` to an action with a remote target is the difference between a
-// device that keeps an audit trail and one that does not. `actionRef` resolves
+// device that keeps an audit trail and one that does not. `action` resolves
 // the action the rule routes to, so its target can be read in the same query.
 mikrotik.system.logging.rule @defaults("topics disabled invalid") {
   // Log topics the rule routes
@@ -2011,7 +2014,7 @@ mikrotik.system.logging.rule @defaults("topics disabled invalid") {
   // RouterOS always binds a rule to an action, so a null here means the rule
   // names an action that is no longer in the action list, which RouterOS also
   // reports through `invalid`.
-  actionRef() mikrotik.system.logging.action
+  action() mikrotik.system.logging.action
   // Prefix added to entries routed by the rule
   prefix string
   // Whether the rule is disabled
@@ -2263,7 +2266,7 @@ mikrotik.container.config @defaults("registryUrl hasRegistryCredentials") {
 // surface. `requireMessageAuth` is the Blast-RADIUS control, and with it off
 // the device accepts responses an attacker in the path can forge.
 // `protocol` decides whether the exchange is UDP RADIUS or RADIUS over TLS,
-// and for RADIUS over TLS `certificateRef` resolves the certificate the device
+// and for RADIUS over TLS `certificate` resolves the certificate the device
 // presents so its expiry, key size, and issuer can be checked in the same
 // query. The shared secret is reported only as `hasSecret`; the secret itself
 // is never read or exposed.
@@ -2309,7 +2312,7 @@ mikrotik.radius.client @defaults("services address requireMessageAuth disabled")
   //
   // Null when no certificate is bound, which is the case for a client that
   // reaches the server over plain UDP RADIUS rather than RADIUS over TLS.
-  certificateRef() mikrotik.certificate
+  certificate() mikrotik.certificate
   // Whether the client is disabled
   disabled bool
   // Optional comment attached to the client

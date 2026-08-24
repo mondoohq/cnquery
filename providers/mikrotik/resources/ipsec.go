@@ -104,12 +104,12 @@ func (r *mqlMikrotik) ipsecPeers() ([]any, error) {
 	return buildList(r.MqlRuntime, rows, newMikrotikIpsecPeer)
 }
 
-// profileRef resolves the peer's profile against the already-cached profile
+// profile resolves the peer's profile against the already-cached profile
 // listing, so a fleet of peers costs one read of /ip/ipsec/profile rather than
 // one per peer.
-func (r *mqlMikrotikIpIpsecPeer) profileRef() (*mqlMikrotikIpIpsecProfile, error) {
+func (r *mqlMikrotikIpIpsecPeer) profile() (*mqlMikrotikIpIpsecProfile, error) {
 	null := func() (*mqlMikrotikIpIpsecProfile, error) {
-		r.ProfileRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.Profile.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if r.cacheProfile == "" {
@@ -139,8 +139,8 @@ type mqlMikrotikIpIpsecIdentityInternal struct {
 	cacheRemoteCertificate string
 }
 
-// cacheRefs stores the names the identity points at, so peerRef,
-// certificateRef and remoteCertificateRef can resolve them without the raw
+// cacheRefs stores the names the identity points at, so peer,
+// certificate and remoteCertificate can resolve them without the raw
 // names being carried as fields that duplicate what the references already
 // report.
 func (r *mqlMikrotikIpIpsecIdentity) cacheRefs(row map[string]string) {
@@ -187,10 +187,10 @@ func (r *mqlMikrotik) ipsecIdentities() ([]any, error) {
 	return buildList(r.MqlRuntime, rows, newMikrotikIpsecIdentity)
 }
 
-// peerRef resolves the identity's peer against the already-cached peer listing.
-func (r *mqlMikrotikIpIpsecIdentity) peerRef() (*mqlMikrotikIpIpsecPeer, error) {
+// peer resolves the identity's peer against the already-cached peer listing.
+func (r *mqlMikrotikIpIpsecIdentity) peer() (*mqlMikrotikIpIpsecPeer, error) {
 	null := func() (*mqlMikrotikIpIpsecPeer, error) {
-		r.PeerRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.Peer.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if r.cachePeer == "" {
@@ -212,21 +212,21 @@ func (r *mqlMikrotikIpIpsecIdentity) peerRef() (*mqlMikrotikIpIpsecPeer, error) 
 	return null()
 }
 
-// certificateRef resolves the certificate the identity presents against the
+// certificate resolves the certificate the identity presents against the
 // already-cached /certificate listing.
-func (r *mqlMikrotikIpIpsecIdentity) certificateRef() (*mqlMikrotikCertificate, error) {
+func (r *mqlMikrotikIpIpsecIdentity) certificate() (*mqlMikrotikCertificate, error) {
 	if r.cacheCertificate == "" {
-		r.CertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return certificateByName(r.MqlRuntime, r.cacheCertificate)
 }
 
-// remoteCertificateRef resolves the certificate the identity expects from the
+// remoteCertificate resolves the certificate the identity expects from the
 // peer against the already-cached /certificate listing.
-func (r *mqlMikrotikIpIpsecIdentity) remoteCertificateRef() (*mqlMikrotikCertificate, error) {
+func (r *mqlMikrotikIpIpsecIdentity) remoteCertificate() (*mqlMikrotikCertificate, error) {
 	if r.cacheRemoteCertificate == "" {
-		r.RemoteCertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.RemoteCertificate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return certificateByName(r.MqlRuntime, r.cacheRemoteCertificate)

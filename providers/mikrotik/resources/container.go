@@ -130,13 +130,13 @@ func newMikrotikRadiusClient(runtime *plugin.Runtime, row map[string]string) (pl
 	return res, nil
 }
 
-// certificateRef resolves the certificate the client presents for RADIUS over
+// certificate resolves the certificate the client presents for RADIUS over
 // TLS against the already-cached /certificate listing, so a device with
 // several RADIUS servers configured costs one read of /certificate rather than
 // one per server.
-func (r *mqlMikrotikRadiusClient) certificateRef() (*mqlMikrotikCertificate, error) {
+func (r *mqlMikrotikRadiusClient) certificate() (*mqlMikrotikCertificate, error) {
 	if r.cacheCertificate == "" {
-		r.CertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return certificateByName(r.MqlRuntime, r.cacheCertificate)

@@ -102,7 +102,7 @@ func TestSstpServerArgs(t *testing.T) {
 	assert.Equal(t, int64(443), args["port"].Value)
 	// with verification off, anyone who passes PPP auth gets a tunnel
 	assert.Equal(t, "no", args["verifyClientCertificate"].Value)
-	// the certificate name is carried only by certificateRef, never as a
+	// the certificate name is carried only by certificate, never as a
 	// field that duplicates it
 	assert.NotContains(t, args, "certificate")
 	assert.Equal(t, false, args["pfs"].Value)

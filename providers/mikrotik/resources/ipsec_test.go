@@ -82,7 +82,7 @@ func TestIpsecPeerArgs(t *testing.T) {
 	assert.Equal(t, "branch-office", args["name"].Value)
 	// aggressive mode exposes a hash an attacker can grind offline
 	assert.Equal(t, "aggressive", args["exchangeMode"].Value)
-	// the profile name is carried only by profileRef
+	// the profile name is carried only by profile
 	assert.NotContains(t, args, "profile")
 	assert.Equal(t, int64(500), args["port"].Value)
 	assert.Equal(t, false, args["passive"].Value)
@@ -104,7 +104,7 @@ func TestIpsecIdentityArgs(t *testing.T) {
 	args := ipsecIdentityArgs(row)
 
 	assert.Equal(t, "mikrotik.ip.ipsec.identity/*4", args["__id"].Value)
-	// the peer name is carried only by peerRef
+	// the peer name is carried only by peer
 	assert.NotContains(t, args, "peer")
 	// pre-shared-key plus generate-policy is the pair that matters
 	assert.Equal(t, "pre-shared-key", args["authMethod"].Value)
@@ -130,8 +130,8 @@ func TestIpsecIdentityArgsNoSecret(t *testing.T) {
 
 	assert.Equal(t, "mikrotik.ip.ipsec.identity/branch-office", args["__id"].Value)
 	assert.Equal(t, false, args["hasSecret"].Value)
-	// the certificate names are carried only by certificateRef and
-	// remoteCertificateRef
+	// the certificate names are carried only by certificate and
+	// remoteCertificate
 	assert.NotContains(t, args, "certificate")
 	assert.NotContains(t, args, "remoteCertificate")
 }
@@ -177,7 +177,7 @@ func TestIpsecIdentityCacheRefsUnset(t *testing.T) {
 
 func TestIpsecIdentityCacheRefsAbsentPeer(t *testing.T) {
 	// RouterOS requires an identity to name a peer, so an empty cache means
-	// the device reported nothing and peerRef resolves to null rather than
+	// the device reported nothing and peer resolves to null rather than
 	// scanning the peer list for an empty name
 	id := &mqlMikrotikIpIpsecIdentity{}
 	id.cacheRefs(map[string]string{})

@@ -130,12 +130,12 @@ func (r *mqlMikrotik) loggingRules() ([]any, error) {
 	return buildList(r.MqlRuntime, rows, newMikrotikLoggingRule)
 }
 
-// actionRef resolves the rule's action against the already-cached action
+// action resolves the rule's action against the already-cached action
 // listing, so reading where every topic ends up costs one read of
 // /system/logging/action rather than one per rule.
-func (r *mqlMikrotikSystemLoggingRule) actionRef() (*mqlMikrotikSystemLoggingAction, error) {
+func (r *mqlMikrotikSystemLoggingRule) action() (*mqlMikrotikSystemLoggingAction, error) {
 	null := func() (*mqlMikrotikSystemLoggingAction, error) {
-		r.ActionRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.Action.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	if r.cacheAction == "" {

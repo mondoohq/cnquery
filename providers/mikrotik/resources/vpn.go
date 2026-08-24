@@ -168,9 +168,9 @@ func initMikrotikInterfaceSstpServer(runtime *plugin.Runtime, args map[string]*l
 	return nil, res, nil
 }
 
-func (r *mqlMikrotikInterfaceSstpServer) certificateRef() (*mqlMikrotikCertificate, error) {
+func (r *mqlMikrotikInterfaceSstpServer) certificate() (*mqlMikrotikCertificate, error) {
 	if r.cacheCertificate == "" {
-		r.CertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return certificateByName(r.MqlRuntime, r.cacheCertificate)
@@ -241,9 +241,9 @@ func initMikrotikInterfaceOvpnServer(runtime *plugin.Runtime, args map[string]*l
 	return nil, res, nil
 }
 
-func (r *mqlMikrotikInterfaceOvpnServer) certificateRef() (*mqlMikrotikCertificate, error) {
+func (r *mqlMikrotikInterfaceOvpnServer) certificate() (*mqlMikrotikCertificate, error) {
 	if r.cacheCertificate == "" {
-		r.CertificateRef.State = plugin.StateIsSet | plugin.StateIsNull
+		r.Certificate.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return certificateByName(r.MqlRuntime, r.cacheCertificate)
