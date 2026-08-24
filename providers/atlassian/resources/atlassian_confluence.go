@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/atlassian/connection/confluence"
@@ -226,10 +227,54 @@ func (a *mqlAtlassianConfluenceSpace) id() (string, error) {
 	return "atlassian.confluence.space/" + a.Key.Data, nil
 }
 
+// confluenceUserIndex returns the instance's user accounts keyed by account ID.
+// It reads them through the atlassian.confluence singleton, so the runtime
+// memoizes the underlying search and one lookup serves every space permission
+// and page restriction in a scan.
+//
+// A failure to read the directory is not fatal here: callers fall back to a
+// reference carrying only the account ID, which leaves the account's name and
+// type null rather than reporting an invented empty value for them.
+func confluenceUserIndex(runtime *plugin.Runtime) map[string]*mqlAtlassianConfluenceUser {
+	root, err := CreateResource(runtime, "atlassian.confluence", map[string]*llx.RawData{})
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to reach the confluence resource to resolve user accounts")
+		return nil
+	}
+	users := root.(*mqlAtlassianConfluence).GetUsers()
+	if users.Error != nil {
+		log.Warn().Err(users.Error).Msg("failed to list confluence users to resolve account types")
+		return nil
+	}
+	idx := make(map[string]*mqlAtlassianConfluenceUser, len(users.Data))
+	for _, raw := range users.Data {
+		user, ok := raw.(*mqlAtlassianConfluenceUser)
+		if !ok || user.Id.Data == "" {
+			continue
+		}
+		idx[user.Id.Data] = user
+	}
+	return idx
+}
+
+// confluenceUserRef resolves an account ID against the directory index. A hit
+// returns the already-populated account, which is what makes the account type
+// readable and so distinguishes an external collaborator from a staff account.
+// A miss returns a reference carrying only the ID, leaving the remaining fields
+// null.
+func confluenceUserRef(runtime *plugin.Runtime, index map[string]*mqlAtlassianConfluenceUser, accountID string) (plugin.Resource, error) {
+	if user, ok := index[accountID]; ok {
+		return user, nil
+	}
+	return NewResource(runtime, "atlassian.confluence.user",
+		map[string]*llx.RawData{"id": llx.StringData(accountID)})
+}
+
 // permissionUsers returns the distinct typed atlassian.confluence.user resources
 // referenced by this space's permissions list. The permissions field contains
 // subjectType="user" rows whose subjectKey is the user's accountId.
 func (a *mqlAtlassianConfluenceSpace) permissionUsers() ([]any, error) {
+	index := confluenceUserIndex(a.MqlRuntime)
 	seen := map[string]bool{}
 	res := []any{}
 	for _, p := range a.Permissions.Data {
@@ -245,13 +290,7 @@ func (a *mqlAtlassianConfluenceSpace) permissionUsers() ([]any, error) {
 			continue
 		}
 		seen[key] = true
-		name, _ := row["subjectName"].(string)
-		args := map[string]*llx.RawData{
-			"id":   llx.StringData(key),
-			"name": llx.StringData(name),
-			"type": llx.StringData(""),
-		}
-		mqlUser, err := NewResource(a.MqlRuntime, "atlassian.confluence.user", args)
+		mqlUser, err := confluenceUserRef(a.MqlRuntime, index, key)
 		if err != nil {
 			return nil, err
 		}
@@ -407,18 +446,14 @@ func (a *mqlAtlassianConfluencePageRestriction) id() (string, error) {
 // Each id is treated as an accountId; the underlying user resource has no fetch
 // endpoint so only the id is hydrated.
 func (a *mqlAtlassianConfluencePageRestriction) users() ([]any, error) {
+	index := confluenceUserIndex(a.MqlRuntime)
 	res := []any{}
 	for _, raw := range a.UserIds.Data {
 		accountID, ok := raw.(string)
 		if !ok || accountID == "" {
 			continue
 		}
-		mqlUser, err := NewResource(a.MqlRuntime, "atlassian.confluence.user",
-			map[string]*llx.RawData{
-				"id":   llx.StringData(accountID),
-				"name": llx.StringData(""),
-				"type": llx.StringData(""),
-			})
+		mqlUser, err := confluenceUserRef(a.MqlRuntime, index, accountID)
 		if err != nil {
 			return nil, err
 		}

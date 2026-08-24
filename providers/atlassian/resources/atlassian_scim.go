@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
 	"go.mondoo.com/mql/llx"
@@ -45,19 +46,9 @@ func (a *mqlAtlassianScim) users() ([]any, error) {
 			if scimUser == nil {
 				continue
 			}
-			formatted := ""
-			if scimUser.Name != nil {
-				formatted = scimUser.Name.Formatted
-			}
-			mqlUser, err := CreateResource(a.MqlRuntime, "atlassian.scim.user",
-				map[string]*llx.RawData{
-					"id":           llx.StringData(scimUser.ID),
-					"name":         llx.StringData(formatted),
-					"displayName":  llx.StringData(scimUser.DisplayName),
-					"organization": llx.StringData(scimUser.Organization),
-					"title":        llx.StringData(scimUser.Title),
-					"active":       llx.BoolData(scimUser.Active),
-				})
+			args := map[string]*llx.RawData{"id": llx.StringData(scimUser.ID)}
+			setScimUserFields(args, scimUser)
+			mqlUser, err := CreateResource(a.MqlRuntime, "atlassian.scim.user", args)
 			if err != nil {
 				return nil, err
 			}
@@ -189,16 +180,35 @@ func initAtlassianScimUser(runtime *plugin.Runtime, args map[string]*llx.RawData
 	if err != nil {
 		return nil, nil, err
 	}
+	setScimUserFields(args, user)
+	return args, nil, nil
+}
+
+// setScimUserFields fills args with every atlassian.scim.user field other than
+// id. Both the list path and the single-user init path go through it so the two
+// cannot drift apart: a field one sets and the other omits would degrade to
+// null for whichever path materializes the user first in a scan.
+func setScimUserFields(args map[string]*llx.RawData, user *models.SCIMUserScheme) {
 	formatted := ""
 	if user.Name != nil {
 		formatted = user.Name.Formatted
+	}
+	// meta is optional in the SCIM response; an absent timestamp stays null
+	// rather than becoming the zero time, which would read as a real date in
+	// year 1 and make "has not synced since" checks answer nonsense.
+	var created, lastModified *time.Time
+	if user.Meta != nil {
+		created = parseAtlassianTime(user.Meta.Created)
+		lastModified = parseAtlassianTime(user.Meta.LastModified)
 	}
 	args["name"] = llx.StringData(formatted)
 	args["displayName"] = llx.StringData(user.DisplayName)
 	args["organization"] = llx.StringData(user.Organization)
 	args["title"] = llx.StringData(user.Title)
 	args["active"] = llx.BoolData(user.Active)
-	return args, nil, nil
+	args["externalId"] = llx.StringDataPtr(nilIfEmpty(user.ExternalID))
+	args["created"] = llx.TimeDataPtr(created)
+	args["lastModified"] = llx.TimeDataPtr(lastModified)
 }
 
 // initAtlassianScimGroup resolves a SCIM group referenced only by id (e.g. from

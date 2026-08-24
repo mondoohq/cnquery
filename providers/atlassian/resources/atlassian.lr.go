@@ -20,6 +20,7 @@ const (
 	ResourceAtlassianScimUser                             string = "atlassian.scim.user"
 	ResourceAtlassianScimGroup                            string = "atlassian.scim.group"
 	ResourceAtlassianAdminOrganization                    string = "atlassian.admin.organization"
+	ResourceAtlassianAdminOrganizationEvent               string = "atlassian.admin.organization.event"
 	ResourceAtlassianAdminOrganizationManagedUser         string = "atlassian.admin.organization.managedUser"
 	ResourceAtlassianAdminOrganizationManagedUserApiToken string = "atlassian.admin.organization.managedUser.apiToken"
 	ResourceAtlassianAdminOrganizationPolicy              string = "atlassian.admin.organization.policy"
@@ -71,6 +72,10 @@ func init() {
 		"atlassian.admin.organization": {
 			Init:   initAtlassianAdminOrganization,
 			Create: createAtlassianAdminOrganization,
+		},
+		"atlassian.admin.organization.event": {
+			// to override args, implement: initAtlassianAdminOrganizationEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAtlassianAdminOrganizationEvent,
 		},
 		"atlassian.admin.organization.managedUser": {
 			// to override args, implement: initAtlassianAdminOrganizationManagedUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -287,6 +292,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"atlassian.scim.user.active": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimUser).GetActive()).ToDataRes(types.Bool)
 	},
+	"atlassian.scim.user.externalId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimUser).GetExternalId()).ToDataRes(types.String)
+	},
+	"atlassian.scim.user.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimUser).GetCreated()).ToDataRes(types.Time)
+	},
+	"atlassian.scim.user.lastModified": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianScimUser).GetLastModified()).ToDataRes(types.Time)
+	},
 	"atlassian.scim.user.groups": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianScimUser).GetGroups()).ToDataRes(types.Array(types.Resource("atlassian.scim.group")))
 	},
@@ -316,6 +330,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.admin.organization.managedUsers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganization).GetManagedUsers()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.managedUser")))
+	},
+	"atlassian.admin.organization.events": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganization).GetEvents()).ToDataRes(types.Array(types.Resource("atlassian.admin.organization.event")))
+	},
+	"atlassian.admin.organization.event.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetId()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.event.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetType()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.event.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetAction()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.event.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"atlassian.admin.organization.event.actorName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetActorName()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.event.actor": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetActor()).ToDataRes(types.Resource("atlassian.admin.organization.managedUser"))
+	},
+	"atlassian.admin.organization.event.context": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetContext()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.admin.organization.event.container": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetContainer()).ToDataRes(types.Array(types.Dict))
+	},
+	"atlassian.admin.organization.event.ip": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetIp()).ToDataRes(types.String)
+	},
+	"atlassian.admin.organization.event.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianAdminOrganizationEvent).GetLocation()).ToDataRes(types.String)
 	},
 	"atlassian.admin.organization.managedUser.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianAdminOrganizationManagedUser).GetId()).ToDataRes(types.String)
@@ -418,6 +465,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.dashboards": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJira).GetDashboards()).ToDataRes(types.Array(types.Resource("atlassian.jira.dashboard")))
+	},
+	"atlassian.jira.applicationRoles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJira).GetApplicationRoles()).ToDataRes(types.Array(types.Resource("atlassian.jira.applicationRole")))
 	},
 	"atlassian.jira.filter.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraFilter).GetId()).ToDataRes(types.String)
@@ -625,6 +675,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.applicationRole.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraApplicationRole).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.applicationRole.groups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetGroups()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.jira.applicationRole.defaultGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetDefaultGroups()).ToDataRes(types.Array(types.String))
+	},
+	"atlassian.jira.applicationRole.selectedByDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetSelectedByDefault()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.applicationRole.defined": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetDefined()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.applicationRole.numberOfSeats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetNumberOfSeats()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.applicationRole.remainingSeats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetRemainingSeats()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.applicationRole.userCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetUserCount()).ToDataRes(types.Int)
+	},
+	"atlassian.jira.applicationRole.hasUnlimitedSeats": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetHasUnlimitedSeats()).ToDataRes(types.Bool)
+	},
+	"atlassian.jira.applicationRole.platform": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraApplicationRole).GetPlatform()).ToDataRes(types.Bool)
 	},
 	"atlassian.jira.project.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraProject).GetId()).ToDataRes(types.String)
@@ -850,6 +927,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"atlassian.jira.group.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianJiraGroup).GetName()).ToDataRes(types.String)
+	},
+	"atlassian.jira.group.members": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAtlassianJiraGroup).GetMembers()).ToDataRes(types.Array(types.Resource("atlassian.jira.user")))
 	},
 	"atlassian.confluence.users": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAtlassianConfluence).GetUsers()).ToDataRes(types.Array(types.Resource("atlassian.confluence.user")))
@@ -1131,6 +1211,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAtlassianScimUser).Active, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"atlassian.scim.user.externalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimUser).ExternalId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.scim.user.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimUser).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.scim.user.lastModified": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianScimUser).LastModified, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"atlassian.scim.user.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianScimUser).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -1177,6 +1269,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.admin.organization.managedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianAdminOrganization).ManagedUsers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.events": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganization).Events, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).__id, ok = v.Value.(string)
+		return
+	},
+	"atlassian.admin.organization.event.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.actorName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).ActorName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.actor": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Actor, ok = plugin.RawToTValue[*mqlAtlassianAdminOrganizationManagedUser](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.context": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Context, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.container": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Container, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.ip": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Ip, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.admin.organization.event.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianAdminOrganizationEvent).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"atlassian.admin.organization.managedUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1333,6 +1473,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.jira.dashboards": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJira).Dashboards, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRoles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJira).ApplicationRoles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.filter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1637,6 +1781,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.jira.applicationRole.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraApplicationRole).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.groups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).Groups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.defaultGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).DefaultGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.selectedByDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).SelectedByDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.defined": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).Defined, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.numberOfSeats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).NumberOfSeats, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.remainingSeats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).RemainingSeats, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.userCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).UserCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.hasUnlimitedSeats": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).HasUnlimitedSeats, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.applicationRole.platform": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraApplicationRole).Platform, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"atlassian.jira.project.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1977,6 +2157,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"atlassian.jira.group.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAtlassianJiraGroup).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"atlassian.jira.group.members": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAtlassianJiraGroup).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"atlassian.confluence.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2428,6 +2612,9 @@ type mqlAtlassianScimUser struct {
 	Organization plugin.TValue[string]
 	Title        plugin.TValue[string]
 	Active       plugin.TValue[bool]
+	ExternalId   plugin.TValue[string]
+	Created      plugin.TValue[*time.Time]
+	LastModified plugin.TValue[*time.Time]
 	Groups       plugin.TValue[[]any]
 }
 
@@ -2490,6 +2677,18 @@ func (c *mqlAtlassianScimUser) GetTitle() *plugin.TValue[string] {
 
 func (c *mqlAtlassianScimUser) GetActive() *plugin.TValue[bool] {
 	return &c.Active
+}
+
+func (c *mqlAtlassianScimUser) GetExternalId() *plugin.TValue[string] {
+	return &c.ExternalId
+}
+
+func (c *mqlAtlassianScimUser) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlAtlassianScimUser) GetLastModified() *plugin.TValue[*time.Time] {
+	return &c.LastModified
 }
 
 func (c *mqlAtlassianScimUser) GetGroups() *plugin.TValue[[]any] {
@@ -2590,6 +2789,7 @@ type mqlAtlassianAdminOrganization struct {
 	Policies     plugin.TValue[[]any]
 	Domains      plugin.TValue[[]any]
 	ManagedUsers plugin.TValue[[]any]
+	Events       plugin.TValue[[]any]
 }
 
 // createAtlassianAdminOrganization creates a new instance of this resource
@@ -2687,6 +2887,123 @@ func (c *mqlAtlassianAdminOrganization) GetManagedUsers() *plugin.TValue[[]any] 
 
 		return c.managedUsers()
 	})
+}
+
+func (c *mqlAtlassianAdminOrganization) GetEvents() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Events, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization", c.__id, "events")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.events()
+	})
+}
+
+// mqlAtlassianAdminOrganizationEvent for the atlassian.admin.organization.event resource
+type mqlAtlassianAdminOrganizationEvent struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAtlassianAdminOrganizationEventInternal
+	Id        plugin.TValue[string]
+	Type      plugin.TValue[string]
+	Action    plugin.TValue[string]
+	CreatedAt plugin.TValue[*time.Time]
+	ActorName plugin.TValue[string]
+	Actor     plugin.TValue[*mqlAtlassianAdminOrganizationManagedUser]
+	Context   plugin.TValue[[]any]
+	Container plugin.TValue[[]any]
+	Ip        plugin.TValue[string]
+	Location  plugin.TValue[string]
+}
+
+// createAtlassianAdminOrganizationEvent creates a new instance of this resource
+func createAtlassianAdminOrganizationEvent(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAtlassianAdminOrganizationEvent{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("atlassian.admin.organization.event", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) MqlName() string {
+	return "atlassian.admin.organization.event"
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetAction() *plugin.TValue[string] {
+	return &c.Action
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetActorName() *plugin.TValue[string] {
+	return &c.ActorName
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetActor() *plugin.TValue[*mqlAtlassianAdminOrganizationManagedUser] {
+	return plugin.GetOrCompute[*mqlAtlassianAdminOrganizationManagedUser](&c.Actor, func() (*mqlAtlassianAdminOrganizationManagedUser, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.admin.organization.event", c.__id, "actor")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAtlassianAdminOrganizationManagedUser), nil
+			}
+		}
+
+		return c.actor()
+	})
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetContext() *plugin.TValue[[]any] {
+	return &c.Context
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetContainer() *plugin.TValue[[]any] {
+	return &c.Container
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetIp() *plugin.TValue[string] {
+	return &c.Ip
+}
+
+func (c *mqlAtlassianAdminOrganizationEvent) GetLocation() *plugin.TValue[string] {
+	return &c.Location
 }
 
 // mqlAtlassianAdminOrganizationManagedUser for the atlassian.admin.organization.managedUser resource
@@ -3002,16 +3319,17 @@ type mqlAtlassianJira struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAtlassianJiraInternal it will be used here
-	Users        plugin.TValue[[]any]
-	Projects     plugin.TValue[[]any]
-	Issues       plugin.TValue[[]any]
-	Groups       plugin.TValue[[]any]
-	ServerInfos  plugin.TValue[*mqlAtlassianJiraServerInfo]
-	AuditRecords plugin.TValue[[]any]
-	CustomFields plugin.TValue[[]any]
-	Workflows    plugin.TValue[[]any]
-	Filters      plugin.TValue[[]any]
-	Dashboards   plugin.TValue[[]any]
+	Users            plugin.TValue[[]any]
+	Projects         plugin.TValue[[]any]
+	Issues           plugin.TValue[[]any]
+	Groups           plugin.TValue[[]any]
+	ServerInfos      plugin.TValue[*mqlAtlassianJiraServerInfo]
+	AuditRecords     plugin.TValue[[]any]
+	CustomFields     plugin.TValue[[]any]
+	Workflows        plugin.TValue[[]any]
+	Filters          plugin.TValue[[]any]
+	Dashboards       plugin.TValue[[]any]
+	ApplicationRoles plugin.TValue[[]any]
 }
 
 // createAtlassianJira creates a new instance of this resource
@@ -3208,6 +3526,22 @@ func (c *mqlAtlassianJira) GetDashboards() *plugin.TValue[[]any] {
 		}
 
 		return c.dashboards()
+	})
+}
+
+func (c *mqlAtlassianJira) GetApplicationRoles() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ApplicationRoles, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira", c.__id, "applicationRoles")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.applicationRoles()
 	})
 }
 
@@ -3833,9 +4167,18 @@ func (c *mqlAtlassianJiraUser) GetApplicationRoles() *plugin.TValue[[]any] {
 type mqlAtlassianJiraApplicationRole struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAtlassianJiraApplicationRoleInternal it will be used here
-	Id   plugin.TValue[string]
-	Name plugin.TValue[string]
+	mqlAtlassianJiraApplicationRoleInternal
+	Id                plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Groups            plugin.TValue[[]any]
+	DefaultGroups     plugin.TValue[[]any]
+	SelectedByDefault plugin.TValue[bool]
+	Defined           plugin.TValue[bool]
+	NumberOfSeats     plugin.TValue[int64]
+	RemainingSeats    plugin.TValue[int64]
+	UserCount         plugin.TValue[int64]
+	HasUnlimitedSeats plugin.TValue[bool]
+	Platform          plugin.TValue[bool]
 }
 
 // createAtlassianJiraApplicationRole creates a new instance of this resource
@@ -3876,6 +4219,60 @@ func (c *mqlAtlassianJiraApplicationRole) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraApplicationRole) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Groups, func() ([]any, error) {
+		return c.groups()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetDefaultGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultGroups, func() ([]any, error) {
+		return c.defaultGroups()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetSelectedByDefault() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SelectedByDefault, func() (bool, error) {
+		return c.selectedByDefault()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetDefined() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Defined, func() (bool, error) {
+		return c.defined()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetNumberOfSeats() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.NumberOfSeats, func() (int64, error) {
+		return c.numberOfSeats()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetRemainingSeats() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RemainingSeats, func() (int64, error) {
+		return c.remainingSeats()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetUserCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UserCount, func() (int64, error) {
+		return c.userCount()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetHasUnlimitedSeats() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.HasUnlimitedSeats, func() (bool, error) {
+		return c.hasUnlimitedSeats()
+	})
+}
+
+func (c *mqlAtlassianJiraApplicationRole) GetPlatform() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Platform, func() (bool, error) {
+		return c.platform()
+	})
 }
 
 // mqlAtlassianJiraProject for the atlassian.jira.project resource
@@ -4716,8 +5113,9 @@ type mqlAtlassianJiraGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAtlassianJiraGroupInternal it will be used here
-	Id   plugin.TValue[string]
-	Name plugin.TValue[string]
+	Id      plugin.TValue[string]
+	Name    plugin.TValue[string]
+	Members plugin.TValue[[]any]
 }
 
 // createAtlassianJiraGroup creates a new instance of this resource
@@ -4763,6 +5161,22 @@ func (c *mqlAtlassianJiraGroup) GetId() *plugin.TValue[string] {
 
 func (c *mqlAtlassianJiraGroup) GetName() *plugin.TValue[string] {
 	return &c.Name
+}
+
+func (c *mqlAtlassianJiraGroup) GetMembers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Members, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("atlassian.jira.group", c.__id, "members")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.members()
+	})
 }
 
 // mqlAtlassianConfluence for the atlassian.confluence resource

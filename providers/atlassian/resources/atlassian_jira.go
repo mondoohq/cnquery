@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
@@ -947,4 +948,246 @@ func (a *mqlAtlassianJiraProject) versions() ([]any, error) {
 
 func (a *mqlAtlassianJiraProjectVersion) id() (string, error) {
 	return "atlassian.jira.project.version/" + a.Id.Data, nil
+}
+
+const (
+	// jiraGroupMemberPageSize matches the server-side cap on the group-member
+	// endpoint. Requesting more does not raise it, and a page shorter than the
+	// requested size would then look like the end of the list on every call.
+	jiraGroupMemberPageSize = 50
+	// jiraGroupMemberMaxPages bounds the membership walk so a server that never
+	// sets isLast cannot page forever.
+	jiraGroupMemberMaxPages = 2000
+)
+
+// mqlAtlassianJiraApplicationRoleInternal caches the full application-role
+// record. The role list seeds it; a role reached through a user's assignments
+// starts empty and fetches on first access to one of the seat or group fields.
+type mqlAtlassianJiraApplicationRoleInternal struct {
+	cacheRole  *models.ApplicationRoleScheme
+	cachedRole bool
+	lock       sync.Mutex
+}
+
+// seedRole stores an already-fetched role record so the accessors do not
+// re-request it.
+func (a *mqlAtlassianJiraApplicationRole) seedRole(role *models.ApplicationRoleScheme) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	a.cacheRole = role
+	a.cachedRole = true
+}
+
+// ensureRole returns the full application-role record, fetching it on a cache
+// miss. A permission failure is returned as an error: reporting "no default
+// groups" for a role the caller was not allowed to read would look identical to
+// a role that genuinely has none.
+func (a *mqlAtlassianJiraApplicationRole) ensureRole() (*models.ApplicationRoleScheme, error) {
+	if a.cachedRole {
+		return a.cacheRole, nil
+	}
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.cachedRole {
+		return a.cacheRole, nil
+	}
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	if a.Id.Data == "" {
+		return nil, errors.New("atlassian.jira.applicationRole: id must be a non-empty role key")
+	}
+	role, _, err := conn.Client().Role.Get(context.Background(), a.Id.Data)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		return nil, errors.New("atlassian.jira.applicationRole with key " + a.Id.Data + " not found")
+	}
+	a.cacheRole = role
+	a.cachedRole = true
+	return role, nil
+}
+
+// applicationRoles returns every application role defined on the instance,
+// seeding each one's cache so the seat and group fields cost no extra call.
+func (a *mqlAtlassianJira) applicationRoles() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	roles, _, err := conn.Client().Role.Gets(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, 0, len(roles))
+	for _, role := range roles {
+		if role == nil || role.Key == "" {
+			continue
+		}
+		mqlRole, err := CreateResource(a.MqlRuntime, "atlassian.jira.applicationRole",
+			map[string]*llx.RawData{
+				"id":   llx.StringData(role.Key),
+				"name": llx.StringData(role.Name),
+			})
+		if err != nil {
+			return nil, err
+		}
+		mqlRole.(*mqlAtlassianJiraApplicationRole).seedRole(role)
+		res = append(res, mqlRole)
+	}
+	return res, nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) groups() ([]any, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return nil, err
+	}
+	return stringsToAny(role.Groups), nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) defaultGroups() ([]any, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return nil, err
+	}
+	return stringsToAny(role.DefaultGroups), nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) selectedByDefault() (bool, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return false, err
+	}
+	return role.SelectedByDefault, nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) defined() (bool, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return false, err
+	}
+	return role.Defined, nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) numberOfSeats() (int64, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return 0, err
+	}
+	return int64(role.NumberOfSeats), nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) remainingSeats() (int64, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return 0, err
+	}
+	return int64(role.RemainingSeats), nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) userCount() (int64, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return 0, err
+	}
+	return int64(role.UserCount), nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) hasUnlimitedSeats() (bool, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return false, err
+	}
+	return role.HasUnlimitedSeats, nil
+}
+
+func (a *mqlAtlassianJiraApplicationRole) platform() (bool, error) {
+	role, err := a.ensureRole()
+	if err != nil {
+		return false, err
+	}
+	return role.Platform, nil
+}
+
+// members returns the accounts in this group, including deactivated ones so a
+// group named in a permission grant can be enumerated in full. The membership
+// endpoint does not report avatars or locales, so those two fields are set to
+// null rather than to an invented empty string.
+func (a *mqlAtlassianJiraGroup) members() ([]any, error) {
+	conn, ok := a.MqlRuntime.Connection.(*jira.JiraConnection)
+	if !ok {
+		return nil, errors.New("Current connection does not allow jira access")
+	}
+	groupName := a.Name.Data
+	if groupName == "" {
+		return nil, errors.New("atlassian.jira.group: name is required to list members")
+	}
+	client := conn.Client()
+
+	res := []any{}
+	err := walkJiraGroupMembers(
+		func(startAt int) (*models.GroupMemberPageScheme, error) {
+			page, _, err := client.Group.Members(context.Background(), groupName, true, startAt, jiraGroupMemberPageSize)
+			return page, err
+		},
+		func(member *models.GroupUserDetailScheme) error {
+			mqlUser, err := CreateResource(a.MqlRuntime, "atlassian.jira.user",
+				map[string]*llx.RawData{
+					"id":       llx.StringData(member.AccountID),
+					"name":     llx.StringData(member.DisplayName),
+					"type":     llx.StringData(member.AccountType),
+					"picture":  llx.StringDataPtr(nil),
+					"email":    llx.StringData(member.EmailAddress),
+					"active":   llx.BoolData(member.Active),
+					"timezone": llx.StringData(member.TimeZone),
+					"locale":   llx.StringDataPtr(nil),
+				})
+			if err != nil {
+				return err
+			}
+			res = append(res, mqlUser)
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// walkJiraGroupMembers pages a group's membership, handing each member to
+// visit. The endpoint caps its page size server-side, so a page shorter than
+// the one requested does not mean the end of the list: isLast is the signal,
+// and treating a short page as the end would truncate every group larger than
+// one page. An empty page and jiraGroupMemberMaxPages bound a server that never
+// sets isLast.
+func walkJiraGroupMembers(
+	fetch func(startAt int) (*models.GroupMemberPageScheme, error),
+	visit func(member *models.GroupUserDetailScheme) error,
+) error {
+	startAt := 0
+	for page := 0; page < jiraGroupMemberMaxPages; page++ {
+		members, err := fetch(startAt)
+		if err != nil {
+			return err
+		}
+		if members == nil || len(members.Values) == 0 {
+			return nil
+		}
+		for _, member := range members.Values {
+			if member == nil || member.AccountID == "" {
+				continue
+			}
+			if err := visit(member); err != nil {
+				return err
+			}
+		}
+		if members.IsLast {
+			return nil
+		}
+		startAt += len(members.Values)
+	}
+	return nil
 }
