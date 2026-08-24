@@ -130,6 +130,40 @@ private cloudflare.zone @defaults("name account.name") {
 	lockdowns() []cloudflare.zone.lockdown
 	// Registrar hold preventing the zone from being added to another account
 	hold() cloudflare.zone.hold
+	// Worker routes that intercept requests to the zone
+	//
+	// Each route binds a URL pattern to a Workers script that runs in front of
+	// every matching request. A route on a broad pattern puts its script in the
+	// request path of the whole site.
+	workerRoutes() []cloudflare.zone.workerRoute
+}
+
+// Worker route
+//
+// Binding of a URL pattern to a Workers script, selected by `pattern`. A route
+// puts its script in front of every request matching the pattern, so a route on
+// `example.com/*` runs on every request to the site, ahead of the origin and
+// with access to the request and response. `worker` resolves the script the
+// route names, and reads null when the route points at a script that no longer
+// exists, which leaves the pattern matching with nothing behind it.
+private cloudflare.zone.workerRoute @defaults("pattern scriptName") {
+	// Route identifier
+	id string
+	// URL pattern the route matches
+	//
+	// For example `example.com/*` or `api.example.com/v1/*`. Wildcards are
+	// matched against the whole request URL.
+	pattern string
+	// Name of the Workers script the route runs
+	//
+	// Empty when the route disables Workers for the pattern rather than
+	// running a script.
+	scriptName string
+	// Workers script the route runs
+	//
+	// Null when the route names no script, or names one that is not in the
+	// account's script list.
+	worker() cloudflare.workers.worker
 }
 
 // Cloudflare account
@@ -744,6 +778,58 @@ private cloudflare.workers.worker @defaults("id") {
   createdOn time
   // Time the worker was last modified
   modifiedOn time
+
+	// Resource bindings attached to the Worker
+	//
+	// Everything the Worker's code can reach at runtime: KV namespaces, R2
+	// buckets, D1 databases, queues, Durable Objects, other Workers reached as
+	// services, mTLS certificates, and secrets. This is the Worker's blast
+	// radius, since code running under a route can use any of them.
+	bindings() []cloudflare.workers.worker.binding
+
+	// Workers that receive this Worker's logs
+	//
+	// Each entry is `{service, environment, namespace}`, naming the Worker that
+	// consumes this one's tail events. A tail consumer receives every request
+	// and response this Worker handles, so it is a path the data takes beyond
+	// the Worker itself.
+	tailConsumers() []dict
+
+	// Whether observability is turned on for the Worker
+	//
+	// False means the Worker's invocations, logs and exceptions are not
+	// retained, so there is nothing to review after an incident. Null when the
+	// Worker's settings cannot be read.
+	observabilityEnabled() bool
+}
+
+// Worker binding
+//
+// One resource the Worker's code can reach at runtime, selected by `name`, which
+// is the JavaScript variable the binding is exposed as. The `type` field names
+// the kind of resource and `target` names the specific one, so a Worker's
+// bindings together describe how far its code can reach: which buckets it can
+// write, which databases it can query, which other Workers it can invoke.
+//
+// Bindings that carry a literal value (a secret, a plain-text or JSON constant,
+// a key, an inline blob) report an empty `target`; their values are never
+// exposed.
+private cloudflare.workers.worker.binding @defaults("name type target") {
+	// JavaScript variable name the binding is exposed as
+	name string
+	// Kind of resource the binding provides
+	//
+	// For example kv_namespace, r2_bucket, d1, queue, service,
+	// durable_object_namespace, mtls_certificate, hyperdrive, vectorize,
+	// analytics_engine, secret_text, or plain_text.
+	type string
+	// The specific resource the binding points at
+	//
+	// A bucket name, a namespace id, a database id, a queue name, the name of
+	// the Worker a service binding invokes, and so on, according to `type`.
+	// Empty for a binding whose value is a literal rather than a reference,
+	// and for a kind with no single identifying field.
+	target string
 }
 
 // Cloudflare Pages page

@@ -451,6 +451,11 @@ cloudflare.workers.secret.scriptName 13.1.1
 cloudflare.workers.secret.secretType 13.1.1
 cloudflare.workers.secrets 13.1.1
 cloudflare.workers.worker 11.0.0
+cloudflare.workers.worker.binding 13.8.1
+cloudflare.workers.worker.binding.name 13.8.1
+cloudflare.workers.worker.binding.target 13.8.1
+cloudflare.workers.worker.binding.type 13.8.1
+cloudflare.workers.worker.bindings 13.8.1
 cloudflare.workers.worker.createdOn 11.0.0
 cloudflare.workers.worker.deploymentId 11.0.0
 cloudflare.workers.worker.etag 11.0.0
@@ -458,9 +463,11 @@ cloudflare.workers.worker.id 11.0.0
 cloudflare.workers.worker.lastDeployedFrom 11.0.0
 cloudflare.workers.worker.logPush 11.0.0
 cloudflare.workers.worker.modifiedOn 11.0.0
+cloudflare.workers.worker.observabilityEnabled 13.8.1
 cloudflare.workers.worker.pipelineHash 11.0.0
 cloudflare.workers.worker.placementMode 11.0.0
 cloudflare.workers.worker.size 11.0.0
+cloudflare.workers.worker.tailConsumers 13.8.1
 cloudflare.workers.workers 11.0.0
 cloudflare.zone 11.0.0
 cloudflare.zone.account 11.0.0
@@ -803,4 +810,10 @@ cloudflare.zone.wafRule.skipRules 13.8.1
 cloudflare.zone.wafRule.skipRulesets 13.8.1
 cloudflare.zone.wafRule.version 13.1.1
 cloudflare.zone.wafRules 13.1.1
+cloudflare.zone.workerRoute 13.8.1
+cloudflare.zone.workerRoute.id 13.8.1
+cloudflare.zone.workerRoute.pattern 13.8.1
+cloudflare.zone.workerRoute.scriptName 13.8.1
+cloudflare.zone.workerRoute.worker 13.8.1
+cloudflare.zone.workerRoutes 13.8.1
 cloudflare.zones 11.0.0

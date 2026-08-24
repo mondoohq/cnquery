@@ -139,6 +139,10 @@ func (c *mqlCloudflareWorkers) workers() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// The per-script settings endpoint is account-scoped, so carry the
+		// account through for bindings(), tailConsumers() and
+		// observabilityEnabled().
+		res.(*mqlCloudflareWorkersWorker).accountID = c.AccountID
 		result = append(result, res)
 	}
 

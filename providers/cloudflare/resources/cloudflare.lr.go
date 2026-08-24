@@ -18,6 +18,7 @@ import (
 const (
 	ResourceCloudflare                                                string = "cloudflare"
 	ResourceCloudflareZone                                            string = "cloudflare.zone"
+	ResourceCloudflareZoneWorkerRoute                                 string = "cloudflare.zone.workerRoute"
 	ResourceCloudflareZoneAccount                                     string = "cloudflare.zone.account"
 	ResourceCloudflareZoneOwner                                       string = "cloudflare.zone.owner"
 	ResourceCloudflareZoneSettings                                    string = "cloudflare.zone.settings"
@@ -36,6 +37,7 @@ const (
 	ResourceCloudflareR2BucketCustomDomain                            string = "cloudflare.r2.bucket.customDomain"
 	ResourceCloudflareWorkers                                         string = "cloudflare.workers"
 	ResourceCloudflareWorkersWorker                                   string = "cloudflare.workers.worker"
+	ResourceCloudflareWorkersWorkerBinding                            string = "cloudflare.workers.worker.binding"
 	ResourceCloudflareWorkersPage                                     string = "cloudflare.workers.page"
 	ResourceCloudflareOne                                             string = "cloudflare.one"
 	ResourceCloudflareOneApp                                          string = "cloudflare.one.app"
@@ -115,6 +117,10 @@ func init() {
 			Init:   initCloudflareZone,
 			Create: createCloudflareZone,
 		},
+		"cloudflare.zone.workerRoute": {
+			// to override args, implement: initCloudflareZoneWorkerRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareZoneWorkerRoute,
+		},
 		"cloudflare.zone.account": {
 			// to override args, implement: initCloudflareZoneAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareZoneAccount,
@@ -186,6 +192,10 @@ func init() {
 		"cloudflare.workers.worker": {
 			// to override args, implement: initCloudflareWorkersWorker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createCloudflareWorkersWorker,
+		},
+		"cloudflare.workers.worker.binding": {
+			// to override args, implement: initCloudflareWorkersWorkerBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createCloudflareWorkersWorkerBinding,
 		},
 		"cloudflare.workers.page": {
 			// to override args, implement: initCloudflareWorkersPage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -641,6 +651,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"cloudflare.zone.hold": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZone).GetHold()).ToDataRes(types.Resource("cloudflare.zone.hold"))
 	},
+	"cloudflare.zone.workerRoutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZone).GetWorkerRoutes()).ToDataRes(types.Array(types.Resource("cloudflare.zone.workerRoute")))
+	},
+	"cloudflare.zone.workerRoute.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWorkerRoute).GetId()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.workerRoute.pattern": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWorkerRoute).GetPattern()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.workerRoute.scriptName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWorkerRoute).GetScriptName()).ToDataRes(types.String)
+	},
+	"cloudflare.zone.workerRoute.worker": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareZoneWorkerRoute).GetWorker()).ToDataRes(types.Resource("cloudflare.workers.worker"))
+	},
 	"cloudflare.zone.account.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareZoneAccount).GetId()).ToDataRes(types.String)
 	},
@@ -1072,6 +1097,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"cloudflare.workers.worker.modifiedOn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareWorkersWorker).GetModifiedOn()).ToDataRes(types.Time)
+	},
+	"cloudflare.workers.worker.bindings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersWorker).GetBindings()).ToDataRes(types.Array(types.Resource("cloudflare.workers.worker.binding")))
+	},
+	"cloudflare.workers.worker.tailConsumers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersWorker).GetTailConsumers()).ToDataRes(types.Array(types.Dict))
+	},
+	"cloudflare.workers.worker.observabilityEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersWorker).GetObservabilityEnabled()).ToDataRes(types.Bool)
+	},
+	"cloudflare.workers.worker.binding.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersWorkerBinding).GetName()).ToDataRes(types.String)
+	},
+	"cloudflare.workers.worker.binding.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersWorkerBinding).GetType()).ToDataRes(types.String)
+	},
+	"cloudflare.workers.worker.binding.target": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlCloudflareWorkersWorkerBinding).GetTarget()).ToDataRes(types.String)
 	},
 	"cloudflare.workers.page.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlCloudflareWorkersPage).GetId()).ToDataRes(types.String)
@@ -2910,6 +2953,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlCloudflareZone).Hold, ok = plugin.RawToTValue[*mqlCloudflareZoneHold](v.Value, v.Error)
 		return
 	},
+	"cloudflare.zone.workerRoutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZone).WorkerRoutes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.workerRoute.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWorkerRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.zone.workerRoute.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWorkerRoute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.workerRoute.pattern": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWorkerRoute).Pattern, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.workerRoute.scriptName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWorkerRoute).ScriptName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.zone.workerRoute.worker": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareZoneWorkerRoute).Worker, ok = plugin.RawToTValue[*mqlCloudflareWorkersWorker](v.Value, v.Error)
+		return
+	},
 	"cloudflare.zone.account.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareZoneAccount).__id, ok = v.Value.(string)
 		return
@@ -3556,6 +3623,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"cloudflare.workers.worker.modifiedOn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlCloudflareWorkersWorker).ModifiedOn, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.worker.bindings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersWorker).Bindings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.worker.tailConsumers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersWorker).TailConsumers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.worker.observabilityEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersWorker).ObservabilityEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.worker.binding.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersWorkerBinding).__id, ok = v.Value.(string)
+		return
+	},
+	"cloudflare.workers.worker.binding.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersWorkerBinding).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.worker.binding.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersWorkerBinding).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"cloudflare.workers.worker.binding.target": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlCloudflareWorkersWorkerBinding).Target, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"cloudflare.workers.page.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -6184,6 +6279,7 @@ type mqlCloudflareZone struct {
 	IpAccessRules            plugin.TValue[[]any]
 	Lockdowns                plugin.TValue[[]any]
 	Hold                     plugin.TValue[*mqlCloudflareZoneHold]
+	WorkerRoutes             plugin.TValue[[]any]
 }
 
 // createCloudflareZone creates a new instance of this resource
@@ -6696,6 +6792,98 @@ func (c *mqlCloudflareZone) GetHold() *plugin.TValue[*mqlCloudflareZoneHold] {
 		}
 
 		return c.hold()
+	})
+}
+
+func (c *mqlCloudflareZone) GetWorkerRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WorkerRoutes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone", c.__id, "workerRoutes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.workerRoutes()
+	})
+}
+
+// mqlCloudflareZoneWorkerRoute for the cloudflare.zone.workerRoute resource
+type mqlCloudflareZoneWorkerRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlCloudflareZoneWorkerRouteInternal
+	Id         plugin.TValue[string]
+	Pattern    plugin.TValue[string]
+	ScriptName plugin.TValue[string]
+	Worker     plugin.TValue[*mqlCloudflareWorkersWorker]
+}
+
+// createCloudflareZoneWorkerRoute creates a new instance of this resource
+func createCloudflareZoneWorkerRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareZoneWorkerRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.zone.workerRoute", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareZoneWorkerRoute) MqlName() string {
+	return "cloudflare.zone.workerRoute"
+}
+
+func (c *mqlCloudflareZoneWorkerRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareZoneWorkerRoute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlCloudflareZoneWorkerRoute) GetPattern() *plugin.TValue[string] {
+	return &c.Pattern
+}
+
+func (c *mqlCloudflareZoneWorkerRoute) GetScriptName() *plugin.TValue[string] {
+	return &c.ScriptName
+}
+
+func (c *mqlCloudflareZoneWorkerRoute) GetWorker() *plugin.TValue[*mqlCloudflareWorkersWorker] {
+	return plugin.GetOrCompute[*mqlCloudflareWorkersWorker](&c.Worker, func() (*mqlCloudflareWorkersWorker, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.zone.workerRoute", c.__id, "worker")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlCloudflareWorkersWorker), nil
+			}
+		}
+
+		return c.worker()
 	})
 }
 
@@ -8373,17 +8561,20 @@ func (c *mqlCloudflareWorkers) GetPageEnvVars() *plugin.TValue[[]any] {
 type mqlCloudflareWorkersWorker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlCloudflareWorkersWorkerInternal it will be used here
-	Id               plugin.TValue[string]
-	Etag             plugin.TValue[string]
-	Size             plugin.TValue[int64]
-	DeploymentId     plugin.TValue[string]
-	PipelineHash     plugin.TValue[string]
-	PlacementMode    plugin.TValue[string]
-	LastDeployedFrom plugin.TValue[string]
-	LogPush          plugin.TValue[bool]
-	CreatedOn        plugin.TValue[*time.Time]
-	ModifiedOn       plugin.TValue[*time.Time]
+	mqlCloudflareWorkersWorkerInternal
+	Id                   plugin.TValue[string]
+	Etag                 plugin.TValue[string]
+	Size                 plugin.TValue[int64]
+	DeploymentId         plugin.TValue[string]
+	PipelineHash         plugin.TValue[string]
+	PlacementMode        plugin.TValue[string]
+	LastDeployedFrom     plugin.TValue[string]
+	LogPush              plugin.TValue[bool]
+	CreatedOn            plugin.TValue[*time.Time]
+	ModifiedOn           plugin.TValue[*time.Time]
+	Bindings             plugin.TValue[[]any]
+	TailConsumers        plugin.TValue[[]any]
+	ObservabilityEnabled plugin.TValue[bool]
 }
 
 // createCloudflareWorkersWorker creates a new instance of this resource
@@ -8456,6 +8647,88 @@ func (c *mqlCloudflareWorkersWorker) GetCreatedOn() *plugin.TValue[*time.Time] {
 
 func (c *mqlCloudflareWorkersWorker) GetModifiedOn() *plugin.TValue[*time.Time] {
 	return &c.ModifiedOn
+}
+
+func (c *mqlCloudflareWorkersWorker) GetBindings() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Bindings, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("cloudflare.workers.worker", c.__id, "bindings")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.bindings()
+	})
+}
+
+func (c *mqlCloudflareWorkersWorker) GetTailConsumers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TailConsumers, func() ([]any, error) {
+		return c.tailConsumers()
+	})
+}
+
+func (c *mqlCloudflareWorkersWorker) GetObservabilityEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ObservabilityEnabled, func() (bool, error) {
+		return c.observabilityEnabled()
+	})
+}
+
+// mqlCloudflareWorkersWorkerBinding for the cloudflare.workers.worker.binding resource
+type mqlCloudflareWorkersWorkerBinding struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlCloudflareWorkersWorkerBindingInternal it will be used here
+	Name   plugin.TValue[string]
+	Type   plugin.TValue[string]
+	Target plugin.TValue[string]
+}
+
+// createCloudflareWorkersWorkerBinding creates a new instance of this resource
+func createCloudflareWorkersWorkerBinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlCloudflareWorkersWorkerBinding{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("cloudflare.workers.worker.binding", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlCloudflareWorkersWorkerBinding) MqlName() string {
+	return "cloudflare.workers.worker.binding"
+}
+
+func (c *mqlCloudflareWorkersWorkerBinding) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlCloudflareWorkersWorkerBinding) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlCloudflareWorkersWorkerBinding) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlCloudflareWorkersWorkerBinding) GetTarget() *plugin.TValue[string] {
+	return &c.Target
 }
 
 // mqlCloudflareWorkersPage for the cloudflare.workers.page resource
