@@ -137,3 +137,33 @@ func TestCreateEventHubRawDataWithoutProperties(t *testing.T) {
 	assert.Equal(t, "", raw["status"].Value)
 	assert.Nil(t, raw["creationTime"].Value)
 }
+
+func TestCreateEventHubConsumerGroupRawData(t *testing.T) {
+	created := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+
+	raw := createEventHubConsumerGroupRawData(&armeventhub.ConsumerGroup{
+		ID:   ptr("/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1/eventhubs/eh1/consumergroups/cg1"),
+		Name: ptr("cg1"),
+		Properties: &armeventhub.ConsumerGroupProperties{
+			CreatedAt:    &created,
+			UserMetadata: ptr("owner=platform"),
+		},
+	})
+
+	assert.Equal(t, "/subscriptions/s/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ns1/eventhubs/eh1/consumergroups/cg1", raw["id"].Value)
+	assert.Equal(t, "cg1", raw["name"].Value)
+	assert.Equal(t, "owner=platform", raw["userMetadata"].Value)
+	assert.Equal(t, &created, raw["creationTime"].Value)
+}
+
+// The $Default consumer group comes back with no properties block at all.
+// Dereferencing it panics, and a panic in an accessor ends the scan rather than
+// the query.
+func TestCreateEventHubConsumerGroupRawDataWithoutProperties(t *testing.T) {
+	raw := createEventHubConsumerGroupRawData(&armeventhub.ConsumerGroup{Name: ptr("$Default")})
+
+	assert.Equal(t, "$Default", raw["name"].Value)
+	assert.Equal(t, "", raw["userMetadata"].Value)
+	// an absent creation time stays null rather than becoming the zero time
+	assert.Nil(t, raw["creationTime"].Value)
+}

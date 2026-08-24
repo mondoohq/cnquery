@@ -421,27 +421,15 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 		func(page armeventhub.ConsumerGroupsClientListByEventHubResponse) []*armeventhub.ConsumerGroup {
 			return page.Value
 		},
-		createConsumerGroup,
+		createEventHubConsumerGroup,
 	)
 }
 
-// createConsumerGroup builds the MQL resource for one consumer group of an event hub.
-func createConsumerGroup(runtime *plugin.Runtime, cg *armeventhub.ConsumerGroup) (plugin.Resource, error) {
-	var userMetadata string
-	var creationTime *time.Time
-	if cg.Properties != nil {
-		creationTime = cg.Properties.CreatedAt
-		if cg.Properties.UserMetadata != nil {
-			userMetadata = *cg.Properties.UserMetadata
-		}
-	}
-
-	mqlCg, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace.eventHub.consumerGroup", map[string]*llx.RawData{
-		"id":           llx.StringDataPtr(cg.ID),
-		"name":         llx.StringDataPtr(cg.Name),
-		"userMetadata": llx.StringData(userMetadata),
-		"creationTime": llx.TimeDataPtr(creationTime),
-	})
+// createEventHubConsumerGroup builds the MQL resource for one consumer group of
+// an event hub.
+func createEventHubConsumerGroup(runtime *plugin.Runtime, cg *armeventhub.ConsumerGroup) (plugin.Resource, error) {
+	mqlCg, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace.eventHub.consumerGroup",
+		createEventHubConsumerGroupRawData(cg))
 	if err != nil {
 		return nil, err
 	}
@@ -453,6 +441,27 @@ func createConsumerGroup(runtime *plugin.Runtime, cg *armeventhub.ConsumerGroup)
 	mqlCg.(*mqlAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup).cacheSystemData = sysData
 
 	return mqlCg, nil
+}
+
+// createEventHubConsumerGroupRawData maps one consumer group onto its MQL
+// fields. Pure, so the nil-Properties case is reachable without an event hub
+// behind it -- the $Default group comes back that way.
+func createEventHubConsumerGroupRawData(cg *armeventhub.ConsumerGroup) map[string]*llx.RawData {
+	var userMetadata string
+	var creationTime *time.Time
+	if cg.Properties != nil {
+		creationTime = cg.Properties.CreatedAt
+		if cg.Properties.UserMetadata != nil {
+			userMetadata = *cg.Properties.UserMetadata
+		}
+	}
+
+	return map[string]*llx.RawData{
+		"id":           llx.StringDataPtr(cg.ID),
+		"name":         llx.StringDataPtr(cg.Name),
+		"userMetadata": llx.StringData(userMetadata),
+		"creationTime": llx.TimeDataPtr(creationTime),
+	}
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules, error) {
