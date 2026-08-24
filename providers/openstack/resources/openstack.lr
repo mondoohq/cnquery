@@ -131,9 +131,11 @@ openstack {
   amphorae() []openstack.octavia.amphora
   // Neutron subnet pools (admin-allocated CIDR ranges) visible to the scoped project
   subnetPools() []openstack.subnetPool
+  // Neutron address scopes grouping subnet pools into a single routable address namespace
+  addressScopes() []openstack.network.addressScope
   // Neutron QoS policies in the scoped project
   qosPolicies() []openstack.qosPolicy
-  // Neutron RBAC policies controlling which projects a network or QoS policy is shared with
+  // Neutron RBAC policies controlling which projects a network, QoS policy, security group, subnet pool, address scope, or address group is shared with
   rbacPolicies() []openstack.network.rbacPolicy
   // Neutron agents running the network control plane
   networkAgents() []openstack.network.agent
@@ -254,6 +256,18 @@ private openstack.user @defaults("id name enabled") {
   ignoreLockoutFailureAttempts bool
   // Whether multi-factor authentication is required for this user (Keystone option `multi_factor_auth_enabled`)
   multiFactorAuthEnabled bool
+  // Whether the user is exempt from password expiry (Keystone option `ignore_password_expiry`)
+  //
+  // True when the domain password-expiry policy does not apply to this account, so its
+  // password never ages out no matter what the domain security compliance settings require.
+  ignorePasswordExpiry bool
+  // Whether the user is exempt from the forced password change on first use (Keystone option `ignore_change_password_upon_first_use`)
+  //
+  // True when the account keeps whatever password an administrator set for it instead of
+  // being required to rotate it at first login.
+  ignoreChangePasswordUponFirstUse bool
+  // Whether the user is exempt from automatic disabling after a period of inactivity (Keystone option `ignore_user_inactivity`)
+  ignoreUserInactivity bool
   // Multi-factor authentication rule sets (Keystone option `multi_factor_auth_rules`)
   //
   // Each entry is a list of auth-method names that together satisfy MFA, for example `["password", "totp"]`. Empty when no rules are configured.
@@ -1406,6 +1420,16 @@ private openstack.octavia.listener @defaults("id name protocol protocolPort prov
   timeoutTcpInspect int
   // Whether HSTS includeSubDomains is enabled (microversion 2.27+)
   hstsIncludeSubdomains bool
+  // Value of the HSTS max-age directive in seconds; 0 when HSTS is off (microversion 2.27+)
+  hstsMaxAge int
+  // Whether the HSTS preload directive is added (microversion 2.27+)
+  hstsPreload bool
+  // Whether HSTS is in force on this listener
+  //
+  // True only when hstsMaxAge is greater than zero, which is what turns the
+  // Strict-Transport-Security header on. The includeSubDomains and preload directives are
+  // inert on their own.
+  hstsEnabled() bool
   // Tags
   tags []string
   // Project that owns this listener
@@ -1714,7 +1738,9 @@ private openstack.subnetPool @defaults("id name ipVersion shared isDefault") {
   // Per-project quota in addresses
   defaultQuota int
   // Address scope ID this pool is bound to; empty when not in any address scope
-  addressScopeId string
+  //
+  // Deprecated in favor of addressScope.
+  addressScopeId @maturity("deprecated") string
   // IP version (4 or 6)
   ipVersion int
   // Whether the pool is shared across projects
@@ -1727,7 +1753,33 @@ private openstack.subnetPool @defaults("id name ipVersion shared isDefault") {
   createdAt time
   // Last update timestamp
   updatedAt time
+  // Address scope this pool is bound to; null when the pool is not in any address scope
+  addressScope() openstack.network.addressScope
   // Project that owns this subnet pool
+  project() openstack.project
+}
+
+// OpenStack Neutron address scope
+//
+// Namespace of non-overlapping routable addresses that Neutron subnet pools are
+// bound to, so every subnet carved from those pools can route to every other one
+// without translation. The `id` field selects a scope, for example
+// `openstack.network.addressScope(id: "a1b2c3d4-...")`. The `shared` flag is the
+// one to audit: a shared scope lets subnet pools owned by different projects
+// allocate out of the same routable namespace, which is what allows those
+// projects' address space to reach each other directly instead of through NAT
+// or a floating IP.
+private openstack.network.addressScope @defaults("id name ipVersion shared") {
+  init(id? string)
+  // Address scope ID (UUID)
+  id string
+  // Address scope name
+  name string
+  // IP version (4 or 6)
+  ipVersion int
+  // Whether the address scope is shared with other projects
+  shared bool
+  // Project that owns the address scope
   project() openstack.project
 }
 
@@ -2139,6 +2191,28 @@ private openstack.objectstorage.container @defaults("name objectCount bytes publ
   versionsLocation() string
   // Container that records overwritten/deleted object versions (X-History-Location); empty when history is disabled
   historyLocation() string
+  // Whether object versioning is turned on for the container (X-Versions-Enabled)
+  versioningEnabled() bool
+  // Destination this container replicates to (X-Sync-To); empty when container sync is not configured
+  //
+  // A standing replication edge that copies every object to another container, commonly on
+  // a different Swift cluster, so the data leaves the boundary the container ACLs describe.
+  syncTo() string
+  // Whether a container-sync shared secret is configured (X-Sync-Key)
+  //
+  // Reports presence only. The key itself authenticates the sync peer and is never exposed.
+  hasSyncKey() bool
+  // Whether a temporary-URL signing key is configured (X-Container-Meta-Temp-URL-Key)
+  //
+  // A temp-URL key mints pre-signed URLs that grant unauthenticated access to objects for a
+  // chosen lifetime, bypassing the container read ACL. Reports presence only; the key value
+  // is never exposed.
+  hasTempUrlKey() bool
+  // Whether a second temporary-URL signing key is configured (X-Container-Meta-Temp-URL-Key-2)
+  //
+  // The second slot used while rotating temp-URL keys. URLs signed with it are honoured just
+  // as those signed with the first key are. Reports presence only.
+  hasTempUrlKey2() bool
   // Free-form container metadata (X-Container-Meta-* headers, without the prefix)
   metadata() map[string]string
   // Whether the container's read ACL grants unauthenticated read access (i.e. contains ".r:*")
@@ -2453,6 +2527,11 @@ private openstack.applicationCredential @defaults("id name unrestricted expiresA
   unrestricted bool
   // Role names this credential is allowed to assume (subset of the owning user's roles)
   roleNames []string
+  // Roles this credential is allowed to assume
+  //
+  // The grants a holder of the credential secret can exercise. Empty when the role
+  // catalog is not readable, in which case roleNames still carries the names.
+  roles() []openstack.role
   // API endpoint access rules
   //
   // Restrictions limiting which API calls the credential may make. Each entry
@@ -2526,8 +2605,15 @@ private openstack.trust @defaults("id impersonation") {
   impersonation bool
   // Role names delegated by this trust
   roleNames []string
+  // Roles delegated by this trust
+  //
+  // The grants the trustee can exercise on the trustor's behalf. Empty when the role
+  // catalog is not readable, in which case roleNames still carries the names.
+  roles() []openstack.role
   // Whether the trustee may re-delegate the trust to another user
   allowRedelegation bool
+  // How many further re-delegations the chain still allows; 0 when re-delegation is not permitted
+  redelegationCount int
   // Remaining number of times the trust can be used; 0 when unlimited
   remainingUses int
   // Expiration timestamp; null when the trust never expires
@@ -3172,6 +3258,16 @@ private openstack.baremetal.node @defaults("id name provisionState powerState ma
   protected bool
   // Reason the node is protected; empty when not protected
   protectedReason string
+  // Whether Ironic runs automated cleaning when the node is unprovisioned; null when the node does not report it
+  //
+  // Automated cleaning erases the node's disks between tenants. False leaves the previous
+  // tenant's data on the hardware for whoever is scheduled onto it next. Null means the
+  // node left the setting unset, so the conductor's own default applies.
+  automatedClean bool
+  // Whether the node is marked retired and will not be scheduled again
+  retired bool
+  // Reason the node was retired; empty when not retired
+  retiredReason string
   // Free-form description of the node
   description string
   // Whether serial console access is enabled
@@ -3333,16 +3429,31 @@ private openstack.network.rbacPolicy @defaults("id action objectType targetProje
   id string
   // Action (access_as_shared, access_as_external)
   action string
-  // Type of the shared object (network, qos-policy)
+  // Type of the shared object
+  //
+  // One of `network`, `qos_policy`, `security_group`, `subnetpool`, `address_scope`, or
+  // `address_group`. Some deployments spell the QoS type `qos-policy`; both spellings
+  // resolve to the same object.
   objectType string
-  // ID of the shared object (a network ID or QoS policy ID, per objectType)
+  // ID of the shared object, of whichever kind objectType names
   objectId string
   // Project the share is granted to; the literal "*" means all projects (cloud-wide share)
   targetProjectId string
-  // Shared network; null unless objectType is "network"
+  // Shared network; null unless objectType is a network
   network() openstack.network
-  // Shared QoS policy; null unless objectType is "qos-policy"
+  // Shared QoS policy; null unless objectType is a QoS policy
   qosPolicy() openstack.qosPolicy
+  // Shared security group; null unless objectType is a security group
+  //
+  // A security group shared into another project can be attached to that project's ports,
+  // so its rules govern traffic to instances the owning project does not control.
+  securityGroup() openstack.securityGroup
+  // Shared subnet pool; null unless objectType is a subnet pool
+  subnetPool() openstack.subnetPool
+  // Shared address scope; null unless objectType is an address scope
+  addressScope() openstack.network.addressScope
+  // Shared address group; null unless objectType is an address group
+  addressGroup() openstack.network.addressGroup
   // Project that owns the RBAC policy
   project() openstack.project
 }

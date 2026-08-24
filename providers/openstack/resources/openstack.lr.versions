@@ -3,6 +3,7 @@
 
 openstack 13.0.1
 openstack.addressGroups 13.7.6
+openstack.addressScopes 13.9.1
 openstack.aggregates 13.0.1
 openstack.amphorae 13.7.6
 openstack.applicationCredential 13.0.1
@@ -13,11 +14,13 @@ openstack.applicationCredential.id 13.0.1
 openstack.applicationCredential.name 13.0.1
 openstack.applicationCredential.project 13.0.1
 openstack.applicationCredential.roleNames 13.0.1
+openstack.applicationCredential.roles 13.9.1
 openstack.applicationCredential.unrestricted 13.0.1
 openstack.applicationCredential.user 13.0.1
 openstack.authUrl 13.0.1
 openstack.backups 13.0.1
 openstack.baremetal.node 13.1.4
+openstack.baremetal.node.automatedClean 13.9.1
 openstack.baremetal.node.bootInterface 13.1.4
 openstack.baremetal.node.conductor 13.1.4
 openstack.baremetal.node.conductorGroup 13.1.4
@@ -43,6 +46,8 @@ openstack.baremetal.node.protected 13.1.4
 openstack.baremetal.node.protectedReason 13.1.4
 openstack.baremetal.node.provisionState 13.1.4
 openstack.baremetal.node.resourceClass 13.1.4
+openstack.baremetal.node.retired 13.9.1
+openstack.baremetal.node.retiredReason 13.9.1
 openstack.baremetal.node.targetPowerState 13.1.4
 openstack.baremetal.node.targetProvisionState 13.1.4
 openstack.baremetal.node.traits 13.1.4
@@ -724,6 +729,12 @@ openstack.network.addressGroup.description 13.7.6
 openstack.network.addressGroup.id 13.7.6
 openstack.network.addressGroup.name 13.7.6
 openstack.network.addressGroup.project 13.7.6
+openstack.network.addressScope 13.9.1
+openstack.network.addressScope.id 13.9.1
+openstack.network.addressScope.ipVersion 13.9.1
+openstack.network.addressScope.name 13.9.1
+openstack.network.addressScope.project 13.9.1
+openstack.network.addressScope.shared 13.9.1
 openstack.network.adminStateUp 13.0.1
 openstack.network.agent 13.7.6
 openstack.network.agent.adminStateUp 13.7.6
@@ -766,12 +777,16 @@ openstack.network.quotaSet.subnetPool 13.0.1
 openstack.network.quotaSet.trunk 13.0.1
 openstack.network.rbacPolicy 13.5.2
 openstack.network.rbacPolicy.action 13.5.2
+openstack.network.rbacPolicy.addressGroup 13.9.1
+openstack.network.rbacPolicy.addressScope 13.9.1
 openstack.network.rbacPolicy.id 13.5.2
 openstack.network.rbacPolicy.network 13.5.2
 openstack.network.rbacPolicy.objectId 13.5.2
 openstack.network.rbacPolicy.objectType 13.5.2
 openstack.network.rbacPolicy.project 13.5.2
 openstack.network.rbacPolicy.qosPolicy 13.5.2
+openstack.network.rbacPolicy.securityGroup 13.9.1
+openstack.network.rbacPolicy.subnetPool 13.9.1
 openstack.network.rbacPolicy.targetProjectId 13.5.2
 openstack.network.shared 13.0.1
 openstack.network.status 13.0.1
@@ -804,6 +819,9 @@ openstack.objectstorage.account.tempUrlKeySet 13.0.1
 openstack.objectstorage.container 13.0.1
 openstack.objectstorage.container.bytes 13.0.1
 openstack.objectstorage.container.created 13.6.1
+openstack.objectstorage.container.hasSyncKey 13.9.1
+openstack.objectstorage.container.hasTempUrlKey 13.9.1
+openstack.objectstorage.container.hasTempUrlKey2 13.9.1
 openstack.objectstorage.container.historyLocation 13.0.1
 openstack.objectstorage.container.metadata 13.0.1
 openstack.objectstorage.container.name 13.0.1
@@ -812,6 +830,8 @@ openstack.objectstorage.container.objects 13.0.1
 openstack.objectstorage.container.public 13.0.1
 openstack.objectstorage.container.readACL 13.0.1
 openstack.objectstorage.container.storagePolicy 13.0.1
+openstack.objectstorage.container.syncTo 13.9.1
+openstack.objectstorage.container.versioningEnabled 13.9.1
 openstack.objectstorage.container.versionsLocation 13.0.1
 openstack.objectstorage.container.writeACL 13.0.1
 openstack.objectstorage.object 13.0.1
@@ -906,7 +926,10 @@ openstack.octavia.listener.defaultPool 13.0.1
 openstack.octavia.listener.defaultTlsContainer 13.0.1
 openstack.octavia.listener.defaultTlsSecret 13.8.2
 openstack.octavia.listener.description 13.0.1
+openstack.octavia.listener.hstsEnabled 13.9.1
 openstack.octavia.listener.hstsIncludeSubdomains 13.0.1
+openstack.octavia.listener.hstsMaxAge 13.9.1
+openstack.octavia.listener.hstsPreload 13.9.1
 openstack.octavia.listener.id 13.0.1
 openstack.octavia.listener.insertHeaders 13.0.1
 openstack.octavia.listener.l7Policies 13.0.1
@@ -1243,6 +1266,7 @@ openstack.subnet.subnetPool 13.0.1
 openstack.subnet.tags 13.0.1
 openstack.subnet.updatedAt 13.0.1
 openstack.subnetPool 13.0.1
+openstack.subnetPool.addressScope 13.9.1
 openstack.subnetPool.addressScopeId 13.0.1
 openstack.subnetPool.createdAt 13.0.1
 openstack.subnetPool.defaultPrefixLen 13.0.1
@@ -1283,8 +1307,10 @@ openstack.trust.id 13.1.4
 openstack.trust.impersonation 13.1.4
 openstack.trust.project 13.1.4
 openstack.trust.redelegated 13.2.2
+openstack.trust.redelegationCount 13.9.1
 openstack.trust.remainingUses 13.1.4
 openstack.trust.roleNames 13.1.4
+openstack.trust.roles 13.9.1
 openstack.trust.trustee 13.1.4
 openstack.trust.trustor 13.1.4
 openstack.trusts 13.1.4
@@ -1297,7 +1323,10 @@ openstack.user.ec2Credentials 13.1.4
 openstack.user.enabled 13.0.1
 openstack.user.groups 13.0.1
 openstack.user.id 13.0.1
+openstack.user.ignoreChangePasswordUponFirstUse 13.9.1
 openstack.user.ignoreLockoutFailureAttempts 13.0.1
+openstack.user.ignorePasswordExpiry 13.9.1
+openstack.user.ignoreUserInactivity 13.9.1
 openstack.user.multiFactorAuthEnabled 13.4.2
 openstack.user.multiFactorAuthRules 13.4.2
 openstack.user.name 13.0.1
