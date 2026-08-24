@@ -80,7 +80,7 @@ func TestDnskeyRecordsFromParams(t *testing.T) {
 		)
 
 		keys := dnskeyRecordsFromParams(params)
-		assert.Len(t, keys, 1, "the readable key must survive its malformed neighbour")
+		assert.Len(t, keys, 1, "the readable key must survive its malformed neighbor")
 	})
 
 	t.Run("an unsuccessful lookup reports nothing", func(t *testing.T) {

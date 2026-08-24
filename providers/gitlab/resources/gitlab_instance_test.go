@@ -40,7 +40,7 @@ func newTestClient(t *testing.T, handler http.Handler) (*gitlab.Client, *httptes
 
 func TestInstanceSettingsPolicyDecodesEveryTag(t *testing.T) {
 	// Values are deliberately distinct so a tag copied onto the wrong field
-	// fails rather than coincidentally matching its neighbour.
+	// fails rather than coincidentally matching its neighbor.
 	payload := []byte(`{
 		"require_personal_access_token_expiry": true,
 		"max_personal_access_token_lifetime": 30,
@@ -238,7 +238,7 @@ func TestSetInstanceSettingsPolicyArgsCarriesReportedValues(t *testing.T) {
 	assert.Equal(t, true, args["allowRunnerRegistrationToken"].Value)
 	assert.Equal(t, false, args["enforceCiInboundJobTokenScopeEnabled"].Value)
 	assert.Equal(t, int64(30), args["maxPersonalAccessTokenLifetime"].Value)
-	assert.Nil(t, args["adminMode"].Value, "a neighbouring unreported setting stays null")
+	assert.Nil(t, args["adminMode"].Value, "a neighboring unreported setting stays null")
 }
 
 //

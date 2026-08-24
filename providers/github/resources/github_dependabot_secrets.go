@@ -16,7 +16,7 @@ import (
 // presents to private package registries while resolving a dependency, so they
 // are reachable from dependency resolution rather than from a workflow run.
 // Only names, scope, visibility and timestamps are read here; the values are
-// never exposed by the API and are never modelled.
+// never exposed by the API and are never modeled.
 
 type mqlGithubDependabotSecretInternal struct {
 	orgLogin string

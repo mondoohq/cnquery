@@ -33,7 +33,7 @@ func (g *mqlGithubOrganization) securityManagerTeams() ([]any, error) {
 	// signature is ListSecurityManagerTeams(ctx, org), and GitHub returns the
 	// whole set. collectPages has nothing to iterate here.
 	//
-	// The method is marked deprecated in favour of ListTeamsAssignedToOrgRole,
+	// The method is marked deprecated in favor of ListTeamsAssignedToOrgRole,
 	// which does page. Migrating is not a like-for-like swap: that call is keyed
 	// on a numeric role id, so it first needs the security-manager role resolved
 	// out of the org role list by name. Getting that name wrong returns an empty
