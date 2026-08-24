@@ -211,7 +211,7 @@ var DefaultProviders Providers = map[string]*Provider{
 			Connectors: []plugin.Connector{
 				{
 					Name:  "bitbucket",
-					Use:   "bitbucket --workspace WORKSPACE",
+					Use:   "bitbucket",
 					Short: "a Bitbucket Cloud workspace",
 				},
 			},
