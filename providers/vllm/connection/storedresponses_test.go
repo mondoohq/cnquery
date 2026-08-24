@@ -35,6 +35,16 @@ func TestClassifyStoredResponseProbe(t *testing.T) {
 		{name: "method rejected", status: http.StatusMethodNotAllowed, readable: false, known: true},
 		{name: "validation reached", status: http.StatusUnprocessableEntity, readable: true, known: true},
 		{name: "retrieval succeeded", status: http.StatusOK, readable: true, known: true},
+		{name: "bad request reached validation", status: http.StatusBadRequest, readable: true, known: true},
+		// None of these show that the retrieval handler answered. A redirect is a
+		// proxy sending the caller to a login page, and 408 and 429 are produced
+		// in front of the handler. Reporting any of them as readable would claim
+		// exposure on a server that never served the route.
+		{name: "redirect to a login page is undetermined", status: http.StatusFound, readable: false, known: false},
+		{name: "moved permanently is undetermined", status: http.StatusMovedPermanently, readable: false, known: false},
+		{name: "request timeout is undetermined", status: http.StatusRequestTimeout, readable: false, known: false},
+		{name: "rate limited is undetermined", status: http.StatusTooManyRequests, readable: false, known: false},
+		{name: "payment required is undetermined", status: http.StatusPaymentRequired, readable: false, known: false},
 	}
 
 	for _, tt := range tests {

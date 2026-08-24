@@ -90,12 +90,20 @@ func ClassifyStoredResponseProbe(status int, body []byte) StoredResponseObservat
 		obs.Known = true
 		obs.Note = "the path is registered but rejected the retrieval method"
 		return obs
-	default:
-		// A 400 or 422 also means the request reached vLLM's own validation
-		// rather than being turned away, so the route is anonymously reachable.
+	case status == http.StatusBadRequest || status == http.StatusUnprocessableEntity:
+		// Reaching vLLM's own request validation means the route answered an
+		// anonymous caller rather than turning it away.
 		obs.Readable = true
 		obs.Known = true
 		obs.Note = "the anonymous request reached route validation"
+		return obs
+	default:
+		// Anything else does not show that the retrieval handler answered. A
+		// 3xx is typically a proxy redirecting to a login page, and 408 or 429
+		// come from in front of the handler, not from it. Treating those as
+		// readable would report exposure on a server that never served the
+		// route, so the verdict stays undetermined.
+		obs.Note = "the response did not show whether the retrieval route answered"
 		return obs
 	}
 }
