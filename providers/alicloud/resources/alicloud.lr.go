@@ -40,6 +40,11 @@ const (
 	ResourceAlicloudEssScalingGroup               string = "alicloud.ess.scalingGroup"
 	ResourceAlicloudEssScalingConfiguration       string = "alicloud.ess.scalingConfiguration"
 	ResourceAlicloudVpc                           string = "alicloud.vpc"
+	ResourceAlicloudVpcSslVpnServer               string = "alicloud.vpc.sslVpnServer"
+	ResourceAlicloudVpcSslVpnClientCert           string = "alicloud.vpc.sslVpnClientCert"
+	ResourceAlicloudVpcCustomerGateway            string = "alicloud.vpc.customerGateway"
+	ResourceAlicloudVpcPhysicalConnection         string = "alicloud.vpc.physicalConnection"
+	ResourceAlicloudVpcVirtualBorderRouter        string = "alicloud.vpc.virtualBorderRouter"
 	ResourceAlicloudVpcNetwork                    string = "alicloud.vpc.network"
 	ResourceAlicloudVpcVswitch                    string = "alicloud.vpc.vswitch"
 	ResourceAlicloudVpcRouteTable                 string = "alicloud.vpc.routeTable"
@@ -269,6 +274,26 @@ func init() {
 		"alicloud.vpc": {
 			// to override args, implement: initAlicloudVpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAlicloudVpc,
+		},
+		"alicloud.vpc.sslVpnServer": {
+			// to override args, implement: initAlicloudVpcSslVpnServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudVpcSslVpnServer,
+		},
+		"alicloud.vpc.sslVpnClientCert": {
+			// to override args, implement: initAlicloudVpcSslVpnClientCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudVpcSslVpnClientCert,
+		},
+		"alicloud.vpc.customerGateway": {
+			// to override args, implement: initAlicloudVpcCustomerGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudVpcCustomerGateway,
+		},
+		"alicloud.vpc.physicalConnection": {
+			// to override args, implement: initAlicloudVpcPhysicalConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudVpcPhysicalConnection,
+		},
+		"alicloud.vpc.virtualBorderRouter": {
+			// to override args, implement: initAlicloudVpcVirtualBorderRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAlicloudVpcVirtualBorderRouter,
 		},
 		"alicloud.vpc.network": {
 			Init:   initAlicloudVpcNetwork,
@@ -2043,6 +2068,303 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.vpc.vpnConnections": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpc).GetVpnConnections()).ToDataRes(types.Array(types.Resource("alicloud.vpc.vpnConnection")))
+	},
+	"alicloud.vpc.sslVpnServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpc).GetSslVpnServers()).ToDataRes(types.Array(types.Resource("alicloud.vpc.sslVpnServer")))
+	},
+	"alicloud.vpc.customerGateways": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpc).GetCustomerGateways()).ToDataRes(types.Array(types.Resource("alicloud.vpc.customerGateway")))
+	},
+	"alicloud.vpc.physicalConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpc).GetPhysicalConnections()).ToDataRes(types.Array(types.Resource("alicloud.vpc.physicalConnection")))
+	},
+	"alicloud.vpc.virtualBorderRouters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpc).GetVirtualBorderRouters()).ToDataRes(types.Array(types.Resource("alicloud.vpc.virtualBorderRouter")))
+	},
+	"alicloud.vpc.sslVpnServer.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.sslVpnServerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetSslVpnServerId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.vpnGatewayId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetVpnGatewayId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.vpnGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetVpnGateway()).ToDataRes(types.Resource("alicloud.vpc.vpnGateway"))
+	},
+	"alicloud.vpc.sslVpnServer.internetIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetInternetIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.clientIpPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetClientIpPool()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.localSubnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetLocalSubnet()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetPort()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.sslVpnServer.proto": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetProto()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.cipher": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetCipher()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.compress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetCompress()).ToDataRes(types.Bool)
+	},
+	"alicloud.vpc.sslVpnServer.connections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetConnections()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.sslVpnServer.maxConnections": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetMaxConnections()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.sslVpnServer.dnsServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetDnsServers()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.multiFactorAuthEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetMultiFactorAuthEnabled()).ToDataRes(types.Bool)
+	},
+	"alicloud.vpc.sslVpnServer.idaasInstanceId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetIdaasInstanceId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.idaasRegionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetIdaasRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.sslVpnServer.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnServer.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.vpc.sslVpnServer.clientCerts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnServer).GetClientCerts()).ToDataRes(types.Array(types.Resource("alicloud.vpc.sslVpnClientCert")))
+	},
+	"alicloud.vpc.sslVpnClientCert.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnClientCert.sslVpnClientCertId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetSslVpnClientCertId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnClientCert.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnClientCert.sslVpnServerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetSslVpnServerId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnClientCert.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnClientCert.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.sslVpnClientCert.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetEndTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.sslVpnClientCert.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.sslVpnClientCert.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcSslVpnClientCert).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.vpc.customerGateway.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.customerGateway.customerGatewayId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetCustomerGatewayId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.customerGateway.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.customerGateway.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.customerGateway.ipAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetIpAddress()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.customerGateway.asn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetAsn()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.customerGateway.authKeyConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetAuthKeyConfigured()).ToDataRes(types.Bool)
+	},
+	"alicloud.vpc.customerGateway.createTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetCreateTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.customerGateway.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.customerGateway.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.vpc.customerGateway.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcCustomerGateway).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.vpc.physicalConnection.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.physicalConnectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetPhysicalConnectionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.businessStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetBusinessStatus()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.bandwidth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetBandwidth()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.physicalConnection.lineOperator": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetLineOperator()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.portType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetPortType()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.accessPointId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetAccessPointId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.peerLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetPeerLocation()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.circuitCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetCircuitCode()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.spec": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetSpec()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetType()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.redundantPhysicalConnectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetRedundantPhysicalConnectionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.parentPhysicalConnectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetParentPhysicalConnectionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.physicalConnection.enabledTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetEnabledTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.physicalConnection.endTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetEndTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.physicalConnection.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.physicalConnection.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.vpc.physicalConnection.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"alicloud.vpc.physicalConnection.virtualBorderRouters": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcPhysicalConnection).GetVirtualBorderRouters()).ToDataRes(types.Array(types.Resource("alicloud.vpc.virtualBorderRouter")))
+	},
+	"alicloud.vpc.virtualBorderRouter.regionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetRegionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.vbrId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetVbrId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetName()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetDescription()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.status": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetStatus()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.vlanId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetVlanId()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnectionId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetPhysicalConnectionId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetPhysicalConnection()).ToDataRes(types.Resource("alicloud.vpc.physicalConnection"))
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnectionStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetPhysicalConnectionStatus()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnectionOwnerUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetPhysicalConnectionOwnerUid()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.crossAccountConnection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetCrossAccountConnection()).ToDataRes(types.Bool)
+	},
+	"alicloud.vpc.virtualBorderRouter.localGatewayIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetLocalGatewayIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.peerGatewayIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetPeerGatewayIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.peeringSubnetMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetPeeringSubnetMask()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.enableIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetEnableIpv6()).ToDataRes(types.Bool)
+	},
+	"alicloud.vpc.virtualBorderRouter.localIpv6GatewayIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetLocalIpv6GatewayIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.peerIpv6GatewayIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetPeerIpv6GatewayIp()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.bandwidth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetBandwidth()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.virtualBorderRouter.mtu": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetMtu()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.virtualBorderRouter.detectMultiplier": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetDetectMultiplier()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.virtualBorderRouter.minRxInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetMinRxInterval()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.virtualBorderRouter.minTxInterval": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetMinTxInterval()).ToDataRes(types.Int)
+	},
+	"alicloud.vpc.virtualBorderRouter.routeTableId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetRouteTableId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetType()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.creationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetCreationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.virtualBorderRouter.activationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetActivationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.virtualBorderRouter.terminationTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetTerminationTime()).ToDataRes(types.Time)
+	},
+	"alicloud.vpc.virtualBorderRouter.resourceGroupId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetResourceGroupId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.virtualBorderRouter.resourceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetResourceGroup()).ToDataRes(types.Resource("alicloud.resourceManager.resourceGroup"))
+	},
+	"alicloud.vpc.virtualBorderRouter.tags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVirtualBorderRouter).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"alicloud.vpc.network.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcNetwork).GetVpcId()).ToDataRes(types.String)
@@ -6934,6 +7256,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"alicloud.cen.attachment.vpc": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudCenAttachment).GetVpc()).ToDataRes(types.Resource("alicloud.vpc.network"))
 	},
+	"alicloud.vpc.vpnGateway.sslVpnServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVpnGateway).GetSslVpnServers()).ToDataRes(types.Array(types.Resource("alicloud.vpc.sslVpnServer")))
+	},
 	"alicloud.vpc.vpnGateway.vpnGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnGateway).GetVpnGatewayId()).ToDataRes(types.String)
 	},
@@ -7020,6 +7345,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"alicloud.vpc.vpnConnection.customerGatewayId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnConnection).GetCustomerGatewayId()).ToDataRes(types.String)
+	},
+	"alicloud.vpc.vpnConnection.customerGateway": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAlicloudVpcVpnConnection).GetCustomerGateway()).ToDataRes(types.Resource("alicloud.vpc.customerGateway"))
 	},
 	"alicloud.vpc.vpnConnection.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAlicloudVpcVpnConnection).GetStatus()).ToDataRes(types.String)
@@ -9192,6 +9520,422 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.vpc.vpnConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudVpc).VpnConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpc).SslVpnServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpc).CustomerGateways, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpc).PhysicalConnections, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpc).VirtualBorderRouters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.sslVpnServerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).SslVpnServerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.vpnGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).VpnGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.vpnGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).VpnGateway, ok = plugin.RawToTValue[*mqlAlicloudVpcVpnGateway](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.internetIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).InternetIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.clientIpPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).ClientIpPool, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.localSubnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).LocalSubnet, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.proto": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).Proto, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.cipher": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).Cipher, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.compress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).Compress, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.connections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).Connections, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.maxConnections": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).MaxConnections, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.dnsServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).DnsServers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.multiFactorAuthEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).MultiFactorAuthEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.idaasInstanceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).IdaasInstanceId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.idaasRegionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).IdaasRegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnServer.clientCerts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnServer).ClientCerts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.sslVpnClientCertId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).SslVpnClientCertId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.sslVpnServerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).SslVpnServerId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.sslVpnClientCert.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcSslVpnClientCert).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.vpc.customerGateway.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.customerGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).CustomerGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.ipAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).IpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.asn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).Asn, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.authKeyConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).AuthKeyConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.createTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).CreateTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.customerGateway.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcCustomerGateway).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.vpc.physicalConnection.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.physicalConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).PhysicalConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.businessStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).BusinessStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.bandwidth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).Bandwidth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.lineOperator": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).LineOperator, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.portType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).PortType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.accessPointId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).AccessPointId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.peerLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).PeerLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.circuitCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).CircuitCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.spec": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).Spec, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.redundantPhysicalConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).RedundantPhysicalConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.parentPhysicalConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).ParentPhysicalConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.enabledTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).EnabledTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.endTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).EndTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.physicalConnection.virtualBorderRouters": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcPhysicalConnection).VirtualBorderRouters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).__id, ok = v.Value.(string)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.regionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).RegionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.vbrId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).VbrId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).Status, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.vlanId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).VlanId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnectionId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).PhysicalConnectionId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).PhysicalConnection, ok = plugin.RawToTValue[*mqlAlicloudVpcPhysicalConnection](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnectionStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).PhysicalConnectionStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.physicalConnectionOwnerUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).PhysicalConnectionOwnerUid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.crossAccountConnection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).CrossAccountConnection, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.localGatewayIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).LocalGatewayIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.peerGatewayIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).PeerGatewayIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.peeringSubnetMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).PeeringSubnetMask, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.enableIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).EnableIpv6, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.localIpv6GatewayIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).LocalIpv6GatewayIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.peerIpv6GatewayIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).PeerIpv6GatewayIp, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.bandwidth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).Bandwidth, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.mtu": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).Mtu, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.detectMultiplier": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).DetectMultiplier, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.minRxInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).MinRxInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.minTxInterval": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).MinTxInterval, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.routeTableId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).RouteTableId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.creationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).CreationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.activationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).ActivationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.terminationTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).TerminationTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.resourceGroupId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).ResourceGroupId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.resourceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).ResourceGroup, ok = plugin.RawToTValue[*mqlAlicloudResourceManagerResourceGroup](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.virtualBorderRouter.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVirtualBorderRouter).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.network.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -16182,6 +16926,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAlicloudVpcVpnGateway).__id, ok = v.Value.(string)
 		return
 	},
+	"alicloud.vpc.vpnGateway.sslVpnServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVpnGateway).SslVpnServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"alicloud.vpc.vpnGateway.vpnGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudVpcVpnGateway).VpnGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -16300,6 +17048,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"alicloud.vpc.vpnConnection.customerGatewayId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAlicloudVpcVpnConnection).CustomerGatewayId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"alicloud.vpc.vpnConnection.customerGateway": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAlicloudVpcVpnConnection).CustomerGateway, ok = plugin.RawToTValue[*mqlAlicloudVpcCustomerGateway](v.Value, v.Error)
 		return
 	},
 	"alicloud.vpc.vpnConnection.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -20846,15 +21598,19 @@ type mqlAlicloudVpc struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAlicloudVpcInternal it will be used here
-	Networks       plugin.TValue[[]any]
-	Vswitches      plugin.TValue[[]any]
-	RouteTables    plugin.TValue[[]any]
-	NatGateways    plugin.TValue[[]any]
-	EipAddresses   plugin.TValue[[]any]
-	NetworkAcls    plugin.TValue[[]any]
-	FlowLogs       plugin.TValue[[]any]
-	VpnGateways    plugin.TValue[[]any]
-	VpnConnections plugin.TValue[[]any]
+	Networks             plugin.TValue[[]any]
+	Vswitches            plugin.TValue[[]any]
+	RouteTables          plugin.TValue[[]any]
+	NatGateways          plugin.TValue[[]any]
+	EipAddresses         plugin.TValue[[]any]
+	NetworkAcls          plugin.TValue[[]any]
+	FlowLogs             plugin.TValue[[]any]
+	VpnGateways          plugin.TValue[[]any]
+	VpnConnections       plugin.TValue[[]any]
+	SslVpnServers        plugin.TValue[[]any]
+	CustomerGateways     plugin.TValue[[]any]
+	PhysicalConnections  plugin.TValue[[]any]
+	VirtualBorderRouters plugin.TValue[[]any]
 }
 
 // createAlicloudVpc creates a new instance of this resource
@@ -21036,6 +21792,873 @@ func (c *mqlAlicloudVpc) GetVpnConnections() *plugin.TValue[[]any] {
 
 		return c.vpnConnections()
 	})
+}
+
+func (c *mqlAlicloudVpc) GetSslVpnServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SslVpnServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc", c.__id, "sslVpnServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sslVpnServers()
+	})
+}
+
+func (c *mqlAlicloudVpc) GetCustomerGateways() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CustomerGateways, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc", c.__id, "customerGateways")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.customerGateways()
+	})
+}
+
+func (c *mqlAlicloudVpc) GetPhysicalConnections() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.PhysicalConnections, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc", c.__id, "physicalConnections")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.physicalConnections()
+	})
+}
+
+func (c *mqlAlicloudVpc) GetVirtualBorderRouters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualBorderRouters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc", c.__id, "virtualBorderRouters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualBorderRouters()
+	})
+}
+
+// mqlAlicloudVpcSslVpnServer for the alicloud.vpc.sslVpnServer resource
+type mqlAlicloudVpcSslVpnServer struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAlicloudVpcSslVpnServerInternal
+	RegionId               plugin.TValue[string]
+	SslVpnServerId         plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	VpnGatewayId           plugin.TValue[string]
+	VpnGateway             plugin.TValue[*mqlAlicloudVpcVpnGateway]
+	InternetIp             plugin.TValue[string]
+	ClientIpPool           plugin.TValue[string]
+	LocalSubnet            plugin.TValue[string]
+	Port                   plugin.TValue[int64]
+	Proto                  plugin.TValue[string]
+	Cipher                 plugin.TValue[string]
+	Compress               plugin.TValue[bool]
+	Connections            plugin.TValue[int64]
+	MaxConnections         plugin.TValue[int64]
+	DnsServers             plugin.TValue[string]
+	MultiFactorAuthEnabled plugin.TValue[bool]
+	IdaasInstanceId        plugin.TValue[string]
+	IdaasRegionId          plugin.TValue[string]
+	CreateTime             plugin.TValue[*time.Time]
+	ResourceGroupId        plugin.TValue[string]
+	ResourceGroup          plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	ClientCerts            plugin.TValue[[]any]
+}
+
+// createAlicloudVpcSslVpnServer creates a new instance of this resource
+func createAlicloudVpcSslVpnServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudVpcSslVpnServer{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.vpc.sslVpnServer", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) MqlName() string {
+	return "alicloud.vpc.sslVpnServer"
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetSslVpnServerId() *plugin.TValue[string] {
+	return &c.SslVpnServerId
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetVpnGatewayId() *plugin.TValue[string] {
+	return &c.VpnGatewayId
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetVpnGateway() *plugin.TValue[*mqlAlicloudVpcVpnGateway] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcVpnGateway](&c.VpnGateway, func() (*mqlAlicloudVpcVpnGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.sslVpnServer", c.__id, "vpnGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcVpnGateway), nil
+			}
+		}
+
+		return c.vpnGateway()
+	})
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetInternetIp() *plugin.TValue[string] {
+	return &c.InternetIp
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetClientIpPool() *plugin.TValue[string] {
+	return &c.ClientIpPool
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetLocalSubnet() *plugin.TValue[string] {
+	return &c.LocalSubnet
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetProto() *plugin.TValue[string] {
+	return &c.Proto
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetCipher() *plugin.TValue[string] {
+	return &c.Cipher
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetCompress() *plugin.TValue[bool] {
+	return &c.Compress
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetConnections() *plugin.TValue[int64] {
+	return &c.Connections
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetMaxConnections() *plugin.TValue[int64] {
+	return &c.MaxConnections
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetDnsServers() *plugin.TValue[string] {
+	return &c.DnsServers
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetMultiFactorAuthEnabled() *plugin.TValue[bool] {
+	return &c.MultiFactorAuthEnabled
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetIdaasInstanceId() *plugin.TValue[string] {
+	return &c.IdaasInstanceId
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetIdaasRegionId() *plugin.TValue[string] {
+	return &c.IdaasRegionId
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.sslVpnServer", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudVpcSslVpnServer) GetClientCerts() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ClientCerts, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.sslVpnServer", c.__id, "clientCerts")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.clientCerts()
+	})
+}
+
+// mqlAlicloudVpcSslVpnClientCert for the alicloud.vpc.sslVpnClientCert resource
+type mqlAlicloudVpcSslVpnClientCert struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudVpcSslVpnClientCertInternal it will be used here
+	RegionId           plugin.TValue[string]
+	SslVpnClientCertId plugin.TValue[string]
+	Name               plugin.TValue[string]
+	SslVpnServerId     plugin.TValue[string]
+	Status             plugin.TValue[string]
+	CreateTime         plugin.TValue[*time.Time]
+	EndTime            plugin.TValue[*time.Time]
+	ResourceGroupId    plugin.TValue[string]
+	ResourceGroup      plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+}
+
+// createAlicloudVpcSslVpnClientCert creates a new instance of this resource
+func createAlicloudVpcSslVpnClientCert(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudVpcSslVpnClientCert{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.vpc.sslVpnClientCert", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) MqlName() string {
+	return "alicloud.vpc.sslVpnClientCert"
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetSslVpnClientCertId() *plugin.TValue[string] {
+	return &c.SslVpnClientCertId
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetSslVpnServerId() *plugin.TValue[string] {
+	return &c.SslVpnServerId
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudVpcSslVpnClientCert) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.sslVpnClientCert", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+// mqlAlicloudVpcCustomerGateway for the alicloud.vpc.customerGateway resource
+type mqlAlicloudVpcCustomerGateway struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudVpcCustomerGatewayInternal it will be used here
+	RegionId          plugin.TValue[string]
+	CustomerGatewayId plugin.TValue[string]
+	Name              plugin.TValue[string]
+	Description       plugin.TValue[string]
+	IpAddress         plugin.TValue[string]
+	Asn               plugin.TValue[int64]
+	AuthKeyConfigured plugin.TValue[bool]
+	CreateTime        plugin.TValue[*time.Time]
+	ResourceGroupId   plugin.TValue[string]
+	ResourceGroup     plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Tags              plugin.TValue[map[string]any]
+}
+
+// createAlicloudVpcCustomerGateway creates a new instance of this resource
+func createAlicloudVpcCustomerGateway(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudVpcCustomerGateway{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.vpc.customerGateway", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) MqlName() string {
+	return "alicloud.vpc.customerGateway"
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetCustomerGatewayId() *plugin.TValue[string] {
+	return &c.CustomerGatewayId
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetIpAddress() *plugin.TValue[string] {
+	return &c.IpAddress
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetAsn() *plugin.TValue[int64] {
+	return &c.Asn
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetAuthKeyConfigured() *plugin.TValue[bool] {
+	return &c.AuthKeyConfigured
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetCreateTime() *plugin.TValue[*time.Time] {
+	return &c.CreateTime
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.customerGateway", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudVpcCustomerGateway) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAlicloudVpcPhysicalConnection for the alicloud.vpc.physicalConnection resource
+type mqlAlicloudVpcPhysicalConnection struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudVpcPhysicalConnectionInternal it will be used here
+	RegionId                      plugin.TValue[string]
+	PhysicalConnectionId          plugin.TValue[string]
+	Name                          plugin.TValue[string]
+	Description                   plugin.TValue[string]
+	Status                        plugin.TValue[string]
+	BusinessStatus                plugin.TValue[string]
+	Bandwidth                     plugin.TValue[int64]
+	LineOperator                  plugin.TValue[string]
+	PortType                      plugin.TValue[string]
+	AccessPointId                 plugin.TValue[string]
+	PeerLocation                  plugin.TValue[string]
+	CircuitCode                   plugin.TValue[string]
+	Spec                          plugin.TValue[string]
+	Type                          plugin.TValue[string]
+	RedundantPhysicalConnectionId plugin.TValue[string]
+	ParentPhysicalConnectionId    plugin.TValue[string]
+	CreationTime                  plugin.TValue[*time.Time]
+	EnabledTime                   plugin.TValue[*time.Time]
+	EndTime                       plugin.TValue[*time.Time]
+	ResourceGroupId               plugin.TValue[string]
+	ResourceGroup                 plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Tags                          plugin.TValue[map[string]any]
+	VirtualBorderRouters          plugin.TValue[[]any]
+}
+
+// createAlicloudVpcPhysicalConnection creates a new instance of this resource
+func createAlicloudVpcPhysicalConnection(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudVpcPhysicalConnection{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.vpc.physicalConnection", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) MqlName() string {
+	return "alicloud.vpc.physicalConnection"
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetPhysicalConnectionId() *plugin.TValue[string] {
+	return &c.PhysicalConnectionId
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetBusinessStatus() *plugin.TValue[string] {
+	return &c.BusinessStatus
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetBandwidth() *plugin.TValue[int64] {
+	return &c.Bandwidth
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetLineOperator() *plugin.TValue[string] {
+	return &c.LineOperator
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetPortType() *plugin.TValue[string] {
+	return &c.PortType
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetAccessPointId() *plugin.TValue[string] {
+	return &c.AccessPointId
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetPeerLocation() *plugin.TValue[string] {
+	return &c.PeerLocation
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetCircuitCode() *plugin.TValue[string] {
+	return &c.CircuitCode
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetSpec() *plugin.TValue[string] {
+	return &c.Spec
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetRedundantPhysicalConnectionId() *plugin.TValue[string] {
+	return &c.RedundantPhysicalConnectionId
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetParentPhysicalConnectionId() *plugin.TValue[string] {
+	return &c.ParentPhysicalConnectionId
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetEnabledTime() *plugin.TValue[*time.Time] {
+	return &c.EnabledTime
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetEndTime() *plugin.TValue[*time.Time] {
+	return &c.EndTime
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.physicalConnection", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+func (c *mqlAlicloudVpcPhysicalConnection) GetVirtualBorderRouters() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.VirtualBorderRouters, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.physicalConnection", c.__id, "virtualBorderRouters")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.virtualBorderRouters()
+	})
+}
+
+// mqlAlicloudVpcVirtualBorderRouter for the alicloud.vpc.virtualBorderRouter resource
+type mqlAlicloudVpcVirtualBorderRouter struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAlicloudVpcVirtualBorderRouterInternal it will be used here
+	RegionId                   plugin.TValue[string]
+	VbrId                      plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Description                plugin.TValue[string]
+	Status                     plugin.TValue[string]
+	VlanId                     plugin.TValue[int64]
+	PhysicalConnectionId       plugin.TValue[string]
+	PhysicalConnection         plugin.TValue[*mqlAlicloudVpcPhysicalConnection]
+	PhysicalConnectionStatus   plugin.TValue[string]
+	PhysicalConnectionOwnerUid plugin.TValue[string]
+	CrossAccountConnection     plugin.TValue[bool]
+	LocalGatewayIp             plugin.TValue[string]
+	PeerGatewayIp              plugin.TValue[string]
+	PeeringSubnetMask          plugin.TValue[string]
+	EnableIpv6                 plugin.TValue[bool]
+	LocalIpv6GatewayIp         plugin.TValue[string]
+	PeerIpv6GatewayIp          plugin.TValue[string]
+	Bandwidth                  plugin.TValue[int64]
+	Mtu                        plugin.TValue[int64]
+	DetectMultiplier           plugin.TValue[int64]
+	MinRxInterval              plugin.TValue[int64]
+	MinTxInterval              plugin.TValue[int64]
+	RouteTableId               plugin.TValue[string]
+	Type                       plugin.TValue[string]
+	CreationTime               plugin.TValue[*time.Time]
+	ActivationTime             plugin.TValue[*time.Time]
+	TerminationTime            plugin.TValue[*time.Time]
+	ResourceGroupId            plugin.TValue[string]
+	ResourceGroup              plugin.TValue[*mqlAlicloudResourceManagerResourceGroup]
+	Tags                       plugin.TValue[map[string]any]
+}
+
+// createAlicloudVpcVirtualBorderRouter creates a new instance of this resource
+func createAlicloudVpcVirtualBorderRouter(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAlicloudVpcVirtualBorderRouter{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("alicloud.vpc.virtualBorderRouter", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) MqlName() string {
+	return "alicloud.vpc.virtualBorderRouter"
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetRegionId() *plugin.TValue[string] {
+	return &c.RegionId
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetVbrId() *plugin.TValue[string] {
+	return &c.VbrId
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetStatus() *plugin.TValue[string] {
+	return &c.Status
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetVlanId() *plugin.TValue[int64] {
+	return &c.VlanId
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetPhysicalConnectionId() *plugin.TValue[string] {
+	return &c.PhysicalConnectionId
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetPhysicalConnection() *plugin.TValue[*mqlAlicloudVpcPhysicalConnection] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcPhysicalConnection](&c.PhysicalConnection, func() (*mqlAlicloudVpcPhysicalConnection, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.virtualBorderRouter", c.__id, "physicalConnection")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcPhysicalConnection), nil
+			}
+		}
+
+		return c.physicalConnection()
+	})
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetPhysicalConnectionStatus() *plugin.TValue[string] {
+	return &c.PhysicalConnectionStatus
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetPhysicalConnectionOwnerUid() *plugin.TValue[string] {
+	return &c.PhysicalConnectionOwnerUid
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetCrossAccountConnection() *plugin.TValue[bool] {
+	return &c.CrossAccountConnection
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetLocalGatewayIp() *plugin.TValue[string] {
+	return &c.LocalGatewayIp
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetPeerGatewayIp() *plugin.TValue[string] {
+	return &c.PeerGatewayIp
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetPeeringSubnetMask() *plugin.TValue[string] {
+	return &c.PeeringSubnetMask
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetEnableIpv6() *plugin.TValue[bool] {
+	return &c.EnableIpv6
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetLocalIpv6GatewayIp() *plugin.TValue[string] {
+	return &c.LocalIpv6GatewayIp
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetPeerIpv6GatewayIp() *plugin.TValue[string] {
+	return &c.PeerIpv6GatewayIp
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetBandwidth() *plugin.TValue[int64] {
+	return &c.Bandwidth
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetMtu() *plugin.TValue[int64] {
+	return &c.Mtu
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetDetectMultiplier() *plugin.TValue[int64] {
+	return &c.DetectMultiplier
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetMinRxInterval() *plugin.TValue[int64] {
+	return &c.MinRxInterval
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetMinTxInterval() *plugin.TValue[int64] {
+	return &c.MinTxInterval
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetRouteTableId() *plugin.TValue[string] {
+	return &c.RouteTableId
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetCreationTime() *plugin.TValue[*time.Time] {
+	return &c.CreationTime
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetActivationTime() *plugin.TValue[*time.Time] {
+	return &c.ActivationTime
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetTerminationTime() *plugin.TValue[*time.Time] {
+	return &c.TerminationTime
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetResourceGroupId() *plugin.TValue[string] {
+	return &c.ResourceGroupId
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetResourceGroup() *plugin.TValue[*mqlAlicloudResourceManagerResourceGroup] {
+	return plugin.GetOrCompute[*mqlAlicloudResourceManagerResourceGroup](&c.ResourceGroup, func() (*mqlAlicloudResourceManagerResourceGroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.virtualBorderRouter", c.__id, "resourceGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudResourceManagerResourceGroup), nil
+			}
+		}
+
+		return c.resourceGroup()
+	})
+}
+
+func (c *mqlAlicloudVpcVirtualBorderRouter) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
 }
 
 // mqlAlicloudVpcNetwork for the alicloud.vpc.network resource
@@ -37349,6 +38972,7 @@ type mqlAlicloudVpcVpnGateway struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAlicloudVpcVpnGatewayInternal
+	SslVpnServers     plugin.TValue[[]any]
 	VpnGatewayId      plugin.TValue[string]
 	Name              plugin.TValue[string]
 	Description       plugin.TValue[string]
@@ -37411,6 +39035,22 @@ func (c *mqlAlicloudVpcVpnGateway) MqlName() string {
 
 func (c *mqlAlicloudVpcVpnGateway) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlAlicloudVpcVpnGateway) GetSslVpnServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SslVpnServers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.vpnGateway", c.__id, "sslVpnServers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sslVpnServers()
+	})
 }
 
 func (c *mqlAlicloudVpcVpnGateway) GetVpnGatewayId() *plugin.TValue[string] {
@@ -37570,6 +39210,7 @@ type mqlAlicloudVpcVpnConnection struct {
 	Name                         plugin.TValue[string]
 	RegionId                     plugin.TValue[string]
 	CustomerGatewayId            plugin.TValue[string]
+	CustomerGateway              plugin.TValue[*mqlAlicloudVpcCustomerGateway]
 	Status                       plugin.TValue[string]
 	State                        plugin.TValue[string]
 	LocalSubnet                  plugin.TValue[string]
@@ -37647,6 +39288,22 @@ func (c *mqlAlicloudVpcVpnConnection) GetRegionId() *plugin.TValue[string] {
 
 func (c *mqlAlicloudVpcVpnConnection) GetCustomerGatewayId() *plugin.TValue[string] {
 	return &c.CustomerGatewayId
+}
+
+func (c *mqlAlicloudVpcVpnConnection) GetCustomerGateway() *plugin.TValue[*mqlAlicloudVpcCustomerGateway] {
+	return plugin.GetOrCompute[*mqlAlicloudVpcCustomerGateway](&c.CustomerGateway, func() (*mqlAlicloudVpcCustomerGateway, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("alicloud.vpc.vpnConnection", c.__id, "customerGateway")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAlicloudVpcCustomerGateway), nil
+			}
+		}
+
+		return c.customerGateway()
+	})
 }
 
 func (c *mqlAlicloudVpcVpnConnection) GetStatus() *plugin.TValue[string] {
