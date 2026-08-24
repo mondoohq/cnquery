@@ -860,6 +860,16 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		}
 		// The field's value arrives here rather than as a return, so an optional
 		// link has to tag its null on this path too.
+		//
+		// Note this tags a field that *resolved* and simply holds null, not one
+		// that failed to resolve - a resource field always resolves, unlike a map
+		// key, which can be absent (that case is caught in mapGetIndex /
+		// dictGetIndex). Tagging both is the point rather than an oversight: an
+		// optional link marks its null whatever the cause, which is what lets a
+		// single `?` cover an absent key and a present-but-null value in the same
+		// position. See ADR 043 §1. An error is left alone - shortCircuitNull
+		// returns res untouched when res.Error is set - so a genuine field
+		// failure still propagates as an error.
 		data := shortCircuitNull(chunk, &RawData{
 			Type:  fieldType,
 			Value: fieldData,
@@ -956,6 +966,14 @@ func (e *blockExecutor) resolveNullBinding(bind *RawData, chunk *Chunk) (*RawDat
 
 	// The chunk's declared output type, so a short-circuited null still types
 	// correctly for whatever consumes it next.
+	//
+	// The fallback is defensive, not a real case: every function chunk the
+	// compiler emits sets Function.Type, and one that does not is a hand-built
+	// chunk. It also cannot mistype what a consumer sees, because a
+	// short-circuited null is re-stamped with its own output type by each link
+	// it passes through - the only type ever observed is that of the last link
+	// in the chain, and that link came from the compiler like the rest. Falling
+	// back to the binding's type keeps the value typed rather than empty.
 	typ := types.Type(f.Type)
 	if typ == "" {
 		typ = bind.Type
