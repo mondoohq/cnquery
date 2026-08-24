@@ -3447,13 +3447,13 @@ private k8s.persistentvolume @defaults("name capacity['storage'] phase storageCl
 
 // Kubernetes RuntimeClass
 //
-// Container runtime configuration a pod selects by name, selected by name.
-// The handler field names the CRI handler the kubelet invokes, which is how a
-// workload is placed on a sandboxed runtime such as gVisor or Kata Containers
-// instead of the node's default runtime. The overhead field reports the fixed
-// resources the runtime itself consumes per pod, scheduling restricts which
-// nodes may run pods of the class, and pods returns the pods currently
-// selecting it.
+// Container runtime configuration a pod selects by name. The handler field
+// names the CRI handler the kubelet invokes, which is how a workload is placed
+// on a sandboxed runtime such as gVisor or Kata Containers instead of the
+// node's default runtime. The overhead field reports the fixed resources the
+// runtime itself consumes per pod, scheduling restricts which nodes may run
+// pods of the class, and pods lists the workloads currently running under
+// this class.
 private k8s.runtimeclass @defaults("name handler created") @context("k8s.context") {
   // Mondoo ID for the Kubernetes object
   id string
