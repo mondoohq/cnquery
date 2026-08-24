@@ -39,6 +39,12 @@ type ZoomConnection struct {
 
 	userIndexLock sync.Mutex
 	userIndex     map[string]*User
+
+	groupIndexLock sync.Mutex
+	groupIndex     map[string]*Group
+
+	roleIndexLock sync.Mutex
+	roleIndex     map[string]*Role
 }
 
 func NewZoomConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*ZoomConnection, error) {
@@ -96,11 +102,14 @@ func (c *ZoomConnection) Client() *Client {
 	return c.client
 }
 
-// UserIndex returns every active account user keyed by ID, fetching the full
-// list at most once per connection. Role and group membership are returned as
-// bare user IDs; resolving each through this index turns a role or group with
-// N members into a single paginated user list rather than N per-member GetUser
-// calls. On error the index is not cached, so a later call can retry.
+// UserIndex returns every account user keyed by ID, in every provisioning
+// status, fetching the roster at most once per connection. Role and group
+// membership are returned as bare user IDs; resolving each through this index
+// turns a role or group with N members into one roster walk rather than N
+// per-member GetUser calls. Users Zoom returns without an ID (pending users
+// have none) are not indexable by ID and are left out of the index; callers
+// that need them read the roster directly. On error the index is not cached,
+// so a later call can retry.
 func (c *ZoomConnection) UserIndex(ctx context.Context) (map[string]*User, error) {
 	c.userIndexLock.Lock()
 	defer c.userIndexLock.Unlock()
@@ -108,25 +117,73 @@ func (c *ZoomConnection) UserIndex(ctx context.Context) (map[string]*User, error
 		return c.userIndex, nil
 	}
 
-	index := map[string]*User{}
-	nextPageToken := ""
-	for {
-		list, err := c.client.ListUsers(ctx, userIndexPageSize, nextPageToken)
-		if err != nil {
-			return nil, err
+	users, err := c.client.ListAllUsers(ctx, userIndexPageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	index := make(map[string]*User, len(users))
+	for i := range users {
+		if users[i].ID == "" {
+			continue
 		}
-		for i := range list.Users {
-			u := list.Users[i]
-			index[u.ID] = &u
-		}
-		if list.NextPageToken == "" {
-			break
-		}
-		nextPageToken = list.NextPageToken
+		index[users[i].ID] = &users[i]
 	}
 
 	c.userIndex = index
 	return c.userIndex, nil
+}
+
+// GroupIndex returns every group on the account keyed by ID, fetching the
+// list at most once per connection. Group references arrive as bare IDs on
+// users and on the two-factor settings; resolving them through this index
+// costs one List Groups call for the whole connection instead of one Get
+// Group call per reference. On error the index is not cached, so a later call
+// can retry.
+func (c *ZoomConnection) GroupIndex(ctx context.Context) (map[string]*Group, error) {
+	c.groupIndexLock.Lock()
+	defer c.groupIndexLock.Unlock()
+	if c.groupIndex != nil {
+		return c.groupIndex, nil
+	}
+
+	list, err := c.client.ListGroups(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	index := make(map[string]*Group, len(list.Groups))
+	for i := range list.Groups {
+		index[list.Groups[i].ID] = &list.Groups[i]
+	}
+
+	c.groupIndex = index
+	return c.groupIndex, nil
+}
+
+// RoleIndex returns every role on the account keyed by ID, fetching the list
+// at most once per connection, for the same reason as GroupIndex: a role
+// reference on a user is a bare ID, and an account-wide roster of users would
+// otherwise cost one Get Role call each.
+func (c *ZoomConnection) RoleIndex(ctx context.Context) (map[string]*Role, error) {
+	c.roleIndexLock.Lock()
+	defer c.roleIndexLock.Unlock()
+	if c.roleIndex != nil {
+		return c.roleIndex, nil
+	}
+
+	list, err := c.client.ListRoles(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	index := make(map[string]*Role, len(list.Roles))
+	for i := range list.Roles {
+		index[list.Roles[i].ID] = &list.Roles[i]
+	}
+
+	c.roleIndex = index
+	return c.roleIndex, nil
 }
 
 // Verify validates the Server-to-Server OAuth credentials by issuing the

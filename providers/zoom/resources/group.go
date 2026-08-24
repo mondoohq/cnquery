@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/rs/zerolog/log"
+
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/zoom/connection"
@@ -107,25 +109,51 @@ func initZoomGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 // members resolves the users belonging to this group.
 func (g *mqlZoomGroup) members() ([]any, error) {
 	conn := g.MqlRuntime.Connection.(*connection.ZoomConnection)
-	client := conn.Client()
 
-	var memberIds []string
-	nextPageToken := ""
-	for {
-		list, err := client.ListGroupMembers(context.Background(), g.Id.Data, groupMembersPageSize, nextPageToken)
-		if err != nil {
-			return nil, err
-		}
-		for _, m := range list.Members {
-			memberIds = append(memberIds, m.ID)
-		}
-		if list.NextPageToken == "" {
-			break
-		}
-		nextPageToken = list.NextPageToken
+	memberIds, err := conn.Client().ListAllGroupMembers(context.Background(), g.Id.Data, groupMembersPageSize)
+	if err != nil {
+		return nil, err
+	}
+	return resolveZoomUsers(g.MqlRuntime, conn, memberIds)
+}
+
+// resolveZoomGroups turns a list of group IDs into typed zoom.group
+// resources. The account's group list is read at most once per connection, so
+// resolving N references costs one List Groups call rather than N Get Group
+// calls. A group the list does not carry falls back to a direct lookup, and an
+// ID that resolves to nothing is skipped rather than failing the whole list.
+func resolveZoomGroups(runtime *plugin.Runtime, conn *connection.ZoomConnection, groupIds []string) ([]any, error) {
+	if len(groupIds) == 0 {
+		return []any{}, nil
 	}
 
-	return resolveZoomUsers(g.MqlRuntime, conn, memberIds)
+	index, err := conn.GroupIndex(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	all := make([]any, 0, len(groupIds))
+	for _, id := range groupIds {
+		if group, ok := index[id]; ok {
+			res, err := newMqlZoomGroup(runtime, group)
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, res)
+			continue
+		}
+
+		res, err := NewResource(runtime, "zoom.group", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			// A stale or deleted group ID should not fail the whole list.
+			log.Debug().Err(err).Str("group", id).Msg("zoom> unable to resolve group")
+			continue
+		}
+		all = append(all, res)
+	}
+	return all, nil
 }
 
 // fetchMeetingSecurity performs the single group-settings GET this group's
