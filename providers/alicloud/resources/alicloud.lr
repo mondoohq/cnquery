@@ -1983,6 +1983,46 @@ alicloud.oss.bucket.replicationRule @defaults("id targetBucket targetLocation st
 alicloud.slb {
   // CLB instances across all enabled regions
   loadBalancers() []alicloud.slb.loadBalancer
+  // Access control lists across all enabled regions
+  //
+  // An access control list holds the addresses a CLB listener allows or denies.
+  // A listener naming an allowlist that turns out to hold 0.0.0.0/0 is
+  // indistinguishable from an unrestricted listener, which the listener's own
+  // fields cannot show.
+  acls() []alicloud.slb.acl
+}
+
+// Server Load Balancer access control list
+//
+// A named list of addresses a CLB listener allows or denies, keyed by aclId
+// within its region. Exposes the address entries and the listeners bound to
+// the list. Use it to find an allowlist that admits every address, which
+// leaves a listener open despite access control reading as enabled.
+alicloud.slb.acl @defaults("aclName aclId addressIPVersion entryCount") {
+  // Region ID the list resides in, for example cn-hangzhou
+  regionId string
+  // Access control list ID, used as the lookup key within its region
+  aclId string
+  // Name of the access control list
+  aclName string
+  // IP version of the entries, either ipv4 or ipv6
+  addressIPVersion string
+  // Address entries in the list, as CIDR blocks
+  entries() []string
+  // Number of address entries in the list
+  entryCount() int
+  // Whether the list covers every address
+  //
+  // True when an entry is 0.0.0.0/0 or ::/0. On a listener whose aclType is
+  // white this makes the allowlist a no-op, so access control reads as enabled
+  // while admitting the whole internet.
+  allowsAllAddresses() bool
+  // ID of the resource group the list belongs to
+  resourceGroupId string
+  // Resource group that contains the list
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the list
+  tags map[string]string
 }
 
 // Server Load Balancer (CLB) instance
@@ -2138,6 +2178,12 @@ alicloud.slb.listener {
   aclId string
   // IDs of the access control lists bound to the listener
   aclIds []string
+  // Access control lists bound to the listener
+  //
+  // Empty when the listener names no list, and when the named lists could not
+  // be read. Traverse to allowsAllAddresses to tell an allowlist that
+  // restricts anything from one that admits every address.
+  acls() []alicloud.slb.acl
   // ID of the vServer group associated with the listener
   vServerGroupId string
   // vServer group the listener forwards to
@@ -4248,6 +4294,44 @@ alicloud.alb {
   loadBalancers() []alicloud.alb.loadBalancer
   // ALB server groups across all enabled regions
   serverGroups() []alicloud.alb.serverGroup
+  // Custom TLS security policies across all enabled regions
+  //
+  // A security policy fixes the TLS versions and cipher suites a listener
+  // accepts. Only custom policies are listed; a listener using one of the
+  // built-in policies names it by id and has no entry here.
+  securityPolicies() []alicloud.alb.securityPolicy
+}
+
+// Application Load Balancer TLS security policy
+//
+// A custom TLS security policy, keyed by securityPolicyId within its region.
+// Exposes the TLS versions and cipher suites the policy permits. Use it to find
+// a listener that still accepts TLS 1.0 or 1.1.
+alicloud.alb.securityPolicy @defaults("securityPolicyName tlsVersions status") {
+  // Region ID the policy resides in, for example cn-hangzhou
+  regionId string
+  // Security policy ID, used as the lookup key within its region
+  securityPolicyId string
+  // Name of the security policy
+  securityPolicyName string
+  // Lifecycle status of the policy, for example Available or Configuring
+  status string
+  // TLS versions the policy accepts, for example TLSv1.2 and TLSv1.3
+  tlsVersions []string
+  // Cipher suites the policy permits
+  ciphers []string
+  // Whether the policy still accepts TLS 1.0 or TLS 1.1
+  //
+  // Both versions are deprecated and carry known weaknesses, so a listener
+  // bound to such a policy accepts connections that a current client would
+  // refuse to make.
+  allowsLegacyTls bool
+  // ID of the resource group the policy belongs to
+  resourceGroupId string
+  // Resource group that contains the policy
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the policy
+  tags map[string]string
 }
 
 // Application Load Balancer instance
@@ -4349,6 +4433,11 @@ alicloud.alb.listener {
   description string
   // TLS security policy applied to the listener, empty for non-TLS listeners
   securityPolicyId string
+  // TLS security policy applied to the listener
+  //
+  // Null for a non-TLS listener and for a listener using one of the built-in
+  // policies, which are not enumerable; securityPolicyId names those.
+  securityPolicy() alicloud.alb.securityPolicy
   // Whether HTTP/2 is enabled
   http2Enabled bool
   // Whether response gzip compression is enabled
@@ -4472,6 +4561,44 @@ alicloud.nlb {
   loadBalancers() []alicloud.nlb.loadBalancer
   // NLB server groups across all enabled regions
   serverGroups() []alicloud.nlb.serverGroup
+  // Custom TLS security policies across all enabled regions
+  //
+  // A security policy fixes the TLS versions and cipher suites a TCPSSL
+  // listener accepts. Only custom policies are listed; a listener using one of
+  // the built-in policies names it by id and has no entry here.
+  securityPolicies() []alicloud.nlb.securityPolicy
+}
+
+// Network Load Balancer TLS security policy
+//
+// A custom TLS security policy, keyed by securityPolicyId within its region.
+// Exposes the TLS versions and cipher suites the policy permits on a TCPSSL
+// listener. Use it to find a listener that still accepts TLS 1.0 or 1.1.
+alicloud.nlb.securityPolicy @defaults("securityPolicyName tlsVersions status") {
+  // Region ID the policy resides in, for example cn-hangzhou
+  regionId string
+  // Security policy ID, used as the lookup key within its region
+  securityPolicyId string
+  // Name of the security policy
+  securityPolicyName string
+  // Lifecycle status of the policy, for example Available or Configuring
+  status string
+  // TLS versions the policy accepts, for example TLSv1.2 and TLSv1.3
+  tlsVersions []string
+  // Cipher suites the policy permits
+  ciphers []string
+  // Whether the policy still accepts TLS 1.0 or TLS 1.1
+  //
+  // Both versions are deprecated and carry known weaknesses, so a listener
+  // bound to such a policy accepts connections that a current client would
+  // refuse to make.
+  allowsLegacyTls bool
+  // ID of the resource group the policy belongs to
+  resourceGroupId string
+  // Resource group that contains the policy
+  resourceGroup() alicloud.resourceManager.resourceGroup
+  // Tags applied to the policy
+  tags map[string]string
 }
 
 // Network Load Balancer instance
@@ -4568,6 +4695,11 @@ alicloud.nlb.listener {
   description string
   // TLS security policy applied to the listener, meaningful for TCPSSL listeners
   securityPolicyId string
+  // TLS security policy applied to the listener
+  //
+  // Null for a non-TCPSSL listener and for a listener using one of the built-in
+  // policies, which are not enumerable; securityPolicyId names those.
+  securityPolicy() alicloud.nlb.securityPolicy
   // Server certificate IDs presented by a TCPSSL listener
   certificateIds []string
   // CA certificate IDs used for mutual TLS on a TCPSSL listener
