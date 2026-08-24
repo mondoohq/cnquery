@@ -219,3 +219,19 @@ func (c *MikrotikConnection) PrintOne(menu string) (map[string]string, error) {
 	}
 	return rows[0], nil
 }
+
+// PrintOneOptional behaves like PrintOne but treats a menu the device does not
+// support -- for example /system/routerboard/settings on a CHR build, or
+// /container without the container package -- as an empty result rather than
+// an error, so the caller can report the subsystem as absent instead of
+// failing the query.
+func (c *MikrotikConnection) PrintOneOptional(menu string) (map[string]string, error) {
+	rows, err := c.PrintOptional(menu)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return map[string]string{}, nil
+	}
+	return rows[0], nil
+}

@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -57,6 +58,73 @@ func splitList(s string) []any {
 		}
 	}
 	return out
+}
+
+// boolField returns the RouterOS boolean at key as a resource field value, or
+// null when the device did not report the attribute at all. RouterOS omits
+// attributes it has no value for, and a menu that was never configured returns
+// no rows rather than defaults, so a fabricated false would read as a security
+// flag that was checked when nothing was.
+func boolField(row map[string]string, key string) *llx.RawData {
+	v, ok := row[key]
+	if !ok {
+		return llx.NilData
+	}
+	return llx.BoolData(parseBool(v))
+}
+
+// intField returns the RouterOS numeric attribute at key, or null when the
+// device did not report it, so an unreported counter or size does not read as
+// a genuine zero.
+func intField(row map[string]string, key string) *llx.RawData {
+	v, ok := row[key]
+	if !ok {
+		return llx.NilData
+	}
+	return llx.IntData(parseInt(v))
+}
+
+// listField splits a RouterOS comma-separated attribute into a list, or
+// returns null when the device did not report the attribute, keeping "the
+// device does not offer this setting" distinct from "the setting is empty".
+func listField(row map[string]string, key string) *llx.RawData {
+	v, ok := row[key]
+	if !ok {
+		return llx.NilData
+	}
+	return llx.ArrayData(splitList(v), types.String)
+}
+
+// presenceField reports whether the device holds a value for a secret
+// attribute (an IPsec pre-shared key, a RADIUS shared secret, a private key)
+// without reading the secret itself into the result. It is null when the menu
+// does not carry the attribute at all.
+func presenceField(row map[string]string, key string) *llx.RawData {
+	v, ok := row[key]
+	if !ok {
+		return llx.NilData
+	}
+	return llx.BoolData(strings.TrimSpace(v) != "")
+}
+
+// rowID builds a resource cache key from the RouterOS row handle. RouterOS
+// includes its internal ".id" handle (e.g. "*1A") in every print reply; it is
+// unique within a menu and stable while the device keeps its current
+// configuration, but it is not an identifier that survives a config reload, so
+// the fallback composes a key from the row's own attributes.
+func rowID(prefix string, row map[string]string, fallback ...string) string {
+	id := row[".id"]
+	if id == "" {
+		id = strings.Join(fallback, "/")
+	}
+	return prefix + id
+}
+
+// errNoMenu reports a menu that returned no records, which on RouterOS means
+// the subsystem is absent or was never configured rather than that it is set
+// to its defaults.
+func errNoMenu(menu string) error {
+	return fmt.Errorf("mikrotik device reported no records for %s", menu)
 }
 
 // buildList maps each RouterOS reply row to a resource using build.
@@ -254,7 +322,9 @@ func (r *mqlMikrotik) ipAddresses() ([]any, error) {
 }
 
 func (r *mqlMikrotik) ipv6Addresses() ([]any, error) {
-	rows, err := mikrotikConn(r.MqlRuntime).Print("/ipv6/address")
+	// /ipv6 only exists when the ipv6 package is enabled; PrintOptional turns
+	// its absence into an empty list instead of failing the whole query
+	rows, err := mikrotikConn(r.MqlRuntime).PrintOptional("/ipv6/address")
 	if err != nil {
 		return nil, err
 	}
