@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"strings"
 	"sync"
 
@@ -46,7 +47,7 @@ func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
 		version, _ := convert.JsonToDict(v.Version)
 		ps, _ := convert.JsonToDict(v.ProtectionStatus)
 
-		volume, err := CreateResource(s.MqlRuntime, "windows.bitlocker.volume", map[string]*llx.RawData{
+		o, err := CreateResource(s.MqlRuntime, "windows.bitlocker.volume", map[string]*llx.RawData{
 			"deviceID":           llx.StringData(v.DeviceID),
 			"driveLetter":        llx.StringData(v.DriveLetter),
 			"conversionStatus":   llx.DictData(cs),
@@ -59,6 +60,15 @@ func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Seed the key protectors the collection script already returned for
+		// this volume. They ride along on the single PowerShell run that read
+		// the volume itself rather than costing one more per volume.
+		volume := o.(*mqlWindowsBitlockerVolume)
+		volume.keyProtectorsSeeded = true
+		volume.cachedKeyProtectors = v.KeyProtectors
+		volume.keyProtectorErr = v.KeyProtectorError
+
 		res = append(res, volume)
 	}
 	return res, nil
@@ -66,6 +76,46 @@ func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
 
 func (s *mqlWindowsBitlockerVolume) id() (string, error) {
 	return "bitlocker.volume/" + s.DeviceID.Data, nil
+}
+
+// mqlWindowsBitlockerVolumeInternal carries the key protectors that
+// windows.bitlocker.volumes already read for this volume, along with the
+// reason they could not be read when that is what happened.
+type mqlWindowsBitlockerVolumeInternal struct {
+	keyProtectorsSeeded bool
+	cachedKeyProtectors []windows.BitLockerKeyProtector
+	keyProtectorErr     error
+}
+
+func (s *mqlWindowsBitlockerVolume) keyProtectors() ([]any, error) {
+	// A volume that was never populated by the lister has no protector data
+	// at all. Reporting that instead of an empty list keeps a future code path
+	// that creates a volume some other way from silently claiming the volume
+	// has no key protectors.
+	if !s.keyProtectorsSeeded {
+		return nil, errors.New("bitlocker key protectors are only available on volumes read from windows.bitlocker.volumes")
+	}
+	if s.keyProtectorErr != nil {
+		return nil, s.keyProtectorErr
+	}
+
+	res := make([]any, 0, len(s.cachedKeyProtectors))
+	for i := range s.cachedKeyProtectors {
+		kp := s.cachedKeyProtectors[i]
+		o, err := CreateResource(s.MqlRuntime, "windows.bitlocker.volume.keyProtector", map[string]*llx.RawData{
+			// The protector ID is unique within a volume, not across the host,
+			// so the cache key has to carry the volume as well.
+			"__id":                 llx.StringData("bitlocker.volume/" + s.DeviceID.Data + "/keyProtector/" + kp.ID),
+			"keyProtectorId":       llx.StringData(kp.ID),
+			"keyProtectorType":     llx.StringData(kp.Type.Text),
+			"keyProtectorTypeCode": llx.IntData(kp.Type.Code),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, o)
+	}
+	return res, nil
 }
 
 func (p *mqlWindowsBitlockerPolicy) id() (string, error) {

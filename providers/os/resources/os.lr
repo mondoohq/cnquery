@@ -11616,9 +11616,15 @@ private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
 // hardware-enforced stack protection. On/off settings are exposed as booleans
 // and graded settings (such as the HVCI and Credential Guard lock modes) as
 // integers. Every field reads null when the underlying value is absent, so "not
-// configured" is distinguishable from an explicit false or 0. Read from the
-// Windows registry, so it is available even on connections that cannot run
-// commands.
+// configured" is distinguishable from an explicit false or 0. The policy
+// fields are read from the Windows registry, so they are available even on
+// connections that cannot run commands. The running-state fields
+// (`securityServicesConfigured`, `securityServicesRunning`,
+// `availableSecurityProperties`, `codeIntegrityPolicyEnforcementStatus`,
+// `usermodeCodeIntegrityPolicyEnforcementStatus`, and
+// `virtualizationBasedSecurityStatus`) come from the Win32_DeviceGuard WMI
+// class and report what the host actually negotiated at boot, which is how a
+// service that is configured but never started becomes visible.
 private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hypervisorEnforcedCodeIntegrity credentialGuardConfig") {
   // Whether Virtualization-Based Security is enabled (EnableVirtualizationBasedSecurity)
   virtualizationBasedSecurityEnabled bool
@@ -11645,6 +11651,45 @@ private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hyperv
   // 1=enabled in enforcement mode, 2=enabled in audit mode, 0=disabled. Null
   // when not configured.
   kernelShadowStacksLaunch int
+  // Security services configured for Virtualization-Based Security (Win32_DeviceGuard SecurityServicesConfigured)
+  //
+  // One entry per configured service: 0=no services configured,
+  // 1=Credential Guard, 2=memory integrity (HVCI), 3=System Guard Secure
+  // Launch, 4=SMM firmware measurement, 5=kernel-mode hardware-enforced stack
+  // protection, 6=kernel-mode hardware-enforced stack protection in audit
+  // mode, 7=hypervisor-enforced paging translation. Read alongside
+  // securityServicesRunning to find a service that is configured but is not
+  // running.
+  securityServicesConfigured() []int
+  // Security services running under Virtualization-Based Security (Win32_DeviceGuard SecurityServicesRunning)
+  //
+  // Same values as securityServicesConfigured, listing the services that are
+  // actually running rather than the ones that were asked for.
+  securityServicesRunning() []int
+  // Security properties the platform offers to Virtualization-Based Security (Win32_DeviceGuard AvailableSecurityProperties)
+  //
+  // One entry per available property: 0=no relevant properties,
+  // 1=hypervisor support, 2=Secure Boot, 3=DMA protection, 4=Secure Memory
+  // Overwrite, 5=NX protections, 6=SMM mitigations, 7=MBEC/GMET,
+  // 8=APIC virtualization. A service that will not start is usually missing
+  // one of these.
+  availableSecurityProperties() []int
+  // Kernel-mode code integrity policy enforcement status (Win32_DeviceGuard CodeIntegrityPolicyEnforcementStatus)
+  //
+  // 0=off, 1=audit mode, 2=enforced.
+  codeIntegrityPolicyEnforcementStatus() int
+  // User-mode code integrity policy enforcement status (Win32_DeviceGuard UsermodeCodeIntegrityPolicyEnforcementStatus)
+  //
+  // 0=off, 1=audit mode, 2=enforced.
+  usermodeCodeIntegrityPolicyEnforcementStatus() int
+  // Running state of Virtualization-Based Security (Win32_DeviceGuard VirtualizationBasedSecurityStatus)
+  //
+  // 0=not enabled, 1=enabled but not running, 2=enabled and running. Where
+  // virtualizationBasedSecurityEnabled reports the policy setting, this
+  // reports whether VBS came up, so a host that is configured for VBS but
+  // lacks the platform support to run it reads 1 rather than looking
+  // compliant.
+  virtualizationBasedSecurityStatus() int
 }
 
 // Windows Local Security Authority (LSA) security policy
@@ -13164,6 +13209,44 @@ windows.bitlocker.volume {
   protectionStatus dict
   // BitLocker Full Volume Encryption metadata version of the volume
   version dict
+  // Key protectors that unlock the volume encryption key
+  //
+  // One entry per protector configured on the volume, for example a TPM
+  // binding alongside a 48-digit recovery password. An empty list means the
+  // volume has no key protectors at all, which is what a volume that has
+  // never had BitLocker enabled reports. Reading the protectors needs an
+  // elevated session; when they cannot be read the field reports that
+  // failure rather than an empty list, so "no recovery password" is never
+  // inferred from a permission problem.
+  keyProtectors() []windows.bitlocker.volume.keyProtector
+}
+
+// Windows BitLocker volume key protector
+//
+// Single protector of a BitLocker volume encryption key: what has to be
+// presented before the volume can be unlocked. `keyProtectorType` is the
+// readable name of the protector and `keyProtectorTypeCode` the raw
+// Win32_EncryptableVolume code behind it, which together answer whether a
+// volume is bound to the TPM alone, additionally requires a PIN or a startup
+// key, or carries a recovery password an operator can escrow. No key material
+// is exposed: `keyProtectorId` names a protector, it does not unlock one.
+private windows.bitlocker.volume.keyProtector @defaults("keyProtectorType keyProtectorId") {
+  // Identifier of this key protector on the volume
+  keyProtectorId string
+  // Name of the key protector type
+  //
+  // One of Tpm, TpmPin, TpmStartupKey, TpmPinStartupKey, ExternalKey,
+  // RecoveryPassword, PublicKey, Password, TpmCertificate, Sid, or Unknown.
+  // A type outside that set reads as Unrecognized, with the raw value
+  // available in keyProtectorTypeCode.
+  keyProtectorType string
+  // Raw Win32_EncryptableVolume key protector type code
+  //
+  // 0 = unknown or other protector type, 1 = TPM, 2 = external key,
+  // 3 = numerical password, 4 = TPM and PIN, 5 = TPM and startup key,
+  // 6 = TPM and PIN and startup key, 7 = public key, 8 = passphrase,
+  // 9 = TPM certificate, 10 = security identifier.
+  keyProtectorTypeCode int
 }
 
 // Windows registered security products

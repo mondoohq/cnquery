@@ -88,7 +88,6 @@ func TestNoNewDottedPathHusks(t *testing.T) {
 		"windows.bitlocker.policy":              true,
 		"windows.defender.preferences":          true,
 		"windows.defender.status":               true,
-		"windows.deviceGuard":                   true,
 		"windows.exploitProtection":             true,
 		"windows.exploitProtection.aslr":        true,
 		"windows.exploitProtection.dep":         true,
