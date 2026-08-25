@@ -2249,6 +2249,537 @@ private tomcat.webapp @defaults("name path") {
   logging() map[string]string
 }
 
+// Internet Information Services web server
+//
+// IIS installation on a Windows host: the websites it serves, the application
+// pools that run them, and the configuration in force at each level. Values
+// are reported as IIS resolves them, after machine.config, the root web.config,
+// applicationHost.config, location sections, a site's own web.config and a
+// nested application's web.config have all been applied in order. A setting a
+// site or application overrides therefore reads with the overriding value, not
+// the one applicationHost.config declares.
+//
+// On a host that does not run IIS, `installed` is false, `config` and
+// `applicationHost` are null, and `sites` and `appPools` are empty. An empty
+// list satisfies `all()`, so a check that iterates sites needs a
+// `iis.sites.length > 0` guard or an `iis.installed` filter to avoid passing on
+// a host that serves nothing.
+iis {
+  // Whether the web server is present on this host
+  //
+  // True when the shared configuration file and the IIS management assembly are
+  // both present under %windir%\system32\inetsrv. The assembly ships with the
+  // web server itself, so this stays true on an installation that omits the
+  // optional management scripting tools.
+  installed() bool
+  // Version reported by the installation, for example "10.0"
+  //
+  // Empty when IIS is not installed or the version cannot be read.
+  version() string
+  // applicationHost.config, for ownership and permission checks
+  //
+  // The shared configuration file as a file, so its permissions and owner can
+  // be audited and its raw text read. Its contents are what IIS starts from,
+  // not what it ends up with: a setting overridden by a site or an application
+  // still reads here with the server-level value. Use `config`,
+  // `iis.site.config` and `iis.application.config` for the values in force.
+  //
+  // The typed fields leave credentials behind, but this file does not: it can
+  // hold encrypted application pool passwords and machine keys, so reading its
+  // content returns whatever it holds. Null when IIS is not installed.
+  applicationHost() file
+  // Configuration in force at server scope
+  //
+  // The defaults every site inherits unless it overrides them, equivalent to
+  // the MACHINE/WEBROOT/APPHOST configuration path. This includes the ASP.NET
+  // sections: they are declared in machine.config and the root web.config, but
+  // the server-scope configuration resolves the whole inheritance chain, so
+  // they read here with the values a site inherits. Null when IIS is not
+  // installed.
+  config() iis.configuration
+  // Websites hosted by this server
+  //
+  // Every site defined on the server, running or stopped. Empty when IIS is not
+  // installed, which makes `all()` over this list vacuously true; guard on
+  // `length` or on `installed`.
+  sites() []iis.site
+  // Application pools defined on this server
+  //
+  // Empty when IIS is not installed.
+  appPools() []iis.appPool
+}
+
+// Website hosted by IIS
+//
+// A single site: its bindings, the application pool it runs under, the
+// applications mounted beneath it, its log settings, and the configuration in
+// force at the site root. The `name` field is the site name as IIS knows it,
+// which is also what identifies the site in its configuration path.
+private iis.site @defaults("name state physicalPath") {
+  // Site name
+  name string
+  // Numeric site id, which also keys the site's log file directory
+  id int
+  // Runtime state
+  //
+  // One of "Started", "Stopped", "Starting", "Stopping" or "Unknown", the
+  // members of the IIS object-state enumeration. Empty when the state cannot be
+  // read at all, which happens when the world wide web publishing service is
+  // not running; "Unknown" is IIS itself reporting that it cannot tell.
+  state string
+  // Filesystem path the site root maps to
+  //
+  // The physical path of the root virtual directory. Empty when the site
+  // declares no root application.
+  physicalPath string
+  // Whether the site starts automatically with the server
+  serverAutoStart bool
+  // Application pool the site root runs under
+  //
+  // Null when the site names a pool the server does not define, so a dangling
+  // reference is visible instead of reading as a pool with default settings.
+  appPool() iis.appPool
+  // Addresses, ports and protocols the site answers on
+  bindings []iis.binding
+  // Applications mounted under this site, including the root application "/"
+  applications []iis.application
+  // Whether request logging is enabled for this site
+  logEnabled bool
+  // Directory log files are written to, with environment variables unexpanded
+  //
+  // For example "%SystemDrive%\inetpub\logs\LogFiles". Each site writes into a
+  // W3SVC<id> subdirectory of this path.
+  logDirectory string
+  // Log file format
+  //
+  // One of "W3C", "IIS", "NCSA" or "Custom". Only the W3C format supports
+  // selecting which fields are recorded.
+  logFormat string
+  // How often a new log file is started
+  //
+  // One of "MaxSize", "Daily", "Weekly", "Monthly" or "Hourly". "MaxSize" rolls
+  // over on logTruncateSize instead of on a schedule.
+  logPeriod string
+  // Size in bytes at which a log file is rolled over, when logPeriod is "MaxSize"
+  logTruncateSize int
+  // Fields recorded in W3C format
+  //
+  // Joined with a comma and a space, the way .NET renders a flags enum, for
+  // example "Date, Time, ClientIP, UserName, Method, UriStem, HttpStatus". IIS
+  // keeps the selection even while another log format is active, so this is
+  // populated regardless of logFormat. Match on the individual field names
+  // rather than comparing the whole string.
+  logFields string
+  // Where W3C log entries are sent
+  //
+  // "File", "ETW", or both as "File, ETW", joined with a comma and a space the
+  // way .NET renders a flags enum. Empty on an installation that predates the
+  // setting, in which case entries go to a file.
+  logTarget string
+  // Whether log rollover follows local time rather than UTC
+  logLocalTimeRollover bool
+  // HTTP Strict Transport Security settings for this site
+  //
+  // The attributes of the site's hsts element, carrying "enabled",
+  // "max-age", "includeSubDomains", "preload" and "redirectHttpToHttps". Null on
+  // an IIS version that has no built-in HSTS support, where the header is set
+  // through a custom response header instead and shows up in
+  // `config.customHeaders`.
+  hsts dict
+  // Configuration in force at the site root
+  config iis.configuration
+}
+
+// Application mounted under an IIS site
+//
+// An application is a configuration boundary: it runs in its own application
+// pool and its web.config overrides what the site and the server declare. The
+// `path` field is the virtual path it is mounted at, "/" for the site root.
+private iis.application @defaults("path physicalPath") {
+  // Virtual path the application is mounted at, "/" for the site root
+  path string
+  // Filesystem path the application root maps to
+  physicalPath string
+  // Protocols the application is enabled for, as a comma-separated list
+  //
+  // For example "http" or "http,net.tcp".
+  enabledProtocols string
+  // Application pool this application runs under
+  //
+  // Null when the application names a pool the server does not define.
+  appPool() iis.appPool
+  // Virtual directories declared under this application
+  virtualDirectories []iis.virtualDirectory
+  // Configuration in force for this application
+  //
+  // Resolved at the application's own configuration path, so it reflects the
+  // application's web.config on top of everything the site and the server
+  // declare. For the root application this is the same configuration the site
+  // reports.
+  config iis.configuration
+}
+
+// Virtual directory of an IIS application
+private iis.virtualDirectory @defaults("path physicalPath") {
+  // Virtual path, "/" for the application root
+  path string
+  // Filesystem path the virtual directory maps to
+  //
+  // A path outside the site root, or on the system partition, is worth checking:
+  // it puts content where the web server was not expected to reach.
+  physicalPath string
+  // Account used to reach the physical path, empty for pass-through authentication
+  //
+  // The account name only. The credential configured alongside it is not
+  // reported.
+  userName string
+  // Logon type used for userName
+  //
+  // One of "Interactive", "Batch", "Network" or "ClearText".
+  logonMethod string
+}
+
+// Address, port and protocol an IIS site answers on
+private iis.binding @defaults("protocol bindingInformation port") {
+  // Protocol, for example "http", "https" or "net.tcp"
+  protocol string
+  // Raw binding string as IIS stores it
+  //
+  // For an HTTP binding this is address:port:hostname, for example
+  // "*:443:www.example.com". A binding with an empty hostname answers for every
+  // name that resolves to the address.
+  bindingInformation string
+  // Host header the binding answers for, empty when it answers for any
+  hostName string
+  // Port the binding listens on, 0 for a binding with no endpoint
+  port int
+  // Address the binding listens on, "0.0.0.0" for every address
+  ipAddress string
+  // Thumbprint of the certificate bound to an HTTPS binding
+  //
+  // The SHA-1 hash as uppercase hex, empty for a binding with no certificate.
+  // This is a public identifier, not key material.
+  certificateHash string
+  // Certificate store the bound certificate is held in, for example "My"
+  certificateStoreName string
+  // SSL binding flags
+  //
+  // A bit field. 1 selects the certificate by hostname (SNI) and 2 uses the
+  // central certificate store. IIS 10 1809 and later add bits that disable
+  // transport features rather than select a certificate: 4 disables HTTP/2, 8
+  // disables OCSP stapling, 16 disables QUIC, 32 disables TLS 1.3 over TCP and
+  // 64 disables legacy TLS. 0 means none of them are set, so test the
+  // individual bits rather than comparing the whole value.
+  sslFlags int
+}
+
+// IIS application pool
+//
+// The worker process configuration a site or application runs under: the
+// identity it runs as, when it recycles, and how it reacts to repeated
+// failures. The `name` field selects a pool, for example the "DefaultAppPool"
+// that a stock installation ships.
+private iis.appPool @defaults("name state identityType") {
+  // Application pool name
+  name string
+  // Runtime state
+  //
+  // One of "Started", "Stopped", "Starting", "Stopping" or "Unknown", the
+  // members of the IIS object-state enumeration. Empty when the state cannot be
+  // read at all; "Unknown" is IIS itself reporting that it cannot tell.
+  state string
+  // Whether the pool starts automatically with the server
+  autoStart bool
+  // Start mode, either "OnDemand" or "AlwaysRunning"
+  startMode string
+  // Managed .NET runtime version, for example "v4.0"
+  //
+  // Empty for a pool that hosts no managed code.
+  managedRuntimeVersion string
+  // Managed pipeline mode, either "Integrated" or "Classic"
+  managedPipelineMode string
+  // Whether 32-bit applications are enabled on a 64-bit host
+  enable32BitAppOnWin64 bool
+  // Requests queued before the pool starts rejecting them
+  queueLength int
+  // Account the worker process runs as
+  //
+  // One of "ApplicationPoolIdentity", "LocalSystem", "LocalService",
+  // "NetworkService" or "SpecificUser". ApplicationPoolIdentity gives the pool a
+  // distinct virtual account, which is what keeps one site's worker process out
+  // of another's files.
+  identityType string
+  // Account name used when identityType is "SpecificUser", empty otherwise
+  //
+  // The account name only. The password configured alongside it is not
+  // reported.
+  userName string
+  // Seconds of inactivity after which the worker process is shut down
+  //
+  // 0 disables the idle timeout, which leaves a worker process resident
+  // indefinitely.
+  idleTimeout int
+  // Worker processes the pool runs, greater than 1 for a web garden
+  maxProcesses int
+  // Whether the pool health-checks its worker processes
+  pingingEnabled bool
+  // Whether the worker process loads the user profile of its identity
+  loadUserProfile bool
+  // Seconds between scheduled recycles, 0 when recycling on an interval is off
+  periodicRestartTime int
+  // Requests served before the pool recycles, 0 when recycling on requests is off
+  periodicRestartRequests int
+  // Private memory in kilobytes that triggers a recycle, 0 when off
+  periodicRestartPrivateMemory int
+  // Virtual memory in kilobytes that triggers a recycle, 0 when off
+  periodicRestartMemory int
+  // Times of day the pool recycles at, as seconds past midnight
+  //
+  // Empty when the pool does not recycle on a schedule.
+  periodicRestartSchedule []int
+  // Recycle causes written to the event log
+  //
+  // Joined with a comma and a space, the way .NET renders a flags enum, for
+  // example "Time, Requests, Schedule, Memory". A recycle trigger that is not
+  // listed here recycles the pool without leaving a record of why, so match on
+  // the individual cause names rather than comparing the whole string.
+  logEventOnRecycle string
+  // Whether a configuration change is prevented from triggering a recycle
+  disallowRotationOnConfigChange bool
+  // Whether overlapping recycles are prevented
+  disallowOverlappingRotation bool
+  // Whether the pool is disabled after repeated worker process failures
+  rapidFailProtection bool
+  // Seconds over which failures are counted toward rapid fail protection
+  rapidFailProtectionInterval int
+  // Failures within the interval that disable the pool
+  rapidFailProtectionMaxCrashes int
+}
+
+// IIS configuration in force at one scope
+//
+// The configuration IIS applies at a single point in its hierarchy, after the
+// whole machine.config, root web.config, applicationHost.config, location, site
+// and application chain has been resolved. This is what the server acts on,
+// which is not what any one configuration file says: reading
+// applicationHost.config directly reports a value a site or application may
+// override, and a check written against that file passes on exactly the
+// override it exists to catch.
+//
+// The `path` field is the IIS configuration path the values were resolved at,
+// for example "MACHINE/WEBROOT/APPHOST" for the server or
+// "MACHINE/WEBROOT/APPHOST/Default Web Site" for a site.
+//
+// A field is null when its section is not declared at this scope. The ASP.NET
+// sections are not such a case: they are declared in machine.config and the
+// root web.config, and every scope here (the server's included) resolves the
+// inheritance chain, so they carry the effective value at each one.
+//
+// Each field names the section and attribute it resolves. A setting with no
+// field of its own is reachable at the same place through `sections`, which
+// carries every section this scope declares under its full path.
+private iis.configuration @defaults("path") {
+  // IIS configuration path these values were resolved at
+  path string
+  // Whether a directory request returns a listing (directoryBrowse/enabled)
+  //
+  // A listing hands out the names of every file in the directory, including
+  // ones no page links to.
+  directoryBrowsingEnabled bool
+  // Whether unauthenticated requests are served (anonymousAuthentication/enabled)
+  anonymousAuthenticationEnabled bool
+  // Account anonymous requests are served as (anonymousAuthentication/userName)
+  //
+  // Empty when anonymous requests run as the application pool identity, which
+  // keeps one site's anonymous requests out of another site's files.
+  anonymousAuthenticationUser string
+  // Whether basic authentication is accepted (basicAuthentication/enabled)
+  //
+  // Basic authentication sends the password base64-encoded, which is plaintext
+  // to anything on the path unless the binding is HTTPS.
+  basicAuthenticationEnabled bool
+  // Whether digest authentication is accepted (digestAuthentication/enabled)
+  digestAuthenticationEnabled bool
+  // Whether integrated Windows authentication is accepted
+  //
+  // From windowsAuthentication/enabled.
+  windowsAuthenticationEnabled bool
+  // Whether client certificates are mapped to local accounts
+  //
+  // From iisClientCertificateMappingAuthentication/enabled. The mapping lives in
+  // IIS configuration and needs no directory to resolve.
+  iisClientCertificateMappingAuthenticationEnabled bool
+  // Whether client certificates are mapped to Active Directory accounts
+  //
+  // From clientCertificateMappingAuthentication/enabled, which resolves the
+  // certificate against the directory rather than against IIS configuration.
+  clientCertificateMappingAuthenticationEnabled bool
+  // ASP.NET authentication mode (system.web/authentication/mode)
+  //
+  // One of "None", "Windows", "Passport", "Forms" or "Federated". The forms
+  // fields below apply when this is "Forms".
+  authenticationMode string
+  // Whether the forms ticket is only sent over HTTPS (forms/requireSSL)
+  //
+  // A forms cookie sent in the clear is a replayable credential.
+  formsRequireSsl bool
+  // How forms authentication carries its ticket (forms/cookieless)
+  //
+  // One of "UseCookies", "UseUri", "AutoDetect" or "UseDeviceProfile". "UseUri"
+  // puts the ticket in the URL, where it reaches proxy logs and referer headers.
+  formsCookieless string
+  // Protection applied to the forms ticket (forms/protection)
+  //
+  // One of "All", "None", "Encryption" or "Validation". "All" both encrypts the
+  // ticket and validates it against tampering.
+  formsProtection string
+  // Seconds before a forms ticket expires (forms/timeout)
+  formsTimeout int
+  // Storage format of inline credentials (forms/credentials/passwordFormat)
+  //
+  // One of "Clear", "SHA1" or "MD5". Null when no inline credentials are
+  // declared, which is the state to prefer: inline credentials put account
+  // material in a configuration file whatever the format.
+  formsCredentialsPasswordFormat string
+  // Whether inline forms credentials are declared at this scope
+  //
+  // True when forms/credentials holds at least one user, which is the thing to
+  // check rather than the format it stores them in.
+  formsCredentialsDeclared bool
+  // Transport requirements for requests (security/access/sslFlags)
+  //
+  // The names of the bits the attribute sets, drawn from "Ssl",
+  // "SslNegotiateCert", "SslRequireCert", "SslMapCert" and "Ssl128". IIS reports
+  // the attribute as a number on some installations and as names on others;
+  // both resolve here to names, and a bit with no name of its own is kept as its
+  // own number, one entry per bit, so it is not silently dropped. An empty list
+  // means requests are accepted over plain HTTP.
+  sslFlags []string
+  // Largest request body accepted, in bytes (requestLimits/maxAllowedContentLength)
+  maxAllowedContentLength int
+  // Longest request URL accepted, in characters (requestLimits/maxUrl)
+  maxUrl int
+  // Longest query string accepted, in characters (requestLimits/maxQueryString)
+  maxQueryString int
+  // Whether non-ASCII characters are accepted in a URL
+  //
+  // From requestFiltering/allowHighBitCharacters.
+  allowHighBitCharacters bool
+  // Whether a doubly-escaped request is accepted
+  //
+  // From requestFiltering/allowDoubleEscaping. Double escaping is how a request
+  // smuggles a path separator past a filter that only inspects the URL once.
+  allowDoubleEscaping bool
+  // Whether unlisted file extensions are served (fileExtensions/allowUnlisted)
+  //
+  // Serving unlisted extensions means a file type nobody considered, dropped
+  // into the content directory, is served on request. The matching setting for
+  // verbs sits under requestFiltering/verbs/allowUnlisted in `sections`, where
+  // the two cannot be mistaken for each other.
+  allowUnlistedFileExtensions bool
+  // Whether the Server response header is suppressed
+  //
+  // From requestFiltering/removeServerHeader.
+  removeServerHeader bool
+  // Level of access handlers are allowed (handlers/accessPolicy)
+  //
+  // This is a **flags** attribute: it holds several names at once, joined with
+  // a comma and a space in the order IIS declares them. "Read, Script" is the
+  // stock value. The names are "None", "Read", "Write", "Execute", "Source",
+  // "Script", "NoRemoteWrite", "NoRemoteRead", "NoRemoteExecute" and
+  // "NoRemoteScript"; "None" appears alone when nothing is set. "Write"
+  // combined with "Script" or "Execute" lets an upload be run, so match on the
+  // names present rather than comparing the whole string.
+  handlerAccessPolicy string
+  // Whether unlisted ISAPI extensions may run
+  //
+  // From isapiCgiRestriction/notListedIsapisAllowed.
+  notListedIsapisAllowed bool
+  // Whether unlisted CGI programs may run
+  //
+  // From isapiCgiRestriction/notListedCgisAllowed, which sits on the same
+  // element as the ISAPI setting above and differs only in name.
+  notListedCgisAllowed bool
+  // Whether ASP.NET compiles debug binaries (compilation/debug)
+  //
+  // Debug compilation slows every request, disables timeouts, and puts source
+  // paths into error output.
+  compilationDebug bool
+  // Who receives detailed ASP.NET error pages (customErrors/mode)
+  //
+  // One of "On", "Off" or "RemoteOnly". "Off" sends the exception, its message
+  // and its stack trace to every client.
+  customErrorsMode string
+  // Who receives detailed IIS error pages (httpErrors/errorMode)
+  //
+  // One of "DetailedLocalOnly", "Custom" or "Detailed". "Detailed" sends
+  // physical paths and error details to remote clients.
+  httpErrorsMode string
+  // Whether ASP.NET request tracing is enabled (system.web/trace/enabled)
+  //
+  // Tracing exposes request contents, cookies and server variables through
+  // trace.axd.
+  traceEnabled bool
+  // Whether the application is deployed in retail mode (deployment/retail)
+  //
+  // Retail mode overrides debug, trace and detailed errors across the whole
+  // machine, whatever an individual application asks for.
+  deploymentRetail bool
+  // Code access security level for ASP.NET applications (trust/level)
+  //
+  // One of "Full", "High", "Medium", "Low" or "Minimal". "Full" places no
+  // restriction on what application code may do.
+  trustLevel string
+  // Algorithm validating view state and forms tickets (machineKey/validation)
+  //
+  // One of "MD5", "SHA1", "3DES", "AES", "HMACSHA256", "HMACSHA384" or
+  // "HMACSHA512". "SHA1" is the value a stock installation reports and is the
+  // weakest of them. The keys on this section are dropped during collection and
+  // reach neither this field nor `sections`.
+  machineKeyValidation string
+  // Where ASP.NET session state is kept (sessionState/mode)
+  //
+  // One of "Off", "InProc", "StateServer", "SQLServer" or "Custom".
+  sessionStateMode string
+  // How the session id is carried (sessionState/cookieless)
+  //
+  // One of "UseCookies", "UseUri", "AutoDetect" or "UseDeviceProfile". "UseUri"
+  // puts the session id in the URL, where it is shared by every copy of the link.
+  sessionStateCookieless string
+  // Seconds an idle session is kept before it is abandoned (sessionState/timeout)
+  sessionStateTimeout int
+  // Whether cookies are marked HttpOnly (httpCookies/httpOnlyCookies)
+  //
+  // An HttpOnly cookie is not readable from script, which is what stops a
+  // cross-site scripting flaw from becoming a stolen session.
+  httpCookiesHttpOnly bool
+  // Whether cookies are only sent over HTTPS (httpCookies/requireSSL)
+  httpCookiesRequireSsl bool
+  // Whether classic ASP keeps the session id secure over HTTPS
+  //
+  // From asp/session/keepSessionIdSecure.
+  aspKeepSessionIdSecure bool
+  // Custom response headers, by header name (httpProtocol/customHeaders)
+  //
+  // The section's collection flattened to a map, so both a header that should be
+  // present ("Strict-Transport-Security") and one that should not
+  // ("X-Powered-By", which advertises the framework version) are one lookup.
+  // Empty when the section declares no headers.
+  customHeaders map[string]string
+  // Every resolved configuration section, keyed by section path
+  //
+  // The full result of the resolution, for reaching a setting that has no field
+  // of its own, for example
+  // `sections["system.webServer/security/dynamicIpSecurity"]["enableLoggingOnlyMode"]`.
+  // Each entry holds the section's attributes and its child elements; sections
+  // whose members carry the setting also hold a "collection" list of those
+  // members. Durations are in seconds throughout, and machineKey's validationKey
+  // and decryptionKey are dropped before the section is reported. A section that
+  // is not declared at this scope has no key here, and reading through a key
+  // that is absent yields null rather than an error.
+  sections dict
+}
+
 // JBoss EAP / WildFly application server
 //
 // Locates a JBoss installation through JBOSS_HOME and exposes the server
