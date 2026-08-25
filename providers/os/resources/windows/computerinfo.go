@@ -94,7 +94,6 @@ type CustomComputerInfo struct {
 	Uptime any `json:"Uptime"`
 }
 
-
 // biosFirmwareType maps the firmware_type environment variable to the
 // vocabulary Get-ComputerInfo uses for BiosFirmwareType, so a host that falls
 // back reports the same two words as one that does not. An unrecognized or
