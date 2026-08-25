@@ -188,6 +188,19 @@ var cos = &PlatformResolver{
 	},
 }
 
+// Talos is an API-managed Kubernetes host: it ships no shell, no /bin or
+// /sbin, and no package database, so nothing here can be derived from a
+// command. /etc/os-release is the whole of what detection can read, and
+// VERSION_ID carries the vendor's own "v" prefix ("v1.13.9"), which is the
+// string talosctl reports and is kept as-is.
+var talos = &PlatformResolver{
+	Name:     "talos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "talos", nil
+	},
+}
+
 var flatcar = &PlatformResolver{
 	Name:     "flatcar",
 	IsFamily: false,
@@ -1487,7 +1500,7 @@ var linuxFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: altlinux runs before the redhat family, whose members probe
 	// /etc/redhat-release and /etc/fedora-release, both of which ALT ships.
-	Children: []*PlatformResolver{archFamily, altlinux, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, wizos, alpine, wolfi, nixos, gentoo, voidlinux, clearlinux, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, cos, flatcar, cirros, defaultLinux},
+	Children: []*PlatformResolver{archFamily, altlinux, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, wizos, alpine, wolfi, nixos, gentoo, voidlinux, clearlinux, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, cos, flatcar, talos, cirros, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
