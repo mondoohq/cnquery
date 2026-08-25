@@ -440,9 +440,9 @@ func TestComputeLsaKerberos(t *testing.T) {
 	})
 
 	tests := []struct {
-		name                                         string
-		mask                                         int64
-		desCbcCrc, desCbcMd5, rc4Hmac, aes128, ae256 bool
+		name                                          string
+		mask                                          int64
+		desCbcCrc, desCbcMd5, rc4Hmac, aes128, aes256 bool
 	}{
 		{"legacy only (0x7)", 0x7, true, true, true, false, false},
 		{"AES only (0x18)", 0x18, false, false, false, true, true},
@@ -479,7 +479,7 @@ func TestComputeLsaKerberos(t *testing.T) {
 				{"desCbcMd5", v.AllowsDesCbcMd5, tc.desCbcMd5},
 				{"rc4Hmac", v.AllowsRc4Hmac, tc.rc4Hmac},
 				{"aes128", v.AllowsAes128, tc.aes128},
-				{"aes256", v.AllowsAes256, tc.ae256},
+				{"aes256", v.AllowsAes256, tc.aes256},
 			} {
 				require.NotNil(t, f.got, f.name)
 				assert.Equal(t, f.want, *f.got, f.name)
