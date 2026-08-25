@@ -13480,6 +13480,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.dnsServer.diagnostics.logFilePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogFilePath()).ToDataRes(types.String)
 	},
+	"windows.dnsServer.diagnostics.maxFileSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetMaxFileSizeBytes()).ToDataRes(types.Int)
+	},
 	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServerDiagnostics).GetMaxFileSizeMb()).ToDataRes(types.Int)
 	},
@@ -32474,6 +32477,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.dnsServer.diagnostics.logFilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDnsServerDiagnostics).LogFilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.maxFileSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).MaxFileSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83792,6 +83799,7 @@ type mqlWindowsDnsServerDiagnostics struct {
 	UseSystemEventLog           plugin.TValue[bool]
 	EnableLoggingToFile         plugin.TValue[bool]
 	LogFilePath                 plugin.TValue[string]
+	MaxFileSizeBytes            plugin.TValue[int64]
 	MaxFileSizeMb               plugin.TValue[int64]
 	EnableLogFileRollover       plugin.TValue[bool]
 	SaveLogsToPersistentStorage plugin.TValue[bool]
@@ -83856,6 +83864,10 @@ func (c *mqlWindowsDnsServerDiagnostics) GetEnableLoggingToFile() *plugin.TValue
 
 func (c *mqlWindowsDnsServerDiagnostics) GetLogFilePath() *plugin.TValue[string] {
 	return &c.LogFilePath
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetMaxFileSizeBytes() *plugin.TValue[int64] {
+	return &c.MaxFileSizeBytes
 }
 
 func (c *mqlWindowsDnsServerDiagnostics) GetMaxFileSizeMb() *plugin.TValue[int64] {

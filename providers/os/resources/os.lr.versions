@@ -4395,6 +4395,7 @@ windows.dnsServer.diagnostics.logTcpPackets 13.40.10
 windows.dnsServer.diagnostics.logUdpPackets 13.40.10
 windows.dnsServer.diagnostics.logUnmatchedResponses 13.40.10
 windows.dnsServer.diagnostics.logUpdates 13.40.10
+windows.dnsServer.diagnostics.maxFileSizeBytes 13.40.10
 windows.dnsServer.diagnostics.maxFileSizeMb 13.40.10
 windows.dnsServer.diagnostics.saveLogsToPersistentStorage 13.40.10
 windows.dnsServer.diagnostics.useSystemEventLog 13.40.10

@@ -280,11 +280,13 @@ func (w *mqlWindowsDnsServer) diagnostics() (*mqlWindowsDnsServerDiagnostics, er
 	d := cfg.Diagnostics
 
 	o, err := CreateResource(w.MqlRuntime, "windows.dnsServer.diagnostics", map[string]*llx.RawData{
-		"__id":                        llx.StringData("windows.dnsServer.diagnostics"),
-		"eventLogLevel":               llx.IntData(d.EventLogLevel),
-		"useSystemEventLog":           llx.BoolData(d.UseSystemEventLog),
-		"enableLoggingToFile":         llx.BoolData(d.EnableLoggingToFile),
-		"logFilePath":                 llx.StringData(d.LogFilePath),
+		"__id":                llx.StringData("windows.dnsServer.diagnostics"),
+		"eventLogLevel":       llx.IntData(d.EventLogLevel),
+		"useSystemEventLog":   llx.BoolData(d.UseSystemEventLog),
+		"enableLoggingToFile": llx.BoolData(d.EnableLoggingToFile),
+		"logFilePath":         llx.StringData(d.LogFilePath),
+		"maxFileSizeBytes":    llx.IntData(d.MaxMBFileSize),
+		// Deprecated: same value, kept so existing checks do not break.
 		"maxFileSizeMb":               llx.IntData(d.MaxMBFileSize),
 		"enableLogFileRollover":       llx.BoolData(d.EnableLogFileRollover),
 		"saveLogsToPersistentStorage": llx.BoolData(d.SaveLogsToPersistentStorage),
