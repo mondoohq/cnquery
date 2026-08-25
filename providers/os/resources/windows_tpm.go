@@ -4,13 +4,9 @@
 package resources
 
 import (
-	"errors"
-	"io"
 	"sync"
 	"sync/atomic"
 
-	"go.mondoo.com/mql/providers/os/connection/shared"
-	"go.mondoo.com/mql/providers/os/resources/powershell"
 	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
@@ -37,19 +33,13 @@ func (w *mqlWindowsTpm) load() (*windows.TpmInfo, error) {
 		return w.info, w.loadErr
 	}
 
-	conn := w.MqlRuntime.Connection.(shared.Connection)
-	executedCmd, err := conn.RunCommand(powershell.Encode(windows.PSGetTpm))
+	stdout, err := runWindowsPowerShell(w.MqlRuntime, windows.PSGetTpm, "retrieve TPM information")
 	if err != nil {
 		w.loadErr = err
 		return nil, err
 	}
-	if executedCmd.ExitStatus != 0 {
-		stderr, _ := io.ReadAll(executedCmd.Stderr)
-		w.loadErr = errors.New("failed to retrieve TPM information: " + string(stderr))
-		return nil, w.loadErr
-	}
 
-	info, err := windows.ParseTpm(executedCmd.Stdout)
+	info, err := windows.ParseTpm(stdout)
 	if err != nil {
 		w.loadErr = err
 		return nil, err
