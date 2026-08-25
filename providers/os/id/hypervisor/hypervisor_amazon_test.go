@@ -12,21 +12,24 @@ import (
 // EC2 Nitro guests were reporting a null hypervisor: systemd-detect-virt says
 // "amazon" and the DMI vendor fields say "Amazon EC2", neither of which had a
 // mapping, so all three Linux detectors found their input and failed to map it.
+//
+// The value is the hypervisor, not the cloud: systemd emits "amazon" only for
+// Nitro, while the older Xen instance families report "xen".
 func TestMapHypervisorAmazonEC2(t *testing.T) {
 	// systemd-detect-virt on a Nitro guest
 	v, ok := mapHypervisor("amazon")
 	assert.True(t, ok)
-	assert.Equal(t, "Amazon EC2", v)
+	assert.Equal(t, "Nitro", v)
 
 	// DMI sys_vendor / board_vendor / bios_vendor
 	v, ok = mapHypervisor("Amazon EC2")
 	assert.True(t, ok)
-	assert.Equal(t, "Amazon EC2", v)
+	assert.Equal(t, "Nitro", v)
 
 	// dmidecode output carries trailing whitespace and mixed case
 	v, ok = mapHypervisor("  AMAZON EC2\n")
 	assert.True(t, ok)
-	assert.Equal(t, "Amazon EC2", v)
+	assert.Equal(t, "Nitro", v)
 }
 
 // Older EC2 instances are Xen-based and must keep resolving to Xen, not be
