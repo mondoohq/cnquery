@@ -13204,7 +13204,11 @@ private windows.acl.auditEntry @defaults("identity auditFlags rights") {
 // read once per scan in a single batched call rather than one call per field.
 // Every field requires the DNS Server role to be installed; gate an audit on
 // `windows.serverFeature(name: "DNS").installed` so the checks do not run on
-// hosts that are not name servers. Complements the client-side `dns` resource
+// hosts that are not name servers. That gate narrows an audit but does not
+// close it: a host where the role was added and the restart has not happened
+// yet reports the feature as installed while the management module is still
+// absent, and every field here reports an error on such a host rather than a
+// configuration. Complements the client-side `dns` resource
 // in the network provider, which resolves names through the public DNS system
 // and cannot see a server's own configuration.
 windows.dnsServer {
@@ -13489,6 +13493,16 @@ private windows.dnsServer.rootHint @defaults("nameServer") {
 // that decide who may transfer it, who may change it, and whether its answers
 // are signed. Iterated from `windows.dnsServer.zones`. The `dnssec` and
 // `signingKeys` fields are populated only for a signed zone.
+//
+// A stub or forwarder zone holds no authoritative data, so the server reports
+// no value at all for the settings that govern such data: `dynamicUpdate`,
+// `secureSecondaries` and `notify` are empty on those zones rather than
+// carrying one of the values listed below, and `isSigned` and `isWinsEnabled`
+// are false because there is nothing to sign or to resolve through WINS. An
+// audit written over the whole zone list should select the zone types it means
+// to judge, for example
+// `windows.dnsServer.zones.where(zoneType == "Primary")`, so that a stub zone
+// does not fail a check about a setting it cannot have.
 private windows.dnsServer.zone @defaults("name zoneType isSigned") {
   // Zone name, for example example.com
   name string
@@ -13499,28 +13513,33 @@ private windows.dnsServer.zone @defaults("name zoneType isSigned") {
   zoneType string
   // Which clients may register records in the zone through dynamic update
   //
-  // One of None, NonsecureAndSecure, or Secure. NonsecureAndSecure lets any
-  // host on the network create or overwrite a record without authenticating,
-  // so a zone that accepts it cannot be trusted to name what it claims to.
+  // One of None, NonsecureAndSecure, or Secure, and empty on a stub or
+  // forwarder zone, which takes no dynamic updates at all. NonsecureAndSecure
+  // lets any host on the network create or overwrite a record without
+  // authenticating, so a zone that accepts it cannot be trusted to name what
+  // it claims to.
   dynamicUpdate string
   // Which servers the zone may be transferred to
   //
   // One of NoTransfer, TransferAnyServer, TransferToZoneNameServer, or
-  // TransferToSecureServers. TransferAnyServer hands the full contents of the
+  // TransferToSecureServers, and empty on a stub or forwarder zone, which has
+  // no contents to transfer. TransferAnyServer hands the full contents of the
   // zone, and therefore an inventory of the network, to anyone who asks.
   secureSecondaries string
   // Servers explicitly allowed to transfer the zone, used when secureSecondaries is TransferToSecureServers
   secondaryServers []string
   // Which secondaries are notified when the zone changes
   //
-  // One of NoNotify, Notify, or NotifyServers.
+  // One of NoNotify, Notify, or NotifyServers, and empty on a stub or
+  // forwarder zone, which has no secondaries to notify.
   notify string
   // Servers notified when the zone changes, used when notify is NotifyServers
   notifyServers []string
   // Whether the zone is DNSSEC signed
   //
   // A signed zone serves an RRSIG alongside every answer, which is what lets
-  // a validating resolver detect a forged or modified response.
+  // a validating resolver detect a forged or modified response. False on a
+  // stub or forwarder zone, which holds no records of its own to sign.
   isSigned bool
   // Whether the zone is stored in Active Directory rather than in a zone file
   isDsIntegrated bool
@@ -13537,7 +13556,7 @@ private windows.dnsServer.zone @defaults("name zoneType isSigned") {
   // Whether the zone resolves single-label names through WINS
   //
   // WINS lookup embeds an unauthenticated legacy name service in the zone's
-  // answers.
+  // answers. False on a stub or forwarder zone, which resolves nothing itself.
   isWinsEnabled bool
   // Name of the zone file, empty for a directory-integrated zone
   zoneFile string
