@@ -12612,9 +12612,21 @@ windows.firewall.profile {
   name string
   // Whether the firewall is enabled on this profile (1 = enabled, 0 = disabled)
   enabled int
-  // Default action for inbound traffic (2 = allow, 4 = block)
+  // Configured default action for inbound traffic
+  //
+  // One of 0 (not configured), 2 (allow) or 4 (block). This is the action
+  // configured through policy, not the action the firewall ends up applying.
+  // A stock Windows Server install reports 0 on every profile while still
+  // blocking inbound traffic, because an unconfigured profile falls back to
+  // the firewall's own built-in default. Comparing this field against 4 to
+  // assert that inbound traffic is blocked therefore fails on a host that
+  // does block it.
   defaultInboundAction int
-  // Default action for outbound traffic (2 = allow, 4 = block)
+  // Configured default action for outbound traffic
+  //
+  // One of 0 (not configured), 2 (allow) or 4 (block). As with the inbound
+  // action, 0 means no policy sets it and the built-in default applies, which
+  // for outbound traffic is allow.
   defaultOutboundAction int
   // Whether administrators can create firewall rules that allow unsolicited inbound traffic (if 0, such rules are ignored)
   allowInboundRules int
