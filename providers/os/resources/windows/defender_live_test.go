@@ -162,3 +162,48 @@ func keysOf(m map[string]json.RawMessage) []string {
 	}
 	return out
 }
+
+// TestScheduleTime covers every serialization a Defender schedule preference
+// has been observed to arrive in. Windows PowerShell 5.1, which is what ships
+// on Windows Server, sends a whole TimeSpan object.
+func TestScheduleTime(t *testing.T) {
+	tests := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{"powershell 5.1 TimeSpan object", `{"Ticks":72000000000,"Days":0,"Hours":2,"Minutes":0,"Seconds":0,"TotalHours":2}`, "02:00:00"},
+		{"TimeSpan object at midnight", `{"Ticks":0,"Days":0,"Hours":0,"Minutes":0,"Seconds":0}`, "00:00:00"},
+		{"TimeSpan object with minutes", `{"Ticks":63000000000,"Hours":1,"Minutes":45}`, "01:45:00"},
+		{"iso duration hours", `"PT2H"`, "02:00:00"},
+		{"iso duration hours and minutes", `"PT1H45M"`, "01:45:00"},
+		{"iso duration seconds", `"PT30S"`, "00:00:30"},
+		{"already formatted", `"02:00:00"`, "02:00:00"},
+		{"powershell date form", `"/Date(1705276800000)/"`, "00:00:00"},
+		{"null", `null`, ""},
+		{"empty", ``, ""},
+		{"unrecognized string is preserved", `"whenever"`, "whenever"},
+		{"trailing number with no unit is not a duration", `"PT2"`, "PT2"},
+		{"no unit at all is not a duration", `"PTX"`, "PTX"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, ScheduleTime(json.RawMessage(tt.raw)))
+		})
+	}
+}
+
+// TestLiveScheduleTimes pins the schedule preferences read off the live hosts.
+func TestLiveScheduleTimes(t *testing.T) {
+	for _, v := range defenderLiveVersions {
+		t.Run(v, func(t *testing.T) {
+			pref, err := ParseMpPreference(readFixture(t, "defender_preference_win"+v+".json"))
+			require.NoError(t, err)
+
+			assert.Equal(t, "02:00:00", pref.ScanScheduleTimeString())
+			assert.Equal(t, "00:00:00", pref.ScanScheduleQuickScanTimeString())
+			assert.Equal(t, "01:45:00", pref.SignatureScheduleTimeString())
+			assert.Equal(t, "02:00:00", pref.RemediationScheduleTimeString())
+		})
+	}
+}
