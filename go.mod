@@ -343,3 +343,5 @@ tool (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	google.golang.org/protobuf/cmd/protoc-gen-go
 )
+
+replace github.com/hnakamur/go-scp => github.com/mondoohq/go-scp v1.0.3

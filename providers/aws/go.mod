@@ -331,3 +331,5 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.7.3 // indirect
 )
+
+replace github.com/hnakamur/go-scp => github.com/mondoohq/go-scp v1.0.3
