@@ -61,3 +61,70 @@ func TestMapHypervisorUnchanged(t *testing.T) {
 	_, ok := mapHypervisor("Some Unknown Vendor")
 	assert.False(t, ok)
 }
+
+// systemd-detect-virt emits its own identifiers, which are not the product
+// names. Without a mapping the guest is detected and then fails to map, so
+// os.hypervisor reads null. Tokens taken from systemd src/basic/virt.c.
+func TestMapHypervisorSystemdTokens(t *testing.T) {
+	for token, want := range map[string]string{
+		"amazon":    "AWS Nitro System",
+		"microsoft": "Hyper-V",
+		"google":    "Google Compute Engine",
+		"apple":     "Apple Virtualization",
+		"oracle":    "VirtualBox",
+		// already mapped before this change, kept here so the whole systemd
+		// vocabulary is covered in one place
+		"kvm":       "KVM",
+		"qemu":      "QEMU",
+		"xen":       "Xen",
+		"vmware":    "VMware",
+		"parallels": "Parallels",
+		"bhyve":     "bhyve",
+		"powervm":   "IBM PowerVM",
+	} {
+		t.Run(token, func(t *testing.T) {
+			v, ok := mapHypervisor(token)
+			assert.True(t, ok, "systemd emits %q; it must map", token)
+			assert.Equal(t, want, v)
+		})
+	}
+}
+
+// The DMI vendor strings for the same platforms must land on the same answer.
+func TestMapHypervisorDMIVendors(t *testing.T) {
+	for vendor, want := range map[string]string{
+		"Amazon EC2":            "AWS Nitro System",
+		"Microsoft Corporation": "Hyper-V",
+		"Google":                "Google Compute Engine",
+		"Google Compute Engine": "Google Compute Engine",
+		"Apple Inc.":            "Apple Virtualization",
+		"VMware, Inc.":          "VMware",
+		"Xen":                   "Xen",
+		"QEMU":                  "QEMU",
+	} {
+		t.Run(vendor, func(t *testing.T) {
+			v, ok := mapHypervisor(vendor)
+			assert.True(t, ok, vendor)
+			assert.Equal(t, want, v)
+		})
+	}
+}
+
+// Several vendor strings contain more than one key. Go randomises map
+// iteration, so before ordering by key length the answer differed between
+// runs. The most specific match must win, every time.
+func TestMapHypervisorLongestMatchWinsDeterministically(t *testing.T) {
+	// contains both "oracle"-free "virtualbox" and, in the vendor form, "oracle"
+	for i := 0; i < 50; i++ {
+		v, ok := mapHypervisor("Oracle VM VirtualBox")
+		assert.True(t, ok)
+		assert.Equal(t, "VirtualBox", v, "longest key must win on every iteration")
+	}
+
+	// "apple virtual" is longer than "apple" and must take precedence
+	for i := 0; i < 50; i++ {
+		v, ok := mapHypervisor("Apple Virtual Machine")
+		assert.True(t, ok)
+		assert.Equal(t, "Apple Virtualization", v)
+	}
+}

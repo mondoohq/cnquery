@@ -5,7 +5,9 @@ package hypervisor
 
 import (
 	"io"
+	"sort"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -34,12 +36,28 @@ var knownHypervisors = map[string]string{
 	"openshift virtualization": "OpenShift Virtualization",
 	"red hat":                  "OpenShift Virtualization",
 
-	// AWS Nitro. systemd-detect-virt reports exactly "amazon" for Nitro and
-	// "xen" for the older Xen-based instance families, so the two are already
-	// distinguishable; the DMI vendor fields read "Amazon EC2" on Nitro and
-	// "Xen" on Xen, which keeps them disjoint on that path too. One substring
-	// therefore covers both Nitro detection routes without shadowing "xen".
+	// The keys below are the identifiers systemd-detect-virt actually emits,
+	// which differ from the product names above. Without them a guest is
+	// detected and then fails to map, so os.hypervisor reads null.
+	// See src/basic/virt.c, virtualization_table.
+	//
+	// AWS Nitro. systemd reports "amazon" for Nitro and "xen" for the older
+	// Xen instance families, and the DMI vendor fields are disjoint the same
+	// way ("Amazon EC2" against "Xen"), so this cannot shadow xen.
 	"amazon": "AWS Nitro System",
+	// systemd's token for Hyper-V; the DMI vendor reads "Microsoft Corporation".
+	"microsoft": "Hyper-V",
+	// systemd's token for GCE; the DMI vendor reads "Google" / "Google Compute Engine".
+	"google": "Google Compute Engine",
+	// systemd's token for Apple Virtualization.framework. The longer keys above
+	// cannot match it, because "apple" contains neither of them.
+	"apple": "Apple Virtualization",
+	// systemd's token for VirtualBox. The longest-match rule in mapHypervisor
+	// keeps "Oracle VM VirtualBox" resolving to VirtualBox rather than racing
+	// this key. Oracle Cloud cannot be caught by it: the whole Linux chain is
+	// gated on the CPU hypervisor flag, so bare metal never reaches here, and
+	// OCI VM shapes report QEMU.
+	"oracle": "VirtualBox",
 }
 
 // hyper is a helper struct to avoid passing the connection and platform
@@ -77,12 +95,39 @@ func mapHypervisor(info string) (string, bool) {
 	// make sure it is lower case
 	info = strings.ToLower(info)
 
-	for key, value := range knownHypervisors {
+	// Longest key first. Several vendor strings contain more than one key --
+	// "Oracle VM VirtualBox" holds both "oracle" and "virtualbox" -- and Go
+	// randomises map iteration, so picking whichever came first made the answer
+	// differ between runs. The longest match is the most specific one.
+	for _, key := range hypervisorKeysByLength() {
 		if strings.Contains(info, key) {
-			return value, true
+			return knownHypervisors[key], true
 		}
 	}
 	return "", false
+}
+
+var (
+	hypervisorKeysOnce   sync.Once
+	hypervisorKeysSorted []string
+)
+
+// hypervisorKeysByLength returns the knownHypervisors keys ordered longest
+// first, so the most specific match wins and the result is reproducible.
+func hypervisorKeysByLength() []string {
+	hypervisorKeysOnce.Do(func() {
+		hypervisorKeysSorted = make([]string, 0, len(knownHypervisors))
+		for key := range knownHypervisors {
+			hypervisorKeysSorted = append(hypervisorKeysSorted, key)
+		}
+		sort.Slice(hypervisorKeysSorted, func(i, j int) bool {
+			if len(hypervisorKeysSorted[i]) != len(hypervisorKeysSorted[j]) {
+				return len(hypervisorKeysSorted[i]) > len(hypervisorKeysSorted[j])
+			}
+			return hypervisorKeysSorted[i] < hypervisorKeysSorted[j]
+		})
+	})
+	return hypervisorKeysSorted
 }
 
 // runCommand is a wrapper around connection.RunCommand that helps execute commands
