@@ -117,3 +117,10 @@ func TestOperationName(t *testing.T) {
 	assert.Equal(t, "Uninstallation", OperationName(UpdateOperationUninstallation))
 	assert.Equal(t, "", OperationName(0))
 }
+
+func TestUpdateHistoryQueryStopsOnError(t *testing.T) {
+	// GetTotalHistoryCount failing without this leaves $count null, the
+	// $count -gt 0 guard false, and an empty history: a host whose update
+	// agent could not be reached reports that nothing was ever installed.
+	assert.Contains(t, WINDOWS_QUERY_UPDATE_HISTORY, "$ErrorActionPreference='Stop'")
+}

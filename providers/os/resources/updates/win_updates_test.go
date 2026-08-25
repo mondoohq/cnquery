@@ -87,3 +87,64 @@ func findKb(pkgs []OperatingSystemUpdate, name string) (OperatingSystemUpdate, e
 	}
 	return OperatingSystemUpdate{}, errors.New("not found")
 }
+
+func TestParseWindowsUpdatesDropsBlankRecords(t *testing.T) {
+	// What a failed Windows Update Agent search leaves on stdout: $searcher is
+	// null, so $searcher.Updates is null, and piping null to ForEach-Object
+	// still runs the block once. Counting that as an outstanding update is
+	// wrong, and so is counting it as a clean scan.
+	updates, err := ParseWindowsUpdates(strings.NewReader(`{"UpdateID": null, "Title": null}`))
+	require.NoError(t, err)
+	assert.Empty(t, updates)
+
+	updates, err = ParseWindowsUpdates(strings.NewReader(`[{"UpdateID": null, "Title": null}]`))
+	require.NoError(t, err)
+	assert.Empty(t, updates)
+
+	// A real update alongside a blank one keeps the real one.
+	updates, err = ParseWindowsUpdates(strings.NewReader(
+		`[{"UpdateID": null, "Title": null},{"UpdateID":"0f1e-2d3c","Title":"2026-08 Cumulative Update (KB5120242)","KBArticleIDs":["5120242"]}]`))
+	require.NoError(t, err)
+	require.Len(t, updates, 1)
+	assert.Equal(t, "0f1e-2d3c", updates[0].UpdateID)
+
+	// An update with a title but no identity is still an update.
+	updates, err = ParseWindowsUpdates(strings.NewReader(`[{"UpdateID":"","Title":"Some driver"}]`))
+	require.NoError(t, err)
+	require.Len(t, updates, 1)
+}
+
+func TestWindowsUpdateSearchQueryStopsOnError(t *testing.T) {
+	// Without this the COM failure is a non-terminating error, powershell.exe
+	// exits 0, the ExitStatus check never fires, and a host that could not be
+	// reached reports itself fully patched.
+	q := windowsUpdateSearchQuery(WindowsUpdateCriteriaAvailable)
+	assert.Contains(t, q, "$ErrorActionPreference='Stop'")
+	assert.Contains(t, q, WindowsUpdateCriteriaAvailable)
+}
+
+func TestDropEmptyWindowsUpdatesKeepsTheInputWhenNothingIsBlank(t *testing.T) {
+	in := []WindowsUpdate{{UpdateID: "a", Title: "A"}, {UpdateID: "b", Title: "B"}}
+	got := dropEmptyWindowsUpdates(in)
+	require.Len(t, got, 2)
+	assert.Equal(t, in, got)
+
+	// Nothing is copied when there is nothing to drop, which is every
+	// successful search.
+	assert.Equal(t, &in[0], &got[0])
+}
+
+func TestDropEmptyWindowsUpdatesPreservesOrder(t *testing.T) {
+	in := []WindowsUpdate{
+		{UpdateID: "a", Title: "A"},
+		{},
+		{UpdateID: "b", Title: "B"},
+		{},
+		{UpdateID: "c", Title: "C"},
+	}
+	got := dropEmptyWindowsUpdates(in)
+	require.Len(t, got, 3)
+	assert.Equal(t, "a", got[0].UpdateID)
+	assert.Equal(t, "b", got[1].UpdateID)
+	assert.Equal(t, "c", got[2].UpdateID)
+}
