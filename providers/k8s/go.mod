@@ -269,3 +269,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect
 	software.sslmate.com/src/go-pkcs12 v0.7.3 // indirect
 )
+
+replace github.com/hnakamur/go-scp => github.com/mondoohq/go-scp v1.0.4
