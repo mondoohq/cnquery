@@ -35,9 +35,11 @@ var macOS = &PlatformResolver{
 			pf.Title = "macOS"
 		}
 
-		// the property list carries the build version, which sw_vers does not
-		// report, so prefer it whenever it is readable
-		// check xml /System/Library/CoreServices/SystemVersion.plist
+		// sw_vers, which the darwin family reads, carries the same product name,
+		// version and build. It is a command though, so it is unavailable on a
+		// scan with no command capability (a mounted disk image, for example),
+		// where the property list is the only source left. Read it whenever it
+		// is readable and let it override.
 		f, err := conn.FileSystem().Open("/System/Library/CoreServices/SystemVersion.plist")
 		if err != nil {
 			log.Debug().Err(err).Msg("platform> could not read the macOS system version property list")
