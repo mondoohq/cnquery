@@ -16,9 +16,8 @@ import (
 // the parsers see in the field rather than a hand-written approximation of
 // them. Hostnames are replaced with a synthetic name; nothing else is altered.
 //
-// Server 2016, 2019 and 2022 are covered. Server 2025 was not reachable when
-// these were captured and has no fixture yet.
-var liveWindowsVersions = []string{"2016", "2019", "2022"}
+// Server 2016, 2019, 2022 and 2025 are all covered.
+var liveWindowsVersions = []string{"2016", "2019", "2022", "2025"}
 
 // liveFirewallRuleNames is the set of rules captured on every host. They are
 // chosen for the decode shapes they carry rather than for their own sake: a
@@ -34,6 +33,17 @@ var liveFirewallRuleNames = []string{
 	"CoreNet-IGMP-Out",
 	"CoreNet-DHCP-Out",
 	"FPS-ICMP4-ERQ-In",
+}
+
+// The Remote Desktop inbound rule is not scoped the same way on every host.
+// 2016 through 2022 scope it to Domain and Private; the 2025 host captured also
+// carries Public. Both are real readings, and pinning a single value would turn
+// a genuine difference between hosts into a test failure.
+var rdpProfilesByVersion = map[string]PSFlagList{
+	"2016": {"Domain", "Private"},
+	"2019": {"Domain", "Private"},
+	"2022": {"Domain", "Private"},
+	"2025": {"Domain", "Private", "Public"},
 }
 
 func openFixture(t *testing.T, name string) *os.File {
@@ -75,7 +85,7 @@ func TestLiveFirewallRules(t *testing.T) {
 			assert.Equal(t, int64(1), rdp.Enabled)
 			assert.Equal(t, int64(1), rdp.Direction)
 			assert.Equal(t, int64(2), rdp.Action)
-			assert.Equal(t, PSFlagList{"Domain", "Private"}, rdp.Profiles)
+			assert.Equal(t, rdpProfilesByVersion[version], rdp.Profiles)
 
 			dhcp := byID["CoreNet-DHCP-Out"]
 			assert.Equal(t, int64(1), dhcp.Enabled)
@@ -108,6 +118,12 @@ func TestLiveFirewallRuleProfileFlagsSplit(t *testing.T) {
 
 			assert.Equal(t, PSFlagList{"Domain", "Private"}, byID["WINRM-HTTP-In-TCP"].Profiles)
 			assert.Equal(t, PSFlagList{"Any"}, byID["CoreNet-IGMP-Out"].Profiles)
+
+			// The Remote Desktop rule is the one that moved: the 2025 host
+			// captured scopes it to all three profiles, so the split has to
+			// produce three flags there and two everywhere else. A test that
+			// pinned one value would have read the drift as a decode failure.
+			assert.Equal(t, rdpProfilesByVersion[version], byID["RemoteDesktop-UserMode-In-TCP"].Profiles)
 		})
 	}
 }
@@ -249,8 +265,8 @@ func TestLiveFirewallSettings(t *testing.T) {
 	}
 }
 
-// The share list is the same on every version captured, so one fixture covers
-// them all. It is the stock set of administrative shares.
+// The share list is byte-identical on 2016, 2019, 2022 and 2025, so one fixture
+// covers them all. It is the stock set of administrative shares.
 func TestLiveSmbShares(t *testing.T) {
 	shares, err := ParseWindowsSmbShares(openFixture(t, "smb-shares.json"))
 	require.NoError(t, err)
