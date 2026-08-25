@@ -83,3 +83,48 @@ func TestSmartScreenEnabledFlag(t *testing.T) {
 	assert.False(t, enabledFlag(&zero))
 	assert.False(t, enabledFlag(nil))
 }
+
+// Real SmartScreen policy readings from Windows Server 2016 (10.0.14393) and
+// 2022 (10.0.20348); Server 2019 (10.0.17763) matched 2022 exactly.
+//
+// No SmartScreen policy is configured on either host, so every policy toggle
+// is absent and has to stay null rather than becoming an explicit 0 that would
+// read as "administratively disabled". The one value that does exist is the
+// Store apps web-content evaluation setting, and it genuinely differs by
+// version: 0 on 2016, 1 on 2019 and later. That is a real reading, so it has
+// to survive as one.
+func TestParseSmartScreenSettings_ServerBaselines(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		fixture      string
+		storeApps    int64
+		storeEnabled bool
+	}{
+		{"Windows Server 2016", "smartscreen_server2016.json", 0, false},
+		{"Windows Server 2022", "smartscreen_server2022.json", 1, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := os.ReadFile("testdata/" + tc.fixture)
+			require.NoError(t, err)
+
+			s, err := ParseSmartScreenSettings(data)
+			require.NoError(t, err)
+
+			// not configured stays null, so it can never read as "turned off by policy"
+			assert.Nil(t, s.EnableSmartScreen)
+			assert.Nil(t, s.EdgeSmartScreenEnabled)
+			assert.Nil(t, s.EdgeSmartScreenPuaEnabled)
+			assert.Nil(t, s.EdgePreventOverride)
+			assert.Nil(t, s.EdgePreventOverrideForFiles)
+			assert.Empty(t, s.ShellSmartScreenLevel)
+
+			// ... while the derived predicates still report the safe reading
+			assert.False(t, s.ExplorerEnabled())
+			assert.False(t, s.EdgeEnabled())
+
+			require.NotNil(t, s.StoreAppsEnableWebContentEvaluation)
+			assert.Equal(t, tc.storeApps, *s.StoreAppsEnableWebContentEvaluation)
+			assert.Equal(t, tc.storeEnabled, s.StoreAppsEnabled())
+		})
+	}
+}

@@ -93,3 +93,62 @@ func TestParseDeviceGuardStatusRejectsEmptyOutput(t *testing.T) {
 	_, err := ParseDeviceGuardStatus(strings.NewReader("   \n"))
 	assert.Error(t, err)
 }
+
+// Real Win32_DeviceGuard readings from Windows Server 2016 (10.0.14393), 2022
+// (10.0.20348) and 2025 (10.0.26100), captured through the shipped
+// PSGetDeviceGuard script. Server 2019 (10.0.17763) produced output identical
+// to 2022, so it is covered by the same fixture.
+//
+// The platform properties are where the versions diverge, and they are the
+// reason a service that is configured will not start: 2016 offers DMA
+// protection, 2022 offers nothing. Neither host has any security service
+// configured or running, and both must read that as a real [0] rather than as
+// a null or an empty list.
+func TestParseDeviceGuardServerBaselines(t *testing.T) {
+	for _, tc := range []struct {
+		name                string
+		fixture             string
+		availableProperties []int64
+		codeIntegrityStatus int64
+	}{
+		{"Windows Server 2016 offers DMA protection", "deviceguard_server2016.json", []int64{3}, 0},
+		{"Windows Server 2022 offers no relevant property", "deviceguard_server2022.json", []int64{0}, 0},
+		// 2025 is the only one of the four that offers hypervisor support (1),
+		// NX (5) and MBEC (7), and the only one whose kernel code integrity
+		// policy is enforced (2) out of the box.
+		{"Windows Server 2025 offers hypervisor, DMA, NX and MBEC", "deviceguard_server2025.json", []int64{1, 3, 5, 7}, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f, err := os.Open("./testdata/" + tc.fixture)
+			require.NoError(t, err)
+			defer f.Close()
+
+			status, err := ParseDeviceGuardStatus(f)
+			require.NoError(t, err)
+
+			assert.Equal(t, tc.availableProperties, []int64(status.AvailableSecurityProperties))
+			// every code the four hosts report has to be one the schema
+			// documents (0-8), or the resource is handing back a number with
+			// no meaning attached
+			for _, code := range status.AvailableSecurityProperties {
+				assert.GreaterOrEqual(t, code, int64(0))
+				assert.LessOrEqual(t, code, int64(8))
+			}
+
+			// "nothing is running" is an answer, not an absence: these must be
+			// a one-element list holding 0, never nil.
+			require.NotNil(t, status.SecurityServicesConfigured)
+			require.NotNil(t, status.SecurityServicesRunning)
+			assert.Equal(t, []int64{0}, []int64(status.SecurityServicesConfigured))
+			assert.Equal(t, []int64{0}, []int64(status.SecurityServicesRunning))
+
+			// the scalars are reported, so they must be 0 rather than null
+			require.NotNil(t, status.VirtualizationBasedSecurityStatus)
+			require.NotNil(t, status.CodeIntegrityPolicyEnforcementStatus)
+			require.NotNil(t, status.UsermodeCodeIntegrityPolicyEnforcementStatus)
+			assert.Equal(t, int64(0), *status.VirtualizationBasedSecurityStatus)
+			assert.Equal(t, tc.codeIntegrityStatus, *status.CodeIntegrityPolicyEnforcementStatus)
+			assert.Equal(t, int64(0), *status.UsermodeCodeIntegrityPolicyEnforcementStatus)
+		})
+	}
+}
