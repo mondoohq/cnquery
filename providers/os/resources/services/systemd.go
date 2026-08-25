@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/coreos/go-systemd/unit"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
@@ -261,7 +262,13 @@ func (s *SystemDServiceManager) List() ([]*Service, error) {
 
 	services, err := ParseServiceSystemDUnitFiles(cmdList.Stdout)
 	if err != nil {
-		return nil, err
+		// Being able to run a command does not mean systemd is the running
+		// init. A container built from a systemd distro carries the unit files
+		// without ever starting systemd, so systemctl produces nothing usable
+		// there. Read the units off disk instead of reporting the failure as
+		// the service list.
+		log.Debug().Err(err).Msg("systemctl did not answer, reading systemd units from disk instead")
+		return (&SystemdFSServiceManager{Fs: s.conn.FileSystem()}).List()
 	}
 
 	// Step 2: Get running state from list-units (provides Running/Description)
