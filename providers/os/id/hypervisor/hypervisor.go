@@ -39,7 +39,7 @@ var knownHypervisors = map[string]string{
 	// distinguishable; the DMI vendor fields read "Amazon EC2" on Nitro and
 	// "Xen" on Xen, which keeps them disjoint on that path too. One substring
 	// therefore covers both Nitro detection routes without shadowing "xen".
-	"amazon": "Nitro",
+	"amazon": "AWS Nitro System",
 }
 
 // hyper is a helper struct to avoid passing the connection and platform

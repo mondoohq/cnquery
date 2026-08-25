@@ -19,17 +19,17 @@ func TestMapHypervisorAmazonEC2(t *testing.T) {
 	// systemd-detect-virt on a Nitro guest
 	v, ok := mapHypervisor("amazon")
 	assert.True(t, ok)
-	assert.Equal(t, "Nitro", v)
+	assert.Equal(t, "AWS Nitro System", v)
 
 	// DMI sys_vendor / board_vendor / bios_vendor
 	v, ok = mapHypervisor("Amazon EC2")
 	assert.True(t, ok)
-	assert.Equal(t, "Nitro", v)
+	assert.Equal(t, "AWS Nitro System", v)
 
 	// dmidecode output carries trailing whitespace and mixed case
 	v, ok = mapHypervisor("  AMAZON EC2\n")
 	assert.True(t, ok)
-	assert.Equal(t, "Nitro", v)
+	assert.Equal(t, "AWS Nitro System", v)
 }
 
 // Older EC2 instances are Xen-based and must keep resolving to Xen, not be
