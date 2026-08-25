@@ -481,6 +481,7 @@ const (
 	ResourceWindowsBitlockerPolicy                        string = "windows.bitlocker.policy"
 	ResourceWindowsBitlockerPolicyDriveSettings           string = "windows.bitlocker.policy.driveSettings"
 	ResourceWindowsBitlockerVolume                        string = "windows.bitlocker.volume"
+	ResourceWindowsBitlockerVolumeKeyProtector            string = "windows.bitlocker.volume.keyProtector"
 	ResourceWindowsSecurity                               string = "windows.security"
 	ResourceWindowsSecurityProduct                        string = "windows.security.product"
 	ResourceWindowsSecurityHealth                         string = "windows.security.health"
@@ -2484,6 +2485,10 @@ func init() {
 		"windows.bitlocker.volume": {
 			// to override args, implement: initWindowsBitlockerVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsBitlockerVolume,
+		},
+		"windows.bitlocker.volume.keyProtector": {
+			// to override args, implement: initWindowsBitlockerVolumeKeyProtector(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsBitlockerVolumeKeyProtector,
 		},
 		"windows.security": {
 			// to override args, implement: initWindowsSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12447,6 +12452,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.deviceGuard.kernelShadowStacksLaunch": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDeviceGuard).GetKernelShadowStacksLaunch()).ToDataRes(types.Int)
 	},
+	"windows.deviceGuard.securityServicesConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetSecurityServicesConfigured()).ToDataRes(types.Array(types.Int))
+	},
+	"windows.deviceGuard.securityServicesRunning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetSecurityServicesRunning()).ToDataRes(types.Array(types.Int))
+	},
+	"windows.deviceGuard.availableSecurityProperties": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetAvailableSecurityProperties()).ToDataRes(types.Array(types.Int))
+	},
+	"windows.deviceGuard.codeIntegrityPolicyEnforcementStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetCodeIntegrityPolicyEnforcementStatus()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.usermodeCodeIntegrityPolicyEnforcementStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetUsermodeCodeIntegrityPolicyEnforcementStatus()).ToDataRes(types.Int)
+	},
+	"windows.deviceGuard.virtualizationBasedSecurityStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDeviceGuard).GetVirtualizationBasedSecurityStatus()).ToDataRes(types.Int)
+	},
 	"windows.lsa.disableDomainCreds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetDisableDomainCreds()).ToDataRes(types.Bool)
 	},
@@ -13562,6 +13585,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.bitlocker.volume.version": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlockerVolume).GetVersion()).ToDataRes(types.Dict)
+	},
+	"windows.bitlocker.volume.keyProtectors": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolume).GetKeyProtectors()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume.keyProtector")))
+	},
+	"windows.bitlocker.volume.keyProtector.keyProtectorId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolumeKeyProtector).GetKeyProtectorId()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.volume.keyProtector.keyProtectorType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolumeKeyProtector).GetKeyProtectorType()).ToDataRes(types.String)
+	},
+	"windows.bitlocker.volume.keyProtector.keyProtectorTypeCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlockerVolumeKeyProtector).GetKeyProtectorTypeCode()).ToDataRes(types.Int)
 	},
 	"windows.security.products": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSecurity).GetProducts()).ToDataRes(types.Array(types.Resource("windows.security.product")))
@@ -30672,6 +30707,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsDeviceGuard).KernelShadowStacksLaunch, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"windows.deviceGuard.securityServicesConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).SecurityServicesConfigured, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.securityServicesRunning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).SecurityServicesRunning, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.availableSecurityProperties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).AvailableSecurityProperties, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.codeIntegrityPolicyEnforcementStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).CodeIntegrityPolicyEnforcementStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.usermodeCodeIntegrityPolicyEnforcementStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).UsermodeCodeIntegrityPolicyEnforcementStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.deviceGuard.virtualizationBasedSecurityStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDeviceGuard).VirtualizationBasedSecurityStatus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"windows.lsa.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsLsa).__id, ok = v.Value.(string)
 		return
@@ -32334,6 +32393,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.bitlocker.volume.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlockerVolume).Version, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.keyProtectors": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolume).KeyProtectors, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.keyProtector.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolumeKeyProtector).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.bitlocker.volume.keyProtector.keyProtectorId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolumeKeyProtector).KeyProtectorId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.keyProtector.keyProtectorType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolumeKeyProtector).KeyProtectorType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.bitlocker.volume.keyProtector.keyProtectorTypeCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlockerVolumeKeyProtector).KeyProtectorTypeCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.security.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79190,14 +79269,20 @@ func (c *mqlWindowsWinrmService) GetAllowRemoteShellAccess() *plugin.TValue[bool
 type mqlWindowsDeviceGuard struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsDeviceGuardInternal it will be used here
-	VirtualizationBasedSecurityEnabled plugin.TValue[bool]
-	RequirePlatformSecurityFeatures    plugin.TValue[int64]
-	HypervisorEnforcedCodeIntegrity    plugin.TValue[int64]
-	HvciMatRequired                    plugin.TValue[bool]
-	CredentialGuardConfig              plugin.TValue[int64]
-	SystemGuardLaunch                  plugin.TValue[bool]
-	KernelShadowStacksLaunch           plugin.TValue[int64]
+	mqlWindowsDeviceGuardInternal
+	VirtualizationBasedSecurityEnabled           plugin.TValue[bool]
+	RequirePlatformSecurityFeatures              plugin.TValue[int64]
+	HypervisorEnforcedCodeIntegrity              plugin.TValue[int64]
+	HvciMatRequired                              plugin.TValue[bool]
+	CredentialGuardConfig                        plugin.TValue[int64]
+	SystemGuardLaunch                            plugin.TValue[bool]
+	KernelShadowStacksLaunch                     plugin.TValue[int64]
+	SecurityServicesConfigured                   plugin.TValue[[]any]
+	SecurityServicesRunning                      plugin.TValue[[]any]
+	AvailableSecurityProperties                  plugin.TValue[[]any]
+	CodeIntegrityPolicyEnforcementStatus         plugin.TValue[int64]
+	UsermodeCodeIntegrityPolicyEnforcementStatus plugin.TValue[int64]
+	VirtualizationBasedSecurityStatus            plugin.TValue[int64]
 }
 
 // createWindowsDeviceGuard creates a new instance of this resource
@@ -79263,6 +79348,42 @@ func (c *mqlWindowsDeviceGuard) GetSystemGuardLaunch() *plugin.TValue[bool] {
 
 func (c *mqlWindowsDeviceGuard) GetKernelShadowStacksLaunch() *plugin.TValue[int64] {
 	return &c.KernelShadowStacksLaunch
+}
+
+func (c *mqlWindowsDeviceGuard) GetSecurityServicesConfigured() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityServicesConfigured, func() ([]any, error) {
+		return c.securityServicesConfigured()
+	})
+}
+
+func (c *mqlWindowsDeviceGuard) GetSecurityServicesRunning() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SecurityServicesRunning, func() ([]any, error) {
+		return c.securityServicesRunning()
+	})
+}
+
+func (c *mqlWindowsDeviceGuard) GetAvailableSecurityProperties() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AvailableSecurityProperties, func() ([]any, error) {
+		return c.availableSecurityProperties()
+	})
+}
+
+func (c *mqlWindowsDeviceGuard) GetCodeIntegrityPolicyEnforcementStatus() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.CodeIntegrityPolicyEnforcementStatus, func() (int64, error) {
+		return c.codeIntegrityPolicyEnforcementStatus()
+	})
+}
+
+func (c *mqlWindowsDeviceGuard) GetUsermodeCodeIntegrityPolicyEnforcementStatus() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.UsermodeCodeIntegrityPolicyEnforcementStatus, func() (int64, error) {
+		return c.usermodeCodeIntegrityPolicyEnforcementStatus()
+	})
+}
+
+func (c *mqlWindowsDeviceGuard) GetVirtualizationBasedSecurityStatus() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.VirtualizationBasedSecurityStatus, func() (int64, error) {
+		return c.virtualizationBasedSecurityStatus()
+	})
 }
 
 // mqlWindowsLsa for the windows.lsa resource
@@ -83360,7 +83481,7 @@ func (c *mqlWindowsBitlockerPolicyDriveSettings) GetDenyCrossOrg() *plugin.TValu
 type mqlWindowsBitlockerVolume struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsBitlockerVolumeInternal it will be used here
+	mqlWindowsBitlockerVolumeInternal
 	DeviceID           plugin.TValue[string]
 	DriveLetter        plugin.TValue[string]
 	ConversionStatus   plugin.TValue[any]
@@ -83369,6 +83490,7 @@ type mqlWindowsBitlockerVolume struct {
 	PersistentVolumeID plugin.TValue[string]
 	ProtectionStatus   plugin.TValue[any]
 	Version            plugin.TValue[any]
+	KeyProtectors      plugin.TValue[[]any]
 }
 
 // createWindowsBitlockerVolume creates a new instance of this resource
@@ -83438,6 +83560,76 @@ func (c *mqlWindowsBitlockerVolume) GetProtectionStatus() *plugin.TValue[any] {
 
 func (c *mqlWindowsBitlockerVolume) GetVersion() *plugin.TValue[any] {
 	return &c.Version
+}
+
+func (c *mqlWindowsBitlockerVolume) GetKeyProtectors() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeyProtectors, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.bitlocker.volume", c.__id, "keyProtectors")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keyProtectors()
+	})
+}
+
+// mqlWindowsBitlockerVolumeKeyProtector for the windows.bitlocker.volume.keyProtector resource
+type mqlWindowsBitlockerVolumeKeyProtector struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsBitlockerVolumeKeyProtectorInternal it will be used here
+	KeyProtectorId       plugin.TValue[string]
+	KeyProtectorType     plugin.TValue[string]
+	KeyProtectorTypeCode plugin.TValue[int64]
+}
+
+// createWindowsBitlockerVolumeKeyProtector creates a new instance of this resource
+func createWindowsBitlockerVolumeKeyProtector(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsBitlockerVolumeKeyProtector{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.bitlocker.volume.keyProtector", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsBitlockerVolumeKeyProtector) MqlName() string {
+	return "windows.bitlocker.volume.keyProtector"
+}
+
+func (c *mqlWindowsBitlockerVolumeKeyProtector) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsBitlockerVolumeKeyProtector) GetKeyProtectorId() *plugin.TValue[string] {
+	return &c.KeyProtectorId
+}
+
+func (c *mqlWindowsBitlockerVolumeKeyProtector) GetKeyProtectorType() *plugin.TValue[string] {
+	return &c.KeyProtectorType
+}
+
+func (c *mqlWindowsBitlockerVolumeKeyProtector) GetKeyProtectorTypeCode() *plugin.TValue[int64] {
+	return &c.KeyProtectorTypeCode
 }
 
 // mqlWindowsSecurity for the windows.security resource
