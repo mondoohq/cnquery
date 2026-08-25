@@ -4,6 +4,7 @@
 package llx_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -87,6 +88,81 @@ func TestEmptyTypePrimitiveConvertsToNil(t *testing.T) {
 	require.NoError(t, rd.Error)
 	assert.Equal(t, types.Nil, rd.Type)
 	assert.Nil(t, rd.Value)
+}
+
+// TestNilPrimitiveConvertsToNil is a regression test for a nil-receiver panic.
+// providers.Runtime watchAndUpdate calls data.Data.RawData() unconditionally,
+// and a provider that answers with neither data nor an error leaves data.Data
+// nil — so RawData must tolerate a nil *Primitive. Probing the husk with the
+// bare fields (p.Value) instead of the nil-safe generated getters crashes the
+// whole scan here, because the executor runs blocks in goroutines.
+func TestNilPrimitiveConvertsToNil(t *testing.T) {
+	var p *llx.Primitive
+	require.NotPanics(t, func() {
+		rd := p.RawData()
+		require.NoError(t, rd.Error)
+		assert.Equal(t, types.Nil, rd.Type)
+		assert.Nil(t, rd.Value)
+	})
+}
+
+// TestErroredUntypedRawDataRoundTrip: an errored RawData without type info
+// (e.g. a provider error wrapped as a bare &RawData{Error: ...} at the plugin
+// boundary) serializes with a typeless data primitive next to the error;
+// reading it back must yield a clean typed null carrying the error.
+func TestErroredUntypedRawDataRoundTrip(t *testing.T) {
+	rd := &llx.RawData{Error: errors.New("field failed")}
+	res := rd.Result()
+	require.NotNil(t, res)
+	assert.Equal(t, "field failed", res.Error)
+	require.NotNil(t, res.Data)
+	assert.Equal(t, "", res.Data.Type)
+
+	back := res.RawData()
+	assert.Equal(t, types.Nil, back.Type)
+	assert.EqualError(t, back.Error, "field failed")
+}
+
+// An errored RawData that does carry type info must keep it.
+func TestErroredTypedRawDataResultKeepsType(t *testing.T) {
+	rd := &llx.RawData{Type: types.Bool, Error: errors.New("field failed")}
+	res := rd.Result()
+	require.NotNil(t, res)
+	assert.Equal(t, string(types.Bool), res.Data.Type)
+	assert.Equal(t, "field failed", res.Error)
+}
+
+// TestBlockWithErroredFieldReadsBackAsNull mirrors a `ports { ... process }`
+// block where one field errored: block2result keeps only Result().Data for
+// nested fields (the error is carried by the query score instead), leaving a
+// typeless empty husk behind. Reading the block back must coerce the husk to
+// a clean null and must not error or drop the surrounding block.
+func TestBlockWithErroredFieldReadsBackAsNull(t *testing.T) {
+	blk := &llx.RawData{
+		Type: types.Block,
+		Value: map[string]any{
+			"ok":  llx.StringData("fine"),
+			"bad": &llx.RawData{Error: errors.New("no process for this port")},
+		},
+	}
+	res := blk.Result()
+	require.NotNil(t, res)
+	require.NotNil(t, res.Data)
+	m := res.Data.Map
+	require.NotNil(t, m)
+	require.Contains(t, m, "bad")
+	assert.Equal(t, "", m["bad"].Type,
+		"the nested errored field serializes as a typeless husk (Primitive cannot carry the error)")
+	assert.Equal(t, string(types.String), m["ok"].Type)
+
+	back := res.RawData()
+	require.NoError(t, back.Error)
+	backMap, ok := back.Value.(map[string]any)
+	require.True(t, ok)
+	badBack, ok := backMap["bad"].(*llx.RawData)
+	require.True(t, ok)
+	assert.Equal(t, types.Nil, badBack.Type)
+	assert.Nil(t, badBack.Value)
 }
 
 // TestEmptyTypePrimitiveKeepsCollection is a regression test for empty

@@ -816,25 +816,41 @@ func primitive2rawdataMapV2(m map[string]*Primitive) (map[string]any, error) {
 // RawData converts the primitive into the internal go-representation of the
 // data that can be used for computations
 func (p *Primitive) RawData() *RawData {
-	// A primitive with no type information is malformed: it is never produced
-	// deliberately (a genuine null is `NilPrimitive`, with Type == types.Nil).
-	// It only appears when an upstream layer emits a broken primitive — a
-	// provider encoding an unset field (see plugin.TValue.ToDataRes) or the
-	// compiler binding a predicate's value field to a resource that lacks it
-	// (see mqlc.addValueFieldChunks).
+	// A primitive with no type information is never produced deliberately (a
+	// genuine null is `NilPrimitive`, with Type == types.Nil). It appears in
+	// two situations, distinguished by whether it carries content:
 	//
-	// Behavior here is loud-and-narrow:
-	//   - narrow: coerce just this field to null instead of returning an error.
-	//     An error would propagate through primitive2array / primitive2rawdataMapV2
-	//     and discard the entire surrounding collection (parray2raw rewrites the
-	//     dropped slice to an empty `[]`), so one broken leaf would empty a whole
-	//     failing-resource list and surface as an empty assessment.
-	//   - loud: log it. Silently coercing to a fake-valid null is what made the
-	//     original compiler bug nearly impossible to find; logging keeps the
-	//     underlying (usually compiler) defect visible even though we degrade
-	//     gracefully for the surrounding data.
+	//   - A nil or completely empty primitive is the husk of a value that was
+	//     holding an error or was never set: an errored value frequently
+	//     carries no type (e.g. a provider error is wrapped as a bare
+	//     &RawData{Error: ...} at the plugin boundary), RawData.Result() stamps
+	//     only the type on it, and block2result strips the per-field error when
+	//     nesting, leaving {} behind (e.g. a `ports { process }` block where a
+	//     port's process lookup failed). A provider that answers with neither
+	//     data nor an error hands us a nil *Primitive outright (see
+	//     providers.Runtime watchAndUpdate), which is why the checks below go
+	//     through the nil-safe generated getters rather than the fields. The
+	//     error, if any, already surfaced on the Result / query score, and a
+	//     provider unset field is separately reported with full
+	//     provider/resource/field attribution by providers.Runtime GetData, so
+	//     re-reporting the husk on every read of the stored data would only
+	//     duplicate it as unattributable noise. Coerce it to null quietly.
+	//
+	//   - A typeless primitive that still holds content is malformed: an
+	//     upstream layer emitted a broken primitive, e.g. the compiler binding
+	//     a predicate's value field to a resource that lacks it (see
+	//     mqlc.addValueFieldChunks). Stay loud-and-narrow: log at error level
+	//     (silently coercing is what made the original compiler bug nearly
+	//     impossible to find), but coerce just this field to null instead of
+	//     returning an error — an error would propagate through
+	//     primitive2array / primitive2rawdataMapV2 and discard the entire
+	//     surrounding collection (parray2raw rewrites the dropped slice to an
+	//     empty `[]`), so one broken leaf would empty a whole failing-resource
+	//     list and surface as an empty assessment.
 	if p.GetType() == "" {
-		log.Error().Msg("llx: encountered a primitive with no type information, coercing to null (an upstream layer — a provider or the compiler — produced a malformed primitive)")
+		if len(p.GetValue()) != 0 || len(p.GetArray()) != 0 || len(p.GetMap()) != 0 {
+			log.Error().Msg("llx: encountered a primitive with no type information, coercing to null (an upstream layer — a provider or the compiler — produced a malformed primitive)")
+		}
 		return &RawData{Type: types.Nil}
 	}
 
