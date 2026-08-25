@@ -2307,7 +2307,7 @@ func init() {
 			Create: createWindowsWinrmService,
 		},
 		"windows.deviceGuard": {
-			// to override args, implement: initWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDeviceGuard,
 			Create: createWindowsDeviceGuard,
 		},
 		"windows.lsa": {

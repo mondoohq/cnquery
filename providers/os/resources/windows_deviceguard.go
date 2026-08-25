@@ -253,3 +253,37 @@ func (r *mqlWindowsDeviceGuard) virtualizationBasedSecurityStatus() (int64, erro
 	}
 	return intValue(dg.VirtualizationBasedSecurityStatus, &r.VirtualizationBasedSecurityStatus)
 }
+
+// windows.deviceGuard is reachable by a dotted path that is also its own
+// registered resource name: the field `deviceGuard` on `windows` and the
+// resource `windows.deviceGuard` occupy the same path. The compiler resolves
+// the longest matching resource name before it considers a field, so
+// `windows.deviceGuard.credentialGuardConfig` instantiates the resource
+// directly and the parent's deviceGuard() accessor never runs. The policy
+// fields are plain schema fields that only that accessor populates, so every
+// one stays unset, reports "provider returned no data and no error", and then
+// converts as a primitive carrying no type information.
+//
+// The result reads null, which is worse than an error: `null && null`
+// evaluates to true in MQL, so a check written in the dotted form passes on a
+// host that was never hardened.
+//
+// Delegating to the parent's accessor fills the resource in. The block form
+// `windows { deviceGuard { ... } }` binds the field rather than resolving a
+// resource name and was never affected. When the parent creates the resource
+// normally it carries an __id and this is a no-op.
+func initWindowsDeviceGuard(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+
+	parent, err := CreateResource(runtime, "windows", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := parent.(*mqlWindows).GetDeviceGuard()
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	return args, v.Data, nil
+}
