@@ -86,8 +86,6 @@ func TestNoNewDottedPathHusks(t *testing.T) {
 		"luks.volume.cipher":              true,
 		"os.date":                         true,
 		"windows.bitlocker.policy":        true,
-		"windows.defender.preferences":    true,
-		"windows.defender.status":         true,
 		"windows.exploitProtection":       true,
 		"windows.exploitProtection.aslr":  true,
 		"windows.exploitProtection.dep":   true,

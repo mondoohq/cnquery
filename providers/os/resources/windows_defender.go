@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -32,6 +33,57 @@ func (d *mqlWindowsDefender) enabled() (bool, error) {
 		return false, nil
 	}
 	return s.AmServiceEnabled.Data && s.AntivirusEnabled.Data && s.AntispywareEnabled.Data, nil
+}
+
+// windows.defender.status and windows.defender.preferences are reachable by
+// dotted paths that are also their own registered resource names: the field
+// `status` on `windows.defender` and the resource `windows.defender.status`
+// occupy the same path. The compiler resolves the longest matching resource
+// name before it considers a field, so `windows.defender.status` instantiates
+// the sub-resource directly and the parent's status() accessor never runs.
+// Every field is a plain schema field that only the parent populates, so all of
+// them stay unset and report "provider returned no data and no error", then
+// convert as primitives carrying no type information:
+//
+//	windows.defender.status.antivirusEnabled           -> null
+//	windows.defender { status { antivirusEnabled } }   -> true
+//
+// A check reading "antivirus is enabled" off the dotted form therefore reports
+// null on a host where Defender is running. Delegating to the parent's accessor
+// fills the resource in. When the parent creates the resource normally it
+// carries an __id and these are a no-op.
+func initWindowsDefenderChild[T plugin.Resource](
+	runtime *plugin.Runtime,
+	args map[string]*llx.RawData,
+	field string,
+	get func(*mqlWindowsDefender) *plugin.TValue[T],
+) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	parent, err := CreateResource(runtime, "windows.defender", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := get(parent.(*mqlWindowsDefender))
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	if v.IsNull() {
+		// Defender is not installed. Falling through would build the resource
+		// out of the empty args and report null for every field, which reads as
+		// "not configured" rather than "not present".
+		return nil, nil, fmt.Errorf("cannot read windows.defender.%s: %w", field, windows.ErrDefenderUnavailable)
+	}
+	return args, v.Data, nil
+}
+
+func initWindowsDefenderStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDefenderChild(runtime, args, "status", (*mqlWindowsDefender).GetStatus)
+}
+
+func initWindowsDefenderPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsDefenderChild(runtime, args, "preferences", (*mqlWindowsDefender).GetPreferences)
 }
 
 func (d *mqlWindowsDefender) status() (*mqlWindowsDefenderStatus, error) {
@@ -64,9 +116,9 @@ func (d *mqlWindowsDefender) status() (*mqlWindowsDefenderStatus, error) {
 		"computerID":                       llx.StringData(status.ComputerID),
 		"computerState":                    llx.IntData(status.ComputerState),
 		"defenderSignaturesOutOfDate":      llx.BoolData(status.DefenderSignaturesOutOfDate),
-		"deviceControlDefaultEnforcement":  llx.IntData(status.DeviceControlDefaultEnforcement),
+		"deviceControlDefaultEnforcement":  llx.StringDataPtr(status.DeviceControlDefaultEnforcement),
 		"deviceControlPoliciesLastUpdated": llx.TimeDataPtr(windows.DefenderTime(status.DeviceControlPoliciesLastUpdated)),
-		"deviceControlState":               llx.IntData(status.DeviceControlState),
+		"deviceControlState":               llx.StringData(status.DeviceControlState),
 		"fullScanAge":                      llx.IntData(status.FullScanAge),
 		"fullScanStartTime":                llx.TimeDataPtr(windows.DefenderTime(status.FullScanStartTime)),
 		"fullScanEndTime":                  llx.TimeDataPtr(windows.DefenderTime(status.FullScanEndTime)),
@@ -240,7 +292,7 @@ func (p *mqlWindowsDefenderPreferences) scan() (*mqlWindowsDefenderScanSettings,
 		"scanScheduleOffset":                            llx.IntData(prefs.ScanScheduleOffset),
 		"scanAvgCPULoadFactor":                          llx.IntData(prefs.ScanAvgCPULoadFactor),
 		"scanOnlyIfIdleEnabled":                         llx.BoolData(prefs.ScanOnlyIfIdleEnabled),
-		"checkForSignaturesBeforeRunningScan":           llx.IntData(prefs.CheckForSignaturesBeforeRunningScan),
+		"checkForSignaturesBeforeRunningScan":           llx.BoolData(prefs.CheckForSignaturesBeforeRunningScan),
 		"disableArchiveScanning":                        llx.BoolData(prefs.DisableArchiveScanning),
 		"disableEmailScanning":                          llx.BoolData(prefs.DisableEmailScanning),
 		"disableRemovableDriveScanning":                 llx.BoolData(prefs.DisableRemovableDriveScanning),
@@ -269,7 +321,7 @@ func (p *mqlWindowsDefenderPreferences) realTimeProtection() (*mqlWindowsDefende
 		"disableBehaviorMonitoring":        llx.BoolData(prefs.DisableBehaviorMonitoring),
 		"disableIOAVProtection":            llx.BoolData(prefs.DisableIOAVProtection),
 		"disableScriptScanning":            llx.BoolData(prefs.DisableScriptScanning),
-		"disableIntrusionPreventionSystem": llx.BoolData(prefs.DisableIntrusionPreventionSystem),
+		"disableIntrusionPreventionSystem": llx.BoolDataPtr(prefs.DisableIntrusionPreventionSystem),
 		"realTimeScanDirection":            llx.IntData(prefs.RealTimeScanDirection),
 		"enableFileHashComputation":        llx.BoolData(prefs.EnableFileHashComputation),
 	})
@@ -410,15 +462,15 @@ func (p *mqlWindowsDefenderPreferences) localSettingOverrides() (*mqlWindowsDefe
 	}
 	res, err := CreateResource(p.MqlRuntime, "windows.defender.localSettingOverrides", map[string]*llx.RawData{
 		"__id":                             llx.StringData("windows.defender.localSettingOverrides"),
-		"spynetReporting":                  llx.BoolData(prefs.LocalSettingOverrideSpynetReporting),
-		"realtimeMonitoring":               llx.BoolData(prefs.LocalSettingOverrideRealtimeMonitoring),
-		"disableBehaviorMonitoring":        llx.BoolData(prefs.LocalSettingOverrideDisableBehaviorMonitoring),
-		"disableIOAVProtection":            llx.BoolData(prefs.LocalSettingOverrideDisableIOAVProtection),
-		"disableIntrusionPreventionSystem": llx.BoolData(prefs.LocalSettingOverrideDisableIntrusionPreventionSystem),
-		"disableOnAccessProtection":        llx.BoolData(prefs.LocalSettingOverrideDisableOnAccessProtection),
-		"scanParameters":                   llx.BoolData(prefs.LocalSettingOverrideScanParameters),
-		"scanScheduleDay":                  llx.BoolData(prefs.LocalSettingOverrideScanScheduleDay),
-		"avgCPULoadFactor":                 llx.BoolData(prefs.LocalSettingOverrideAvgCPULoadFactor),
+		"spynetReporting":                  llx.BoolDataPtr(prefs.LocalSettingOverrideSpynetReporting),
+		"realtimeMonitoring":               llx.BoolDataPtr(prefs.LocalSettingOverrideRealtimeMonitoring),
+		"disableBehaviorMonitoring":        llx.BoolDataPtr(prefs.LocalSettingOverrideDisableBehaviorMonitoring),
+		"disableIOAVProtection":            llx.BoolDataPtr(prefs.LocalSettingOverrideDisableIOAVProtection),
+		"disableIntrusionPreventionSystem": llx.BoolDataPtr(prefs.LocalSettingOverrideDisableIntrusionPreventionSystem),
+		"disableOnAccessProtection":        llx.BoolDataPtr(prefs.LocalSettingOverrideDisableOnAccessProtection),
+		"scanParameters":                   llx.BoolDataPtr(prefs.LocalSettingOverrideScanParameters),
+		"scanScheduleDay":                  llx.BoolDataPtr(prefs.LocalSettingOverrideScanScheduleDay),
+		"avgCPULoadFactor":                 llx.BoolDataPtr(prefs.LocalSettingOverrideAvgCPULoadFactor),
 	})
 	if err != nil {
 		return nil, err
@@ -528,7 +580,11 @@ func (p *mqlWindowsDefenderPreferences) disableGenericReports() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return prefs.DisableGenericReports, nil
+	if prefs.DisableGenericReports == nil {
+		p.DisableGenericReports.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return *prefs.DisableGenericReports, nil
 }
 
 // mqlWindowsDefenderThreatActionSettingsInternal caches the per-threat-ID

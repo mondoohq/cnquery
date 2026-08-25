@@ -13993,11 +13993,17 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // Whether the Defender signatures are out of date
   defenderSignaturesOutOfDate bool
   // Default enforcement mode for device control
-  deviceControlDefaultEnforcement int
+  //
+  // Reported as a name rather than a number, for example "Allow" or "Deny".
+  // Null when no device-control enforcement policy is applied.
+  deviceControlDefaultEnforcement string
   // Date the device-control policies were last updated
   deviceControlPoliciesLastUpdated time
   // Operational state of device control
-  deviceControlState int
+  //
+  // Reported as a name rather than a number, for example "Disabled" when
+  // device control is not in effect.
+  deviceControlState string
   // Number of days since the last full scan completed
   fullScanAge int
   // Time the last full scan started
@@ -14108,6 +14114,8 @@ windows.defender.preferences @defaults("puaProtection") {
   // Whether automatic exclusions for server roles are disabled
   disableAutoExclusions() bool
   // Whether sending Watson (generic) reports to Microsoft is disabled
+  //
+  // Null when the Defender platform does not report this preference.
   disableGenericReports() bool
 }
 
@@ -14125,9 +14133,9 @@ windows.defender.scanSettings @defaults("scanParameters scanScheduleDay") {
   //
   // 0 = every day, 1 = Sunday through 7 = Saturday, 8 = never.
   scanScheduleDay int
-  // Time of day a scheduled scan runs (raw schedule value)
+  // Time of day a scheduled scan runs, as "HH:MM:SS"
   scanScheduleTime string
-  // Time of day a scheduled quick scan runs (raw schedule value)
+  // Time of day a scheduled quick scan runs, as "HH:MM:SS"
   scanScheduleQuickScanTime string
   // Number of minutes after midnight to offset the scheduled scan
   scanScheduleOffset int
@@ -14136,9 +14144,7 @@ windows.defender.scanSettings @defaults("scanParameters scanScheduleDay") {
   // Whether scheduled scans run only when the computer is idle
   scanOnlyIfIdleEnabled bool
   // Whether to check for new signatures before running a scheduled scan
-  //
-  // 0 = never, 1 = before every scan, 2 = disabled.
-  checkForSignaturesBeforeRunningScan int
+  checkForSignaturesBeforeRunningScan bool
   // Whether scanning inside archive files is disabled
   disableArchiveScanning bool
   // Whether email scanning is disabled
@@ -14178,6 +14184,10 @@ windows.defender.realTimeSettings @defaults("disableRealtimeMonitoring") {
   // Whether script scanning is disabled
   disableScriptScanning bool
   // Whether the Network Inspection System (intrusion prevention) is disabled
+  //
+  // Null when the Defender platform does not report this preference. Recent
+  // platform releases dropped it from Get-MpPreference, in which case the
+  // live state is available as nisEnabled on windows.defender.status.
   disableIntrusionPreventionSystem bool
   // Direction in which real-time scanning inspects files
   //
@@ -14224,7 +14234,7 @@ windows.defender.cloudSettings @defaults("mapsReporting cloudBlockLevel") {
 windows.defender.signatureSettings @defaults("signatureUpdateInterval") {
   // Day of the week scheduled signature updates run
   signatureScheduleDay int
-  // Time of day scheduled signature updates run (raw schedule value)
+  // Time of day scheduled signature updates run, as "HH:MM:SS"
   signatureScheduleTime string
   // Hours between signature update checks
   signatureUpdateInterval int
@@ -14363,8 +14373,13 @@ windows.defender.behavioralNetworkBlockSettings @defaults("bruteForceProtectionC
 //
 // Whether a locally configured preference is allowed to override the
 // corresponding Group Policy setting. When an override is disabled (false)
-// the policy value is enforced and users cannot change it locally; CIS
-// benchmarks generally require these overrides to be disabled.
+// the policy value is enforced and users cannot change it locally, which is
+// the hardened configuration.
+//
+// Every field here is null on a host whose Defender platform does not report
+// the preference. Recent platform releases dropped the LocalSettingOverride
+// properties from Get-MpPreference, so on those hosts nothing about the
+// overrides is known and a null must not be read as "no override allowed".
 windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonitoring") {
   // Whether a local setting may override MAPS (SpyNet) reporting
   spynetReporting bool
@@ -14394,7 +14409,7 @@ windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonito
 windows.defender.remediationSettings @defaults("quarantinePurgeItemsAfterDelay") {
   // Day of the week scheduled remediation runs
   remediationScheduleDay int
-  // Time of day scheduled remediation runs (raw schedule value)
+  // Time of day scheduled remediation runs, as "HH:MM:SS"
   remediationScheduleTime string
   // Number of days quarantined items are kept before purging
   quarantinePurgeItemsAfterDelay int

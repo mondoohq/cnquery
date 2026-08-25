@@ -6,7 +6,7 @@
   "ScanScheduleOffset": 120,
   "ScanAvgCPULoadFactor": 50,
   "ScanOnlyIfIdleEnabled": true,
-  "CheckForSignaturesBeforeRunningScan": 0,
+  "CheckForSignaturesBeforeRunningScan": false,
   "DisableArchiveScanning": false,
   "DisableEmailScanning": true,
   "DisableRemovableDriveScanning": true,

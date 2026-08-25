@@ -100,14 +100,17 @@ func TestParseMpPreference(t *testing.T) {
 	assert.Equal(t, int64(1), pref.RemoteEncryptionProtectionConfiguredState)
 
 	// local setting overrides
-	assert.False(t, pref.LocalSettingOverrideSpynetReporting)
-	assert.False(t, pref.LocalSettingOverrideRealtimeMonitoring)
+	require.NotNil(t, pref.LocalSettingOverrideSpynetReporting)
+	assert.False(t, *pref.LocalSettingOverrideSpynetReporting)
+	require.NotNil(t, pref.LocalSettingOverrideRealtimeMonitoring)
+	assert.False(t, *pref.LocalSettingOverrideRealtimeMonitoring)
 
 	// misc
 	assert.Equal(t, int64(1), pref.PUAProtection)
 	assert.True(t, pref.RandomizeScheduleTaskTimes)
 	// the "RePorts" casing is matched via the explicit json tag
-	assert.True(t, pref.DisableGenericReports)
+	require.NotNil(t, pref.DisableGenericReports)
+	assert.True(t, *pref.DisableGenericReports)
 }
 
 func TestParseMpThreats(t *testing.T) {
