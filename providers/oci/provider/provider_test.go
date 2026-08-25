@@ -24,7 +24,7 @@ func TestOciProvider(t *testing.T) {
 		Asset: &inventory.Asset{
 			Connections: []*inventory.Config{
 				{
-					Backend: "oci",
+					Type:    "oci",
 				},
 			},
 		},

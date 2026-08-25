@@ -60,21 +60,6 @@ func New(opts ...Option) *Inventory {
 func InventoryFromYAML(data []byte) (*Inventory, error) {
 	res := New()
 	err := yaml.Unmarshal(data, res)
-
-	// FIXME: DEPRECATED, remove in v10.0 (or later) vv
-	// This is only used to migrate the old "backend" field.
-	if err == nil && res.Spec != nil {
-		for _, asset := range res.Spec.Assets {
-			for _, conn := range asset.Connections {
-				if conn.Type == "" {
-					log.Warn().Msg("no connection `type` provided in inventory, falling back to deprecated `backend` field")
-					conn.Type = ConnBackendToType(conn.Backend)
-				}
-			}
-		}
-	}
-	// ^^
-
 	return res, err
 }
 

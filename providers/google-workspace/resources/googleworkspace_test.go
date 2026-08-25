@@ -18,7 +18,7 @@ var x = testutils.InitTester(googleWorkspaceProvider(), Registry)
 
 func googleWorkspaceProvider() *googleWorkspaceConnection {
 	provider, err := googleworkspace.NewGoogleWorkspaceConnection(&inventory.Config{
-		Backend: "google-workspace",
+		Type:    "google-workspace",
 		Options: map[string]string{
 			"customer-id": "<add-here>",
 		},

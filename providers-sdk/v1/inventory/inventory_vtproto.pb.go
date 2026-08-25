@@ -162,7 +162,6 @@ func (m *Config) CloneVT() *Config {
 		return (*Config)(nil)
 	}
 	r := new(Config)
-	r.Backend = m.Backend
 	r.Host = m.Host
 	r.Port = m.Port
 	r.Path = m.Path
@@ -949,13 +948,6 @@ func (m *Config) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xea
 		}
-	}
-	if m.Backend != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Backend))
-		i--
-		dAtA[i] = 0x1
-		i--
-		dAtA[i] = 0xe0
 	}
 	if m.Discover != nil {
 		size, err := m.Discover.MarshalToSizedBufferVT(dAtA[:i])
@@ -2050,9 +2042,6 @@ func (m *Config) SizeVT() (n int) {
 	if m.Discover != nil {
 		l = m.Discover.SizeVT()
 		n += 2 + l + protohelpers.SizeOfVarint(uint64(l))
-	}
-	if m.Backend != 0 {
-		n += 2 + protohelpers.SizeOfVarint(uint64(m.Backend))
 	}
 	if len(m.Capabilities) > 0 {
 		for _, s := range m.Capabilities {
@@ -4338,25 +4327,6 @@ func (m *Config) UnmarshalVT(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 28:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Backend", wireType)
-			}
-			m.Backend = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Backend |= ProviderType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		case 29:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Capabilities", wireType)
