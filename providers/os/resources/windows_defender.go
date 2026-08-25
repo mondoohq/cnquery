@@ -181,8 +181,7 @@ func (d *mqlWindowsDefender) preferences() (*mqlWindowsDefenderPreferences, erro
 	// Seed the cache so the grouped sub-accessors reuse this result instead of
 	// running Get-MpPreference a second time.
 	p := res.(*mqlWindowsDefenderPreferences)
-	p.prefs = prefs
-	p.fetched = true
+	p.seedPrefs(prefs)
 	return p, nil
 }
 
@@ -270,6 +269,37 @@ type mqlWindowsDefenderPreferencesInternal struct {
 	fetched bool
 	prefs   *windows.MpPreference
 	err     error
+}
+
+// seedPrefs installs an already-fetched Get-MpPreference result.
+//
+// It must take the same lock getPrefs uses. CreateResource looks the __id up in
+// the runtime cache and returns the existing resource when it finds one, so the
+// instance handed back here may already be published and in use by another
+// goroutine reading these fields under the lock. Writing them unlocked is a
+// data race, and without the happens-before edge the lock provides a reader can
+// observe fetched as true while prefs is still nil, which makes getPrefs return
+// (nil, nil) and every grouped accessor dereference it.
+//
+// The fetched guard keeps a second seeder from replacing a result that has
+// already been handed out.
+func (p *mqlWindowsDefenderPreferences) seedPrefs(prefs *windows.MpPreference) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	if p.fetched {
+		return
+	}
+	p.prefs = prefs
+	p.fetched = true
+}
+
+// peekPrefs reports the cached Get-MpPreference result without fetching. The
+// third return value is false when nothing has been cached yet. It exists so a
+// test can observe the seeded state under the lock.
+func (p *mqlWindowsDefenderPreferences) peekPrefs() (*windows.MpPreference, error, bool) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	return p.prefs, p.err, p.fetched
 }
 
 // getPrefs fetches Get-MpPreference once and caches the result.
