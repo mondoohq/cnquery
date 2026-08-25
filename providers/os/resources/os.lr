@@ -14113,9 +14113,9 @@ windows.defender.scanSettings @defaults("scanParameters scanScheduleDay") {
   //
   // 0 = every day, 1 = Sunday through 7 = Saturday, 8 = never.
   scanScheduleDay int
-  // Time of day a scheduled scan runs (raw schedule value)
+  // Time of day a scheduled scan runs, as "HH:MM:SS"
   scanScheduleTime string
-  // Time of day a scheduled quick scan runs (raw schedule value)
+  // Time of day a scheduled quick scan runs, as "HH:MM:SS"
   scanScheduleQuickScanTime string
   // Number of minutes after midnight to offset the scheduled scan
   scanScheduleOffset int
@@ -14214,7 +14214,7 @@ windows.defender.cloudSettings @defaults("mapsReporting cloudBlockLevel") {
 windows.defender.signatureSettings @defaults("signatureUpdateInterval") {
   // Day of the week scheduled signature updates run
   signatureScheduleDay int
-  // Time of day scheduled signature updates run (raw schedule value)
+  // Time of day scheduled signature updates run, as "HH:MM:SS"
   signatureScheduleTime string
   // Hours between signature update checks
   signatureUpdateInterval int
@@ -14389,7 +14389,7 @@ windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonito
 windows.defender.remediationSettings @defaults("quarantinePurgeItemsAfterDelay") {
   // Day of the week scheduled remediation runs
   remediationScheduleDay int
-  // Time of day scheduled remediation runs (raw schedule value)
+  // Time of day scheduled remediation runs, as "HH:MM:SS"
   remediationScheduleTime string
   // Number of days quarantined items are kept before purging
   quarantinePurgeItemsAfterDelay int
