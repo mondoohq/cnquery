@@ -14,7 +14,10 @@ import (
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
-const sysctlPath = "/proc/sys/"
+const (
+	sysctlPath      = "/proc/sys/"
+	procModulesPath = "/proc/modules"
+)
 
 type KernelInfo struct {
 	Version   string            `json:"version"`
@@ -151,13 +154,31 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 }
 
 func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
-	// TODO: use proc in future
-	cmd, err := s.conn.RunCommand("/sbin/lsmod")
+	if s.conn.Capabilities().Has(shared.Capability_RunCommand) {
+		cmd, err := s.conn.RunCommand("/sbin/lsmod")
+		// lsmod does not live in /sbin on every distro: Container-Optimized OS
+		// ships it as /bin/lsmod and has an empty /sbin, so the command exits
+		// 127 with no output. Nothing checked the exit status, so an empty
+		// parse was reported as "no modules loaded" rather than as a failure,
+		// and a policy asserting a module is absent passed without ever
+		// reading the module list.
+		if err == nil && cmd.ExitStatus == 0 {
+			log.Debug().Msg("using lsmod to read kernel modules")
+			return ParseLsmod(cmd.Stdout), nil
+		}
+	}
+
+	// /proc/modules is the kernel's own interface, so it needs no binary on
+	// PATH and works for a filesystem-only scan that cannot run commands at
+	// all. Parameters() already falls back the same way onto /proc/sys.
+	log.Debug().Msg("using /proc/modules to read kernel modules")
+	f, err := s.conn.FileSystem().Open(procModulesPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not read kernel modules")
 	}
+	defer f.Close()
 
-	return ParseLsmod(cmd.Stdout), nil
+	return ParseLinuxProcModules(f), nil
 }
 
 type OSXKernelManager struct {
