@@ -2326,11 +2326,11 @@ func init() {
 			Create: createWindowsLsa,
 		},
 		"windows.lsa.ntlm": {
-			// to override args, implement: initWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsLsaNtlm,
 			Create: createWindowsLsaNtlm,
 		},
 		"windows.lsa.secureChannel": {
-			// to override args, implement: initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsLsaSecureChannel,
 			Create: createWindowsLsaSecureChannel,
 		},
 		"windows.schannel": {
