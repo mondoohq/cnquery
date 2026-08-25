@@ -5,6 +5,7 @@ package mount
 
 import (
 	"github.com/cockroachdb/errors"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
 
@@ -50,25 +51,44 @@ func (s *LinuxMountManager) Name() string {
 }
 
 func (s *LinuxMountManager) List() ([]MountPoint, error) {
-	// TODO: not working via docker yet
-	// // try /proc
-	// f, err := s.motor.Provider.File("/proc/mount")
-	// if err == nil {
-	// 	defer f.Close()
-	// 	return ParseLinuxProcMount(f), nil
-	// }
-
+	// `mount` carries the richest output, but plenty of hosts have a command
+	// capability and no util-linux to answer with: the immutable and distroless
+	// images in particular. /proc/mounts lists the same mounts, so reach for it
+	// when the command cannot answer rather than failing the whole resource.
 	if s.conn.Capabilities().Has(shared.Capability_RunCommand) {
-		cmd, err := s.conn.RunCommand("mount")
-		if err != nil {
-			return nil, errors.Wrap(err, "could not read mounts")
+		mounts, err := s.mountsFromCommand()
+		if err == nil {
+			return mounts, nil
 		}
-		return ParseLinuxMountCmd(cmd.Stdout), nil
-	} else if s.conn.Capabilities().Has(shared.Capability_File) {
+		if !s.conn.Capabilities().Has(shared.Capability_File) {
+			return nil, err
+		}
+		log.Debug().Err(err).Msg("mql[mount]> could not read mounts with the mount command, reading them from the filesystem")
+	}
+
+	if s.conn.Capabilities().Has(shared.Capability_File) {
 		return mountsFromFSLinux(s.conn.FileSystem())
 	}
 
 	return nil, errors.New("mount not supported for provided transport")
+}
+
+func (s *LinuxMountManager) mountsFromCommand() ([]MountPoint, error) {
+	cmd, err := s.conn.RunCommand("mount")
+	if err != nil {
+		return nil, errors.Wrap(err, "could not run the mount command")
+	}
+	if cmd.ExitStatus != 0 {
+		return nil, errors.Newf("the mount command exited with %d", cmd.ExitStatus)
+	}
+
+	mounts := ParseLinuxMountCmd(cmd.Stdout)
+	// A running Linux host always has at least a root mount, so an empty result
+	// means the command did not answer, not that nothing is mounted.
+	if len(mounts) == 0 {
+		return nil, errors.New("the mount command reported no mounts")
+	}
+	return mounts, nil
 }
 
 type UnixMountManager struct {
@@ -83,6 +103,11 @@ func (s *UnixMountManager) List() ([]MountPoint, error) {
 	cmd, err := s.conn.RunCommand("mount")
 	if err != nil {
 		return nil, errors.Wrap(err, "could not run mount command")
+	}
+	// Without this the stderr of a failed mount command parses to an empty list
+	// and reports as "nothing is mounted".
+	if cmd.ExitStatus != 0 {
+		return nil, errors.Newf("the mount command exited with %d", cmd.ExitStatus)
 	}
 
 	return ParseUnixMountCmd(cmd.Stdout), nil
