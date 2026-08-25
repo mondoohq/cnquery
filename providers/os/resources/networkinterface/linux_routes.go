@@ -196,6 +196,14 @@ func (l *linuxRouteDetector) parseLinuxRoutesFromProc(output string) ([]Route, e
 
 		flags := parseLinuxRouteFlags(int64(flagsInt))
 
+		// Same discard entries the IPv6 table and `ip route` paths drop. The
+		// kernel's fib_flag_trans sets RTF_REJECT for unreachable and prohibit
+		// routes; blackhole carries no flag of its own here, so only the JSON
+		// path can tell that one apart.
+		if routeFlagsRejected(flags) {
+			continue
+		}
+
 		// Handle gateway
 		gatewayStr := gateway.String()
 		if gateway.Equal(net.IPv4zero) {

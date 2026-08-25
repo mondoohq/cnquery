@@ -89,6 +89,47 @@ func TestParseLinuxIPv6RoutesKeepsRealDefault(t *testing.T) {
 	assert.Equal(t, []string{"ADDRCONF", "GATEWAY", "UP"}, routes[0].Flags)
 }
 
+// /proc/net/route is the primary IPv4 source, and it reports unreachable and
+// prohibit entries with RTF_REJECT just as the IPv6 table does. Without the
+// same guard the two sources disagree: `ip route` skips them by type while
+// /proc reports them as ordinary routes.
+//
+// Fixture captured from a Linux host carrying all three discard types:
+//
+//	ip route add unreachable 10.99.0.0/16
+//	ip route add blackhole   10.98.0.0/16
+//	ip route add prohibit    10.97.0.0/16
+func TestParseLinuxRoutesFromProcSkipsRejectRoutes(t *testing.T) {
+	const procRoute = `Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
+eth0	00000000	010011AC	0003	0	0	0	00000000	0	0	0
+*	0000610A	00000000	0201	0	0	0	0000FFFF	0	0	0
+*	0000620A	00000000	0001	0	0	0	0000FFFF	0	0	0
+*	0000630A	00000000	0201	0	0	0	0000FFFF	0	0	0
+eth0	000011AC	00000000	0001	0	0	0	0000FFFF	0	0	0
+`
+	l := &linuxRouteDetector{}
+	routes, err := l.parseLinuxRoutesFromProc(procRoute)
+	require.NoError(t, err)
+
+	var dests []string
+	for _, r := range routes {
+		dests = append(dests, r.Destination)
+	}
+
+	assert.NotContains(t, dests, "10.99.0.0/16", "unreachable route must not be reported")
+	assert.NotContains(t, dests, "10.97.0.0/16", "prohibit route must not be reported")
+
+	assert.Contains(t, dests, "0.0.0.0/0", "the real default route must survive")
+	assert.Contains(t, dests, "172.17.0.0/16", "the real link route must survive")
+
+	// The kernel's fib_flag_trans maps only RTN_UNREACHABLE and RTN_PROHIBIT to
+	// RTF_REJECT, so a blackhole route reaches /proc with flags 0001 and is
+	// indistinguishable from a live one here. `ip route show table all` filters
+	// it by type instead.
+	assert.Contains(t, dests, "10.98.0.0/16",
+		"blackhole carries no REJECT bit in /proc/net/route; only the JSON path can filter it")
+}
+
 // `ip route show table all` reports the discard entries with a type. The struct
 // has always parsed the field; nothing read it.
 func TestIpRouteJSONSkipsDiscardRoutes(t *testing.T) {
