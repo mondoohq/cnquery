@@ -12453,8 +12453,38 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.lsa.everyoneIncludesAnonymous": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetEveryoneIncludesAnonymous()).ToDataRes(types.Bool)
 	},
+	"windows.lsa.fipsAlgorithmPolicyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetFipsAlgorithmPolicyEnabled()).ToDataRes(types.Bool)
+	},
 	"windows.lsa.forceGuest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetForceGuest()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.kerberosAllowsAes128": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetKerberosAllowsAes128()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.kerberosAllowsAes256": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetKerberosAllowsAes256()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.kerberosAllowsDesCbcCrc": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetKerberosAllowsDesCbcCrc()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.kerberosAllowsDesCbcMd5": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetKerberosAllowsDesCbcMd5()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.kerberosAllowsRc4Hmac": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetKerberosAllowsRc4Hmac()).ToDataRes(types.Bool)
+	},
+	"windows.lsa.kerberosSupportedEncryptionTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetKerberosSupportedEncryptionTypes()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ldapClientIntegrity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetLdapClientIntegrity()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ldapEnforceChannelBinding": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetLdapEnforceChannelBinding()).ToDataRes(types.Int)
+	},
+	"windows.lsa.ldapServerIntegrity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsLsa).GetLdapServerIntegrity()).ToDataRes(types.Int)
 	},
 	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsLsa).GetLimitBlankPasswordUse()).ToDataRes(types.Bool)
@@ -30684,8 +30714,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsLsa).EveryoneIncludesAnonymous, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"windows.lsa.fipsAlgorithmPolicyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).FipsAlgorithmPolicyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"windows.lsa.forceGuest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsLsa).ForceGuest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.kerberosAllowsAes128": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).KerberosAllowsAes128, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.kerberosAllowsAes256": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).KerberosAllowsAes256, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.kerberosAllowsDesCbcCrc": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).KerberosAllowsDesCbcCrc, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.kerberosAllowsDesCbcMd5": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).KerberosAllowsDesCbcMd5, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.kerberosAllowsRc4Hmac": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).KerberosAllowsRc4Hmac, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.kerberosSupportedEncryptionTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).KerberosSupportedEncryptionTypes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ldapClientIntegrity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).LdapClientIntegrity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ldapEnforceChannelBinding": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).LdapEnforceChannelBinding, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.lsa.ldapServerIntegrity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsLsa).LdapServerIntegrity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.lsa.limitBlankPasswordUse": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79270,21 +79340,31 @@ type mqlWindowsLsa struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlWindowsLsaInternal it will be used here
-	DisableDomainCreds          plugin.TValue[bool]
-	EveryoneIncludesAnonymous   plugin.TValue[bool]
-	ForceGuest                  plugin.TValue[bool]
-	LimitBlankPasswordUse       plugin.TValue[bool]
-	LmCompatibilityLevel        plugin.TValue[int64]
-	NoLmHash                    plugin.TValue[bool]
-	RestrictAnonymous           plugin.TValue[int64]
-	RestrictAnonymousSam        plugin.TValue[bool]
-	RestrictRemoteSam           plugin.TValue[string]
-	RunAsPpl                    plugin.TValue[int64]
-	SceNoApplyLegacyAuditPolicy plugin.TValue[bool]
-	SubmitControl               plugin.TValue[bool]
-	UseMachineId                plugin.TValue[bool]
-	Ntlm                        plugin.TValue[*mqlWindowsLsaNtlm]
-	SecureChannel               plugin.TValue[*mqlWindowsLsaSecureChannel]
+	DisableDomainCreds               plugin.TValue[bool]
+	EveryoneIncludesAnonymous        plugin.TValue[bool]
+	FipsAlgorithmPolicyEnabled       plugin.TValue[bool]
+	ForceGuest                       plugin.TValue[bool]
+	KerberosAllowsAes128             plugin.TValue[bool]
+	KerberosAllowsAes256             plugin.TValue[bool]
+	KerberosAllowsDesCbcCrc          plugin.TValue[bool]
+	KerberosAllowsDesCbcMd5          plugin.TValue[bool]
+	KerberosAllowsRc4Hmac            plugin.TValue[bool]
+	KerberosSupportedEncryptionTypes plugin.TValue[int64]
+	LdapClientIntegrity              plugin.TValue[int64]
+	LdapEnforceChannelBinding        plugin.TValue[int64]
+	LdapServerIntegrity              plugin.TValue[int64]
+	LimitBlankPasswordUse            plugin.TValue[bool]
+	LmCompatibilityLevel             plugin.TValue[int64]
+	NoLmHash                         plugin.TValue[bool]
+	RestrictAnonymous                plugin.TValue[int64]
+	RestrictAnonymousSam             plugin.TValue[bool]
+	RestrictRemoteSam                plugin.TValue[string]
+	RunAsPpl                         plugin.TValue[int64]
+	SceNoApplyLegacyAuditPolicy      plugin.TValue[bool]
+	SubmitControl                    plugin.TValue[bool]
+	UseMachineId                     plugin.TValue[bool]
+	Ntlm                             plugin.TValue[*mqlWindowsLsaNtlm]
+	SecureChannel                    plugin.TValue[*mqlWindowsLsaSecureChannel]
 }
 
 // createWindowsLsa creates a new instance of this resource
@@ -79336,9 +79416,69 @@ func (c *mqlWindowsLsa) GetEveryoneIncludesAnonymous() *plugin.TValue[bool] {
 	})
 }
 
+func (c *mqlWindowsLsa) GetFipsAlgorithmPolicyEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.FipsAlgorithmPolicyEnabled, func() (bool, error) {
+		return c.fipsAlgorithmPolicyEnabled()
+	})
+}
+
 func (c *mqlWindowsLsa) GetForceGuest() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.ForceGuest, func() (bool, error) {
 		return c.forceGuest()
+	})
+}
+
+func (c *mqlWindowsLsa) GetKerberosAllowsAes128() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KerberosAllowsAes128, func() (bool, error) {
+		return c.kerberosAllowsAes128()
+	})
+}
+
+func (c *mqlWindowsLsa) GetKerberosAllowsAes256() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KerberosAllowsAes256, func() (bool, error) {
+		return c.kerberosAllowsAes256()
+	})
+}
+
+func (c *mqlWindowsLsa) GetKerberosAllowsDesCbcCrc() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KerberosAllowsDesCbcCrc, func() (bool, error) {
+		return c.kerberosAllowsDesCbcCrc()
+	})
+}
+
+func (c *mqlWindowsLsa) GetKerberosAllowsDesCbcMd5() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KerberosAllowsDesCbcMd5, func() (bool, error) {
+		return c.kerberosAllowsDesCbcMd5()
+	})
+}
+
+func (c *mqlWindowsLsa) GetKerberosAllowsRc4Hmac() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.KerberosAllowsRc4Hmac, func() (bool, error) {
+		return c.kerberosAllowsRc4Hmac()
+	})
+}
+
+func (c *mqlWindowsLsa) GetKerberosSupportedEncryptionTypes() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.KerberosSupportedEncryptionTypes, func() (int64, error) {
+		return c.kerberosSupportedEncryptionTypes()
+	})
+}
+
+func (c *mqlWindowsLsa) GetLdapClientIntegrity() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LdapClientIntegrity, func() (int64, error) {
+		return c.ldapClientIntegrity()
+	})
+}
+
+func (c *mqlWindowsLsa) GetLdapEnforceChannelBinding() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LdapEnforceChannelBinding, func() (int64, error) {
+		return c.ldapEnforceChannelBinding()
+	})
+}
+
+func (c *mqlWindowsLsa) GetLdapServerIntegrity() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LdapServerIntegrity, func() (int64, error) {
+		return c.ldapServerIntegrity()
 	})
 }
 

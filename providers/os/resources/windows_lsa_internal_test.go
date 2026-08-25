@@ -364,3 +364,185 @@ func TestLsaStringFieldPtr(t *testing.T) {
 		assert.Equal(t, "", f.Data)
 	})
 }
+
+// isNullBool and isNullInt report whether the generated field representation of
+// a nullable source pointer lands in the null state, which is how an absent
+// registry value has to surface to MQL. The TValue is bound to a local first
+// because IsNull has a pointer receiver.
+func isNullBool(p *bool) bool {
+	f := boolFieldPtr(p)
+	return f.IsSet() && f.IsNull()
+}
+
+func isNullInt(p *int64) bool {
+	f := intFieldPtr(p)
+	return f.IsSet() && f.IsNull()
+}
+
+func TestComputeLsaFips(t *testing.T) {
+	t.Run("absent value yields null, not a fabricated false", func(t *testing.T) {
+		assert.Nil(t, computeLsaFips(map[string]registry.RegistryKeyItem{}))
+		assert.Nil(t, computeLsaFips(items(d("SomethingElse", 1))))
+		assert.True(t, isNullBool(computeLsaFips(map[string]registry.RegistryKeyItem{})))
+	})
+
+	t.Run("explicit 0 is false and distinguishable from absent", func(t *testing.T) {
+		p := computeLsaFips(items(d("Enabled", 0)))
+		require.NotNil(t, p)
+		assert.False(t, *p)
+		assert.False(t, isNullBool(p))
+	})
+
+	t.Run("enabled reads true", func(t *testing.T) {
+		p := computeLsaFips(items(d("Enabled", 1)))
+		require.NotNil(t, p)
+		assert.True(t, *p)
+	})
+}
+
+func TestComputeLsaKerberos(t *testing.T) {
+	empty := map[string]registry.RegistryKeyItem{}
+
+	t.Run("absent in both locations yields null everywhere", func(t *testing.T) {
+		v := computeLsaKerberos(empty, empty)
+		assert.Nil(t, v.SupportedEncryptionTypes)
+		assert.Nil(t, v.AllowsDesCbcCrc)
+		assert.Nil(t, v.AllowsDesCbcMd5)
+		assert.Nil(t, v.AllowsRc4Hmac)
+		assert.Nil(t, v.AllowsAes128)
+		assert.Nil(t, v.AllowsAes256)
+
+		// an absent mask must not decode to "every type denied": that would
+		// report DES and RC4 as blocked on a host that never configured the
+		// policy and is in fact using the Windows default set
+		assert.True(t, isNullInt(v.SupportedEncryptionTypes))
+		assert.True(t, isNullBool(v.AllowsRc4Hmac))
+		assert.True(t, isNullBool(v.AllowsAes256))
+	})
+
+	t.Run("the policy location wins over the legacy location", func(t *testing.T) {
+		v := computeLsaKerberos(
+			items(d("SupportedEncryptionTypes", 0x18)),
+			items(d("SupportedEncryptionTypes", 0x4)),
+		)
+		require.NotNil(t, v.SupportedEncryptionTypes)
+		assert.Equal(t, int64(0x18), *v.SupportedEncryptionTypes)
+		require.NotNil(t, v.AllowsRc4Hmac)
+		assert.False(t, *v.AllowsRc4Hmac)
+	})
+
+	t.Run("the legacy location is used when the policy value is absent", func(t *testing.T) {
+		v := computeLsaKerberos(empty, items(d("SupportedEncryptionTypes", 0x4)))
+		require.NotNil(t, v.SupportedEncryptionTypes)
+		assert.Equal(t, int64(0x4), *v.SupportedEncryptionTypes)
+		require.NotNil(t, v.AllowsRc4Hmac)
+		assert.True(t, *v.AllowsRc4Hmac)
+	})
+
+	tests := []struct {
+		name                                         string
+		mask                                         int64
+		desCbcCrc, desCbcMd5, rc4Hmac, aes128, ae256 bool
+	}{
+		{"legacy only (0x7)", 0x7, true, true, true, false, false},
+		{"AES only (0x18)", 0x18, false, false, false, true, true},
+		{"transitional RC4 plus AES (0x1C)", 0x1C, false, false, true, true, true},
+		{"explicit zero denies every known type", 0x0, false, false, false, false, false},
+		{"single legacy bit (0x1)", 0x1, true, false, false, false, false},
+		{"AES256 alone (0x10)", 0x10, false, false, false, false, true},
+		// 0x7FFFFFF8 is the hardened value the Windows baseline expects: every
+		// reserved future-type bit is set alongside AES, and the three legacy
+		// bits are clear. The unknown high bits must not bleed into any answer.
+		{"future-type bits set with AES (0x7FFFFFF8)", 0x7FFFFFF8, false, false, false, true, true},
+		// the same shape with a legacy bit deliberately left on, so a bug that
+		// widened the mask would show up as DES reading false
+		{"future-type bits set with DES still on (0x7FFFFFF9)", 0x7FFFFFF9, true, false, false, true, true},
+		// 0x80000000 is documented as "use Windows default values"; it is an
+		// unknown bit as far as the decode is concerned and must be ignored
+		{"top bit set alongside AES (0x80000018)", 0x80000018, false, false, false, true, true},
+		{"top bit alone (0x80000000)", 0x80000000, false, false, false, false, false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			v := computeLsaKerberos(items(d("SupportedEncryptionTypes", tc.mask)), empty)
+
+			require.NotNil(t, v.SupportedEncryptionTypes)
+			assert.Equal(t, tc.mask, *v.SupportedEncryptionTypes, "the raw mask is reported unchanged")
+
+			for _, f := range []struct {
+				name string
+				got  *bool
+				want bool
+			}{
+				{"desCbcCrc", v.AllowsDesCbcCrc, tc.desCbcCrc},
+				{"desCbcMd5", v.AllowsDesCbcMd5, tc.desCbcMd5},
+				{"rc4Hmac", v.AllowsRc4Hmac, tc.rc4Hmac},
+				{"aes128", v.AllowsAes128, tc.aes128},
+				{"aes256", v.AllowsAes256, tc.ae256},
+			} {
+				require.NotNil(t, f.got, f.name)
+				assert.Equal(t, f.want, *f.got, f.name)
+			}
+		})
+	}
+}
+
+func TestComputeLsaLdap(t *testing.T) {
+	empty := map[string]registry.RegistryKeyItem{}
+
+	t.Run("no NTDS key leaves the server settings null, not zero", func(t *testing.T) {
+		// the shape of a member server or standalone host: the NTDS service is
+		// not installed, so the key is missing entirely. Reporting 0 here would
+		// claim "LDAP signing not required" about a setting that does not apply.
+		v := computeLsaLdap(empty, empty)
+		assert.Nil(t, v.ServerIntegrity)
+		assert.Nil(t, v.EnforceChannelBinding)
+		assert.Nil(t, v.ClientIntegrity)
+
+		assert.True(t, isNullInt(v.ServerIntegrity))
+		assert.True(t, isNullInt(v.EnforceChannelBinding))
+		assert.True(t, isNullInt(v.ClientIntegrity))
+	})
+
+	t.Run("client setting resolves while the server settings stay null", func(t *testing.T) {
+		v := computeLsaLdap(empty, items(d("LDAPClientIntegrity", 1)))
+		require.NotNil(t, v.ClientIntegrity)
+		assert.Equal(t, int64(1), *v.ClientIntegrity)
+		assert.Nil(t, v.ServerIntegrity)
+		assert.Nil(t, v.EnforceChannelBinding)
+	})
+
+	t.Run("a domain controller resolves every value", func(t *testing.T) {
+		v := computeLsaLdap(
+			items(d("LDAPServerIntegrity", 2), d("LdapEnforceChannelBinding", 2)),
+			items(d("LDAPClientIntegrity", 2)),
+		)
+		require.NotNil(t, v.ServerIntegrity)
+		assert.Equal(t, int64(2), *v.ServerIntegrity)
+		require.NotNil(t, v.EnforceChannelBinding)
+		assert.Equal(t, int64(2), *v.EnforceChannelBinding)
+		require.NotNil(t, v.ClientIntegrity)
+		assert.Equal(t, int64(2), *v.ClientIntegrity)
+	})
+
+	t.Run("explicit 0 is reported as 0, not as null", func(t *testing.T) {
+		v := computeLsaLdap(
+			items(d("LDAPServerIntegrity", 0), d("LdapEnforceChannelBinding", 0)),
+			items(d("LDAPClientIntegrity", 0)),
+		)
+		require.NotNil(t, v.ServerIntegrity)
+		assert.Equal(t, int64(0), *v.ServerIntegrity)
+		assert.False(t, isNullInt(v.ServerIntegrity))
+		require.NotNil(t, v.EnforceChannelBinding)
+		assert.False(t, isNullInt(v.EnforceChannelBinding))
+		require.NotNil(t, v.ClientIntegrity)
+		assert.False(t, isNullInt(v.ClientIntegrity))
+	})
+
+	t.Run("the server settings are read from NTDS, not from the client key", func(t *testing.T) {
+		// a value planted on the wrong key must not satisfy the field
+		v := computeLsaLdap(empty, items(d("LDAPServerIntegrity", 2)))
+		assert.Nil(t, v.ServerIntegrity)
+	})
+}

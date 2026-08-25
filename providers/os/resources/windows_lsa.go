@@ -28,6 +28,44 @@ const (
 	lsaNetlogonPolicyPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Netlogon\Parameters`
 )
 
+// Registry locations of the hardening controls that live outside the Lsa key
+// itself.
+//
+// FipsAlgorithmPolicy is a subkey of Lsa holding a single Enabled DWORD.
+//
+// The Kerberos supported encryption types are written by the "Network
+// security: Configure encryption types allowed for Kerberos" policy to the
+// Policies hive, which is the location Windows honors. The identically named
+// value under Lsa\Kerberos\Parameters is the legacy location: Windows Server
+// 2025 no longer reads it, but it is still effective on earlier releases, so it
+// is consulted as a fallback when the policy value is absent.
+//
+// The two LDAP server settings live under the NTDS service, which is installed
+// only on a domain controller. On a member server or a standalone host the key
+// does not exist at all, which is why an absent value has to resolve to null
+// rather than to 0: the setting does not apply, it is not turned off. The LDAP
+// client signing requirement is a separate service key present on every host.
+const (
+	lsaFipsPath           = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy`
+	lsaKerberosPath       = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\Kerberos\Parameters`
+	lsaKerberosPolicyPath = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters`
+	lsaNtdsPath           = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NTDS\Parameters`
+	lsaLdapClientPath     = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LDAP`
+)
+
+// Bits of the Kerberos SupportedEncryptionTypes bitmask. Only the well-known
+// encryption types are decoded; the remaining high bits are reserved for future
+// encryption types and are deliberately ignored, so a value that sets them
+// (0x7FFFFFF8 is a common hardened setting) still decodes the known bits
+// correctly.
+const (
+	kerberosEtypeDesCbcCrc int64 = 0x1
+	kerberosEtypeDesCbcMd5 int64 = 0x2
+	kerberosEtypeRc4Hmac   int64 = 0x4
+	kerberosEtypeAes128    int64 = 0x8
+	kerberosEtypeAes256    int64 = 0x10
+)
+
 func (r *mqlWindowsLsa) id() (string, error) {
 	return "windows.lsa", nil
 }
@@ -290,6 +328,144 @@ func (r *mqlWindowsLsa) secureChannel() (*mqlWindowsLsaSecureChannel, error) {
 		return nil, err
 	}
 	return o.(*mqlWindowsLsaSecureChannel), nil
+}
+
+// lsaKerberosValues holds the Kerberos encryption-type settings: the raw
+// bitmask plus the decoded well-known bits, all nullable.
+type lsaKerberosValues struct {
+	SupportedEncryptionTypes *int64
+	AllowsDesCbcCrc          *bool
+	AllowsDesCbcMd5          *bool
+	AllowsRc4Hmac            *bool
+	AllowsAes128             *bool
+	AllowsAes256             *bool
+}
+
+// computeLsaKerberos extracts the Kerberos supported encryption types and
+// decodes the well-known bits. The policy hive wins over the legacy
+// Lsa\Kerberos\Parameters location, matching how Windows resolves the setting.
+// When neither location carries the value every field stays null: an absent
+// value means Windows uses its built-in default set, which is not the same as a
+// configured mask of 0. Pure function for unit testing.
+func computeLsaKerberos(policy, legacy map[string]registry.RegistryKeyItem) lsaKerberosValues {
+	mask := regIntPtr(policy, "SupportedEncryptionTypes")
+	if mask == nil {
+		mask = regIntPtr(legacy, "SupportedEncryptionTypes")
+	}
+	if mask == nil {
+		return lsaKerberosValues{}
+	}
+
+	// bit reports whether one encryption type is permitted. Masking a single bit
+	// keeps unknown high bits from leaking into any of the answers.
+	bit := func(b int64) *bool {
+		v := *mask&b != 0
+		return &v
+	}
+
+	return lsaKerberosValues{
+		SupportedEncryptionTypes: mask,
+		AllowsDesCbcCrc:          bit(kerberosEtypeDesCbcCrc),
+		AllowsDesCbcMd5:          bit(kerberosEtypeDesCbcMd5),
+		AllowsRc4Hmac:            bit(kerberosEtypeRc4Hmac),
+		AllowsAes128:             bit(kerberosEtypeAes128),
+		AllowsAes256:             bit(kerberosEtypeAes256),
+	}
+}
+
+// lsaLdapValues holds the LDAP signing and channel-binding requirements as
+// nullable pointers.
+type lsaLdapValues struct {
+	ClientIntegrity       *int64
+	EnforceChannelBinding *int64
+	ServerIntegrity       *int64
+}
+
+// computeLsaLdap extracts the LDAP settings. The two server-side values come
+// from the NTDS service key, which exists only on a domain controller, and the
+// client-side value from the LDAP service key. Pure function for unit testing.
+func computeLsaLdap(ntds, ldapClient map[string]registry.RegistryKeyItem) lsaLdapValues {
+	return lsaLdapValues{
+		ClientIntegrity:       regIntPtr(ldapClient, "LDAPClientIntegrity"),
+		EnforceChannelBinding: regIntPtr(ntds, "LdapEnforceChannelBinding"),
+		ServerIntegrity:       regIntPtr(ntds, "LDAPServerIntegrity"),
+	}
+}
+
+// computeLsaFips extracts the FIPS algorithm policy from the
+// Lsa\FipsAlgorithmPolicy key. Nil when the Enabled value is absent, which is
+// the state of a host that never configured FIPS mode. Pure function for unit
+// testing.
+func computeLsaFips(fips map[string]registry.RegistryKeyItem) *bool {
+	return regBoolPtr(fips, "Enabled")
+}
+
+func (r *mqlWindowsLsa) fipsAlgorithmPolicyEnabled() (bool, error) {
+	items, err := r.readLsaKey(lsaFipsPath)
+	if err != nil {
+		return false, err
+	}
+	r.FipsAlgorithmPolicyEnabled = boolFieldPtr(computeLsaFips(items))
+	return false, nil
+}
+
+func (r *mqlWindowsLsa) kerberosAllowsAes128() (bool, error)    { return false, r.populateKerberos() }
+func (r *mqlWindowsLsa) kerberosAllowsAes256() (bool, error)    { return false, r.populateKerberos() }
+func (r *mqlWindowsLsa) kerberosAllowsDesCbcCrc() (bool, error) { return false, r.populateKerberos() }
+func (r *mqlWindowsLsa) kerberosAllowsDesCbcMd5() (bool, error) { return false, r.populateKerberos() }
+func (r *mqlWindowsLsa) kerberosAllowsRc4Hmac() (bool, error)   { return false, r.populateKerberos() }
+
+func (r *mqlWindowsLsa) kerberosSupportedEncryptionTypes() (int64, error) {
+	return 0, r.populateKerberos()
+}
+
+// populateKerberos reads the Kerberos encryption-type setting once and fills
+// the raw bitmask together with every decoded field, so a query touching
+// several of them reads the registry a single time and the answers cannot
+// disagree with the mask they came from.
+func (r *mqlWindowsLsa) populateKerberos() error {
+	policy, err := r.readLsaKey(lsaKerberosPolicyPath)
+	if err != nil {
+		return err
+	}
+	legacy, err := r.readLsaKey(lsaKerberosPath)
+	if err != nil {
+		return err
+	}
+	v := computeLsaKerberos(policy, legacy)
+
+	r.KerberosSupportedEncryptionTypes = intFieldPtr(v.SupportedEncryptionTypes)
+	r.KerberosAllowsAes128 = boolFieldPtr(v.AllowsAes128)
+	r.KerberosAllowsAes256 = boolFieldPtr(v.AllowsAes256)
+	r.KerberosAllowsDesCbcCrc = boolFieldPtr(v.AllowsDesCbcCrc)
+	r.KerberosAllowsDesCbcMd5 = boolFieldPtr(v.AllowsDesCbcMd5)
+	r.KerberosAllowsRc4Hmac = boolFieldPtr(v.AllowsRc4Hmac)
+	return nil
+}
+
+func (r *mqlWindowsLsa) ldapClientIntegrity() (int64, error)       { return 0, r.populateLdap() }
+func (r *mqlWindowsLsa) ldapEnforceChannelBinding() (int64, error) { return 0, r.populateLdap() }
+func (r *mqlWindowsLsa) ldapServerIntegrity() (int64, error)       { return 0, r.populateLdap() }
+
+// populateLdap reads the NTDS and LDAP service keys once and fills all three
+// LDAP fields. On a host that is not a domain controller the NTDS key is
+// missing, which readLsaKey turns into an empty map, leaving the two
+// server-side fields null.
+func (r *mqlWindowsLsa) populateLdap() error {
+	ntds, err := r.readLsaKey(lsaNtdsPath)
+	if err != nil {
+		return err
+	}
+	ldapClient, err := r.readLsaKey(lsaLdapClientPath)
+	if err != nil {
+		return err
+	}
+	v := computeLsaLdap(ntds, ldapClient)
+
+	r.LdapClientIntegrity = intFieldPtr(v.ClientIntegrity)
+	r.LdapEnforceChannelBinding = intFieldPtr(v.EnforceChannelBinding)
+	r.LdapServerIntegrity = intFieldPtr(v.ServerIntegrity)
+	return nil
 }
 
 // intFieldPtr converts a nullable *int64 into the generated plugin.TValue[int64]

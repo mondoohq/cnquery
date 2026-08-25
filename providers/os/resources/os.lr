@@ -11657,16 +11657,103 @@ private windows.deviceGuard @defaults("virtualizationBasedSecurityEnabled hyperv
 // are exposed as booleans and graded settings (such as the LAN Manager
 // authentication level) as integers. NTLM (MSV1_0 and WDigest) settings are
 // grouped under `ntlm` and the Netlogon secure-channel settings under
-// `secureChannel`. Values are nullable: an absent value resolves to null so it
-// is distinguishable from an explicit false or 0, letting checks assert on
-// configured-vs-default precisely.
+// `secureChannel`. The FIPS algorithm policy, the Kerberos supported
+// encryption types, and the LDAP signing and channel-binding requirements are
+// read from their own keys and exposed directly on this resource. Values are
+// nullable: an absent value resolves to null so it is distinguishable from an
+// explicit false or 0, letting checks assert on configured-vs-default
+// precisely.
 windows.lsa {
   // Whether storing network authentication credentials is disabled (Lsa\DisableDomainCreds)
   disableDomainCreds() bool
   // Whether the Everyone permissions apply to anonymous users (Lsa\EveryoneIncludesAnonymous)
   everyoneIncludesAnonymous() bool
+  // Whether FIPS compliant algorithms are required for encryption, hashing, and signing (Lsa\FipsAlgorithmPolicy\Enabled)
+  //
+  // Backs the "System cryptography: Use FIPS compliant algorithms for
+  // encryption, hashing, and signing" security option. When enabled, Windows
+  // components restrict themselves to FIPS 140 validated algorithms. Null when
+  // the value is absent, in which case the Windows default of FIPS mode off
+  // applies rather than a configured false.
+  fipsAlgorithmPolicyEnabled() bool
   // Whether the guest-only sharing and security model is used for local accounts (Lsa\ForceGuest)
   forceGuest() bool
+  // Whether Kerberos may negotiate AES128-CTS-HMAC-SHA1-96 (bit 0x8 of SupportedEncryptionTypes)
+  //
+  // Decoded from kerberosSupportedEncryptionTypes. Null when that value is
+  // absent, in which case Windows uses its built-in default set rather than a
+  // configured one.
+  kerberosAllowsAes128() bool
+  // Whether Kerberos may negotiate AES256-CTS-HMAC-SHA1-96 (bit 0x10 of SupportedEncryptionTypes)
+  //
+  // Decoded from kerberosSupportedEncryptionTypes. Null when that value is
+  // absent, in which case Windows uses its built-in default set rather than a
+  // configured one.
+  kerberosAllowsAes256() bool
+  // Whether Kerberos may negotiate the legacy DES-CBC-CRC cipher (bit 0x1 of SupportedEncryptionTypes)
+  //
+  // DES is broken and a hardened system leaves this bit clear. Decoded from
+  // kerberosSupportedEncryptionTypes. Null when that value is absent, in which
+  // case Windows uses its built-in default set rather than a configured one.
+  kerberosAllowsDesCbcCrc() bool
+  // Whether Kerberos may negotiate the legacy DES-CBC-MD5 cipher (bit 0x2 of SupportedEncryptionTypes)
+  //
+  // DES is broken and a hardened system leaves this bit clear. Decoded from
+  // kerberosSupportedEncryptionTypes. Null when that value is absent, in which
+  // case Windows uses its built-in default set rather than a configured one.
+  kerberosAllowsDesCbcMd5() bool
+  // Whether Kerberos may negotiate the legacy RC4-HMAC-MD5 cipher (bit 0x4 of SupportedEncryptionTypes)
+  //
+  // RC4 is retained only as a transition fallback and is the cipher targeted by
+  // Kerberoasting. A hardened system leaves this bit clear. Decoded from
+  // kerberosSupportedEncryptionTypes. Null when that value is absent, in which
+  // case Windows uses its built-in default set rather than a configured one.
+  kerberosAllowsRc4Hmac() bool
+  // Kerberos encryption types the computer is allowed to negotiate (SupportedEncryptionTypes bitmask)
+  //
+  // Bitmask behind the "Network security: Configure encryption types allowed
+  // for Kerberos" security option. The defined bits are 0x1 DES_CBC_CRC,
+  // 0x2 DES_CBC_MD5, 0x4 RC4_HMAC_MD5, 0x8 AES128_CTS_HMAC_SHA1_96,
+  // 0x10 AES256_CTS_HMAC_SHA1_96, and 0x20 AES256_CTS_HMAC_SHA1_96_SK, with the
+  // remaining high bits reserved for future encryption types. A common hardened
+  // value is 0x7FFFFFF8, which clears the three legacy bits and leaves the rest
+  // set.
+  //
+  // Read from the policy location
+  // SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters,
+  // falling back to the legacy location Lsa\Kerberos\Parameters that Windows
+  // Server 2025 no longer honors. Null when neither location carries the value,
+  // in which case Windows uses its built-in default set rather than a
+  // configured 0. The kerberosAllows fields decode the well-known bits, since
+  // MQL has no bitwise operators to test them with.
+  kerberosSupportedEncryptionTypes() int
+  // LDAP client signing requirement (Services\LDAP\LDAPClientIntegrity)
+  //
+  // Backs the "Network security: LDAP client signing requirements" security
+  // option, which controls whether this computer requests or requires signing
+  // when it binds to an LDAP server: 0 none, 1 negotiate signing, 2 require
+  // signing. Null when the value is absent, in which case the Windows default
+  // applies rather than a configured 0.
+  ldapClientIntegrity() int
+  // LDAP server channel binding token requirement (Services\NTDS\Parameters\LdapEnforceChannelBinding)
+  //
+  // Extended Protection for Authentication enforcement on LDAP over TLS binds,
+  // introduced by ADV190023: 0 never, 1 when supported, 2 always required. The
+  // NTDS key exists only on domain controllers, so this resolves to null on a
+  // member server or a standalone host where the setting does not apply, and
+  // also on a domain controller that never configured the value. Null therefore
+  // means the Windows default is in force, not that channel binding is off.
+  ldapEnforceChannelBinding() int
+  // LDAP server signing requirement (Services\NTDS\Parameters\LDAPServerIntegrity)
+  //
+  // Backs the "Domain controller: LDAP server signing requirements" security
+  // option, which controls whether the directory rejects unsigned LDAP binds:
+  // 0 and 1 both leave unsigned binds acceptable, 2 requires signing. The NTDS
+  // key exists only on domain controllers, so this resolves to null on a member
+  // server or a standalone host where the setting does not apply, and also on a
+  // domain controller that never configured the value. Null therefore means the
+  // Windows default is in force, not that signing is not required.
+  ldapServerIntegrity() int
   // Whether local accounts with blank passwords are limited to console logon (Lsa\LimitBlankPasswordUse)
   limitBlankPasswordUse() bool
   // LAN Manager authentication level (Lsa\LmCompatibilityLevel; 0-5, higher is stronger)

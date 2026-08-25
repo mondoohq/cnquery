@@ -4557,7 +4557,17 @@ windows.hotfixes 9.0.1
 windows.lsa 13.29.1
 windows.lsa.disableDomainCreds 13.29.1
 windows.lsa.everyoneIncludesAnonymous 13.29.1
+windows.lsa.fipsAlgorithmPolicyEnabled 13.40.10
 windows.lsa.forceGuest 13.29.1
+windows.lsa.kerberosAllowsAes128 13.40.10
+windows.lsa.kerberosAllowsAes256 13.40.10
+windows.lsa.kerberosAllowsDesCbcCrc 13.40.10
+windows.lsa.kerberosAllowsDesCbcMd5 13.40.10
+windows.lsa.kerberosAllowsRc4Hmac 13.40.10
+windows.lsa.kerberosSupportedEncryptionTypes 13.40.10
+windows.lsa.ldapClientIntegrity 13.40.10
+windows.lsa.ldapEnforceChannelBinding 13.40.10
+windows.lsa.ldapServerIntegrity 13.40.10
 windows.lsa.limitBlankPasswordUse 13.29.1
 windows.lsa.lmCompatibilityLevel 13.29.1
 windows.lsa.noLmHash 13.29.1
