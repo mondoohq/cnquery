@@ -119,7 +119,7 @@ const (
 	ScanContentModeNoCompare Feature = 21
 
 	// Record resource data (the recording-style rows behind the resource explorer and GetResourcesData/ListResources) while scanning, and deliver it inside the uploaded scan database. Only acts together with UploadResultsV2 - resources ride the uploaded file, never the legacy StoreResults RPC. Successor to StoreResourcesData, which is retired: it required a server-side resolved-policy stamp as a second key and sent resources through the legacy RPC.
-	// start:  v13.x
+	// start:  v14.x
 	// status: new
 	UploadResourcesData Feature = 22
 
