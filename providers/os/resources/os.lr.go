@@ -13957,6 +13957,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.defender.status.amProductVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderStatus).GetAmProductVersion()).ToDataRes(types.String)
 	},
+	"windows.defender.status.amRunningMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAmRunningMode()).ToDataRes(types.String)
+	},
 	"windows.defender.status.amServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderStatus).GetAmServiceEnabled()).ToDataRes(types.Bool)
 	},
@@ -33186,6 +33189,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.defender.status.amProductVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderStatus).AmProductVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.amRunningMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AmRunningMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.defender.status.amServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -85509,6 +85516,7 @@ type mqlWindowsDefenderStatus struct {
 	// optional: if you define mqlWindowsDefenderStatusInternal it will be used here
 	AmEngineVersion                  plugin.TValue[string]
 	AmProductVersion                 plugin.TValue[string]
+	AmRunningMode                    plugin.TValue[string]
 	AmServiceEnabled                 plugin.TValue[bool]
 	AmServiceVersion                 plugin.TValue[string]
 	AntispywareEnabled               plugin.TValue[bool]
@@ -85595,6 +85603,10 @@ func (c *mqlWindowsDefenderStatus) GetAmEngineVersion() *plugin.TValue[string] {
 
 func (c *mqlWindowsDefenderStatus) GetAmProductVersion() *plugin.TValue[string] {
 	return &c.AmProductVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetAmRunningMode() *plugin.TValue[string] {
+	return &c.AmRunningMode
 }
 
 func (c *mqlWindowsDefenderStatus) GetAmServiceEnabled() *plugin.TValue[bool] {
