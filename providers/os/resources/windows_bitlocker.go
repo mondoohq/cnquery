@@ -31,10 +31,48 @@ const (
 	fveRDVPrefix = "RDV"
 )
 
-func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
-	conn := s.MqlRuntime.Connection.(shared.Connection)
+// mqlWindowsBitlockerInternal memoizes the single Win32_EncryptableVolume
+// read. Both `available` and `volumes` are backed by it, so asking whether
+// BitLocker can be read and then reading it costs one PowerShell process
+// rather than two.
+type mqlWindowsBitlockerInternal struct {
+	lock          sync.Mutex
+	fetched       bool
+	cachedVolumes []windows.BitLockerVolumeStatus
+	err           error
+}
 
-	volumes, err := windows.GetBitLockerVolumes(conn)
+// read returns the volume statuses, running the collection at most once. The
+// error is memoized alongside the data so a host that cannot answer reports
+// the same failure to both fields.
+func (s *mqlWindowsBitlocker) read() ([]windows.BitLockerVolumeStatus, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.fetched {
+		return s.cachedVolumes, s.err
+	}
+	s.fetched = true
+
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		s.err = errors.New("windows.bitlocker is not supported on this connection")
+		return nil, s.err
+	}
+	s.cachedVolumes, s.err = windows.GetBitLockerVolumes(conn)
+	return s.cachedVolumes, s.err
+}
+
+// available reports whether the BitLocker WMI provider could be read. It is
+// the one field on this resource that never fails: it exists so a policy can
+// ask "is BitLocker present here" without triggering the very error it is
+// trying to avoid, which it could not do if the question itself could error.
+func (s *mqlWindowsBitlocker) available() (bool, error) {
+	_, err := s.read()
+	return err == nil, nil
+}
+
+func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
+	volumes, err := s.read()
 	if err != nil {
 		return nil, err
 	}

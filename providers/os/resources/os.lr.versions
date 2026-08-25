@@ -4120,6 +4120,7 @@ windows.auditPolicy.subcategory.localizedName 13.28.2
 windows.auditPolicy.subcategory.name 13.28.2
 windows.auditPolicy.subcategory.success 13.28.2
 windows.bitlocker 9.0.1
+windows.bitlocker.available 13.40.10
 windows.bitlocker.policy 13.29.1
 windows.bitlocker.policy.disableExternalDmaUnderLock 13.29.1
 windows.bitlocker.policy.driveSettings 13.29.1

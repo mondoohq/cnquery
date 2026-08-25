@@ -250,8 +250,8 @@ func (l *psKeyProtectorList) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// bitlockerVolumeStatus returns the status for one individual volume
-type bitlockerVolumeStatus struct {
+// BitLockerVolumeStatus is the encryption state of one individual volume.
+type BitLockerVolumeStatus struct {
 	DeviceID           string
 	DriveLetter        string
 	ConversionStatus   conversionStatus
@@ -291,7 +291,7 @@ type statusCode struct {
 	Text string `json:"text"`
 }
 
-func GetBitLockerVolumes(p shared.Connection) ([]bitlockerVolumeStatus, error) {
+func GetBitLockerVolumes(p shared.Connection) ([]BitLockerVolumeStatus, error) {
 	c, err := p.RunCommand(powershell.Encode(bitlockerStatusScript))
 	if err != nil {
 		return nil, err
@@ -309,7 +309,7 @@ func GetBitLockerVolumes(p shared.Connection) ([]bitlockerVolumeStatus, error) {
 // an empty list: an empty list is indistinguishable from a host whose volumes
 // are all unencrypted, so a failed reading would satisfy the very checks that
 // are meant to catch one.
-func bitlockerResult(stdout []byte, exitStatus int, stderr []byte) ([]bitlockerVolumeStatus, error) {
+func bitlockerResult(stdout []byte, exitStatus int, stderr []byte) ([]BitLockerVolumeStatus, error) {
 	if exitStatus != 0 {
 		msg := strings.TrimSpace(string(stderr))
 		if msg == "" {
@@ -323,7 +323,7 @@ func bitlockerResult(stdout []byte, exitStatus int, stderr []byte) ([]bitlockerV
 	return ParseWindowsBitlockerStatus(bytes.NewReader(stdout))
 }
 
-func ParseWindowsBitlockerStatus(r io.Reader) ([]bitlockerVolumeStatus, error) {
+func ParseWindowsBitlockerStatus(r io.Reader) ([]BitLockerVolumeStatus, error) {
 	var volumeStatus []powershellBitlockerVolumeStatus
 	data, err := io.ReadAll(r)
 	if err != nil {
@@ -335,11 +335,11 @@ func ParseWindowsBitlockerStatus(r io.Reader) ([]bitlockerVolumeStatus, error) {
 		return nil, err
 	}
 
-	res := []bitlockerVolumeStatus{}
+	res := []BitLockerVolumeStatus{}
 	for i := range volumeStatus {
 		v := volumeStatus[i]
 
-		bvs := bitlockerVolumeStatus{
+		bvs := BitLockerVolumeStatus{
 			DeviceID:    v.Volume.DeviceID,
 			DriveLetter: v.Volume.DriveLetter,
 			ConversionStatus: conversionStatus{

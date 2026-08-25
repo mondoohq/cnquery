@@ -13771,6 +13771,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.printerDriver.printProcessor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsPrinterDriver).GetPrintProcessor()).ToDataRes(types.String)
 	},
+	"windows.bitlocker.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlocker).GetAvailable()).ToDataRes(types.Bool)
+	},
 	"windows.bitlocker.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlocker).GetVolumes()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume")))
 	},
@@ -32896,6 +32899,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.bitlocker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlocker).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.bitlocker.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlocker).Available, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.bitlocker.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -84683,9 +84690,10 @@ func (c *mqlWindowsPrinterDriver) GetPrintProcessor() *plugin.TValue[string] {
 type mqlWindowsBitlocker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsBitlockerInternal it will be used here
-	Volumes plugin.TValue[[]any]
-	Policy  plugin.TValue[*mqlWindowsBitlockerPolicy]
+	mqlWindowsBitlockerInternal
+	Available plugin.TValue[bool]
+	Volumes   plugin.TValue[[]any]
+	Policy    plugin.TValue[*mqlWindowsBitlockerPolicy]
 }
 
 // createWindowsBitlocker creates a new instance of this resource
@@ -84718,6 +84726,12 @@ func (c *mqlWindowsBitlocker) MqlName() string {
 
 func (c *mqlWindowsBitlocker) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlWindowsBitlocker) GetAvailable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Available, func() (bool, error) {
+		return c.available()
+	})
 }
 
 func (c *mqlWindowsBitlocker) GetVolumes() *plugin.TValue[[]any] {

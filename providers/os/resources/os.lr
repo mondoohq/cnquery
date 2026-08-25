@@ -13768,6 +13768,16 @@ windows.printerDriver @defaults("name version manufacturer") {
 // Policy (FVE) settings under `policy`. Use it to verify that OS and data
 // drives are encrypted and protected.
 windows.bitlocker {
+  // Whether the BitLocker WMI provider can be read on this target
+  //
+  // The Win32_EncryptableVolume class that backs `volumes` is registered by
+  // the BitLocker feature, so on a host where the feature is not installed
+  // the namespace does not exist and no volume encryption state can be read
+  // at all. This field reports that without failing, so a policy can skip
+  // such a host deliberately instead of treating an unreadable host as an
+  // encrypted one. It is false when the provider cannot be read and true
+  // when it can, and it never reports an error or a null.
+  available() bool
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
   // BitLocker Group Policy (FVE) settings configured for this system
