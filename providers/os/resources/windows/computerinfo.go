@@ -6,6 +6,7 @@ package windows
 import (
 	"encoding/json"
 	"io"
+	"strings"
 )
 
 // PSGetComputerInfo is a PowerShell script that retrieves computer information.
@@ -21,7 +22,7 @@ function Get-CustomComputerInfo {
     $os = Get-CimInstance -ClassName Win32_OperatingSystem
     $timeZone = Get-CimInstance -ClassName Win32_TimeZone
     $windowsProduct = Get-ItemProperty "HKLM:\Software\Microsoft\Windows NT\CurrentVersion"
-    $firmwareType = Get-CimInstance -Namespace root\cimv2 -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty FirmwareType
+    $firmwareType = $env:firmware_type
     $hal = (Get-Item "$env:SystemRoot\System32\hal.dll" -ErrorAction SilentlyContinue).VersionInfo.ProductVersion
     $physicalMemoryKB = $null
     $capacity = (Get-CimInstance -ClassName Win32_PhysicalMemory -ErrorAction SilentlyContinue | Measure-Object -Property Capacity -Sum).Sum
@@ -69,7 +70,12 @@ type CustomComputerInfo struct {
 	// WindowsProduct. Reading it from WindowsProduct found nothing on any
 	// host, so BiosFirmwareType was always null even though the script had
 	// gone and fetched it.
-	FirmwareType any `json:"FirmwareType"`
+	//
+	// The value carried here is the firmware_type environment variable
+	// ("Legacy" or "UEFI"). Win32_ComputerSystem.FirmwareType, which the
+	// script used to read, is empty on every host tested, so that source
+	// could not have filled the field in even with the mapping corrected.
+	FirmwareType string `json:"FirmwareType"`
 	// Hal is the hal.dll product version, which is what
 	// OsHardwareAbstractionLayer reports. It used to be filled in with the
 	// operating system version instead, which is a different and shorter
@@ -86,6 +92,23 @@ type CustomComputerInfo struct {
 	// It used to be filled in with the boot timestamp, so a field documented
 	// as a duration carried a point in time.
 	Uptime any `json:"Uptime"`
+}
+
+
+// biosFirmwareType maps the firmware_type environment variable to the
+// vocabulary Get-ComputerInfo uses for BiosFirmwareType, so a host that falls
+// back reports the same two words as one that does not. An unrecognized or
+// absent value yields nil: "the firmware type could not be read" is not the
+// same claim as "this machine boots BIOS".
+func biosFirmwareType(v string) any {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "legacy":
+		return "Bios"
+	case "uefi":
+		return "Uefi"
+	default:
+		return nil
+	}
 }
 
 func ParseCustomComputerInfo(r io.Reader) (map[string]any, error) {
@@ -108,7 +131,7 @@ func ParseCustomComputerInfo(r io.Reader) (map[string]any, error) {
 		"BiosDescription":                    customComputerInfo.Bios["Description"],
 		"BiosEmbeddedControllerMajorVersion": customComputerInfo.Bios["EmbeddedControllerMajorVersion"],
 		"BiosEmbeddedControllerMinorVersion": customComputerInfo.Bios["EmbeddedControllerMinorVersion"],
-		"BiosFirmwareType":                   customComputerInfo.FirmwareType,
+		"BiosFirmwareType":                   biosFirmwareType(customComputerInfo.FirmwareType),
 		"BiosIdentificationCode":             customComputerInfo.Bios["IdentificationCode"],
 		"BiosInstallDate":                    customComputerInfo.Bios["InstallDate"],
 		"BiosInstallableLanguages":           customComputerInfo.Bios["InstallableLanguages"],
