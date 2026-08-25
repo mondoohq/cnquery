@@ -460,7 +460,13 @@ func (x *mqlHttpHeaderContentType) id() (string, error) {
 
 func parseSetCookieDirectives(raw []any) (name *llx.RawData, value *llx.RawData, params *llx.RawData) {
 	name, value, params = llx.NilData, llx.NilData, llx.NilData
-	parseHeaderFields(raw, func(key string, val string) {
+	if len(raw) == 0 {
+		return name, value, params
+	}
+	// Each Set-Cookie header carries exactly one cookie. Parsing more than the
+	// first would fold the later cookies' name=value pairs into this cookie's
+	// attribute map.
+	parseHeaderFields(raw[:1], func(key string, val string) {
 		// RFC 6265 section 5.2: attribute names are case-insensitive,
 		// while cookie names and values keep their casing
 		if name.Value == nil && val != "" {
@@ -494,6 +500,33 @@ func (x *mqlHttpHeader) setCookie() (*mqlHttpHeaderSetCookie, error) {
 		return nil, err
 	}
 	return o.(*mqlHttpHeaderSetCookie), nil
+}
+
+func (x *mqlHttpHeader) setCookies() ([]any, error) {
+	raw, ok := x.Params.Data["Set-Cookie"]
+	if !ok {
+		x.SetCookies.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	values := raw.([]any)
+	res := make([]any, 0, len(values))
+	for i := range values {
+		// one Set-Cookie header carries one cookie, so parse them one at a time
+		cname, cval, params := parseSetCookieDirectives(values[i : i+1])
+
+		o, err := CreateResource(x.MqlRuntime, "http.header.setCookie", map[string]*llx.RawData{
+			"name":   cname,
+			"value":  cval,
+			"params": params,
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, o)
+	}
+
+	return res, nil
 }
 
 func parseCspDirectives(raw []any) map[string]any {

@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
 type timeoutErr struct{}
@@ -191,6 +192,63 @@ func TestParseSetCookieDirectives(t *testing.T) {
 	t.Run("keeps attribute value casing", func(t *testing.T) {
 		_, _, params := parseSetCookieDirectives([]any{"sid=1; Domain=Example.COM; SameSite=Strict"})
 		assert.Equal(t, map[string]any{"domain": "Example.COM", "samesite": "Strict"}, params.Value)
+	})
+
+	t.Run("does not absorb a second cookie into the first cookie's attributes", func(t *testing.T) {
+		name, value, params := parseSetCookieDirectives([]any{
+			"NEXT_LOCALE=en; Path=/; Secure",
+			"consent_region=other; Path=/; Secure",
+		})
+		assert.Equal(t, llx.StringData("NEXT_LOCALE"), name)
+		assert.Equal(t, llx.StringData("en"), value)
+		assert.Equal(t, map[string]any{"path": "/", "secure": ""}, params.Value)
+	})
+}
+
+func TestHttpHeaderSetCookies(t *testing.T) {
+	newHeader := func(vals ...any) *mqlHttpHeader {
+		return &mqlHttpHeader{
+			MqlRuntime: &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}},
+			__id:       "https://example.com",
+			Params: plugin.TValue[map[string]any]{
+				Data:  map[string]any{"Set-Cookie": vals},
+				State: plugin.StateIsSet,
+			},
+		}
+	}
+
+	t.Run("returns one entry per Set-Cookie header", func(t *testing.T) {
+		cookies, err := newHeader(
+			"NEXT_LOCALE=en; Path=/; Secure",
+			"consent_region=other; Path=/; Secure; HttpOnly",
+		).setCookies()
+		require.NoError(t, err)
+		require.Len(t, cookies, 2)
+
+		first := cookies[0].(*mqlHttpHeaderSetCookie)
+		assert.Equal(t, "NEXT_LOCALE", first.Name.Data)
+		assert.Equal(t, "en", first.Value.Data)
+		assert.Equal(t, map[string]any{"path": "/", "secure": ""}, first.Params.Data)
+
+		second := cookies[1].(*mqlHttpHeaderSetCookie)
+		assert.Equal(t, "consent_region", second.Name.Data)
+		assert.Equal(t, "other", second.Value.Data)
+		assert.Equal(t, map[string]any{"path": "/", "secure": "", "httponly": ""}, second.Params.Data)
+	})
+
+	t.Run("is null when the response sets no cookies", func(t *testing.T) {
+		h := &mqlHttpHeader{
+			MqlRuntime: &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}},
+			__id:       "https://example.com",
+			Params: plugin.TValue[map[string]any]{
+				Data:  map[string]any{"Content-Type": []any{"text/html"}},
+				State: plugin.StateIsSet,
+			},
+		}
+		cookies, err := h.setCookies()
+		require.NoError(t, err)
+		assert.Nil(t, cookies)
+		assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, h.SetCookies.State)
 	})
 }
 

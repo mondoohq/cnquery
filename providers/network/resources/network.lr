@@ -78,7 +78,17 @@ private http.header @defaults("length=params.length") {
   // Content-Type header
   contentType() http.header.contentType
   // Set-Cookie header
+  //
+  // The first cookie the response sets. Null when the response sets no
+  // cookies. A response may set more than one cookie; use `setCookies` to
+  // inspect every one of them.
   setCookie() http.header.setCookie
+  // Every cookie the response sets, one entry per Set-Cookie header
+  //
+  // Null when the response sets no cookies. Each entry parses one
+  // Set-Cookie header, so attributes stay attached to the cookie that
+  // carried them.
+  setCookies() []http.header.setCookie
   // Content-Security-Policy header directives
   //
   // The parsed Content-Security-Policy header, keyed by directive name
