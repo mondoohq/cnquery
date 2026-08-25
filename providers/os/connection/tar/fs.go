@@ -161,11 +161,6 @@ func (fs *FS) resolveEntry(header *tar.Header) (*tar.Header, bool) {
 	return nil, false
 }
 
-// resolve symlink file
-func (fs *FS) resolveSymlink(header *tar.Header) string {
-	return fs.resolveSymlinkFrom(header.Name, header.Linkname)
-}
-
 // resolveSymlinkFrom resolves link as it would be read from dest. A relative
 // target is relative to dest's directory, so callers that arrived by a hard
 // link pass the path they came in on rather than the storage location.
@@ -186,6 +181,8 @@ func (fs *FS) resolveSymlinkFrom(dest string, link string) string {
 	return path
 }
 
+// open reads the content of a fully resolved entry. Callers resolve symlinks
+// and hard links with resolveEntry first.
 func (fs *FS) open(header *tar.Header) (io.Reader, error) {
 	log.Debug().Str("file", header.Name).Msg("tar> load file content")
 
@@ -196,10 +193,9 @@ func (fs *FS) open(header *tar.Header) (io.Reader, error) {
 	}
 	defer f.Close()
 
+	// header is already resolved by Open, so this is the entry that holds the
+	// data rather than a link to it
 	path := header.Name
-	if resolved, ok := fs.resolveEntry(header); ok {
-		path = resolved.Name
-	}
 
 	// extract file from tar stream
 	reader, err := fsutil.ExtractFileFromTarStream(path, f)
