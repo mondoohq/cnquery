@@ -4,6 +4,7 @@
 package windows
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -169,4 +170,51 @@ func TestTpmManufacturer(t *testing.T) {
 // collected: a field that is never fetched cannot be leaked by any query.
 func TestPSGetTpmDoesNotCollectOwnerAuth(t *testing.T) {
 	assert.NotContains(t, PSGetTpm, "OwnerAuth")
+}
+
+// Real Get-Tpm readings from hosts with no TPM, captured through the shipped
+// PSGetTpm script. Server 2019 (10.0.17763) produced output identical to 2022,
+// so it is covered by the same fixture.
+//
+// The two versions disagree on what a machine without a TPM reports, which is
+// the point of pinning both: on 2016 the TBS service will not start, Get-Tpm
+// throws outright, and every field comes back empty; on 2019 and later Get-Tpm
+// returns an object whose AutoProvisioning is "NotDefined" and whose
+// OwnerClearDisabled is true. The second is the trap the resource
+// documentation warns about, since a host with no TPM at all reports the same
+// value a hardened one would.
+func TestParseTpmAbsentServerBaselines(t *testing.T) {
+	t.Run("Server 2016, where Get-Tpm itself fails", func(t *testing.T) {
+		f, err := os.Open("./testdata/tpm_absent_server2016.json")
+		require.NoError(t, err)
+		defer f.Close()
+
+		info, err := ParseTpm(f)
+		require.NoError(t, err)
+
+		assert.False(t, info.TpmPresent)
+		assert.False(t, info.TpmReady)
+		assert.False(t, info.TpmEnabled)
+		assert.False(t, info.TpmActivated)
+		assert.Empty(t, info.AutoProvisioning)
+		assert.False(t, info.OwnerClearDisabled)
+		assert.Empty(t, info.MajorSpecVersion())
+		assert.Empty(t, info.Manufacturer())
+	})
+
+	t.Run("Server 2022, where Get-Tpm answers for an absent TPM", func(t *testing.T) {
+		f, err := os.Open("./testdata/tpm_absent_server2022.json")
+		require.NoError(t, err)
+		defer f.Close()
+
+		info, err := ParseTpm(f)
+		require.NoError(t, err)
+
+		assert.False(t, info.TpmPresent)
+		assert.Equal(t, "NotDefined", info.AutoProvisioning)
+		// true on a machine that has no TPM to clear
+		assert.True(t, info.OwnerClearDisabled)
+		assert.Empty(t, info.MajorSpecVersion())
+		assert.Empty(t, info.Manufacturer())
+	})
 }
