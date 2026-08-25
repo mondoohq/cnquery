@@ -2542,11 +2542,11 @@ func init() {
 			Create: createWindowsDefender,
 		},
 		"windows.defender.status": {
-			// to override args, implement: initWindowsDefenderStatus(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDefenderStatus,
 			Create: createWindowsDefenderStatus,
 		},
 		"windows.defender.preferences": {
-			// to override args, implement: initWindowsDefenderPreferences(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsDefenderPreferences,
 			Create: createWindowsDefenderPreferences,
 		},
 		"windows.defender.scanSettings": {
