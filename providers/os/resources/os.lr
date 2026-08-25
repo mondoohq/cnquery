@@ -11634,25 +11634,27 @@ private windows.winrm.listener @defaults("transport port address enabled") {
 
 // WinRM client policy
 //
-// WinRM client policy under HKLM\SOFTWARE\Policies\Microsoft
-// \Windows\WinRM\Client. These are GPO-only values; when a value is absent the
-// documented Windows default applies.
+// Live WS-Management client configuration, which already reflects any Group
+// Policy setting applied to it. Reading these needs a connection that can run
+// commands.
 private windows.winrm.client @defaults("allowBasic allowUnencryptedTraffic") {
-  // Whether the WinRM client allows Basic authentication (Client\AllowBasic)
+  // Whether the WinRM client allows Basic authentication
   //
-  // Defaults to true (Windows historically allows Basic auth on the client
-  // when the policy is not configured).
-  allowBasic bool
-  // Whether the WinRM client allows unencrypted traffic (Client\AllowUnencryptedTraffic)
+  // Reports the live WS-Management value (Client\Auth\Basic), which already
+  // reflects any Group Policy setting. True on a stock Windows Server: the
+  // client will offer Basic credentials when a server asks for them.
+  allowBasic() bool
+  // Whether the WinRM client allows unencrypted traffic
   //
-  // Defaults to true (Windows historically allows unencrypted traffic on the
-  // client when the policy is not configured).
-  allowUnencryptedTraffic bool
-  // Whether the WinRM client allows Digest authentication (Client\AllowDigest)
+  // Reports the live WS-Management value (Client\AllowUnencrypted), which
+  // already reflects any Group Policy setting. False on a stock Windows
+  // Server, so the client refuses to send an unencrypted request.
+  allowUnencryptedTraffic() bool
+  // Whether the WinRM client allows Digest authentication
   //
-  // Defaults to true (Digest authentication is enabled on the client when the
-  // policy is not configured).
-  allowDigest bool
+  // Reports the live WS-Management value (Client\Auth\Digest), which already
+  // reflects any Group Policy setting. True on a stock Windows Server.
+  allowDigest() bool
   // Hosts the WinRM client trusts without mutual authentication (Client\TrustedHosts)
   //
   // A comma-separated list, empty when no host is trusted. A single "*"
@@ -11666,35 +11668,43 @@ private windows.winrm.client @defaults("allowBasic allowUnencryptedTraffic") {
 
 // WinRM service policy
 //
-// WinRM service policy under HKLM\SOFTWARE\Policies\Microsoft
-// \Windows\WinRM\Service (and the WinRS subkey). These are GPO-only values;
-// when a value is absent the documented Windows default applies.
+// The WinRM service configuration. The authentication, encryption and remote
+// shell settings are read live from WS-Management, which already reflects any
+// Group Policy applied to them, so reading those needs a connection that can
+// run commands. The remaining settings exist only under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service and fall back to
+// the documented Windows default when no policy sets them.
 private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
-  // Whether the WinRM service allows Basic authentication (Service\AllowBasic)
+  // Whether the WinRM service accepts Basic authentication
   //
-  // Defaults to true (Windows historically allows Basic auth on the service
-  // when the policy is not configured).
-  allowBasic bool
-  // Whether the WinRM service allows unencrypted traffic (Service\AllowUnencryptedTraffic)
+  // Reports the live WS-Management value (Service\Auth\Basic), which already
+  // reflects any Group Policy setting. False on a stock Windows Server. Basic
+  // authentication sends the password in a reversible encoding, so a service
+  // that accepts it over an unencrypted transport is handing out credentials.
+  allowBasic() bool
+  // Whether the WinRM service accepts unencrypted traffic
   //
-  // Defaults to true (Windows historically allows unencrypted traffic on the
-  // service when the policy is not configured).
-  allowUnencryptedTraffic bool
+  // Reports the live WS-Management value (Service\AllowUnencrypted), which
+  // already reflects any Group Policy setting. False on a stock Windows
+  // Server. Together with allowBasic this is the pair worth auditing: an
+  // unencrypted transport is what turns Basic authentication into a credential
+  // disclosure.
+  allowUnencryptedTraffic() bool
   // Whether the WinRM service disallows storing RunAs credentials (Service\DisableRunAs)
   //
-  // Defaults to false (RunAs credential storage is not disabled when the
-  // policy is not configured).
+  // Read from the policy key. Defaults to false (RunAs credential storage is
+  // not disabled when the policy is not configured).
   disableRunAs bool
   // Whether the WinRM service allows remote server management / auto config (Service\AllowAutoConfig)
   //
-  // Defaults to false (the listener is not auto-configured when the policy is
-  // not configured).
+  // Read from the policy key. Defaults to false (the listener is not
+  // auto-configured when the policy is not configured).
   allowAutoConfig bool
-  // Whether WinRS allows remote shell access (Service\WinRS\AllowRemoteShellAccess)
+  // Whether WinRS allows remote shell access
   //
-  // Defaults to true (remote shell access is allowed when the policy is not
-  // configured).
-  allowRemoteShellAccess bool
+  // Reports the live WS-Management value (Shell\AllowRemoteShellAccess), which
+  // already reflects any Group Policy setting. True on a stock Windows Server.
+  allowRemoteShellAccess() bool
   // IPv4 addresses the WinRM service accepts requests on (Service\IPv4Filter)
   //
   // A comma-separated list of addresses or ranges, "*" for every IPv4 address,
