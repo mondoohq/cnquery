@@ -677,6 +677,21 @@ var freebsdPortStates = map[string]string{
 	"CLOSING":     TCP_STATES[11],
 }
 
+// freebsdPortState translates one sockstat CONN STATE token onto the canonical
+// TCP_STATES vocabulary. An unrecognised token passes through unchanged rather
+// than becoming "", so a state FreeBSD adds later is still visible instead of
+// silently reading as no state at all. udp rows carry no state and keep their
+// empty value.
+func freebsdPortState(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	if state, ok := freebsdPortStates[raw]; ok {
+		return state
+	}
+	return raw
+}
+
 // listFreebsd reads sockets from sockstat, which is part of the base system.
 func (p *mqlPorts) listFreebsd() ([]any, error) {
 	users, err := p.users()
@@ -711,11 +726,21 @@ func (p *mqlPorts) listFreebsd() ([]any, error) {
 		return nil, err
 	}
 
+	// sockstat names the owning user, while the users map is keyed by uid.
+	// Index once: scanning per socket is O(sockets x users).
+	usersByName := make(map[string]*mqlUser, len(users))
+	for uid := range users {
+		u := users[uid]
+		if u != nil {
+			usersByName[u.Name.Data] = u
+		}
+	}
+
 	res := []any{}
 	for i := range entries {
 		entry := entries[i]
 
-		state := freebsdPortStates[entry.State]
+		state := freebsdPortState(entry.State)
 
 		args := map[string]*llx.RawData{
 			"protocol":      llx.StringData(entry.Protocol),
@@ -726,7 +751,7 @@ func (p *mqlPorts) listFreebsd() ([]any, error) {
 			"remotePort":    llx.IntData(entry.RemotePort),
 		}
 
-		mqlUser := userByName(users, entry.User)
+		mqlUser := usersByName[entry.User]
 		if mqlUser != nil {
 			args["user"] = llx.ResourceData(mqlUser, "user")
 		}
@@ -753,18 +778,6 @@ func (p *mqlPorts) listFreebsd() ([]any, error) {
 	}
 
 	return res, nil
-}
-
-// userByName finds a user resource by name. sockstat reports the owning user
-// by name, while the users map is keyed by uid.
-func userByName(users map[int64]*mqlUser, name string) *mqlUser {
-	for uid := range users {
-		u := users[uid]
-		if u != nil && u.Name.Data == name {
-			return u
-		}
-	}
-	return nil
 }
 
 // AIX Implementation
