@@ -4,6 +4,7 @@
 package dnsshake
 
 import (
+	"encoding/binary"
 	"net"
 	"testing"
 
@@ -130,4 +131,96 @@ func TestQueryLeavesUntruncatedAnswersAlone(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, values, rec.RData)
 	assert.Equal(t, int64(300), rec.TTL)
+}
+
+// rawResolver serves a hand-built UDP response whose header counts more records
+// than the body carries, and answers normally over TCP. Such a response fails to
+// unpack with the truncation bit clear, so it is only reached by retrying on the
+// error rather than on the bit.
+func rawResolver(t *testing.T, name string, values []string) string {
+	t.Helper()
+
+	packetConn, listener, port := listenBoth(t)
+
+	go func() {
+		buf := make([]byte, 1500)
+		for {
+			n, addr, err := packetConn.ReadFrom(buf)
+			if err != nil {
+				return
+			}
+
+			req := new(dns.Msg)
+			if err := req.Unpack(buf[:n]); err != nil {
+				continue
+			}
+
+			// A well-formed reply carrying one answer, then an answer count that
+			// claims far more than the body holds. That is what an oversized
+			// response looks like on the wire when the truncation bit does not
+			// come with it: the header parses, the body runs out.
+			reply := new(dns.Msg)
+			reply.SetReply(req)
+			reply.Answer = append(reply.Answer, &dns.TXT{
+				Hdr: dns.RR_Header{
+					Name:   dns.Fqdn(name),
+					Rrtype: dns.TypeTXT,
+					Class:  dns.ClassINET,
+					Ttl:    300,
+				},
+				Txt: []string{"partial"},
+			})
+			packed, err := reply.Pack()
+			if err != nil {
+				continue
+			}
+			// A second answer that starts and does not finish: name pointer and
+			// type, then nothing. The header counts it, the body cannot supply
+			// it, and the unpack fails partway through.
+			packed = append(packed, 0xC0, 0x0C, 0x00, 0x10)
+			binary.BigEndian.PutUint16(packed[6:8], 2)
+			_, _ = packetConn.WriteTo(packed, addr)
+		}
+	}()
+
+	handler := dns.HandlerFunc(func(w dns.ResponseWriter, req *dns.Msg) {
+		m := new(dns.Msg)
+		m.SetReply(req)
+		for _, v := range values {
+			m.Answer = append(m.Answer, &dns.TXT{
+				Hdr: dns.RR_Header{
+					Name:   dns.Fqdn(name),
+					Rrtype: dns.TypeTXT,
+					Class:  dns.ClassINET,
+					Ttl:    300,
+				},
+				Txt: []string{v},
+			})
+		}
+		_ = w.WriteMsg(m)
+	})
+
+	tcp := &dns.Server{Listener: listener, Handler: handler}
+	go func() { _ = tcp.ActivateAndServe() }()
+	t.Cleanup(func() {
+		_ = tcp.Shutdown()
+		_ = packetConn.Close()
+	})
+
+	return port
+}
+
+func TestQueryRetriesUnpackFailuresOverTCP(t *testing.T) {
+	// The truncation bit is not the only way an oversized answer arrives. A
+	// response whose header overcounts fails to unpack with the bit clear, and
+	// retrying only on the bit would report the name as publishing no TXT.
+	values := []string{"v=spf1 -all"}
+	port := rawResolver(t, "example.com", values)
+
+	res := queryTestResolver(t, "example.com", port)
+
+	rec, ok := res["TXT"]
+	require.True(t, ok, "the TXT record must survive a UDP answer that will not unpack")
+	assert.Equal(t, values, rec.RData)
+	assert.NoError(t, rec.Error)
 }

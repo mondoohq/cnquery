@@ -348,7 +348,13 @@ func (d *DnsClient) queryDnsTypeAt(server string, recursion bool, fqdn string, t
 	// all, which is indistinguishable from a name that publishes none: the type
 	// never makes it into the result map, so records, spf and dkim all report
 	// the name as having nothing rather than reporting that the lookup failed.
-	if r != nil && r.Truncated {
+	//
+	// The unpack error is a separate trigger rather than a consequence of the
+	// truncation bit. A response whose header counts more records than the body
+	// carries fails to unpack with the bit clear, and the partially parsed
+	// message still comes back alongside the error, so testing the bit alone
+	// would leave that case on the floor.
+	if r != nil && (r.Truncated || err != nil) {
 		tcp := &dns.Client{Net: "tcp"}
 		if retried, _, tcpErr := tcp.Exchange(m, address); tcpErr == nil {
 			r, err = retried, nil
