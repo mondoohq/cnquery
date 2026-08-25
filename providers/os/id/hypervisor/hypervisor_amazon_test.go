@@ -113,18 +113,50 @@ func TestMapHypervisorDMIVendors(t *testing.T) {
 // Several vendor strings contain more than one key. Go randomises map
 // iteration, so before ordering by key length the answer differed between
 // runs. The most specific match must win, every time.
+//
+// "Red Hat RHEV Hypervisor" is the case that actually proves it: it contains
+// both "red hat" (7) and "rhev" (4), and the two map to DIFFERENT products, so
+// iteration order was observable in the result.
 func TestMapHypervisorLongestMatchWinsDeterministically(t *testing.T) {
-	// contains both "oracle"-free "virtualbox" and, in the vendor form, "oracle"
 	for i := 0; i < 50; i++ {
-		v, ok := mapHypervisor("Oracle VM VirtualBox")
+		v, ok := mapHypervisor("Red Hat RHEV Hypervisor")
 		assert.True(t, ok)
-		assert.Equal(t, "VirtualBox", v, "longest key must win on every iteration")
+		assert.Equal(t, "OpenShift Virtualization", v,
+			"the longer key must win on every iteration, not whichever came first")
+	}
+}
+
+// "oracle" is systemd's token for VirtualBox, but as a substring it is far too
+// broad. It is matched exactly, so a vendor string that merely contains the
+// word is not mislabelled.
+func TestMapHypervisorOracleIsExactMatchOnly(t *testing.T) {
+	// systemd emits the bare token
+	v, ok := mapHypervisor("oracle")
+	assert.True(t, ok)
+	assert.Equal(t, "VirtualBox", v)
+
+	// trailing whitespace from a command must not defeat the exact match
+	v, ok = mapHypervisor(" Oracle\n")
+	assert.True(t, ok)
+	assert.Equal(t, "VirtualBox", v)
+
+	// a vendor string that merely contains the word must NOT become VirtualBox
+	for _, vendor := range []string{
+		"Oracle Corporation",
+		"Oracle Cloud Compute",
+		"Oracle Cloud Infrastructure",
+	} {
+		v, ok := mapHypervisor(vendor)
+		assert.False(t, ok, "%q must not be mistaken for VirtualBox", vendor)
+		assert.Equal(t, "", v)
 	}
 
-	// "apple virtual" is longer than "apple" and must take precedence
-	for i := 0; i < 50; i++ {
-		v, ok := mapHypervisor("Apple Virtual Machine")
-		assert.True(t, ok)
-		assert.Equal(t, "Apple Virtualization", v)
-	}
+	// VirtualBox is still identified by DMI, via its product_name
+	v, ok = mapHypervisor("VirtualBox")
+	assert.True(t, ok)
+	assert.Equal(t, "VirtualBox", v)
+
+	v, ok = mapHypervisor("Oracle VM VirtualBox")
+	assert.True(t, ok)
+	assert.Equal(t, "VirtualBox", v)
 }

@@ -52,11 +52,8 @@ var knownHypervisors = map[string]string{
 	// systemd's token for Apple Virtualization.framework. The longer keys above
 	// cannot match it, because "apple" contains neither of them.
 	"apple": "Apple Virtualization",
-	// systemd's token for VirtualBox. The longest-match rule in mapHypervisor
-	// keeps "Oracle VM VirtualBox" resolving to VirtualBox rather than racing
-	// this key. Oracle Cloud cannot be caught by it: the whole Linux chain is
-	// gated on the CPU hypervisor flag, so bare metal never reaches here, and
-	// OCI VM shapes report QEMU.
+	// systemd's token for VirtualBox. Matched exactly, never as a substring:
+	// see exactMatchHypervisors.
 	"oracle": "VirtualBox",
 }
 
@@ -92,19 +89,39 @@ func Hypervisor(conn shared.Connection, pf *inventory.Platform) (hypervisor stri
 
 // mapHypervisor maps known hypervisors to their names.
 func mapHypervisor(info string) (string, bool) {
-	// make sure it is lower case
-	info = strings.ToLower(info)
+	// make sure it is lower case, and trimmed so an exact match is not defeated
+	// by the trailing newline a command leaves behind
+	info = strings.TrimSpace(strings.ToLower(info))
 
 	// Longest key first. Several vendor strings contain more than one key --
 	// "Oracle VM VirtualBox" holds both "oracle" and "virtualbox" -- and Go
 	// randomises map iteration, so picking whichever came first made the answer
 	// differ between runs. The longest match is the most specific one.
 	for _, key := range hypervisorKeysByLength() {
+		if exactMatchHypervisors[key] {
+			if info == key {
+				return knownHypervisors[key], true
+			}
+			continue
+		}
 		if strings.Contains(info, key) {
 			return knownHypervisors[key], true
 		}
 	}
 	return "", false
+}
+
+// exactMatchHypervisors lists keys that must equal the detected string rather
+// than appear anywhere within it.
+//
+// "oracle" is systemd-detect-virt's token for VirtualBox, and systemd emits it
+// as the whole string. As a substring it is far too broad: "Oracle
+// Corporation" is a DMI vendor that has nothing to do with VirtualBox, and any
+// future Oracle Cloud vendor string carrying the word would be mislabelled.
+// VirtualBox is still recognised by DMI through the "virtualbox" key, which
+// its product_name carries.
+var exactMatchHypervisors = map[string]bool{
+	"oracle": true,
 }
 
 var (
