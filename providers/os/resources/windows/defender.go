@@ -248,9 +248,9 @@ type MpComputerStatus struct {
 	ComputerID                       string
 	ComputerState                    int64
 	DefenderSignaturesOutOfDate      bool
-	DeviceControlDefaultEnforcement  int64
+	DeviceControlDefaultEnforcement  string
 	DeviceControlPoliciesLastUpdated string
-	DeviceControlState               int64
+	DeviceControlState               string
 	FullScanAge                      int64
 	FullScanStartTime                string
 	FullScanEndTime                  string
@@ -292,7 +292,7 @@ type MpPreference struct {
 	ScanScheduleOffset                            int64
 	ScanAvgCPULoadFactor                          int64
 	ScanOnlyIfIdleEnabled                         bool
-	CheckForSignaturesBeforeRunningScan           int64
+	CheckForSignaturesBeforeRunningScan           bool
 	DisableArchiveScanning                        bool
 	DisableEmailScanning                          bool
 	DisableRemovableDriveScanning                 bool

@@ -13994,13 +13994,13 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsDefenderStatus).GetDefenderSignaturesOutOfDate()).ToDataRes(types.Bool)
 	},
 	"windows.defender.status.deviceControlDefaultEnforcement": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlDefaultEnforcement()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlDefaultEnforcement()).ToDataRes(types.String)
 	},
 	"windows.defender.status.deviceControlPoliciesLastUpdated": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlPoliciesLastUpdated()).ToDataRes(types.Time)
 	},
 	"windows.defender.status.deviceControlState": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlState()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsDefenderStatus).GetDeviceControlState()).ToDataRes(types.String)
 	},
 	"windows.defender.status.fullScanAge": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderStatus).GetFullScanAge()).ToDataRes(types.Int)
@@ -14162,7 +14162,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlWindowsDefenderScanSettings).GetScanOnlyIfIdleEnabled()).ToDataRes(types.Bool)
 	},
 	"windows.defender.scanSettings.checkForSignaturesBeforeRunningScan": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlWindowsDefenderScanSettings).GetCheckForSignaturesBeforeRunningScan()).ToDataRes(types.Int)
+		return (r.(*mqlWindowsDefenderScanSettings).GetCheckForSignaturesBeforeRunningScan()).ToDataRes(types.Bool)
 	},
 	"windows.defender.scanSettings.disableArchiveScanning": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderScanSettings).GetDisableArchiveScanning()).ToDataRes(types.Bool)
@@ -33231,7 +33231,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.defender.status.deviceControlDefaultEnforcement": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsDefenderStatus).DeviceControlDefaultEnforcement, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsDefenderStatus).DeviceControlDefaultEnforcement, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.defender.status.deviceControlPoliciesLastUpdated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33239,7 +33239,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.defender.status.deviceControlState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsDefenderStatus).DeviceControlState, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsDefenderStatus).DeviceControlState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.defender.status.fullScanAge": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33463,7 +33463,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"windows.defender.scanSettings.checkForSignaturesBeforeRunningScan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlWindowsDefenderScanSettings).CheckForSignaturesBeforeRunningScan, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		r.(*mqlWindowsDefenderScanSettings).CheckForSignaturesBeforeRunningScan, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"windows.defender.scanSettings.disableArchiveScanning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -85483,9 +85483,9 @@ type mqlWindowsDefenderStatus struct {
 	ComputerID                       plugin.TValue[string]
 	ComputerState                    plugin.TValue[int64]
 	DefenderSignaturesOutOfDate      plugin.TValue[bool]
-	DeviceControlDefaultEnforcement  plugin.TValue[int64]
+	DeviceControlDefaultEnforcement  plugin.TValue[string]
 	DeviceControlPoliciesLastUpdated plugin.TValue[*time.Time]
-	DeviceControlState               plugin.TValue[int64]
+	DeviceControlState               plugin.TValue[string]
 	FullScanAge                      plugin.TValue[int64]
 	FullScanStartTime                plugin.TValue[*time.Time]
 	FullScanEndTime                  plugin.TValue[*time.Time]
@@ -85613,7 +85613,7 @@ func (c *mqlWindowsDefenderStatus) GetDefenderSignaturesOutOfDate() *plugin.TVal
 	return &c.DefenderSignaturesOutOfDate
 }
 
-func (c *mqlWindowsDefenderStatus) GetDeviceControlDefaultEnforcement() *plugin.TValue[int64] {
+func (c *mqlWindowsDefenderStatus) GetDeviceControlDefaultEnforcement() *plugin.TValue[string] {
 	return &c.DeviceControlDefaultEnforcement
 }
 
@@ -85621,7 +85621,7 @@ func (c *mqlWindowsDefenderStatus) GetDeviceControlPoliciesLastUpdated() *plugin
 	return &c.DeviceControlPoliciesLastUpdated
 }
 
-func (c *mqlWindowsDefenderStatus) GetDeviceControlState() *plugin.TValue[int64] {
+func (c *mqlWindowsDefenderStatus) GetDeviceControlState() *plugin.TValue[string] {
 	return &c.DeviceControlState
 }
 
@@ -86031,7 +86031,7 @@ type mqlWindowsDefenderScanSettings struct {
 	ScanScheduleOffset                            plugin.TValue[int64]
 	ScanAvgCPULoadFactor                          plugin.TValue[int64]
 	ScanOnlyIfIdleEnabled                         plugin.TValue[bool]
-	CheckForSignaturesBeforeRunningScan           plugin.TValue[int64]
+	CheckForSignaturesBeforeRunningScan           plugin.TValue[bool]
 	DisableArchiveScanning                        plugin.TValue[bool]
 	DisableEmailScanning                          plugin.TValue[bool]
 	DisableRemovableDriveScanning                 plugin.TValue[bool]
@@ -86104,7 +86104,7 @@ func (c *mqlWindowsDefenderScanSettings) GetScanOnlyIfIdleEnabled() *plugin.TVal
 	return &c.ScanOnlyIfIdleEnabled
 }
 
-func (c *mqlWindowsDefenderScanSettings) GetCheckForSignaturesBeforeRunningScan() *plugin.TValue[int64] {
+func (c *mqlWindowsDefenderScanSettings) GetCheckForSignaturesBeforeRunningScan() *plugin.TValue[bool] {
 	return &c.CheckForSignaturesBeforeRunningScan
 }
 

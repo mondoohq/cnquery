@@ -13973,11 +13973,17 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // Whether the Defender signatures are out of date
   defenderSignaturesOutOfDate bool
   // Default enforcement mode for device control
-  deviceControlDefaultEnforcement int
+  //
+  // Reported as a name rather than a number, for example "Allow" or "Deny".
+  // An empty string means no device-control enforcement policy is applied.
+  deviceControlDefaultEnforcement string
   // Date the device-control policies were last updated
   deviceControlPoliciesLastUpdated time
   // Operational state of device control
-  deviceControlState int
+  //
+  // Reported as a name rather than a number, for example "Disabled" when
+  // device control is not in effect.
+  deviceControlState string
   // Number of days since the last full scan completed
   fullScanAge int
   // Time the last full scan started
@@ -14116,9 +14122,7 @@ windows.defender.scanSettings @defaults("scanParameters scanScheduleDay") {
   // Whether scheduled scans run only when the computer is idle
   scanOnlyIfIdleEnabled bool
   // Whether to check for new signatures before running a scheduled scan
-  //
-  // 0 = never, 1 = before every scan, 2 = disabled.
-  checkForSignaturesBeforeRunningScan int
+  checkForSignaturesBeforeRunningScan bool
   // Whether scanning inside archive files is disabled
   disableArchiveScanning bool
   // Whether email scanning is disabled
