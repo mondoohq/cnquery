@@ -2278,11 +2278,11 @@ func init() {
 			Create: createWindowsUpdateEntry,
 		},
 		"windows.update.config": {
-			// to override args, implement: initWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsUpdateConfig,
 			Create: createWindowsUpdateConfig,
 		},
 		"windows.update.policy": {
-			// to override args, implement: initWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsUpdatePolicy,
 			Create: createWindowsUpdatePolicy,
 		},
 		"windows.serverFeature": {
@@ -2358,15 +2358,15 @@ func init() {
 			Create: createWindowsSpooler,
 		},
 		"windows.spooler.pointAndPrint": {
-			// to override args, implement: initWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSpoolerPointAndPrint,
 			Create: createWindowsSpoolerPointAndPrint,
 		},
 		"windows.spooler.rpc": {
-			// to override args, implement: initWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSpoolerRpc,
 			Create: createWindowsSpoolerRpc,
 		},
 		"windows.spooler.ipp": {
-			// to override args, implement: initWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSpoolerIpp,
 			Create: createWindowsSpoolerIpp,
 		},
 		"windows.telemetry": {

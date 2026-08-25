@@ -170,6 +170,24 @@ func deriveCatalogSource(read bool, useWUServer bool, wsusServerURL string, auOp
 	return "windowsUpdate"
 }
 
+// windows.update.config and windows.update.policy share their names with the
+// dotted paths that reach them, so `windows.update.config.catalogSource`
+// resolved the resource instead of the field and reported null for every
+// setting. See initWindowsSingletonChild.
+func initWindowsUpdateConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsSingletonChild(runtime, args, "windows.update",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsUpdateConfig] {
+			return r.(*mqlWindowsUpdate).GetConfig()
+		})
+}
+
+func initWindowsUpdatePolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsSingletonChild(runtime, args, "windows.update",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsUpdatePolicy] {
+			return r.(*mqlWindowsUpdate).GetPolicy()
+		})
+}
+
 func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 	policy, okPolicy := w.readRegistryKey(wuPolicyKey)
 	au, okAU := w.readRegistryKey(wuPolicyAUKey)

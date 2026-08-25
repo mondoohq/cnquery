@@ -200,49 +200,28 @@ func powershellLanguageMode(state int64) string {
 	return "FullLanguage"
 }
 
-// Each singleton sub-resource below is reachable by a dotted path that is also
-// its own registered resource name: the field `transcription` on
-// `windows.powershell` and the resource `windows.powershell.transcription`
-// occupy the same path. The compiler resolves the longest matching resource
-// name before it considers a field, so the dotted path instantiates the
-// sub-resource directly and the parent's accessor never runs. Its plain schema
-// fields are populated only by the parent, so every one stays unset and reports
-// "provider returned no data and no error".
-//
-// Delegating to the parent's accessor fills the resource in. The block form
-// `windows.powershell { transcription { ... } }` binds the field instead of
-// resolving a resource name and was never affected. When the resource is
-// created normally by the parent it carries an __id, and each of these is a
-// no-op.
-func initWindowsPowershellChild[T plugin.Resource](
-	runtime *plugin.Runtime,
-	args map[string]*llx.RawData,
-	get func(*mqlWindowsPowershell) *plugin.TValue[T],
-) (map[string]*llx.RawData, plugin.Resource, error) {
-	if _, ok := args["__id"]; ok {
-		return args, nil, nil
-	}
-	parent, err := CreateResource(runtime, "windows.powershell", map[string]*llx.RawData{})
-	if err != nil {
-		return nil, nil, err
-	}
-	v := get(parent.(*mqlWindowsPowershell))
-	if v.Error != nil {
-		return nil, nil, v.Error
-	}
-	return args, v.Data, nil
-}
-
+// Each singleton sub-resource below shares its name with the dotted path that
+// reaches it, so querying `windows.powershell.transcription.enabled` resolved
+// the resource instead of the field. See initWindowsSingletonChild.
 func initWindowsPowershellScriptBlockLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initWindowsPowershellChild(runtime, args, (*mqlWindowsPowershell).GetScriptBlockLogging)
+	return initWindowsSingletonChild(runtime, args, "windows.powershell",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsPowershellScriptBlockLogging] {
+			return r.(*mqlWindowsPowershell).GetScriptBlockLogging()
+		})
 }
 
 func initWindowsPowershellModuleLogging(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initWindowsPowershellChild(runtime, args, (*mqlWindowsPowershell).GetModuleLogging)
+	return initWindowsSingletonChild(runtime, args, "windows.powershell",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsPowershellModuleLogging] {
+			return r.(*mqlWindowsPowershell).GetModuleLogging()
+		})
 }
 
 func initWindowsPowershellTranscription(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
-	return initWindowsPowershellChild(runtime, args, (*mqlWindowsPowershell).GetTranscription)
+	return initWindowsSingletonChild(runtime, args, "windows.powershell",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsPowershellTranscription] {
+			return r.(*mqlWindowsPowershell).GetTranscription()
+		})
 }
 
 func (r *mqlWindowsPowershell) scriptBlockLogging() (*mqlWindowsPowershellScriptBlockLogging, error) {
