@@ -11462,9 +11462,17 @@ windows.eventlog @defaults("name") {
   maxSizeKB() int
   // Retention behavior when the log reaches its maximum size
   //
-  // One of "overwrite_as_needed" (Retention 0), "overwrite_by_days" (a
-  // positive retention period in seconds), or "never_overwrite" (Retention
-  // 4294967295 or -1).
+  // One of "overwrite_as_needed", "overwrite_by_days" (a positive retention
+  // period), or "never_overwrite". Resolved from the first source that
+  // carries a value: the Group Policy Retention, the classic channel
+  // configuration under Services\EventLog, the WINEVT channel key, and then
+  // the retention mode the channel itself reports. The first two use a period
+  // in seconds (0 as needed, a positive count of seconds by days, 4294967295
+  // or -1 never); the WINEVT key uses a flag instead, 0 as needed and non-zero
+  // never. A modern provider channel is not under Services\EventLog at all,
+  // so without the last two sources every one of them resolved to the Windows
+  // default. Falls back to "overwrite_as_needed", the documented default, only
+  // when no source reports a behavior.
   retention() string
   // Whether the channel overwrites events as needed when full (Retention 0)
   overwriteAsNeeded() bool

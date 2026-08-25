@@ -49,6 +49,7 @@ IsClassicLog=[bool]$l.IsClassicLog
 LogFilePath=[string]$l.LogFilePath
 SystemRoot=[string]$env:SystemRoot
 RecordCount=$(if($null -eq $l.RecordCount){0}else{[int64]$l.RecordCount})
+LogMode=[string]$l.LogMode
 }|ConvertTo-Json -Depth 3 -Compress`
 }
 
@@ -98,6 +99,11 @@ type EventLogChannel struct {
 	// never collected anything, which is why it is only meaningful read
 	// together with IsEnabled.
 	RecordCount int64 `json:"RecordCount"`
+	// LogMode is the effective retention behavior Windows resolved for the
+	// channel: Circular, AutoBackup or Retain. It is the only source that
+	// covers a modern provider channel left at its manifest default, where
+	// neither the classic Services\EventLog key nor an override exists.
+	LogMode string `json:"LogMode"`
 }
 
 // ExpandedLogFilePath is the full path of the backing .evtx file, with the
