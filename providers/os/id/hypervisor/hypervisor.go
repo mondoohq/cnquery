@@ -33,6 +33,11 @@ var knownHypervisors = map[string]string{
 	"nutanix":                  "Nutanix Acropolis",
 	"openshift virtualization": "OpenShift Virtualization",
 	"red hat":                  "OpenShift Virtualization",
+
+	// EC2. systemd-detect-virt reports exactly "amazon" on a Nitro guest, and
+	// the DMI vendor fields read "Amazon EC2", so one substring covers both
+	// detection paths. Older Xen-based instances still match "xen" above.
+	"amazon": "Amazon EC2",
 }
 
 // hyper is a helper struct to avoid passing the connection and platform
