@@ -96,10 +96,6 @@ func TestNoNewDottedPathHusks(t *testing.T) {
 		"windows.scheduledTask.principal": true,
 		"windows.scheduledTask.settings":  true,
 		"windows.smartScreen":             true,
-		"windows.smb.clientConfiguration": true,
-		"windows.smb.serverConfiguration": true,
-		"windows.winrm.client":            true,
-		"windows.winrm.service":           true,
 	}
 
 	var unexpected []string

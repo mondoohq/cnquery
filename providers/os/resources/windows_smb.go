@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
@@ -396,4 +397,47 @@ func (w *mqlWindowsSmb) connections() ([]any, error) {
 		res = append(res, r)
 	}
 	return res, nil
+}
+
+// windows.smb.serverConfiguration and windows.smb.clientConfiguration are both
+// a field path on windows.smb and a resource name in their own right. The
+// compiler resolves the longest matching resource name before it considers a
+// field, so the dotted form instantiates the sub-resource directly and the
+// parent's accessor never runs. Every field on these resources is a plain
+// schema field that only the parent populates, so none is ever set: the query
+// reports null for each one with "provider returned no data and no error", and
+// the values convert as primitives carrying no type information.
+//
+// That is worse than an error, because a check reading "SMB signing is
+// required" off a null does not fail on a host that does not require it.
+//
+// Delegating to the parent's accessor fills the resource in. The block form
+// `windows.smb { serverConfiguration { ... } }` binds the field instead of
+// resolving a resource name and was never affected. When the resource is
+// created normally by the parent it carries an __id and this is a no-op.
+func initWindowsSmbChild[T plugin.Resource](
+	runtime *plugin.Runtime,
+	args map[string]*llx.RawData,
+	get func(*mqlWindowsSmb) *plugin.TValue[T],
+) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	parent, err := CreateResource(runtime, "windows.smb", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := get(parent.(*mqlWindowsSmb))
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	return args, v.Data, nil
+}
+
+func initWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsSmbChild(runtime, args, (*mqlWindowsSmb).GetServerConfiguration)
+}
+
+func initWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsSmbChild(runtime, args, (*mqlWindowsSmb).GetClientConfiguration)
 }
