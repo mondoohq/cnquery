@@ -307,15 +307,18 @@ func (s *Spdx) convertToSbom(doc *spdx.Document) *Sbom {
 						}
 						name = distroVal
 						pf.Title = distroVal
+						// a distro qualifier carries no version when the
+						// platform has none, e.g. "arch" rather than
+						// "arch-rolling"
 						vals := strings.Split(distroVal, "-")
-						if len(vals) > 0 {
-							pf.Name = vals[0]
+						pf.Name = vals[0]
+						if len(vals) > 1 {
 							pf.Version = vals[1]
 						}
 						pf.Family = familyMap[pf.Name]
 					}
 					arch, ok := m["arch"]
-					if ok {
+					if ok && pf != nil {
 						pf.Arch = arch
 					}
 				}
