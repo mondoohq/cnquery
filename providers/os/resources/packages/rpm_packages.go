@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.mondoo.com/mql/providers/core/resources/versions/semver"
@@ -259,6 +260,13 @@ type RpmPkgManager struct {
 	platform      *inventory.Platform
 	staticChecked bool
 	static        bool
+
+	// The rpm database path (`%{_dbpath}`) is a system-wide constant, so it is
+	// resolved once via `rpm -E` and reused for every package that asks for its
+	// files instead of spawning one identical command per package.
+	dbPathMu       sync.Mutex
+	dbPathResolved bool
+	dbPathFiles    []FileRecord
 }
 
 func (rpm *RpmPkgManager) Name() string {
@@ -514,22 +522,56 @@ func (rpm *RpmPkgManager) Files(name string, version string, arch string) ([]Fil
 	if rpm.isStaticAnalysis() {
 		// nothing to do since the data is already attached to the package
 		return nil, nil
-	} else {
-		// This returns the path to the RPM database
-		cmd, err := rpm.conn.RunCommand("rpm -E '%{_dbpath}'")
-		if err != nil {
-			return nil, errors.Wrap(err, "could not rpm database path")
-		}
-		fileRecords := []FileRecord{}
-		scanner := bufio.NewScanner(cmd.Stdout)
-		for scanner.Scan() {
-			line := scanner.Text()
-			fileRecords = append(fileRecords, FileRecord{
-				Path: line,
-			})
-		}
-		return fileRecords, nil
 	}
+
+	// `%{_dbpath}` is the same for every package on the system, so we resolve it
+	// once and hand the cached result to every package that asks for its files.
+	// This avoids running one `rpm -E '%{_dbpath}'` command per package (an N+1
+	// on hosts with hundreds of packages).
+	records, err := rpm.dbPathFileRecords()
+	if err != nil {
+		return nil, err
+	}
+
+	// Return a copy so callers can't mutate the cached slice. A shallow copy is
+	// enough because FileRecord is transitively value-typed: Path is a string,
+	// and PkgDigest and PkgFileInfo hold only strings and fixed-width integers.
+	// Adding a pointer, slice, or map to any of the three would make the copy
+	// share state with the cache again, and this would need to deep copy.
+	out := make([]FileRecord, len(records))
+	copy(out, records)
+	return out, nil
+}
+
+// dbPathFileRecords resolves the rpm database path (`%{_dbpath}`) once and caches
+// the resulting file records on the manager, so repeated calls reuse the cached
+// value instead of re-running the `rpm -E` command. A failed resolution is not
+// cached, so a transient error can be retried on the next call.
+func (rpm *RpmPkgManager) dbPathFileRecords() ([]FileRecord, error) {
+	rpm.dbPathMu.Lock()
+	defer rpm.dbPathMu.Unlock()
+
+	if rpm.dbPathResolved {
+		return rpm.dbPathFiles, nil
+	}
+
+	// This returns the path to the RPM database
+	cmd, err := rpm.conn.RunCommand("rpm -E '%{_dbpath}'")
+	if err != nil {
+		return nil, errors.Wrap(err, "could not rpm database path")
+	}
+	fileRecords := []FileRecord{}
+	scanner := bufio.NewScanner(cmd.Stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fileRecords = append(fileRecords, FileRecord{
+			Path: line,
+		})
+	}
+
+	rpm.dbPathFiles = fileRecords
+	rpm.dbPathResolved = true
+	return fileRecords, nil
 }
 
 // SusePkgManager overwrites the normal RPM handler
