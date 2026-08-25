@@ -188,6 +188,50 @@ func TestParseWindowsFirewallRuleFiltersSingleElementFlattens(t *testing.T) {
 	assert.Nil(t, solo.Security)
 }
 
+func TestDecodePSObjectListEmptyWrapperIsNotARecord(t *testing.T) {
+	// A wrapper whose collection is empty is still a wrapper. Decoding it as a
+	// T fabricates a record with every field at its zero value, reported as
+	// though PowerShell had returned it.
+	//
+	// This asserts on decodePSObjectList rather than on
+	// ParseWindowsFirewallRuleFilters because the firewall join drops a filter
+	// whose InstanceID is empty, which hides the fabricated record from that
+	// caller's output. The decoder is generic over six call sites and nothing
+	// in its contract promises the caller will guard, so the guarantee belongs
+	// here.
+	for _, tc := range []struct {
+		name string
+		raw  string
+	}{
+		{"count only, no value key", `{"Count":0}`},
+		{"empty value array", `{"value":[],"Count":0}`},
+		{"null value", `{"value":null,"Count":0}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			list, err := decodePSObjectList[WindowsFirewallPortFilter](json.RawMessage(tc.raw))
+			require.NoError(t, err)
+			assert.Empty(t, list, "an empty wrapper must not decode to a filter record")
+		})
+	}
+
+	// Control: a genuine single object carries neither wrapper key and must
+	// still flatten to one record, so the discriminator above has not broken
+	// the flattening path it sits next to.
+	list, err := decodePSObjectList[WindowsFirewallPortFilter](
+		json.RawMessage(`{"InstanceID":"Real-In","Protocol":"TCP","LocalPort":"445"}`))
+	require.NoError(t, err)
+	require.Len(t, list, 1)
+	assert.Equal(t, "Real-In", list[0].InstanceID)
+	assert.Equal(t, PSStringArray{"445"}, list[0].LocalPort)
+
+	// Control: a populated wrapper still decodes through the wrapper path.
+	list, err = decodePSObjectList[WindowsFirewallPortFilter](
+		json.RawMessage(`{"value":[{"InstanceID":"Wrapped-In","LocalPort":"80"}],"Count":1}`))
+	require.NoError(t, err)
+	require.Len(t, list, 1)
+	assert.Equal(t, "Wrapped-In", list[0].InstanceID)
+}
+
 func TestPSFlexString(t *testing.T) {
 	for _, tc := range []struct {
 		name string

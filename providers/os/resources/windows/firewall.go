@@ -258,12 +258,26 @@ func decodePSObjectList[T any](raw json.RawMessage) ([]T, error) {
 		}
 		return list, nil
 	case '{':
+		// Distinguish a wrapper from a single flattened object by whether the
+		// object carries the wrapper's own keys, not by whether "value" holds
+		// anything. A wrapper whose collection is empty still IS a wrapper, and
+		// decoding it as a T would yield a record with every field at its zero
+		// value: a fabricated filter with an empty InstanceID that joins to no
+		// rule, reported as though PowerShell had returned it.
 		var wrapped struct {
-			Value json.RawMessage `json:"value"`
+			Value *json.RawMessage `json:"value"`
+			Count *json.RawMessage `json:"Count"`
 		}
-		if err := json.Unmarshal(data, &wrapped); err == nil && len(wrapped.Value) > 0 {
+		if err := json.Unmarshal(data, &wrapped); err == nil && (wrapped.Value != nil || wrapped.Count != nil) {
+			if wrapped.Value == nil {
+				return nil, nil
+			}
+			inner := bytes.TrimSpace(*wrapped.Value)
+			if len(inner) == 0 || bytes.Equal(inner, []byte("null")) {
+				return nil, nil
+			}
 			var list []T
-			if err := json.Unmarshal(wrapped.Value, &list); err != nil {
+			if err := json.Unmarshal(inner, &list); err != nil {
 				return nil, err
 			}
 			return list, nil
