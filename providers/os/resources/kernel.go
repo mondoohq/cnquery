@@ -113,6 +113,61 @@ func suseKernelMatchesRunning(pkgVersion, pkgName, runningKernelVersion string) 
 	return strings.HasPrefix(stripRPMEpoch(pkgVersion), versionPrefix)
 }
 
+// suseKernelName reports the flavor a SUSE kernel package carries, and whether
+// the package holds a bootable kernel at all.
+//
+// SUSE names its bootable kernels "kernel-<flavor>" (kernel-default,
+// kernel-azure, kernel-rt, kernel-kvmsmall), plus the stripped
+// "kernel-<flavor>-base" variant that MicroOS boots. Everything else shipped
+// under the kernel- prefix is a subpackage that contains no kernel:
+// kernel-firmware-*, kernel-devel, kernel-macros, kernel-source, kernel-syms,
+// kernel-docs, kernel-install-tools, kernel-obs-build, kernel-livepatch-*, and
+// the per-flavor -devel/-extra/-optional/-vdso builds.
+//
+// Listing those invents installed kernels that are not on disk, and their
+// versions are unrelated to any kernel release: a stock host with
+// kernel-firmware-network and kernel-macros installed reported three
+// "installed kernels", one of them at a higher version than the running one,
+// which reads as a pending kernel upgrade that does not exist.
+//
+// A bootable name is therefore one flavor segment, optionally followed by
+// "-base", and the flavor is not one of the subpackage words. A flavor SUSE
+// adds later still resolves; a subpackage never does.
+func suseKernelName(pkgName string) (string, bool) {
+	flavor, ok := strings.CutPrefix(pkgName, "kernel-")
+	if !ok || flavor == "" {
+		return "", false
+	}
+
+	// kernel-default-base is bootable; kernel-default-devel and
+	// kernel-firmware-network are not.
+	flavor = strings.TrimSuffix(flavor, "-base")
+	if strings.Contains(flavor, "-") {
+		return "", false
+	}
+
+	if suseKernelSubpackages[flavor] {
+		return "", false
+	}
+
+	return pkgName, true
+}
+
+// suseKernelSubpackages are the single-segment kernel-* packages that are not
+// kernels. Multi-segment subpackages (kernel-firmware-network,
+// kernel-obs-build, kernel-default-devel) are already excluded by shape.
+// "base" only appears as a suffix on a real flavor (kernel-default-base); on
+// its own it is not a kernel.
+var suseKernelSubpackages = map[string]bool{
+	"base":     true,
+	"devel":    true,
+	"docs":     true,
+	"firmware": true,
+	"macros":   true,
+	"source":   true,
+	"syms":     true,
+}
+
 // debianImageKernelName reports the kernel release a linux-image package
 // carries, and whether the package holds a kernel at all.
 //
@@ -341,14 +396,15 @@ func photonKernelVersion(pkg kernelPackage, runningKernelVersion string) (Kernel
 //	cat /proc/version
 //	Linux version 4.12.14-122.23-default (geeko@buildhost)
 func suseKernelVersion(pkg kernelPackage, runningKernelVersion string) (KernelVersion, bool) {
-	if !strings.HasPrefix(pkg.Name, "kernel-") {
+	name, ok := suseKernelName(pkg.Name)
+	if !ok {
 		return KernelVersion{}, false
 	}
 
 	return KernelVersion{
-		Name:    pkg.Name,
-		Version: pkg.Version + strings.TrimPrefix(pkg.Name, "kernel"),
-		Running: suseKernelMatchesRunning(pkg.Version, pkg.Name, runningKernelVersion),
+		Name:    name,
+		Version: pkg.Version + strings.TrimPrefix(name, "kernel"),
+		Running: suseKernelMatchesRunning(pkg.Version, name, runningKernelVersion),
 	}, true
 }
 
