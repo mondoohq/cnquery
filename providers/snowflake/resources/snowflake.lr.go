@@ -1497,7 +1497,7 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 		return (r.(*mqlSnowflakeAuthenticationPolicy).GetOptions()).ToDataRes(types.String)
 	},
 	"snowflake.authenticationPolicy.createdAt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlSnowflakeAuthenticationPolicy).GetCreatedAt()).ToDataRes(types.String)
+		return (r.(*mqlSnowflakeAuthenticationPolicy).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"snowflake.authenticationPolicy.authenticationMethods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlSnowflakeAuthenticationPolicy).GetAuthenticationMethods()).ToDataRes(types.Array(types.String))
@@ -4351,7 +4351,7 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		return
 	},
 	"snowflake.authenticationPolicy.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlSnowflakeAuthenticationPolicy).CreatedAt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		r.(*mqlSnowflakeAuthenticationPolicy).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"snowflake.authenticationPolicy.authenticationMethods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -10299,7 +10299,7 @@ type mqlSnowflakeAuthenticationPolicy struct {
 	OwnerRoleType            plugin.TValue[string]
 	Comment                  plugin.TValue[string]
 	Options                  plugin.TValue[string]
-	CreatedAt                plugin.TValue[string]
+	CreatedAt                plugin.TValue[*time.Time]
 	AuthenticationMethods    plugin.TValue[[]any]
 	MfaAuthenticationMethods plugin.TValue[[]any]
 	MfaEnrollment            plugin.TValue[string]
@@ -10373,7 +10373,7 @@ func (c *mqlSnowflakeAuthenticationPolicy) GetOptions() *plugin.TValue[string] {
 	return &c.Options
 }
 
-func (c *mqlSnowflakeAuthenticationPolicy) GetCreatedAt() *plugin.TValue[string] {
+func (c *mqlSnowflakeAuthenticationPolicy) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 

@@ -122,7 +122,25 @@ func TestParseSnowflakeTime(t *testing.T) {
 		{"snowflake show format nanos", "2023-01-02 15:04:05.000000000 -0700"},
 		{"snowflake show format no fraction", "2023-01-02 15:04:05 -0700"},
 		{"rfc3339", "2023-01-02T15:04:05-07:00"},
+		// The form an authentication policy's created_on takes. The RFC3339
+		// layout carries no fractional second, so this only parses because
+		// time.Parse accepts one following the seconds field regardless. If
+		// that ever stopped holding, the field would go silently null.
+		{"rfc3339 with milliseconds", "2023-01-02T15:04:05.000-07:00"},
 	}
+	t.Run("rfc3339 keeps a non-zero fraction", func(t *testing.T) {
+		// Verbatim shape of snowflake.authenticationPolicy.createdAt.
+		got := parseSnowflakeTime("2026-08-20T04:38:48.289-07:00")
+		gotTime, ok := got.Value.(*time.Time)
+		if !ok {
+			t.Fatalf("value is %T, want *time.Time", got.Value)
+		}
+		want := time.Date(2026, 8, 20, 4, 38, 48, 289000000, time.FixedZone("", -7*3600))
+		if !gotTime.Equal(want) {
+			t.Errorf("got %v, want %v", gotTime, want)
+		}
+	})
+
 	for _, tc := range validCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := parseSnowflakeTime(tc.in)
