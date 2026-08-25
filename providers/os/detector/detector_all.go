@@ -877,7 +877,9 @@ var busybox = &PlatformResolver{
 			return false, nil
 		}
 
-		releaseRegex := regexp.MustCompile(`^(.+)\s(v[\d\.]+)\s*\((.*)\).*$`)
+		// busybox prints its version as "BusyBox v1.34.1 (...)"; the v is part of
+		// its banner, not the version, and every other platform reports a bare one.
+		releaseRegex := regexp.MustCompile(`^(.+)\sv([\d\.]+)\s*\((.*)\).*$`)
 		for _, rodataByteString := range rodataByteStrings {
 			rodataString := string(rodataByteString)
 			m := releaseRegex.FindStringSubmatch(rodataString)
