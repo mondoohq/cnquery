@@ -28,9 +28,18 @@ const (
 	maxCachedCRLs = 16
 )
 
+// crlEntry is one cache slot. It is created before the download starts and its
+// ready channel is closed when the download finishes, so callers that arrive
+// while a list is in flight wait for that result instead of starting their own.
+type crlEntry struct {
+	ready chan struct{}
+	list  *x509.RevocationList
+	err   error
+}
+
 var (
 	crlCacheLock sync.Mutex
-	crlCache     = map[string]*x509.RevocationList{}
+	crlCache     = map[string]*crlEntry{}
 )
 
 // fetchCRL downloads and parses a certificate revocation list, reusing a cached
@@ -38,15 +47,58 @@ var (
 //
 // The list states how long it is good for, so honoring NextUpdate is both the
 // correct cache policy and the one that keeps a scan of many hosts behind the
-// same issuer down to a single download.
+// same issuer down to a single download. Only one download per URL runs at a
+// time: a scan opens many hosts at once and their chains share an issuer, so
+// without that they would all miss an empty cache together and each fetch the
+// same list.
 func fetchCRL(url string) (*x509.RevocationList, error) {
-	crlCacheLock.Lock()
-	if cached, ok := crlCache[url]; ok && time.Now().Before(cached.NextUpdate) {
-		crlCacheLock.Unlock()
-		return cached, nil
-	}
-	crlCacheLock.Unlock()
+	for {
+		crlCacheLock.Lock()
+		entry, inFlightOrCached := crlCache[url]
+		if !inFlightOrCached {
+			// Claim the slot before releasing the lock, so anyone arriving
+			// during the download waits on this entry rather than starting
+			// another.
+			entry = &crlEntry{ready: make(chan struct{})}
+			crlCache[url] = entry
+			crlCacheLock.Unlock()
 
+			entry.list, entry.err = downloadCRL(url)
+			close(entry.ready)
+
+			// A list that could not be read is not worth keeping, and neither
+			// is one that arrived already past its NextUpdate. Drop both so the
+			// next caller retries rather than inheriting the failure.
+			keep := entry.err == nil && time.Now().Before(entry.list.NextUpdate)
+			crlCacheLock.Lock()
+			if !keep || len(crlCache) > maxCachedCRLs {
+				if crlCache[url] == entry {
+					delete(crlCache, url)
+				}
+			}
+			crlCacheLock.Unlock()
+
+			return entry.list, entry.err
+		}
+		crlCacheLock.Unlock()
+
+		<-entry.ready
+		if entry.err == nil && time.Now().Before(entry.list.NextUpdate) {
+			return entry.list, nil
+		}
+
+		// The entry is stale or failed. Drop it and go round again to become
+		// the downloader, unless someone else has already replaced it.
+		crlCacheLock.Lock()
+		if crlCache[url] == entry {
+			delete(crlCache, url)
+		}
+		crlCacheLock.Unlock()
+	}
+}
+
+// downloadCRL fetches and parses one list, with no caching of its own.
+func downloadCRL(url string) (*x509.RevocationList, error) {
 	client := &http.Client{Timeout: crlHTTPTimeout}
 	res, err := client.Get(url)
 	if err != nil {
@@ -67,14 +119,6 @@ func fetchCRL(url string) (*x509.RevocationList, error) {
 	if err != nil {
 		return nil, multierr.Wrap(err, "failed to parse CRL")
 	}
-
-	crlCacheLock.Lock()
-	// Dropping new entries rather than evicting keeps this allocation-free in
-	// the steady state; the cap is far above what a real chain needs.
-	if len(crlCache) < maxCachedCRLs {
-		crlCache[url] = list
-	}
-	crlCacheLock.Unlock()
 
 	return list, nil
 }
@@ -102,11 +146,17 @@ func crlRevocation(cert *x509.Certificate, issuer *x509.Certificate) (bool, *Rev
 			continue
 		}
 
-		if issuer != nil {
-			if err := list.CheckSignatureFrom(issuer); err != nil {
-				errs.Add(multierr.Wrap(err, "CRL at "+url+" is not signed by the issuing certificate"))
-				continue
-			}
+		// Without an issuer there is nothing to check the list against, and an
+		// unverified list must not decide anything: whoever answers the
+		// distribution point would otherwise be able to clear a certificate
+		// that has been revoked.
+		if issuer == nil {
+			errs.Add(errors.New("CRL at " + url + " has no issuing certificate to verify its signature against"))
+			continue
+		}
+		if err := list.CheckSignatureFrom(issuer); err != nil {
+			errs.Add(multierr.Wrap(err, "CRL at "+url+" is not signed by the issuing certificate"))
+			continue
 		}
 
 		for i := range list.RevokedCertificateEntries {

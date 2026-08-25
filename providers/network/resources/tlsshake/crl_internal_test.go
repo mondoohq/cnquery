@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -136,7 +137,7 @@ func (s *crlServer) serve(der []byte) { s.body.Store(&der) }
 func clearCRLCache(t *testing.T) {
 	t.Helper()
 	crlCacheLock.Lock()
-	crlCache = map[string]*x509.RevocationList{}
+	crlCache = map[string]*crlEntry{}
 	crlCacheLock.Unlock()
 }
 
@@ -229,6 +230,71 @@ func TestCrlRevocationDeterminesNothingWhenTheListCannotBeRead(t *testing.T) {
 		assert.Nil(t, revocation)
 		require.Error(t, err)
 	})
+}
+
+func TestCrlRevocationRefusesAListItCannotAttributeToAnIssuer(t *testing.T) {
+	// With no issuer there is nothing to check the signature against. Trusting
+	// the list anyway would let whoever answers the distribution point clear a
+	// certificate that has been revoked.
+	clearCRLCache(t)
+
+	ca := newTestCA(t, "test ca")
+	server := newCRLServer(t)
+	cert := ca.issue(t, 42, server.url)
+	server.serve(ca.crl(t, time.Now(), 42))
+
+	determined, revocation, err := crlRevocation(cert, nil)
+	assert.False(t, determined, "an unverifiable list must decide nothing")
+	assert.Nil(t, revocation)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no issuing certificate")
+}
+
+func TestFetchCRLDownloadsOncePerUrlUnderConcurrency(t *testing.T) {
+	// A scan opens many hosts at once and their chains share an issuer, so
+	// without single-flight they all miss an empty cache together and each
+	// fetch the same list.
+	clearCRLCache(t)
+
+	ca := newTestCA(t, "test ca")
+	server := newCRLServer(t)
+	cert := ca.issue(t, 42, server.url)
+	server.serve(ca.crl(t, time.Now(), 42))
+
+	var wg sync.WaitGroup
+	for range 16 {
+		wg.Go(func() {
+			determined, _, err := crlRevocation(cert, ca.cert)
+			assert.NoError(t, err)
+			assert.True(t, determined)
+		})
+	}
+	wg.Wait()
+
+	assert.Equal(t, int32(1), server.hits.Load(), "concurrent callers should share one download")
+}
+
+func TestFetchCRLRetriesAfterAFailedDownload(t *testing.T) {
+	// A failure must not be cached, or one blip would report every certificate
+	// behind that issuer as unchecked for the rest of the run.
+	clearCRLCache(t)
+
+	ca := newTestCA(t, "test ca")
+	server := newCRLServer(t)
+	cert := ca.issue(t, 42, server.url)
+
+	server.status.Store(http.StatusInternalServerError)
+	determined, _, err := crlRevocation(cert, ca.cert)
+	require.False(t, determined)
+	require.Error(t, err)
+
+	server.status.Store(http.StatusOK)
+	server.serve(ca.crl(t, time.Now(), 42))
+
+	determined, revocation, err := crlRevocation(cert, ca.cert)
+	require.NoError(t, err)
+	assert.True(t, determined)
+	assert.NotNil(t, revocation)
 }
 
 func TestFetchCRLReusesAListUntilItsNextUpdate(t *testing.T) {
