@@ -5,6 +5,7 @@ package registry
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,4 +68,30 @@ func TestNormalizeMultiSz(t *testing.T) {
 		// Two empty strings is distinct from the single-empty artifact
 		assert.Equal(t, []string{"", ""}, normalizeMultiSz([]string{"", ""}))
 	})
+}
+
+// TestWindowsRegistryEmptyListParsers covers the shape PowerShell produces for
+// a key that exists but has nothing in it. `ConvertTo-Json` writes nothing at
+// all for an empty array, so the collection scripts return an empty stream
+// rather than `[]`. Decoding that used to fail with "unexpected end of JSON
+// input", which turned "this key is present and configures nothing" into an
+// unreadable key. The SCHANNEL subtree hits this routinely: the Protocols key
+// holds only subkeys and no values, and a protocol's Client subkey can exist
+// with neither Enabled nor DisabledByDefault set.
+func TestWindowsRegistryEmptyListParsers(t *testing.T) {
+	for _, in := range []string{"", "\r\n", "   \n"} {
+		items, err := ParsePowershellRegistryKeyItems(strings.NewReader(in))
+		require.NoError(t, err)
+		assert.Empty(t, items)
+
+		children, err := ParsePowershellRegistryKeyChildren(strings.NewReader(in))
+		require.NoError(t, err)
+		assert.Empty(t, children)
+	}
+
+	// malformed output is still an error, not silently an empty key
+	_, err := ParsePowershellRegistryKeyItems(strings.NewReader("{not json"))
+	assert.Error(t, err)
+	_, err = ParsePowershellRegistryKeyChildren(strings.NewReader("{not json"))
+	assert.Error(t, err)
 }

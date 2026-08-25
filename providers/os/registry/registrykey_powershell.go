@@ -4,15 +4,29 @@
 package registry
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 )
 
+// isEmptyPowershellList reports whether the collection scripts produced no
+// output. `ConvertTo-Json` writes nothing for an empty array, so a key that
+// exists but holds no values (or no subkeys) comes back as an empty stream
+// rather than as `[]`. Decoding that as JSON fails with "unexpected end of
+// JSON input", which would surface as an unreadable key: exactly the case the
+// callers need to read as "present, but nothing configured".
+func isEmptyPowershellList(data []byte) bool {
+	return len(bytes.TrimSpace(data)) == 0
+}
+
 func ParsePowershellRegistryKeyItems(r io.Reader) ([]RegistryKeyItem, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
+	}
+	if isEmptyPowershellList(data) {
+		return []RegistryKeyItem{}, nil
 	}
 
 	var items []RegistryKeyItem
@@ -24,6 +38,9 @@ func ParsePowershellRegistryKeyChildren(r io.Reader) ([]RegistryKeyChild, error)
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
+	}
+	if isEmptyPowershellList(data) {
+		return []RegistryKeyChild{}, nil
 	}
 
 	var children []RegistryKeyChild

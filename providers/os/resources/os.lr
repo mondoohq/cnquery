@@ -11830,6 +11830,20 @@ private windows.lsa.secureChannel {
 // using the default order, and on non-Windows platforms) the list accessors
 // resolve to an empty list and pqcKeyExchangeEnabled resolves to false rather
 // than failing.
+//
+// The protocols, ciphers, hashes, and keyExchangeAlgorithms lists come from the
+// separate per-algorithm override store under
+// HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL. Windows
+// applies a built-in default to every algorithm that has no override there, and
+// that default differs between Windows releases, so an absent registry value
+// does not mean the algorithm is off. Each list therefore always contains the
+// well-known algorithm names, whether or not the registry mentions them, and
+// reports configured as false with a null enablement for the ones it does not.
+// Write audits against configured and the enablement fields together, for
+// example
+// `windows.schannel.protocols.where(name == "TLS 1.0").all(clientConfigured &&
+// clientEnabled == false)`, so a host that never set the value fails instead of
+// passing on a null.
 windows.schannel {
   // Ordered TLS cipher suite list (REG_MULTI_SZ Functions under ...\SSL\00010002)
   cipherSuites() []string
@@ -11837,6 +11851,143 @@ windows.schannel {
   ellipticCurves() []string
   // Whether a post-quantum ML-KEM key-exchange group is enabled (any ellipticCurves entry contains "MLKEM", case-insensitive)
   pqcKeyExchangeEnabled() bool
+  // Per-protocol client and server overrides (SCHANNEL\Protocols)
+  //
+  // Always carries the well-known protocol names (SSL 2.0, SSL 3.0, TLS 1.0,
+  // TLS 1.1, TLS 1.2, TLS 1.3, DTLS 1.0, DTLS 1.2, PCT 1.0, and
+  // Multi-Protocol Unified Hello), plus any other protocol subkey present in
+  // the registry.
+  protocols() []windows.schannel.protocol
+  // Per-cipher overrides (SCHANNEL\Ciphers)
+  //
+  // Always carries the well-known cipher names (the RC4 sizes, DES 56/56,
+  // Triple DES 168, NULL, AES 128/128, and AES 256/256), plus any other
+  // cipher subkey present in the registry.
+  ciphers() []windows.schannel.cipher
+  // Per-hash overrides (SCHANNEL\Hashes)
+  //
+  // Always carries the well-known hash names (MD5, SHA, SHA256, SHA384, and
+  // SHA512), plus any other hash subkey present in the registry.
+  hashes() []windows.schannel.hash
+  // Per-key-exchange-algorithm overrides (SCHANNEL\KeyExchangeAlgorithms)
+  //
+  // Always carries the well-known algorithm names (PKCS, ECDH, and
+  // Diffie-Hellman), plus any other key exchange subkey present in the
+  // registry.
+  keyExchangeAlgorithms() []windows.schannel.keyExchangeAlgorithm
+}
+
+// Schannel protocol override
+//
+// Client-side and server-side overrides for a single TLS, DTLS, or legacy
+// SSL protocol version, read from the Client and Server subkeys of
+// HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\<name>.
+// The name field is the protocol name as it appears in the registry, spaces
+// included, for example "TLS 1.0" or "Multi-Protocol Unified Hello".
+//
+// clientConfigured and serverConfigured report whether that side has any
+// override in the registry at all. When a side is not configured, Windows
+// applies its built-in default for the release, so enabled and
+// disabledByDefault for that side are null rather than false.
+private windows.schannel.protocol @defaults("name clientEnabled serverEnabled") {
+  // Protocol name as it appears under SCHANNEL\Protocols, for example "TLS 1.2"
+  name string
+  // Whether the Client subkey carries an Enabled or DisabledByDefault value
+  clientConfigured bool
+  // Whether the protocol is enabled for outbound client connections (Client\Enabled)
+  //
+  // The registry stores 0 for off and a non-zero DWORD (commonly 1 or
+  // 0xFFFFFFFF) for on. Null when the value is absent, in which case the
+  // Windows default for the release applies.
+  clientEnabled bool
+  // Whether the protocol is withheld from client negotiation unless explicitly requested (Client\DisabledByDefault)
+  //
+  // 1 means the protocol is not offered by default. Null when the value is
+  // absent.
+  clientDisabledByDefault bool
+  // Whether the Server subkey carries an Enabled or DisabledByDefault value
+  serverConfigured bool
+  // Whether the protocol is enabled for inbound server connections (Server\Enabled)
+  //
+  // The registry stores 0 for off and a non-zero DWORD (commonly 1 or
+  // 0xFFFFFFFF) for on. Null when the value is absent, in which case the
+  // Windows default for the release applies.
+  serverEnabled bool
+  // Whether the protocol is withheld from server negotiation unless explicitly requested (Server\DisabledByDefault)
+  //
+  // 1 means the protocol is not offered by default. Null when the value is
+  // absent.
+  serverDisabledByDefault bool
+}
+
+// Schannel cipher override
+//
+// Enablement override for a single bulk cipher, read from
+// HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\<name>.
+// The name field is the cipher name as it appears in the registry, for example
+// "RC4 128/128", "Triple DES 168", or "AES 256/256". When configured is false
+// the cipher has no override and the Windows default for the release applies,
+// so enabled is null.
+private windows.schannel.cipher @defaults("name enabled") {
+  // Cipher name as it appears under SCHANNEL\Ciphers, for example "AES 256/256"
+  name string
+  // Whether the cipher subkey carries an Enabled value
+  configured bool
+  // Whether the cipher is enabled (Enabled)
+  //
+  // The registry stores 0 for off and a non-zero DWORD (commonly 1 or
+  // 0xFFFFFFFF) for on. Null when the value is absent.
+  enabled bool
+}
+
+// Schannel hash override
+//
+// Enablement override for a single hash algorithm used for TLS message
+// authentication and signatures, read from
+// HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Hashes\<name>.
+// The name field is the hash name as it appears in the registry, for example
+// "MD5", "SHA", or "SHA256". When configured is false the hash has no override
+// and the Windows default for the release applies, so enabled is null.
+private windows.schannel.hash @defaults("name enabled") {
+  // Hash name as it appears under SCHANNEL\Hashes, for example "SHA256"
+  name string
+  // Whether the hash subkey carries an Enabled value
+  configured bool
+  // Whether the hash is enabled (Enabled)
+  //
+  // The registry stores 0 for off and a non-zero DWORD (commonly 1 or
+  // 0xFFFFFFFF) for on. Null when the value is absent.
+  enabled bool
+}
+
+// Schannel key exchange algorithm override
+//
+// Enablement and minimum key size overrides for a single key exchange
+// algorithm, read from
+// HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\KeyExchangeAlgorithms\<name>.
+// The name field is the algorithm name as it appears in the registry, for
+// example "PKCS", "ECDH", or "Diffie-Hellman". The minimum key length values
+// apply to the Diffie-Hellman and PKCS entries and bound the smallest key size
+// Schannel will accept. When configured is false the algorithm has no override
+// and the Windows default for the release applies, so every value is null.
+private windows.schannel.keyExchangeAlgorithm @defaults("name enabled") {
+  // Algorithm name as it appears under SCHANNEL\KeyExchangeAlgorithms, for example "Diffie-Hellman"
+  name string
+  // Whether the algorithm subkey carries an Enabled, ServerMinKeyBitLength, or ClientMinKeyBitLength value
+  configured bool
+  // Whether the key exchange algorithm is enabled (Enabled)
+  //
+  // The registry stores 0 for off and a non-zero DWORD (commonly 1 or
+  // 0xFFFFFFFF) for on. Null when the value is absent.
+  enabled bool
+  // Smallest key size in bits Schannel accepts when acting as a server (ServerMinKeyBitLength)
+  //
+  // Null when the value is absent.
+  serverMinKeyBitLength int
+  // Smallest key size in bits Schannel accepts when acting as a client (ClientMinKeyBitLength)
+  //
+  // Null when the value is absent.
+  clientMinKeyBitLength int
 }
 
 // Windows Print Spooler security configuration

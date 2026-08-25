@@ -441,6 +441,10 @@ const (
 	ResourceWindowsLsaNtlm                                string = "windows.lsa.ntlm"
 	ResourceWindowsLsaSecureChannel                       string = "windows.lsa.secureChannel"
 	ResourceWindowsSchannel                               string = "windows.schannel"
+	ResourceWindowsSchannelProtocol                       string = "windows.schannel.protocol"
+	ResourceWindowsSchannelCipher                         string = "windows.schannel.cipher"
+	ResourceWindowsSchannelHash                           string = "windows.schannel.hash"
+	ResourceWindowsSchannelKeyExchangeAlgorithm           string = "windows.schannel.keyExchangeAlgorithm"
 	ResourceWindowsSpooler                                string = "windows.spooler"
 	ResourceWindowsSpoolerPointAndPrint                   string = "windows.spooler.pointAndPrint"
 	ResourceWindowsSpoolerRpc                             string = "windows.spooler.rpc"
@@ -2325,6 +2329,22 @@ func init() {
 		"windows.schannel": {
 			// to override args, implement: initWindowsSchannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsSchannel,
+		},
+		"windows.schannel.protocol": {
+			// to override args, implement: initWindowsSchannelProtocol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSchannelProtocol,
+		},
+		"windows.schannel.cipher": {
+			// to override args, implement: initWindowsSchannelCipher(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSchannelCipher,
+		},
+		"windows.schannel.hash": {
+			// to override args, implement: initWindowsSchannelHash(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSchannelHash,
+		},
+		"windows.schannel.keyExchangeAlgorithm": {
+			// to override args, implement: initWindowsSchannelKeyExchangeAlgorithm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsSchannelKeyExchangeAlgorithm,
 		},
 		"windows.spooler": {
 			// to override args, implement: initWindowsSpooler(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12574,6 +12594,72 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSchannel).GetPqcKeyExchangeEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.protocols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetProtocols()).ToDataRes(types.Array(types.Resource("windows.schannel.protocol")))
+	},
+	"windows.schannel.ciphers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetCiphers()).ToDataRes(types.Array(types.Resource("windows.schannel.cipher")))
+	},
+	"windows.schannel.hashes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetHashes()).ToDataRes(types.Array(types.Resource("windows.schannel.hash")))
+	},
+	"windows.schannel.keyExchangeAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetKeyExchangeAlgorithms()).ToDataRes(types.Array(types.Resource("windows.schannel.keyExchangeAlgorithm")))
+	},
+	"windows.schannel.protocol.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelProtocol).GetName()).ToDataRes(types.String)
+	},
+	"windows.schannel.protocol.clientConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelProtocol).GetClientConfigured()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.protocol.clientEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelProtocol).GetClientEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.protocol.clientDisabledByDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelProtocol).GetClientDisabledByDefault()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.protocol.serverConfigured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelProtocol).GetServerConfigured()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.protocol.serverEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelProtocol).GetServerEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.protocol.serverDisabledByDefault": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelProtocol).GetServerDisabledByDefault()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.cipher.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelCipher).GetName()).ToDataRes(types.String)
+	},
+	"windows.schannel.cipher.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelCipher).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.cipher.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelCipher).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.hash.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelHash).GetName()).ToDataRes(types.String)
+	},
+	"windows.schannel.hash.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelHash).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.hash.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelHash).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.keyExchangeAlgorithm.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelKeyExchangeAlgorithm).GetName()).ToDataRes(types.String)
+	},
+	"windows.schannel.keyExchangeAlgorithm.configured": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelKeyExchangeAlgorithm).GetConfigured()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.keyExchangeAlgorithm.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelKeyExchangeAlgorithm).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.schannel.keyExchangeAlgorithm.serverMinKeyBitLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelKeyExchangeAlgorithm).GetServerMinKeyBitLength()).ToDataRes(types.Int)
+	},
+	"windows.schannel.keyExchangeAlgorithm.clientMinKeyBitLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannelKeyExchangeAlgorithm).GetClientMinKeyBitLength()).ToDataRes(types.Int)
 	},
 	"windows.spooler.startMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSpooler).GetStartMode()).ToDataRes(types.Int)
@@ -30885,6 +30971,110 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSchannel).PqcKeyExchangeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).Protocols, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.ciphers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).Ciphers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.hashes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).Hashes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.keyExchangeAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).KeyExchangeAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.schannel.protocol.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocol.clientConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).ClientConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocol.clientEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).ClientEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocol.clientDisabledByDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).ClientDisabledByDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocol.serverConfigured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).ServerConfigured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocol.serverEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).ServerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.protocol.serverDisabledByDefault": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelProtocol).ServerDisabledByDefault, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.cipher.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelCipher).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.schannel.cipher.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelCipher).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.cipher.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelCipher).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.cipher.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelCipher).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.hash.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelHash).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.schannel.hash.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelHash).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.hash.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelHash).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.hash.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelHash).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.keyExchangeAlgorithm.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelKeyExchangeAlgorithm).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.schannel.keyExchangeAlgorithm.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelKeyExchangeAlgorithm).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.keyExchangeAlgorithm.configured": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelKeyExchangeAlgorithm).Configured, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.keyExchangeAlgorithm.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelKeyExchangeAlgorithm).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.keyExchangeAlgorithm.serverMinKeyBitLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelKeyExchangeAlgorithm).ServerMinKeyBitLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.keyExchangeAlgorithm.clientMinKeyBitLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannelKeyExchangeAlgorithm).ClientMinKeyBitLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.spooler.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79736,6 +79926,10 @@ type mqlWindowsSchannel struct {
 	CipherSuites          plugin.TValue[[]any]
 	EllipticCurves        plugin.TValue[[]any]
 	PqcKeyExchangeEnabled plugin.TValue[bool]
+	Protocols             plugin.TValue[[]any]
+	Ciphers               plugin.TValue[[]any]
+	Hashes                plugin.TValue[[]any]
+	KeyExchangeAlgorithms plugin.TValue[[]any]
 }
 
 // createWindowsSchannel creates a new instance of this resource
@@ -79791,6 +79985,336 @@ func (c *mqlWindowsSchannel) GetPqcKeyExchangeEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.PqcKeyExchangeEnabled, func() (bool, error) {
 		return c.pqcKeyExchangeEnabled()
 	})
+}
+
+func (c *mqlWindowsSchannel) GetProtocols() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Protocols, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.schannel", c.__id, "protocols")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.protocols()
+	})
+}
+
+func (c *mqlWindowsSchannel) GetCiphers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Ciphers, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.schannel", c.__id, "ciphers")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.ciphers()
+	})
+}
+
+func (c *mqlWindowsSchannel) GetHashes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Hashes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.schannel", c.__id, "hashes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.hashes()
+	})
+}
+
+func (c *mqlWindowsSchannel) GetKeyExchangeAlgorithms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.KeyExchangeAlgorithms, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.schannel", c.__id, "keyExchangeAlgorithms")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.keyExchangeAlgorithms()
+	})
+}
+
+// mqlWindowsSchannelProtocol for the windows.schannel.protocol resource
+type mqlWindowsSchannelProtocol struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSchannelProtocolInternal it will be used here
+	Name                    plugin.TValue[string]
+	ClientConfigured        plugin.TValue[bool]
+	ClientEnabled           plugin.TValue[bool]
+	ClientDisabledByDefault plugin.TValue[bool]
+	ServerConfigured        plugin.TValue[bool]
+	ServerEnabled           plugin.TValue[bool]
+	ServerDisabledByDefault plugin.TValue[bool]
+}
+
+// createWindowsSchannelProtocol creates a new instance of this resource
+func createWindowsSchannelProtocol(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSchannelProtocol{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.schannel.protocol", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSchannelProtocol) MqlName() string {
+	return "windows.schannel.protocol"
+}
+
+func (c *mqlWindowsSchannelProtocol) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSchannelProtocol) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsSchannelProtocol) GetClientConfigured() *plugin.TValue[bool] {
+	return &c.ClientConfigured
+}
+
+func (c *mqlWindowsSchannelProtocol) GetClientEnabled() *plugin.TValue[bool] {
+	return &c.ClientEnabled
+}
+
+func (c *mqlWindowsSchannelProtocol) GetClientDisabledByDefault() *plugin.TValue[bool] {
+	return &c.ClientDisabledByDefault
+}
+
+func (c *mqlWindowsSchannelProtocol) GetServerConfigured() *plugin.TValue[bool] {
+	return &c.ServerConfigured
+}
+
+func (c *mqlWindowsSchannelProtocol) GetServerEnabled() *plugin.TValue[bool] {
+	return &c.ServerEnabled
+}
+
+func (c *mqlWindowsSchannelProtocol) GetServerDisabledByDefault() *plugin.TValue[bool] {
+	return &c.ServerDisabledByDefault
+}
+
+// mqlWindowsSchannelCipher for the windows.schannel.cipher resource
+type mqlWindowsSchannelCipher struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSchannelCipherInternal it will be used here
+	Name       plugin.TValue[string]
+	Configured plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+}
+
+// createWindowsSchannelCipher creates a new instance of this resource
+func createWindowsSchannelCipher(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSchannelCipher{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.schannel.cipher", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSchannelCipher) MqlName() string {
+	return "windows.schannel.cipher"
+}
+
+func (c *mqlWindowsSchannelCipher) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSchannelCipher) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsSchannelCipher) GetConfigured() *plugin.TValue[bool] {
+	return &c.Configured
+}
+
+func (c *mqlWindowsSchannelCipher) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlWindowsSchannelHash for the windows.schannel.hash resource
+type mqlWindowsSchannelHash struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSchannelHashInternal it will be used here
+	Name       plugin.TValue[string]
+	Configured plugin.TValue[bool]
+	Enabled    plugin.TValue[bool]
+}
+
+// createWindowsSchannelHash creates a new instance of this resource
+func createWindowsSchannelHash(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSchannelHash{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.schannel.hash", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSchannelHash) MqlName() string {
+	return "windows.schannel.hash"
+}
+
+func (c *mqlWindowsSchannelHash) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSchannelHash) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsSchannelHash) GetConfigured() *plugin.TValue[bool] {
+	return &c.Configured
+}
+
+func (c *mqlWindowsSchannelHash) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+// mqlWindowsSchannelKeyExchangeAlgorithm for the windows.schannel.keyExchangeAlgorithm resource
+type mqlWindowsSchannelKeyExchangeAlgorithm struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsSchannelKeyExchangeAlgorithmInternal it will be used here
+	Name                  plugin.TValue[string]
+	Configured            plugin.TValue[bool]
+	Enabled               plugin.TValue[bool]
+	ServerMinKeyBitLength plugin.TValue[int64]
+	ClientMinKeyBitLength plugin.TValue[int64]
+}
+
+// createWindowsSchannelKeyExchangeAlgorithm creates a new instance of this resource
+func createWindowsSchannelKeyExchangeAlgorithm(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsSchannelKeyExchangeAlgorithm{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.schannel.keyExchangeAlgorithm", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsSchannelKeyExchangeAlgorithm) MqlName() string {
+	return "windows.schannel.keyExchangeAlgorithm"
+}
+
+func (c *mqlWindowsSchannelKeyExchangeAlgorithm) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsSchannelKeyExchangeAlgorithm) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlWindowsSchannelKeyExchangeAlgorithm) GetConfigured() *plugin.TValue[bool] {
+	return &c.Configured
+}
+
+func (c *mqlWindowsSchannelKeyExchangeAlgorithm) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsSchannelKeyExchangeAlgorithm) GetServerMinKeyBitLength() *plugin.TValue[int64] {
+	return &c.ServerMinKeyBitLength
+}
+
+func (c *mqlWindowsSchannelKeyExchangeAlgorithm) GetClientMinKeyBitLength() *plugin.TValue[int64] {
+	return &c.ClientMinKeyBitLength
 }
 
 // mqlWindowsSpooler for the windows.spooler resource
