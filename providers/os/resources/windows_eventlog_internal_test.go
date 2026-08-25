@@ -121,3 +121,45 @@ func TestResolveMaxSizeKB(t *testing.T) {
 		assert.Equal(t, int64(0), n)
 	})
 }
+
+func TestDecodeChannelRetention(t *testing.T) {
+	// The WINEVT channel key is a flag, not the seconds period the classic
+	// Services\EventLog key uses. Feeding a 1 to decodeRetention would report
+	// a channel configured to retain its events as one that overwrites them
+	// after a single day, which is the mistake this decode exists to avoid.
+	assert.Equal(t, retentionOverwriteAsNeeded, decodeChannelRetention(0))
+	assert.Equal(t, retentionNeverOverwrite, decodeChannelRetention(1))
+	assert.Equal(t, retentionNeverOverwrite, decodeChannelRetention(-1))
+
+	assert.Equal(t, retentionOverwriteByDays, decodeRetention(1),
+		"the seconds encoding must keep reading a 1 as a period, so the two decodes stay distinct")
+}
+
+func TestDecodeLogMode(t *testing.T) {
+	tests := []struct {
+		mode string
+		want string
+		ok   bool
+	}{
+		{mode: "Circular", want: retentionOverwriteAsNeeded, ok: true},
+		{mode: "circular", want: retentionOverwriteAsNeeded, ok: true},
+		// Both of these keep the events: Retain refuses new ones once full,
+		// AutoBackup archives the log and starts a new one. Neither overwrites.
+		{mode: "Retain", want: retentionNeverOverwrite, ok: true},
+		{mode: "AutoBackup", want: retentionNeverOverwrite, ok: true},
+		{mode: " Retain ", want: retentionNeverOverwrite, ok: true},
+		// An unrecognized or absent mode must not resolve to anything, so the
+		// caller falls through to the documented default rather than guessing.
+		{mode: "", ok: false},
+		{mode: "Whatever", ok: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.mode, func(t *testing.T) {
+			got, ok := decodeLogMode(tt.mode)
+			assert.Equal(t, tt.ok, ok)
+			if tt.ok {
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
