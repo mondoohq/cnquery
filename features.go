@@ -118,9 +118,14 @@ const (
 	// status: new
 	ScanContentModeNoCompare Feature = 21
 
+	// Record resource data (the recording-style rows behind the resource explorer and GetResourcesData/ListResources) while scanning, and deliver it inside the uploaded scan database. Only acts together with UploadResultsV2 - resources ride the uploaded file, never the legacy StoreResults RPC. Successor to StoreResourcesData, which is retired: it required a server-side resolved-policy stamp as a second key and sent resources through the legacy RPC.
+	// start:  v13.x
+	// status: new
+	UploadResourcesData Feature = 22
+
 	// Placeholder to indicate how many feature flags exist. This number
 	// is changing with every new feature and cannot be used as a featureflag itself.
-	MAX_FEATURES byte = 22
+	MAX_FEATURES byte = 23
 )
 
 var FeaturesValue = map[string]Feature{
@@ -145,6 +150,7 @@ var FeaturesValue = map[string]Feature{
 	"ScanContentModeServerCompare": ScanContentModeServerCompare,
 	"ScanContentModeClientCompare": ScanContentModeClientCompare,
 	"ScanContentModeNoCompare":     ScanContentModeNoCompare,
+	"UploadResourcesData":          UploadResourcesData,
 }
 
 // DefaultFeatures are a set of default flags that are active
@@ -166,4 +172,5 @@ var AvailableFeatures = Features{
 	byte(ScanContentModeServerCompare),
 	byte(ScanContentModeClientCompare),
 	byte(ScanContentModeNoCompare),
+	byte(UploadResourcesData),
 }
