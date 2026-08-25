@@ -107,3 +107,59 @@ func (w *mqlWindowsTpm) manufacturerVersion() (string, error) {
 	}
 	return info.ManufacturerVersion, nil
 }
+
+func (w *mqlWindowsTpm) lockedOut() (bool, error) {
+	info, err := w.load()
+	if err != nil {
+		return false, err
+	}
+	return info.LockedOut, nil
+}
+
+func (w *mqlWindowsTpm) lockoutCount() (int64, error) {
+	info, err := w.load()
+	if err != nil {
+		return 0, err
+	}
+	return info.LockoutCount, nil
+}
+
+func (w *mqlWindowsTpm) lockoutHealTime() (string, error) {
+	info, err := w.load()
+	if err != nil {
+		return "", err
+	}
+	return info.LockoutHealTime, nil
+}
+
+func (w *mqlWindowsTpm) autoProvisioning() (string, error) {
+	info, err := w.load()
+	if err != nil {
+		return "", err
+	}
+	return info.AutoProvisioning, nil
+}
+
+func (w *mqlWindowsTpm) manufacturerId() (int64, error) {
+	info, err := w.load()
+	if err != nil {
+		return 0, err
+	}
+	return info.ManufacturerId, nil
+}
+
+func (w *mqlWindowsTpm) manufacturerIdTxt() (string, error) {
+	info, err := w.load()
+	if err != nil {
+		return "", err
+	}
+	return info.Manufacturer(), nil
+}
+
+func (w *mqlWindowsTpm) ownerClearDisabled() (bool, error) {
+	info, err := w.load()
+	if err != nil {
+		return false, err
+	}
+	return info.OwnerClearDisabled, nil
+}

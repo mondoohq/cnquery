@@ -22,6 +22,11 @@ type mqlWindowsAclInternal struct {
 	lock    sync.Mutex
 	fetched bool
 	data    *windows.WindowsAcl
+	// the system access control list is a separate command behind a separate
+	// privilege, so it is cached separately: a session that cannot read the
+	// audit rules must still be able to read the permissions
+	auditFetched bool
+	auditData    *windows.WindowsAclAudit
 }
 
 func (a *mqlWindowsAcl) id() (string, error) {
@@ -194,4 +199,80 @@ func (s *mqlFile) acl(path string) (*mqlWindowsAcl, error) {
 		return nil, err
 	}
 	return o.(*mqlWindowsAcl), nil
+}
+
+// auditAcl reads the system access control list of the path, the rules that
+// decide what the object audits.
+//
+// This is a separate command from acl, behind a separate cache, because it is
+// behind a separate privilege. Reading a system access control list requires
+// SeSecurityPrivilege, which an unelevated session does not hold, and folding
+// the two reads together would cost such a session the permissions as well.
+//
+// A path whose audit rules cannot be read is an error, never an empty list.
+// "Nothing is audited here" and "the audit rules could not be read" satisfy an
+// audit assertion identically, and only the first is an answer.
+func (a *mqlWindowsAcl) auditAcl() (*windows.WindowsAclAudit, error) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+	if a.auditFetched {
+		return a.auditData, nil
+	}
+
+	path := a.Path.Data
+	if path == "" {
+		return nil, errors.New("windows.acl requires a path")
+	}
+
+	// the message names what was attempted and lets the command's own stderr
+	// give the reason. Naming SeSecurityPrivilege here would assert it as the
+	// cause even when the real one is a path that does not exist, which is
+	// what a missing directory reported before.
+	stdout, err := runWindowsPowerShell(a.MqlRuntime, windows.AclAuditScript(path),
+		"read the audit rules of "+path)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := windows.ParseWindowsAclAudit(stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	a.auditData = data
+	a.auditFetched = true
+	return a.auditData, nil
+}
+
+func (a *mqlWindowsAcl) auditEntries() ([]any, error) {
+	audit, err := a.auditAcl()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(audit.Audit))
+	for _, e := range audit.Audit {
+		r, err := CreateResource(a.MqlRuntime, "windows.acl.auditEntry", map[string]*llx.RawData{
+			// one principal is audited more than once on one object: success
+			// on one set of rights and failure on another, inherited and set
+			// directly. Every one of those is in the id, or the second entry
+			// reports the first one's rights.
+			"__id":             llx.StringData(windows.AclAuditEntryID(audit.Path, e.Identity, e.AuditFlags, e.Mask, e.Inherited, e.InheritanceFlags, e.PropagationFlags)),
+			"identity":         llx.StringData(e.Identity),
+			"sid":              llx.StringData(e.Sid),
+			"auditFlags":       llx.StringData(e.AuditFlags),
+			"auditsSuccess":    llx.BoolData(e.AuditsSuccess()),
+			"auditsFailure":    llx.BoolData(e.AuditsFailure()),
+			"rights":           llx.StringData(e.Rights),
+			"rightsMask":       llx.IntData(e.Mask),
+			"isInherited":      llx.BoolData(e.Inherited),
+			"inheritanceFlags": llx.StringData(e.InheritanceFlags),
+			"propagationFlags": llx.StringData(e.PropagationFlags),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
+	}
+	return res, nil
 }

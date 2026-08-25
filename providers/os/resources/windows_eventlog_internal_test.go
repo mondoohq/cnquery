@@ -70,3 +70,54 @@ func TestLookupInt(t *testing.T) {
 	_, ok = lookupInt(items, "missing")
 	assert.False(t, ok)
 }
+
+func TestResolveMaxSizeKB(t *testing.T) {
+	dword := func(v int64) map[string]registry.RegistryKeyItem {
+		return map[string]registry.RegistryKeyItem{"maxsize": dwordItem("MaxSize", v)}
+	}
+	empty := map[string]registry.RegistryKeyItem{}
+
+	t.Run("Group Policy wins and is already in KB", func(t *testing.T) {
+		n, ok := resolveMaxSizeKB(dword(196608), dword(20480*1024), dword(1024*1024))
+		assert.True(t, ok)
+		assert.Equal(t, int64(196608), n)
+	})
+
+	t.Run("the classic channel configuration is in bytes", func(t *testing.T) {
+		n, ok := resolveMaxSizeKB(empty, dword(20480*1024), empty)
+		assert.True(t, ok)
+		assert.Equal(t, int64(20480), n)
+	})
+
+	// Measured on a live host: Microsoft-Windows-PowerShell/Operational
+	// carries MaxSize 0xf00000 under WINEVT and nothing under
+	// Services\EventLog, so without this source it reported the documented
+	// 20480 default instead of its real 15360.
+	t.Run("a modern channel resolves through WINEVT", func(t *testing.T) {
+		n, ok := resolveMaxSizeKB(empty, empty, dword(15728640))
+		assert.True(t, ok)
+		assert.Equal(t, int64(15360), n)
+	})
+
+	t.Run("a classic log never reaches WINEVT", func(t *testing.T) {
+		// Services\EventLog says 20 MB, WINEVT says 1 MB; the classic source wins
+		n, ok := resolveMaxSizeKB(empty, dword(20480*1024), dword(1024*1024))
+		assert.True(t, ok)
+		assert.Equal(t, int64(20480), n)
+	})
+
+	// The registry holds overrides only. Measured on a live host:
+	// Microsoft-Windows-WinRM/Operational has no MaxSize value anywhere and
+	// runs at the 1052672 bytes its manifest declares, so a miss has to be
+	// reported rather than resolved, or the caller never consults the one
+	// source that knows the manifest value.
+	t.Run("nothing configured is a miss, not a default", func(t *testing.T) {
+		n, ok := resolveMaxSizeKB(empty, empty, empty)
+		assert.False(t, ok)
+		assert.Equal(t, int64(0), n)
+
+		n, ok = resolveMaxSizeKB(nil, nil, nil)
+		assert.False(t, ok)
+		assert.Equal(t, int64(0), n)
+	})
+}

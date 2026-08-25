@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -23,6 +24,12 @@ import (
 const (
 	eventlogPolicyPathFmt  = `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\EventLog\%s`
 	eventlogServicePathFmt = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\%s`
+	// The WINEVT channel key is where a modern provider channel such as
+	// Microsoft-Windows-PowerShell/Operational is configured. The classic
+	// logs keep their configuration under Services\EventLog, so reading only
+	// that key resolved every modern channel to the documented default and
+	// reported a size nobody had set.
+	eventlogChannelPathFmt = `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\%s`
 )
 
 // Decoded Retention behaviors.
@@ -47,6 +54,13 @@ type mqlWindowsEventlogInternal struct {
 	// each map is value name (lower-cased) -> registry item for one key
 	policy  map[string]registry.RegistryKeyItem
 	service map[string]registry.RegistryKeyItem
+	channel map[string]registry.RegistryKeyItem
+	// the live channel state is a command rather than a registry read, so it
+	// is cached separately: the registry-backed fields must keep resolving on
+	// a connection that cannot run commands
+	stateLoaded atomic.Bool
+	stateErr    error
+	state       *windows.EventLogChannel
 }
 
 func (w *mqlWindowsEventlog) id() (string, error) {
@@ -107,9 +121,15 @@ func (w *mqlWindowsEventlog) load() error {
 		w.loadErr = err
 		return err
 	}
+	channel, err := w.readKey(fmt.Sprintf(eventlogChannelPathFmt, w.Name.Data))
+	if err != nil {
+		w.loadErr = err
+		return err
+	}
 
 	w.policy = policy
 	w.service = service
+	w.channel = channel
 	w.loaded.Store(true)
 	return nil
 }
@@ -139,18 +159,53 @@ func registryItemInt(item registry.RegistryKeyItem) (int64, bool) {
 	return 0, false
 }
 
+// resolveMaxSizeKB picks the maximum log size in KB out of the three registry
+// sources, in the order Windows applies them, and reports whether any of them
+// carried a value at all. Pure function for unit testing.
+//
+// The registry holds overrides only. A channel left at the size its manifest
+// declares has no value in any of these keys, which is why a miss here is
+// reported rather than resolved to a default: the caller has one more source
+// that knows the manifest value.
+func resolveMaxSizeKB(policy, service, channel map[string]registry.RegistryKeyItem) (int64, bool) {
+	// the Group Policy MaxSize is already expressed in KB
+	if n, ok := lookupInt(policy, "maxsize"); ok {
+		return n, true
+	}
+	// the effective Services\EventLog MaxSize is in bytes
+	if n, ok := lookupInt(service, "maxsize"); ok {
+		return n / 1024, true
+	}
+	// a modern provider channel is not under Services\EventLog at all; it is
+	// configured under WINEVT, also in bytes. Without this source every modern
+	// channel resolved to the documented default and reported a size nobody
+	// had set. A classic log resolves above and never reaches here.
+	if n, ok := lookupInt(channel, "maxsize"); ok {
+		return n / 1024, true
+	}
+	return 0, false
+}
+
 func (w *mqlWindowsEventlog) maxSizeKB() (int64, error) {
 	if err := w.load(); err != nil {
 		return 0, err
 	}
-	// the Group Policy MaxSize is already expressed in KB
-	if n, ok := lookupInt(w.policy, "maxsize"); ok {
+	if n, ok := resolveMaxSizeKB(w.policy, w.service, w.channel); ok {
 		return n, nil
 	}
-	// the effective Services\EventLog MaxSize is in bytes
-	if n, ok := lookupInt(w.service, "maxsize"); ok {
-		return n / 1024, nil
+
+	// Nothing overrides the size, which is the normal state for a channel left
+	// at what its manifest declares. That value is not in the registry at all
+	// and is only reachable through the channel itself, so a host that reports
+	// 1028 KB through wevtutil was reported as 20480 without this.
+	//
+	// A connection that cannot run commands still resolves below rather than
+	// failing: this source is an improvement on the default, not a
+	// replacement for the registry chain.
+	if state, err := w.loadState(); err == nil && state.MaximumSizeInBytes > 0 {
+		return state.MaximumSizeInBytes / 1024, nil
 	}
+
 	return eventlogDefaultMaxSizeKB, nil
 }
 
@@ -213,4 +268,71 @@ func lookupInt(items map[string]registry.RegistryKeyItem, name string) (int64, b
 		return 0, false
 	}
 	return registryItemInt(item)
+}
+
+// loadState reads the live channel state exactly once and caches it, so a
+// query that reads whether the channel is enabled, where it writes, and how
+// many events it holds costs a single remote command.
+//
+// It is separate from load because it is a command rather than a registry
+// read: a connection that cannot run commands still resolves maxSizeKB,
+// retention and overwriteAsNeeded, and only these four fields report an error.
+func (w *mqlWindowsEventlog) loadState() (*windows.EventLogChannel, error) {
+	if w.stateLoaded.Load() {
+		return w.state, nil
+	}
+	w.lock.Lock()
+	defer w.lock.Unlock()
+	if w.stateLoaded.Load() || w.stateErr != nil {
+		return w.state, w.stateErr
+	}
+
+	stdout, err := runWindowsPowerShell(w.MqlRuntime, windows.EventLogChannelScript(w.Name.Data),
+		"read the Event Log channel "+w.Name.Data)
+	if err != nil {
+		w.stateErr = err
+		return nil, err
+	}
+
+	state, err := windows.ParseEventLogChannel(stdout)
+	if err != nil {
+		w.stateErr = err
+		return nil, err
+	}
+
+	w.state = state
+	w.stateLoaded.Store(true)
+	return state, nil
+}
+
+func (w *mqlWindowsEventlog) enabled() (bool, error) {
+	state, err := w.loadState()
+	if err != nil {
+		return false, err
+	}
+	return state.IsEnabled, nil
+}
+
+func (w *mqlWindowsEventlog) logFilePath() (string, error) {
+	state, err := w.loadState()
+	if err != nil {
+		return "", err
+	}
+	return state.ExpandedLogFilePath(), nil
+}
+
+func (w *mqlWindowsEventlog) isClassicLog() (bool, error) {
+	state, err := w.loadState()
+	if err != nil {
+		return false, err
+	}
+	return state.IsClassicLog, nil
+}
+
+func (w *mqlWindowsEventlog) recordCount() (int64, error) {
+	state, err := w.loadState()
+	if err != nil {
+		return 0, err
+	}
+	return state.RecordCount, nil
 }

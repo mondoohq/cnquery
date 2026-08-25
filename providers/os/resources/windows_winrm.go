@@ -5,8 +5,11 @@ package resources
 
 import (
 	"strings"
+	"sync"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
 )
@@ -168,4 +171,113 @@ func (r *mqlWindowsWinrm) serviceStartMode() (int64, error) {
 		return 0, err
 	}
 	return computeWinRMServiceStartMode(items), nil
+}
+
+// mqlWindowsWinrmServiceInternal caches the one WS-Management read behind both
+// address filters, so a query that reads the IPv4 and the IPv6 filter costs a
+// single remote command rather than two.
+type mqlWindowsWinrmServiceInternal struct {
+	lock    sync.Mutex
+	fetched bool
+	config  *windows.WinRMConfig
+}
+
+// readWinRMConfig reads the live WS-Management client and service settings.
+//
+// These have no registry equivalent that can be trusted. The WinRM service
+// applies the Group Policy key to its own configuration, so this value already
+// carries a policy setting, while reading the policy key alone would miss a
+// TrustedHosts set locally with `winrm set winrm/config/client`, which is the
+// configuration actually worth finding.
+func readWinRMConfig(runtime *plugin.Runtime) (*windows.WinRMConfig, error) {
+	stdout, err := runWindowsPowerShell(runtime, windows.PSGetWinRMConfig, "read the WinRM configuration")
+	if err != nil {
+		return nil, err
+	}
+	return windows.ParseWinRMConfig(stdout)
+}
+
+func (r *mqlWindowsWinrmClient) trustedHosts() (string, error) {
+	config, err := readWinRMConfig(r.MqlRuntime)
+	if err != nil {
+		return "", err
+	}
+	return string(config.Client.TrustedHosts), nil
+}
+
+// serviceConfig reads the WS-Management service settings once and caches them.
+//
+// The guard is read under the lock, never before it, so a racing accessor
+// cannot see the flag set and the pointer still nil. The lock is uncontended
+// in the common case and the work it guards is a remote command.
+func (r *mqlWindowsWinrmService) serviceConfig() (*windows.WinRMConfig, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	if r.fetched {
+		return r.config, nil
+	}
+
+	config, err := readWinRMConfig(r.MqlRuntime)
+	if err != nil {
+		return nil, err
+	}
+
+	r.config = config
+	r.fetched = true
+	return r.config, nil
+}
+
+func (r *mqlWindowsWinrmService) ipv4Filter() (string, error) {
+	config, err := r.serviceConfig()
+	if err != nil {
+		return "", err
+	}
+	return string(config.Service.IPv4Filter), nil
+}
+
+func (r *mqlWindowsWinrmService) ipv6Filter() (string, error) {
+	config, err := r.serviceConfig()
+	if err != nil {
+		return "", err
+	}
+	return string(config.Service.IPv6Filter), nil
+}
+
+// listeners enumerates the configured WS-Management listeners.
+//
+// A host with no listener reports an empty list; a configuration that cannot
+// be read is an error. Collapsing the two would let "no listener accepts
+// unencrypted HTTP" pass on a host whose listener configuration nobody managed
+// to read.
+func (r *mqlWindowsWinrm) listeners() ([]any, error) {
+	stdout, err := runWindowsPowerShell(r.MqlRuntime, windows.PSGetWinRMListeners, "enumerate the WinRM listeners")
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := windows.ParseWinRMListeners(stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]any, 0, len(list))
+	for _, l := range list {
+		o, err := CreateResource(r.MqlRuntime, "windows.winrm.listener", map[string]*llx.RawData{
+			// one host carries an HTTP and an HTTPS listener on the same
+			// address, and two listeners on different addresses with the same
+			// transport, so both dimensions are in the id
+			"__id":                  llx.StringData(l.ID()),
+			"transport":             llx.StringData(string(l.Transport)),
+			"port":                  llx.IntData(l.PortNumber()),
+			"address":               llx.StringData(string(l.Address)),
+			"enabled":               llx.BoolData(l.IsEnabled()),
+			"certificateThumbprint": llx.StringData(string(l.CertificateThumbprint)),
+			"hostname":              llx.StringData(string(l.Hostname)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, o)
+	}
+	return res, nil
 }

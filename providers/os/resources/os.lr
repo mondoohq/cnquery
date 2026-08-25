@@ -11435,19 +11435,30 @@ private windows.optionalFeature @defaults("name") {
 
 // Windows Event Log channel configuration
 //
-// Size and retention policy of a single Windows Event Log
-// channel. The `name` field selects the channel as it appears under the
-// EventLog registry tree, for example `windows.eventlog(name: "Security")`
-// or `windows.eventlog(name: "Application")`. `maxSizeKB` reports the
-// maximum log file size in KB and `retention` decodes how the channel
-// behaves when that size is reached. Each field resolves the Group Policy
-// value first, then the effective channel configuration, and finally the
-// documented Windows default when neither is set.
+// Size, retention policy and collection state of a single Windows Event Log
+// channel. The `name` field selects the channel by its log name, for example
+// `windows.eventlog(name: "Security")`, `windows.eventlog(name: "Application")`
+// or a modern provider channel such as
+// `windows.eventlog(name: "Microsoft-Windows-PowerShell/Operational")`.
+// `maxSizeKB` reports the maximum log file size in KB and `retention` decodes
+// how the channel behaves when that size is reached. `retention` reads the
+// registry alone, so it works on a connection that cannot run commands.
+// `enabled`, `logFilePath`, `isClassicLog` and `recordCount` report the live
+// channel state and need a connection that can run commands.
 windows.eventlog @defaults("name") {
   init(name string)
   // Event Log channel name (for example Application, Security, Setup, or System)
   name string
-  // Maximum log file size in KB (MaxSize)
+  // Maximum log file size in KB
+  //
+  // Resolved from the first source that carries a value: the Group Policy
+  // MaxSize, the classic channel configuration under Services\EventLog, the
+  // WINEVT channel key, and then the size the channel's manifest declares.
+  // The registry holds overrides only, so a channel left at its manifest size
+  // has no value in any of those keys and only the last source knows it; that
+  // one needs a connection that can run commands, and a connection without
+  // one still resolves the registry sources. Falls back to the documented
+  // 20 MB Windows default only when no source reports a size at all.
   maxSizeKB() int
   // Retention behavior when the log reaches its maximum size
   //
@@ -11457,6 +11468,31 @@ windows.eventlog @defaults("name") {
   retention() string
   // Whether the channel overwrites events as needed when full (Retention 0)
   overwriteAsNeeded() bool
+  // Whether the channel is enabled and collecting events
+  //
+  // A disabled channel records nothing, so a policy that asserts a channel is
+  // large enough or retained long enough is worthless until this is true.
+  // Needs a connection that can run commands.
+  enabled() bool
+  // Full path of the channel's backing .evtx file
+  //
+  // For example C:\Windows\System32\Winevt\Logs\Application.evtx. Compose it
+  // with `file.acl` to check who can read or tamper with the recorded events.
+  // Needs a connection that can run commands.
+  logFilePath() string
+  // Whether the channel is one of the classic pre-Vista logs
+  //
+  // True for Application, Security, Setup, System and other logs kept for
+  // backward compatibility, false for a modern channel published by a
+  // provider such as Microsoft-Windows-PowerShell/Operational. Needs a
+  // connection that can run commands.
+  isClassicLog() bool
+  // Number of events currently held in the channel
+  //
+  // Zero on a channel that has been cleared, and also on one that has never
+  // collected anything, so read it together with `enabled` rather than as
+  // evidence on its own. Needs a connection that can run commands.
+  recordCount() int
 }
 
 // Windows Remote Desktop / Terminal Services configuration
@@ -11537,8 +11573,11 @@ windows.rdp {
 // the Group Policy key HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM; these
 // are GPO-only values with no per-listener effective fallback, so when a value
 // is absent the documented Windows default applies. `serviceStartMode` reflects
-// HKLM\SYSTEM\CurrentControlSet\Services\WinRM\Start. Read from the registry, so
-// it is available even on connections that cannot run commands.
+// HKLM\SYSTEM\CurrentControlSet\Services\WinRM\Start. Those fields are read
+// from the registry, so they are available even on connections that cannot run
+// commands. `listeners`, `client.trustedHosts`, `service.ipv4Filter` and
+// `service.ipv6Filter` report the live WS-Management configuration instead and
+// need a connection that can run commands.
 windows.winrm {
   // WinRM client authentication and transport policy
   client() windows.winrm.client
@@ -11549,6 +11588,48 @@ windows.winrm {
   // The HKLM\SYSTEM\CurrentControlSet\Services\WinRM\Start DWORD: 2=automatic,
   // 3=manual, 4=disabled. Defaults to 3 (manual) when the value is absent.
   serviceStartMode() int
+  // Configured WinRM listeners
+  //
+  // Every listener the WS-Management service is configured with, with the
+  // transport it accepts, the port and address it is bound to, and the
+  // certificate an HTTPS listener presents. A host with no listener
+  // configured reports an empty list, which is not the same as a failed read:
+  // a configuration that cannot be read (the WinRM service is stopped, or the
+  // connection cannot run commands) is an error, so an audit of the form
+  // "no listener accepts unencrypted HTTP" cannot pass by reading nothing.
+  listeners() []windows.winrm.listener
+}
+
+// WinRM listener
+//
+// Single WS-Management listener: the transport it accepts, the address and
+// port it is bound to, whether it is enabled, and, for an HTTPS listener, the
+// hostname and certificate it presents. An HTTP listener carries session
+// payloads without transport encryption unless the authentication mechanism
+// encrypts them itself, so an internet-reachable HTTP listener combined with
+// `windows.winrm.service.allowUnencryptedTraffic` is the pair worth auditing.
+private windows.winrm.listener @defaults("transport port address enabled") {
+  // Transport the listener accepts, either HTTP or HTTPS
+  transport string
+  // TCP port the listener is bound to, 0 when the port cannot be read
+  //
+  // The Windows defaults are 5985 for HTTP and 5986 for HTTPS. Older hosts
+  // configured before Windows Vista may still use 80 and 443.
+  port int
+  // Address the listener is bound to
+  //
+  // Either "*" for every address, "IP:<address>" for a single address, or
+  // "MAC:<address>" for the addresses of one adapter.
+  address string
+  // Whether the listener is enabled
+  enabled bool
+  // Thumbprint of the certificate an HTTPS listener presents, empty for HTTP
+  certificateThumbprint string
+  // Hostname the listener answers for, empty when it is not restricted
+  //
+  // For an HTTPS listener this is the name the presented certificate must
+  // match.
+  hostname string
 }
 
 // WinRM client policy
@@ -11572,6 +11653,15 @@ private windows.winrm.client @defaults("allowBasic allowUnencryptedTraffic") {
   // Defaults to true (Digest authentication is enabled on the client when the
   // policy is not configured).
   allowDigest bool
+  // Hosts the WinRM client trusts without mutual authentication (Client\TrustedHosts)
+  //
+  // A comma-separated list, empty when no host is trusted. A single "*"
+  // trusts every host, which turns off the server authentication that
+  // otherwise stops the client from sending credentials to an impostor.
+  // Entries may also be wildcards such as "*.example.com" or the literal
+  // "<local>". Reports the live WS-Management value, which already reflects
+  // any Group Policy setting, so it needs a connection that can run commands.
+  trustedHosts() string
 }
 
 // WinRM service policy
@@ -11605,6 +11695,20 @@ private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
   // Defaults to true (remote shell access is allowed when the policy is not
   // configured).
   allowRemoteShellAccess bool
+  // IPv4 addresses the WinRM service accepts requests on (Service\IPv4Filter)
+  //
+  // A comma-separated list of addresses or ranges, "*" for every IPv4 address,
+  // and empty when the service accepts no IPv4 request at all. Reports the
+  // live WS-Management value, which already reflects any Group Policy setting,
+  // so it needs a connection that can run commands.
+  ipv4Filter() string
+  // IPv6 addresses the WinRM service accepts requests on (Service\IPv6Filter)
+  //
+  // A comma-separated list of addresses or ranges, "*" for every IPv6 address,
+  // and empty when the service accepts no IPv6 request at all. Reports the
+  // live WS-Management value, which already reflects any Group Policy setting,
+  // so it needs a connection that can run commands.
+  ipv6Filter() string
 }
 
 // Windows Device Guard policy (Virtualization-Based Security, HVCI, and Credential Guard)
@@ -12303,11 +12407,13 @@ private windows.powershell.transcription @defaults("enabled") {
 // Windows Trusted Platform Module (TPM)
 //
 // Trusted Platform Module state: whether a TPM is present,
-// ready for use, enabled, and activated, along with its major specification
-// version and manufacturer version string. Presence and a 2.0 specification
-// version are prerequisites for Windows 11 readiness and several BitLocker
-// and device-health controls. On a system without a TPM the fields resolve
-// cleanly (present is false) rather than erroring.
+// ready for use, enabled, and activated, along with its manufacturer, its
+// major specification version, its dictionary-attack lockout state, and
+// whether Windows provisions it automatically. Presence and a 2.0
+// specification version are prerequisites for Windows 11 readiness and
+// several BitLocker and device-health controls, and a locked out or
+// unprovisioned TPM is present without being usable. On a system without a
+// TPM the fields resolve cleanly (present is false) rather than erroring.
 windows.tpm {
   // Whether a TPM is present on the system
   present() bool
@@ -12321,6 +12427,41 @@ windows.tpm {
   specVersion() string
   // TPM manufacturer version string
   manufacturerVersion() string
+  // Whether the TPM is locked out against dictionary attack
+  //
+  // True after too many failed authorization attempts, while the TPM refuses
+  // further owner authorization until the lockout heals or is reset.
+  lockedOut() bool
+  // Number of authorization failures counted against the lockout threshold
+  lockoutCount() int
+  // Time the TPM takes to forget one authorization failure
+  //
+  // A human-readable duration such as "2 hours", empty when the TPM reports
+  // none. The counter drops by one each time this elapses, so it is how long
+  // a lockout takes to clear on its own.
+  lockoutHealTime() string
+  // Whether Windows automatically provisions the TPM
+  //
+  // One of Enabled, Disabled, EnabledForCertainOnly, or NotDefined, and empty
+  // when the TPM reports nothing at all. Automatic provisioning is what makes
+  // a TPM ready for use without an administrator preparing it, and disabling
+  // it leaves a present TPM unusable by BitLocker and device health
+  // attestation. A machine with no TPM reports NotDefined.
+  autoProvisioning() string
+  // TPM manufacturer identifier as a number
+  //
+  // The raw TCG vendor identifier, which is usually four ASCII characters
+  // packed into an integer. Read `manufacturerIdTxt` for the readable form.
+  manufacturerId() int
+  // TPM manufacturer identifier as text, for example "INTC" or "AMD"
+  manufacturerIdTxt() string
+  // Whether clearing the TPM from the operating system is blocked
+  //
+  // True when the owner authorization needed to clear the TPM is not
+  // available to Windows, so a clear has to be confirmed from firmware. Read
+  // it together with `present`: a machine with no TPM also reports true, and
+  // on its own that reads like hardening on a host that has no TPM to harden.
+  ownerClearDisabled() bool
 }
 
 // Windows advanced audit policy
@@ -12817,6 +12958,18 @@ windows.acl @defaults("path owner") {
   sddl() string
   // Access control entries
   entries() []windows.acl.entry
+  // System access control entries, the rules that decide what is audited
+  //
+  // What the object records to the Security event log, rather than what it
+  // permits: each entry names a principal, the rights involved, and whether
+  // successful attempts, failed attempts, or both are audited. An object with
+  // no audit rule reports an empty list, and audits nothing.
+  //
+  // Reading a system access control list requires the SeSecurityPrivilege
+  // right, which an unelevated session does not hold. Without it this field is
+  // an error rather than an empty list, so "nothing is audited here" can never
+  // be the answer to "the audit could not be read".
+  auditEntries() []windows.acl.auditEntry
   // Principals granted write access by an allow entry
   //
   // The account names of every allow entry whose rights include any form of
@@ -12882,6 +13035,57 @@ private windows.acl.entry @defaults("identity type rights") {
   // A principal with either can grant itself everything else, so it is
   // equivalent to full control even when the mask does not say so.
   allowsPermissionChange bool
+  // Whether the entry was inherited from a parent object rather than set on this one
+  isInherited bool
+  // How the entry propagates to child objects
+  //
+  // For example "ContainerInherit, ObjectInherit", or None when the entry
+  // applies only to this object.
+  inheritanceFlags string
+  // How inheritance is applied to children, for example InheritOnly or None
+  propagationFlags string
+}
+
+// Windows audit control entry
+//
+// Single entry of a system access control list: the principal whose attempts
+// are recorded, the rights the rule covers, and whether success, failure, or
+// both are written to the Security event log. Iterated from
+// `windows.acl.auditEntries`.
+//
+// An audit rule only takes effect while the matching advanced audit policy
+// subcategory is enabled, which `windows.auditPolicy` reports. A rule present
+// here with "Object Access / File System" auditing switched off records
+// nothing.
+private windows.acl.auditEntry @defaults("identity auditFlags rights") {
+  // Account whose attempts the entry records, in DOMAIN\name form
+  identity string
+  // Security identifier of the account, empty when it cannot be resolved
+  //
+  // An entry whose identity cannot be translated is still reported, with the
+  // raw identity kept, rather than being dropped from the list.
+  sid string
+  // Which outcomes are audited, as Windows labels them
+  //
+  // One of None, Success, Failure, or "Success, Failure". Read
+  // `auditsSuccess` and `auditsFailure` for assertions rather than matching
+  // this string.
+  auditFlags string
+  // Whether successful attempts are recorded
+  auditsSuccess bool
+  // Whether failed attempts are recorded
+  auditsFailure bool
+  // Rights the entry audits, as Windows labels them
+  //
+  // For example FullControl, or "Modify, Synchronize". Unreliable for
+  // assertions: a mask containing generic bits has no label and renders as a
+  // bare signed number. Read `rightsMask` when the exact rights matter.
+  rights string
+  // Raw access mask the entry audits
+  //
+  // The 32 bit access mask widened to a signed 64 bit value, so masks with
+  // the high generic bits set stay positive rather than appearing negative.
+  rightsMask int
   // Whether the entry was inherited from a parent object rather than set on this one
   isInherited bool
   // How the entry propagates to child objects

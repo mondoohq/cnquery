@@ -6,6 +6,7 @@ package resources
 import (
 	"errors"
 	"io"
+	"strings"
 	"sync"
 
 	"go.mondoo.com/mql/llx"
@@ -15,6 +16,38 @@ import (
 	"go.mondoo.com/mql/providers/os/resources/powershell"
 	"go.mondoo.com/mql/providers/os/resources/windows"
 )
+
+// runWindowsPowerShell runs a PowerShell script on the target and returns its
+// standard output.
+//
+// A non-zero exit is an error carrying the script's own stderr, never an empty
+// result. Every caller reads a security setting, and a setting that could not
+// be read has to fail the check rather than resolve to whatever value the zero
+// value happens to be: "no listener is configured" and "the listener
+// configuration could not be read" satisfy an audit identically, and only one
+// of them should.
+func runWindowsPowerShell(runtime *plugin.Runtime, script, what string) (io.Reader, error) {
+	conn, ok := runtime.Connection.(shared.Connection)
+	if !ok {
+		return nil, errors.New("failed to " + what + ": this connection type is not supported")
+	}
+	if !conn.Capabilities().Has(shared.Capability_RunCommand) {
+		return nil, errors.New("failed to " + what + ": this connection cannot run commands")
+	}
+
+	executedCmd, err := conn.RunCommand(powershell.Encode(script))
+	if err != nil {
+		return nil, err
+	}
+	if executedCmd.ExitStatus != 0 {
+		stderr, err := io.ReadAll(executedCmd.Stderr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("failed to " + what + ": " + strings.TrimSpace(string(stderr)))
+	}
+	return executedCmd.Stdout, nil
+}
 
 func (s *mqlWindows) computerInfo() (map[string]any, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
