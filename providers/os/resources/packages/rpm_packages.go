@@ -428,9 +428,17 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	}
 	var tmpRpmDBFile string
 	var detectedPath string
+	// A path we cannot stat is not fatal on its own -- it just is not the
+	// database -- but if none of the candidates matched, the last failure is the
+	// best explanation we have for why, so keep it instead of dropping it.
+	var lastExistsErr error
 	for i := range files {
 		ok, err := afs.Exists(files[i])
-		if err == nil && ok {
+		if err != nil {
+			lastExistsErr = errors.Wrapf(err, "could not check %s", files[i])
+			continue
+		}
+		if ok {
 			splitPath := strings.Split(files[i], "/")
 			tmpRpmDBFile = filepath.Join(rpmTmpDir, splitPath[len(splitPath)-1])
 			detectedPath = files[i]
@@ -439,7 +447,18 @@ func (rpm *RpmPkgManager) staticList() ([]Package, error) {
 	}
 
 	if len(detectedPath) == 0 {
-		return nil, errors.Wrap(err, "could not find rpm packages location on : "+rpm.platform.Name)
+		// This must be a hard error. Returning no packages and no error reports
+		// an empty inventory for a host with thousands of packages installed,
+		// and every package-based assertion then passes against data that was
+		// never read. Name the paths that were searched so a distro with a
+		// layout we do not know yet (Bottlerocket, for one) is one log line away
+		// from being diagnosed rather than an invisible zero.
+		msg := fmt.Sprintf("could not find the rpm database on %s, searched: %s",
+			rpm.platform.Name, strings.Join(files, ", "))
+		if lastExistsErr != nil {
+			return nil, errors.Wrap(lastExistsErr, msg)
+		}
+		return nil, errors.New(msg)
 	}
 	log.Debug().Str("path", detectedPath).Msg("found rpm packages location")
 

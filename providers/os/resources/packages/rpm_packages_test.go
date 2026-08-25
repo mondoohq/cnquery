@@ -12,6 +12,7 @@ import (
 	"time"
 
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
@@ -825,6 +826,80 @@ func TestRpmEpochParityAcrossCollectionPaths(t *testing.T) {
 			// The rpmdb path additionally carries the database as evidence.
 			assert.Equal(t, PkgFilesIncluded, fromDB.FilesAvailable)
 			assert.Equal(t, []FileRecord{{Path: "/var/lib/rpm/rpmdb.sqlite"}}, fromDB.Files)
+		})
+	}
+}
+
+// memFsConnection swaps out only the filesystem of an existing connection, so a
+// test can drive the static-analysis path against an in-memory image layout.
+type memFsConnection struct {
+	shared.Connection
+	fs afero.Fs
+}
+
+func (c *memFsConnection) FileSystem() afero.Fs { return c.fs }
+
+// TestRpmStaticListWithoutDatabaseErrors guards against the silent-zero bug: a
+// host whose rpm database sits at a path we do not know (Bottlerocket, for one)
+// used to come back as (nil, nil) from staticList, because the not-found branch
+// wrapped an `err` that was always nil at that point and Wrap(nil) is nil. The
+// scan then reported zero packages with no failure, and every package assertion
+// passed against an inventory that was never read.
+func TestRpmStaticListWithoutDatabaseErrors(t *testing.T) {
+	base, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_redhat8.toml"))
+	require.NoError(t, err)
+
+	conn := &memFsConnection{Connection: base, fs: afero.NewMemMapFs()}
+
+	pf := &inventory.Platform{
+		Name:    "bottlerocket",
+		Version: "1.20.0",
+		Arch:    "x86_64",
+		Family:  []string{"linux", "unix", "os"},
+	}
+
+	mgr := &RpmPkgManager{conn: conn, platform: pf}
+
+	pkgs, err := mgr.staticList()
+	require.Error(t, err, "a missing rpm database must be an error, never an empty package list")
+	assert.Nil(t, pkgs)
+	assert.Contains(t, err.Error(), "bottlerocket", "the error must name the platform")
+	assert.Contains(t, err.Error(), "/var/lib/rpm/rpmdb.sqlite",
+		"the error must list the paths that were searched")
+}
+
+// TestRpmStaticListFindsDatabaseAtEveryKnownPath pins the candidate list: each
+// documented layout must still be picked up, so the not-found error above only
+// fires for a genuinely unknown one.
+func TestRpmStaticListFindsDatabaseAtEveryKnownPath(t *testing.T) {
+	knownPaths := []string{
+		"/usr/lib/sysimage/rpm/Packages",
+		"/usr/lib/sysimage/rpm/Packages.db",
+		"/usr/lib/sysimage/rpm/rpmdb.sqlite",
+		"/var/lib/rpm/rpmdb.sqlite",
+		"/var/lib/rpm/Packages",
+		"/var/lib/rpm/Packages.db",
+	}
+
+	base, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/packages_redhat8.toml"))
+	require.NoError(t, err)
+
+	pf := &inventory.Platform{Name: "redhat", Version: "8.4", Arch: "x86_64"}
+
+	for _, path := range knownPaths {
+		t.Run(path, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			// Not a real rpm database -- reaching the rpmdb parser at all is
+			// enough to prove the path was detected, since the not-found branch
+			// returns before any of that.
+			require.NoError(t, afero.WriteFile(fs, path, []byte("not-an-rpmdb"), 0o644))
+
+			mgr := &RpmPkgManager{conn: &memFsConnection{Connection: base, fs: fs}, platform: pf}
+
+			_, err := mgr.staticList()
+			require.Error(t, err)
+			assert.NotContains(t, err.Error(), "could not find the rpm database",
+				"the database at %s must be detected", path)
 		})
 	}
 }
