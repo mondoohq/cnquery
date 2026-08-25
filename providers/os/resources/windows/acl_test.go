@@ -315,3 +315,129 @@ func TestParseWindowsAclUnresolvableIdentity(t *testing.T) {
 	// It still counts as a writer, so an audit sees the orphaned grant.
 	assert.Contains(t, acl.AllowedWritePrincipals(), "S-1-5-21-1111111111-2222222222-3333333333-1013")
 }
+
+func TestParseWindowsAclAudit(t *testing.T) {
+	t.Run("a directory auditing failed writes by Everyone", func(t *testing.T) {
+		input := `{"Path":"C:\\scratch","Audit":[{"Identity":"Everyone","Sid":"S-1-1-0","AuditFlags":"Failure","Rights":"Write, Delete","Mask":65654,"Inherited":false,"InheritanceFlags":"ContainerInherit, ObjectInherit","PropagationFlags":"None"}]}`
+
+		acl, err := ParseWindowsAclAudit(strings.NewReader(input))
+		require.NoError(t, err)
+		require.Len(t, acl.Audit, 1)
+		e := acl.Audit[0]
+		assert.Equal(t, "Everyone", e.Identity)
+		assert.Equal(t, "S-1-1-0", e.Sid)
+		assert.Equal(t, "Failure", e.AuditFlags)
+		assert.False(t, e.AuditsSuccess())
+		assert.True(t, e.AuditsFailure())
+		assert.Equal(t, int64(65654), e.Mask)
+		assert.False(t, e.Inherited)
+	})
+
+	// An object that audits nothing is a real answer and decodes to an empty
+	// list. A list that could not be read never reaches this decode: without
+	// SeSecurityPrivilege the command fails and the caller reports the error.
+	t.Run("an object with no audit rule is an empty list", func(t *testing.T) {
+		acl, err := ParseWindowsAclAudit(strings.NewReader(`{"Path":"C:\\scratch","Audit":[]}`))
+		require.NoError(t, err)
+		assert.Empty(t, acl.Audit)
+		assert.NotNil(t, acl.Audit)
+	})
+
+	t.Run("an absent Audit key is an empty list rather than nil", func(t *testing.T) {
+		acl, err := ParseWindowsAclAudit(strings.NewReader(`{"Path":"C:\\scratch"}`))
+		require.NoError(t, err)
+		assert.NotNil(t, acl.Audit)
+		assert.Empty(t, acl.Audit)
+	})
+
+	// FileSystemRights is a signed 32 bit enum, so a mask carrying the generic
+	// bits has no label and the script widens it through BitConverter. The
+	// value must arrive positive, or a rights comparison silently inverts.
+	t.Run("a generic mask stays positive and keeps its raw label", func(t *testing.T) {
+		input := `{"Path":"C:\\scratch","Audit":[{"Identity":"BUILTIN\\Administrators","Sid":"S-1-5-32-544","AuditFlags":"Success, Failure","Rights":"-536805376","Mask":3758161920,"Inherited":true,"InheritanceFlags":"None","PropagationFlags":"None"}]}`
+
+		acl, err := ParseWindowsAclAudit(strings.NewReader(input))
+		require.NoError(t, err)
+		require.Len(t, acl.Audit, 1)
+		e := acl.Audit[0]
+		assert.Equal(t, int64(3758161920), e.Mask)
+		assert.Positive(t, e.Mask)
+		assert.Equal(t, "-536805376", e.Rights)
+		assert.True(t, e.AuditsSuccess())
+		assert.True(t, e.AuditsFailure())
+		assert.True(t, e.Inherited)
+	})
+
+	t.Run("malformed output is an error", func(t *testing.T) {
+		_, err := ParseWindowsAclAudit(strings.NewReader(`{"Audit":`))
+		assert.Error(t, err)
+	})
+}
+
+func TestWindowsAclAuditEntryFlags(t *testing.T) {
+	for _, tc := range []struct {
+		flags   string
+		success bool
+		failure bool
+	}{
+		{flags: "Success", success: true, failure: false},
+		{flags: "Failure", success: false, failure: true},
+		{flags: "Success, Failure", success: true, failure: true},
+		{flags: "Failure, Success", success: true, failure: true},
+		// no spaces after the comma, and a case the API has been seen to vary
+		{flags: "Success,Failure", success: true, failure: true},
+		{flags: "success, failure", success: true, failure: true},
+		// None audits nothing, and neither does an absent label; both must
+		// read false rather than defaulting an object into looking audited
+		{flags: "None", success: false, failure: false},
+		{flags: "", success: false, failure: false},
+	} {
+		e := WindowsAclAuditEntry{AuditFlags: tc.flags}
+		assert.Equal(t, tc.success, e.AuditsSuccess(), "success for %q", tc.flags)
+		assert.Equal(t, tc.failure, e.AuditsFailure(), "failure for %q", tc.flags)
+	}
+}
+
+// A flag is matched element by element, not as a substring, so a label that
+// merely contains another flag's name cannot be mistaken for it.
+func TestWindowsAclAuditFlagsAreNotSubstringMatched(t *testing.T) {
+	e := WindowsAclAuditEntry{AuditFlags: "SuccessfulOnly"}
+	assert.False(t, e.AuditsSuccess())
+}
+
+// One principal is audited more than once on one object: success on one set of
+// rights and failure on another, inherited and set directly. A missing
+// dimension makes CreateResource return the cached first instance, so the
+// second entry reports the first one's rights.
+func TestAclAuditEntryIDDimensions(t *testing.T) {
+	base := func() (string, string, string, int64, bool, string, string) {
+		return `C:\scratch`, "Everyone", "Success", 65654, false, "None", "None"
+	}
+
+	p, id, f, m, i, inh, prop := base()
+	ref := AclAuditEntryID(p, id, f, m, i, inh, prop)
+
+	assert.Equal(t, ref, AclAuditEntryID(p, id, f, m, i, inh, prop), "stable")
+	assert.NotEqual(t, ref, AclAuditEntryID(p, id, "Failure", m, i, inh, prop), "audited outcomes")
+	assert.NotEqual(t, ref, AclAuditEntryID(p, id, f, 1, i, inh, prop), "rights mask")
+	assert.NotEqual(t, ref, AclAuditEntryID(p, id, f, m, true, inh, prop), "inherited")
+	assert.NotEqual(t, ref, AclAuditEntryID(p, "SYSTEM", f, m, i, inh, prop), "principal")
+	assert.NotEqual(t, ref, AclAuditEntryID(`C:\other`, id, f, m, i, inh, prop), "path")
+	assert.NotEqual(t, ref, AclAuditEntryID(p, id, f, m, i, "ObjectInherit", prop), "inheritance flags")
+	assert.NotEqual(t, ref, AclAuditEntryID(p, id, f, m, i, inh, "InheritOnly"), "propagation flags")
+
+	// and it must not collide with a discretionary entry on the same object
+	assert.NotEqual(t, ref, AclEntryID(p, id, f, m, i, inh, prop))
+}
+
+func TestAclAuditScript(t *testing.T) {
+	script := AclAuditScript(`C:\Program Files\it's here`)
+	// single quoting is what makes a Windows path safe to interpolate: no
+	// escape sequence is recognized inside it, so a backslash stays a
+	// backslash. Only the quote itself needs escaping, by doubling it.
+	assert.Contains(t, script, `$p='C:\Program Files\it''s here'`)
+	// -Audit is what asks for the system access control list; without it
+	// $a.Audit is empty on every object
+	assert.Contains(t, script, "-Audit")
+	assert.LessOrEqual(t, len(script), PSMaxScriptLength)
+}

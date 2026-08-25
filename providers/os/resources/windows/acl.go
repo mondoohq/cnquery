@@ -214,3 +214,116 @@ func ParseWindowsAcl(input io.Reader) (*WindowsAcl, error) {
 	}
 	return &res, nil
 }
+
+// AclAuditScript builds the PowerShell that reads a filesystem object's
+// system access control list, the rules that decide what is audited.
+//
+// It is a separate command from AclScript rather than an extra flag on it.
+// Reading a system access control list requires the SeSecurityPrivilege
+// right, which an unelevated session does not hold, and merging the two would
+// make an unprivileged session lose the discretionary list as well.
+//
+// The mask is widened through BitConverter for the same reason as in
+// AclScript: FileSystemRights is a signed 32 bit enum, so a mask carrying the
+// generic bits is a negative number that [uint32] refuses outright.
+func AclAuditScript(path string) string {
+	return `$ErrorActionPreference='Stop'
+$p=` + quotePowerShellString(path) + `
+$a=Get-Acl -LiteralPath $p -Audit
+[ordered]@{
+Path=$p
+Audit=@($a.Audit|ForEach-Object{
+$s='';try{$s=[string]$_.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{}
+[ordered]@{Identity=[string]$_.IdentityReference;Sid=$s;AuditFlags=[string]$_.AuditFlags;Rights=[string]$_.FileSystemRights;Mask=[int64][System.BitConverter]::ToUInt32([System.BitConverter]::GetBytes([int]$_.FileSystemRights),0);Inherited=$_.IsInherited;InheritanceFlags=[string]$_.InheritanceFlags;PropagationFlags=[string]$_.PropagationFlags}})
+}|ConvertTo-Json -Depth 5 -Compress`
+}
+
+// WindowsAclAudit is a filesystem object's system access control list.
+type WindowsAclAudit struct {
+	Path string `json:"Path"`
+	// Audit is empty on an object that audits nothing, which is a real answer
+	// and not the same as a list that could not be read: without
+	// SeSecurityPrivilege the command fails and never reaches this decode.
+	Audit []WindowsAclAuditEntry `json:"Audit"`
+}
+
+// WindowsAclAuditEntry is one audit control entry.
+type WindowsAclAuditEntry struct {
+	Identity string `json:"Identity"`
+	Sid      string `json:"Sid"`
+	// AuditFlags is None, Success, Failure, or "Success, Failure".
+	AuditFlags string `json:"AuditFlags"`
+	// Rights is what .NET names the mask, which is not always a name. A mask
+	// carrying generic bits has no label and arrives as a signed decimal
+	// string.
+	Rights           string `json:"Rights"`
+	Mask             int64  `json:"Mask"`
+	Inherited        bool   `json:"Inherited"`
+	InheritanceFlags string `json:"InheritanceFlags"`
+	PropagationFlags string `json:"PropagationFlags"`
+}
+
+// hasAuditFlag reports whether the comma separated AuditFlags label contains
+// the named flag. The label is matched element by element rather than as a
+// substring, so a future flag whose name contains another one cannot be
+// mistaken for it.
+func hasAuditFlag(flags, name string) bool {
+	for _, f := range strings.Split(flags, ",") {
+		if strings.EqualFold(strings.TrimSpace(f), name) {
+			return true
+		}
+	}
+	return false
+}
+
+// AuditsSuccess reports whether the entry records successful attempts.
+func (e WindowsAclAuditEntry) AuditsSuccess() bool {
+	return hasAuditFlag(e.AuditFlags, "Success")
+}
+
+// AuditsFailure reports whether the entry records failed attempts.
+func (e WindowsAclAuditEntry) AuditsFailure() bool {
+	return hasAuditFlag(e.AuditFlags, "Failure")
+}
+
+// AclAuditEntryID builds the resource id of an audit control entry.
+//
+// It carries the same dimensions as AclEntryID, with the audited outcomes in
+// place of allow or deny: one principal legitimately appears more than once on
+// one object, auditing success on one set of rights and failure on another,
+// once inherited and once set directly. A missing dimension makes the second
+// entry report the first one's rights, because CreateResource returns the
+// cached first instance for a repeated id.
+func AclAuditEntryID(path, identity, auditFlags string, mask int64, inherited bool, inheritanceFlags, propagationFlags string) string {
+	var b strings.Builder
+	b.WriteString("windows.acl.auditEntry/")
+	b.WriteString(path)
+	b.WriteString("/")
+	b.WriteString(identity)
+	b.WriteString("/")
+	b.WriteString(auditFlags)
+	b.WriteString("/")
+	b.WriteString(strconv.FormatInt(mask, 10))
+	if inherited {
+		b.WriteString("/inherited")
+	} else {
+		b.WriteString("/direct")
+	}
+	b.WriteString("/")
+	b.WriteString(inheritanceFlags)
+	b.WriteString("/")
+	b.WriteString(propagationFlags)
+	return b.String()
+}
+
+// ParseWindowsAclAudit decodes a system access control list.
+func ParseWindowsAclAudit(input io.Reader) (*WindowsAclAudit, error) {
+	var res WindowsAclAudit
+	if err := json.NewDecoder(input).Decode(&res); err != nil {
+		return nil, err
+	}
+	if res.Audit == nil {
+		res.Audit = []WindowsAclAuditEntry{}
+	}
+	return &res, nil
+}

@@ -434,6 +434,7 @@ const (
 	ResourceWindowsEventlog                               string = "windows.eventlog"
 	ResourceWindowsRdp                                    string = "windows.rdp"
 	ResourceWindowsWinrm                                  string = "windows.winrm"
+	ResourceWindowsWinrmListener                          string = "windows.winrm.listener"
 	ResourceWindowsWinrmClient                            string = "windows.winrm.client"
 	ResourceWindowsWinrmService                           string = "windows.winrm.service"
 	ResourceWindowsDeviceGuard                            string = "windows.deviceGuard"
@@ -468,6 +469,7 @@ const (
 	ResourceWindowsSmbConnection                          string = "windows.smb.connection"
 	ResourceWindowsAcl                                    string = "windows.acl"
 	ResourceWindowsAclEntry                               string = "windows.acl.entry"
+	ResourceWindowsAclAuditEntry                          string = "windows.acl.auditEntry"
 	ResourceWindowsDnsServer                              string = "windows.dnsServer"
 	ResourceWindowsDnsServerSettings                      string = "windows.dnsServer.settings"
 	ResourceWindowsDnsServerRecursion                     string = "windows.dnsServer.recursion"
@@ -2303,6 +2305,10 @@ func init() {
 			// to override args, implement: initWindowsWinrm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsWinrm,
 		},
+		"windows.winrm.listener": {
+			// to override args, implement: initWindowsWinrmListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsWinrmListener,
+		},
 		"windows.winrm.client": {
 			// to override args, implement: initWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsWinrmClient,
@@ -2438,6 +2444,10 @@ func init() {
 		"windows.acl.entry": {
 			// to override args, implement: initWindowsAclEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createWindowsAclEntry,
+		},
+		"windows.acl.auditEntry": {
+			// to override args, implement: initWindowsAclAuditEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createWindowsAclAuditEntry,
 		},
 		"windows.dnsServer": {
 			// to override args, implement: initWindowsDnsServer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -12351,6 +12361,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.eventlog.overwriteAsNeeded": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsEventlog).GetOverwriteAsNeeded()).ToDataRes(types.Bool)
 	},
+	"windows.eventlog.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.eventlog.logFilePath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetLogFilePath()).ToDataRes(types.String)
+	},
+	"windows.eventlog.isClassicLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetIsClassicLog()).ToDataRes(types.Bool)
+	},
+	"windows.eventlog.recordCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsEventlog).GetRecordCount()).ToDataRes(types.Int)
+	},
 	"windows.rdp.networkLevelAuthentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsRdp).GetNetworkLevelAuthentication()).ToDataRes(types.Bool)
 	},
@@ -12432,6 +12454,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.winrm.serviceStartMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrm).GetServiceStartMode()).ToDataRes(types.Int)
 	},
+	"windows.winrm.listeners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrm).GetListeners()).ToDataRes(types.Array(types.Resource("windows.winrm.listener")))
+	},
+	"windows.winrm.listener.transport": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmListener).GetTransport()).ToDataRes(types.String)
+	},
+	"windows.winrm.listener.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmListener).GetPort()).ToDataRes(types.Int)
+	},
+	"windows.winrm.listener.address": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmListener).GetAddress()).ToDataRes(types.String)
+	},
+	"windows.winrm.listener.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmListener).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.listener.certificateThumbprint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmListener).GetCertificateThumbprint()).ToDataRes(types.String)
+	},
+	"windows.winrm.listener.hostname": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmListener).GetHostname()).ToDataRes(types.String)
+	},
 	"windows.winrm.client.allowBasic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrmClient).GetAllowBasic()).ToDataRes(types.Bool)
 	},
@@ -12440,6 +12483,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.winrm.client.allowDigest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrmClient).GetAllowDigest()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.client.trustedHosts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmClient).GetTrustedHosts()).ToDataRes(types.String)
 	},
 	"windows.winrm.service.allowBasic": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrmService).GetAllowBasic()).ToDataRes(types.Bool)
@@ -12455,6 +12501,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsWinrmService).GetAllowRemoteShellAccess()).ToDataRes(types.Bool)
+	},
+	"windows.winrm.service.ipv4Filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetIpv4Filter()).ToDataRes(types.String)
+	},
+	"windows.winrm.service.ipv6Filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsWinrmService).GetIpv6Filter()).ToDataRes(types.String)
 	},
 	"windows.deviceGuard.virtualizationBasedSecurityEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDeviceGuard).GetVirtualizationBasedSecurityEnabled()).ToDataRes(types.Bool)
@@ -12861,6 +12913,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.tpm.manufacturerVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsTpm).GetManufacturerVersion()).ToDataRes(types.String)
 	},
+	"windows.tpm.lockedOut": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetLockedOut()).ToDataRes(types.Bool)
+	},
+	"windows.tpm.lockoutCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetLockoutCount()).ToDataRes(types.Int)
+	},
+	"windows.tpm.lockoutHealTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetLockoutHealTime()).ToDataRes(types.String)
+	},
+	"windows.tpm.autoProvisioning": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetAutoProvisioning()).ToDataRes(types.String)
+	},
+	"windows.tpm.manufacturerId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetManufacturerId()).ToDataRes(types.Int)
+	},
+	"windows.tpm.manufacturerIdTxt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetManufacturerIdTxt()).ToDataRes(types.String)
+	},
+	"windows.tpm.ownerClearDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsTpm).GetOwnerClearDisabled()).ToDataRes(types.Bool)
+	},
 	"windows.auditPolicy.list": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsAuditPolicy).GetList()).ToDataRes(types.Array(types.Resource("windows.auditPolicy.subcategory")))
 	},
@@ -13185,6 +13258,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.acl.entries": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsAcl).GetEntries()).ToDataRes(types.Array(types.Resource("windows.acl.entry")))
 	},
+	"windows.acl.auditEntries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAcl).GetAuditEntries()).ToDataRes(types.Array(types.Resource("windows.acl.auditEntry")))
+	},
 	"windows.acl.allowedWritePrincipals": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsAcl).GetAllowedWritePrincipals()).ToDataRes(types.Array(types.String))
 	},
@@ -13229,6 +13305,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.acl.entry.propagationFlags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsAclEntry).GetPropagationFlags()).ToDataRes(types.String)
+	},
+	"windows.acl.auditEntry.identity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetIdentity()).ToDataRes(types.String)
+	},
+	"windows.acl.auditEntry.sid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetSid()).ToDataRes(types.String)
+	},
+	"windows.acl.auditEntry.auditFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetAuditFlags()).ToDataRes(types.String)
+	},
+	"windows.acl.auditEntry.auditsSuccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetAuditsSuccess()).ToDataRes(types.Bool)
+	},
+	"windows.acl.auditEntry.auditsFailure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetAuditsFailure()).ToDataRes(types.Bool)
+	},
+	"windows.acl.auditEntry.rights": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetRights()).ToDataRes(types.String)
+	},
+	"windows.acl.auditEntry.rightsMask": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetRightsMask()).ToDataRes(types.Int)
+	},
+	"windows.acl.auditEntry.isInherited": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetIsInherited()).ToDataRes(types.Bool)
+	},
+	"windows.acl.auditEntry.inheritanceFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetInheritanceFlags()).ToDataRes(types.String)
+	},
+	"windows.acl.auditEntry.propagationFlags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsAclAuditEntry).GetPropagationFlags()).ToDataRes(types.String)
 	},
 	"windows.dnsServer.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServer).GetSettings()).ToDataRes(types.Resource("windows.dnsServer.settings"))
@@ -30700,6 +30806,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsEventlog).OverwriteAsNeeded, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"windows.eventlog.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.eventlog.logFilePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).LogFilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.eventlog.isClassicLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).IsClassicLog, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.eventlog.recordCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsEventlog).RecordCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"windows.rdp.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsRdp).__id, ok = v.Value.(string)
 		return
@@ -30816,6 +30938,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsWinrm).ServiceStartMode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"windows.winrm.listeners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrm).Listeners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.listener.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmListener).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.winrm.listener.transport": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmListener).Transport, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.listener.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmListener).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.listener.address": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmListener).Address, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.listener.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmListener).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.listener.certificateThumbprint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmListener).CertificateThumbprint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.listener.hostname": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmListener).Hostname, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"windows.winrm.client.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsWinrmClient).__id, ok = v.Value.(string)
 		return
@@ -30830,6 +30984,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.winrm.client.allowDigest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsWinrmClient).AllowDigest, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.client.trustedHosts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmClient).TrustedHosts, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.winrm.service.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -30854,6 +31012,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.winrm.service.allowRemoteShellAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsWinrmService).AllowRemoteShellAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.ipv4Filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).Ipv4Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.winrm.service.ipv6Filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsWinrmService).Ipv6Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.deviceGuard.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31472,6 +31638,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsTpm).ManufacturerVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"windows.tpm.lockedOut": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).LockedOut, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.lockoutCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).LockoutCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.lockoutHealTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).LockoutHealTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.autoProvisioning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).AutoProvisioning, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.manufacturerId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).ManufacturerId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.manufacturerIdTxt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).ManufacturerIdTxt, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.tpm.ownerClearDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsTpm).OwnerClearDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"windows.auditPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsAuditPolicy).__id, ok = v.Value.(string)
 		return
@@ -31952,6 +32146,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsAcl).Entries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"windows.acl.auditEntries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAcl).AuditEntries, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"windows.acl.allowedWritePrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsAcl).AllowedWritePrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -32014,6 +32212,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.acl.entry.propagationFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsAclEntry).PropagationFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).__id, ok = v.Value.(string)
+		return
+	},
+	"windows.acl.auditEntry.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).Identity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.sid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).Sid, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.auditFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).AuditFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.auditsSuccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).AuditsSuccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.auditsFailure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).AuditsFailure, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.rights": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).Rights, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.rightsMask": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).RightsMask, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.isInherited": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).IsInherited, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.inheritanceFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).InheritanceFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.acl.auditEntry.propagationFlags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsAclAuditEntry).PropagationFlags, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.dnsServer.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79188,6 +79430,10 @@ type mqlWindowsEventlog struct {
 	MaxSizeKB         plugin.TValue[int64]
 	Retention         plugin.TValue[string]
 	OverwriteAsNeeded plugin.TValue[bool]
+	Enabled           plugin.TValue[bool]
+	LogFilePath       plugin.TValue[string]
+	IsClassicLog      plugin.TValue[bool]
+	RecordCount       plugin.TValue[int64]
 }
 
 // createWindowsEventlog creates a new instance of this resource
@@ -79246,6 +79492,30 @@ func (c *mqlWindowsEventlog) GetRetention() *plugin.TValue[string] {
 func (c *mqlWindowsEventlog) GetOverwriteAsNeeded() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.OverwriteAsNeeded, func() (bool, error) {
 		return c.overwriteAsNeeded()
+	})
+}
+
+func (c *mqlWindowsEventlog) GetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Enabled, func() (bool, error) {
+		return c.enabled()
+	})
+}
+
+func (c *mqlWindowsEventlog) GetLogFilePath() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogFilePath, func() (string, error) {
+		return c.logFilePath()
+	})
+}
+
+func (c *mqlWindowsEventlog) GetIsClassicLog() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IsClassicLog, func() (bool, error) {
+		return c.isClassicLog()
+	})
+}
+
+func (c *mqlWindowsEventlog) GetRecordCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RecordCount, func() (int64, error) {
+		return c.recordCount()
 	})
 }
 
@@ -79469,6 +79739,7 @@ type mqlWindowsWinrm struct {
 	Client           plugin.TValue[*mqlWindowsWinrmClient]
 	Service          plugin.TValue[*mqlWindowsWinrmService]
 	ServiceStartMode plugin.TValue[int64]
+	Listeners        plugin.TValue[[]any]
 }
 
 // createWindowsWinrm creates a new instance of this resource
@@ -79546,6 +79817,91 @@ func (c *mqlWindowsWinrm) GetServiceStartMode() *plugin.TValue[int64] {
 	})
 }
 
+func (c *mqlWindowsWinrm) GetListeners() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Listeners, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.winrm", c.__id, "listeners")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.listeners()
+	})
+}
+
+// mqlWindowsWinrmListener for the windows.winrm.listener resource
+type mqlWindowsWinrmListener struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsWinrmListenerInternal it will be used here
+	Transport             plugin.TValue[string]
+	Port                  plugin.TValue[int64]
+	Address               plugin.TValue[string]
+	Enabled               plugin.TValue[bool]
+	CertificateThumbprint plugin.TValue[string]
+	Hostname              plugin.TValue[string]
+}
+
+// createWindowsWinrmListener creates a new instance of this resource
+func createWindowsWinrmListener(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsWinrmListener{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.winrm.listener", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsWinrmListener) MqlName() string {
+	return "windows.winrm.listener"
+}
+
+func (c *mqlWindowsWinrmListener) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsWinrmListener) GetTransport() *plugin.TValue[string] {
+	return &c.Transport
+}
+
+func (c *mqlWindowsWinrmListener) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlWindowsWinrmListener) GetAddress() *plugin.TValue[string] {
+	return &c.Address
+}
+
+func (c *mqlWindowsWinrmListener) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlWindowsWinrmListener) GetCertificateThumbprint() *plugin.TValue[string] {
+	return &c.CertificateThumbprint
+}
+
+func (c *mqlWindowsWinrmListener) GetHostname() *plugin.TValue[string] {
+	return &c.Hostname
+}
+
 // mqlWindowsWinrmClient for the windows.winrm.client resource
 type mqlWindowsWinrmClient struct {
 	MqlRuntime *plugin.Runtime
@@ -79554,6 +79910,7 @@ type mqlWindowsWinrmClient struct {
 	AllowBasic              plugin.TValue[bool]
 	AllowUnencryptedTraffic plugin.TValue[bool]
 	AllowDigest             plugin.TValue[bool]
+	TrustedHosts            plugin.TValue[string]
 }
 
 // createWindowsWinrmClient creates a new instance of this resource
@@ -79605,16 +79962,24 @@ func (c *mqlWindowsWinrmClient) GetAllowDigest() *plugin.TValue[bool] {
 	return &c.AllowDigest
 }
 
+func (c *mqlWindowsWinrmClient) GetTrustedHosts() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TrustedHosts, func() (string, error) {
+		return c.trustedHosts()
+	})
+}
+
 // mqlWindowsWinrmService for the windows.winrm.service resource
 type mqlWindowsWinrmService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsWinrmServiceInternal it will be used here
+	mqlWindowsWinrmServiceInternal
 	AllowBasic              plugin.TValue[bool]
 	AllowUnencryptedTraffic plugin.TValue[bool]
 	DisableRunAs            plugin.TValue[bool]
 	AllowAutoConfig         plugin.TValue[bool]
 	AllowRemoteShellAccess  plugin.TValue[bool]
+	Ipv4Filter              plugin.TValue[string]
+	Ipv6Filter              plugin.TValue[string]
 }
 
 // createWindowsWinrmService creates a new instance of this resource
@@ -79672,6 +80037,18 @@ func (c *mqlWindowsWinrmService) GetAllowAutoConfig() *plugin.TValue[bool] {
 
 func (c *mqlWindowsWinrmService) GetAllowRemoteShellAccess() *plugin.TValue[bool] {
 	return &c.AllowRemoteShellAccess
+}
+
+func (c *mqlWindowsWinrmService) GetIpv4Filter() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Ipv4Filter, func() (string, error) {
+		return c.ipv4Filter()
+	})
+}
+
+func (c *mqlWindowsWinrmService) GetIpv6Filter() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Ipv6Filter, func() (string, error) {
+		return c.ipv6Filter()
+	})
 }
 
 // mqlWindowsDeviceGuard for the windows.deviceGuard resource
@@ -81378,6 +81755,13 @@ type mqlWindowsTpm struct {
 	Activated           plugin.TValue[bool]
 	SpecVersion         plugin.TValue[string]
 	ManufacturerVersion plugin.TValue[string]
+	LockedOut           plugin.TValue[bool]
+	LockoutCount        plugin.TValue[int64]
+	LockoutHealTime     plugin.TValue[string]
+	AutoProvisioning    plugin.TValue[string]
+	ManufacturerId      plugin.TValue[int64]
+	ManufacturerIdTxt   plugin.TValue[string]
+	OwnerClearDisabled  plugin.TValue[bool]
 }
 
 // createWindowsTpm creates a new instance of this resource
@@ -81450,6 +81834,48 @@ func (c *mqlWindowsTpm) GetSpecVersion() *plugin.TValue[string] {
 func (c *mqlWindowsTpm) GetManufacturerVersion() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.ManufacturerVersion, func() (string, error) {
 		return c.manufacturerVersion()
+	})
+}
+
+func (c *mqlWindowsTpm) GetLockedOut() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LockedOut, func() (bool, error) {
+		return c.lockedOut()
+	})
+}
+
+func (c *mqlWindowsTpm) GetLockoutCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.LockoutCount, func() (int64, error) {
+		return c.lockoutCount()
+	})
+}
+
+func (c *mqlWindowsTpm) GetLockoutHealTime() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LockoutHealTime, func() (string, error) {
+		return c.lockoutHealTime()
+	})
+}
+
+func (c *mqlWindowsTpm) GetAutoProvisioning() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.AutoProvisioning, func() (string, error) {
+		return c.autoProvisioning()
+	})
+}
+
+func (c *mqlWindowsTpm) GetManufacturerId() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ManufacturerId, func() (int64, error) {
+		return c.manufacturerId()
+	})
+}
+
+func (c *mqlWindowsTpm) GetManufacturerIdTxt() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ManufacturerIdTxt, func() (string, error) {
+		return c.manufacturerIdTxt()
+	})
+}
+
+func (c *mqlWindowsTpm) GetOwnerClearDisabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.OwnerClearDisabled, func() (bool, error) {
+		return c.ownerClearDisabled()
 	})
 }
 
@@ -82529,6 +82955,7 @@ type mqlWindowsAcl struct {
 	InheritanceEnabled     plugin.TValue[bool]
 	Sddl                   plugin.TValue[string]
 	Entries                plugin.TValue[[]any]
+	AuditEntries           plugin.TValue[[]any]
 	AllowedWritePrincipals plugin.TValue[[]any]
 }
 
@@ -82616,6 +83043,22 @@ func (c *mqlWindowsAcl) GetEntries() *plugin.TValue[[]any] {
 		}
 
 		return c.entries()
+	})
+}
+
+func (c *mqlWindowsAcl) GetAuditEntries() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AuditEntries, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("windows.acl", c.__id, "auditEntries")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.auditEntries()
 	})
 }
 
@@ -82731,6 +83174,95 @@ func (c *mqlWindowsAclEntry) GetInheritanceFlags() *plugin.TValue[string] {
 }
 
 func (c *mqlWindowsAclEntry) GetPropagationFlags() *plugin.TValue[string] {
+	return &c.PropagationFlags
+}
+
+// mqlWindowsAclAuditEntry for the windows.acl.auditEntry resource
+type mqlWindowsAclAuditEntry struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlWindowsAclAuditEntryInternal it will be used here
+	Identity         plugin.TValue[string]
+	Sid              plugin.TValue[string]
+	AuditFlags       plugin.TValue[string]
+	AuditsSuccess    plugin.TValue[bool]
+	AuditsFailure    plugin.TValue[bool]
+	Rights           plugin.TValue[string]
+	RightsMask       plugin.TValue[int64]
+	IsInherited      plugin.TValue[bool]
+	InheritanceFlags plugin.TValue[string]
+	PropagationFlags plugin.TValue[string]
+}
+
+// createWindowsAclAuditEntry creates a new instance of this resource
+func createWindowsAclAuditEntry(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlWindowsAclAuditEntry{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("windows.acl.auditEntry", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlWindowsAclAuditEntry) MqlName() string {
+	return "windows.acl.auditEntry"
+}
+
+func (c *mqlWindowsAclAuditEntry) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlWindowsAclAuditEntry) GetIdentity() *plugin.TValue[string] {
+	return &c.Identity
+}
+
+func (c *mqlWindowsAclAuditEntry) GetSid() *plugin.TValue[string] {
+	return &c.Sid
+}
+
+func (c *mqlWindowsAclAuditEntry) GetAuditFlags() *plugin.TValue[string] {
+	return &c.AuditFlags
+}
+
+func (c *mqlWindowsAclAuditEntry) GetAuditsSuccess() *plugin.TValue[bool] {
+	return &c.AuditsSuccess
+}
+
+func (c *mqlWindowsAclAuditEntry) GetAuditsFailure() *plugin.TValue[bool] {
+	return &c.AuditsFailure
+}
+
+func (c *mqlWindowsAclAuditEntry) GetRights() *plugin.TValue[string] {
+	return &c.Rights
+}
+
+func (c *mqlWindowsAclAuditEntry) GetRightsMask() *plugin.TValue[int64] {
+	return &c.RightsMask
+}
+
+func (c *mqlWindowsAclAuditEntry) GetIsInherited() *plugin.TValue[bool] {
+	return &c.IsInherited
+}
+
+func (c *mqlWindowsAclAuditEntry) GetInheritanceFlags() *plugin.TValue[string] {
+	return &c.InheritanceFlags
+}
+
+func (c *mqlWindowsAclAuditEntry) GetPropagationFlags() *plugin.TValue[string] {
 	return &c.PropagationFlags
 }
 
