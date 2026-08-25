@@ -47,7 +47,7 @@ require (
 	github.com/google/go-containerregistry v0.21.7
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-hclog v1.6.3
-	github.com/hashicorp/go-plugin v1.8.0
+	github.com/hashicorp/go-plugin v1.8.1-0.20260626113307-2d71c1b8b0e6 // pinned past v1.8.0 for hashicorp/go-plugin#388 (drops deprecated github.com/golang/protobuf) - revert to a tagged release once one ships
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/vault/api v1.23.0
 	github.com/hnakamur/go-scp v1.0.2
