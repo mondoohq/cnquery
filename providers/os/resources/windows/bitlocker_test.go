@@ -186,3 +186,58 @@ func TestBitlockerStatusWithoutKeyProtectors(t *testing.T) {
 		assert.Empty(t, vols[i].KeyProtectors)
 	}
 }
+
+// The BitLocker WMI provider is registered by the BitLocker feature. On a host
+// where the feature was never installed the namespace does not exist, and the
+// collection script used to report that as "[]" with exit status 0.
+//
+// Captured verbatim from Windows Server 2016 (10.0.14393), 2019 (10.0.17763)
+// and 2022 (10.0.20348), where
+//
+//	Get-WmiObject -namespace "Root\cimv2\security\MicrosoftVolumeEncryption" ...
+//
+// fails with `Invalid namespace` and the script still exits 0 with "[]" on
+// stdout. An empty list is the same answer a host with no encryptable volumes
+// gives, so a policy could not tell the two apart.
+func TestBitlockerMissingNamespaceIsNotAnEmptyList(t *testing.T) {
+	stdout, err := os.ReadFile("./testdata/bitlocker_namespace_missing.json")
+	require.NoError(t, err)
+
+	// The script now exits non-zero, and that has to reach the caller as an
+	// error even though stdout still parses as a valid empty list.
+	volumes, err := bitlockerResult(stdout, 1,
+		[]byte("could not read Win32_EncryptableVolume; the BitLocker feature is not installed on this host: Invalid namespace\n"))
+	require.Error(t, err)
+	assert.Nil(t, volumes)
+	assert.Contains(t, err.Error(), "BitLocker feature is not installed")
+
+	// and the same bytes on a successful run are still a legitimate empty list
+	volumes, err = bitlockerResult(stdout, 0, nil)
+	require.NoError(t, err)
+	assert.Empty(t, volumes)
+}
+
+// A failure that produced no stderr must still be an error rather than an
+// empty list, and must say something.
+func TestBitlockerNonZeroExitWithoutStderr(t *testing.T) {
+	volumes, err := bitlockerResult([]byte("[]"), 5, nil)
+	require.Error(t, err)
+	assert.Nil(t, volumes)
+	assert.Contains(t, err.Error(), "status 5")
+}
+
+// Output that never arrived is not an empty list either.
+func TestBitlockerEmptyOutput(t *testing.T) {
+	volumes, err := bitlockerResult([]byte("  \r\n"), 0, nil)
+	require.Error(t, err)
+	assert.Nil(t, volumes)
+	assert.Contains(t, err.Error(), "no output")
+}
+
+// The guard is in the script, not only in Go: without -ErrorAction Stop the
+// missing namespace is non-terminating and the script reaches its final
+// ConvertTo-Json with an empty collection.
+func TestBitlockerScriptFailsOnMissingNamespace(t *testing.T) {
+	assert.Contains(t, bitlockerStatusScript, "-ErrorAction Stop")
+	assert.Contains(t, bitlockerStatusScript, "exit 1")
+}

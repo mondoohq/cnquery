@@ -4,10 +4,12 @@
 package windows
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
@@ -114,8 +116,24 @@ func KeyProtectorReadError(deviceID string, returnValue *int64) error {
 		deviceID, uint32(*returnValue))
 }
 
+// The Win32_EncryptableVolume class is registered by the BitLocker feature, so
+// on a host where the feature is not installed the namespace does not exist at
+// all. Get-WmiObject reports that as a non-terminating error, which left
+// $encryptedVolumes empty and the script emitting "[]" with exit status 0. An
+// empty list is the same answer a host with no encryptable volumes gives, so
+// `windows.bitlocker.volumes.all(...)` and `.none(...)` passed vacuously on
+// every host that has never had BitLocker installed. -ErrorAction Stop turns
+// the missing namespace into a failure the caller can see.
+//
+// The per-volume method calls deliberately keep the default preference: one
+// volume that will not answer must not take the whole reading down with it.
 const bitlockerStatusScript = `
-$encryptedVolumes = Get-WmiObject -namespace "Root\cimv2\security\MicrosoftVolumeEncryption" -ClassName "Win32_Encryptablevolume" 
+try {
+	$encryptedVolumes = @(Get-WmiObject -namespace "Root\cimv2\security\MicrosoftVolumeEncryption" -ClassName "Win32_Encryptablevolume" -ErrorAction Stop)
+} catch {
+	[Console]::Error.WriteLine("could not read Win32_EncryptableVolume; the BitLocker feature is not installed on this host: " + $_.Exception.Message)
+	exit 1
+}
 
 $bitlockerStatus = @()
 
@@ -232,8 +250,8 @@ func (l *psKeyProtectorList) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// bitlockerVolumeStatus returns the status for one individual volume
-type bitlockerVolumeStatus struct {
+// BitLockerVolumeStatus is the encryption state of one individual volume.
+type BitLockerVolumeStatus struct {
 	DeviceID           string
 	DriveLetter        string
 	ConversionStatus   conversionStatus
@@ -273,22 +291,39 @@ type statusCode struct {
 	Text string `json:"text"`
 }
 
-func GetBitLockerVolumes(p shared.Connection) ([]bitlockerVolumeStatus, error) {
+func GetBitLockerVolumes(p shared.Connection) ([]BitLockerVolumeStatus, error) {
 	c, err := p.RunCommand(powershell.Encode(bitlockerStatusScript))
 	if err != nil {
 		return nil, err
 	}
-	if c.ExitStatus != 0 {
-		stderr, err := io.ReadAll(c.Stderr)
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New("failed to retrieve bitlocker info: " + string(stderr))
+	stdout, err := io.ReadAll(c.Stdout)
+	if err != nil {
+		return nil, err
 	}
-	return ParseWindowsBitlockerStatus(c.Stdout)
+	stderr, _ := io.ReadAll(c.Stderr)
+	return bitlockerResult(stdout, c.ExitStatus, stderr)
 }
 
-func ParseWindowsBitlockerStatus(r io.Reader) ([]bitlockerVolumeStatus, error) {
+// bitlockerResult turns a raw command result into volume statuses. A non-zero
+// exit, or output that never arrived, is reported as an error rather than as
+// an empty list: an empty list is indistinguishable from a host whose volumes
+// are all unencrypted, so a failed reading would satisfy the very checks that
+// are meant to catch one.
+func bitlockerResult(stdout []byte, exitStatus int, stderr []byte) ([]BitLockerVolumeStatus, error) {
+	if exitStatus != 0 {
+		msg := strings.TrimSpace(string(stderr))
+		if msg == "" {
+			msg = fmt.Sprintf("command exited with status %d", exitStatus)
+		}
+		return nil, errors.New("failed to retrieve BitLocker volumes: " + msg)
+	}
+	if len(bytes.TrimSpace(stdout)) == 0 {
+		return nil, errors.New("failed to retrieve BitLocker volumes: the collection script produced no output")
+	}
+	return ParseWindowsBitlockerStatus(bytes.NewReader(stdout))
+}
+
+func ParseWindowsBitlockerStatus(r io.Reader) ([]BitLockerVolumeStatus, error) {
 	var volumeStatus []powershellBitlockerVolumeStatus
 	data, err := io.ReadAll(r)
 	if err != nil {
@@ -300,11 +335,11 @@ func ParseWindowsBitlockerStatus(r io.Reader) ([]bitlockerVolumeStatus, error) {
 		return nil, err
 	}
 
-	res := []bitlockerVolumeStatus{}
+	res := []BitLockerVolumeStatus{}
 	for i := range volumeStatus {
 		v := volumeStatus[i]
 
-		bvs := bitlockerVolumeStatus{
+		bvs := BitLockerVolumeStatus{
 			DeviceID:    v.Volume.DeviceID,
 			DriveLetter: v.Volume.DriveLetter,
 			ConversionStatus: conversionStatus{

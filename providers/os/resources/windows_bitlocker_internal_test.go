@@ -4,12 +4,14 @@
 package resources
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers/os/registry"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 )
 
 // fveDword builds a DWORD registry item.
@@ -268,4 +270,46 @@ func TestComputeBitlockerDrive_AllAbsentAreNull(t *testing.T) {
 	assert.Nil(t, rawString(t, args, "discoveryVolumeType"))
 	// driveType is always set even with no values
 	assert.Equal(t, "removableData", args["driveType"].Value)
+}
+
+// available is the escape hatch that lets a policy skip a host where BitLocker
+// cannot be read, so it is the one field on the resource that must never
+// itself fail. If asking "is BitLocker present here" could error or return
+// null, it could not be used to guard the query that does error.
+//
+// The memo is seeded directly so both outcomes are exercised without a live
+// connection; the live behaviour is covered by verification against Windows
+// Server 2016, 2019, 2022 and 2025, where the WMI namespace is absent and
+// available reports false.
+func TestBitlockerAvailableNeverFails(t *testing.T) {
+	t.Run("false when the provider could not be read", func(t *testing.T) {
+		b := &mqlWindowsBitlocker{}
+		b.fetched = true
+		b.err = errors.New(`failed to retrieve BitLocker volumes: could not read ` +
+			`Win32_EncryptableVolume; the BitLocker feature is not installed on this host`)
+
+		available, err := b.available()
+		require.NoError(t, err, "available must not propagate the read failure")
+		assert.False(t, available)
+	})
+
+	t.Run("true when the provider read, even with no volumes", func(t *testing.T) {
+		b := &mqlWindowsBitlocker{}
+		b.fetched = true
+		b.cachedVolumes = nil
+
+		available, err := b.available()
+		require.NoError(t, err)
+		assert.True(t, available, "a host whose provider answers is available even with an empty volume list")
+	})
+
+	t.Run("true when the provider read volumes", func(t *testing.T) {
+		b := &mqlWindowsBitlocker{}
+		b.fetched = true
+		b.cachedVolumes = []windows.BitLockerVolumeStatus{{DeviceID: "volume-1"}}
+
+		available, err := b.available()
+		require.NoError(t, err)
+		assert.True(t, available)
+	})
 }
