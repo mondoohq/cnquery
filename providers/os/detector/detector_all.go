@@ -150,7 +150,7 @@ var arch = &PlatformResolver{
 var manjaro = &PlatformResolver{
 	Name:     "manjaro",
 	IsFamily: false,
-	Emits:    []string{"manjaro-arm"},
+	Emits:    []string{"manjaro", "manjaro-arm"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// Manjaro ARM ships ID=manjaro-arm with ID_LIKE="manjaro arch". It is the
 		// same distribution built for ARM and belongs to the arch family just as
@@ -612,7 +612,7 @@ var cloudlinux = &PlatformResolver{
 var centos = &PlatformResolver{
 	Name:     "centos",
 	IsFamily: false,
-	Emits:    []string{"rockylinux", "almalinux"},
+	Emits:    []string{"centos", "rockylinux", "almalinux"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// works for centos 5+
 		if strings.Contains(pf.Title, "CentOS") || pf.Name == "centos" {
@@ -819,7 +819,7 @@ var windriver = &PlatformResolver{
 var opensuse = &PlatformResolver{
 	Name:     "opensuse",
 	IsFamily: false,
-	Emits:    []string{"opensuse-leap", "opensuse-tumbleweed"},
+	Emits:    []string{"opensuse", "opensuse-leap", "opensuse-tumbleweed"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "opensuse" || pf.Name == "opensuse-leap" || pf.Name == "opensuse-tumbleweed" {
 			return true, nil
@@ -1793,6 +1793,9 @@ var WindowsFamily = &PlatformResolver{
 var unknownOperatingSystem = &PlatformResolver{
 	Name:     "unknown-os",
 	IsFamily: false,
+	// names nothing: it is the terminal fallback and leaves the platform
+	// unnamed, so "unknown-os" is not a platform any asset can report
+	Emits: []string{},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if we reach here, we really do not know the system
 		log.Debug().Msg("platform> we do not know the operating system, please contact support")
