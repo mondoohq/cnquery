@@ -98,19 +98,28 @@ func TestDeriveCatalogSource(t *testing.T) {
 		useWUServer    bool
 		wsusServerURL  string
 		auOptions      int64
-		hasPolicyState bool
+		noAutoUpdate   bool
+		wufbConfigured bool
 		want           string
 	}{
 		{name: "registry unreadable", read: false, want: "unknown"},
-		{name: "automatic updates disabled", read: true, auOptions: 1, want: "disabled"},
+		{name: "automatic updates disabled, legacy AUOptions encoding", read: true, auOptions: 1, want: "disabled"},
+		// The shape every host running a modern Windows carries: AUOptions
+		// holds a live value and NoAutoUpdate is what switches updates off.
+		{name: "automatic updates disabled by NoAutoUpdate", read: true, auOptions: 2, noAutoUpdate: true, want: "disabled"},
+		{name: "NoAutoUpdate wins over a configured WSUS server", read: true, useWUServer: true, wsusServerURL: "http://wsus.local:8530", auOptions: 4, noAutoUpdate: true, want: "disabled"},
 		{name: "wsus managed", read: true, useWUServer: true, wsusServerURL: "http://wsus.local:8530", auOptions: 4, want: "wsus"},
 		{name: "wsus url without UseWUServer falls through", read: true, useWUServer: false, wsusServerURL: "http://wsus.local:8530", auOptions: 4, want: "windowsUpdate"},
-		{name: "windows update for business", read: true, hasPolicyState: true, auOptions: 0, want: "windowsUpdateForBusiness"},
+		{name: "windows update for business", read: true, wufbConfigured: true, auOptions: 0, want: "windowsUpdateForBusiness"},
 		{name: "direct windows update", read: true, auOptions: 4, want: "windowsUpdate"},
+		// The PolicyState key exists on every Windows Server since 2019 with
+		// IsWUfBConfigured set to 0; its presence alone must not read as
+		// enrollment.
+		{name: "PolicyState present but WUfB not configured", read: true, wufbConfigured: false, auOptions: 4, want: "windowsUpdate"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := deriveCatalogSource(tt.read, tt.useWUServer, tt.wsusServerURL, tt.auOptions, tt.hasPolicyState)
+			got := deriveCatalogSource(tt.read, tt.useWUServer, tt.wsusServerURL, tt.auOptions, tt.noAutoUpdate, tt.wufbConfigured)
 			assert.Equal(t, tt.want, got)
 		})
 	}

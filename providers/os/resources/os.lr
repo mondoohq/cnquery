@@ -11306,8 +11306,9 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   //
   // One of "windowsUpdate" (direct Microsoft Update), "wsus" (a configured
   // WSUS server), "windowsUpdateForBusiness", "disabled" (the agent or
-  // automatic updates are turned off), or "unknown" (the relevant registry
-  // keys could not be read).
+  // automatic updates are turned off, through either AU\NoAutoUpdate or the
+  // legacy AUOptions encoding), or "unknown" (the relevant registry keys could
+  // not be read).
   catalogSource string
   // Configured WSUS server URL (HKLM\...\WindowsUpdate\WUServer)
   wsusServerUrl string
@@ -11334,7 +11335,13 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   lastInstallSuccess time
   // Whether a reboot is pending from a previous update
   rebootPending bool
-  // Windows Update for Business policy state (HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState)
+  // Whether Windows Update for Business is configured
+  //
+  // The IsWUfBConfigured flag under
+  // HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState, 1 when
+  // the host takes its update policy from Windows Update for Business. Null
+  // when the key is absent, which is the state of a host that was never
+  // enrolled.
   policyState int
 }
 
