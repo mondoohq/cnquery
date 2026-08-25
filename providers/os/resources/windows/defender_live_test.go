@@ -57,6 +57,11 @@ func TestMpComputerStatusLiveDecodes(t *testing.T) {
 			assert.False(t, status.IsTamperProtected)
 			assert.False(t, status.RebootRequired)
 			assert.Equal(t, "4.18.26070.9", status.AMProductVersion)
+
+			// "Normal" means Defender is the active antivirus. A passive-mode
+			// host still reports amServiceEnabled and antivirusEnabled true, so
+			// this is what separates "protected" from "installed".
+			assert.Equal(t, "Normal", status.AMRunningMode)
 			assert.Equal(t, "Off", status.SmartAppControlState)
 
 			// Device control reports names, not numbers. Defender leaves the

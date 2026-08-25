@@ -14051,8 +14051,15 @@ windows.defender @defaults("enabled") {
   // Configurable Defender preferences and policy (Get-MpPreference)
   preferences() windows.defender.preferences
   // Threats recorded in the Defender threat history
+  //
+  // An empty list means Defender has recorded no threats. Null means the
+  // history could not be read because Defender is not installed, and must not
+  // be read as "no threats found".
   threats() []windows.defender.threat
   // Malware detections recorded by Defender
+  //
+  // An empty list means Defender has recorded no detections. Null means the
+  // history could not be read because Defender is not installed.
   threatDetections() []windows.defender.threatDetection
 }
 
@@ -14071,6 +14078,16 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   amEngineVersion string
   // Antimalware client (product) version
   amProductVersion string
+  // Mode the Defender antimalware engine is running in
+  //
+  // "Normal" means Defender is the active antivirus. "Passive Mode" and
+  // "SxS Passive Mode" mean another antivirus is active and Defender is not
+  // remediating threats, even though amServiceEnabled and antivirusEnabled
+  // still report true. "EDR Block Mode" means Defender remediates only what
+  // endpoint detection and response identifies, and "Not running" means the
+  // engine is stopped. Check this before reading the protection toggles as
+  // proof the host is being defended.
+  amRunningMode string
   // Whether the Windows Defender antimalware service is running
   amServiceEnabled bool
   // Antimalware service version

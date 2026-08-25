@@ -4274,6 +4274,7 @@ windows.defender.signatureSettings.signatureUpdateInterval 13.29.1
 windows.defender.status 13.29.1
 windows.defender.status.amEngineVersion 13.29.1
 windows.defender.status.amProductVersion 13.29.1
+windows.defender.status.amRunningMode 13.40.10
 windows.defender.status.amServiceEnabled 13.29.1
 windows.defender.status.amServiceVersion 13.29.1
 windows.defender.status.antispywareEnabled 13.29.1
