@@ -123,6 +123,13 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		// This is supported in Debian and Ubuntu:
 		// https: // snapcraft.io/docs/distro-support
 		pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
+	// ALT Linux is rpm based but is not in the redhat family: it ships
+	// /etc/redhat-release and /etc/fedora-release carrying only "ALT Container"
+	// with no distro name, so detection gives it a resolver of its own under
+	// plain linux. Without a case here it matched nothing and packages reported
+	// an error on a system with a populated rpm database.
+	case asset.Platform.Name == "altlinux":
+		fallthrough
 	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux" || asset.Platform.Name == "bottlerocket" || asset.Platform.Name == "azurelinux":
 		fallthrough
 	case asset.Platform.IsFamily("redhat") ||
