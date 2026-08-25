@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
@@ -300,4 +301,41 @@ func (p *mqlWindowsBitlockerPolicy) fixedDataDrives() (*mqlWindowsBitlockerPolic
 
 func (p *mqlWindowsBitlockerPolicy) removableDataDrives() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
 	return p.driveSettings(fveRDVPrefix)
+}
+
+// windows.bitlocker.policy is reachable by a dotted path that is also its own
+// registered resource name: the field `policy` on `windows.bitlocker` and the
+// resource `windows.bitlocker.policy` occupy the same path. The compiler
+// resolves the longest matching resource name before it considers a field, so
+// `windows.bitlocker.policy.useAdvancedStartup` instantiates the resource
+// directly and the parent's policy() accessor never runs. The five global FVE
+// values are plain schema fields that only that accessor populates, so every
+// one stays unset, reports "provider returned no data and no error", and then
+// converts as a primitive carrying no type information.
+//
+// The result reads null, which is worse than an error: `null && null`
+// evaluates to true in MQL, so a check written in the dotted form passes on a
+// host that was never hardened.
+//
+// The per-drive-type sub-resources were never affected, because they are
+// computed accessors that read the FVE key themselves, and neither was the
+// block form `windows.bitlocker { policy { ... } }`, which binds the field
+// rather than resolving a resource name.
+func initWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+
+	parent, err := CreateResource(runtime, "windows.bitlocker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := parent.(*mqlWindowsBitlocker).GetPolicy()
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	if v.Data == nil {
+		return nil, nil, errors.New("could not read the BitLocker policy of this host")
+	}
+	return args, v.Data, nil
 }
