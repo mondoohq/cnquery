@@ -12679,6 +12679,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.schannel.ellipticCurves": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSchannel).GetEllipticCurves()).ToDataRes(types.Array(types.String))
 	},
+	"windows.schannel.signatureAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetSignatureAlgorithms()).ToDataRes(types.Array(types.String))
+	},
 	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSchannel).GetPqcKeyExchangeEnabled()).ToDataRes(types.Bool)
 	},
@@ -31271,6 +31274,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.schannel.ellipticCurves": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSchannel).EllipticCurves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.schannel.signatureAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).SignatureAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80610,6 +80617,7 @@ type mqlWindowsSchannel struct {
 	// optional: if you define mqlWindowsSchannelInternal it will be used here
 	CipherSuites          plugin.TValue[[]any]
 	EllipticCurves        plugin.TValue[[]any]
+	SignatureAlgorithms   plugin.TValue[[]any]
 	PqcKeyExchangeEnabled plugin.TValue[bool]
 	Protocols             plugin.TValue[[]any]
 	Ciphers               plugin.TValue[[]any]
@@ -80663,6 +80671,12 @@ func (c *mqlWindowsSchannel) GetCipherSuites() *plugin.TValue[[]any] {
 func (c *mqlWindowsSchannel) GetEllipticCurves() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.EllipticCurves, func() ([]any, error) {
 		return c.ellipticCurves()
+	})
+}
+
+func (c *mqlWindowsSchannel) GetSignatureAlgorithms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SignatureAlgorithms, func() ([]any, error) {
+		return c.signatureAlgorithms()
 	})
 }
 

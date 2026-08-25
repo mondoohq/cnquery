@@ -343,3 +343,54 @@ func TestMergeSchannelNames(t *testing.T) {
 }
 
 func boolPtr(v bool) *bool { return &v }
+
+// TestSchannelLocalSslStoreSources pins which subkey and which value name backs
+// each of the three effective lists. The local SSL store keys one subkey per
+// NCRYPT interface and both interfaces spell their own list `Functions`, so
+// reading `Functions` under 00010003 for the supported groups returns the
+// signature algorithms instead: a plausible, non-empty, entirely wrong answer
+// that no error reports. Real hosts confirm the split, with the subkey naming
+// itself in its default value: 00010002 is NCRYPT_SCHANNEL_INTERFACE and
+// 00010003 is NCRYPT_SCHANNEL_SIGNATURE_INTERFACE on Windows Server 2016, 2019,
+// and 2022 alike.
+func TestSchannelLocalSslStoreSources(t *testing.T) {
+	const store = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL`
+
+	assert.Equal(t, store+`\00010002`, schannelCipherSuitesPath)
+	assert.Equal(t, store+`\00010003`, schannelSignatureAlgoPath)
+	assert.Equal(t, "Functions", schannelFunctionsValue)
+	assert.Equal(t, "EccCurves", schannelEccCurvesValue)
+
+	// the supported groups come from the cipher-suite interface, not the
+	// signature interface
+	assert.NotEqual(t, schannelSignatureAlgoPath, schannelCipherSuitesPath)
+	assert.NotEqual(t, schannelFunctionsValue, schannelEccCurvesValue)
+}
+
+// TestPqcKeyExchangeEnabledOnSignatureAlgorithms feeds the real
+// signature-algorithm lists captured from Windows Server 2016, 2019, and 2022
+// through the ML-KEM detector. None of them can ever contain a key-exchange
+// group, so a pqcKeyExchangeEnabled built on that list is pinned to false on
+// every host, including one where post-quantum key exchange is switched on.
+func TestPqcKeyExchangeEnabledOnSignatureAlgorithms(t *testing.T) {
+	// ...\SSL\00010003 Functions, verbatim
+	ws2016 := []string{
+		"RSA/SHA256", "RSA/SHA384", "RSA/SHA1", "ECDSA/SHA256",
+		"ECDSA/SHA384", "ECDSA/SHA1", "DSA/SHA1", "RSA/SHA512", "ECDSA/SHA512",
+	}
+	ws2022 := []string{
+		"RSAE-PSS/SHA256", "RSAE-PSS/SHA384", "RSAE-PSS/SHA512",
+		"RSA/SHA256", "RSA/SHA384", "RSA/SHA1", "ECDSA/SHA256",
+		"ECDSA/SHA384", "ECDSA/SHA1", "DSA/SHA1", "RSA/SHA512", "ECDSA/SHA512",
+	}
+	assert.False(t, pqcKeyExchangeEnabled(ws2016))
+	assert.False(t, pqcKeyExchangeEnabled(ws2022))
+
+	// ...\SSL\00010002 EccCurves, verbatim, on the same hosts
+	stockGroups := []string{"curve25519", "NistP256", "NistP384"}
+	assert.False(t, pqcKeyExchangeEnabled(stockGroups))
+
+	// the same list once a post-quantum group is enabled
+	withMlKem := append([]string{"secp256r1_mlkem768"}, stockGroups...)
+	assert.True(t, pqcKeyExchangeEnabled(withMlKem))
+}

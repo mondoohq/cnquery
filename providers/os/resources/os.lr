@@ -12057,15 +12057,17 @@ private windows.lsa.secureChannel {
 
 // Windows Schannel TLS configuration
 //
-// Schannel (Secure Channel) TLS cipher-suite and supported-group
-// configuration that backs the Microsoft TLS/SSL stack, read from the effective
-// local Schannel store under
+// Schannel (Secure Channel) TLS cipher-suite, supported-group, and
+// signature-algorithm configuration that backs the Microsoft TLS/SSL stack, read
+// from the effective local Schannel store under
 // HKLM\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL.
-// The ordered cipher-suite list is the REG_MULTI_SZ `Functions` value under the
-// 00010002 subkey and the ordered elliptic-curve / supported-group list is the
-// REG_MULTI_SZ `Functions` value under the 00010003 subkey. On Windows 11 24H2
-// and Windows Server 2025 the supported-group list is where post-quantum ML-KEM
-// key-exchange groups (for example secp256r1_mlkem768) appear once enabled.
+// The 00010002 subkey holds the ordered cipher-suite list in its REG_MULTI_SZ
+// `Functions` value and the ordered elliptic-curve / supported-group list in its
+// REG_MULTI_SZ `EccCurves` value, the same list `Get-TlsEccCurve` reports. The
+// 00010003 subkey holds the ordered signature-algorithm list in its REG_MULTI_SZ
+// `Functions` value. On Windows 11 24H2 and Windows Server 2025 the
+// supported-group list is where post-quantum ML-KEM key-exchange groups (for
+// example secp256r1_mlkem768) appear once enabled.
 //
 // When a key or value is absent (the common case on older Windows, on systems
 // using the default order, and on non-Windows platforms) the list accessors
@@ -12088,8 +12090,21 @@ private windows.lsa.secureChannel {
 windows.schannel {
   // Ordered TLS cipher suite list (REG_MULTI_SZ Functions under ...\SSL\00010002)
   cipherSuites() []string
-  // Ordered TLS elliptic-curve / supported-group list (REG_MULTI_SZ Functions under ...\SSL\00010003)
+  // Ordered TLS elliptic-curve / supported-group list (REG_MULTI_SZ EccCurves under ...\SSL\00010002)
+  //
+  // The key-exchange groups Schannel offers, in preference order, for example
+  // curve25519, NistP256, and NistP384 on a stock Windows Server. This is the
+  // list `Get-TlsEccCurve` reports and the list post-quantum ML-KEM groups join
+  // once enabled. Signature algorithms are a separate list, exposed as
+  // signatureAlgorithms.
   ellipticCurves() []string
+  // Ordered TLS signature algorithm list (REG_MULTI_SZ Functions under ...\SSL\00010003)
+  //
+  // The certificate and handshake signature algorithms Schannel offers, in
+  // preference order, spelled key type and hash separated by a slash, for
+  // example RSA/SHA256, ECDSA/SHA384, and the legacy DSA/SHA1 and RSA/SHA1.
+  // Windows Server 2022 and later also list the RSAE-PSS entries.
+  signatureAlgorithms() []string
   // Whether a post-quantum ML-KEM key-exchange group is enabled (any ellipticCurves entry contains "MLKEM", case-insensitive)
   pqcKeyExchangeEnabled() bool
   // Per-protocol client and server overrides (SCHANNEL\Protocols)
