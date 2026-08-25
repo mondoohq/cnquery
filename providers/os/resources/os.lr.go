@@ -79735,7 +79735,7 @@ func (c *mqlWindowsRdp) GetCloudClipboardIntegrationDisabled() *plugin.TValue[bo
 type mqlWindowsWinrm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsWinrmInternal it will be used here
+	mqlWindowsWinrmInternal
 	Client           plugin.TValue[*mqlWindowsWinrmClient]
 	Service          plugin.TValue[*mqlWindowsWinrmService]
 	ServiceStartMode plugin.TValue[int64]
@@ -79951,15 +79951,21 @@ func (c *mqlWindowsWinrmClient) MqlID() string {
 }
 
 func (c *mqlWindowsWinrmClient) GetAllowBasic() *plugin.TValue[bool] {
-	return &c.AllowBasic
+	return plugin.GetOrCompute[bool](&c.AllowBasic, func() (bool, error) {
+		return c.allowBasic()
+	})
 }
 
 func (c *mqlWindowsWinrmClient) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
-	return &c.AllowUnencryptedTraffic
+	return plugin.GetOrCompute[bool](&c.AllowUnencryptedTraffic, func() (bool, error) {
+		return c.allowUnencryptedTraffic()
+	})
 }
 
 func (c *mqlWindowsWinrmClient) GetAllowDigest() *plugin.TValue[bool] {
-	return &c.AllowDigest
+	return plugin.GetOrCompute[bool](&c.AllowDigest, func() (bool, error) {
+		return c.allowDigest()
+	})
 }
 
 func (c *mqlWindowsWinrmClient) GetTrustedHosts() *plugin.TValue[string] {
@@ -79972,7 +79978,7 @@ func (c *mqlWindowsWinrmClient) GetTrustedHosts() *plugin.TValue[string] {
 type mqlWindowsWinrmService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlWindowsWinrmServiceInternal
+	// optional: if you define mqlWindowsWinrmServiceInternal it will be used here
 	AllowBasic              plugin.TValue[bool]
 	AllowUnencryptedTraffic plugin.TValue[bool]
 	DisableRunAs            plugin.TValue[bool]
@@ -80020,11 +80026,15 @@ func (c *mqlWindowsWinrmService) MqlID() string {
 }
 
 func (c *mqlWindowsWinrmService) GetAllowBasic() *plugin.TValue[bool] {
-	return &c.AllowBasic
+	return plugin.GetOrCompute[bool](&c.AllowBasic, func() (bool, error) {
+		return c.allowBasic()
+	})
 }
 
 func (c *mqlWindowsWinrmService) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
-	return &c.AllowUnencryptedTraffic
+	return plugin.GetOrCompute[bool](&c.AllowUnencryptedTraffic, func() (bool, error) {
+		return c.allowUnencryptedTraffic()
+	})
 }
 
 func (c *mqlWindowsWinrmService) GetDisableRunAs() *plugin.TValue[bool] {
@@ -80036,7 +80046,9 @@ func (c *mqlWindowsWinrmService) GetAllowAutoConfig() *plugin.TValue[bool] {
 }
 
 func (c *mqlWindowsWinrmService) GetAllowRemoteShellAccess() *plugin.TValue[bool] {
-	return &c.AllowRemoteShellAccess
+	return plugin.GetOrCompute[bool](&c.AllowRemoteShellAccess, func() (bool, error) {
+		return c.allowRemoteShellAccess()
+	})
 }
 
 func (c *mqlWindowsWinrmService) GetIpv4Filter() *plugin.TValue[string] {
