@@ -183,6 +183,8 @@ func TestScheduleTime(t *testing.T) {
 		{"null", `null`, ""},
 		{"empty", ``, ""},
 		{"unrecognized string is preserved", `"whenever"`, "whenever"},
+		{"trailing number with no unit is not a duration", `"PT2"`, "PT2"},
+		{"no unit at all is not a duration", `"PTX"`, "PTX"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

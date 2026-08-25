@@ -239,6 +239,8 @@ func ScheduleTime(raw json.RawMessage) string {
 			Ticks *int64 `json:"Ticks"`
 		}
 		if err := json.Unmarshal(raw, &ts); err == nil && ts.Ticks != nil {
+			// A .NET tick is 100 nanoseconds, and time.Duration counts
+			// nanoseconds, so the tick count scales by 100.
 			return formatTimeOfDay(time.Duration(*ts.Ticks) * 100)
 		}
 		return s
@@ -280,20 +282,27 @@ func parseISODuration(v string) (time.Duration, bool) {
 		return 0, false
 	}
 	var total time.Duration
-	num := ""
-	for _, r := range rest {
-		if (r >= '0' && r <= '9') || r == '.' {
-			num += string(r)
+	// start indexes the first byte of the number currently being read. Slicing
+	// rest keeps the digits where they already are instead of rebuilding them a
+	// character at a time, which would allocate once per digit on every
+	// schedule field of every scan.
+	start := -1
+	for i := 0; i < len(rest); i++ {
+		c := rest[i]
+		if (c >= '0' && c <= '9') || c == '.' {
+			if start < 0 {
+				start = i
+			}
 			continue
 		}
-		if num == "" {
+		if start < 0 {
 			return 0, false
 		}
-		f, err := strconv.ParseFloat(num, 64)
+		f, err := strconv.ParseFloat(rest[start:i], 64)
 		if err != nil {
 			return 0, false
 		}
-		switch r {
+		switch c {
 		case 'H':
 			total += time.Duration(f * float64(time.Hour))
 		case 'M':
@@ -303,9 +312,10 @@ func parseISODuration(v string) (time.Duration, bool) {
 		default:
 			return 0, false
 		}
-		num = ""
+		start = -1
 	}
-	if num != "" {
+	// A trailing number with no unit, for example "PT2".
+	if start >= 0 {
 		return 0, false
 	}
 	return total, true
