@@ -599,8 +599,8 @@ github.com/hashicorp/serf v0.9.5/go.mod h1:UWDWwZeL5cuWDJdl0C6wrvrUwEqtQ4ZKBKKEN
 github.com/hashicorp/serf v0.9.6/go.mod h1:TXZNMjZQijwlDvp+r0b63xZ45H7JmCmgg4gpTwn9UV4=
 github.com/hashicorp/yamux v0.1.2 h1:XtB8kyFOyHXYVFnwT5C3+Bdo8gArse7j2AQ0DA0Uey8=
 github.com/hashicorp/yamux v0.1.2/go.mod h1:C+zze2n6e/7wshOZep2A70/aQU6QBRWJO/G6FT1wIns=
-github.com/hnakamur/go-sshd v0.0.0-20170228152141-dccc3399d26a h1:p8dbHRhXhPSwVZqk76FguLzyeCZuvCqFlaYSqXOzbyI=
-github.com/hnakamur/go-sshd v0.0.0-20170228152141-dccc3399d26a/go.mod h1:R+6I3EdoV6ofbNqJsArhT9+Pnu57DxtmDJAQfxkCbGo=
+github.com/hnakamur/go-sshd v0.2.1 h1:HOvlvBWPjedji3PUuF8xpRHVnYXX3LMfoi2NW8+OxOk=
+github.com/hnakamur/go-sshd v0.2.1/go.mod h1:I9pHzExs6WUoAJyT6awiGD+CW2r0EEoqZ1OFVKUhrZs=
 github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f h1:7LYC+Yfkj3CTRcShK0KOL/w6iTiKyqqBA9a41Wnggw8=
 github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f/go.mod h1:pFlLw2CfqZiIBOx6BuCeRLCrfxBJipTY0nIOF/VbGcI=
 github.com/iancoleman/strcase v0.2.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
@@ -734,8 +734,8 @@ github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3Rllmb
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee h1:W5t00kpgFdJifH4BDsTlE89Zl93FEloxaWZfGcifgq8=
 github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
-github.com/mondoohq/go-scp v1.0.3 h1:98gJ+/uy6OZBYAC9PTzHaJjtzFOLt1hCk/r4Qhr0iF0=
-github.com/mondoohq/go-scp v1.0.3/go.mod h1:oQDkIsKnHiZjsXTwwJkZZVKHDYRgBSznicgFEEq7pdQ=
+github.com/mondoohq/go-scp v1.0.4 h1:DtcpMNvBw7erV8Xf66Q1qruNlciyCwxIHe5h1C/I544=
+github.com/mondoohq/go-scp v1.0.4/go.mod h1:BJpx7G2DFyf9Ujof36llkm8aLKkCRUmLHr/NAQvSr58=
 github.com/muesli/termenv v0.16.0 h1:S5AlUN9dENB57rsbnkPyfdGuWIlkmzJjbFf0Tf5FWUc=
 github.com/muesli/termenv v0.16.0/go.mod h1:ZRfOIKPFDYQoDFF4Olj7/QJbW60Ol/kL1pU3VfY/Cnk=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=

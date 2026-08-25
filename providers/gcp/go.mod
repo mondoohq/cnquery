@@ -305,4 +305,4 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/hnakamur/go-scp => github.com/mondoohq/go-scp v1.0.3
+replace github.com/hnakamur/go-scp => github.com/mondoohq/go-scp v1.0.4
