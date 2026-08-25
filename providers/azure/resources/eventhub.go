@@ -74,7 +74,7 @@ func eventHubAuthorizationRulesToMql(runtime *plugin.Runtime, rules []*armeventh
 				rights = append(rights, string(*right))
 			}
 		}
-		mqlRule, err := CreateResource(runtime, "azure.subscription.eventHubService.authorizationRule", map[string]*llx.RawData{
+		mqlRule, err := CreateResource(runtime, ResourceAzureSubscriptionEventHubServiceAuthorizationRule, map[string]*llx.RawData{
 			"id":     llx.StringDataPtr(r.ID),
 			"name":   llx.StringDataPtr(r.Name),
 			"rights": llx.ArrayData(rights, types.String),
@@ -203,7 +203,7 @@ func createEventHubNamespace(runtime *plugin.Runtime, ns *armeventhub.EHNamespac
 		return nil, err
 	}
 
-	mqlNs, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace", rawData)
+	mqlNs, err := CreateResource(runtime, ResourceAzureSubscriptionEventHubServiceNamespace, rawData)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +342,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error
 
 // createEventHub builds the MQL resource for one event hub within a namespace.
 func createEventHub(runtime *plugin.Runtime, eh *armeventhub.Eventhub) (plugin.Resource, error) {
-	mqlEh, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace.eventHub",
+	mqlEh, err := CreateResource(runtime, ResourceAzureSubscriptionEventHubServiceNamespaceEventHub,
 		createEventHubRawData(eh))
 	if err != nil {
 		return nil, err
@@ -428,7 +428,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceEventHub) consumerGroups() 
 // createEventHubConsumerGroup builds the MQL resource for one consumer group of
 // an event hub.
 func createEventHubConsumerGroup(runtime *plugin.Runtime, cg *armeventhub.ConsumerGroup) (plugin.Resource, error) {
-	mqlCg, err := CreateResource(runtime, "azure.subscription.eventHubService.namespace.eventHub.consumerGroup",
+	mqlCg, err := CreateResource(runtime, ResourceAzureSubscriptionEventHubServiceNamespaceEventHubConsumerGroup,
 		createEventHubConsumerGroupRawData(cg))
 	if err != nil {
 		return nil, err
@@ -516,7 +516,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 			subnetID = *r.Subnet.ID
 		}
 		id := fmt.Sprintf("%s/networkRules/virtualNetworkRules/%d", a.Id.Data, i)
-		mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule",
+		mqlRule, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule,
 			map[string]*llx.RawData{
 				"__id":                             llx.StringData(id),
 				"ignoreMissingVnetServiceEndpoint": llx.BoolData(ignore),
@@ -528,13 +528,13 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespace) networkRules() (*mqlAzure
 		vnetRules = append(vnetRules, mqlRule)
 	}
 
-	res, err := CreateResource(a.MqlRuntime, "azure.subscription.eventHubService.namespace.networkRules", map[string]*llx.RawData{
+	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRules, map[string]*llx.RawData{
 		"__id":                        llx.StringData(a.Id.Data + "/networkRules"),
 		"defaultAction":               llx.StringData(defaultAction),
 		"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 		"trustedServiceAccessEnabled": llx.BoolData(trustedServiceAccess),
 		"ipRules":                     llx.ArrayData(ipRules, types.Dict),
-		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource("azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule")),
+		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource(ResourceAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkRule)),
 	})
 	if err != nil {
 		return nil, err
@@ -586,7 +586,7 @@ func (a *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRulesVirtualNetworkR
 		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+	res, err := NewResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceSubnet,
 		map[string]*llx.RawData{"id": llx.StringData(a.cacheSubnetID)})
 	if err != nil {
 		return nil, err
