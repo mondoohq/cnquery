@@ -5,10 +5,12 @@ package resources
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
 	"go.mondoo.com/ranger-rpc/codes"
 	"go.mondoo.com/ranger-rpc/status"
@@ -37,9 +39,11 @@ const (
 // The Kerberos supported encryption types are written by the "Network
 // security: Configure encryption types allowed for Kerberos" policy to the
 // Policies hive, which is the location Windows honors. The identically named
-// value under Lsa\Kerberos\Parameters is the legacy location: Windows Server
-// 2025 no longer reads it, but it is still effective on earlier releases, so it
-// is consulted as a fallback when the policy value is absent.
+// value under Lsa\Kerberos\Parameters is the legacy location: it is still
+// effective up to Windows Server 2022, so it is consulted as a fallback when
+// the policy value is absent, but Windows Server 2025 (build 26100) no longer
+// reads it at all, so on that release and later the fallback is skipped and an
+// absent policy value resolves to null.
 //
 // The two LDAP server settings live under the NTDS service, which is installed
 // only on a domain controller. On a member server or a standalone host the key
@@ -342,15 +346,28 @@ type lsaKerberosValues struct {
 	AllowsAes256             *bool
 }
 
+// kerberosLegacyEtypeLastBuild is the highest Windows build that still honors
+// the legacy Lsa\Kerberos\Parameters\SupportedEncryptionTypes value. Windows
+// Server 2025 is build 26100 and no longer reads it, so anything from that
+// build on must not fall back to it.
+const kerberosLegacyEtypeLastBuild = 26100
+
 // computeLsaKerberos extracts the Kerberos supported encryption types and
 // decodes the well-known bits. The policy hive wins over the legacy
 // Lsa\Kerberos\Parameters location, matching how Windows resolves the setting.
-// When neither location carries the value every field stays null: an absent
+//
+// legacyHonored says whether this release still reads the legacy location.
+// When it does not, a value left there by a pre-2025 hardening script is inert:
+// reporting it would describe a configuration Windows is not applying, and
+// would do so in the unsafe direction, since a leftover AES-only mask reads as
+// "RC4 is not allowed" on a host whose built-in default set does allow it.
+//
+// When no location carries an honored value every field stays null: an absent
 // value means Windows uses its built-in default set, which is not the same as a
 // configured mask of 0. Pure function for unit testing.
-func computeLsaKerberos(policy, legacy map[string]registry.RegistryKeyItem) lsaKerberosValues {
+func computeLsaKerberos(policy, legacy map[string]registry.RegistryKeyItem, legacyHonored bool) lsaKerberosValues {
 	mask := regIntPtr(policy, "SupportedEncryptionTypes")
-	if mask == nil {
+	if mask == nil && legacyHonored {
 		mask = regIntPtr(legacy, "SupportedEncryptionTypes")
 	}
 	if mask == nil {
@@ -433,7 +450,7 @@ func (r *mqlWindowsLsa) populateKerberos() error {
 	if err != nil {
 		return err
 	}
-	v := computeLsaKerberos(policy, legacy)
+	v := computeLsaKerberos(policy, legacy, r.legacyKerberosEtypeHonored())
 
 	r.KerberosSupportedEncryptionTypes = intFieldPtr(v.SupportedEncryptionTypes)
 	r.KerberosAllowsAes128 = boolFieldPtr(v.AllowsAes128)
@@ -544,4 +561,25 @@ func initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.R
 		return nil, nil, errors.New("could not read the Netlogon secure-channel settings from windows.lsa")
 	}
 	return nil, sc.Data, nil
+}
+
+// legacyKerberosEtypeHonored reports whether this Windows release still reads
+// Lsa\Kerberos\Parameters\SupportedEncryptionTypes. Windows reports its build
+// as the platform version, so the test is a numeric comparison against the
+// Windows Server 2025 build. An unreadable or unparseable version keeps the
+// fallback, which is the behavior every release up to Windows Server 2022 needs.
+func (r *mqlWindowsLsa) legacyKerberosEtypeHonored() bool {
+	conn, ok := r.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		return true
+	}
+	asset := conn.Asset()
+	if asset == nil || asset.Platform == nil {
+		return true
+	}
+	build, err := strconv.Atoi(asset.Platform.Version)
+	if err != nil {
+		return true
+	}
+	return build < kerberosLegacyEtypeLastBuild
 }

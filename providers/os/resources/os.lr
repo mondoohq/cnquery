@@ -11915,12 +11915,16 @@ windows.lsa {
   // set.
   //
   // Read from the policy location
-  // SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters,
-  // falling back to the legacy location Lsa\Kerberos\Parameters that Windows
-  // Server 2025 no longer honors. Null when neither location carries the value,
-  // in which case Windows uses its built-in default set rather than a
-  // configured 0. The kerberosAllows fields decode the well-known bits, since
-  // MQL has no bitwise operators to test them with.
+  // SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters.
+  // Up to Windows Server 2022 the legacy location Lsa\Kerberos\Parameters is
+  // read as a fallback when the policy value is absent. Windows Server 2025
+  // (build 26100) no longer honors that location at all, so on that release and
+  // later it is not consulted and a value left there by an older hardening
+  // script does not appear here: it is inert on the host, and reporting it
+  // would describe a configuration Windows is not applying. Null when no
+  // honored location carries the value, in which case Windows uses its built-in
+  // default set rather than a configured 0. The kerberosAllows fields decode
+  // the well-known bits, since MQL has no bitwise operators to test them with.
   kerberosSupportedEncryptionTypes() int
   // LDAP client signing requirement (Services\LDAP\LDAPClientIntegrity)
   //
