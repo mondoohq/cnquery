@@ -93,8 +93,6 @@ func TestNoNewDottedPathHusks(t *testing.T) {
 		"windows.exploitProtection.dep":   true,
 		"windows.exploitProtection.heap":  true,
 		"windows.exploitProtection.sehop": true,
-		"windows.lsa.ntlm":                true,
-		"windows.lsa.secureChannel":       true,
 		"windows.scheduledTask.principal": true,
 		"windows.scheduledTask.settings":  true,
 		"windows.smartScreen":             true,

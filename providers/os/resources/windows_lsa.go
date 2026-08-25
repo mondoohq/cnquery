@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"errors"
 	"strings"
 
 	"go.mondoo.com/mql/llx"
@@ -494,4 +495,53 @@ func stringFieldPtr(v *string) plugin.TValue[string] {
 		return plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	}
 	return plugin.TValue[string]{Data: *v, State: plugin.StateIsSet}
+}
+
+// initWindowsLsaNtlm resolves a bare windows.lsa.ntlm to the one the parent
+// builds. The resource shares its name with the field path that reaches it, so
+// `windows.lsa.ntlm.useLogonCredential` creates it directly rather than through
+// windows.lsa. Its fields are plain schema fields with no accessor of their own,
+// so without this the dotted form returned null for every field (and logged
+// "provider returned no data and no error for a field") while the block form
+// `windows.lsa { ntlm { useLogonCredential } }` returned the real values.
+func initWindowsLsaNtlm(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	// the parent populates every field through CreateResource, which skips
+	// this init; only a bare creation reaches here
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	o, err := CreateResource(runtime, "windows.lsa", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	ntlm := o.(*mqlWindowsLsa).GetNtlm()
+	if ntlm.Error != nil {
+		return nil, nil, ntlm.Error
+	}
+	if ntlm.Data == nil {
+		return nil, nil, errors.New("could not read the NTLM settings from windows.lsa")
+	}
+	return nil, ntlm.Data, nil
+}
+
+// initWindowsLsaSecureChannel resolves a bare windows.lsa.secureChannel to the
+// one the parent builds, for the same reason as initWindowsLsaNtlm.
+func initWindowsLsaSecureChannel(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if len(args) > 0 {
+		return args, nil, nil
+	}
+
+	o, err := CreateResource(runtime, "windows.lsa", nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	sc := o.(*mqlWindowsLsa).GetSecureChannel()
+	if sc.Error != nil {
+		return nil, nil, sc.Error
+	}
+	if sc.Data == nil {
+		return nil, nil, errors.New("could not read the Netlogon secure-channel settings from windows.lsa")
+	}
+	return nil, sc.Data, nil
 }
