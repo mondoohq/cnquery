@@ -321,15 +321,10 @@ type ResourceInfo struct {
 	// Note: Please do not use this field, it is only temporary and will be
 	// removed in the future once binding resources are mandatory for all
 	// executions.
-	Others   []*ResourceInfo `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
-	Maturity string          `protobuf:"bytes,32,opt,name=maturity,proto3" json:"maturity,omitempty"`
-	// DEPRECATED: remove in v14, not used anymore as of v13.
-	// We now use min_provider_version to show what providers we require.
-	//
-	// Deprecated: Marked as deprecated in resources.proto.
-	MinMondooVersion string `protobuf:"bytes,25,opt,name=min_mondoo_version,json=minMondooVersion,proto3" json:"min_mondoo_version,omitempty"` // ^^
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	Others        []*ResourceInfo `protobuf:"bytes,29,rep,name=others,proto3" json:"others,omitempty"`
+	Maturity      string          `protobuf:"bytes,32,opt,name=maturity,proto3" json:"maturity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ResourceInfo) Reset() {
@@ -467,14 +462,6 @@ func (x *ResourceInfo) GetMaturity() string {
 	return ""
 }
 
-// Deprecated: Marked as deprecated in resources.proto.
-func (x *ResourceInfo) GetMinMondooVersion() string {
-	if x != nil {
-		return x.MinMondooVersion
-	}
-	return ""
-}
-
 type Field struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Name               string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -486,14 +473,9 @@ type Field struct {
 	IsPrivate          bool                   `protobuf:"varint,22,opt,name=is_private,json=isPrivate,proto3" json:"is_private,omitempty"`
 	MinProviderVersion string                 `protobuf:"bytes,30,opt,name=min_provider_version,json=minProviderVersion,proto3" json:"min_provider_version,omitempty"`
 	Provider           string                 `protobuf:"bytes,27,opt,name=provider,proto3" json:"provider,omitempty"`
-	// DEPRECATED: remove in v14, not used anymore as of v13.
-	// We now use min_provider_version to show what providers we require.
-	//
-	// Deprecated: Marked as deprecated in resources.proto.
-	MinMondooVersion   string `protobuf:"bytes,23,opt,name=min_mondoo_version,json=minMondooVersion,proto3" json:"min_mondoo_version,omitempty"`
-	IsImplicitResource bool   `protobuf:"varint,24,opt,name=is_implicit_resource,json=isImplicitResource,proto3" json:"is_implicit_resource,omitempty"`
-	IsEmbedded         bool   `protobuf:"varint,25,opt,name=is_embedded,json=isEmbedded,proto3" json:"is_embedded,omitempty"`
-	Maturity           string `protobuf:"bytes,26,opt,name=maturity,proto3" json:"maturity,omitempty"`
+	IsImplicitResource bool                   `protobuf:"varint,24,opt,name=is_implicit_resource,json=isImplicitResource,proto3" json:"is_implicit_resource,omitempty"`
+	IsEmbedded         bool                   `protobuf:"varint,25,opt,name=is_embedded,json=isEmbedded,proto3" json:"is_embedded,omitempty"`
+	Maturity           string                 `protobuf:"bytes,26,opt,name=maturity,proto3" json:"maturity,omitempty"`
 	// This field contains references to other providers with the same
 	// resource/field.
 	// Note: Please do not use this field, it is only temporary and will be
@@ -597,14 +579,6 @@ func (x *Field) GetProvider() string {
 	return ""
 }
 
-// Deprecated: Marked as deprecated in resources.proto.
-func (x *Field) GetMinMondooVersion() string {
-	if x != nil {
-		return x.MinMondooVersion
-	}
-	return ""
-}
-
 func (x *Field) GetIsImplicitResource() bool {
 	if x != nil {
 		return x.IsImplicitResource
@@ -659,7 +633,7 @@ const file_resources_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1a\n" +
 	"\boptional\x18\x03 \x01(\bR\boptional\"6\n" +
 	"\x04Init\x12.\n" +
-	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\x84\x05\n" +
+	"\x04args\x18\x01 \x03(\v2\x1a.mondoo.resources.TypedArgR\x04args\"\xec\x04\n" +
 	"\fResourceInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12B\n" +
@@ -675,11 +649,10 @@ const file_resources_proto_rawDesc = "" +
 	"\acontext\x18\x1e \x01(\tR\acontext\x12\x1a\n" +
 	"\bprovider\x18\x1b \x01(\tR\bprovider\x126\n" +
 	"\x06others\x18\x1d \x03(\v2\x1e.mondoo.resources.ResourceInfoR\x06others\x12\x1a\n" +
-	"\bmaturity\x18  \x01(\tR\bmaturity\x120\n" +
-	"\x12min_mondoo_version\x18\x19 \x01(\tB\x02\x18\x01R\x10minMondooVersion\x1aR\n" +
+	"\bmaturity\x18  \x01(\tR\bmaturity\x1aR\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01\"\xcf\x03\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.mondoo.resources.FieldR\x05value:\x028\x01J\x04\b\x19\x10\x1aR\x12min_mondoo_version\"\xb7\x03\n" +
 	"\x05Field\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12!\n" +
@@ -691,12 +664,11 @@ const file_resources_proto_rawDesc = "" +
 	"is_private\x18\x16 \x01(\bR\tisPrivate\x120\n" +
 	"\x14min_provider_version\x18\x1e \x01(\tR\x12minProviderVersion\x12\x1a\n" +
 	"\bprovider\x18\x1b \x01(\tR\bprovider\x120\n" +
-	"\x12min_mondoo_version\x18\x17 \x01(\tB\x02\x18\x01R\x10minMondooVersion\x120\n" +
 	"\x14is_implicit_resource\x18\x18 \x01(\bR\x12isImplicitResource\x12\x1f\n" +
 	"\vis_embedded\x18\x19 \x01(\bR\n" +
 	"isEmbedded\x12\x1a\n" +
 	"\bmaturity\x18\x1a \x01(\tR\bmaturity\x12/\n" +
-	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06othersB.Z,go.mondoo.com/mql/providers-sdk/v1/resourcesb\x06proto3"
+	"\x06others\x18\x1d \x03(\v2\x17.mondoo.resources.FieldR\x06othersJ\x04\b\x17\x10\x18R\x12min_mondoo_versionB.Z,go.mondoo.com/mql/providers-sdk/v1/resourcesb\x06proto3"
 
 var (
 	file_resources_proto_rawDescOnce sync.Once
