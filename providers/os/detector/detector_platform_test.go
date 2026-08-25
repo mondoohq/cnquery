@@ -1054,7 +1054,35 @@ func TestMacOSsDetector(t *testing.T) {
 	assert.Equal(t, "macos", di.Name, "os name should be identified")
 	assert.Equal(t, "Mac OS X", di.Title, "os title should be identified")
 	assert.Equal(t, "10.14.5", di.Version, "os version should be identified")
+	assert.Equal(t, "18F132", di.Build, "os build should be identified")
 	assert.Equal(t, "x86_64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"darwin", "bsd", "unix", "os"}, di.Family)
+}
+
+// A darwin system whose system version property list is unreadable is still
+// macOS: the details come from sw_vers instead of the property list.
+func TestMacOSWithoutSystemVersionPlistDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-macos-no-plist.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "macos", di.Name, "os name should be identified")
+	assert.Equal(t, "macOS", di.Title, "os title should be identified")
+	assert.Equal(t, "15.5", di.Version, "os version should be identified")
+	assert.Equal(t, "24F74", di.Build, "os build should be identified")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"darwin", "bsd", "unix", "os"}, di.Family)
+}
+
+// A darwin system that reports neither sw_vers nor a system version property
+// list is reported as macOS without a version, never as the kernel name.
+func TestMacOSWithoutSwVersDetector(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-darwin-bare.toml")
+	assert.Nil(t, err, "was able to create the provider")
+
+	assert.Equal(t, "macos", di.Name, "os name should be identified")
+	assert.Equal(t, "macOS", di.Title, "os title should be identified")
+	assert.Empty(t, di.Version, "os version is unknown")
+	assert.Equal(t, "arm64", di.Arch, "os arch should be identified")
 	assert.Equal(t, []string{"darwin", "bsd", "unix", "os"}, di.Family)
 }
 

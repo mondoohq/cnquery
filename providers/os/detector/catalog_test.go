@@ -40,4 +40,8 @@ func TestCatalogPlatforms(t *testing.T) {
 	}
 	require.NotNil(t, ubuntu, "ubuntu should be a catalogued platform")
 	assert.Equal(t, []string{"debian", "linux", "unix", "os"}, ubuntu.fam)
+
+	// darwin is a kernel and a family, never a platform of its own
+	assert.True(t, byName["macos"], "macos should be a catalogued platform")
+	assert.False(t, byName["darwin"], "darwin should not be a catalogued platform")
 }

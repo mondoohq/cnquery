@@ -25,38 +25,48 @@ var macOS = &PlatformResolver{
 	Name:     "macos",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		// when we reach here, we know it is darwin
+		// When we reach here, we know it is darwin, and macOS is the only
+		// operating system built on it that mql can connect to. Darwin is the
+		// kernel, not a product, so the system is reported as macOS even when
+		// neither sw_vers nor the system version property list can be read.
+		pf.Name = "macos"
+		if pf.Title == "" || strings.EqualFold(pf.Title, "darwin") {
+			// uname reports the kernel name, which is not the product name
+			pf.Title = "macOS"
+		}
+
+		// the property list carries the build version, which sw_vers does not
+		// report, so prefer it whenever it is readable
 		// check xml /System/Library/CoreServices/SystemVersion.plist
 		f, err := conn.FileSystem().Open("/System/Library/CoreServices/SystemVersion.plist")
 		if err != nil {
-			return false, nil
+			log.Debug().Err(err).Msg("platform> could not read the macOS system version property list")
+			return true, nil
 		}
 		defer f.Close()
 
 		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
-			return false, nil
+			log.Debug().Err(err).Msg("platform> macOS system version property list is empty")
+			return true, nil
 		}
 
 		sv, err := ParseMacOSSystemVersion(string(c))
-		if err != nil || len(c) == 0 {
-			return false, nil
+		if err != nil {
+			log.Debug().Err(err).Msg("platform> could not parse the macOS system version property list")
+			return true, nil
 		}
 
-		pf.Name = "macos"
-		pf.Title = sv["ProductName"]
-		pf.Version = sv["ProductVersion"]
-		pf.Build = sv["ProductBuildVersion"]
+		if len(sv["ProductName"]) > 0 {
+			pf.Title = sv["ProductName"]
+		}
+		if len(sv["ProductVersion"]) > 0 {
+			pf.Version = sv["ProductVersion"]
+		}
+		if len(sv["ProductBuildVersion"]) > 0 {
+			pf.Build = sv["ProductBuildVersion"]
+		}
 
-		return true, nil
-	},
-}
-
-// is part of the darwin platform and fallback for non-known darwin systems
-var otherDarwin = &PlatformResolver{
-	Name:     "darwin",
-	IsFamily: false,
-	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
 }
@@ -1233,14 +1243,6 @@ var windows = &PlatformResolver{
 	},
 }
 
-var slugRe = regexp.MustCompile("[^a-z0-9]+")
-
-func slugifyDarwin(s string) string {
-	s = strings.ToLower(s)
-	s = slugRe.ReplaceAllString(s, "_")
-	return strings.Trim(s, "_")
-}
-
 var (
 	// characters that are dropped outright, so "FRITZ!OS" slugs to "fritzos"
 	// instead of gaining a separator where the punctuation used to be
@@ -1264,7 +1266,7 @@ func slugifyPlatformName(s string) string {
 var darwinFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_DARWIN,
 	IsFamily: true,
-	Children: []*PlatformResolver{macOS, otherDarwin},
+	Children: []*PlatformResolver{macOS},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if !strings.Contains(strings.ToLower(pf.Name), "darwin") {
 			return false, nil
@@ -1274,22 +1276,20 @@ var darwinFamily = &PlatformResolver{
 		// read information from /usr/bin/sw_vers
 		osrd := NewOSReleaseDetector(conn)
 		dsv, err := osrd.darwin_swversion()
-		// ignore dsv config if we got an error
-		if err == nil {
-			if len(dsv["ProductName"]) > 0 {
-				// name needs to be slugged
-				pf.Name = slugifyDarwin(dsv["ProductName"])
-				if pf.Name == "mac_os_x" {
-					pf.Name = "macos"
-				}
-				pf.Title = dsv["ProductName"]
-			}
-			if len(dsv["ProductVersion"]) > 0 {
-				pf.Version = dsv["ProductVersion"]
-			}
-		} else {
-			// TODO: we know its darwin, but without swversion support
-			log.Error().Err(err)
+		if err != nil {
+			// we know it is darwin, the macos resolver reports what it can
+			log.Debug().Err(err).Msg("platform> could not read sw_vers")
+			return true, nil
+		}
+
+		if len(dsv["ProductName"]) > 0 {
+			pf.Title = dsv["ProductName"]
+		}
+		if len(dsv["ProductVersion"]) > 0 {
+			pf.Version = dsv["ProductVersion"]
+		}
+		if len(dsv["BuildVersion"]) > 0 {
+			pf.Build = dsv["BuildVersion"]
 		}
 
 		return true, nil
