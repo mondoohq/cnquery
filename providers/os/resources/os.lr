@@ -13313,10 +13313,13 @@ private windows.dnsServer.settings {
   enableVersionQuery int
   // Whether the server answers over IPv6
   enableIPv6 bool
-  // IP addresses the DNS service is configured to answer on
+  // IP addresses the DNS service answers on
   //
-  // Empty when the server has not been restricted to specific addresses, in
-  // which case it answers on every address in `allIpAddresses`.
+  // A server that has not been restricted to specific addresses reports every
+  // address it is bound to here, so this list is not empty on an unrestricted
+  // server and matches `allIpAddresses` instead. The restriction itself is
+  // therefore visible as this list being a subset of `allIpAddresses`, not as
+  // this list being empty.
   listeningIpAddresses []string
   // All IP addresses present on the host
   allIpAddresses []string
@@ -13428,8 +13431,13 @@ private windows.dnsServer.diagnostics @defaults("eventLogLevel") {
   enableLoggingToFile bool
   // Path of the debug log file, empty when the default path is used
   logFilePath string
-  // Maximum debug log file size in megabytes
-  maxFileSizeMb int
+  // Maximum debug log file size in bytes
+  //
+  // Reported by the DnsServer module as MaxMBFileSize, but the value is a
+  // byte count and not a megabyte count: the Windows default of 500000000 is
+  // 500 MB, and it is written through to the LogFileMaxSize registry value
+  // unchanged. Compare against a size in bytes.
+  maxFileSizeBytes int
   // Whether the debug log wraps rather than stopping when it reaches its size limit
   enableLogFileRollover bool
   // Whether debug log entries are flushed to disk as they are written
