@@ -151,16 +151,13 @@ var manjaro = &PlatformResolver{
 	Name:     "manjaro",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		// Manjaro ARM ships ID=manjaro-arm with ID_LIKE="manjaro arch". It is the
-		// same distribution built for ARM and belongs to the arch family just as
-		// manjaro does. Without it the arch family matched on /etc/arch-release
-		// but no child claimed the platform, so the generic fallback took it and
-		// container images were reported as "scratch". The name is left as the
-		// distribution reports it rather than folded into "manjaro".
-		if pf.Name == "manjaro" || pf.Name == "manjaro-arm" {
+		// Manjaro ARM ships ID=manjaro-arm. It is the same distribution built for
+		// ARM, so it reports as manjaro rather than as a platform of its own.
+		if pf.Name == "manjaro-arm" {
+			pf.Name = "manjaro"
 			return true, nil
 		}
-		return false, nil
+		return pf.Name == "manjaro", nil
 	},
 }
 
@@ -611,6 +608,7 @@ var cloudlinux = &PlatformResolver{
 var centos = &PlatformResolver{
 	Name:     "centos",
 	IsFamily: false,
+	Emits:    []string{"centos", "rockylinux", "almalinux"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// works for centos 5+
 		if strings.Contains(pf.Title, "CentOS") || pf.Name == "centos" {
@@ -684,6 +682,7 @@ var fedora = &PlatformResolver{
 var oracle = &PlatformResolver{
 	Name:     "oracle",
 	IsFamily: false,
+	Emits:    []string{"oraclelinux"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// works for oracle 7+
 		if pf.Name == "ol" {
@@ -816,6 +815,7 @@ var windriver = &PlatformResolver{
 var opensuse = &PlatformResolver{
 	Name:     "opensuse",
 	IsFamily: false,
+	Emits:    []string{"opensuse", "opensuse-leap", "opensuse-tumbleweed"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "opensuse" || pf.Name == "opensuse-leap" || pf.Name == "opensuse-tumbleweed" {
 			return true, nil
@@ -1009,6 +1009,7 @@ var mageia = &PlatformResolver{
 var mxlinux = &PlatformResolver{
 	Name:     "mxlinux",
 	IsFamily: false,
+	Emits:    []string{"mx"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		osrd := NewOSReleaseDetector(conn)
 		lsb, err := osrd.lsbconfig()
@@ -1788,6 +1789,9 @@ var WindowsFamily = &PlatformResolver{
 var unknownOperatingSystem = &PlatformResolver{
 	Name:     "unknown-os",
 	IsFamily: false,
+	// names nothing: it is the terminal fallback and leaves the platform
+	// unnamed, so "unknown-os" is not a platform any asset can report
+	Emits: []string{},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if we reach here, we really do not know the system
 		log.Debug().Msg("platform> we do not know the operating system, please contact support")
