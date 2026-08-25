@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWinRMBool(t *testing.T) {
@@ -130,4 +131,27 @@ func TestComputeWinRMServiceStartMode(t *testing.T) {
 		// loader lower-cases names; the lookup uses the lower-cased "start"
 		assert.Equal(t, int64(2), computeWinRMServiceStartMode(map[string]int64{"start": 2}))
 	})
+}
+
+// windows.winrm.client and windows.winrm.service are each both a field path on
+// windows.winrm and a resource name, which is the condition that makes an Init
+// necessary: the compiler resolves the resource name first, so the dotted form
+// skips the parent's accessor and every field the parent would have populated
+// stays unset.
+func TestWindowsWinrmSingletonsAreReachableByTheirOwnPath(t *testing.T) {
+	for _, path := range []string{
+		"windows.winrm.client",
+		"windows.winrm.service",
+	} {
+		t.Run(path, func(t *testing.T) {
+			_, isField := getDataFields[path]
+			require.True(t, isField, "%s should be a field path on its parent", path)
+
+			factory, isResource := resourceFactories[path]
+			require.True(t, isResource, "%s should also be a registered resource name", path)
+
+			assert.NotNil(t, factory.Init,
+				"%s resolves to the resource, not the field, so without an Init every field reads null", path)
+		})
+	}
 }

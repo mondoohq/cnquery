@@ -2310,11 +2310,11 @@ func init() {
 			Create: createWindowsWinrmListener,
 		},
 		"windows.winrm.client": {
-			// to override args, implement: initWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsWinrmClient,
 			Create: createWindowsWinrmClient,
 		},
 		"windows.winrm.service": {
-			// to override args, implement: initWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsWinrmService,
 			Create: createWindowsWinrmService,
 		},
 		"windows.deviceGuard": {
@@ -2418,11 +2418,11 @@ func init() {
 			Create: createWindowsSmb,
 		},
 		"windows.smb.serverConfiguration": {
-			// to override args, implement: initWindowsSmbServerConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSmbServerConfiguration,
 			Create: createWindowsSmbServerConfiguration,
 		},
 		"windows.smb.clientConfiguration": {
-			// to override args, implement: initWindowsSmbClientConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsSmbClientConfiguration,
 			Create: createWindowsSmbClientConfiguration,
 		},
 		"windows.smb.share": {

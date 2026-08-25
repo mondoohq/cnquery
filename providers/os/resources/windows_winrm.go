@@ -281,3 +281,45 @@ func (r *mqlWindowsWinrm) listeners() ([]any, error) {
 	}
 	return res, nil
 }
+
+// windows.winrm.client and windows.winrm.service are both a field path on
+// windows.winrm and a resource name in their own right. The compiler resolves
+// the longest matching resource name before it considers a field, so the dotted
+// form instantiates the sub-resource directly and the parent's accessor never
+// runs. The fields the parent populates are then never set, and the query
+// reports null for each one with "provider returned no data and no error".
+//
+// A null is worse than an error here, because a check reading "the service does
+// not allow unencrypted traffic" off a null does not fail on a service that
+// allows it.
+//
+// Delegating to the parent's accessor fills the resource in. The block form
+// `windows.winrm { service { ... } }` binds the field instead of resolving a
+// resource name and was never affected. When the resource is created normally
+// by the parent it carries an __id and this is a no-op.
+func initWindowsWinrmChild[T plugin.Resource](
+	runtime *plugin.Runtime,
+	args map[string]*llx.RawData,
+	get func(*mqlWindowsWinrm) *plugin.TValue[T],
+) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	parent, err := CreateResource(runtime, "windows.winrm", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := get(parent.(*mqlWindowsWinrm))
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	return args, v.Data, nil
+}
+
+func initWindowsWinrmClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsWinrmChild(runtime, args, (*mqlWindowsWinrm).GetClient)
+}
+
+func initWindowsWinrmService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsWinrmChild(runtime, args, (*mqlWindowsWinrm).GetService)
+}
