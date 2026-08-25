@@ -128,6 +128,9 @@ type MQLExecutorV2 struct {
 	lock           sync.Mutex
 	blockExecutors []*blockExecutor
 	unregistered   bool
+
+	blockPointsLock sync.RWMutex
+	blockPoints     map[uint64]*blockPoints
 }
 
 func (c *blockExecutor) watcherUID(ref uint64) string {
@@ -165,6 +168,7 @@ func NewExecutorV2(code *CodeV2, runtime Runtime, props map[string]*Primitive, c
 		code:           code,
 		props:          props,
 		blockExecutors: []*blockExecutor{},
+		blockPoints:    map[uint64]*blockPoints{},
 	}
 
 	exec, err := res._newBlockExecutor(1<<32, callback, nil)
@@ -184,13 +188,16 @@ func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallba
 		return nil, errors.New("cannot find block " + strconv.FormatUint(blockRef, 10))
 	}
 
-	callbackPoints := map[uint64]string{}
+	points, err := c.pointsForBlock(blockRef, block)
+	if err != nil {
+		return nil, err
+	}
 
 	res := &blockExecutor{
 		id:             uuid.Must(uuid.NewV4()).String() + "/" + strconv.FormatUint(blockRef>>32, 10),
 		blockRef:       blockRef,
 		callback:       callback,
-		callbackPoints: callbackPoints,
+		callbackPoints: points.callbackPoints,
 		cache:          newCache(),
 		stepTracker:    newCache(),
 		calls: &Calls{
@@ -201,7 +208,39 @@ func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallba
 		ctx:         c,
 		parent:      parent,
 		watcherIds:  &types.StringSet{},
-		entrypoints: map[uint64]struct{}{},
+		entrypoints: points.entrypoints,
+	}
+
+	return res, nil
+}
+
+// blockPoints holds the entrypoint and callback lookup tables of one block.
+// Both derive from the block and from the code checksums, which never change
+// while the executor runs. Both are read-only after this constructor returns.
+type blockPoints struct {
+	entrypoints    map[uint64]struct{}
+	callbackPoints map[uint64]string
+}
+
+// pointsForBlock returns the lookup tables of a block. An array or map block
+// runs one block executor per element, so a query over a large array asked for
+// the same two tables thousands of times. The tables are equal for every
+// executor of the same block, so they are built once and shared.
+// The lock only covers the map lookup and the map write. The tables are built
+// outside it. Two executors that reach a block at the same time may both build
+// the tables, and the first result stored wins. The tables are equal either
+// way, because they derive from the same immutable code.
+func (c *MQLExecutorV2) pointsForBlock(blockRef uint64, block *Block) (*blockPoints, error) {
+	c.blockPointsLock.RLock()
+	points, ok := c.blockPoints[blockRef]
+	c.blockPointsLock.RUnlock()
+	if ok {
+		return points, nil
+	}
+
+	points = &blockPoints{
+		entrypoints:    make(map[uint64]struct{}, len(block.Entrypoints)),
+		callbackPoints: make(map[uint64]string, len(block.Entrypoints)+len(block.Datapoints)),
 	}
 
 	for _, ref := range block.Entrypoints {
@@ -212,8 +251,8 @@ func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallba
 		if ref < 1 {
 			return nil, errors.New("llx.executor> cannot execute with invalid ref number in entrypoint")
 		}
-		res.entrypoints[ref] = struct{}{}
-		res.callbackPoints[ref] = id
+		points.entrypoints[ref] = struct{}{}
+		points.callbackPoints[ref] = id
 	}
 
 	for _, ref := range block.Datapoints {
@@ -224,14 +263,21 @@ func (c *MQLExecutorV2) _newBlockExecutor(blockRef uint64, callback ResultCallba
 		if ref < 1 {
 			return nil, errors.New("llx.executor> cannot execute with invalid ref number in datapoint")
 		}
-		res.callbackPoints[ref] = id
+		points.callbackPoints[ref] = id
 	}
 
-	if len(res.callbackPoints) == 0 {
+	if len(points.callbackPoints) == 0 {
 		panic("no callback points")
 	}
 
-	return res, nil
+	c.blockPointsLock.Lock()
+	defer c.blockPointsLock.Unlock()
+
+	if existing, ok := c.blockPoints[blockRef]; ok {
+		return existing, nil
+	}
+	c.blockPoints[blockRef] = points
+	return points, nil
 }
 
 // NoRun returns error for all callbacks and don't run code
