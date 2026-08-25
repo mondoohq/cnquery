@@ -11396,9 +11396,12 @@ private windows.serverFeature @defaults("name") {
   installed bool
   // Feature installation state
   //
-  // The ServerManager InstallState value from Get-WindowsFeature,
-  // distinguishing installed, available (not installed), and removed
-  // (payload removed from the image) features.
+  // The ServerManager InstallState value from Get-WindowsFeature: 0 =
+  // Available (not installed), 1 = Installed, 2 = Uninstall pending, 3 =
+  // Install pending, 4 = Not present, 5 = Removed (payload removed from the
+  // image), 6 = Unknown. A pending state takes effect after the next reboot
+  // and still reports `installed` as true, so read `installed` rather than
+  // comparing this to a number.
   installState int
 }
 
@@ -11428,8 +11431,9 @@ private windows.optionalFeature @defaults("name") {
   enabled bool
   // Feature state
   //
-  // The DISM feature state: 0 = Disabled, 1 = Enabled, 2 = Disable pending,
+  // The DISM feature state: 0 = Disabled, 1 = Disable pending, 2 = Enabled,
   // 3 = Enable pending (a pending state takes effect after the next reboot).
+  // Read `enabled` rather than comparing this to a number.
   state int
 }
 
