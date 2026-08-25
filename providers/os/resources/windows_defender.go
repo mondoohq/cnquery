@@ -102,6 +102,7 @@ func (d *mqlWindowsDefender) status() (*mqlWindowsDefenderStatus, error) {
 		"__id":                             llx.StringData("windows.defender.status"),
 		"amEngineVersion":                  llx.StringData(status.AMEngineVersion),
 		"amProductVersion":                 llx.StringData(status.AMProductVersion),
+		"amRunningMode":                    llx.StringData(status.AMRunningMode),
 		"amServiceEnabled":                 llx.BoolData(status.AMServiceEnabled),
 		"amServiceVersion":                 llx.StringData(status.AMServiceVersion),
 		"antispywareEnabled":               llx.BoolData(status.AntispywareEnabled),
