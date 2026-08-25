@@ -1267,10 +1267,8 @@ func TestGoogleCOSDetector(t *testing.T) {
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 }
 
-// Container-Optimized OS ships only /etc/os-release, with ID=cos. Nothing
-// claimed it, so the generic resolver did: an SSH scan still reported the name
-// os-release states, but a container image was reported as "scratch" and the
-// name never reached the platform catalog.
+// Asserting the name would pass either way: the generic fallback leaves
+// whatever os-release said. Container images are what break.
 func TestGoogleCOSIsClaimedByItsOwnResolver(t *testing.T) {
 	mockConn, err := mock.New(0, &inventory.Asset{}, mock.WithPath("./testdata/detect-google-cos.toml"))
 	require.NoError(t, err)
@@ -1284,7 +1282,6 @@ func TestGoogleCOSIsClaimedByItsOwnResolver(t *testing.T) {
 		"a container image claimed only by the generic resolver is reported as scratch")
 }
 
-// cos must reach the platform catalog, which is built from the detector tree.
 func TestGoogleCOSIsInPlatformCatalog(t *testing.T) {
 	assert.Equal(t, []string{"os", "unix", "linux"}, osTree["cos"],
 		"cos must carry a family chain for policy filters to match on")

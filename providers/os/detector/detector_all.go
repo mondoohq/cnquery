@@ -169,13 +169,8 @@ var azurelinux = &PlatformResolver{
 	},
 }
 
-// Container-Optimized OS from Google ships only /etc/os-release, carrying
-// ID=cos along with VERSION_ID and BUILD_ID. Without a resolver of its own the
-// generic linux fallback claimed it: an SSH or local scan still reported the
-// name os-release states, but a container or container image claimed by that
-// fallback is reported as "scratch", and the name never reached the platform
-// catalog, so cos had no family chain to filter on. Note cos ships no package
-// manager, so packages are not available on this platform; detection only.
+// Container-Optimized OS ships only /etc/os-release, with ID=cos. It has no
+// package manager, so this is detection only.
 var cos = &PlatformResolver{
 	Name:     "cos",
 	IsFamily: false,
