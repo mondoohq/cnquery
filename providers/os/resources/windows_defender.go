@@ -191,7 +191,12 @@ func (d *mqlWindowsDefender) threats() ([]any, error) {
 	threats, err := windows.GetDefenderThreats(conn)
 	if err != nil {
 		if errors.Is(err, windows.ErrDefenderUnavailable) {
-			return []any{}, nil
+			// An empty list would make threats.none(...) and threats.all(...)
+			// pass on a host that has no antivirus recording threats at all.
+			// Null says the history could not be read, matching how status and
+			// preferences resolve on the same host.
+			d.Threats.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -224,7 +229,8 @@ func (d *mqlWindowsDefender) threatDetections() ([]any, error) {
 	detections, err := windows.GetDefenderThreatDetections(conn)
 	if err != nil {
 		if errors.Is(err, windows.ErrDefenderUnavailable) {
-			return []any{}, nil
+			d.ThreatDetections.State = plugin.StateIsSet | plugin.StateIsNull
+			return nil, nil
 		}
 		return nil, err
 	}
