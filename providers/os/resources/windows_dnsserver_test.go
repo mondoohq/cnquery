@@ -100,11 +100,6 @@ func TestNoNewDottedPathHusks(t *testing.T) {
 		"windows.smartScreen":             true,
 		"windows.smb.clientConfiguration": true,
 		"windows.smb.serverConfiguration": true,
-		"windows.spooler.ipp":             true,
-		"windows.spooler.pointAndPrint":   true,
-		"windows.spooler.rpc":             true,
-		"windows.update.config":           true,
-		"windows.update.policy":           true,
 		"windows.winrm.client":            true,
 		"windows.winrm.service":           true,
 	}

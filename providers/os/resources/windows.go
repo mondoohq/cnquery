@@ -49,6 +49,45 @@ func runWindowsPowerShell(runtime *plugin.Runtime, script, what string) (io.Read
 	return executedCmd.Stdout, nil
 }
 
+// initWindowsSingletonChild fills in a singleton sub-resource that is reached
+// by a dotted path which is also its own registered resource name.
+//
+// The field `config` on `windows.update` and the resource
+// `windows.update.config` occupy the same path. The compiler resolves the
+// longest matching resource name before it considers a field, so the dotted
+// path instantiates the sub-resource directly and the parent's accessor never
+// runs. Its plain schema fields are populated only by the parent, so every one
+// stays unset and reports "provider returned no data and no error".
+//
+// Worse, the husk is created with the same __id the parent would use, so it
+// also occupies the runtime cache entry for the real resource: a query that
+// mixes the dotted and the block form resolves the husk first and the block
+// form then reads the husk's unset fields as null.
+//
+// Delegating to the parent's accessor fills the resource in. The block form
+// `windows.update { config { ... } }` binds the field instead of resolving a
+// resource name and was never affected. When the resource is created normally
+// by the parent it carries an __id, and this is a no-op.
+func initWindowsSingletonChild[T plugin.Resource](
+	runtime *plugin.Runtime,
+	args map[string]*llx.RawData,
+	parentName string,
+	get func(plugin.Resource) *plugin.TValue[T],
+) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	parent, err := CreateResource(runtime, parentName, map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := get(parent)
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	return args, v.Data, nil
+}
+
 func (s *mqlWindows) computerInfo() (map[string]any, error) {
 	conn := s.MqlRuntime.Connection.(shared.Connection)
 

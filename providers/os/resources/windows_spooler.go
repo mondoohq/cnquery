@@ -270,6 +270,31 @@ func (r *mqlWindowsSpooler) windowsProtectedPrintGroupPolicyState() (bool, error
 
 // --- sub-resources ----------------------------------------------------------
 
+// Each singleton sub-resource below shares its name with the dotted path that
+// reaches it, so querying `windows.spooler.pointAndPrint.…` resolved the
+// resource instead of the field and reported null for every setting. See
+// initWindowsSingletonChild.
+func initWindowsSpoolerPointAndPrint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsSingletonChild(runtime, args, "windows.spooler",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsSpoolerPointAndPrint] {
+			return r.(*mqlWindowsSpooler).GetPointAndPrint()
+		})
+}
+
+func initWindowsSpoolerRpc(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsSingletonChild(runtime, args, "windows.spooler",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsSpoolerRpc] {
+			return r.(*mqlWindowsSpooler).GetRpc()
+		})
+}
+
+func initWindowsSpoolerIpp(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	return initWindowsSingletonChild(runtime, args, "windows.spooler",
+		func(r plugin.Resource) *plugin.TValue[*mqlWindowsSpoolerIpp] {
+			return r.(*mqlWindowsSpooler).GetIpp()
+		})
+}
+
 func (r *mqlWindowsSpooler) pointAndPrint() (*mqlWindowsSpoolerPointAndPrint, error) {
 	reg, err := r.load()
 	if err != nil {
