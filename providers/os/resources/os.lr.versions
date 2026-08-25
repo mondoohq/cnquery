@@ -4727,6 +4727,7 @@ windows.schannel.protocol.serverConfigured 13.40.10
 windows.schannel.protocol.serverDisabledByDefault 13.40.10
 windows.schannel.protocol.serverEnabled 13.40.10
 windows.schannel.protocols 13.40.10
+windows.schannel.signatureAlgorithms 13.40.10
 windows.scheduledTask 13.25.1
 windows.scheduledTask.action 13.25.1
 windows.scheduledTask.action.arguments 13.25.1

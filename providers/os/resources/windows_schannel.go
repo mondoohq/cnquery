@@ -13,21 +13,28 @@ import (
 	"go.mondoo.com/ranger-rpc/status"
 )
 
-// Registry locations of the effective Schannel TLS configuration. The ordered
-// cipher-suite list and the ordered elliptic-curve / supported-group list are
-// each stored as the REG_MULTI_SZ `Functions` value under their own subkey of
-// the local SSL configuration store.
+// Registry locations of the effective Schannel TLS configuration, held in the
+// local SSL configuration store. The store has one subkey per NCRYPT interface,
+// named after the interface id, and each subkey names itself in its default
+// value:
 //
-// Verified against Microsoft Learn: the cipher-suite order lives at
-// ...\Local\SSL\00010002 as the `Functions` REG_MULTI_SZ value (documented in
-// several Microsoft troubleshooting articles). The companion
-// ...\Local\SSL\00010003 subkey holds the effective elliptic-curve /
-// supported-group order, where post-quantum ML-KEM groups appear on Windows 11
-// 24H2 and Windows Server 2025.
+//   - 00010002 is NCRYPT_SCHANNEL_INTERFACE. Its `Functions` REG_MULTI_SZ is the
+//     ordered cipher-suite list and its `EccCurves` REG_MULTI_SZ is the ordered
+//     elliptic-curve / supported-group list, which is what `Get-TlsEccCurve`
+//     reports and where post-quantum ML-KEM groups appear on Windows 11 24H2 and
+//     Windows Server 2025.
+//   - 00010003 is NCRYPT_SCHANNEL_SIGNATURE_INTERFACE. Its `Functions`
+//     REG_MULTI_SZ is the ordered signature-algorithm list (RSA/SHA256,
+//     ECDSA/SHA384, DSA/SHA1, and on newer releases the RSAE-PSS entries).
+//
+// The two interfaces both spell their list `Functions`, which is why the
+// supported groups have to come from the `EccCurves` value of the first rather
+// than the `Functions` value of the second.
 const (
-	schannelCipherSuitesPath    = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010002`
-	schannelSupportedGroupsPath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010003`
-	schannelFunctionsValue      = "Functions"
+	schannelCipherSuitesPath  = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010002`
+	schannelSignatureAlgoPath = `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010003`
+	schannelFunctionsValue    = "Functions"
+	schannelEccCurvesValue    = "EccCurves"
 )
 
 func (r *mqlWindowsSchannel) id() (string, error) {
@@ -73,11 +80,19 @@ func (r *mqlWindowsSchannel) cipherSuites() ([]interface{}, error) {
 }
 
 func (r *mqlWindowsSchannel) ellipticCurves() ([]interface{}, error) {
-	curves, err := r.readMultiString(schannelSupportedGroupsPath, schannelFunctionsValue)
+	curves, err := r.readMultiString(schannelCipherSuitesPath, schannelEccCurvesValue)
 	if err != nil {
 		return nil, err
 	}
 	return strSliceToAny(curves), nil
+}
+
+func (r *mqlWindowsSchannel) signatureAlgorithms() ([]interface{}, error) {
+	algorithms, err := r.readMultiString(schannelSignatureAlgoPath, schannelFunctionsValue)
+	if err != nil {
+		return nil, err
+	}
+	return strSliceToAny(algorithms), nil
 }
 
 func (r *mqlWindowsSchannel) pqcKeyExchangeEnabled() (bool, error) {
