@@ -1452,10 +1452,10 @@ func TestDetectorTalos(t *testing.T) {
 
 	assert.Equal(t, "talos", di.Name, "os name should be identified")
 	assert.Equal(t, "Talos (v1.13.9)", di.Title, "os title should be identified")
-	// the vendor's own "v" prefix, as talosctl reports it. Nothing normalizes
-	// VERSION_ID, and stripping it here would report a version Talos does not
-	// use for itself.
-	assert.Equal(t, "v1.13.9", di.Version, "os version should be identified")
+	// VERSION_ID is v1.13.9 on this target; the vendor's "v" prefix is stripped
+	// so version comparisons do not have to special-case Talos. The prefixed
+	// string survives in Title, which is PRETTY_NAME verbatim.
+	assert.Equal(t, "1.13.9", di.Version, "os version should have the v prefix stripped")
 	assert.Equal(t, []string{"linux", "unix", "os"}, di.Family)
 	assert.Equal(t, map[string]string{"distro-id": "talos"}, di.Labels)
 }

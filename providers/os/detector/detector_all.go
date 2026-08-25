@@ -190,14 +190,22 @@ var cos = &PlatformResolver{
 
 // Talos is an API-managed Kubernetes host: it ships no shell, no /bin or
 // /sbin, and no package database, so nothing here can be derived from a
-// command. /etc/os-release is the whole of what detection can read, and
-// VERSION_ID carries the vendor's own "v" prefix ("v1.13.9"), which is the
-// string talosctl reports and is kept as-is.
+// command. /etc/os-release is the whole of what detection can read.
+//
+// Talos writes VERSION_ID with its own "v" prefix ("v1.13.9"). The prefix is
+// stripped so the field holds a bare version like every other platform reports:
+// pf.Version is what version comparisons in policies run against, and a leading
+// "v" makes Talos the one platform those comparisons have to special-case. The
+// prefixed string is still visible in Title, which keeps PRETTY_NAME verbatim.
 var talos = &PlatformResolver{
 	Name:     "talos",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		return pf.Name == "talos", nil
+		if pf.Name != "talos" {
+			return false, nil
+		}
+		pf.Version = strings.TrimPrefix(pf.Version, "v")
+		return true, nil
 	},
 }
 
