@@ -109,13 +109,30 @@ func TestOptionalFeatureStateEnum(t *testing.T) {
 					assert.False(t, f.Enabled, "%s: state 0 is Disabled", f.Name)
 					disabled++
 				default:
-					// 1 (disable pending) and 3 (enable pending) are real but
-					// rare; neither is a steady state and neither is Enabled.
-					assert.False(t, f.Enabled, "%s: state %d is a pending state", f.Name, f.State)
+					// 1 and 3 are the pending states, and 6 is
+					// DisabledWithPayloadRemoved, which Server 2025 reports
+					// for NetFx3. The set is not closed, but Enabled is only
+					// ever 2, so anything else must not read as enabled.
+					assert.False(t, f.Enabled, "%s: state %d is not Enabled", f.Name, f.State)
 				}
 			}
 			assert.NotZero(t, enabled, "the fixture must carry an enabled feature")
 			assert.NotZero(t, disabled, "the fixture must carry a disabled feature")
+
+			if rel == "2025" {
+				// Server 2025 reports DisabledWithPayloadRemoved for NetFx3,
+				// a state outside the range the schema used to document. It
+				// is not enabled, and a policy comparing the number would not
+				// have known it existed.
+				var sawPayloadRemoved bool
+				for _, f := range features {
+					if f.State == 6 {
+						sawPayloadRemoved = true
+						assert.False(t, f.Enabled)
+					}
+				}
+				assert.True(t, sawPayloadRemoved, "the 2025 fixture must keep the payload-removed feature")
+			}
 		})
 	}
 }

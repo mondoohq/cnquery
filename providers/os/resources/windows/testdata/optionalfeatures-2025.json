@@ -1,0 +1,122 @@
+[
+  {
+    "FeatureName": "Server-Core",
+    "State": 2
+  },
+  {
+    "FeatureName": "NetFx3ServerFeatures",
+    "State": 0
+  },
+  {
+    "FeatureName": "NetFx3",
+    "State": 6
+  },
+  {
+    "FeatureName": "WCF-HTTP-Activation",
+    "State": 0
+  },
+  {
+    "FeatureName": "WCF-NonHTTP-Activation",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-WebServerRole",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-WebServer",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-CommonHttpFeatures",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-Security",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-RequestFiltering",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-StaticContent",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-DefaultDocument",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-DirectoryBrowsing",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-HttpErrors",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-HttpRedirect",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-WebDAV",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ApplicationDevelopment",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-WebSockets",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ApplicationInit",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-NetFxExtensibility",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-NetFxExtensibility45",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ISAPIExtensions",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ISAPIFilter",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ASPNET",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ASPNET45",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ASP",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-CGI",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-ServerSideIncludes",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-HealthAndDiagnostics",
+    "State": 0
+  },
+  {
+    "FeatureName": "IIS-HttpLogging",
+    "State": 0
+  }
+]

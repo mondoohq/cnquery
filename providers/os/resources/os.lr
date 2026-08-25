@@ -11432,8 +11432,10 @@ private windows.optionalFeature @defaults("name") {
   // Feature state
   //
   // The DISM feature state: 0 = Disabled, 1 = Disable pending, 2 = Enabled,
-  // 3 = Enable pending (a pending state takes effect after the next reboot).
-  // Read `enabled` rather than comparing this to a number.
+  // 3 = Enable pending (a pending state takes effect after the next reboot),
+  // 6 = Disabled with the payload removed from the image, which is how
+  // Windows Server 2025 reports NetFx3. The set is not closed, so read
+  // `enabled` rather than comparing this to a number.
   state int
 }
 
