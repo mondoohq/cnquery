@@ -13924,8 +13924,15 @@ windows.defender @defaults("enabled") {
   // Configurable Defender preferences and policy (Get-MpPreference)
   preferences() windows.defender.preferences
   // Threats recorded in the Defender threat history
+  //
+  // An empty list means Defender has recorded no threats. Null means the
+  // history could not be read because Defender is not installed, and must not
+  // be read as "no threats found".
   threats() []windows.defender.threat
   // Malware detections recorded by Defender
+  //
+  // An empty list means Defender has recorded no detections. Null means the
+  // history could not be read because Defender is not installed.
   threatDetections() []windows.defender.threatDetection
 }
 
