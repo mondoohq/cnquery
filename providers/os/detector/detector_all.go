@@ -150,6 +150,7 @@ var arch = &PlatformResolver{
 var manjaro = &PlatformResolver{
 	Name:     "manjaro",
 	IsFamily: false,
+	Emits:    []string{"manjaro-arm"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// Manjaro ARM ships ID=manjaro-arm with ID_LIKE="manjaro arch". It is the
 		// same distribution built for ARM and belongs to the arch family just as
@@ -611,6 +612,7 @@ var cloudlinux = &PlatformResolver{
 var centos = &PlatformResolver{
 	Name:     "centos",
 	IsFamily: false,
+	Emits:    []string{"rockylinux", "almalinux"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// works for centos 5+
 		if strings.Contains(pf.Title, "CentOS") || pf.Name == "centos" {
@@ -684,6 +686,7 @@ var fedora = &PlatformResolver{
 var oracle = &PlatformResolver{
 	Name:     "oracle",
 	IsFamily: false,
+	Emits:    []string{"oraclelinux"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// works for oracle 7+
 		if pf.Name == "ol" {
@@ -816,6 +819,7 @@ var windriver = &PlatformResolver{
 var opensuse = &PlatformResolver{
 	Name:     "opensuse",
 	IsFamily: false,
+	Emits:    []string{"opensuse-leap", "opensuse-tumbleweed"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "opensuse" || pf.Name == "opensuse-leap" || pf.Name == "opensuse-tumbleweed" {
 			return true, nil
@@ -1009,6 +1013,7 @@ var mageia = &PlatformResolver{
 var mxlinux = &PlatformResolver{
 	Name:     "mxlinux",
 	IsFamily: false,
+	Emits:    []string{"mx"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		osrd := NewOSReleaseDetector(conn)
 		lsb, err := osrd.lsbconfig()
