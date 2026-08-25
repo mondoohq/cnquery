@@ -154,17 +154,23 @@ func formatWULastError(code int64) string {
 // deriveCatalogSource determines the effective update source from the raw
 // registry signals. Order matters: an explicitly disabled agent wins, then
 // WSUS, then Windows Update for Business, then direct Windows Update.
-func deriveCatalogSource(read bool, useWUServer bool, wsusServerURL string, auOptions int64, hasPolicyState bool) string {
+//
+// noAutoUpdate is the modern way a host turns automatic updates off, and it is
+// checked alongside the legacy AUOptions == 1 encoding. AUOptions has not had
+// a value of 1 since Windows XP, so on any host this provider runs against
+// that test alone never fired and a host with automatic updates switched off
+// reported itself as pulling from Windows Update.
+func deriveCatalogSource(read bool, useWUServer bool, wsusServerURL string, auOptions int64, noAutoUpdate bool, wufbConfigured bool) string {
 	if !read {
 		return "unknown"
 	}
-	if auOptions == 1 {
+	if auOptions == 1 || noAutoUpdate {
 		return "disabled"
 	}
 	if useWUServer && wsusServerURL != "" {
 		return "wsus"
 	}
-	if hasPolicyState && wsusServerURL == "" {
+	if wufbConfigured && wsusServerURL == "" {
 		return "windowsUpdateForBusiness"
 	}
 	return "windowsUpdate"
@@ -205,10 +211,16 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 	wsusStatusServerURL := regString(policy, "WUStatusServer")
 	useWUServer := regInt(au, "UseWUServer") == 1
 	auOptions := regInt(au, "AUOptions")
-	hasPolicyState := regHas(wufb, "PolicyState")
-	policyState := regInt(wufb, "PolicyState")
+	noAutoUpdate := regInt(au, "NoAutoUpdate") == 1
 
-	catalogSource := deriveCatalogSource(read, useWUServer, wsusServerURL, auOptions, hasPolicyState)
+	// wufbPolicyState names the key, not a value inside it. Reading a value of
+	// that name found nothing on any host, so the Windows Update for Business
+	// branch below was unreachable and policyState reported a constant 0 that
+	// no host had set. IsWUfBConfigured is the flag the key actually carries.
+	wufbConfigured := regInt(wufb, "IsWUfBConfigured") == 1
+	policyState := regIntPtr(wufb, "IsWUfBConfigured")
+
+	catalogSource := deriveCatalogSource(read, useWUServer, wsusServerURL, auOptions, noAutoUpdate, wufbConfigured)
 
 	rebootPending := w.registryKeyExists(wuRebootCBS) || w.registryKeyExists(wuRebootAU)
 
@@ -224,7 +236,7 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 		"lastDownloadSuccess":  llx.TimeDataPtr(parseWULastSuccessTime(regString(download, "LastSuccessTime"))),
 		"lastInstallSuccess":   llx.TimeDataPtr(parseWULastSuccessTime(regString(install, "LastSuccessTime"))),
 		"rebootPending":        llx.BoolData(rebootPending),
-		"policyState":          llx.IntData(policyState),
+		"policyState":          intPtrData(policyState),
 	})
 	if err != nil {
 		return nil, err

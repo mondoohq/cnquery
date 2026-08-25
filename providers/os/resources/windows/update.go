@@ -50,7 +50,13 @@ func ParseKBID(s string) string {
 // (and de-duplicates by KB), so the two must stay in sync; see
 // TestUpdateHistoryQueryFilterMatchesGo. Dates serialize as PowerShell
 // "/Date(ms)/" strings.
+//
+// $ErrorActionPreference is Stop so a failed COM call exits non-zero. Without
+// it GetTotalHistoryCount failing leaves $count null, the $count -gt 0 guard is
+// false, and the caller is handed an empty history: a host whose update agent
+// could not be reached reports that nothing has ever been installed.
 var WINDOWS_QUERY_UPDATE_HISTORY = `
+$ErrorActionPreference='Stop';
 $ProgressPreference='SilentlyContinue';
 $session = New-Object -ComObject Microsoft.Update.Session
 $searcher = $session.CreateUpdateSearcher()
