@@ -282,25 +282,30 @@ func (k *mqlRegistrykey) items() ([]any, error) {
 	return items, nil
 }
 
-func (k *mqlRegistrykey) children() ([]any, error) {
+// getChildren returns the child keys of this registry key, resolving the same
+// way getEntries does: natively on a local Windows host, through PowerShell
+// otherwise, and against the per-user hive when one is selected.
+func (k *mqlRegistrykey) getChildren() ([]registry.RegistryKeyChild, error) {
 	conn := k.MqlRuntime.Connection.(shared.Connection)
-	res := []any{}
-	var children []registry.RegistryKeyChild
-	var err error
 	switch {
 	case k.isUserHive() && conn.Type() == shared.Type_Local && runtime.GOOS == "windows":
-		children, err = k.nativeUserHiveChildren(conn)
+		return k.nativeUserHiveChildren(conn)
 	case k.isUserHive():
-		children, err = k.powershellChildren(userHivePath(k.UserSid.Data, k.Path.Data))
+		return k.powershellChildren(userHivePath(k.UserSid.Data, k.Path.Data))
 	case conn.Type() == shared.Type_Local && runtime.GOOS == "windows":
-		children, err = registry.GetNativeRegistryKeyChildren(k.Path.Data)
+		return registry.GetNativeRegistryKeyChildren(k.Path.Data)
 	default:
-		children, err = k.powershellChildren(k.Path.Data)
+		return k.powershellChildren(k.Path.Data)
 	}
+}
+
+func (k *mqlRegistrykey) children() ([]any, error) {
+	children, err := k.getChildren()
 	if err != nil {
 		return nil, err
 	}
 
+	res := []any{}
 	for i := range children {
 		child := children[i]
 		res = append(res, child.Path)
