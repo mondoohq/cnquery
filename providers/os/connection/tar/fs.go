@@ -55,13 +55,9 @@ func (fs *FS) Open(path string) (afero.File, error) {
 		return nil, os.ErrNotExist
 	}
 
-	if h.Typeflag == tar.TypeSymlink {
-		resolvedPath := fs.resolveSymlink(h)
-		log.Debug().Str("path", path).Str("resolved", Abs(resolvedPath)).Msg("file is a symlink, resolved it")
-		h, ok = fs.FileMap[Abs(resolvedPath)]
-		if !ok {
-			return nil, os.ErrNotExist
-		}
+	h, ok = fs.resolveEntry(h)
+	if !ok {
+		return nil, os.ErrNotExist
 	}
 
 	reader, err := fs.open(h)
@@ -114,23 +110,66 @@ func (fs *FS) Chown(name string, uid, gid int) error {
 }
 
 func (fs *FS) stat(header *tar.Header) (os.FileInfo, error) {
-	statHeader := header
-	if header.Typeflag == tar.TypeSymlink {
-		path := fs.resolveSymlink(header)
-		h, ok := fs.FileMap[Abs(path)]
-		if !ok {
-			return nil, errors.New("could not find " + path)
-		}
-		statHeader = h
+	statHeader, ok := fs.resolveEntry(header)
+	if !ok {
+		return nil, errors.New("could not resolve " + header.Name)
 	}
 	return statHeader.FileInfo(), nil
 }
 
+// maxLinkHops bounds link resolution so a cyclic archive cannot spin forever.
+const maxLinkHops = 10
+
+// resolveEntry follows symlinks and hard links to the entry that actually holds
+// the content. Tar records a hard link as a name plus a target path relative to
+// the archive root, carrying no data of its own, so reading one without
+// following it yields an empty file. OSTree-based images reach
+// /usr/lib/os-release exactly that way: a symlink from /etc onto a hard link
+// into the ostree object store.
+func (fs *FS) resolveEntry(header *tar.Header) (*tar.Header, bool) {
+	h := header
+	// The path we are logically at. A hard link does not move it: it points at
+	// where the bytes are stored, not at a new location in the tree. That
+	// matters when the bytes turn out to be a relative symlink, which has to be
+	// resolved against the directory we entered by. On an OSTree image
+	// /etc/redhat-release is a hard link into the object store holding a symlink
+	// to "fedora-release", and that means /etc/fedora-release.
+	logical := header.Name
+	for i := 0; i < maxLinkHops; i++ {
+		var target string
+		switch h.Typeflag {
+		case tar.TypeSymlink:
+			target = Abs(fs.resolveSymlinkFrom(logical, h.Linkname))
+			log.Debug().Str("path", logical).Str("resolved", target).Msg("file is a symlink, resolved it")
+			logical = target
+		case tar.TypeLink:
+			// a hard link target is already relative to the archive root
+			target = Abs(h.Linkname)
+			log.Debug().Str("path", logical).Str("resolved", target).Msg("file is a hard link, resolved it")
+		default:
+			return h, true
+		}
+
+		next, ok := fs.FileMap[target]
+		if !ok {
+			return nil, false
+		}
+		h = next
+	}
+
+	log.Warn().Str("path", header.Name).Msg("tar> too many link hops, giving up")
+	return nil, false
+}
+
 // resolve symlink file
 func (fs *FS) resolveSymlink(header *tar.Header) string {
-	dest := header.Name
-	link := header.Linkname
+	return fs.resolveSymlinkFrom(header.Name, header.Linkname)
+}
 
+// resolveSymlinkFrom resolves link as it would be read from dest. A relative
+// target is relative to dest's directory, so callers that arrived by a hard
+// link pass the path they came in on rather than the storage location.
+func (fs *FS) resolveSymlinkFrom(dest string, link string) string {
 	var path string
 	if filepath.IsAbs(link) {
 		var err error
@@ -158,8 +197,8 @@ func (fs *FS) open(header *tar.Header) (io.Reader, error) {
 	defer f.Close()
 
 	path := header.Name
-	if header.Typeflag == tar.TypeSymlink {
-		path = fs.resolveSymlink(header)
+	if resolved, ok := fs.resolveEntry(header); ok {
+		path = resolved.Name
 	}
 
 	// extract file from tar stream
