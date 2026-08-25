@@ -33,7 +33,7 @@ type AuditpolSubcategory struct {
 // auditpolKnownSubcategories maps subcategory GUIDs (uppercase, no braces) to
 // their canonical English name and audit category. It covers the 60
 // subcategories `auditpol /list /subcategory:* /v` reports on Windows Server
-// 2016, 2019, and 2022: the 59 of MS-GPAC plus Access Rights, which the
+// 2016, 2019, 2022, and 2025: the 59 of MS-GPAC plus Access Rights, which the
 // specification does not list but every one of those releases does.
 var auditpolKnownSubcategories = map[string]AuditpolSubcategory{
 	// System

@@ -131,9 +131,9 @@ func findPol(auditpol []windows.AuditpolEntry, subcategory string) *windows.Audi
 // an assertion over that category passes without ever having seen it.
 //
 // The GUIDs below are the full set `auditpol /list /subcategory:* /v` reports on
-// Windows Server 2016 (10.0.14393), 2019 (10.0.17763), and 2022 (10.0.20348);
-// all three agree, and all three include Access Rights, which MS-GPAC does not
-// document.
+// Windows Server 2016 (10.0.14393), 2019 (10.0.17763), 2022 (10.0.20348), and
+// 2025 (10.0.26100); all four agree, and all four include Access Rights, which
+// MS-GPAC does not document.
 func TestAuditpolTableCoversLiveSubcategories(t *testing.T) {
 	liveSubcategories := map[string]struct{ name, category string }{
 		"0CCE9210-69AE-11D9-BED3-505054503030": {"Security State Change", "System"},
