@@ -248,7 +248,7 @@ type MpComputerStatus struct {
 	ComputerID                       string
 	ComputerState                    int64
 	DefenderSignaturesOutOfDate      bool
-	DeviceControlDefaultEnforcement  string
+	DeviceControlDefaultEnforcement  *string
 	DeviceControlPoliciesLastUpdated string
 	DeviceControlState               string
 	FullScanAge                      int64
@@ -309,7 +309,7 @@ type MpPreference struct {
 	DisableBehaviorMonitoring        bool
 	DisableIOAVProtection            bool
 	DisableScriptScanning            bool
-	DisableIntrusionPreventionSystem bool
+	DisableIntrusionPreventionSystem *bool
 	RealTimeScanDirection            int64
 	EnableFileHashComputation        bool
 
@@ -365,15 +365,15 @@ type MpPreference struct {
 	RemoteEncryptionProtectionMaxBlockTime    int64
 
 	// local setting overrides (whether a local preference may override policy)
-	LocalSettingOverrideSpynetReporting                  bool
-	LocalSettingOverrideRealtimeMonitoring               bool
-	LocalSettingOverrideDisableBehaviorMonitoring        bool
-	LocalSettingOverrideDisableIOAVProtection            bool
-	LocalSettingOverrideDisableIntrusionPreventionSystem bool
-	LocalSettingOverrideDisableOnAccessProtection        bool
-	LocalSettingOverrideScanParameters                   bool
-	LocalSettingOverrideScanScheduleDay                  bool
-	LocalSettingOverrideAvgCPULoadFactor                 bool
+	LocalSettingOverrideSpynetReporting                  *bool
+	LocalSettingOverrideRealtimeMonitoring               *bool
+	LocalSettingOverrideDisableBehaviorMonitoring        *bool
+	LocalSettingOverrideDisableIOAVProtection            *bool
+	LocalSettingOverrideDisableIntrusionPreventionSystem *bool
+	LocalSettingOverrideDisableOnAccessProtection        *bool
+	LocalSettingOverrideScanParameters                   *bool
+	LocalSettingOverrideScanScheduleDay                  *bool
+	LocalSettingOverrideAvgCPULoadFactor                 *bool
 
 	// remediation
 	RemediationScheduleDay         int64
@@ -399,7 +399,7 @@ type MpPreference struct {
 	// Defender uses the historical "RePorts" casing for this preference; the
 	// json tag matches it explicitly so the field is populated regardless of how
 	// the cmdlet serializes it.
-	DisableGenericReports bool `json:"DisableGenericRePorts"`
+	DisableGenericReports *bool `json:"DisableGenericRePorts"`
 }
 
 // ScanScheduleTimeString returns the raw scheduled-scan time value.

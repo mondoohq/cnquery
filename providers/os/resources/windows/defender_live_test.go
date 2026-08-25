@@ -63,7 +63,7 @@ func TestMpComputerStatusLiveDecodes(t *testing.T) {
 			// default enforcement unset on a host with no device-control
 			// policy, so it must not read as a number either.
 			assert.Equal(t, "Disabled", status.DeviceControlState)
-			assert.Empty(t, status.DeviceControlDefaultEnforcement)
+			assert.Nil(t, status.DeviceControlDefaultEnforcement)
 
 			// A host that has never run a scan reports uint32 max for the scan
 			// age and leaves the scan times null.
@@ -113,6 +113,22 @@ func TestMpPreferenceLiveDecodes(t *testing.T) {
 			assert.Empty(t, pref.ThreatIDDefaultAction_Actions)
 			assert.Empty(t, pref.ControlledFolderAccessAllowedApplications)
 			assert.Empty(t, pref.ControlledFolderAccessProtectedFolders)
+
+			// The Defender platform on these hosts does not report these
+			// preferences at all. They must stay nil rather than decoding to
+			// false, which would claim a hardened configuration that nothing
+			// verified.
+			assert.Nil(t, pref.DisableIntrusionPreventionSystem)
+			assert.Nil(t, pref.DisableGenericReports)
+			assert.Nil(t, pref.LocalSettingOverrideSpynetReporting)
+			assert.Nil(t, pref.LocalSettingOverrideRealtimeMonitoring)
+			assert.Nil(t, pref.LocalSettingOverrideDisableBehaviorMonitoring)
+			assert.Nil(t, pref.LocalSettingOverrideDisableIOAVProtection)
+			assert.Nil(t, pref.LocalSettingOverrideDisableIntrusionPreventionSystem)
+			assert.Nil(t, pref.LocalSettingOverrideDisableOnAccessProtection)
+			assert.Nil(t, pref.LocalSettingOverrideScanParameters)
+			assert.Nil(t, pref.LocalSettingOverrideScanScheduleDay)
+			assert.Nil(t, pref.LocalSettingOverrideAvgCPULoadFactor)
 		})
 	}
 }

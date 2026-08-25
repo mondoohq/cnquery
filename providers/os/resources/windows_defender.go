@@ -64,7 +64,7 @@ func (d *mqlWindowsDefender) status() (*mqlWindowsDefenderStatus, error) {
 		"computerID":                       llx.StringData(status.ComputerID),
 		"computerState":                    llx.IntData(status.ComputerState),
 		"defenderSignaturesOutOfDate":      llx.BoolData(status.DefenderSignaturesOutOfDate),
-		"deviceControlDefaultEnforcement":  llx.StringData(status.DeviceControlDefaultEnforcement),
+		"deviceControlDefaultEnforcement":  llx.StringDataPtr(status.DeviceControlDefaultEnforcement),
 		"deviceControlPoliciesLastUpdated": llx.TimeDataPtr(windows.DefenderTime(status.DeviceControlPoliciesLastUpdated)),
 		"deviceControlState":               llx.StringData(status.DeviceControlState),
 		"fullScanAge":                      llx.IntData(status.FullScanAge),
@@ -269,7 +269,7 @@ func (p *mqlWindowsDefenderPreferences) realTimeProtection() (*mqlWindowsDefende
 		"disableBehaviorMonitoring":        llx.BoolData(prefs.DisableBehaviorMonitoring),
 		"disableIOAVProtection":            llx.BoolData(prefs.DisableIOAVProtection),
 		"disableScriptScanning":            llx.BoolData(prefs.DisableScriptScanning),
-		"disableIntrusionPreventionSystem": llx.BoolData(prefs.DisableIntrusionPreventionSystem),
+		"disableIntrusionPreventionSystem": llx.BoolDataPtr(prefs.DisableIntrusionPreventionSystem),
 		"realTimeScanDirection":            llx.IntData(prefs.RealTimeScanDirection),
 		"enableFileHashComputation":        llx.BoolData(prefs.EnableFileHashComputation),
 	})
@@ -410,15 +410,15 @@ func (p *mqlWindowsDefenderPreferences) localSettingOverrides() (*mqlWindowsDefe
 	}
 	res, err := CreateResource(p.MqlRuntime, "windows.defender.localSettingOverrides", map[string]*llx.RawData{
 		"__id":                             llx.StringData("windows.defender.localSettingOverrides"),
-		"spynetReporting":                  llx.BoolData(prefs.LocalSettingOverrideSpynetReporting),
-		"realtimeMonitoring":               llx.BoolData(prefs.LocalSettingOverrideRealtimeMonitoring),
-		"disableBehaviorMonitoring":        llx.BoolData(prefs.LocalSettingOverrideDisableBehaviorMonitoring),
-		"disableIOAVProtection":            llx.BoolData(prefs.LocalSettingOverrideDisableIOAVProtection),
-		"disableIntrusionPreventionSystem": llx.BoolData(prefs.LocalSettingOverrideDisableIntrusionPreventionSystem),
-		"disableOnAccessProtection":        llx.BoolData(prefs.LocalSettingOverrideDisableOnAccessProtection),
-		"scanParameters":                   llx.BoolData(prefs.LocalSettingOverrideScanParameters),
-		"scanScheduleDay":                  llx.BoolData(prefs.LocalSettingOverrideScanScheduleDay),
-		"avgCPULoadFactor":                 llx.BoolData(prefs.LocalSettingOverrideAvgCPULoadFactor),
+		"spynetReporting":                  llx.BoolDataPtr(prefs.LocalSettingOverrideSpynetReporting),
+		"realtimeMonitoring":               llx.BoolDataPtr(prefs.LocalSettingOverrideRealtimeMonitoring),
+		"disableBehaviorMonitoring":        llx.BoolDataPtr(prefs.LocalSettingOverrideDisableBehaviorMonitoring),
+		"disableIOAVProtection":            llx.BoolDataPtr(prefs.LocalSettingOverrideDisableIOAVProtection),
+		"disableIntrusionPreventionSystem": llx.BoolDataPtr(prefs.LocalSettingOverrideDisableIntrusionPreventionSystem),
+		"disableOnAccessProtection":        llx.BoolDataPtr(prefs.LocalSettingOverrideDisableOnAccessProtection),
+		"scanParameters":                   llx.BoolDataPtr(prefs.LocalSettingOverrideScanParameters),
+		"scanScheduleDay":                  llx.BoolDataPtr(prefs.LocalSettingOverrideScanScheduleDay),
+		"avgCPULoadFactor":                 llx.BoolDataPtr(prefs.LocalSettingOverrideAvgCPULoadFactor),
 	})
 	if err != nil {
 		return nil, err
@@ -528,7 +528,11 @@ func (p *mqlWindowsDefenderPreferences) disableGenericReports() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return prefs.DisableGenericReports, nil
+	if prefs.DisableGenericReports == nil {
+		p.DisableGenericReports.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return *prefs.DisableGenericReports, nil
 }
 
 // mqlWindowsDefenderThreatActionSettingsInternal caches the per-threat-ID

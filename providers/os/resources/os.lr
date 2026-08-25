@@ -13975,7 +13975,7 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   // Default enforcement mode for device control
   //
   // Reported as a name rather than a number, for example "Allow" or "Deny".
-  // An empty string means no device-control enforcement policy is applied.
+  // Null when no device-control enforcement policy is applied.
   deviceControlDefaultEnforcement string
   // Date the device-control policies were last updated
   deviceControlPoliciesLastUpdated time
@@ -14094,6 +14094,8 @@ windows.defender.preferences @defaults("puaProtection") {
   // Whether automatic exclusions for server roles are disabled
   disableAutoExclusions() bool
   // Whether sending Watson (generic) reports to Microsoft is disabled
+  //
+  // Null when the Defender platform does not report this preference.
   disableGenericReports() bool
 }
 
@@ -14162,6 +14164,10 @@ windows.defender.realTimeSettings @defaults("disableRealtimeMonitoring") {
   // Whether script scanning is disabled
   disableScriptScanning bool
   // Whether the Network Inspection System (intrusion prevention) is disabled
+  //
+  // Null when the Defender platform does not report this preference. Recent
+  // platform releases dropped it from Get-MpPreference, in which case the
+  // live state is available as nisEnabled on windows.defender.status.
   disableIntrusionPreventionSystem bool
   // Direction in which real-time scanning inspects files
   //
@@ -14347,8 +14353,13 @@ windows.defender.behavioralNetworkBlockSettings @defaults("bruteForceProtectionC
 //
 // Whether a locally configured preference is allowed to override the
 // corresponding Group Policy setting. When an override is disabled (false)
-// the policy value is enforced and users cannot change it locally; CIS
-// benchmarks generally require these overrides to be disabled.
+// the policy value is enforced and users cannot change it locally, which is
+// the hardened configuration.
+//
+// Every field here is null on a host whose Defender platform does not report
+// the preference. Recent platform releases dropped the LocalSettingOverride
+// properties from Get-MpPreference, so on those hosts nothing about the
+// overrides is known and a null must not be read as "no override allowed".
 windows.defender.localSettingOverrides @defaults("spynetReporting realtimeMonitoring") {
   // Whether a local setting may override MAPS (SpyNet) reporting
   spynetReporting bool
