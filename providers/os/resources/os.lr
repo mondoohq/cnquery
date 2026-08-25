@@ -12261,13 +12261,17 @@ windows.telemetry {
 //
 // PowerShell logging settings configured via Group Policy under
 // HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell: Script Block Logging,
-// Transcription, and the machine execution policy. These are GPO-only values
-// with no effective fallback, so when a value is absent the corresponding field
-// is null, which is distinguishable from an explicit 0. Read from the registry,
-// so it is available even on connections that cannot run commands.
+// Module Logging, Transcription, and the machine execution policy, together
+// with the system lockdown state that decides the session language mode. The
+// policy settings are GPO-only values with no effective fallback, so when a
+// value is absent the corresponding field is null, which is distinguishable
+// from an explicit 0. Read from the registry, so it is available even on
+// connections that cannot run commands.
 windows.powershell {
   // Script Block Logging policy (PowerShell\ScriptBlockLogging)
   scriptBlockLogging() windows.powershell.scriptBlockLogging
+  // Module Logging policy (PowerShell\ModuleLogging)
+  moduleLogging() windows.powershell.moduleLogging
   // Transcription policy (PowerShell\Transcription)
   transcription() windows.powershell.transcription
   // PowerShell execution policy (PowerShell\ExecutionPolicy)
@@ -12275,6 +12279,26 @@ windows.powershell {
   // The machine-wide execution policy string set by Group Policy, e.g.
   // "AllSigned", "RemoteSigned", or "Restricted". Null when the value is absent.
   executionPolicy() string
+  // System lockdown state (__PSLockdownPolicy)
+  //
+  // The machine-scoped `__PSLockdownPolicy` environment variable, read from
+  // HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment.
+  // PowerShell reads it as a Windows Lockdown Policy state bitmask when no
+  // App Control or AppLocker policy applies: the 0x8 bit requests audit and
+  // the 0x4 bit requests enforcement, and enforcement runs sessions in
+  // ConstrainedLanguage mode. Null when the value is absent or does not parse
+  // as a number, which is the default on a host with no lockdown configured.
+  lockdownPolicy() int
+  // PowerShell language mode implied by the system lockdown state
+  //
+  // "ConstrainedLanguage" when `lockdownPolicy` requests enforcement,
+  // otherwise "FullLanguage". Audit reports "FullLanguage" because it records
+  // what would have been blocked without restricting the session, so read
+  // `lockdownPolicy` to tell audit apart from no lockdown at all. Null when
+  // `lockdownPolicy` is null: this field covers only the `__PSLockdownPolicy`
+  // fall-back, and a host constrained by an active App Control or AppLocker
+  // policy leaves that value unset.
+  languageMode() string
 }
 
 // PowerShell Script Block Logging policy
@@ -12287,6 +12311,13 @@ windows.powershell {
 private windows.powershell.scriptBlockLogging @defaults("enabled") {
   // Whether script block logging is enabled (EnableScriptBlockLogging); null when the value is absent
   enabled bool
+  // Whether script block invocation logging is enabled (EnableScriptBlockInvocationLogging)
+  //
+  // Records an event each time a command, script block, function, or script
+  // starts and stops, in addition to the script block contents recorded by
+  // `enabled`. It produces a high volume of events, so it is usually left off
+  // outside an investigation. Null when the value is absent.
+  invocationLogging bool
 }
 
 // PowerShell Transcription policy
@@ -12298,6 +12329,44 @@ private windows.powershell.scriptBlockLogging @defaults("enabled") {
 private windows.powershell.transcription @defaults("enabled") {
   // Whether PowerShell transcription is enabled (EnableTranscripting); null when the value is absent
   enabled bool
+  // Directory transcripts are written to (OutputDirectory)
+  //
+  // The directory PowerShell writes session transcripts to. Null when the
+  // value is absent, in which case transcripts land in the user's Documents
+  // folder on the host that produced them. The path is worth auditing in its
+  // own right: a directory writable by unprivileged users lets an attacker
+  // edit the record of their own session, and a purely local path leaves the
+  // only copy on the machine being investigated.
+  outputDirectory string
+  // Whether each transcribed command carries an invocation header (EnableInvocationHeader)
+  //
+  // Writes a timestamped header before every command recorded in the
+  // transcript, which is what makes the transcript usable as a timeline.
+  // Null when the value is absent.
+  enableInvocationHeader bool
+}
+
+// PowerShell Module Logging policy
+//
+// Module Logging policy under HKLM\SOFTWARE\Policies\Microsoft
+// \Windows\PowerShell\ModuleLogging. Module logging records pipeline
+// execution details for the selected modules to the Windows PowerShell event
+// log. The policy carries two halves: whether it is on, and which modules it
+// covers. A policy that is on but names no module logs nothing, so
+// `moduleNames` is what says whether the setting has any effect. This is a
+// GPO-only value; when it is absent the field is null, distinguishable from an
+// explicit 0.
+private windows.powershell.moduleLogging @defaults("enabled") {
+  // Whether module logging is enabled (EnableModuleLogging); null when the value is absent
+  enabled bool
+  // Module names selected for logging (ModuleNames subkey)
+  //
+  // One entry per module named by the policy, taken from the value names under
+  // the ModuleNames subkey. A single entry of "*" selects every module. Null
+  // when the ModuleNames subkey is absent, and an empty list when the subkey
+  // exists but names no module, in which case module logging records nothing
+  // even while `enabled` is true.
+  moduleNames() []string
 }
 
 // Windows Trusted Platform Module (TPM)
