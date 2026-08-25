@@ -12831,6 +12831,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.firewall.rule.policyStoreSourceType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsFirewallRule).GetPolicyStoreSourceType()).ToDataRes(types.Int)
 	},
+	"windows.firewall.rule.profiles": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetProfiles()).ToDataRes(types.Array(types.String))
+	},
+	"windows.firewall.rule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.localPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetLocalPorts()).ToDataRes(types.Array(types.String))
+	},
+	"windows.firewall.rule.remotePorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetRemotePorts()).ToDataRes(types.Array(types.String))
+	},
+	"windows.firewall.rule.localAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetLocalAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.firewall.rule.remoteAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetRemoteAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"windows.firewall.rule.icmpTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetIcmpTypes()).ToDataRes(types.Array(types.String))
+	},
+	"windows.firewall.rule.program": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetProgram()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.serviceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetServiceName()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.interfaceTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetInterfaceTypes()).ToDataRes(types.Array(types.String))
+	},
+	"windows.firewall.rule.authorizedUsers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetAuthorizedUsers()).ToDataRes(types.String)
+	},
+	"windows.firewall.rule.authorizedComputers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsFirewallRule).GetAuthorizedComputers()).ToDataRes(types.String)
+	},
 	"windows.smb.shares": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSmb).GetShares()).ToDataRes(types.Array(types.Resource("windows.smb.share")))
 	},
@@ -31254,6 +31290,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.firewall.rule.policyStoreSourceType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsFirewallRule).PolicyStoreSourceType, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.profiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Profiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.localPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).LocalPorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.remotePorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).RemotePorts, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.localAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).LocalAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.remoteAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).RemoteAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.icmpTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).IcmpTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.program": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).Program, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.serviceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).ServiceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.interfaceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).InterfaceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.authorizedUsers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).AuthorizedUsers, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.firewall.rule.authorizedComputers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsFirewallRule).AuthorizedComputers, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.smb.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80792,6 +80876,18 @@ type mqlWindowsFirewallRule struct {
 	EnforcementStatus     plugin.TValue[string]
 	PolicyStoreSource     plugin.TValue[string]
 	PolicyStoreSourceType plugin.TValue[int64]
+	Profiles              plugin.TValue[[]any]
+	Protocol              plugin.TValue[string]
+	LocalPorts            plugin.TValue[[]any]
+	RemotePorts           plugin.TValue[[]any]
+	LocalAddresses        plugin.TValue[[]any]
+	RemoteAddresses       plugin.TValue[[]any]
+	IcmpTypes             plugin.TValue[[]any]
+	Program               plugin.TValue[string]
+	ServiceName           plugin.TValue[string]
+	InterfaceTypes        plugin.TValue[[]any]
+	AuthorizedUsers       plugin.TValue[string]
+	AuthorizedComputers   plugin.TValue[string]
 }
 
 // createWindowsFirewallRule creates a new instance of this resource
@@ -80893,6 +80989,54 @@ func (c *mqlWindowsFirewallRule) GetPolicyStoreSource() *plugin.TValue[string] {
 
 func (c *mqlWindowsFirewallRule) GetPolicyStoreSourceType() *plugin.TValue[int64] {
 	return &c.PolicyStoreSourceType
+}
+
+func (c *mqlWindowsFirewallRule) GetProfiles() *plugin.TValue[[]any] {
+	return &c.Profiles
+}
+
+func (c *mqlWindowsFirewallRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlWindowsFirewallRule) GetLocalPorts() *plugin.TValue[[]any] {
+	return &c.LocalPorts
+}
+
+func (c *mqlWindowsFirewallRule) GetRemotePorts() *plugin.TValue[[]any] {
+	return &c.RemotePorts
+}
+
+func (c *mqlWindowsFirewallRule) GetLocalAddresses() *plugin.TValue[[]any] {
+	return &c.LocalAddresses
+}
+
+func (c *mqlWindowsFirewallRule) GetRemoteAddresses() *plugin.TValue[[]any] {
+	return &c.RemoteAddresses
+}
+
+func (c *mqlWindowsFirewallRule) GetIcmpTypes() *plugin.TValue[[]any] {
+	return &c.IcmpTypes
+}
+
+func (c *mqlWindowsFirewallRule) GetProgram() *plugin.TValue[string] {
+	return &c.Program
+}
+
+func (c *mqlWindowsFirewallRule) GetServiceName() *plugin.TValue[string] {
+	return &c.ServiceName
+}
+
+func (c *mqlWindowsFirewallRule) GetInterfaceTypes() *plugin.TValue[[]any] {
+	return &c.InterfaceTypes
+}
+
+func (c *mqlWindowsFirewallRule) GetAuthorizedUsers() *plugin.TValue[string] {
+	return &c.AuthorizedUsers
+}
+
+func (c *mqlWindowsFirewallRule) GetAuthorizedComputers() *plugin.TValue[string] {
+	return &c.AuthorizedComputers
 }
 
 // mqlWindowsSmb for the windows.smb resource

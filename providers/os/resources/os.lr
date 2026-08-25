@@ -12156,8 +12156,16 @@ windows.firewall.profile {
 // Single Windows Firewall rule: its unique `instanceID`, display
 // name, description, group, enabled state, traffic direction (inbound/
 // outbound), action (allow/block), edge traversal policy, and enforcement
-// status. Iterated from `windows.firewall.rules` to audit which rules are
-// active and whether they match expected policy.
+// status, together with the conditions the rule matches on: protocol,
+// local and remote ports and addresses, ICMP types, program, service,
+// profiles, interface types, and authorized remote principals. Iterated
+// from `windows.firewall.rules` to audit which rules are active and what
+// traffic they actually permit, for example an enabled inbound allow rule
+// whose remote addresses are `Any`. The condition fields are joined onto
+// the rule from the `Get-NetFirewallPortFilter`,
+// `Get-NetFirewallAddressFilter`, `Get-NetFirewallApplicationFilter`,
+// `Get-NetFirewallServiceFilter`, `Get-NetFirewallInterfaceTypeFilter`,
+// and `Get-NetFirewallSecurityFilter` cmdlets.
 windows.firewall.rule {
   // A string that uniquely identifies this instance within the policy store
   instanceID string
@@ -12202,6 +12210,82 @@ windows.firewall.rule {
   policyStoreSource string
   // Describes the type of policy store where this rule originally came from
   policyStoreSourceType int
+  // Firewall profiles this rule applies to
+  //
+  // Any combination of `Domain`, `Private`, and `Public`, or the single
+  // value `Any` when the rule applies to every profile. A rule only takes
+  // effect while one of its profiles is the active one, so a permissive
+  // rule scoped to `Domain` is a different exposure from the same rule
+  // scoped to `Public`.
+  profiles []string
+  // IP protocol the rule matches
+  //
+  // A well-known name such as `TCP`, `UDP`, `ICMPv4`, or `ICMPv6`, the
+  // literal `Any`, or the IANA protocol number for protocols with no
+  // well-known name.
+  protocol string
+  // Local ports the rule matches
+  //
+  // Individual ports, inclusive ranges such as `8554-8558`, the literal
+  // `Any`, or one of the dynamic keywords Windows accepts in place of a
+  // port number (`RPC`, `RPCEPMap`, `IPHTTPS`, `PlayToDiscovery`).
+  localPorts []string
+  // Remote ports the rule matches
+  //
+  // Same value space as `localPorts`.
+  remotePorts []string
+  // Local addresses the rule matches
+  //
+  // Individual addresses, CIDR blocks, inclusive ranges, or the literal
+  // `Any`.
+  localAddresses []string
+  // Remote addresses the rule matches
+  //
+  // Individual addresses, CIDR blocks, inclusive ranges, the literal `Any`,
+  // or one of the address keywords Windows resolves at evaluation time
+  // (`LocalSubnet`, `Internet`, `Intranet`, `DNS`, `DHCP`, `WINS`,
+  // `DefaultGateway`, `PlayToDevice`). An inbound allow rule whose remote
+  // addresses are `Any` accepts traffic from anywhere that can reach the
+  // host.
+  remoteAddresses []string
+  // ICMP types and codes the rule matches
+  //
+  // Each entry is either a type number such as `8`, a `type:code` pair such
+  // as `3:4`, or the literal `Any`. Rules whose protocol is not ICMP report
+  // `Any` rather than an empty list, so read this together with `protocol`.
+  icmpTypes []string
+  // Path of the program the rule is scoped to
+  //
+  // An absolute path, the literal `Any` when the rule applies to every
+  // program, or `System` for kernel-mode traffic. Null when the host
+  // reported no application condition for the rule.
+  program string
+  // Windows service the rule is scoped to
+  //
+  // The service short name, or the literal `Any` when the rule is not
+  // scoped to a service. Null when the host reported no service condition
+  // for the rule.
+  serviceName string
+  // Interface types the rule applies to
+  //
+  // Any combination of `Wired`, `Wireless`, and `RemoteAccess`, or the
+  // single value `Any`.
+  interfaceTypes []string
+  // Authorized remote users
+  //
+  // The literal `Any` when the rule places no user condition on the traffic
+  // it permits, which is the case for every rule a stock Windows install
+  // ships with. Otherwise an SDDL security descriptor restricting the rule
+  // to connections whose authenticated remote user matches it. Null when
+  // the host reported no security condition for the rule.
+  authorizedUsers string
+  // Authorized remote computers
+  //
+  // The literal `Any` when the rule places no machine condition on the
+  // traffic it permits. Otherwise an SDDL security descriptor restricting
+  // the rule to connections from authenticated remote machines that match
+  // it. Null when the host reported no security condition for the rule.
+  authorizedComputers string
 }
 
 // Windows SMB (Server Message Block) server
