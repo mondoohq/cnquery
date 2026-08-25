@@ -176,32 +176,59 @@ func TestParseContentTypeDirectives(t *testing.T) {
 
 func TestParseSetCookieDirectives(t *testing.T) {
 	t.Run("parses the cookie name, value, and attributes", func(t *testing.T) {
-		name, value, params := parseSetCookieDirectives([]any{"sid=abc123; Secure; HttpOnly; Max-Age=100"})
+		name, value, params := parseSetCookieDirectives("sid=abc123; Secure; HttpOnly; Max-Age=100")
 		assert.Equal(t, llx.StringData("sid"), name)
 		assert.Equal(t, llx.StringData("abc123"), value)
 		assert.Equal(t, map[string]any{"secure": "", "httponly": "", "max-age": "100"}, params.Value)
 	})
 
 	t.Run("keeps cookie name and value casing, normalizes attribute names", func(t *testing.T) {
-		name, value, params := parseSetCookieDirectives([]any{"SessionId=AbC123; SECURE; httpOnly"})
+		name, value, params := parseSetCookieDirectives("SessionId=AbC123; SECURE; httpOnly")
 		assert.Equal(t, llx.StringData("SessionId"), name)
 		assert.Equal(t, llx.StringData("AbC123"), value)
 		assert.Equal(t, map[string]any{"secure": "", "httponly": ""}, params.Value)
 	})
 
 	t.Run("keeps attribute value casing", func(t *testing.T) {
-		_, _, params := parseSetCookieDirectives([]any{"sid=1; Domain=Example.COM; SameSite=Strict"})
+		_, _, params := parseSetCookieDirectives("sid=1; Domain=Example.COM; SameSite=Strict")
 		assert.Equal(t, map[string]any{"domain": "Example.COM", "samesite": "Strict"}, params.Value)
 	})
+}
 
-	t.Run("does not absorb a second cookie into the first cookie's attributes", func(t *testing.T) {
-		name, value, params := parseSetCookieDirectives([]any{
-			"NEXT_LOCALE=en; Path=/; Secure",
-			"consent_region=other; Path=/; Secure",
-		})
-		assert.Equal(t, llx.StringData("NEXT_LOCALE"), name)
-		assert.Equal(t, llx.StringData("en"), value)
-		assert.Equal(t, map[string]any{"path": "/", "secure": ""}, params.Value)
+func TestHttpHeaderSetCookie(t *testing.T) {
+	t.Run("returns only the first cookie, without absorbing the rest", func(t *testing.T) {
+		h := &mqlHttpHeader{
+			MqlRuntime: &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}},
+			__id:       "https://example.com",
+			Params: plugin.TValue[map[string]any]{
+				Data: map[string]any{"Set-Cookie": []any{
+					"NEXT_LOCALE=en; Path=/; Secure",
+					"consent_region=other; Path=/; Secure; HttpOnly",
+				}},
+				State: plugin.StateIsSet,
+			},
+		}
+		cookie, err := h.setCookie()
+		require.NoError(t, err)
+		require.NotNil(t, cookie)
+		assert.Equal(t, "NEXT_LOCALE", cookie.Name.Data)
+		assert.Equal(t, "en", cookie.Value.Data)
+		assert.Equal(t, map[string]any{"path": "/", "secure": ""}, cookie.Params.Data)
+	})
+
+	t.Run("is null when the response sets no cookies", func(t *testing.T) {
+		h := &mqlHttpHeader{
+			MqlRuntime: &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}},
+			__id:       "https://example.com",
+			Params: plugin.TValue[map[string]any]{
+				Data:  map[string]any{"Content-Type": []any{"text/html"}},
+				State: plugin.StateIsSet,
+			},
+		}
+		cookie, err := h.setCookie()
+		require.NoError(t, err)
+		assert.Nil(t, cookie)
+		assert.Equal(t, plugin.StateIsSet|plugin.StateIsNull, h.SetCookie.State)
 	})
 }
 

@@ -79,10 +79,11 @@ private http.header @defaults("length=params.length") {
   contentType() http.header.contentType
   // Set-Cookie header
   //
-  // The first cookie the response sets. Null when the response sets no
-  // cookies. A response may set more than one cookie; use `setCookies` to
-  // inspect every one of them.
-  setCookie() http.header.setCookie
+  // Deprecated in favor of setCookies. Reports only the first cookie the
+  // response sets, so an assertion made over it silently ignores every other
+  // cookie. Null when the response sets no cookies. Will be removed in the
+  // next major release.
+  setCookie() @maturity("deprecated") http.header.setCookie
   // Every cookie the response sets, one entry per Set-Cookie header
   //
   // Null when the response sets no cookies. Each entry parses one
