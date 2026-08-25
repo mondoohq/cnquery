@@ -2202,11 +2202,11 @@ func init() {
 			Create: createWindowsExploitProtection,
 		},
 		"windows.exploitProtection.dep": {
-			// to override args, implement: initWindowsExploitProtectionDep(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionDep,
 			Create: createWindowsExploitProtectionDep,
 		},
 		"windows.exploitProtection.aslr": {
-			// to override args, implement: initWindowsExploitProtectionAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionAslr,
 			Create: createWindowsExploitProtectionAslr,
 		},
 		"windows.exploitProtection.cfg": {
@@ -2214,11 +2214,11 @@ func init() {
 			Create: createWindowsExploitProtectionCfg,
 		},
 		"windows.exploitProtection.sehop": {
-			// to override args, implement: initWindowsExploitProtectionSehop(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionSehop,
 			Create: createWindowsExploitProtectionSehop,
 		},
 		"windows.exploitProtection.heap": {
-			// to override args, implement: initWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionHeap,
 			Create: createWindowsExploitProtectionHeap,
 		},
 		"windows.smartScreen": {
@@ -2510,7 +2510,7 @@ func init() {
 			Create: createWindowsBitlocker,
 		},
 		"windows.bitlocker.policy": {
-			// to override args, implement: initWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsBitlockerPolicy,
 			Create: createWindowsBitlockerPolicy,
 		},
 		"windows.bitlocker.policy.driveSettings": {
