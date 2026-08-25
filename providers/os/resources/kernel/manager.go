@@ -162,7 +162,17 @@ func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
 		// parse was reported as "no modules loaded" rather than as a failure,
 		// and a policy asserting a module is absent passed without ever
 		// reading the module list.
-		if err == nil && cmd.ExitStatus == 0 {
+		//
+		// Each way of missing is logged separately: a command that could not be
+		// run at all and one that ran and failed are different problems on the
+		// target, and from the fallback alone they look identical.
+		switch {
+		case err != nil:
+			log.Debug().Err(err).Msg("could not run /sbin/lsmod, falling back to /proc/modules")
+		case cmd.ExitStatus != 0:
+			log.Debug().Int("exit", cmd.ExitStatus).
+				Msg("/sbin/lsmod exited non-zero, falling back to /proc/modules")
+		default:
 			log.Debug().Msg("using lsmod to read kernel modules")
 			return ParseLsmod(cmd.Stdout), nil
 		}
