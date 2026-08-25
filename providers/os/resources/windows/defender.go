@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -212,22 +213,111 @@ func (f *flexNumStrings) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// rawString renders a json.RawMessage as a trimmed string, stripping the
-// surrounding quotes when the value is a JSON string. It is used for schedule
-// time fields whose serialization differs across PowerShell versions (a
-// TimeSpan object in 5.1, an ISO duration string in 7+).
-func rawString(raw json.RawMessage) string {
+// ScheduleTime normalizes a Defender schedule preference to a "HH:MM:SS"
+// time of day.
+//
+// These preferences are CIM datetime values, and how PowerShell serializes
+// them depends on the host. Windows PowerShell 5.1 emits a whole TimeSpan
+// object, so the field arrives as
+// {"Ticks":72000000000,"Days":0,"Hours":2,...}; PowerShell 7+ emits an ISO
+// 8601 duration such as "PT2H"; and some builds emit the "/Date(ms)/" form or
+// an already-formatted "02:00:00". All four describe 02:00 and must read the
+// same way.
+//
+// An unrecognized value is returned trimmed rather than dropped, so an
+// unfamiliar serialization surfaces as itself instead of as an empty string
+// that would read as "no schedule".
+func ScheduleTime(raw json.RawMessage) string {
 	s := strings.TrimSpace(string(raw))
 	if s == "" || s == "null" {
 		return ""
 	}
+
+	// PowerShell 5.1: a serialized TimeSpan object.
+	if s[0] == '{' {
+		var ts struct {
+			Ticks *int64 `json:"Ticks"`
+		}
+		if err := json.Unmarshal(raw, &ts); err == nil && ts.Ticks != nil {
+			return formatTimeOfDay(time.Duration(*ts.Ticks) * 100)
+		}
+		return s
+	}
+
 	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
 		var v string
 		if err := json.Unmarshal(raw, &v); err == nil {
-			return v
+			return normalizeScheduleString(v)
 		}
 	}
 	return s
+}
+
+// normalizeScheduleString converts the string serializations of a schedule
+// preference to "HH:MM:SS".
+func normalizeScheduleString(v string) string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return ""
+	}
+	// The "/Date(ms)/" form carries a full timestamp whose time of day is the
+	// scheduled time.
+	if t := powershell.PSJsonTimestamp(v); t != nil {
+		return t.UTC().Format("15:04:05")
+	}
+	if d, ok := parseISODuration(v); ok {
+		return formatTimeOfDay(d)
+	}
+	return v
+}
+
+// parseISODuration parses the time-only ISO 8601 durations PowerShell 7+ emits
+// for a TimeSpan, for example "PT2H" or "PT1H45M". Durations carrying a date
+// component are rejected, since a schedule preference never has one.
+func parseISODuration(v string) (time.Duration, bool) {
+	rest, ok := strings.CutPrefix(strings.ToUpper(v), "PT")
+	if !ok || rest == "" {
+		return 0, false
+	}
+	var total time.Duration
+	num := ""
+	for _, r := range rest {
+		if (r >= '0' && r <= '9') || r == '.' {
+			num += string(r)
+			continue
+		}
+		if num == "" {
+			return 0, false
+		}
+		f, err := strconv.ParseFloat(num, 64)
+		if err != nil {
+			return 0, false
+		}
+		switch r {
+		case 'H':
+			total += time.Duration(f * float64(time.Hour))
+		case 'M':
+			total += time.Duration(f * float64(time.Minute))
+		case 'S':
+			total += time.Duration(f * float64(time.Second))
+		default:
+			return 0, false
+		}
+		num = ""
+	}
+	if num != "" {
+		return 0, false
+	}
+	return total, true
+}
+
+// formatTimeOfDay renders a duration since midnight as "HH:MM:SS".
+func formatTimeOfDay(d time.Duration) string {
+	if d < 0 {
+		d = 0
+	}
+	secs := int64(d / time.Second)
+	return fmt.Sprintf("%02d:%02d:%02d", (secs/3600)%24, (secs/60)%60, secs%60)
 }
 
 // MpComputerStatus mirrors the relevant fields of Get-MpComputerStatus.
@@ -402,22 +492,22 @@ type MpPreference struct {
 	DisableGenericReports *bool `json:"DisableGenericRePorts"`
 }
 
-// ScanScheduleTimeString returns the raw scheduled-scan time value.
-func (p *MpPreference) ScanScheduleTimeString() string { return rawString(p.ScanScheduleTime) }
+// ScanScheduleTimeString returns the scheduled-scan time of day.
+func (p *MpPreference) ScanScheduleTimeString() string { return ScheduleTime(p.ScanScheduleTime) }
 
-// ScanScheduleQuickScanTimeString returns the raw scheduled quick-scan time value.
+// ScanScheduleQuickScanTimeString returns the scheduled quick-scan time of day.
 func (p *MpPreference) ScanScheduleQuickScanTimeString() string {
-	return rawString(p.ScanScheduleQuickScanTime)
+	return ScheduleTime(p.ScanScheduleQuickScanTime)
 }
 
-// SignatureScheduleTimeString returns the raw scheduled signature-update time value.
+// SignatureScheduleTimeString returns the scheduled signature-update time of day.
 func (p *MpPreference) SignatureScheduleTimeString() string {
-	return rawString(p.SignatureScheduleTime)
+	return ScheduleTime(p.SignatureScheduleTime)
 }
 
-// RemediationScheduleTimeString returns the raw scheduled-remediation time value.
+// RemediationScheduleTimeString returns the scheduled-remediation time of day.
 func (p *MpPreference) RemediationScheduleTimeString() string {
-	return rawString(p.RemediationScheduleTime)
+	return ScheduleTime(p.RemediationScheduleTime)
 }
 
 // MpThreat mirrors the relevant fields of Get-MpThreat.
