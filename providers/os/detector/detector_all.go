@@ -169,6 +169,21 @@ var azurelinux = &PlatformResolver{
 	},
 }
 
+// Container-Optimized OS from Google ships only /etc/os-release, carrying
+// ID=cos along with VERSION_ID and BUILD_ID. Without a resolver of its own the
+// generic linux fallback claimed it: an SSH or local scan still reported the
+// name os-release states, but a container or container image claimed by that
+// fallback is reported as "scratch", and the name never reached the platform
+// catalog, so cos had no family chain to filter on. Note cos ships no package
+// manager, so packages are not available on this platform; detection only.
+var cos = &PlatformResolver{
+	Name:     "cos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "cos", nil
+	},
+}
+
 var flatcar = &PlatformResolver{
 	Name:     "flatcar",
 	IsFamily: false,
@@ -1468,7 +1483,7 @@ var linuxFamily = &PlatformResolver{
 	IsFamily: true,
 	// NOTE: altlinux runs before the redhat family, whose members probe
 	// /etc/redhat-release and /etc/fedora-release, both of which ALT ships.
-	Children: []*PlatformResolver{archFamily, altlinux, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, wizos, alpine, wolfi, nixos, gentoo, voidlinux, clearlinux, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, cirros, defaultLinux},
+	Children: []*PlatformResolver{archFamily, altlinux, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, wizos, alpine, wolfi, nixos, gentoo, voidlinux, clearlinux, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, cos, flatcar, cirros, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
