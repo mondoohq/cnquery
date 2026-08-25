@@ -173,9 +173,24 @@ func ParseWindowsUpdates(input io.Reader) ([]WindowsUpdate, error) {
 // a null decodes to. The script's ErrorActionPreference keeps a failed search
 // from producing one, and this keeps any other source of a blank record from
 // being counted as an outstanding update.
+//
+// The common case is that there is nothing to drop, so the input is returned
+// as it stands and nothing is allocated until a blank record is actually seen.
 func dropEmptyWindowsUpdates(updates []WindowsUpdate) []WindowsUpdate {
-	res := make([]WindowsUpdate, 0, len(updates))
+	first := -1
 	for i := range updates {
+		if updates[i].UpdateID == "" && updates[i].Title == "" {
+			first = i
+			break
+		}
+	}
+	if first < 0 {
+		return updates
+	}
+
+	res := make([]WindowsUpdate, first, len(updates)-1)
+	copy(res, updates[:first])
+	for i := first + 1; i < len(updates); i++ {
 		if updates[i].UpdateID == "" && updates[i].Title == "" {
 			continue
 		}

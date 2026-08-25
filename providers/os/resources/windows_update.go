@@ -214,11 +214,21 @@ func (w *mqlWindowsUpdate) config() (*mqlWindowsUpdateConfig, error) {
 	noAutoUpdate := regInt(au, "NoAutoUpdate") == 1
 
 	// wufbPolicyState names the key, not a value inside it. Reading a value of
-	// that name found nothing on any host, so the Windows Update for Business
-	// branch below was unreachable and policyState reported a constant 0 that
-	// no host had set. IsWUfBConfigured is the flag the key actually carries.
-	wufbConfigured := regInt(wufb, "IsWUfBConfigured") == 1
+	// that name found nothing on any host: Server 2019, 2022 and 2025 carry
+	// the key with a dozen values (DeferQualityUpdates, BranchReadinessLevel,
+	// IsWUfBConfigured and the rest) and none of them is called PolicyState,
+	// while Server 2016 has no such key at all. So the Windows Update for
+	// Business branch below was unreachable and policyState reported a
+	// constant 0 that no host had set.
+	//
+	// IsWUfBConfigured is the flag the key actually carries, and it is the
+	// whole of what this key says about enrollment, so policyState and the
+	// catalogSource gate are deliberately the same reading rather than two
+	// values that happen to coincide. wufbConfigured is derived from
+	// policyState to keep that explicit: an absent key is not enrollment, and
+	// neither is the flag being present and 0.
 	policyState := regIntPtr(wufb, "IsWUfBConfigured")
+	wufbConfigured := policyState != nil && *policyState == 1
 
 	catalogSource := deriveCatalogSource(read, useWUServer, wsusServerURL, auOptions, noAutoUpdate, wufbConfigured)
 
