@@ -209,8 +209,13 @@ func (w *mqlWindowsEventlog) maxSizeKB() (int64, error) {
 	return eventlogDefaultMaxSizeKB, nil
 }
 
-// retentionRaw returns the effective Retention value (policy wins) and whether
-// it was set in either source.
+// retentionRaw returns the effective Retention value from the two keys that
+// use the legacy seconds encoding (policy wins) and whether either carried a
+// value.
+//
+// The WINEVT channel key is deliberately not consulted here: it stores
+// Retention as a boolean rather than a period, so its value cannot be fed to
+// decodeRetention. resolveRetention reads it separately.
 func (w *mqlWindowsEventlog) retentionRaw() (int64, bool, error) {
 	if err := w.load(); err != nil {
 		return 0, false, err
@@ -224,16 +229,69 @@ func (w *mqlWindowsEventlog) retentionRaw() (int64, bool, error) {
 	return 0, false, nil
 }
 
-func (w *mqlWindowsEventlog) retention() (string, error) {
+// decodeChannelRetention maps the WINEVT channel Retention value to a
+// behavior. This key does not use the legacy seconds encoding the classic logs
+// use: it is a flag, 0 for "overwrite events as needed" and non-zero for "do
+// not overwrite events". Passing it to decodeRetention would read a channel
+// configured to retain its events as one that overwrites them after a day.
+func decodeChannelRetention(n int64) string {
+	if n == 0 {
+		return retentionOverwriteAsNeeded
+	}
+	return retentionNeverOverwrite
+}
+
+// decodeLogMode maps the effective LogMode Windows reports for a channel to a
+// behavior, and reports whether it was recognized. AutoBackup archives the log
+// when it is full and starts a new one, so like Retain it does not overwrite.
+func decodeLogMode(mode string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case "circular":
+		return retentionOverwriteAsNeeded, true
+	case "autobackup", "retain":
+		return retentionNeverOverwrite, true
+	default:
+		return "", false
+	}
+}
+
+// resolveRetention picks the retention behavior out of the sources in the
+// order Windows applies them.
+//
+// A modern provider channel such as Microsoft-Windows-PowerShell/Operational
+// is not under Services\EventLog at all. Without the WINEVT and LogMode
+// sources every one of them resolved to the documented Windows default, so a
+// channel explicitly configured not to overwrite its events was reported as
+// overwriting them as needed, which is the reading that lets an audit pass.
+func (w *mqlWindowsEventlog) resolveRetention() (string, error) {
 	n, ok, err := w.retentionRaw()
 	if err != nil {
 		return "", err
 	}
-	if !ok {
-		// Windows overwrites events as needed by default
-		return retentionOverwriteAsNeeded, nil
+	if ok {
+		return decodeRetention(n), nil
 	}
-	return decodeRetention(n), nil
+
+	if n, ok := lookupInt(w.channel, "retention"); ok {
+		return decodeChannelRetention(n), nil
+	}
+
+	// The effective behavior the channel itself reports. It costs a command,
+	// so a connection that cannot run one still resolves to the default below
+	// rather than failing: this source is an improvement on the default, not a
+	// replacement for the registry chain.
+	if state, err := w.loadState(); err == nil {
+		if mode, ok := decodeLogMode(state.LogMode); ok {
+			return mode, nil
+		}
+	}
+
+	// Windows overwrites events as needed by default
+	return retentionOverwriteAsNeeded, nil
+}
+
+func (w *mqlWindowsEventlog) retention() (string, error) {
+	return w.resolveRetention()
 }
 
 // decodeRetention maps a Retention value to a human-readable behavior. The
@@ -250,15 +308,14 @@ func decodeRetention(n int64) string {
 	}
 }
 
+// overwriteAsNeeded is derived from the same resolution retention uses, so the
+// two can never disagree about the same channel.
 func (w *mqlWindowsEventlog) overwriteAsNeeded() (bool, error) {
-	n, ok, err := w.retentionRaw()
+	behavior, err := w.resolveRetention()
 	if err != nil {
 		return false, err
 	}
-	if !ok {
-		return true, nil
-	}
-	return n == 0, nil
+	return behavior == retentionOverwriteAsNeeded, nil
 }
 
 // lookupInt returns the int64 value of a registry item from the given key map.
