@@ -13483,6 +13483,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.dnsServer.diagnostics.maxFileSizeBytes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServerDiagnostics).GetMaxFileSizeBytes()).ToDataRes(types.Int)
 	},
+	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetMaxFileSizeMb()).ToDataRes(types.Int)
+	},
 	"windows.dnsServer.diagnostics.enableLogFileRollover": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServerDiagnostics).GetEnableLogFileRollover()).ToDataRes(types.Bool)
 	},
@@ -32478,6 +32481,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.dnsServer.diagnostics.maxFileSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDnsServerDiagnostics).MaxFileSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).MaxFileSizeMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"windows.dnsServer.diagnostics.enableLogFileRollover": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83793,6 +83800,7 @@ type mqlWindowsDnsServerDiagnostics struct {
 	EnableLoggingToFile         plugin.TValue[bool]
 	LogFilePath                 plugin.TValue[string]
 	MaxFileSizeBytes            plugin.TValue[int64]
+	MaxFileSizeMb               plugin.TValue[int64]
 	EnableLogFileRollover       plugin.TValue[bool]
 	SaveLogsToPersistentStorage plugin.TValue[bool]
 	LogQueries                  plugin.TValue[bool]
@@ -83860,6 +83868,10 @@ func (c *mqlWindowsDnsServerDiagnostics) GetLogFilePath() *plugin.TValue[string]
 
 func (c *mqlWindowsDnsServerDiagnostics) GetMaxFileSizeBytes() *plugin.TValue[int64] {
 	return &c.MaxFileSizeBytes
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetMaxFileSizeMb() *plugin.TValue[int64] {
+	return &c.MaxFileSizeMb
 }
 
 func (c *mqlWindowsDnsServerDiagnostics) GetEnableLogFileRollover() *plugin.TValue[bool] {

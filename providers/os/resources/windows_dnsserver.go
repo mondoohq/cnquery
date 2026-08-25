@@ -286,6 +286,8 @@ func (w *mqlWindowsDnsServer) diagnostics() (*mqlWindowsDnsServerDiagnostics, er
 		"enableLoggingToFile":         llx.BoolData(d.EnableLoggingToFile),
 		"logFilePath":                 llx.StringData(d.LogFilePath),
 		"maxFileSizeBytes":            llx.IntData(d.MaxMBFileSize),
+		// Deprecated: same value, kept so existing checks do not break.
+		"maxFileSizeMb":               llx.IntData(d.MaxMBFileSize),
 		"enableLogFileRollover":       llx.BoolData(d.EnableLogFileRollover),
 		"saveLogsToPersistentStorage": llx.BoolData(d.SaveLogsToPersistentStorage),
 		"logQueries":                  llx.BoolData(d.Queries),

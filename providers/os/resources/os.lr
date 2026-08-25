@@ -13438,6 +13438,13 @@ private windows.dnsServer.diagnostics @defaults("eventLogLevel") {
   // 500 MB, and it is written through to the LogFileMaxSize registry value
   // unchanged. Compare against a size in bytes.
   maxFileSizeBytes int
+  // Maximum debug log file size, despite the name reported in bytes
+  //
+  // Deprecated in favor of maxFileSizeBytes, which carries the same value under
+  // a name that says what the unit actually is. This field is unchanged and
+  // still reports the byte count, so existing checks keep the behavior they
+  // have today. Will be removed in the next major release.
+  maxFileSizeMb @maturity("deprecated") int
   // Whether the debug log wraps rather than stopping when it reaches its size limit
   enableLogFileRollover bool
   // Whether debug log entries are flushed to disk as they are written
