@@ -31,7 +31,7 @@ func TestMacOsXPackageParser(t *testing.T) {
 	}
 	m, err := packages.ParseMacOSPackages(mock, pf, c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 5, len(m), "detected the right amount of packages")
+	assert.Equal(t, 6, len(m), "detected the right amount of packages")
 
 	assert.Equal(t, "Preview", m[0].Name, "pkg name detected")
 	assert.Equal(t, "10.0", m[0].Version, "pkg version detected")
@@ -61,8 +61,37 @@ func TestMacOsXPackageParser(t *testing.T) {
 	assert.Equal(t, "7778.181", m[3].Version, "pkg version recovered from Info.plist")
 	assert.Equal(t, "pkg:macos/macos/Microsoft%20Teams%20%28PWA%29@7778.181?arch=x86_64", m[3].PUrl)
 
-	// A bare ".app" directory with no Info.plist (a system daemon) genuinely
-	// has no version anywhere, so the version stays empty.
-	assert.Equal(t, "liquiddetectiond", m[4].Name, "pkg name detected")
-	assert.Equal(t, "", m[4].Version, "no version available for a bare .app daemon")
+	// An application bundle whose Info.plist carries no version keys at all is
+	// still a real installed application, so it is reported with an empty
+	// version rather than dropped.
+	assert.Equal(t, "qFlipper", m[4].Name, "versionless app bundle kept")
+	assert.Equal(t, "", m[4].Version, "no version available in the Info.plist")
+	assert.Equal(t, "pkg:macos/macos/qFlipper?arch=x86_64", m[4].PUrl)
+
+	// Wrapped iOS apps keep their Info.plist inside Wrapper/, so there is no
+	// Contents/Info.plist to find. They report a version, so they must never
+	// be dropped by the bundle check.
+	assert.Equal(t, "Victory", m[5].Name, "wrapped iOS app kept")
+	assert.Equal(t, "3.2.1", m[5].Version, "version reported by system_profiler")
+	assert.Equal(t, "pkg:macos/macos/Victory@3.2.1?arch=x86_64", m[5].PUrl)
+
+	// system_profiler enumerates every path carrying a bundle-like extension,
+	// not just application bundles. Entries with no version and no
+	// Contents/Info.plist are not installed applications and are dropped
+	// instead of being reported with an unusable, versionless purl.
+	for _, dropped := range []string{
+		"liquiddetectiond",     // bare .app directory holding a daemon
+		"https+++bsky",         // Firefox origin storage directory
+		"group.is.workflow.my", // app-group script container
+	} {
+		assert.NotContains(t, names(m), dropped, "non-application entry dropped")
+	}
+}
+
+func names(pkgs []packages.Package) []string {
+	list := make([]string, len(pkgs))
+	for i := range pkgs {
+		list[i] = pkgs[i].Name
+	}
+	return list
 }
