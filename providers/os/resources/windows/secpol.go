@@ -107,8 +107,9 @@ func ParseSecpol(r io.Reader) (*Secpol, error) {
 }
 
 // AccountNames lists the [Privilege Rights] principals secedit reported as
-// names rather than SIDs, sorted so the resolver command stays stable. Empty on
-// an English install, where no lookup runs at all.
+// names rather than SIDs, sorted so the resolver command stays stable. secedit
+// names machine-local accounts, so `Guest` in a deny right is enough to put an
+// entry here, on any display language.
 func (s *Secpol) AccountNames() []string {
 	seen := map[string]struct{}{}
 	var names []string
@@ -198,8 +199,8 @@ func isSecurityIdentifier(value string) bool {
 // it. Account name resolution runs as a separate command (see SidLookupScript):
 // combining the export with SID enumeration in one encoded command trips
 // Defender's Trojan:Win32/Commando.A!ml heuristic.
-// Output crosses a pipe, so pin UTF-8: the console code page mangles localized
-// names such as `Gäste` into bytes no SID lookup can match.
+// Output crosses a pipe, so pin UTF-8: the console code page mangles a local
+// account name such as `Müller` into bytes no SID lookup can match.
 const SecpolScript = `
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $cfg = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
@@ -209,7 +210,7 @@ Remove-Item $cfg | Out-Null
 `
 
 // SidLookupScript prints one `name<TAB>sid` line per name it can resolve. It
-// only runs when secedit reported localized account names instead of SIDs.
+// only runs when secedit reported account names instead of SIDs.
 func SidLookupScript(names []string) string {
 	quoted := make([]string, 0, len(names))
 	for _, name := range names {
