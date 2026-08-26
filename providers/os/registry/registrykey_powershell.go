@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 )
 
 // isEmptyPowershellList reports whether the collection scripts produced no
@@ -120,8 +121,17 @@ $reg.Property | ForEach-Object {
 ConvertTo-Json -Depth 3 -Compress $properties
 `
 
+// escapePowershellSingleQuoted escapes a value for interpolation into a
+// single-quoted PowerShell string. PowerShell's escape inside such a string is
+// doubling the quote. Registry key and value names may legally contain one (a
+// key named O'Brien is valid), and without this the quote closes the literal
+// early: the script then fails to parse, or executes whatever followed it.
+func escapePowershellSingleQuoted(s string) string {
+	return strings.ReplaceAll(s, "'", "''")
+}
+
 func GetRegistryKeyItemScript(path string) string {
-	return fmt.Sprintf(getRegistryKeyItemScript, path)
+	return fmt.Sprintf(getRegistryKeyItemScript, escapePowershellSingleQuoted(path))
 }
 
 // getRegistryKeyChildItemsScript represents a registry key item and its children
@@ -143,5 +153,5 @@ ConvertTo-Json -compress $properties
 `
 
 func GetRegistryKeyChildItemsScript(path string) string {
-	return fmt.Sprintf(getRegistryKeyChildItemsScript, path)
+	return fmt.Sprintf(getRegistryKeyChildItemsScript, escapePowershellSingleQuoted(path))
 }
