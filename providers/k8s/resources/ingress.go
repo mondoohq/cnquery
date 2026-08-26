@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
@@ -361,7 +362,15 @@ func getTLS(ingress *networkingv1.Ingress, objId string, runtime *plugin.Runtime
 
 			certs := secret.GetCertificates()
 			if certs.Error != nil {
-				return nil, errors.New("error getting certificate data from Secret")
+				// A Secret whose tls.crt is absent or not parseable as PEM is a
+				// property of this one entry, not of the Ingress. Skip it and keep
+				// the remaining entries, the same way a missing Secret and a Secret
+				// with no TLS data are handled.
+				log.Debug().Err(certs.Error).
+					Str("ingress", ingress.Name).
+					Str("secret", tls.SecretName).
+					Msg("skipping ingress TLS entry whose certificate could not be read")
+				continue
 			}
 			if certs.Data == nil || len(certs.Data) == 0 {
 				// no TLS data in Secret referenced
