@@ -393,11 +393,7 @@ func (k *mqlK8sPod) automountServiceAccountToken() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if spec.AutomountServiceAccountToken == nil {
-		// Defaults to true when unset.
-		return true, nil
-	}
-	return *spec.AutomountServiceAccountToken, nil
+	return effectiveAutomountServiceAccountToken(k.MqlRuntime, spec, k.Namespace.Data), nil
 }
 
 func (k *mqlK8sPod) hostNetwork() (bool, error) {
