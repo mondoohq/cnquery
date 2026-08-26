@@ -39,6 +39,12 @@ kustomize.kustomization @defaults("path") {
   // Name suffix applied to all resources
   nameSuffix string
   // Common labels added to all resources
+  //
+  // Every label pair the kustomization adds to the objects it renders,
+  // gathered from both declaration syntaxes: the legacy `commonLabels`
+  // mapping and the current `labels` list, whose `pairs` entries are folded
+  // in on top of it. A pair declared in `labels` wins when the same key
+  // appears in both, and a later `labels` entry wins over an earlier one.
   commonLabels map[string]string
   // Common annotations added to all resources
   commonAnnotations map[string]string
@@ -168,6 +174,13 @@ kustomize.image @defaults("name newTag") {
   newName string
   // New tag
   newTag string
+  // Tag suffix appended to the original tag
+  //
+  // Set by a `tagSuffix:` entry, which keeps the original tag and appends
+  // this string to it, for example `-debian`. It is an alternative to
+  // newTag and digest, so an entry that leaves all three of those empty
+  // still rewrites the image reference.
+  tagSuffix string
   // New digest (mutually exclusive with newTag)
   digest string
 }
@@ -214,6 +227,15 @@ private kustomize.resource @defaults("kind name") {
 // manifest set, which matters when a single source drives security-relevant
 // fields such as image tags, names, or annotations.
 private kustomize.replacement @defaults("sourcePath") {
+  // Replacement file path
+  //
+  // Set when the entry is declared as `- path: file.yaml` instead of
+  // inline, naming the file (relative to the kustomization directory) that
+  // holds the source and targets. Empty for an inline declaration. The
+  // field stays populated even when the file cannot be read, so a
+  // dangling reference is visible rather than reading as a replacement
+  // that substitutes nothing.
+  path string
   // Source field path (e.g., ".metadata.name")
   sourcePath string
   // Source resource kind

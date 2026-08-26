@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
@@ -46,6 +47,13 @@ type jsonPatchOp struct {
 type mqlKustomizePatchInternal struct {
 	format string
 	ops    []jsonPatchOp
+	// stampOnce guards the post-construction write of format and ops.
+	// CreateResource may return a cached instance for concurrent callers
+	// with the same __id; stampOnce ensures the stamp happens exactly once
+	// across those goroutines, so it never races a concurrent operations()
+	// read. Matches the pattern in newMqlKustomization and
+	// newMqlKustomizeReplacement.
+	stampOnce sync.Once
 }
 
 // strategicMergePatchEntry turns one legacy `patchesStrategicMerge` entry into
@@ -105,37 +113,28 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 	if len(raw) == 0 && p.Path != "" {
 		// Best-effort read; a missing/unreadable file falls back to
 		// strategic-merge with no operations rather than failing the audit.
-		// Constrain the read to the kustomization directory so a malicious
-		// patch path (e.g. "../../etc/passwd") — or a symlink inside the
-		// directory whose target is outside it — can't escape the scan root.
-		// Both the base and the candidate are symlink-resolved before the
-		// containment check so a symlinked scan root (e.g. /tmp on macOS,
-		// which resolves to /private/tmp) doesn't cause false rejections.
-		full := filepath.Join(kustPath, p.Path)
-		// Prefer symlink-resolved paths for the containment check (this catches
-		// a symlink inside the directory whose target escapes it). When symlink
-		// resolution fails for any reason other than the target being a
-		// resolvable escape — e.g. a broken/unresolvable symlink component in
-		// kustPath itself — fall back to a lexical containment check so a
-		// perfectly readable patch file isn't silently dropped and misclassified
-		// as an empty strategic-merge patch.
-		base, target := filepath.Clean(kustPath), filepath.Clean(full)
-		if rb, err1 := filepath.EvalSymlinks(kustPath); err1 == nil {
-			if rt, err2 := filepath.EvalSymlinks(full); err2 == nil {
-				base, target = rb, rt
-			}
-		}
-		if rel, err := filepath.Rel(base, target); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		// The read is constrained to the kustomization directory so a
+		// malicious patch path (e.g. "../../etc/passwd") can't escape the
+		// scan root; see resolveContainedPath.
+		if target, ok := resolveContainedPath(kustPath, p.Path); ok {
 			data, readErr := os.ReadFile(target)
 			switch {
 			case readErr == nil:
 				raw = data
 				content = string(data)
-			case !os.IsNotExist(readErr):
-				// A genuinely missing file is the expected best-effort case; any
-				// other read failure would silently misclassify the patch, so
-				// surface it.
-				log.Warn().Err(readErr).Str("path", p.Path).Msg("kustomize: could not read patch file; treating it as an empty patch")
+			case os.IsNotExist(readErr):
+				// A patch that names a file which isn't there changes nothing
+				// during rendering, and kustomize itself fails the build. Say
+				// so: reporting it as an empty patch with no signal lets a
+				// policy iterating `patches.operations` pass vacuously on what
+				// is really a typo.
+				log.Warn().Str("path", p.Path).Str("kustomization", kustPath).
+					Msg("kustomize: patch file does not exist; treating it as an empty patch")
+			default:
+				// Any other read failure would silently misclassify the patch,
+				// so surface it too.
+				log.Warn().Err(readErr).Str("path", p.Path).
+					Msg("kustomize: could not read patch file; treating it as an empty patch")
 			}
 		} else {
 			log.Warn().Str("path", p.Path).Msg("kustomize: patch path escapes the kustomization directory; ignoring")
@@ -163,8 +162,10 @@ func newMqlKustomizePatch(runtime *plugin.Runtime, kustPath string, index int, p
 		return nil, err
 	}
 	mqlP := res.(*mqlKustomizePatch)
-	mqlP.format = format
-	mqlP.ops = ops
+	mqlP.stampOnce.Do(func() {
+		mqlP.format = format
+		mqlP.ops = ops
+	})
 	return mqlP, nil
 }
 

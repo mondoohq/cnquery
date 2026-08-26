@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"go.mondoo.com/mql/llx"
@@ -50,16 +51,40 @@ type mqlKustomizeKustomizationInternal struct {
 	stampOnce sync.Once
 }
 
+// mergedLabels gathers every label pair the kustomization adds to its
+// rendered objects. There are two declaration slots and both are live:
+// the legacy `commonLabels` mapping (types.Kustomization.CommonLabels) and
+// the current `labels` list (types.Kustomization.Labels), which is what
+// `kustomize edit fix` writes and what the docs recommend. FixKustomization,
+// which the connection runs after unmarshalling, does not fold one into the
+// other — that fold lives in FixKustomizationPreMarshalling and runs the
+// other direction — so reading only CommonLabels reported {} for an overlay
+// that does label everything it renders.
+//
+// Precedence: the legacy mapping seeds the result and `labels` pairs are
+// merged on top, with a later `labels` entry winning over an earlier one.
+// Kustomize rejects a key that appears in both slots, so the overlap only
+// arises on input kustomize would refuse anyway.
+func mergedLabels(k *kustomizeTypes.Kustomization) map[string]any {
+	labels := make(map[string]any, len(k.CommonLabels))
+	for key, val := range k.CommonLabels {
+		labels[key] = val
+	}
+	for _, l := range k.Labels {
+		for key, val := range l.Pairs {
+			labels[key] = val
+		}
+	}
+	return labels
+}
+
 func newMqlKustomization(runtime *plugin.Runtime, entry *connection.KustomizationEntry) (*mqlKustomizeKustomization, error) {
 	if entry == nil || entry.Kustomization == nil {
 		return nil, errors.New("kustomize: entry has no parsed kustomization")
 	}
 	k := entry.Kustomization
 
-	commonLabels := make(map[string]any, len(k.CommonLabels))
-	for key, val := range k.CommonLabels {
-		commonLabels[key] = val
-	}
+	commonLabels := mergedLabels(k)
 	commonAnnotations := make(map[string]any, len(k.CommonAnnotations))
 	for key, val := range k.CommonAnnotations {
 		commonAnnotations[key] = val
@@ -102,10 +127,13 @@ func newMqlKustomization(runtime *plugin.Runtime, entry *connection.Kustomizatio
 // state stays populated — without this, field accessors would nil-deref
 // on a bare resource constructed only from the `path` arg.
 //
-// Returning `args, nil, nil` for an unknown / empty path matches the
-// "bare resource is a valid empty state" convention used elsewhere in
-// this repo; callers see a resource that satisfies the type but yields
-// errors from the accessors.
+// No args, or an empty path, keeps returning `args, nil, nil`: a bare
+// resource is a valid empty state. A path that matches nothing is a
+// different thing entirely and returns a not-found error — falling
+// through there would have the runtime build the resource from the
+// partial args, leaving every other field UNSET, which surfaces
+// client-side as "primitive with no type information" with nothing
+// pointing at the cause.
 func initKustomizeKustomization(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
 	if len(args) == 0 {
 		return args, nil, nil
@@ -132,7 +160,7 @@ func initKustomizeKustomization(runtime *plugin.Runtime, args map[string]*llx.Ra
 			return args, mqlK, nil
 		}
 	}
-	return args, nil, nil
+	return nil, nil, fmt.Errorf("kustomize: no kustomization loaded for path %q", path)
 }
 
 func (k *mqlKustomizeKustomization) id() (string, error) {
@@ -243,12 +271,15 @@ func (k *mqlKustomizeKustomization) replacements() ([]any, error) {
 		return nil, err
 	}
 	var mqlReplacements []any
-	for i, r := range kust.Replacements {
-		mqlR, err := newMqlKustomizeReplacement(k.MqlRuntime, kustPath, i, &r)
+	for i := range kust.Replacements {
+		r := kust.Replacements[i]
+		// One entry can expand into several rows: a `- path:` declaration
+		// names a file that may hold a list of replacements.
+		mqlRs, err := newMqlKustomizeReplacements(k.MqlRuntime, kustPath, i, &r)
 		if err != nil {
 			return nil, err
 		}
-		mqlReplacements = append(mqlReplacements, mqlR)
+		mqlReplacements = append(mqlReplacements, mqlRs...)
 	}
 	return mqlReplacements, nil
 }

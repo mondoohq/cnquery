@@ -260,6 +260,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"kustomize.image.newTag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizeImage).GetNewTag()).ToDataRes(types.String)
 	},
+	"kustomize.image.tagSuffix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKustomizeImage).GetTagSuffix()).ToDataRes(types.String)
+	},
 	"kustomize.image.digest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizeImage).GetDigest()).ToDataRes(types.String)
 	},
@@ -283,6 +286,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"kustomize.resource.manifest": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizeResource).GetManifest()).ToDataRes(types.Dict)
+	},
+	"kustomize.replacement.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlKustomizeReplacement).GetPath()).ToDataRes(types.String)
 	},
 	"kustomize.replacement.sourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlKustomizeReplacement).GetSourcePath()).ToDataRes(types.String)
@@ -505,6 +511,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlKustomizeImage).NewTag, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"kustomize.image.tagSuffix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizeImage).TagSuffix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"kustomize.image.digest": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKustomizeImage).Digest, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -543,6 +553,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"kustomize.replacement.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlKustomizeReplacement).__id, ok = v.Value.(string)
+		return
+	},
+	"kustomize.replacement.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlKustomizeReplacement).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"kustomize.replacement.sourcePath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1097,10 +1111,11 @@ type mqlKustomizeImage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlKustomizeImageInternal it will be used here
-	Name    plugin.TValue[string]
-	NewName plugin.TValue[string]
-	NewTag  plugin.TValue[string]
-	Digest  plugin.TValue[string]
+	Name      plugin.TValue[string]
+	NewName   plugin.TValue[string]
+	NewTag    plugin.TValue[string]
+	TagSuffix plugin.TValue[string]
+	Digest    plugin.TValue[string]
 }
 
 // createKustomizeImage creates a new instance of this resource
@@ -1145,6 +1160,10 @@ func (c *mqlKustomizeImage) GetNewName() *plugin.TValue[string] {
 
 func (c *mqlKustomizeImage) GetNewTag() *plugin.TValue[string] {
 	return &c.NewTag
+}
+
+func (c *mqlKustomizeImage) GetTagSuffix() *plugin.TValue[string] {
+	return &c.TagSuffix
 }
 
 func (c *mqlKustomizeImage) GetDigest() *plugin.TValue[string] {
@@ -1230,6 +1249,7 @@ type mqlKustomizeReplacement struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlKustomizeReplacementInternal
+	Path       plugin.TValue[string]
 	SourcePath plugin.TValue[string]
 	SourceKind plugin.TValue[string]
 	SourceName plugin.TValue[string]
@@ -1266,6 +1286,10 @@ func (c *mqlKustomizeReplacement) MqlName() string {
 
 func (c *mqlKustomizeReplacement) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlKustomizeReplacement) GetPath() *plugin.TValue[string] {
+	return &c.Path
 }
 
 func (c *mqlKustomizeReplacement) GetSourcePath() *plugin.TValue[string] {
