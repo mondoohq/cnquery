@@ -356,6 +356,11 @@ func (r *RestartableProvider) Heartbeat(req *pp.HeartbeatReq) (*pp.HeartbeatRes,
 	return r.plugin.Heartbeat(req)
 }
 
+// Translations implements plugin.ProviderPlugin.
+func (r *RestartableProvider) Translations(req *pp.TranslationsReq) (*pp.TranslationsRes, error) {
+	return r.plugin.Translations(req)
+}
+
 // MockConnect implements plugin.ProviderPlugin.
 func (r *RestartableProvider) MockConnect(req *pp.ConnectReq, callback pp.ProviderCallback) (*pp.ConnectRes, error) {
 	return r.plugin.MockConnect(req, callback)

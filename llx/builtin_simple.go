@@ -80,9 +80,11 @@ func boolOrOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft
 		return nil, dref, nil
 	}
 
-	if bind.Value == nil {
-		return BoolData(v.Value == nil), 0, nil
-	}
+	// A null left side is falsy, so the result is whatever the right side says -
+	// exactly what a false left side does. This branch used to carry the AND
+	// rule verbatim (`v.Value == nil`), which made `null || true` return false:
+	// wrong under three-valued logic, wrong under null-as-false, and wrong under
+	// null-as-true. Falling through to the shared tail is the whole fix.
 	if v == nil || v.Value == nil {
 		return BoolData(false), 0, nil
 	}
@@ -90,13 +92,24 @@ func boolOrOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft
 	return BoolData(fRight(v.Value)), 0, nil
 }
 
-// boolAndOp behaves like boolOp, but checks if the left argument is false first
-// (and stop if it is). Only then proceeds to check the right argument.
+// boolAndOp behaves like boolOp, but checks if the left argument is falsy first
+// (and stops if it is). Only then proceeds to check the right argument.
+//
+// A null operand is falsy. It used to be its own case, returning true when the
+// other side was also null, which made `a && b` pass when neither a nor b could
+// be read - an assertion reporting success over two values it never measured.
+// Nine providers grew regression tests to keep their resources from tripping it.
+// Treating null as falsy removes the case rather than special-casing it: null
+// now takes the identical path false takes, including the short circuit.
+//
+// Comparison stays untouched. `null == null` is still true, because asking
+// whether two absent values are equal is a different question from asking
+// whether an absent value satisfies a check.
 func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLeft func(any) bool, fRight func(any) bool) (*RawData, uint64, error) {
 	arg := chunk.Function.Args[0]
 
-	if bind.Value != nil && !fLeft(bind.Value) {
-		// if the left side is false, we can return false immediately
+	if bind.Value == nil || !fLeft(bind.Value) {
+		// if the left side is falsy, we can return false immediately
 		// We need to write a nil result for the right side to avoid
 		// it being executed, for example to get its data for the
 		// datapoints
@@ -122,9 +135,6 @@ func boolAndOpV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64, fLef
 		return nil, dref, nil
 	}
 
-	if bind.Value == nil {
-		return BoolData(v.Value == nil), 0, nil
-	}
 	if v == nil || v.Value == nil {
 		return BoolData(false), 0, nil
 	}

@@ -164,6 +164,37 @@ make providers/mqlr
 ./mqlr generate providers/aws/resources/aws.lr --dist providers/aws/resources
 ```
 
+#### Schema-change report (ADR 040 part 5)
+
+Codegen diffs the committed `*.resources.json` against the schema it just built
+and classifies every delta as **additive** or **breaking**:
+
+```
+INFO  schema changed  additive=4 breaking=1
+WARN  breaking schema change: type changed from "string" to "demo.vpc"  path=demo.bucket.vpcId
+```
+
+Breaking means a change that can stop existing content resolving the way it did:
+a field's type changed, a resource/field/alias was removed, something became
+private or mandatory, a list type changed, an init signature moved. Docs,
+`min_provider_version`, `provider` and `defaults` are ignored - they churn on
+every commit and cannot break content.
+
+A breaking line is **not** a "fix your code" instruction. It is the signal that
+the change needs a deliberate decision: deprecate-and-add instead of mutating
+(see [§6](#resource-field-naming--constraints)), or - once phase 2 lands - ship a
+migration lens. Read the warning, decide, and say which you chose in the PR.
+
+Two things to know:
+
+- **The report is a warning today.** `--fail-on-breaking` turns it into a gate
+  that exits without writing the schema; it is off by default until migration
+  lenses exist to satisfy it.
+- **It fires once.** Generation still writes the new schema, so a second run
+  compares new-against-new and says nothing. The committed file in git is the
+  real baseline - if you missed the warning, revert the generated files and
+  regenerate.
+
 ### Step 3: Implementation Strategies
 Implement the generated interfaces in the provider's Go code. Use one of these patterns:
 
@@ -543,7 +574,7 @@ When implementing or modifying builtin functions in `llx/` (e.g., array/dict ope
   filters = append(filters[0:j], filters[j+1:]...)  // safe — original untouched
   ```
 - **A `panic` in a builtin or comparator crashes the entire scan.** The executor runs blocks in goroutines, so the panic is unrecoverable — it kills the scan, not just one query. Guard every type assertion on `arg.Value`/`bind.Value` with comma-ok (`x, ok := v.([]any)`) or a `== nil` check; never use the bare `v.(T)` form on runtime data.
-- **`null && null` evaluates to `true` in MQL** (three-valued logic). An init-miss stub that leaves its booleans as `StateIsNull` will pass a `{ a && b }` assertion even though nothing was actually verified — set explicit `false` values on such stubs so misses and typos fail.
+- **A null operand of `&&` or `||` is falsy** (ADR 040 part 4). `null && anything` is `false`, and `null || x` is whatever `x` says, so an init-miss stub whose booleans stay `StateIsNull` now **fails** a `{ a && b }` assertion instead of passing it. Comparison is unaffected: `null == null` is still `true`. Setting explicit `false` on such a stub is no longer required to make misses fail, though it is still better practice — an explicit `false` states a measured fact, where a null states that nothing was read, and only the former is meaningful in a report. (Before v14 `null && null` evaluated to `true` and `null || true` to `false`; nine providers carried regression tests for the first of those.)
 
 ## 6. Important Implementation Details
 

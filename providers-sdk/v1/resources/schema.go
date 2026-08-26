@@ -4,6 +4,8 @@
 package resources
 
 import (
+	"strings"
+
 	"go.mondoo.com/mql/types"
 )
 
@@ -13,6 +15,46 @@ type ResourcesSchema interface {
 	FindField(resource *ResourceInfo, field string) (FieldPath, []*Field, bool)
 	AllResources() map[string]*ResourceInfo
 	AllDependencies() map[string]*ProviderInfo
+	// AllProviderVersions returns the version of every provider that
+	// contributed to this schema, keyed by provider id. See
+	// Schema.provider_versions.
+	AllProviderVersions() map[string]string
+}
+
+// cloneField returns a copy of a field for insertion into an aggregate schema.
+//
+// The aggregate is built by merging the per-provider schemas the coordinator
+// caches, and merging appends to `Others`. Storing the source pointer would make
+// that append mutate the cached per-provider schema, so every rebuild of the
+// aggregate would append again and `Others` would grow without bound. The copy
+// is explicit rather than `*fv` because Field is a protobuf message and its
+// internal state must not be copied by value.
+func cloneField(fv *Field) *Field {
+	if fv == nil {
+		return nil
+	}
+	f := &Field{
+		Name:               fv.Name,
+		Type:               fv.Type,
+		IsMandatory:        fv.IsMandatory,
+		Title:              fv.Title,
+		Desc:               fv.Desc,
+		IsPrivate:          fv.IsPrivate,
+		MinProviderVersion: fv.MinProviderVersion,
+		Provider:           fv.Provider,
+		IsImplicitResource: fv.IsImplicitResource,
+		IsEmbedded:         fv.IsEmbedded,
+		Maturity:           fv.Maturity,
+	}
+	if fv.Refs != nil {
+		f.Refs = make([]string, len(fv.Refs))
+		copy(f.Refs, fv.Refs)
+	}
+	if fv.Others != nil {
+		f.Others = make([]*Field, len(fv.Others))
+		copy(f.Others, fv.Others)
+	}
+	return f
 }
 
 // Add another schema and return yourself. other may be nil.
@@ -39,6 +81,9 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				existing.IsExtension = v.IsExtension
 				existing.Provider = v.Provider
 				existing.Init = v.Init
+				// A version string only means something relative to the
+				// provider that owns it, so it travels with Provider.
+				existing.MinProviderVersion = v.MinProviderVersion
 			}
 			// TODO: clean up any resource that clashes right now. There are a few
 			//       implicit extensions that cause this behavior at the moment.
@@ -76,7 +121,7 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				if fExisting, ok := existing.Fields[fk]; ok && fv.Provider != fExisting.Provider {
 					fExisting.Others = append(fExisting.Others, fv)
 				} else {
-					existing.Fields[fk] = fv
+					existing.Fields[fk] = cloneField(fv)
 				}
 			}
 		} else {
@@ -94,9 +139,14 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 				Context:     v.Context,
 				Provider:    v.Provider,
 				Maturity:    v.Maturity,
+				// The version axis has to survive aggregation: it is the only
+				// record of which provider release introduced this resource,
+				// and diagnostics and the ADR 040 reconciliation step both read
+				// it off the merged schema, not off the per-provider one.
+				MinProviderVersion: v.MinProviderVersion,
 			}
 			for k, v := range v.Fields {
-				ri.Fields[k] = v
+				ri.Fields[k] = cloneField(v)
 			}
 			s.Resources[k] = ri
 		}
@@ -117,6 +167,16 @@ func (s *Schema) Add(other ResourcesSchema) ResourcesSchema {
 			}
 			s.Dependencies[k] = pi
 		}
+	}
+
+	for k, v := range other.AllProviderVersions() {
+		if v == "" {
+			continue
+		}
+		if s.ProviderVersions == nil {
+			s.ProviderVersions = make(map[string]string)
+		}
+		s.ProviderVersions[k] = v
 	}
 
 	return s
@@ -188,4 +248,53 @@ func (s *Schema) AllResources() map[string]*ResourceInfo {
 
 func (s *Schema) AllDependencies() map[string]*ProviderInfo {
 	return s.Dependencies
+}
+
+func (s *Schema) AllProviderVersions() map[string]string {
+	return s.ProviderVersions
+}
+
+// ProviderKey reduces a provider id to the stable name people type on the
+// command line. All of "go.mondoo.com/mql/providers/aws",
+// "go.mondoo.com/mql/v13/providers/aws", "go.mondoo.com/cnquery/v9/providers/aws"
+// and "go.mondoo.com/cnquery/providers/aws" become "aws".
+//
+// Provenance has to key on something that survives an id migration, and the ids
+// in the tree have not converged: 45 of 81 providers ship a committed schema
+// whose provider id predates the current one, spread over three generations of
+// the format. The .lr sources are all current -- codegen writes the .lr's
+// `option provider` verbatim -- but a schema is only rewritten when its provider
+// is rebuilt, and CI regenerates only the providers a PR touches
+// (.github/workflows/pr-test-generated-files.yaml), so an untouched provider
+// keeps its old string indefinitely and no diff ever reports it.
+//
+// Keying version metadata on the raw id would therefore lose the association
+// for more than half the providers, silently.
+func ProviderKey(id string) string {
+	if i := strings.LastIndexByte(id, '/'); i >= 0 && i+1 < len(id) {
+		return id[i+1:]
+	}
+	return id
+}
+
+// ProviderVersion returns the version of a provider, and whether it is known.
+// It accepts either a provider id or a bare name, and matches on the normalized
+// key so a legacy id resolves against a current one.
+//
+// An unknown provider is the normal case for a schema serialized before ADR 040
+// provenance existed, so a miss means "no information", never an error.
+func (s *Schema) ProviderVersion(id string) (string, bool) {
+	if s == nil || s.ProviderVersions == nil {
+		return "", false
+	}
+	if v, ok := s.ProviderVersions[id]; ok && v != "" {
+		return v, true
+	}
+	want := ProviderKey(id)
+	for k, v := range s.ProviderVersions {
+		if v != "" && ProviderKey(k) == want {
+			return v, true
+		}
+	}
+	return "", false
 }

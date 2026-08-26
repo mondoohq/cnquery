@@ -41,6 +41,10 @@ type StaticProvider interface {
 // ProviderPlugin is the interface that we're exposing as a plugin.
 type ProviderPlugin interface {
 	Heartbeat(req *HeartbeatReq) (*HeartbeatRes, error)
+	// Translations returns this provider's downgrade catalog (ADR 040 part 6).
+	// plugin.Service answers it with an empty catalog, so a provider that has
+	// no translations to offer needs no code at all.
+	Translations(req *TranslationsReq) (*TranslationsRes, error)
 	ParseCLI(req *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(req *ConnectReq, callback ProviderCallback) (*ConnectRes, error)
 	Disconnect(req *DisconnectReq) (*DisconnectRes, error)

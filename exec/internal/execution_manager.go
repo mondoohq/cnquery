@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc"
 	"go.mondoo.com/mql/providers-sdk/v1/resources"
 	"go.mondoo.com/mql/providers-sdk/v1/upstream/health"
 )
@@ -198,7 +199,8 @@ func (em *executionManager) executeCodeBundle(codeBundle *llx.CodeBundle, props 
 
 	// TODO(jaym): sendResult may not be correct. We may need to fill in the
 	// checksum
-	x, err := llx.NewExecutorV2(codeBundle.CodeV2, em.runtime, props, sendResult)
+	x, err := llx.NewExecutorV2WithSkew(codeBundle.CodeV2, em.runtime, props, sendResult,
+		skewPolicyFor(codeBundle, em.runtime))
 	if err == nil {
 		err = x.Run()
 	}
@@ -241,4 +243,50 @@ var errQueryTimeout = errors.New("query execution timed out")
 
 type iExecutor interface {
 	Unregister() error
+}
+
+// skewPolicyFor compares what a bundle says it needs against what this build
+// has, and returns a policy naming every provider the reader is behind on
+// (ADR 040 parts 1 and 4).
+//
+// This is the one place that knows both halves: the bundle carries the versions
+// it was compiled against, and the runtime's schema carries the versions that
+// are loaded. It returns nil when the reader satisfies everything, and for any
+// bundle compiled before provenance existed - an absent requirement is absent
+// information, not permission to start dropping fields.
+func skewPolicyFor(codeBundle *llx.CodeBundle, runtime llx.Runtime) *llx.SkewPolicy {
+	if codeBundle == nil || runtime == nil {
+		return nil
+	}
+	schema := runtime.Schema()
+	if schema == nil {
+		return nil
+	}
+
+	unmet := mqlc.UnmetRequirements(codeBundle, schema.AllProviderVersions())
+	if len(unmet) == 0 {
+		return nil
+	}
+
+	reasons := make(map[string]string, len(unmet))
+	for _, req := range unmet {
+		// A provider the reader cannot name a version for is excluded, even
+		// though UnmetRequirements reports it. Reporting it is right - content
+		// needing a provider you do not have genuinely cannot run - but
+		// degrading on it is not: not knowing a version is not evidence of
+		// skew, and treating it as evidence would silently drop fields whenever
+		// provenance is merely absent, which is every bundle and every schema
+		// that predates it. Dropping a field needs proof the field could not
+		// have existed here, and only a known-older version is that proof.
+		if req.Installed == "" {
+			continue
+		}
+		reasons[req.Provider] = req.Error()
+	}
+	if len(reasons) == 0 {
+		return nil
+	}
+	log.Debug().Interface("providers", reasons).
+		Msg("bundle was compiled against newer providers than this build has")
+	return llx.NewSkewPolicy(reasons)
 }

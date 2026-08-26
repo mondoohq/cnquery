@@ -211,6 +211,303 @@ never silently drift out of sync with the schema it describes.
 4. **Degradation policy hardening.** Consistent typed-null-with-reason;
    assertion-safe stubs; per-field partial results (part 4).
 
+## Implementation status
+
+Phase 1 has landed. What exists now:
+
+- **Provenance** — `Schema.provider_versions` records the version of every
+  provider contributing to a schema, stamped at load time from the provider's
+  own config (`providers/providers.go`, `providers/coordinator.go`). Bundles
+  carry `CodeBundle.provider_schemas` (writer identity) and
+  `CodeBundle.min_provider_versions` (the derived requirement), computed by a
+  post-compile walk of the finished bytecode (`mqlc/provenance.go`). Both maps
+  key on the **stable provider name**, not the module-path id -- see the note on
+  id drift below.
+- **Reconciliation primitive** — `mqlc.UnmetRequirements(bundle, reader)` answers
+  "can this reader run this bundle", which is what parts 3 and 4 both need. A
+  bundle with no recorded requirements is reported satisfiable, since absence of
+  a requirement is absence of information.
+- **Diagnostics** — a failed name resolution now names the provider whose
+  namespace it fell under and the version installed, on all three failure paths
+  (the ADR above cites only the root one). It deliberately does *not* claim which
+  version would be new enough; that needs the phase-2 registry.
+- **Build-time detection** — `lrcore.DiffSchemas` classifies every schema delta
+  as additive or breaking, wired into `mqlr generate` as a warning, with
+  `--fail-on-breaking` ready for phase 2. Documented in `CLAUDE.md` §2 Step 2.
+- **Min-MQL-engine axis** — revived as a static feature → introducing-version
+  table (`mqlc/engine_version.go`). This resolves the "how is min-MQL-version
+  computed" open question as *static table*, not a build stamp: the version that
+  matters is where the feature landed, which no amount of compile-time
+  introspection can tell you. Its first entry is ADR 043 strict mode at
+  **14.0.0** — an engine predating the nullability marker reads it as
+  `UNSPECIFIED` and runs the bundle *non-strict*, so it does not fail, it
+  silently verifies less. That is the one case where declaring an engine floor is
+  strictly better than degrading.
+
+### Part 4: what the code actually did
+
+Part 4 above is written on the premise that version skew degrades to silent
+nulls which three-valued logic then turns into a pass. Measuring the paths
+before changing them showed the premise is half wrong, and the half that is
+right has a different cause.
+
+**Skew does not degrade silently.** Compiling against a schema carrying a field
+the runtime lacks, then executing against that runtime, produces a clean error
+that `&&` propagates:
+
+```
+sshd.config.futureField                            -> cannot find field 'futureField' in resource 'sshd.config'
+sshd.config.futureField && sshd.config.futureField -> cannot find field 'futureField' in resource 'sshd.config'
+```
+
+The `llx/builtin.go` Unset fallback this ADR cites is not what fires. What is
+missing there is *attribution*, not failure: the bundle's
+`min_provider_versions` already says `os: 99.0.0`, so the message could name the
+version gap instead of the symptom.
+
+**The falsely-green bug was real but unrelated to skew.** It came from genuine
+runtime nulls, in the `bind.Value == nil` shortcut shared by the logical
+operators, and it was two defects rather than one:
+
+- `null && null` returned **true** - an assertion reporting success over two
+  values it never read. Nine providers (`azure`, `databricks`, `mongodbatlas`,
+  `ms365`, `neon`, `oci`, `os`, `vllm`, `zoom`) had grown regression tests across
+  16 sites whose only purpose was keeping their resources from tripping it.
+- `null || true` returned **false**, because `boolOrOpV2` carried the AND rule
+  verbatim. Wrong under three-valued logic, under null-as-false, and under
+  null-as-true alike.
+
+Both are fixed by making a null operand **falsy**: `null && x` is false, and
+`null || x` is whatever `x` says. Implemented by routing a nil binding down the
+path `false` already takes, which deletes both special cases rather than adding a
+third. Comparison is untouched - `null == null` stays true, because whether two
+absent values are equal is a different question from whether an absent value
+satisfies a check.
+
+This lands in **v14**: it turns checks that were passing into checks that fail,
+which is the point, and it cannot ship in a minor. It also retires the
+per-provider workaround tax, and it stands on its own correctness argument rather
+than on the skew premise.
+
+**The recompile-from-source path deliberately does not degrade.** A reader
+holding `source` and compiling it locally against an older schema fails at
+`ErrIdentifierNotFound`, and that is the intended outcome: content that needs a
+newer provider should say so, and the compile error now names the provider and
+the version installed rather than reading as a typo. Degradation is for executing
+bytecode that was already compiled elsewhere, not for papering over content this
+node cannot express.
+
+**Graceful degradation now works off the provenance.** When a bundle declares it
+needs a newer provider than this build has, a field the reader does not define is
+dropped rather than failing the query: the field resolves to an *unavailable*
+value carrying `requires the os provider >= 99.0.0 (13.0.0 is installed)`, and
+everything else in the query still runs.
+
+Three properties make this safe rather than a way to hide bugs:
+
+- **Evidence is required.** Degradation happens only when the reader can name a
+  version for that provider and it is genuinely older. A reader that knows no
+  version is *absent information*, not proof of skew, and a missing field there
+  stays a hard failure - which is what a typo and a compiler defect look like.
+- **The value keeps its type.** The reader has no field definition to take a type
+  from, but the compiler baked the writer's type into the chunk, so the stand-in
+  is a typed null rather than the untyped one that produces "a primitive with no
+  type information" downstream. This is the typed-null-with-reason of part 4, and
+  it falls out of the bytecode for free.
+- **It cannot read as a pass.** An unavailable field is an error value, and a
+  null operand is falsy, so an assertion over one fails. Under ADR 043 strict
+  mode the skew reason survives rather than being replaced by the generic
+  null-binding message, because `resolveNullBinding` declines a binding that
+  already carries an error.
+
+The pieces: `llx.ErrFieldNotFound` (typed so the executor can classify it),
+`llx.SkewPolicy` (which providers the reader is behind on, and why),
+`degradeUnavailableField` in the executor, `skewPolicyFor` in `exec/internal`
+(the one place holding both the bundle and the runtime), and a dimmed
+not-measured rendering in `cli/printer`.
+
+### Part 6: degradation compiled into the bundle
+
+Parts 1-4 handle a gap the reader can *recognise*: a name it does not have. That
+inference only works for additive change. When a field's **type** changes, the
+name exists on both sides and nothing fires - measured on a field flipped from
+`[]string` to `string`:
+
+```
+sshd.config.ciphers                  -> []string, no error        # silently the wrong type
+sshd.config.ciphers == "aes256-ctr"  -> cannot find function '==' for type '[]string'
+sshd.config.ciphers.length           -> 6, no error               # confidently wrong
+```
+
+Two of the three are silent, and the third blames the query rather than the
+version. Detection is cheap and local, because the reader already holds both
+types: `chunk.Function.Type` is the writer's, baked into the bytecode by the
+compiler, and `resource.Fields[id].Type` is its own. Nobody compares them.
+
+Repair splits in two, and only one half needs new machinery.
+
+**Case 1: no translation exists.** A list collapsed to a scalar, when nothing
+says which element to take. There is no answer to invent, so this is the part-4
+floor: mark the value unavailable and let it propagate to everything built on
+it. Identical treatment to a field that simply does not exist yet, which is what
+it is from the reader's side.
+
+**Case 2: a translation exists, and the producer knows it.** Some changes carry
+their own backward projection:
+
+- `terraform.resources(query)` is shorthand for
+  `terraform.where(<is a resource>).where(query)`.
+- a field promoted from `string` to `time` is the old string, parsed.
+- `process.executable` promoted from `string` to `file` is the old string as a
+  path, with `basename` the operation that recovers the name.
+
+For these the fallback should be **compiled into the bundle**: the producer emits
+a form that works on both vocabularies, rather than the reader guessing or the
+producer compiling per client.
+
+Three properties make this the cheap option:
+
+- **No wire change and no bootstrapping.** The fallback is ordinary bytecode in
+  the older vocabulary, so an old executor runs it without knowing the mechanism
+  exists. An alternatives table in the bundle would need the *reader* to
+  understand it first, which means shipping the mechanism a release before
+  anything could use it.
+- **One artifact.** The producer still compiles once for everyone, preserving the
+  property that makes parts 1-4 work offline and peer-to-peer: the server never
+  needs to know who it is compiling for.
+- **The compiler already knows when.** A field's `min_provider_version` says
+  which release changed it. Emitting the defensive form only for changes newer
+  than a configured oldest-supported-provider keeps this from being a permanent
+  tax on every query, and the knob is a single policy setting rather than
+  per-client knowledge.
+
+The constraint that decides whether a change qualifies: **the fallback must be
+expressible using only constructs that predate the change.** A projection that
+needs a resource or an operator the old reader lacks is not a fallback, it is
+case 1 wearing a disguise. That is checkable at build time against the same
+schema history the part-5 gate already reads, which is what keeps "we know how to
+degrade it" from becoming a claim nobody verifies.
+
+**Implemented** as a sidecar plus an in-place patch, not as branches in the
+primary code. `CodeBundle.translations` carries `(ref, provider, below_version,
+block_ref)` entries; the translation blocks ship inside `code_v2` as ordinary
+blocks that nothing points at until a patch does. `llx.Patch` selects the entries
+this reader needs and returns a **copy** with those chunks redirected at a
+`$translate` chunk, which runs the block against the original binding.
+
+Why the copy: one bundle is executed against many assets and queries run in
+goroutines, so rewriting in place races a goroutine reading the chunk - and a
+lock around the patch does nothing about that. Only the blocks actually
+containing a patched chunk are cloned; a current reader copies nothing.
+
+Three properties fall out, all pinned by tests:
+
+- **A current reader pays nothing.** It walks the sidecar, matches nothing, and
+  runs pristine bytecode - no branch it can never take.
+- **Identity survives.** The executor reads `code.Checksums[ref]` rather than
+  recomputing, so a patched reader reports under the checksums the producer
+  shipped and scoring does not fork across versions.
+- **Nothing renumbers.** Blocks are addressed by index and the patched chunk is
+  replaced at its own index.
+
+The catalog reaches the compiler through the **runtime**, not through a caller
+assembling it. `providers.Runtime` implements `llx.TranslationSource`, and
+`mqlc.NewConfigFrom(runtime, features)` picks it up - so anything that compiles,
+here or built on this, gets the mechanism by using mql normally. There is no
+second compiler to wire separately.
+
+The lookup is a function rather than a prepared map, because which providers a
+query touches is only known while compiling it: a map would force the caller to
+guess, or to start every installed provider just in case, and reading a catalog
+means *running* the provider. Asked lazily, a compile with no floor set starts no
+providers at all, and one with a floor consults only the providers its query
+reaches. Misses are cached, so an unreachable provider is asked once rather than
+once per field.
+
+**The support window is a default, not a setting to remember.** The floor is the
+provider's current major minus two, clamped at 14 and always the `.0.0` of that
+major, computed per provider by `mqlc.DefaultDowngradeFloor` and applied by
+`NewConfigFrom`:
+
+```
+provider 15.1.2  ->  14.0.0   (15-2 is 13, clamped)
+provider 17.1.2  ->  15.0.0
+provider 16.4.0  ->  14.0.0
+```
+
+The clamp is not arbitrary: the machinery that *consumes* translations ships in
+v14, so a v13 reader ignores the sidecar field and runs the primary code no
+matter what is emitted for it. A provider still on a pre-14 major therefore gets
+no floor at all rather than a floor above its own version - which also means the
+compiler never asks it for a catalog, and asking means starting it. Every
+provider is on major 13 today, so the default currently emits nothing and costs
+nothing; it starts working on its own as providers reach 14, which they do
+together with mql.
+
+Because the default activates for every provider at that point, the catalog is
+read only from a provider the runtime **already has connected** - never through
+the coordinator, which would start one that is not running. Compiling is not
+always followed by executing: shell autocomplete compiles on every keystroke, and
+launching a provider process per keystroke to read a catalog is not a trade worth
+making. The case that matters is unaffected, since a query cannot run against a
+provider without that provider being connected. The cost is that a fallback may
+be missed for a provider that had not started yet, which degrades to the part-4
+unavailable value rather than to a wrong one.
+
+Providers author steps between adjacent releases in Go
+(`plugin.Translate` + `TranslationBuilder`), which keeps their maintenance linear
+and lets a shipped step stay frozen. The compiler relocates each into the bundle,
+rebasing block-relative bindings and recomputing checksums at the destination,
+and emits one entry per era so the reader selects exactly one and never composes
+anything at runtime. A field read in several places gets one entry per read but
+shares a single block, keyed on the binding's checksum: two reads of the same
+field off the same binding are the same computation, and two reads off different
+bindings are not.
+
+Two things it refuses to emit: a translation whose result type disagrees with the
+field's declared type (downstream is compiled against that type), and one that
+rebuilds a field out of something introduced *after* the era it serves - checked
+against `min_provider_version`, since a translation that is itself unrunnable is
+worse than none.
+
+`plugin.Service` answers the new RPC with an empty catalog, so adding it changed
+no provider. A provider binary that cannot be reached yields no fallbacks, one
+aggregate warning, and compilation continues.
+
+**The reverse direction is detection only.** An old bundle carries no translation
+for a change it predates, so the reader compares the writer's baked-in
+`Function.Type` against its own schema (`llx.FindTypeDrift`) and warns. This is
+the skew with no symptom of its own - the name resolves on both sides, so nothing
+errors, and the query either fails somewhere unrelated or returns a plausible
+wrong answer. Repairing it needs the inverse of the provider's own step; until
+that exists, saying so beats the alternative.
+
+### A note on provider-id drift
+
+Provenance keys on the stable provider **name** rather than the module-path id
+because the ids in the tree have not converged. 45 of 81 providers ship a
+committed `*.resources.json` whose `provider` string predates the current one,
+across three generations of the format (27 on `mql/v13/...`, 17 on
+`cnquery/v9/...`, 1 on `cnquery/...`).
+
+The `.lr` sources are all current, and codegen writes the `.lr`'s
+`option provider` verbatim into every resource — so this is purely artifact lag.
+A schema is only rewritten when its provider is rebuilt, and CI regenerates only
+the providers a PR touches
+(`.github/workflows/pr-test-generated-files.yaml`), so its
+`git diff --exit-code providers/**/*.resources.json` never sees an untouched
+provider. Regenerating all 45 is a mechanical follow-up; normalizing the key
+means provenance does not depend on it happening.
+
+Two fixes were prerequisites the ADR did not anticipate, both in
+`Schema.Add` — the aggregate the compiler actually resolves against:
+
+- It **dropped `MinProviderVersion`** when copying a `ResourceInfo`, so the
+  version data codegen writes never reached the compiler at all.
+- It **aliased the per-provider schemas' `Field` pointers** into the aggregate,
+  so merging appended to the coordinator's cached schema and every rebuild
+  appended again, growing `Others` without bound.
+
 ## Consequences
 
 - Structural type change and the new→old direction — the actual problem — become

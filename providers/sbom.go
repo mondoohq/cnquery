@@ -57,6 +57,11 @@ func (s *sbomProviderService) Heartbeat(req *plugin.HeartbeatReq) (*plugin.Heart
 	return nil, nil
 }
 
+// Translations: the sbom provider bridges no shapes.
+func (s *sbomProviderService) Translations(req *plugin.TranslationsReq) (*plugin.TranslationsRes, error) {
+	return &plugin.TranslationsRes{}, nil
+}
+
 func (s *sbomProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	filePath := req.Args[0]
 

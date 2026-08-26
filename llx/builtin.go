@@ -891,6 +891,23 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 		e.triggerChain(ref, data)
 	})
 	if err != nil {
+		// A field this reader has never heard of, in a bundle that already told
+		// us it was compiled against a newer provider, is not a broken query -
+		// it is a field this build was never going to have. Drop that one field
+		// and let the rest of the query run, rather than failing all of it for
+		// the sake of a value no version of this binary could produce.
+		//
+		// The evidence matters. Without a skew policy the same missing field is
+		// a typo or a compiler defect, and degrading it would bury a real bug.
+		if data, degraded := e.degradeUnavailableField(resource, chunk, err); degraded {
+			e.cache.Store(ref, &stepCache{Result: data})
+			if codeID, ok := e.callbackPoints[ref]; ok {
+				e.callback(&RawResult{Data: data, CodeID: codeID})
+			}
+			e.triggerChain(ref, data)
+			return nil, 0, nil
+		}
+
 		if _, ok := err.(resources.NotReadyError); !ok {
 			fieldType := types.Unset
 			if field := resource.Fields[chunk.Id]; field != nil {
@@ -911,8 +928,59 @@ func runResourceFunction(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint
 	return nil, 0, err
 }
 
+// degradeUnavailableField decides whether a failed field read is version skew
+// that may be dropped, and builds the value that stands in for it.
+//
+// The stand-in keeps the field's declared type even though the reader's schema
+// has no definition to take it from: the compiler baked the writer's type into
+// the chunk, so the bytecode still knows what the field was meant to be. That
+// matters because an untyped null is what produces "a primitive with no type
+// information, coercing to null" downstream - a value that names neither the
+// field it came from nor why it is missing.
+func (e *blockExecutor) degradeUnavailableField(resource *resources.ResourceInfo, chunk *Chunk, err error) (*RawData, bool) {
+	var notFound *ErrFieldNotFound
+	if !errors.As(err, &notFound) {
+		return nil, false
+	}
+
+	reason := e.ctx.skew.Reason(resource.Provider)
+	if reason == "" {
+		return nil, false
+	}
+
+	typ := types.Type(chunk.Function.GetType())
+	if typ == "" {
+		typ = types.Unset
+	}
+
+	log.Debug().
+		Str("resource", notFound.Resource).
+		Str("field", notFound.Field).
+		Str("reason", reason).
+		Msg("exec> dropping a field this provider version does not have")
+
+	return &RawData{
+		Type: typ,
+		Error: &errFieldUnavailable{
+			resource: notFound.Resource,
+			field:    notFound.Field,
+			reason:   reason,
+		},
+	}, true
+}
+
 // BuiltinFunction provides the handler for this type's function
 func BuiltinFunctionV2(typ types.Type, name string) (*chunkHandlerV2, error) {
+	// $translate is bound to whatever the original chunk was bound to, which can
+	// be any type at all, so it is answered before the per-type tables rather
+	// than registered into every one of them.
+	if name == TranslateChunkID {
+		// Built here rather than held in a package var: the handler reaches
+		// runBlock, which reaches back into this function, and Go rejects that
+		// as an initialization cycle at package scope.
+		return &chunkHandlerV2{f: runTranslate, Label: TranslateChunkID}, nil
+	}
+
 	underlying := typ.Underlying()
 	h, ok := BuiltinFunctionsV2[underlying]
 	if !ok {

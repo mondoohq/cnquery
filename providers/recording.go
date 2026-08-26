@@ -115,6 +115,12 @@ func (s *recordingProvider) Heartbeat(req *plugin.HeartbeatReq) (*plugin.Heartbe
 	return nil, nil
 }
 
+// Translations: a recording replays what was captured, so there is no live
+// provider whose shapes could need bridging.
+func (s *recordingProvider) Translations(req *plugin.TranslationsReq) (*plugin.TranslationsRes, error) {
+	return &plugin.TranslationsRes{}, nil
+}
+
 func (s *recordingProvider) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	filePath := ""
 

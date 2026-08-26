@@ -124,6 +124,11 @@ type MQLExecutorV2 struct {
 	runtime Runtime
 	code    *CodeV2
 	props   map[string]*Primitive
+	// skew excuses fields this build was never going to have, because the
+	// bundle declared it needs a newer provider than the one loaded. Nil when
+	// the reader satisfies everything the bundle asked for, which is the normal
+	// case. See SkewPolicy.
+	skew *SkewPolicy
 
 	lock           sync.Mutex
 	blockExecutors []*blockExecutor
@@ -153,7 +158,17 @@ func errorResultMsg(msg string, codeID string) *RawResult {
 
 // NewExecutor will create a code runner from code, running in a runtime, calling
 // callback whenever we get a result
+// NewExecutorV2 runs code with no tolerance for version skew: any field the
+// reader's schema lacks fails the query. Use NewExecutorV2WithSkew when the
+// bundle's provenance says the reader is behind.
 func NewExecutorV2(code *CodeV2, runtime Runtime, props map[string]*Primitive, callback ResultCallback) (*MQLExecutorV2, error) {
+	return NewExecutorV2WithSkew(code, runtime, props, callback, nil)
+}
+
+// NewExecutorV2WithSkew is NewExecutorV2 with a policy naming the providers the
+// reader is behind on. Fields belonging to those providers that the reader does
+// not have degrade to an unavailable value instead of failing the whole query.
+func NewExecutorV2WithSkew(code *CodeV2, runtime Runtime, props map[string]*Primitive, callback ResultCallback, skew *SkewPolicy) (*MQLExecutorV2, error) {
 	if runtime == nil {
 		return nil, errors.New("cannot exec MQL without a runtime")
 	}
@@ -167,6 +182,7 @@ func NewExecutorV2(code *CodeV2, runtime Runtime, props map[string]*Primitive, c
 		runtime:        runtime,
 		code:           code,
 		props:          props,
+		skew:           skew,
 		blockExecutors: []*blockExecutor{},
 		blockPoints:    map[uint64]*blockPoints{},
 	}
@@ -758,6 +774,15 @@ func (b *blockExecutor) createResource(name string, binding uint64, f *Function,
 
 	resource, err := runtime.CreateResource(name, args)
 	if err != nil {
+		// A resource this build has never heard of, in a bundle that already
+		// told us it was compiled against a newer provider, degrades exactly
+		// like a missing field does. Handling only the field case would make
+		// the behaviour depend on how far into a chain the gap falls.
+		if data, degraded := b.degradeUnavailableResource(name, err); degraded {
+			b.cache.Store(ref, &stepCache{Result: data, IsStatic: true})
+			return data, 0, nil
+		}
+
 		// in case it's not something that requires later loading, store the error
 		// so that consecutive steps can retrieve it cached
 		if _, ok := err.(resources.NotReadyError); !ok {
@@ -943,7 +968,7 @@ func (e *blockExecutor) runChain(start uint64) {
 		// if this is a result for a callback (entry- or datapoint) send it
 		if res != nil {
 			if codeID, ok := e.callbackPoints[curRef]; ok {
-				e.callback(&RawResult{Data: res, CodeID: codeID})
+				e.callback(&RawResult{Data: e.markTranslated(curRef, res), CodeID: codeID})
 			}
 		} else if err != nil {
 			if codeID, ok := e.callbackPoints[curRef]; ok {
@@ -992,7 +1017,7 @@ func (e *blockExecutor) triggerChain(ref uint64, data *RawData) {
 	// before we do anything else, we may have to provide the value from
 	// this callback point
 	if codeID, ok := e.callbackPoints[ref]; ok {
-		e.callback(&RawResult{Data: data, CodeID: codeID})
+		e.callback(&RawResult{Data: e.markTranslated(ref, data), CodeID: codeID})
 	}
 
 	nxt, ok := e.calls.Load(ref)
@@ -1014,7 +1039,7 @@ func (e *blockExecutor) triggerChain(ref uint64, data *RawData) {
 	}
 
 	log.Trace().Uint64("ref", ref).Msgf("exec> trigger callback")
-	e.callback(&RawResult{Data: res.Result, CodeID: codeID})
+	e.callback(&RawResult{Data: e.markTranslated(ref, res.Result), CodeID: codeID})
 }
 
 func (e *blockExecutor) triggerChainError(ref uint64, err error) {

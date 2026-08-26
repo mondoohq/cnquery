@@ -77,7 +77,7 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 	}
 
 	if conf.DoAst {
-		compilerConf := mqlc.NewConfig(runtime.Schema(), conf.Features)
+		compilerConf := mqlc.NewConfigFrom(runtime, conf.Features)
 		compilerConf.Strict = conf.Strict
 		b, err := mqlc.Compile(conf.Command, nil, compilerConf)
 		if err != nil {
@@ -94,7 +94,7 @@ func (c *mqlPlugin) RunQuery(conf *run.RunQueryConfig, runtime *providers.Runtim
 			return errors.Wrap(err, "failed to parse command")
 		}
 
-		compilerConf := mqlc.NewConfig(runtime.Schema(), conf.Features)
+		compilerConf := mqlc.NewConfigFrom(runtime, conf.Features)
 		compilerConf.Strict = conf.Strict
 		compilerConf.EnableStats()
 		conf := compilerConf
