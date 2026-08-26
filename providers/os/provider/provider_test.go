@@ -212,7 +212,7 @@ func TestInjectedPlatformIDs(t *testing.T) {
 		{
 			name: "only separators",
 			conf: &inventory.Config{Options: map[string]string{device.PlatformIdInject: " , "}},
-			want: []string{},
+			want: nil,
 		},
 		{
 			name: "option absent",

@@ -726,5 +726,8 @@ func injectedPlatformIDs(conf *inventory.Config) []string {
 			ids = append(ids, id)
 		}
 	}
+	if len(ids) == 0 {
+		return nil
+	}
 	return ids
 }

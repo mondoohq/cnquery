@@ -63,3 +63,27 @@ func TestIsHostRootMount(t *testing.T) {
 		assert.False(t, isHostRootMount(conn))
 	})
 }
+
+func TestResolveUsesInProcessMetadataForAHostRoot(t *testing.T) {
+	pf := &inventory.Platform{Name: "bottlerocket", Family: []string{"linux", "unix", "os"}}
+
+	t.Run("host root reads metadata in-process", func(t *testing.T) {
+		// The command reader cannot run anything over a filesystem connection,
+		// so a host root has to reach the metadata service directly.
+		conn := newFsConnection(t, map[string]string{shared.HostRootOption: "true"})
+
+		identifier, err := Resolve(conn, pf)
+		require.NoError(t, err)
+		assert.IsType(t, &LocalEc2InstanceMetadata{}, identifier)
+	})
+
+	t.Run("any other mount keeps the command reader", func(t *testing.T) {
+		// Without the opt-in the mount may belong to a different machine, and
+		// the metadata service would answer with this one's identity.
+		conn := newFsConnection(t, nil)
+
+		identifier, err := Resolve(conn, pf)
+		require.NoError(t, err)
+		assert.IsType(t, &CommandInstanceMetadata{}, identifier)
+	})
+}
