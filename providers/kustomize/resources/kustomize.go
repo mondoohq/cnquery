@@ -65,8 +65,23 @@ type mqlKustomizeKustomizationInternal struct {
 // merged on top, with a later `labels` entry winning over an earlier one.
 // Kustomize rejects a key that appears in both slots, so the overlap only
 // arises on input kustomize would refuse anyway.
+//
+// The fold is deliberately lossy in one respect. A `labels` entry also carries
+// IncludeSelectors and IncludeTemplates, both defaulting to false, whereas the
+// legacy CommonLabels is documented as applying "to all objects and selectors"
+// and so always rewrites selectors. Flattening to one map therefore cannot
+// distinguish a metadata-only label from one that also rewrites a workload's
+// selector. That is the right trade here: commonLabels is the field policies
+// already reference, and every pair in it really is added to the rendered
+// objects. Exposing the two booleans needs its own field rather than a
+// kustomize.label sub-resource, which would carry no natural key and no
+// reference to another resource.
 func mergedLabels(k *kustomizeTypes.Kustomization) map[string]any {
-	labels := make(map[string]any, len(k.CommonLabels))
+	size := len(k.CommonLabels)
+	for _, l := range k.Labels {
+		size += len(l.Pairs)
+	}
+	labels := make(map[string]any, size)
 	for key, val := range k.CommonLabels {
 		labels[key] = val
 	}

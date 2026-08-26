@@ -45,6 +45,10 @@ kustomize.kustomization @defaults("path") {
   // mapping and the current `labels` list, whose `pairs` entries are folded
   // in on top of it. A pair declared in `labels` wins when the same key
   // appears in both, and a later `labels` entry wins over an earlier one.
+  // The map reports which pairs are added, not how far they reach: a
+  // `labels` entry may set includeSelectors or includeTemplates to control
+  // whether it also rewrites selectors and pod templates, and those flags
+  // are not represented here.
   commonLabels map[string]string
   // Common annotations added to all resources
   commonAnnotations map[string]string
