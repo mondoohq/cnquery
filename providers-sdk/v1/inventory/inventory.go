@@ -60,7 +60,21 @@ func New(opts ...Option) *Inventory {
 func InventoryFromYAML(data []byte) (*Inventory, error) {
 	res := New()
 	err := yaml.Unmarshal(data, res)
-	return res, err
+	if err != nil {
+		return res, err
+	}
+
+	// A `name:` written into an inventory file is a name the author chose for that
+	// asset, so it outranks whatever a provider detects after connecting. Mark it:
+	// by the time discovery sees the asset, a requested name and a name a provider
+	// filled in during ParseCLI are the same string in the same field.
+	for _, asset := range res.GetSpec().GetAssets() {
+		if asset.GetName() != "" {
+			asset.NameOverride = true
+		}
+	}
+
+	return res, nil
 }
 
 // InventoryFromFile loads an inventory from file system
