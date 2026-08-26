@@ -16,23 +16,26 @@ import (
 )
 
 type Secpol struct {
-	SystemAccess    map[string]any
-	EventAudit      map[string]any
-	RegistryValues  map[string]any
-	PrivilegeRights map[string]any
+	SystemAccess   map[string]any
+	EventAudit     map[string]any
+	RegistryValues map[string]any
+	// principals as secedit exported them: SIDs without the leading "*", plus
+	// account names. PrivilegeRightSids reports them all as SIDs.
+	PrivilegeRights map[string][]string
 }
 
 // SidResolver maps account names to SIDs, with or without secedit's leading "*".
 type SidResolver func(names []string) (map[string]string, error)
 
-// ParseSecpol reports [Privilege Rights] principals as SIDs. Localized account
-// names are handed to resolve; whatever stays unresolved is dropped.
-func ParseSecpol(r io.Reader, resolve SidResolver) (*Secpol, error) {
+// ParseSecpol parses a secedit export. Resolving [Privilege Rights] account
+// names needs a second command on the target, so it is a separate step
+// (PrivilegeRightSids) and a failing lookup costs only that one field.
+func ParseSecpol(r io.Reader) (*Secpol, error) {
 	res := &Secpol{
-		SystemAccess:    map[string]any{}, // except for NewAdministratorName & NewGuestName, parse everything as int64
-		EventAudit:      map[string]any{}, // parse to int
-		RegistryValues:  map[string]any{}, // keep strings
-		PrivilegeRights: map[string]any{}, // split entries with ,
+		SystemAccess:    map[string]any{},      // except for NewAdministratorName & NewGuestName, parse everything as int64
+		EventAudit:      map[string]any{},      // parse to int
+		RegistryValues:  map[string]any{},      // keep strings
+		PrivilegeRights: map[string][]string{}, // split entries with ,
 	}
 
 	cfg, err := ini.Load(r)
@@ -85,9 +88,6 @@ func ParseSecpol(r io.Reader, resolve SidResolver) (*Secpol, error) {
 		return nil, err
 	}
 	keys = privilegeRights.Keys()
-	principals := make(map[string][]string, len(keys))
-	var names []string
-	seenNames := map[string]struct{}{}
 	for i := range keys {
 		entry := keys[i]
 
@@ -99,27 +99,51 @@ func ParseSecpol(r io.Reader, resolve SidResolver) (*Secpol, error) {
 				continue
 			}
 			valuesT = append(valuesT, val)
-
-			if _, ok := seenNames[val]; !ok && !isSecurityIdentifier(val) {
-				seenNames[val] = struct{}{}
-				names = append(names, val)
-			}
 		}
-		principals[entry.Name()] = valuesT
+		res.PrivilegeRights[entry.Name()] = valuesT
 	}
 
+	return res, nil
+}
+
+// AccountNames lists the [Privilege Rights] principals secedit reported as
+// names rather than SIDs, sorted so the resolver command stays stable. Empty on
+// an English install, where no lookup runs at all.
+func (s *Secpol) AccountNames() []string {
+	seen := map[string]struct{}{}
+	var names []string
+	for _, principals := range s.PrivilegeRights {
+		for _, val := range principals {
+			if isSecurityIdentifier(val) {
+				continue
+			}
+			if _, ok := seen[val]; ok {
+				continue
+			}
+			seen[val] = struct{}{}
+			names = append(names, val)
+		}
+	}
+	sort.Strings(names)
+	return names
+}
+
+// PrivilegeRightSids reports the principals as SIDs. Account names go to
+// resolve; whatever stays unresolved is dropped.
+func (s *Secpol) PrivilegeRightSids(resolve SidResolver) (map[string]any, error) {
 	lookup := map[string]string{}
-	if len(names) > 0 && resolve != nil {
+	if names := s.AccountNames(); len(names) > 0 && resolve != nil {
+		var err error
 		lookup, err = resolve(names)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not resolve privilege right account names")
 		}
 	}
 
-	for key, valuesT := range principals {
-		res.PrivilegeRights[key] = privilegeRightSids(valuesT, lookup)
+	res := make(map[string]any, len(s.PrivilegeRights))
+	for key, principals := range s.PrivilegeRights {
+		res[key] = privilegeRightSids(principals, lookup)
 	}
-
 	return res, nil
 }
 
@@ -174,7 +198,10 @@ func isSecurityIdentifier(value string) bool {
 // it. Account name resolution runs as a separate command (see SidLookupScript):
 // combining the export with SID enumeration in one encoded command trips
 // Defender's Trojan:Win32/Commando.A!ml heuristic.
+// Output crosses a pipe, so pin UTF-8: the console code page mangles localized
+// names such as `Gäste` into bytes no SID lookup can match.
 const SecpolScript = `
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
 $cfg = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 secedit /export /cfg $cfg | Out-Null
 Get-Content $cfg
@@ -192,6 +219,7 @@ func SidLookupScript(names []string) string {
 }
 
 const sidLookupScript = `
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
 $names = @(%s)
 foreach ($name in $names) {
     $sid = $null

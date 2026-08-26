@@ -4,9 +4,12 @@
 package resources_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/testutils"
 )
 
 func TestResource_Secpol(t *testing.T) {
@@ -66,4 +69,46 @@ func TestResource_Secpol(t *testing.T) {
 			})
 		}
 	})
+}
+
+// TestResource_SecpolGerman covers a German host, where secedit names the
+// principals of a user right instead of reporting their SIDs.
+func TestResource_SecpolGerman(t *testing.T) {
+	abs, err := filepath.Abs("testdata/secpol_windows_de.json")
+	require.NoError(t, err)
+	de := testutils.InitTester(testutils.RecordingMock(abs))
+
+	res := de.TestQuery(t, "secpol.privilegerights['SeDenyNetworkLogonRight']")
+	require.NotEmpty(t, res)
+	assert.Empty(t, res[0].Result().Error)
+	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-546"}, res[0].Data.Value)
+}
+
+// TestResource_SecpolSidLookupKilled pins the blast radius of a failing SID
+// lookup: every field that does not need it keeps answering, which is most of
+// what a Windows benchmark reads out of secpol.
+func TestResource_SecpolSidLookupKilled(t *testing.T) {
+	abs, err := filepath.Abs("testdata/secpol_windows_de_lookup_killed.json")
+	require.NoError(t, err)
+	de := testutils.InitTester(testutils.RecordingMock(abs))
+
+	for _, q := range []string{
+		"secpol.systemaccess['PasswordHistorySize']",
+		"secpol.systemaccess['LockoutBadCount']",
+		"secpol.eventaudit['AuditLogonEvents']",
+		`secpol.registryvalues['MACHINE\System\CurrentControlSet\Control\Lsa\FullPrivilegeAuditing']`,
+	} {
+		t.Run(q, func(t *testing.T) {
+			res := de.TestQuery(t, q)
+			require.NotEmpty(t, res)
+			assert.Empty(t, res[0].Result().Error)
+			assert.NotEmpty(t, res[0].Data.Value)
+		})
+	}
+
+	// the field that does need it reports the failure rather than a list the
+	// unresolved names were quietly dropped from
+	res := de.TestQuery(t, "secpol.privilegerights['SeDenyNetworkLogonRight']")
+	require.NotEmpty(t, res)
+	assert.Contains(t, res[0].Result().Error, "could not resolve privilege right account names")
 }

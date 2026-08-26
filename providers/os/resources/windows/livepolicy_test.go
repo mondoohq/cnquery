@@ -122,17 +122,21 @@ func TestParseSecpolLiveCaptures(t *testing.T) {
 			require.NoError(t, err)
 			defer f.Close()
 
+			secpol, err := windows.ParseSecpol(f)
+			require.NoError(t, err)
+
 			// a real export names every principal as a SID, so no resolver is
 			// needed and nothing may be dropped for want of one
-			secpol, err := windows.ParseSecpol(f, nil)
+			rights, err := secpol.PrivilegeRightSids(nil)
 			require.NoError(t, err)
+			assert.Empty(t, secpol.AccountNames())
 
 			// each of the four maps must come back populated: an empty one
 			// makes every assertion written over it pass vacuously
 			assert.NotEmpty(t, secpol.SystemAccess)
 			assert.NotEmpty(t, secpol.EventAudit)
 			assert.NotEmpty(t, secpol.RegistryValues)
-			assert.NotEmpty(t, secpol.PrivilegeRights)
+			assert.NotEmpty(t, rights)
 
 			// stock defaults, identical on all four releases
 			assert.Equal(t, "42", secpol.SystemAccess["MaximumPasswordAge"])
@@ -160,21 +164,21 @@ func TestParseSecpolLiveCaptures(t *testing.T) {
 			// commas, and every entry survives as a SID
 			assert.Equal(t,
 				[]any{"S-1-1-0", "S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-551"},
-				secpol.PrivilegeRights["SeNetworkLogonRight"])
+				rights["SeNetworkLogonRight"])
 			assert.Equal(t,
 				[]any{"S-1-5-32-544"},
-				secpol.PrivilegeRights["SeDebugPrivilege"])
+				rights["SeDebugPrivilege"])
 			assert.Equal(t,
 				[]any{"S-1-5-32-544", "S-1-5-32-555"},
-				secpol.PrivilegeRights["SeRemoteInteractiveLogonRight"])
+				rights["SeRemoteInteractiveLogonRight"])
 
 			// a stock host grants none of the deny rights, and the parser must
 			// report that as an absent key rather than as an empty list that
 			// would read as "explicitly nobody"
-			_, ok := secpol.PrivilegeRights["SeDenyNetworkLogonRight"]
+			_, ok := rights["SeDenyNetworkLogonRight"]
 			assert.False(t, ok)
 
-			for right, principals := range secpol.PrivilegeRights {
+			for right, principals := range rights {
 				sids, ok := principals.([]any)
 				require.True(t, ok, "%s is not a list", right)
 				assert.NotEmpty(t, sids, "%s came back empty", right)
@@ -190,19 +194,21 @@ func TestParseSecpolLiveCaptures(t *testing.T) {
 // four stock exports. They are small, and pinning them keeps a fixture refresh
 // from quietly swapping one release's capture for another's.
 func TestSecpolLiveCapturesVersionDrift(t *testing.T) {
-	load := func(name string) *windows.Secpol {
+	load := func(name string) (*windows.Secpol, map[string]any) {
 		f, err := os.Open("./testdata/secpol-" + name + ".inf")
 		require.NoError(t, err)
 		defer f.Close()
-		s, err := windows.ParseSecpol(f, nil)
+		s, err := windows.ParseSecpol(f)
 		require.NoError(t, err)
-		return s
+		rights, err := s.PrivilegeRightSids(nil)
+		require.NoError(t, err)
+		return s, rights
 	}
 
-	ws2016 := load("ws2016")
-	ws2019 := load("ws2019")
-	ws2022 := load("ws2022")
-	ws2025 := load("ws2025")
+	ws2016, ws2016Rights := load("ws2016")
+	ws2019, _ := load("ws2019")
+	ws2022, ws2022Rights := load("ws2022")
+	ws2025, ws2025Rights := load("ws2025")
 
 	// Windows Server 2025 is the first of the four to ship account lockout on
 	// by default, and it is the only one that exports the three lockout keys
@@ -227,11 +233,11 @@ func TestSecpolLiveCapturesVersionDrift(t *testing.T) {
 	// the Window Manager group holds SeIncreaseBasePriorityPrivilege from 2019
 	// on, so the same right has a different principal list per release
 	assert.Equal(t, []any{"S-1-5-32-544"},
-		ws2016.PrivilegeRights["SeIncreaseBasePriorityPrivilege"])
+		ws2016Rights["SeIncreaseBasePriorityPrivilege"])
 	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-90-0"},
-		ws2022.PrivilegeRights["SeIncreaseBasePriorityPrivilege"])
+		ws2022Rights["SeIncreaseBasePriorityPrivilege"])
 
 	// 2025 grants SeServiceLogonRight to the virtual-account authority as well
-	assert.Equal(t, []any{"S-1-5-80-0"}, ws2016.PrivilegeRights["SeServiceLogonRight"])
-	assert.Len(t, ws2025.PrivilegeRights["SeServiceLogonRight"], 2)
+	assert.Equal(t, []any{"S-1-5-80-0"}, ws2016Rights["SeServiceLogonRight"])
+	assert.Len(t, ws2025Rights["SeServiceLogonRight"], 2)
 }
