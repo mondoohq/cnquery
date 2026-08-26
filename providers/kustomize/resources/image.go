@@ -78,7 +78,11 @@ func newMqlKustomizeImage(runtime *plugin.Runtime, kustPath string, idx int, img
 		"name":    llx.StringData(img.Name),
 		"newName": llx.StringData(img.NewName),
 		"newTag":  llx.StringData(img.NewTag),
-		"digest":  llx.StringData(img.Digest),
+		// tagSuffix is the fifth override slot: it keeps the original tag and
+		// appends to it. Leaving it out made such an entry read as newName="",
+		// newTag="", digest="" — a rewrite that looked like a no-op.
+		"tagSuffix": llx.StringData(img.TagSuffix),
+		"digest":    llx.StringData(img.Digest),
 	})
 	if err != nil {
 		return nil, err
