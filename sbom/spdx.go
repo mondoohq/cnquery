@@ -121,21 +121,29 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		// The SPDX specification requires NOASSERTION rather than an empty value
 		// for the license and copyright fields. An empty string is not valid
 		// SPDX, and a strict consumer may reject the whole document over it.
-		declared := spdxNoAssertion(pkg.License)
+		//
+		// SPDX draws exactly the distinction the license model does: *declared*
+		// is what the package says about itself, *concluded* is what this
+		// document asserts after looking. They differ precisely when it matters
+		// — a package declaring MIT while shipping AGPL-3.0-only — so where a
+		// concluded license was determined it is emitted as itself rather than
+		// echoing the declared one.
+		declared := spdxNoAssertion(spdxLicense(declaredLicenses(pkg), pkg.License))
+		concluded := spdxNoAssertion(spdxLicense(concludedLicenses(pkg), ""))
+		if concluded == spdxNoAssertionValue {
+			// Nothing was concluded. Echoing the declared value is the honest
+			// reading: it is what the document has to go on, and asserting more
+			// than was determined is what NOASSERTION exists to avoid.
+			concluded = declared
+		}
 		doc.Packages = append(doc.Packages, &spdx.Package{
-			PackageSPDXIdentifier:  id,
-			PackageName:            pkg.Name,
-			PackageVersion:         pkg.Version,
-			PackageLicenseDeclared: declared,
-			// Concluded is the license this document asserts the package is
-			// under. With only a declared value to go on, the honest concluded
-			// value is the same one — asserting more than was determined is what
-			// NOASSERTION exists to avoid.
-			PackageLicenseConcluded: declared,
-			// The model carries no copyright field yet, so this states
-			// NOASSERTION rather than omitting a spec-required field. When
-			// Package gains one, this is the single line that changes.
-			PackageCopyrightText:      spdxNoAssertionValue,
+			PackageSPDXIdentifier:     id,
+			PackageName:               pkg.Name,
+			PackageVersion:            pkg.Version,
+			PackageLicenseDeclared:    declared,
+			PackageLicenseConcluded:   concluded,
+			PackageCopyrightText:      spdxNoAssertion(strings.Join(pkg.Copyright, "\n")),
+			PackageSupplier:           spdxSupplier(pkg.Supplier),
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
 			PackageFileName:           pkg.Location,
@@ -144,7 +152,8 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		// A LicenseRef-* identifier is not on the SPDX license list, so the
 		// specification requires the document to define it before it may be
 		// referenced.
-		extractedLicenses.add(pkg.License)
+		extractedLicenses.add(declared)
+		extractedLicenses.add(concluded)
 	}
 
 	doc.OtherLicenses = extractedLicenses.render()
@@ -407,4 +416,51 @@ func (s extractedLicenseSet) render() []*spdx.OtherLicense {
 		})
 	}
 	return out
+}
+
+// spdxLicense renders license entries as the single value an SPDX field holds,
+// falling back to a legacy scalar when the structured list is empty.
+//
+// SPDX carries one expression per field, so several entries are joined with
+// AND: a package under two licenses is under both, and OR would grant a choice
+// the producer never reported.
+func spdxLicense(licenses []*License, fallback string) string {
+	parts := make([]string, 0, len(licenses))
+	for _, l := range licenses {
+		v := strings.TrimSpace(l.GetExpression())
+		if v == "" {
+			v = strings.TrimSpace(l.GetSpdxId())
+		}
+		if v == "" {
+			v = strings.TrimSpace(l.GetName())
+		}
+		if v == "" {
+			continue
+		}
+		if len(licenses) > 1 && isSPDXExpression(v) {
+			// Parenthesize so joining cannot reassociate an operand: "A OR B"
+			// AND "C" is not "A OR (B AND C)".
+			v = "(" + v + ")"
+		}
+		parts = append(parts, v)
+	}
+	if len(parts) == 0 {
+		return strings.TrimSpace(fallback)
+	}
+	return strings.Join(parts, " AND ")
+}
+
+// spdxSupplier renders a supplier as the spec's Originator/Supplier shape, or
+// NOASSERTION when none is known.
+//
+// SPDX requires the value to be typed — "Organization: name" or "Person: name".
+// An unqualified name is not valid, and this package has no way to tell which a
+// supplier is, so it reports the type SPDX itself uses for a supplier of
+// software: an organization.
+func spdxSupplier(supplier string) *common.Supplier {
+	supplier = strings.TrimSpace(supplier)
+	if supplier == "" {
+		return &common.Supplier{Supplier: spdxNoAssertionValue}
+	}
+	return &common.Supplier{Supplier: supplier, SupplierType: "Organization"}
 }

@@ -206,3 +206,174 @@ func TestLicenseContentIsDeterministic(t *testing.T) {
 		}
 	}
 }
+
+// The model extension exists for one case: a package whose own manifest
+// declares one license while the files it ships say another. Flattening the two
+// into a single value is what the scalar forced, and it is the error that
+// matters most in a compliance document — it asserts a grant the shipped code
+// does not make.
+
+func splitLicenseBom() *Sbom {
+	return &Sbom{
+		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
+		Asset:     &Asset{Name: "test-asset", Platform: &Platform{Name: "linux", Version: "1"}},
+		Packages: []*Package{{
+			Name: "disagrees", Version: "1.0.0", Purl: "pkg:npm/disagrees@1.0.0",
+			// The scalar stays populated, as the migration contract requires.
+			License: "MIT",
+			Licenses: []*License{
+				{SpdxId: "MIT", Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_DECLARED, Confidence: 1},
+				{
+					SpdxId:      "AGPL-3.0-only",
+					Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED,
+					Confidence:  0.98,
+					Location:    "node_modules/disagrees/LICENSE",
+				},
+			},
+			Copyright: []string{"Copyright (c) 2019 Example Corp"},
+			Supplier:  "Example Corp",
+		}},
+	}
+}
+
+func renderBom(t *testing.T, format string, bom *Sbom) string {
+	t.Helper()
+	var b strings.Builder
+	h := New(format)
+	if h == nil {
+		t.Fatalf("no handler for %q", format)
+	}
+	if err := h.Render(&b, bom); err != nil {
+		t.Fatalf("render %s: %v", format, err)
+	}
+	return b.String()
+}
+
+func TestCycloneDXSeparatesDeclaredFromConcluded(t *testing.T) {
+	var doc struct {
+		Components []struct {
+			Name     string `json:"name"`
+			Licenses []struct {
+				License    *struct{ ID, Name string } `json:"license"`
+				Expression string                     `json:"expression"`
+			} `json:"licenses"`
+			Copyright string `json:"copyright"`
+			Supplier  *struct {
+				Name string `json:"name"`
+			} `json:"supplier"`
+			Evidence *struct {
+				Licenses []struct {
+					License *struct{ ID, Name string } `json:"license"`
+				} `json:"licenses"`
+				Copyright []struct {
+					Text string `json:"text"`
+				} `json:"copyright"`
+			} `json:"evidence"`
+		} `json:"components"`
+	}
+	if err := json.Unmarshal([]byte(renderBom(t, "cyclonedx-json", splitLicenseBom())), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	// The document also carries the asset's platform component; the package is
+	// the one under test.
+	var c = doc.Components[0]
+	found := false
+	for _, comp := range doc.Components {
+		if comp.Name == "disagrees" {
+			c, found = comp, true
+		}
+	}
+	if !found {
+		t.Fatalf("no component named disagrees in %d components", len(doc.Components))
+	}
+
+	// Declared is an assertion the package makes about itself.
+	if len(c.Licenses) != 1 || c.Licenses[0].License == nil || c.Licenses[0].License.ID != "MIT" {
+		t.Errorf("licenses = %+v, want the declared MIT", c.Licenses)
+	}
+	// Concluded is evidence: it was read out of a file rather than stated.
+	if c.Evidence == nil || len(c.Evidence.Licenses) != 1 ||
+		c.Evidence.Licenses[0].License == nil || c.Evidence.Licenses[0].License.ID != "AGPL-3.0-only" {
+		t.Errorf("evidence.licenses = %+v, want the concluded AGPL-3.0-only", c.Evidence)
+	}
+	if c.Copyright != "Copyright (c) 2019 Example Corp" {
+		t.Errorf("copyright = %q", c.Copyright)
+	}
+	if c.Evidence == nil || len(c.Evidence.Copyright) != 1 {
+		t.Errorf("evidence.copyright = %+v, want the statement that was found", c.Evidence)
+	}
+	if c.Supplier == nil || c.Supplier.Name != "Example Corp" {
+		t.Errorf("supplier = %+v", c.Supplier)
+	}
+}
+
+func TestSPDXConcludedIsNotAnEchoOfDeclared(t *testing.T) {
+	out := renderBom(t, "spdx-json", splitLicenseBom())
+	var doc struct {
+		Packages []struct {
+			LicenseDeclared  string `json:"licenseDeclared"`
+			LicenseConcluded string `json:"licenseConcluded"`
+			CopyrightText    string `json:"copyrightText"`
+			Supplier         string `json:"supplier"`
+		} `json:"packages"`
+	}
+	if err := json.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(doc.Packages) != 1 {
+		t.Fatalf("packages = %d, want 1", len(doc.Packages))
+	}
+	p := doc.Packages[0]
+	if p.LicenseDeclared != "MIT" {
+		t.Errorf("licenseDeclared = %q, want MIT", p.LicenseDeclared)
+	}
+	if p.LicenseConcluded != "AGPL-3.0-only" {
+		t.Errorf("licenseConcluded = %q, want AGPL-3.0-only — the shipped text is the grant", p.LicenseConcluded)
+	}
+	if p.CopyrightText != "Copyright (c) 2019 Example Corp" {
+		t.Errorf("copyrightText = %q", p.CopyrightText)
+	}
+	if !strings.Contains(p.Supplier, "Example Corp") {
+		t.Errorf("supplier = %q", p.Supplier)
+	}
+}
+
+// TestLegacyScalarStillRenders is the migration contract: a producer that has
+// not adopted the structured list renders exactly as it did before.
+func TestLegacyScalarStillRenders(t *testing.T) {
+	cdx := renderTo(t, "cyclonedx-json")
+	for _, want := range []string{`"MIT"`, `"MIT OR Apache-2.0"`, `"BSD-like, see LICENSE"`} {
+		if !strings.Contains(cdx, want) {
+			t.Errorf("cyclonedx output lost %s", want)
+		}
+	}
+	spdxOut := renderTo(t, "spdx-json")
+	if !strings.Contains(spdxOut, "LicenseRef-Acme-Internal") {
+		t.Error("spdx output lost the LicenseRef identifier")
+	}
+}
+
+// TestSPDXConcludedFallsBackToDeclared: with nothing concluded, echoing the
+// declared value is the honest reading — but it must be the declared value,
+// not NOASSERTION, or a document loses a license it was told about.
+func TestSPDXConcludedFallsBackToDeclared(t *testing.T) {
+	out := renderTo(t, "spdx-json")
+	var doc struct {
+		Packages []struct {
+			Name             string `json:"name"`
+			LicenseDeclared  string `json:"licenseDeclared"`
+			LicenseConcluded string `json:"licenseConcluded"`
+		} `json:"packages"`
+	}
+	if err := json.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	for _, p := range doc.Packages {
+		if p.Name == "plain-id" && (p.LicenseDeclared != "MIT" || p.LicenseConcluded != "MIT") {
+			t.Errorf("plain-id: declared=%q concluded=%q, want MIT for both", p.LicenseDeclared, p.LicenseConcluded)
+		}
+		if p.Name == "undeclared" && p.LicenseConcluded != "NOASSERTION" {
+			t.Errorf("undeclared: concluded=%q, want NOASSERTION", p.LicenseConcluded)
+		}
+	}
+}
