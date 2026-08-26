@@ -378,7 +378,11 @@ os {
   // Time since the most recent operating system update was installed
   //
   // A duration, like `uptime`, so `os.lastUpdateAge.days` reads the patch
-  // age directly. Null whenever `lastUpdate` is null.
+  // age directly. Measured once, when the field is first read, and held for
+  // the rest of the scan rather than tracking the clock, the same way
+  // `uptime` behaves. For an age relative to a specific moment, subtract
+  // instead: `time.now - os.lastUpdate`. Null whenever `lastUpdate` is
+  // null.
   lastUpdateAge() time
   // Record the last-update timestamp was read from
   //

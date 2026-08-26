@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -150,7 +151,15 @@ func lastInstalledWindows(runtime *plugin.Runtime) (*updates.LastInstalledUpdate
 	}
 	wu := obj.(*mqlWindowsUpdate)
 
-	if installed := wu.GetInstalled(); installed.Error == nil {
+	installed := wu.GetInstalled()
+	if installed.Error != nil {
+		// The fallback below still produces an answer, so this is not fatal. Log
+		// it anyway: without it, a permission problem or a blocked PowerShell
+		// looks identical to a host that genuinely has no agent history, and the
+		// coarser registry source gets used with nothing to explain why.
+		log.Debug().Err(installed.Error).
+			Msg("mql[os.lastUpdate]> windows update agent history unavailable, falling back to the registry")
+	} else {
 		var newest time.Time
 		for i := range installed.Data {
 			entry, ok := installed.Data[i].(*mqlWindowsUpdateEntry)

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/resources/date"
 )
 
 // Sources a last-installed-update timestamp can come from. They are reported
@@ -59,10 +60,23 @@ func ResolveLastInstalledUpdate(conn shared.Connection) (*LastInstalledUpdate, e
 
 // assetTimeZone returns the zone the Debian update logs are read in. dpkg and
 // apt write local time with no offset, so the zone has to come from somewhere
-// other than the log, and we take the scanning host's. Scanning a machine in a
-// different zone over SSH or through a mounted filesystem is then off by the
-// difference between the two, which is noise at the day granularity these
-// timestamps are used at, and only matters to an hours-based check.
-func assetTimeZone() *time.Location {
-	return time.Local
+// other than the log itself.
+//
+// It comes from the asset: /etc/localtime, /etc/timezone and the rest, all read
+// through the connection's filesystem, so a container image or a mounted
+// snapshot answers as well as a running host. That matters more than it first
+// appears, because an image is almost always UTC while the machine scanning it
+// rarely is, and reading the log in the scanner's zone would shift every
+// timestamp by that offset.
+//
+// An asset carrying no zone information at all falls back to UTC, not to the
+// scanner's zone. A Unix system with neither /etc/localtime nor /etc/timezone
+// runs in UTC, which is what the stripped container images that reach this
+// fallback actually do, so UTC is a fact about the asset where the scanner's
+// zone is only ever a guess about it.
+func assetTimeZone(conn shared.Connection) *time.Location {
+	if loc := date.LocationFromFS(conn.FileSystem()); loc != nil {
+		return loc
+	}
+	return time.UTC
 }

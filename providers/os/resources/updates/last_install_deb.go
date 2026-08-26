@@ -44,7 +44,7 @@ const (
 // recorded. Every source is a file read, so this answers the same way on a
 // running host, a container image, and a mounted filesystem.
 func lastInstalledDebian(conn shared.Connection) (*LastInstalledUpdate, error) {
-	return lastInstalledDebianFS(conn.FileSystem(), assetTimeZone())
+	return lastInstalledDebianFS(conn.FileSystem(), assetTimeZone(conn))
 }
 
 // lastInstalledDebianFS is lastInstalledDebian's filesystem-only body, split out
