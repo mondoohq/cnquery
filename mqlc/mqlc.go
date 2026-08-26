@@ -150,7 +150,13 @@ func (c *compiler) notFound(id string, binding *variable) *ErrIdentifierNotFound
 	if binding == nil {
 		provider = identifierProvider(c.Schema, id)
 	} else {
-		err.Binding = c.Binding.typ.Label()
+		// Both of these read the binding the caller passed, not c.Binding.
+		// They are the same object today - compileIdentifier's only caller
+		// hands it c.Binding - but reading the field here would make the
+		// reported type and the resolved provider disagree the moment a caller
+		// passes anything else, which is exactly what a nested-block binding
+		// would do.
+		err.Binding = binding.typ.Label()
 		provider = bindingProvider(c.Schema, binding.typ)
 	}
 	if provider == "" {
@@ -267,6 +273,11 @@ func (c *CompilerConfig) EnableMultiStats() {
 // so any capability that has to reach every compile has to reach it through one
 // of these constructors; a caller that assembles CompilerConfig by hand silently
 // opts out.
+//
+// A runtime with no schema yields no DowngradeFloor, so nothing is emitted. That
+// is the right outcome - a floor is meaningless without provider versions to
+// measure against - but it is silent, so a caller wondering why its floor is
+// empty should check the schema first.
 func NewConfigFrom(runtime llx.Runtime, features mql.Features) CompilerConfig {
 	conf := NewConfig(runtime.Schema(), features)
 	if src, ok := runtime.(llx.TranslationSource); ok {

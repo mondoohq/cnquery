@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"errors"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -27,26 +28,28 @@ import (
 // Lookups are cached, including the misses: a provider that cannot be reached is
 // asked once, not once per field.
 type translationSource struct {
-	coordinator ProvidersCoordinator
+	// runtime scopes the lookup to the providers this runtime already has
+	// connected. See fetch for why it is not the coordinator.
+	runtime *Runtime
 
 	mu          sync.Mutex
 	cache       map[string][]*llx.TranslationStep
 	unavailable map[string]struct{}
 }
 
-// NewTranslationSource returns a llx.TranslationSource backed by the loaded
-// providers. It is what makes the downgrade mechanism reachable from any compile
-// that has a coordinator, which is every compile that has a runtime.
-func NewTranslationSource(coordinator ProvidersCoordinator) llx.TranslationSource {
+// NewTranslationSource returns a llx.TranslationSource backed by the providers a
+// runtime has connected. It is what makes the downgrade mechanism reachable from
+// any compile that has a runtime, which is every compile that will execute.
+func NewTranslationSource(runtime *Runtime) llx.TranslationSource {
 	return &translationSource{
-		coordinator: coordinator,
+		runtime:     runtime,
 		cache:       map[string][]*llx.TranslationStep{},
 		unavailable: map[string]struct{}{},
 	}
 }
 
 func (s *translationSource) TranslationsFor(provider string) []*llx.TranslationStep {
-	if s == nil || s.coordinator == nil || provider == "" {
+	if s == nil || s.runtime == nil || provider == "" {
 		return nil
 	}
 
@@ -75,13 +78,21 @@ func (s *translationSource) TranslationsFor(provider string) []*llx.TranslationS
 }
 
 func (s *translationSource) fetch(provider string) ([]*llx.TranslationStep, error) {
-	// A translation catalog is a static property of the provider build, so this
-	// needs the provider running but not connected to anything.
-	running, err := s.coordinator.GetRunningProvider(provider, UpdateProvidersConfig{})
-	if err != nil {
-		return nil, err
+	// Only ask a provider this runtime already has connected. Going through the
+	// coordinator would *start* one that is not running
+	// (coordinator.GetRunningProvider falls through to unsafeStartProvider), and
+	// a compile is not always followed by an execution: shell autocomplete
+	// compiles on every keystroke, and launching a provider process per
+	// keystroke to read a catalog is not a trade worth making.
+	//
+	// The case that matters is unaffected. A query cannot run against a provider
+	// without that provider being connected, so by the time a compile is for
+	// something that will execute, the provider is here.
+	connected := s.connectedProvider(provider)
+	if connected == nil {
+		return nil, errors.New("provider '" + provider + "' is not connected, cannot read its translations")
 	}
-	res, err := running.Plugin.Translations(&plugin.TranslationsReq{})
+	res, err := connected.Instance.Plugin.Translations(&plugin.TranslationsReq{})
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +110,22 @@ func (s *translationSource) fetch(provider string) ([]*llx.TranslationStep, erro
 		})
 	}
 	return steps, nil
+}
+
+// connectedProvider finds a connected provider by id or by stable name, since a
+// resource's provider id and the id a runtime keys on can spell the same
+// provider differently.
+func (s *translationSource) connectedProvider(provider string) *ConnectedProvider {
+	if connected := s.runtime.providers[provider]; connected != nil {
+		return connected
+	}
+	want := resources.ProviderKey(provider)
+	for id, connected := range s.runtime.providers {
+		if resources.ProviderKey(id) == want {
+			return connected
+		}
+	}
+	return nil
 }
 
 // Unavailable names the providers a catalog could not be read from, so a caller

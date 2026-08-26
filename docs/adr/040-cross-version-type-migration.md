@@ -441,7 +441,18 @@ matter what is emitted for it. A provider still on a pre-14 major therefore gets
 no floor at all rather than a floor above its own version - which also means the
 compiler never asks it for a catalog, and asking means starting it. Every
 provider is on major 13 today, so the default currently emits nothing and costs
-nothing; it starts working on its own as providers reach 14.
+nothing; it starts working on its own as providers reach 14, which they do
+together with mql.
+
+Because the default activates for every provider at that point, the catalog is
+read only from a provider the runtime **already has connected** - never through
+the coordinator, which would start one that is not running. Compiling is not
+always followed by executing: shell autocomplete compiles on every keystroke, and
+launching a provider process per keystroke to read a catalog is not a trade worth
+making. The case that matters is unaffected, since a query cannot run against a
+provider without that provider being connected. The cost is that a fallback may
+be missed for a provider that had not started yet, which degrades to the part-4
+unavailable value rather than to a wrong one.
 
 Providers author steps between adjacent releases in Go
 (`plugin.Translate` + `TranslationBuilder`), which keeps their maintenance linear

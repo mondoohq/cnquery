@@ -1213,7 +1213,7 @@ func (r *Runtime) Schema() resources.ResourcesSchema {
 // starts no providers.
 func (r *Runtime) TranslationsFor(provider string) []*llx.TranslationStep {
 	r.translationsOnce.Do(func() {
-		r.translations = NewTranslationSource(r.coordinator)
+		r.translations = NewTranslationSource(r)
 	})
 	return r.translations.TranslationsFor(provider)
 }
