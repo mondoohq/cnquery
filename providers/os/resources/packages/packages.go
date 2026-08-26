@@ -130,7 +130,9 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 	// an error on a system with a populated rpm database.
 	case asset.Platform.Name == "altlinux":
 		fallthrough
-	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux" || asset.Platform.Name == "bottlerocket" || asset.Platform.Name == "azurelinux":
+	// opencloudos is rpm based but ships no /etc/redhat-release, so the redhat
+	// family declines it and it resolves as a platform of its own
+	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux" || asset.Platform.Name == "bottlerocket" || asset.Platform.Name == "azurelinux" || asset.Platform.Name == "opencloudos":
 		fallthrough
 	case asset.Platform.IsFamily("redhat") ||
 		asset.Platform.IsFamily("euler") ||
