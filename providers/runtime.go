@@ -869,6 +869,43 @@ func (r *Runtime) EnableResourcesRecording() error {
 	return r.SetRecording(recording)
 }
 
+// EnsureResourcesRecording makes this runtime record resource data for
+// asset, regardless of when it is called relative to the runtime's
+// connection. It mounts an in-memory recording if none is mounted (the same
+// Null-only swap as EnableResourcesRecording, so a recording the caller
+// mounted — e.g. via --record — is never clobbered) and registers asset
+// with the mounted recording.
+//
+// The registration is what makes late enabling work, and it encodes three
+// invariants of the recording machinery that callers should not have to
+// know: assets are normally registered at CONNECT time (a recording mounted
+// afterwards knows no connections), AddData silently drops rows for
+// connections the recording does not know, and readers look assets up by
+// the identity on the registered asset — so asset should be the one
+// carrying the identity readers will use (e.g. the platform-assigned MRN),
+// with the connection config whose Id writes are keyed under. An asset with
+// no connections mounts the recording and skips registration: the runtime
+// has not connected yet, and connect-time registration will cover it.
+func (r *Runtime) EnsureResourcesRecording(asset *inventory.Asset) error {
+	if err := r.EnableResourcesRecording(); err != nil {
+		return err
+	}
+	if asset == nil || len(asset.Connections) == 0 {
+		return nil
+	}
+
+	providerID := ""
+	var connectionID uint32
+	if r.Provider != nil && r.Provider.Instance != nil {
+		providerID = r.Provider.Instance.ID
+	}
+	if r.Provider != nil && r.Provider.Connection != nil {
+		connectionID = r.Provider.Connection.Id
+	}
+	r.recording.EnsureAsset(asset, providerID, connectionID, asset.Connections[0])
+	return nil
+}
+
 func (r *Runtime) SetRecording(recording llx.Recording) error {
 	r.recording = recording
 	if r.Provider == nil || r.Provider.Instance == nil {
