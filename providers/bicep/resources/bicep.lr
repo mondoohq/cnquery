@@ -25,8 +25,19 @@ bicep {
   resources() []bicep.resource
   // All Bicep parameter (.bicepparam) files found
   paramFiles() []bicep.paramFile
-  // Compiled ARM template (if available via JSON or bicep build)
+  // Compiled ARM template
+  //
+  // The first ARM template JSON the scan discovered, or the one named directly
+  // when the connection points at a single .json file. Null when the scan found
+  // no ARM template. Use templates to reach every template in a scanned tree.
   template() bicep.template
+  // All ARM templates found
+  //
+  // Every JSON file under the scanned path that parses as an ARM deployment
+  // template, in path-sorted order, so a repo holding several (for example
+  // `infra/azuredeploy.json` alongside `modules/network.json`) has all of them
+  // audited rather than only the first.
+  templates() []bicep.template
 }
 
 // Bicep source file
@@ -745,9 +756,25 @@ bicep.template.resource @defaults("type name") {
   location string
   // Full resource properties as dict
   properties dict
+  // Resource tags
+  //
+  // The resource's `tags` object, empty when the resource declares none. The
+  // same shape `bicep.resource.tags` carries, so one tagging policy covers both
+  // Bicep source and compiled ARM JSON.
+  tags map[string]string
   // Dependencies
+  //
+  // The resource's `dependsOn` entries. ARM permits an object form alongside
+  // the usual resourceId expression string, and a symbolic-name template uses
+  // `[reference(...)]` objects; an object entry is rendered to its raw JSON
+  // text so no dependency edge is lost.
   dependsOn []string
-  // ARM deployment condition expression; empty when the resource is unconditional
+  // ARM deployment condition
+  //
+  // The resource's `condition`, empty only when the resource declares none and
+  // is therefore unconditional. ARM's condition is boolean-valued and usually
+  // written as an expression string, but a literal is legal and is reported as
+  // "true" or "false"; "false" means the resource is never deployed.
   condition string
   // Name of the ARM `copy` iteration block; empty when the resource is not copied
   copyName string
@@ -765,6 +792,15 @@ bicep.template.resource @defaults("type name") {
   // `templateLink` deployment (not resolvable offline) and for non-deployment
   // resources.
   linkedTemplate() bicep.template
+  // Nested child resources
+  //
+  // Child resources declared inside this resource's own `resources` array, the
+  // standard ARM encoding for `Microsoft.Web/sites` to `config/web`,
+  // `Microsoft.Sql/servers` to `auditingSettings` and `firewallRules`, and
+  // `Microsoft.Storage/storageAccounts` to `blobServices`. Empty when the
+  // resource declares no children. Children may declare children of their own,
+  // resolved the same way.
+  resources() []bicep.template.resource
   // Full manifest
   manifest dict
 }
