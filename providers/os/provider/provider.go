@@ -529,6 +529,17 @@ func (s *Service) connect(req *plugin.ConnectReq, callback plugin.ProviderCallba
 			} else {
 				// In this case asset.Name should already be set via the inventory
 				asset.PlatformIds = []string{pID}
+				// The inventory may know identifiers for this machine that no
+				// detector can reach through a mount. The Kubernetes node scan
+				// is the case this exists for: it reads the node's cloud
+				// instance ID from the Kubernetes API and passes it down here,
+				// because a scan pod cannot reach the instance metadata
+				// service. Appending rather than replacing keeps both the
+				// Kubernetes identity and the cloud one on the asset, which is
+				// what lets it resolve to the asset the cloud integration
+				// already discovered instead of becoming a second asset for
+				// the same machine.
+				asset.PlatformIds = append(asset.PlatformIds, injectedPlatformIDs(conf)...)
 			}
 
 		// Do not expose mock connection as a supported type
@@ -693,4 +704,27 @@ func parseContainerSubcommand(subcommand, target string, conf *inventory.Config)
 		conf.Type = shared.Type_DockerContainer.String()
 		conf.Host = target
 	}
+}
+
+// injectedPlatformIDs returns the platform identifiers a caller passed through
+// the inventory in the inject-platform-ids option, skipping empty entries.
+//
+// Empty entries are expected rather than exceptional: callers template the
+// value (e.g. `{{ getenv "MONDOO_AWS_PLATFORM_ID" }}`), and a host with no such
+// identity resolves it to an empty string. Treating that as an identifier
+// would put a meaningless "" on the asset.
+func injectedPlatformIDs(conf *inventory.Config) []string {
+	raw := conf.GetOptions()[device.PlatformIdInject]
+	if raw == "" {
+		return nil
+	}
+
+	ids := make([]string, 0, 1)
+	for _, id := range strings.Split(raw, ",") {
+		id = strings.TrimSpace(id)
+		if id != "" {
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
