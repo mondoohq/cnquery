@@ -902,7 +902,24 @@ func (r *Runtime) EnsureResourcesRecording(asset *inventory.Asset) error {
 	if r.Provider != nil && r.Provider.Connection != nil {
 		connectionID = r.Provider.Connection.Id
 	}
-	r.recording.EnsureAsset(asset, providerID, connectionID, asset.Connections[0])
+
+	// Register under the config of the runtime's ACTIVE connection when the
+	// asset carries several: the recording indexes writes by conf.Id, and
+	// AddData silently drops rows for connection ids it does not know — so
+	// registering a non-active connection's config would reproduce exactly
+	// the silent-drop failure this method exists to prevent. Fall back to
+	// the first connection when none matches (or the runtime has not
+	// connected yet, where connect-time registration covers the rest).
+	conf := asset.Connections[0]
+	if connectionID > 0 {
+		for _, c := range asset.Connections {
+			if c.Id == connectionID {
+				conf = c
+				break
+			}
+		}
+	}
+	r.recording.EnsureAsset(asset, providerID, connectionID, conf)
 	return nil
 }
 
