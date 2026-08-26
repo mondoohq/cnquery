@@ -199,8 +199,9 @@ func isSecurityIdentifier(value string) bool {
 // it. Account name resolution runs as a separate command (see SidLookupScript):
 // combining the export with SID enumeration in one encoded command trips
 // Defender's Trojan:Win32/Commando.A!ml heuristic.
-// Output crosses a pipe, so pin UTF-8: the console code page mangles a local
-// account name such as `Müller` into bytes no SID lookup can match.
+// Output crosses a pipe, so pin UTF-8 instead of inheriting it: under a legacy
+// code page a local account name such as `Müller` arrives as undecodable bytes
+// and the principal is dropped from the right.
 const SecpolScript = `
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $cfg = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
