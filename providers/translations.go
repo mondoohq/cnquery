@@ -4,10 +4,9 @@
 package providers
 
 import (
+	"errors"
 	"sort"
 	"strings"
-
-	"errors"
 	"sync"
 
 	"github.com/rs/zerolog/log"
