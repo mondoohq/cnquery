@@ -171,19 +171,32 @@ var (
 	// the same reason as paramRe — `output ids string[] = names` has no bare
 	// word before the `=`.
 	outputRe = regexp.MustCompile(`(?m)^output\s+(\w+)\s+(\S.*)$`)
+	// paramHeaderRe and outputHeaderRe match only the declaration header,
+	// anchored to the start of the statement. The value is then taken as the
+	// remaining text, which may span lines when it holds a triple-quoted
+	// string.
+	paramHeaderRe  = regexp.MustCompile(`\Aparam\s+(\w+)\s+`)
+	outputHeaderRe = regexp.MustCompile(`\Aoutput\s+(\w+)\s+`)
 	// Every built-in decorator may also be written through the `sys`
 	// namespace (`@sys.secure()`), which is what Bicep requires when a
 	// user-defined symbol shadows the bare name. `decNS` makes that prefix
 	// optional everywhere so a namespace-qualified `@sys.secure()` is not
 	// silently read as "not secure".
-	descDecRe      = regexp.MustCompile(decNS + `description\('([^']*)'\)`)
-	secureDecRe    = regexp.MustCompile(decNS + `secure\(\)`)
-	allowedDecRe   = regexp.MustCompile(decNS + `allowed\(\[([^\]]*)\]\)`)
-	minLengthDecRe = regexp.MustCompile(decNS + `minLength\(\s*(-?\d+)\s*\)`)
-	maxLengthDecRe = regexp.MustCompile(decNS + `maxLength\(\s*(-?\d+)\s*\)`)
-	minValueDecRe  = regexp.MustCompile(decNS + `minValue\(\s*(-?\d+)\s*\)`)
-	maxValueDecRe  = regexp.MustCompile(decNS + `maxValue\(\s*(-?\d+)\s*\)`)
-	exportDecRe    = regexp.MustCompile(decNS + `export\(\)`)
+	// The value may contain an escaped quote (`@description('The VM\\'s name')`),
+	// so the capture accepts escape pairs. A bare `[^']*` class stopped at the
+	// backslash and then failed to anchor, blanking the whole description.
+	descDecRe   = regexp.MustCompile(decNS + `description\('((?:[^'\\]|\\.)*)'\)`)
+	secureDecRe = regexp.MustCompile(decNS + `secure\(\)`)
+	// allowedDecOpenRe locates the decorator; the argument list is then
+	// delimited with the string-aware scanner. A `[^\]]*` class stopped at the
+	// first `]`, so an allowed value containing one (`'a]b'`) failed the match
+	// entirely and the constraint read as absent rather than partial.
+	allowedDecOpenRe = regexp.MustCompile(decNS + `allowed\(`)
+	minLengthDecRe   = regexp.MustCompile(decNS + `minLength\(\s*(-?\d+)\s*\)`)
+	maxLengthDecRe   = regexp.MustCompile(decNS + `maxLength\(\s*(-?\d+)\s*\)`)
+	minValueDecRe    = regexp.MustCompile(decNS + `minValue\(\s*(-?\d+)\s*\)`)
+	maxValueDecRe    = regexp.MustCompile(decNS + `maxValue\(\s*(-?\d+)\s*\)`)
+	exportDecRe      = regexp.MustCompile(decNS + `export\(\)`)
 
 	// discriminatorDecRe captures the key argument of an
 	// `@discriminator('<key>')` decorator on a tagged-union type.
@@ -319,10 +332,16 @@ func parseBicep(content string) *parsedBicepFile {
 		case "output":
 			// Reassemble multi-line output values (a looped output's
 			// `[for ... : ...]` spans lines) into a single collapsed-whitespace
-			// line so the value regex and loop detector see the whole RHS.
+			// line so the value regex and loop detector see the whole RHS. A
+			// value holding a triple-quoted string keeps its newlines instead:
+			// collapsing them would rewrite the string's contents.
 			outLine := firstLine
 			if len(stmtLines) > 1 {
-				outLine = strings.Join(strings.Fields(strings.Join(stmtLines, " ")), " ")
+				if containsMultilineString(stmt.text) {
+					outLine = stmt.text
+				} else {
+					outLine = strings.Join(strings.Fields(strings.Join(stmtLines, " ")), " ")
+				}
 			}
 			if o, ok := parseOutput(outLine, stmt.decorators); ok {
 				o.startLine, o.endLine = startLine, endLine
@@ -367,8 +386,25 @@ func parseBicep(content string) *parsedBicepFile {
 func reassembleParamStatement(lines []string) string {
 	st := scanState{}
 	parts := make([]string, 0, len(lines))
+	multiline := false
 	for _, l := range lines {
-		parts = append(parts, strings.TrimSpace(stripInlineComment(l, &st)))
+		before := st.inMulti
+		stripped := stripInlineComment(l, &st)
+		if !before && st.inMulti {
+			multiline = true
+		}
+		if multiline {
+			// Inside (or after opening) a triple-quoted string the line breaks
+			// are part of the value. Trimming and space-joining them would
+			// rewrite a multi-line default into a single line, and the earlier
+			// line-anchored value regex reported only the opening delimiter.
+			parts = append(parts, stripped)
+			continue
+		}
+		parts = append(parts, strings.TrimSpace(stripped))
+	}
+	if multiline {
+		return strings.Join(parts, "\n")
 	}
 	return strings.Join(parts, " ")
 }
@@ -396,17 +432,27 @@ func stripInlineComment(s string, st *scanState) string {
 func parseParameter(line string, decorators []string) (parsedParameter, bool) {
 	p := parsedParameter{decorators: decorators}
 
-	m := paramRe.FindStringSubmatch(line)
-	if len(m) < 3 {
+	// The header is matched separately from the value so that a value holding a
+	// triple-quoted string can span lines; paramRe's `.` stops at a newline, so
+	// using it for the value truncated a multi-line default to the bare opening
+	// delimiter and then reported that fragment as the parameter's value.
+	loc := paramHeaderRe.FindStringSubmatchIndex(line)
+	if loc == nil {
 		return parsedParameter{}, false
 	}
 
-	p.name = m[1]
-	rest := strings.TrimSpace(m[2])
+	p.name = line[loc[2]:loc[3]]
+	rest := strings.TrimSpace(line[loc[1]:])
+	if rest == "" {
+		return parsedParameter{}, false
+	}
 	if typ, def, hasDefault := splitDeclAtEquals(rest); hasDefault {
 		p.typ = typ
-		// Strip Bicep single-quote string delimiters
-		if len(def) >= 2 && def[0] == '\'' && def[len(def)-1] == '\'' {
+		// Strip the delimiters only when the whole default is one string
+		// literal. A value that merely begins and ends with a quote, such as
+		// `'prod' == env ? 'Premium' : 'Standard'`, is an expression, and removing
+		// its outer quotes corrupted it into an unbalanced string.
+		if isSingleQuotedLiteral(def) {
 			def = def[1 : len(def)-1]
 		}
 		p.defaultValue = def
@@ -422,9 +468,7 @@ func parseParameter(line string, decorators []string) (parsedParameter, bool) {
 		p.description = m[1]
 	}
 	p.secure = secureDecRe.MatchString(decText)
-	if m := allowedDecRe.FindStringSubmatch(decText); len(m) > 1 {
-		p.allowed = parseAllowedValues(m[1])
-	}
+	p.allowed = extractAllowedValues(decText)
 	p.minLength = parseIntDecorator(decText, minLengthDecRe)
 	p.maxLength = parseIntDecorator(decText, maxLengthDecRe)
 	p.minValue = parseIntDecorator(decText, minValueDecRe)
@@ -452,6 +496,22 @@ func parseIntDecorator(decText string, re *regexp.Regexp) *int64 {
 // allowedValueRe matches individual quoted values like 'foo' or "foo".
 var allowedValueRe = regexp.MustCompile(`'([^']*)'`)
 
+// extractAllowedValues returns the values of an `@allowed([...])` decorator.
+// The closing parenthesis is found with the string-aware scanner so a `]` or
+// `)` inside one of the literals cannot end the list early.
+func extractAllowedValues(decText string) []string {
+	loc := allowedDecOpenRe.FindStringIndex(decText)
+	if loc == nil {
+		return nil
+	}
+	open := loc[1] - 1
+	closeIdx := matchingParenIndex(decText, open)
+	if closeIdx <= open {
+		return nil
+	}
+	return parseAllowedValues(decText[open+1 : closeIdx])
+}
+
 func parseAllowedValues(raw string) []string {
 	// Extract all single-quoted values from the raw content.
 	// This handles both newline-separated and comma-separated formats:
@@ -463,6 +523,31 @@ func parseAllowedValues(raw string) []string {
 		vals = append(vals, m[1])
 	}
 	return vals
+}
+
+// varMultilineHeaderRe matches only the `var <name> =` header, anchored to the
+// start of the statement. The value is taken as the remaining text so it can
+// span lines, which varRe cannot express (its `.` does not match a newline).
+var varMultilineHeaderRe = regexp.MustCompile(`\Avar\s+(\w+)\s*=\s*`)
+
+// parseVariableMultiline parses a `var` declaration whose value contains a
+// triple-quoted string, keeping the string's newlines intact.
+func parseVariableMultiline(text string, decorators []string) parsedVariable {
+	v := parsedVariable{}
+	loc := varMultilineHeaderRe.FindStringSubmatchIndex(text)
+	if loc == nil {
+		// Not a shape we recognize; fall back to the single-line parser so the
+		// declaration is not dropped entirely.
+		return parseVariable(strings.Join(strings.Fields(text), " "), decorators)
+	}
+	v.name = text[loc[2]:loc[3]]
+	v.expression = strings.TrimSpace(text[loc[1]:])
+
+	decText := strings.Join(decorators, "\n")
+	if m := descDecRe.FindStringSubmatch(decText); len(m) > 1 {
+		v.description = m[1]
+	}
+	return v
 }
 
 func parseVariable(line string, decorators []string) parsedVariable {
@@ -502,18 +587,26 @@ func parseVariableDecl(lines []string, startIdx int, decorators []string) (parse
 	st := scanState{}
 	st.feed(first)
 
-	if st.totalDepth() <= 0 {
+	if !st.open() {
 		return parseVariable(first, decorators), startIdx + 1
 	}
 
-	// Value opens a block; reassemble until depth returns to zero.
+	// Value opens a block or a multi-line string; reassemble until it closes.
 	joined := []string{first}
 	i := startIdx + 1
-	for st.totalDepth() > 0 && i < len(lines) {
+	for st.open() && i < len(lines) {
 		t := strings.TrimSpace(lines[i])
 		joined = append(joined, t)
 		st.feed(t)
 		i++
+	}
+
+	// A multi-line string's contents are data, not layout: joining with spaces
+	// and collapsing whitespace would rewrite a shell script or certificate
+	// body into one line. Keep the newlines in that case, and split the
+	// declaration with the delimiter-aware scanner rather than the line regex.
+	if raw := strings.Join(joined, "\n"); containsMultilineString(raw) {
+		return parseVariableMultiline(raw, decorators), i
 	}
 
 	combined := strings.Join(joined, " ")
@@ -707,7 +800,7 @@ func scanStatementEnd(s string) int {
 	}
 	st.feed(s[:nl])
 	pos := nl + 1
-	if st.totalDepth() <= 0 {
+	if !st.open() {
 		return nl
 	}
 	for pos < len(s) {
@@ -723,7 +816,7 @@ func scanStatementEnd(s string) int {
 			return len(s)
 		}
 		pos += next + 1
-		if st.totalDepth() <= 0 {
+		if !st.open() {
 			return pos - 1
 		}
 	}
@@ -776,17 +869,21 @@ func parseModuleDecl(lines []string, startIdx int, decorators []string) (*parsed
 // Bicep requires — so the caller can skip it rather than append a husk.
 func parseOutput(line string, decorators []string) (parsedOutput, bool) {
 	o := parsedOutput{}
-	m := outputRe.FindStringSubmatch(line)
-	if len(m) < 3 {
+	loc := outputHeaderRe.FindStringSubmatchIndex(line)
+	if loc == nil {
+		return parsedOutput{}, false
+	}
+	rest := strings.TrimSpace(line[loc[1]:])
+	if rest == "" {
 		return parsedOutput{}, false
 	}
 
-	typ, expr, hasValue := splitDeclAtEquals(strings.TrimSpace(m[2]))
+	typ, expr, hasValue := splitDeclAtEquals(rest)
 	if !hasValue || typ == "" {
 		return parsedOutput{}, false
 	}
 
-	o.name = m[1]
+	o.name = line[loc[2]:loc[3]]
 	o.typ = typ
 	// A looped output (`output ids array = [for sa in sas: sa.id]`)
 	// produces an array. Intentionally store the per-iteration value
@@ -1328,18 +1425,12 @@ func extractCondition(line string) string {
 	if idx := strings.Index(line, "= if"); idx >= 0 {
 		rest := strings.TrimSpace(line[idx+4:])
 		// Extract the condition expression in parens
+		// matchingParenIndex shares the string-aware lexer, so a `)` inside a
+		// quoted value (`if (tag == 'a)b')`) no longer closes the condition
+		// early and truncate the expression.
 		if strings.HasPrefix(rest, "(") {
-			depth := 0
-			for i, ch := range rest {
-				if ch == '(' {
-					depth++
-				}
-				if ch == ')' {
-					depth--
-					if depth == 0 {
-						return rest[1:i]
-					}
-				}
+			if closeIdx := matchingParenIndex(rest, 0); closeIdx > 0 {
+				return rest[1:closeIdx]
 			}
 		}
 	}
@@ -1391,6 +1482,34 @@ type scanState struct {
 
 func (s *scanState) totalDepth() int { return s.paren + s.bracket + s.brace }
 
+// open reports whether the state is mid-construct and a statement scanner must
+// keep consuming lines.
+//
+// Bracket depth alone is not enough. A triple-quoted multi-line string opens no
+// paren, bracket, or brace, so a depth-only test ended the statement at the
+// first newline and handed the remaining lines of the string back to the
+// scanner as top-level statements. Anything in them that looked like a
+// declaration was then parsed as one, so a deployment script embedded in a
+// variable could fabricate resources, parameters, and outputs that are not part
+// of the template.
+func (s *scanState) open() bool { return s.totalDepth() > 0 || s.inMulti }
+
+// containsMultilineString reports whether s opens a triple-quoted string
+// anywhere outside a comment or another string. Callers use it to decide
+// whether a reassembled statement must keep its newlines: collapsing them would
+// corrupt the string's contents.
+func containsMultilineString(s string) bool {
+	st := scanState{}
+	for i := 0; i < len(s); {
+		before := st.inMulti
+		i = st.stepAt(s, i)
+		if !before && st.inMulti {
+			return true
+		}
+	}
+	return false
+}
+
 // stepAt processes one position in `body` and returns the next index
 // to resume from. It handles the full set of Bicep token states
 // (single-line strings with `\<char>` escapes, triple-quoted
@@ -1417,6 +1536,15 @@ func (s *scanState) stepAt(body string, i int) int {
 	}
 	ch := body[i]
 	if s.inStr != 0 {
+		// A single- or double-quoted Bicep string cannot contain a raw
+		// newline; that is what the triple-quoted form is for. Clearing the
+		// state at the line break keeps one unterminated quote from turning
+		// the rest of a resource body into string content, which made the
+		// resource's properties read as empty.
+		if ch == '\n' {
+			s.inStr = 0
+			return i + 1
+		}
 		// Bicep string escapes: `\\`, `\'`, `\n`, `\$`, etc. The next
 		// byte is literal regardless of what it is, so just skip it.
 		if ch == '\\' && i+1 < len(body) {
@@ -1470,6 +1598,11 @@ func (s *scanState) stepAt(body string, i int) int {
 // running depth counters. Characters inside a string literal or after
 // a top-level `//` comment marker do not affect depth.
 func (s *scanState) feed(line string) {
+	// Callers split on newlines, so the line break that would have closed
+	// an unterminated single-quoted string is not part of line. Reset for
+	// the same reason stepAt resets at an explicit newline. inMulti and
+	// inCmt are deliberately preserved: those constructs do span lines.
+	s.inStr = 0
 	for i := 0; i < len(line); {
 		i = s.stepAt(line, i)
 	}
@@ -1547,6 +1680,10 @@ func (s *scanState) scanForBodyBrace(line string) int {
 // blocks. Anything it can't parse cleanly falls back to a string —
 // audits can still match on the text.
 func parseBicepObject(body string) map[string]any {
+	return parseBicepObjectDepth(body, 0)
+}
+
+func parseBicepObjectDepth(body string, depth int) map[string]any {
 	entries := splitTopLevelEntries(body)
 	out := make(map[string]any, len(entries))
 	for _, entry := range entries {
@@ -1554,7 +1691,7 @@ func parseBicepObject(body string) map[string]any {
 		if !ok {
 			continue
 		}
-		out[unquoteBicepKey(strings.TrimSpace(key))] = parseBicepValue(strings.TrimSpace(value))
+		out[unquoteBicepKey(strings.TrimSpace(key))] = parseBicepValueDepth(strings.TrimSpace(value), depth)
 	}
 	return out
 }
@@ -1574,16 +1711,48 @@ func unquoteBicepKey(k string) string {
 	return k
 }
 
+// maxValueDepth bounds recursion in the object/array value parser, mirroring
+// maxExprDepth in the expression parser. Real Bicep nests properties a handful
+// of levels deep; the cap exists so a deeply nested, possibly adversarial
+// template degrades to raw text instead of driving super-linear work that
+// wedges the scan.
+const maxValueDepth = 200
+
 func parseBicepValue(v string) any {
+	return parseBicepValueDepth(v, 0)
+}
+
+func parseBicepValueDepth(v string, depth int) any {
 	if v == "" {
 		return ""
 	}
+	if depth >= maxValueDepth {
+		return v
+	}
 	switch v[0] {
 	case '{':
-		return parseBicepObject(stripOuter(v, '{', '}'))
+		// stripOuter returns its input unchanged when there is nothing to
+		// strip, which for a lone delimiter makes this a fixed point: the
+		// container parser splits the text into the same single entry and
+		// hands it straight back. That recursion has no base case and
+		// overflows the stack, which is a fatal error the plugin runtime
+		// cannot recover from. Only descend when the text actually shrank.
+		if inner := stripOuter(v, '{', '}'); len(inner) < len(v) {
+			return parseBicepObjectDepth(inner, depth+1)
+		}
+		return v
 	case '[':
-		return parseBicepArray(stripOuter(v, '[', ']'))
+		if inner := stripOuter(v, '[', ']'); len(inner) < len(v) {
+			return parseBicepArrayDepth(inner, depth+1)
+		}
+		return v
 	case '\'', '"':
+		// A triple-quoted multi-line string needs all three delimiters
+		// removed; stripping a single quote from each end left stray `''`
+		// bookends on every embedded script, certificate, or policy body.
+		if len(v) >= 6 && strings.HasPrefix(v, "'''") && strings.HasSuffix(v, "'''") {
+			return v[3 : len(v)-3]
+		}
 		if len(v) >= 2 && v[len(v)-1] == v[0] {
 			return v[1 : len(v)-1]
 		}
@@ -1640,10 +1809,14 @@ func stripLiteralQuotes(s string) string {
 }
 
 func parseBicepArray(body string) []any {
+	return parseBicepArrayDepth(body, 0)
+}
+
+func parseBicepArrayDepth(body string, depth int) []any {
 	entries := splitTopLevelEntries(body)
 	out := make([]any, 0, len(entries))
 	for _, e := range entries {
-		out = append(out, parseBicepValue(strings.TrimSpace(e)))
+		out = append(out, parseBicepValueDepth(strings.TrimSpace(e), depth))
 	}
 	return out
 }
@@ -1684,6 +1857,13 @@ func splitTopLevelEntries(body string) []string {
 	}
 	i := 0
 	for i < len(body) {
+		// A single- or double-quoted string cannot span lines in Bicep, so a
+		// newline closes an unterminated one. Without this, one stray quote
+		// merged every following entry into the malformed one and the
+		// object's remaining keys disappeared.
+		if body[i] == '\n' && st.inStr != 0 && !st.inMulti && !st.inCmt {
+			st.inStr = 0
+		}
 		// Special cases only fire when we're not inside any string,
 		// and only at top-level depth so nested object/array entries
 		// preserve their commas and newlines.
@@ -1717,28 +1897,32 @@ func splitTopLevelEntries(body string) []string {
 	return entries
 }
 
-// tagsEntryRe matches one `key: 'value'` line inside a `tags: { ... }` block.
-// Keys can be bare identifiers (`env`) or single-quoted strings (`'env-1'`);
-// only literal single-quoted values are captured — expression-valued tags
-// like `env: parameters('env')` are skipped because the dict shape on the
-// resource gives audits a way to reach them in raw form.
-var tagsEntryRe = regexp.MustCompile(`(?m)^\s*(?:'([^']+)'|(\w[\w-]*))\s*:\s*'([^']*)'\s*,?\s*$`)
-
 // extractTags pulls a `tags: { ... }` block out of a resource body and
 // returns the literal key/value pairs as a map. Expression-valued tags are
 // dropped; the resource's `properties` dict still surfaces the raw text.
+//
+// Entries are split with the shared string-aware scanner rather than matched
+// one per line. A line-anchored pattern required every pair to sit alone on
+// its own line, so the inline form `tags: { env: 'prod', owner: 'x' }` matched
+// nothing and a correctly tagged resource reported no tags at all.
 func extractTags(body string) map[string]string {
 	raw := extractFieldBlock(body, "tags")
 	if raw == "" {
 		return nil
 	}
 	tags := map[string]string{}
-	for _, m := range tagsEntryRe.FindAllStringSubmatch(raw, -1) {
-		key := m[1]
-		if key == "" {
-			key = m[2]
+	for _, entry := range splitTopLevelEntries(raw) {
+		key, value, ok := splitFirstColon(entry)
+		if !ok {
+			continue
 		}
-		tags[key] = m[3]
+		value = strings.TrimSpace(value)
+		// Only literal values are surfaced here. An expression-valued tag
+		// stays reachable through the resource's raw properties dict.
+		if !isSingleQuotedLiteral(value) {
+			continue
+		}
+		tags[unquoteBicepKey(strings.TrimSpace(key))] = value[1 : len(value)-1]
 	}
 	if len(tags) == 0 {
 		return nil
