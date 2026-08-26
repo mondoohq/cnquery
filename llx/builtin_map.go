@@ -607,24 +607,6 @@ func dictNotEmpty(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*R
 	}
 }
 
-// Deprecated: replace with calls to the empty type
-func dictNotEmptyV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
-	if bind.Value == nil {
-		return BoolFalse, 0, nil
-	}
-
-	switch x := bind.Value.(type) {
-	case string:
-		return BoolData(len(x) != 0), 0, nil
-	case []any:
-		return BoolData(len(x) != 0), 0, nil
-	case map[string]any:
-		return BoolData(len(x) != 0), 0, nil
-	default:
-		return nil, 0, errors.New("dict value does not support field `notEmpty`")
-	}
-}
-
 func dictBlockCallV2(e *blockExecutor, bind *RawData, chunk *Chunk, ref uint64) (*RawData, uint64, error) {
 	switch bind.Value.(type) {
 	case []any:
