@@ -361,6 +361,36 @@ os {
   uptime() time
   // List of available OS updates
   updates() []os.update
+  // Time the most recent operating system update was installed
+  //
+  // Newest install or upgrade recorded by the platform's own update
+  // mechanism: the rpm database, the apt and dpkg logs, the macOS install
+  // history, or the Windows Update Agent. Definition data (XProtect on
+  // macOS, Defender signatures on Windows) is excluded, because it lands
+  // weekly or daily and would report a system months behind on updates as
+  // freshly patched. On Linux this covers any change the OS package manager
+  // made, so installing a single package counts alongside a full upgrade.
+  // On a container image it is effectively the image build time, which is
+  // what makes a stale base image visible. Null on platforms that keep no
+  // such record, and null is not false under three-valued logic, so guard
+  // on it: `os.lastUpdate != null && (time.now - os.lastUpdate).days < 30`.
+  lastUpdate() time
+  // Time since the most recent operating system update was installed
+  //
+  // A duration, like `uptime`, so `os.lastUpdateAge.days` reads the patch
+  // age directly. Null whenever `lastUpdate` is null.
+  lastUpdateAge() time
+  // Record the last-update timestamp was read from
+  //
+  // One of "rpmdb", "apt-history", "dpkg-log", "dpkg-status-mtime",
+  // "macos-install-history", "windows-update-agent", or
+  // "windows-update-registry". Precision differs sharply between them:
+  // "rpmdb", "apt-history" and "macos-install-history" name an exact
+  // install event, while "dpkg-status-mtime" is only the last time the
+  // package database was rewritten and "windows-update-registry" counts
+  // definition data the agent history would have excluded. Null whenever
+  // `lastUpdate` is null.
+  lastUpdateSource() string
   // Whether a reboot is pending
   rebootpending() bool
   // Hostname for this OS
@@ -426,6 +456,12 @@ os.base {
   uptime() time
   // List of available OS updates
   updates() []os.update
+  // Time the most recent operating system update was installed
+  lastUpdate() time
+  // Time since the most recent operating system update was installed, as a duration
+  lastUpdateAge() time
+  // Record the last-update timestamp was read from (e.g., "rpmdb", "apt-history")
+  lastUpdateSource() string
   // Whether a reboot is pending
   rebootpending() bool
   // Hostname for this OS
