@@ -861,9 +861,9 @@ type CodeBundle struct {
 	// afterwards
 	Vars map[uint64]string `protobuf:"bytes,25,rep,name=vars,proto3" json:"vars,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Writer-schema identity (ADR 040 part 1): the version of every provider
-	// whose schema this bundle was compiled against, keyed by the stable provider
-	// name ("aws", "os") rather than by its module-path id, so the key survives an
-	// id migration.
+	// whose schema this bundle was compiled against, keyed by the stable
+	// provider name ("aws", "os") rather than by its module-path id, so the key
+	// survives an id migration.
 	//
 	// This says what the compiler *saw*. It is provenance, not a requirement -
 	// use min_provider_versions to decide whether a reader can execute the

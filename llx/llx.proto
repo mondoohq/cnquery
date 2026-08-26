@@ -144,9 +144,9 @@ message CodeBundle {
   map<uint64,string> vars = 25;
 
   // Writer-schema identity (ADR 040 part 1): the version of every provider
-  // whose schema this bundle was compiled against, keyed by the stable provider
-  // name ("aws", "os") rather than by its module-path id, so the key survives an
-  // id migration.
+  // whose schema this bundle was compiled against, keyed by the stable
+  // provider name ("aws", "os") rather than by its module-path id, so the key
+  // survives an id migration.
   //
   // This says what the compiler *saw*. It is provenance, not a requirement -
   // use min_provider_versions to decide whether a reader can execute the
