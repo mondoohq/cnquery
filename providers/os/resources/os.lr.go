@@ -766,7 +766,7 @@ func init() {
 			Create: createFile,
 		},
 		"file.signature": {
-			// to override args, implement: initFileSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initFileSignature,
 			Create: createFileSignature,
 		},
 		"networkHosts": {

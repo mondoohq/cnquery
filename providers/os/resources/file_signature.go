@@ -6,6 +6,7 @@ package resources
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"strings"
 	"time"
@@ -15,6 +16,19 @@ import (
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/resources/powershell"
 )
+
+// file.signature is both a resource name and the field path that reaches it.
+// The compiler resolves the longest matching resource name first, so a bare
+// `file.signature` builds the sub-resource instead of calling the parent's
+// accessor, and without an Init every field reads null: a check asserting
+// `signed` would quietly pass on an unsigned binary. There is no file to
+// inspect in that form, so say so instead of handing back an empty instance.
+func initFileSignature(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+	return nil, nil, errors.New("file.signature needs a file, query it as file(\"/path/to/file\").signature")
+}
 
 // signature returns the file's code signature. macOS uses codesign, Windows uses
 // Authenticode; on every other platform (no universal per-file ELF signing model)
