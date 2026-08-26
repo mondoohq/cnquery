@@ -157,7 +157,7 @@ func ParseXbpsFileList(r io.Reader) ([]FileRecord, error) {
 		return nil, fmt.Errorf("could not parse the xbps file list: %w", err)
 	}
 
-	records := []FileRecord{}
+	records := make([]FileRecord, 0, len(list.Dirs)+len(list.Files)+len(list.Links))
 	for _, group := range [][]xbpsFileEntry{list.Dirs, list.Files, list.Links} {
 		for _, entry := range group {
 			if entry.File != "" {
@@ -250,6 +250,10 @@ func ParseXbpsUpdates(r io.Reader) (map[string]PackageUpdate, error) {
 		// The revision separator is the last "_", and the version starts after
 		// the last "-" before it. Splitting on the first hyphen would cut
 		// "base-files-0.142_11" in the wrong place.
+		//
+		// Searching from the right rather than the left is also what makes an
+		// underscore inside the name harmless: in "my_pkg-1.0_1" the last "_"
+		// is still the revision separator, so the name survives intact.
 		sep := strings.LastIndex(pkgver, "_")
 		if sep < 0 {
 			continue

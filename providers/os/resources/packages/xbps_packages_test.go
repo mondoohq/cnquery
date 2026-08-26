@@ -132,6 +132,24 @@ func TestParseXbpsUpdates(t *testing.T) {
 	assert.Equal(t, "20230311_1", updates["ca-certificates"].Available)
 }
 
+// An underscore is the revision separator, so a name containing one looks
+// ambiguous. It is not: the search runs from the right, so the last "_" is
+// still the revision and the name survives whole.
+func TestParseXbpsUpdatesNameContainingUnderscore(t *testing.T) {
+	out := strings.Join([]string{
+		"my_pkg-1.0_1 update x86_64 https://repo-default.voidlinux.org/current 1 2",
+		"pkg-my_name-2.5_3 update x86_64 https://repo-default.voidlinux.org/current 1 2",
+		"",
+	}, "\n")
+
+	updates, err := packages.ParseXbpsUpdates(strings.NewReader(out))
+	require.NoError(t, err)
+	require.Len(t, updates, 2)
+
+	assert.Equal(t, "1.0_1", updates["my_pkg"].Available)
+	assert.Equal(t, "2.5_3", updates["pkg-my_name"].Available)
+}
+
 func TestParseXbpsUpdatesEmpty(t *testing.T) {
 	updates, err := packages.ParseXbpsUpdates(strings.NewReader(""))
 	require.NoError(t, err)
