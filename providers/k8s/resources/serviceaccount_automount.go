@@ -16,6 +16,7 @@ package resources
 
 import (
 	"github.com/rs/zerolog/log"
+	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -49,13 +50,45 @@ func podServiceAccountName(spec *corev1.PodSpec) string {
 	return "default"
 }
 
+// serviceAccountIndex returns the cluster's ServiceAccounts indexed by
+// namespace/name, building the index once per scan. Every workload resolves its
+// account through here, so rebuilding it per workload would cost one pass over
+// every ServiceAccount per workload.
+//
+// Two cold callers can both build it; that is harmless because they produce the
+// same content and the underlying list is already deduplicated by the runtime.
+// The lock only keeps a reader from observing a half-assigned map.
+func (k *mqlK8s) serviceAccountIndex() (map[string]*mqlK8sServiceaccount, error) {
+	k.lock.Lock()
+	cached := k.serviceAccountsByName
+	k.lock.Unlock()
+	if cached != nil {
+		return cached, nil
+	}
+
+	index, err := namespacedByName[*mqlK8sServiceaccount](
+		k.MqlRuntime, func(x *mqlK8s) *plugin.TValue[[]any] { return x.GetServiceaccounts() })
+	if err != nil {
+		return nil, err
+	}
+
+	k.lock.Lock()
+	k.serviceAccountsByName = index
+	k.lock.Unlock()
+	return index, nil
+}
+
 // serviceAccountAutomount returns the named ServiceAccount's automount setting,
 // or nil when the account cannot be resolved. It reads the already-fetched
 // ServiceAccount collection rather than looking each account up individually,
 // so it costs no extra API calls.
 func serviceAccountAutomount(runtime *plugin.Runtime, namespace, name string) *bool {
-	index, err := namespacedByName[*mqlK8sServiceaccount](
-		runtime, func(x *mqlK8s) *plugin.TValue[[]any] { return x.GetServiceaccounts() })
+	o, err := CreateResource(runtime, "k8s", map[string]*llx.RawData{})
+	if err != nil {
+		log.Debug().Err(err).Msg("cannot reach the k8s resource to resolve automountServiceAccountToken")
+		return nil
+	}
+	index, err := o.(*mqlK8s).serviceAccountIndex()
 	if err != nil {
 		// A scan without permission to list ServiceAccounts cannot tell what the
 		// account asks for, so the Kubernetes default applies.
@@ -82,8 +115,12 @@ func effectiveAutomountServiceAccountToken(runtime *plugin.Runtime, spec *corev1
 	if spec != nil {
 		podLevel = spec.AutomountServiceAccountToken
 	}
-	if podLevel != nil {
-		return *podLevel
+
+	// The account only matters when the spec is silent, so skip the lookup
+	// entirely when the pod already decided.
+	var accountLevel *bool
+	if podLevel == nil {
+		accountLevel = serviceAccountAutomount(runtime, namespace, podServiceAccountName(spec))
 	}
-	return automountFromSpecAndAccount(nil, serviceAccountAutomount(runtime, namespace, podServiceAccountName(spec)))
+	return automountFromSpecAndAccount(podLevel, accountLevel)
 }
