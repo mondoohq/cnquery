@@ -919,13 +919,12 @@ func (r *Runtime) EnsureResourcesRecording(asset *inventory.Asset) error {
 			}
 		}
 	}
-	if conf == nil {
+	if conf != nil {
 		// A nil connection config cannot be registered (EnsureAsset derefs
-		// it); the recording stays mounted and connect-time registration
-		// covers the asset once a real connection exists.
-		return nil
+		// it); in that case the recording stays mounted and connect-time
+		// registration covers the asset once a real connection exists.
+		r.recording.EnsureAsset(asset, providerID, connectionID, conf)
 	}
-	r.recording.EnsureAsset(asset, providerID, connectionID, conf)
 	return nil
 }
 
