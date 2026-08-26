@@ -22,13 +22,16 @@ func TestParseSecpol(t *testing.T) {
 	f, err := mock.RunCommand(encoded)
 	require.NoError(t, err)
 
-	secpol, err := ParseSecpol(f.Stdout, nil)
+	secpol, err := ParseSecpol(f.Stdout)
+	require.NoError(t, err)
+
+	rights, err := secpol.PrivilegeRightSids(nil)
 	require.NoError(t, err)
 
 	assert.Equal(t, "42", secpol.SystemAccess["MaximumPasswordAge"])
 	assert.Equal(t, "chris", secpol.SystemAccess["NewAdministratorName"])
 	assert.Equal(t, "0", secpol.EventAudit["AuditLogonEvents"])
-	assert.Equal(t, []any{"S-1-1-0", "S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-551"}, secpol.PrivilegeRights["SeNetworkLogonRight"])
+	assert.Equal(t, []any{"S-1-1-0", "S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-551"}, rights["SeNetworkLogonRight"])
 	assert.Equal(t, "3,0", secpol.RegistryValues["MACHINE\\System\\CurrentControlSet\\Control\\Lsa\\FullPrivilegeAuditing"])
 }
 
@@ -48,19 +51,35 @@ signature="$CHICAGO$"
 Revision=1
 `
 
-func TestParseSecpolWithoutResolver(t *testing.T) {
-	// Without a resolver the parser cannot translate names, so secpol.privilegerights
-	// output stays restricted to SIDs.
-	secpol, err := ParseSecpol(strings.NewReader(secpolWithNames), nil)
+func TestParseSecpolKeepsRawPrincipals(t *testing.T) {
+	// The parse step reports the principals as exported, names included, and
+	// lists the names a resolver would have to translate.
+	secpol, err := ParseSecpol(strings.NewReader(secpolWithNames))
 	require.NoError(t, err)
 
-	assert.Equal(t, []any{"S-1-5-32-544"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
-	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545"}, secpol.PrivilegeRights["SeInteractiveLogonRight"])
+	assert.Equal(t, []string{"Guest", "S-1-5-32-544"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
+	assert.Equal(t, []string{"Gast", "Guest"}, secpol.AccountNames())
 }
 
-func TestParseSecpolResolvesNames(t *testing.T) {
+func TestPrivilegeRightSidsWithoutResolver(t *testing.T) {
+	// Without a resolver nothing can translate the names, so
+	// secpol.privilegerights output stays restricted to SIDs.
+	secpol, err := ParseSecpol(strings.NewReader(secpolWithNames))
+	require.NoError(t, err)
+
+	rights, err := secpol.PrivilegeRightSids(nil)
+	require.NoError(t, err)
+
+	assert.Equal(t, []any{"S-1-5-32-544"}, rights["SeDenyNetworkLogonRight"])
+	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545"}, rights["SeInteractiveLogonRight"])
+}
+
+func TestPrivilegeRightSidsResolvesNames(t *testing.T) {
+	secpol, err := ParseSecpol(strings.NewReader(secpolWithNames))
+	require.NoError(t, err)
+
 	var requested []string
-	secpol, err := ParseSecpol(strings.NewReader(secpolWithNames), func(names []string) (map[string]string, error) {
+	rights, err := secpol.PrivilegeRightSids(func(names []string) (map[string]string, error) {
 		requested = names
 		return map[string]string{
 			"Guest": "S-1-5-21-1234567890-1234567890-1234567890-501",
@@ -69,16 +88,24 @@ func TestParseSecpolResolvesNames(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	assert.Equal(t, []string{"Guest", "Gast"}, requested)
-	assert.Equal(t, []any{"S-1-5-21-1234567890-1234567890-1234567890-501", "S-1-5-32-544"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
-	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-546"}, secpol.PrivilegeRights["SeInteractiveLogonRight"])
+	assert.Equal(t, []string{"Gast", "Guest"}, requested)
+	assert.Equal(t, []any{"S-1-5-21-1234567890-1234567890-1234567890-501", "S-1-5-32-544"}, rights["SeDenyNetworkLogonRight"])
+	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545", "S-1-5-32-546"}, rights["SeInteractiveLogonRight"])
 }
 
-func TestParseSecpolResolverError(t *testing.T) {
-	_, err := ParseSecpol(strings.NewReader(secpolWithNames), func(names []string) (map[string]string, error) {
+func TestPrivilegeRightSidsResolverError(t *testing.T) {
+	secpol, err := ParseSecpol(strings.NewReader(secpolWithNames))
+	require.NoError(t, err)
+
+	// A failing lookup must not cost the caller the three sections that were
+	// parsed without it.
+	_, err = secpol.PrivilegeRightSids(func(names []string) (map[string]string, error) {
 		return nil, assert.AnError
 	})
 	require.Error(t, err)
+	assert.Equal(t, "0", secpol.SystemAccess["MinimumPasswordAge"])
+	assert.Equal(t, "0", secpol.EventAudit["AuditSystemEvents"])
+	assert.Equal(t, "4,0", secpol.RegistryValues[`MACHINE\System\foo`])
 }
 
 func TestParseSecpolWithoutNamesSkipsResolver(t *testing.T) {
@@ -96,15 +123,18 @@ SeDenyNetworkLogonRight = *S-1-5-32-544
 signature="$CHICAGO$"
 Revision=1
 `
+	secpol, err := ParseSecpol(strings.NewReader(input))
+	require.NoError(t, err)
+
 	called := false
-	secpol, err := ParseSecpol(strings.NewReader(input), func(names []string) (map[string]string, error) {
+	rights, err := secpol.PrivilegeRightSids(func(names []string) (map[string]string, error) {
 		called = true
 		return nil, nil
 	})
 	require.NoError(t, err)
 
 	assert.False(t, called)
-	assert.Equal(t, []any{"S-1-5-32-544"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
+	assert.Equal(t, []any{"S-1-5-32-544"}, rights["SeDenyNetworkLogonRight"])
 }
 
 func TestParseSecpolNormalizesPrivilegeRightSIDs(t *testing.T) {
@@ -122,10 +152,13 @@ SeDenyNetworkLogonRight = S-1-5-32-545,*S-1-5-32-544,Guest,,not-a-sid,S-1-X-0,*S
 signature="$CHICAGO$"
 Revision=1
 `
-	secpol, err := ParseSecpol(strings.NewReader(input), nil)
+	secpol, err := ParseSecpol(strings.NewReader(input))
 	require.NoError(t, err)
 
-	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545"}, secpol.PrivilegeRights["SeDenyNetworkLogonRight"])
+	rights, err := secpol.PrivilegeRightSids(nil)
+	require.NoError(t, err)
+
+	assert.Equal(t, []any{"S-1-5-32-544", "S-1-5-32-545"}, rights["SeDenyNetworkLogonRight"])
 }
 
 func TestSidLookupScript(t *testing.T) {
