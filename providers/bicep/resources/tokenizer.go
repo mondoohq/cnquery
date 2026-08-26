@@ -93,7 +93,7 @@ func tokenizeBicep(content string) []bicepStatement {
 			st := scanState{}
 			st.feed(trimmed)
 			i++
-			for st.totalDepth() > 0 && i < len(lines) {
+			for st.open() && i < len(lines) {
 				t := strings.TrimSpace(lines[i])
 				decLine += "\n" + t
 				st.feed(t)
@@ -140,7 +140,7 @@ func tokenizeBicep(content string) []bicepStatement {
 		bodyLines = append(bodyLines, lines[i])
 		st.feed(lines[i])
 		i++
-		for st.totalDepth() > 0 && i < len(lines) {
+		for st.open() && i < len(lines) {
 			bodyLines = append(bodyLines, lines[i])
 			st.feed(lines[i])
 			i++
