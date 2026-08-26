@@ -144,3 +144,22 @@ func TestSpdxJsonDecoder_Alpine_syft(t *testing.T) {
 	assert.Equal(t, "alpine", sbomReport.Asset.Platform.Name)
 	assert.Equal(t, "3.19.9", sbomReport.Asset.Platform.Version)
 }
+
+// TestSpdxJsonDecoder_DistroNameWithDash pins that a platform name containing a
+// dash survives the round trip. The distro qualifier is the platform name and
+// version joined with a dash, and the openSUSE family puts dashes in the name
+// itself, so splitting on the first dash reported "opensuse-leap-15.6" as name
+// "opensuse" version "leap" — both fields wrong.
+func TestSpdxJsonDecoder_DistroNameWithDash(t *testing.T) {
+	f, err := os.Open("testdata/opensuse-leap.spdx.json")
+	require.NoError(t, err)
+
+	decoder := sbom.NewSPDX(sbom.FormatSpdxJSON)
+
+	sbomReport, err := decoder.Parse(f)
+	require.NoError(t, err)
+	require.NotNil(t, sbomReport)
+	assert.Equal(t, "opensuse-leap", sbomReport.Asset.Platform.Name)
+	assert.Equal(t, "15.6", sbomReport.Asset.Platform.Version)
+	assert.Equal(t, "x86_64", sbomReport.Asset.Platform.Arch)
+}
