@@ -34,12 +34,6 @@ const (
 	// newer xbps.
 	xbpsPkgdbGlob = xbpsDbDir + "/pkgdb-*.plist"
 
-	// xbpsAlternativesKey is a bookkeeping entry that sits alongside the
-	// packages at the top level of the database. It is a dict like they are but
-	// has no pkgname, so it is skipped by the same check that skips anything
-	// else unexpected.
-	xbpsAlternativesKey = "_XBPS_ALTERNATIVES_"
-
 	// xbpsInstallDateLayout is how xbps writes install-date, e.g.
 	// "2021-07-25 10:42 UTC". Note there are no seconds.
 	xbpsInstallDateLayout = "2006-01-02 15:04 MST"
@@ -103,7 +97,11 @@ func ParseXbpsPkgdb(pf *inventory.Platform, r io.Reader) ([]Package, error) {
 	pkgs := make([]Package, 0, len(names))
 	for _, name := range names {
 		entry := db[name]
-		// Skips _XBPS_ALTERNATIVES_ and anything else that is not a package.
+		// The top level of the database is not packages alone: xbps keeps a
+		// bookkeeping entry, _XBPS_ALTERNATIVES_, right beside them, and it is
+		// a dict like they are. Skipping on the absence of a pkgname rather
+		// than on that one name means a bookkeeping key added later is skipped
+		// too, instead of becoming a package with no name and no version.
 		if entry.PkgName == "" {
 			continue
 		}
