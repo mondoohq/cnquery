@@ -182,11 +182,6 @@ func (fs *FS) resolveHeader(header *tar.Header) (*tar.Header, bool) {
 	return nil, false
 }
 
-// resolve symlink file
-func (fs *FS) resolveSymlink(header *tar.Header) string {
-	return fs.resolveSymlinkFrom(header.Name, header.Linkname)
-}
-
 // resolveSymlinkFrom resolves a symlink target against the path the link is
 // being accessed through. That path is usually the entry's own name, but not
 // when the link was reached through a hardlink: see resolveHeader.
@@ -207,6 +202,9 @@ func (fs *FS) resolveSymlinkFrom(dest string, link string) string {
 	return path
 }
 
+// open reads the bytes of header out of the archive. header must already be
+// resolved by resolveHeader: a link entry carries no payload of its own, so
+// reading one directly would yield an empty file.
 func (fs *FS) open(header *tar.Header) (io.Reader, error) {
 	log.Debug().Str("file", header.Name).Msg("tar> load file content")
 
@@ -217,15 +215,8 @@ func (fs *FS) open(header *tar.Header) (io.Reader, error) {
 	}
 	defer f.Close()
 
-	// Open and stat resolve before calling this, but resolve again so the
-	// content read is correct no matter which entry the caller arrived with.
-	resolved, ok := fs.resolveHeader(header)
-	if !ok {
-		return nil, os.ErrNotExist
-	}
-
 	// extract file from tar stream
-	reader, err := fsutil.ExtractFileFromTarStream(resolved.Name, f)
+	reader, err := fsutil.ExtractFileFromTarStream(header.Name, f)
 	if err != nil {
 		return nil, err
 	}
