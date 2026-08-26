@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/resources/updates"
 )
 
 // isRpmPlatform decides whether the answer comes from the rpm database or from
@@ -67,4 +70,41 @@ func TestLastUpdateAgeClampsFutureInstall(t *testing.T) {
 	age := lastUpdateAge(time.Now().Add(24 * time.Hour))
 	require.NotNil(t, age)
 	assert.Equal(t, int64(0), llx.TimeToDuration(age))
+}
+
+// lastUpdate, lastUpdateAge and lastUpdateSource share one cache, and the
+// executor resolves a resource's fields in separate goroutines, so they can
+// enter it at the same time. Run under -race this is what catches a cache that
+// reads its own state outside the lock; without -race it still pins that every
+// caller sees the same outcome.
+//
+// A runtime with no connection resolves to a null record, which is the whole
+// point here: the test exercises the cache, not the platform dispatch.
+func TestLastUpdateCacheConcurrentGet(t *testing.T) {
+	const callers = 64
+
+	cache := &lastUpdateCache{}
+	runtime := &plugin.Runtime{}
+
+	type result struct {
+		update *updates.LastInstalledUpdate
+		err    error
+	}
+	results := make([]result, callers)
+
+	var wg sync.WaitGroup
+	wg.Add(callers)
+	for i := 0; i < callers; i++ {
+		go func(i int) {
+			defer wg.Done()
+			update, err := cache.get(runtime)
+			results[i] = result{update: update, err: err}
+		}(i)
+	}
+	wg.Wait()
+
+	for i := range results {
+		assert.Equal(t, results[0].update, results[i].update, "every caller must see the same record")
+		assert.Equal(t, results[0].err, results[i].err, "every caller must see the same error")
+	}
 }

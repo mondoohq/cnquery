@@ -27,28 +27,30 @@ const windowsDefinitionUpdates = "Definition Updates"
 // mqlOsInternal and mqlOsBaseInternal, since `os` and `os.base` carry the same
 // three fields.
 type lastUpdateCache struct {
-	lock    sync.Mutex
-	fetched bool
-	update  *updates.LastInstalledUpdate
+	once   sync.Once
+	update *updates.LastInstalledUpdate
+	err    error
 }
 
+// get resolves the newest update install once and hands the same outcome to
+// every field that asks.
+//
+// sync.Once rather than a mutex guarding a "fetched" flag: the executor resolves
+// a resource's fields in separate goroutines, and reading such a flag outside
+// the lock races with the write inside it. There is no happens-before edge
+// between the two, so a reader can observe the flag set before the value it
+// guards is visible.
+//
+// A failure is cached alongside a success. Each of the three fields resolves
+// once through the runtime's own field cache, so retrying would buy at most two
+// further attempts at a failure that is deterministic within a scan (an
+// unreadable package database, a missing permission) while paying for the full
+// package listing again.
 func (c *lastUpdateCache) get(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, error) {
-	if c.fetched {
-		return c.update, nil
-	}
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	if c.fetched {
-		return c.update, nil
-	}
-
-	update, err := resolveLastInstalledUpdate(runtime)
-	if err != nil {
-		return nil, err
-	}
-	c.update = update
-	c.fetched = true
-	return update, nil
+	c.once.Do(func() {
+		c.update, c.err = resolveLastInstalledUpdate(runtime)
+	})
+	return c.update, c.err
 }
 
 type mqlOsInternal struct {
