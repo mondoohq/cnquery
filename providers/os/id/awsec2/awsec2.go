@@ -46,7 +46,40 @@ func Resolve(conn shared.Connection, pf *inventory.Platform) (InstanceIdentifier
 			return NewLocal(cfg), nil
 		}
 	}
+
+	// A mounted host root describes the machine we are already running on, so
+	// the local IMDS answer is its answer. It needs its own branch because the
+	// command reader below shells out to curl, and a filesystem connection has
+	// no command execution at all -- it returns ErrRunCommandNotImplemented, so
+	// every identity lookup fails and the asset ends up with no cloud identity.
+	//
+	// The gate is deliberately an explicit caller assertion rather than a guess
+	// from the connection: for any other mounted filesystem -- a snapshot, an
+	// image, a volume detached from a different machine -- IMDS would answer
+	// with the scanner's own identity and silently attribute the scan to the
+	// wrong instance. See shared.HostRootOption.
+	if isHostRootMount(conn) {
+		if _, ok := conn.(*mock.Connection); !ok {
+			return NewLocal(cfg), nil
+		}
+	}
+
 	return NewCommandInstanceMetadata(conn, pf, &cfg), nil
+}
+
+// isHostRootMount reports whether the connection is a filesystem connection
+// that the caller marked as the root filesystem of the local machine.
+func isHostRootMount(conn shared.Connection) bool {
+	if conn.Type() != shared.Type_FileSystem {
+		return false
+	}
+
+	asset := conn.Asset()
+	if asset == nil || len(asset.Connections) == 0 {
+		return false
+	}
+
+	return asset.Connections[0].GetOptions()[shared.HostRootOption] == "true"
 }
 
 // awsConfig looks at the connection to see if it has additional options that need

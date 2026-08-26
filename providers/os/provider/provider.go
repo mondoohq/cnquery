@@ -204,6 +204,15 @@ func (s *Service) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error)
 		conf.Options["disable-cache"] = strconv.FormatBool(disableCache.RawData().Value.(bool))
 	}
 
+	// Only recorded when the caller opts in: the absence of the key and an
+	// explicit "false" mean the same thing, and writing it unconditionally
+	// would put a misleading host-root=false on every other connector.
+	if hostRoot, ok := flags[shared.HostRootOption]; ok {
+		if enabled, isBool := hostRoot.RawData().Value.(bool); isBool && enabled {
+			conf.Options[shared.HostRootOption] = "true"
+		}
+	}
+
 	if containerProxy, ok := flags[shared.ContainerProxyOption]; ok {
 		proxyVal := containerProxy.RawData().Value.(string)
 		if proxyVal != "" {
