@@ -1,68 +1,574 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package resources_test
+package resources
 
 import (
+	"errors"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
-func TestResource_RsyslogConf(t *testing.T) {
-	t.Run("files includes main conf and .d fragments", func(t *testing.T) {
-		res := x.TestQuery(t, "rsyslog.conf.files.length")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-		assert.Equal(t, int64(2), res[0].Data.Value)
+// content() must skip files it cannot read instead of swallowing the error and
+// appending an empty block for them.
+func TestRsyslogConfContentSkipsUnreadableFiles(t *testing.T) {
+	good := &mqlFile{}
+	good.Content = plugin.TValue[string]{Data: "good content", State: plugin.StateIsSet}
+
+	unreadable := &mqlFile{}
+	unreadable.Content = plugin.TValue[string]{
+		Error: errors.New("permission denied"),
+		State: plugin.StateIsSet | plugin.StateIsNull,
+	}
+
+	s := &mqlRsyslogConf{}
+	out, err := s.content([]any{unreadable, good})
+	require.NoError(t, err)
+
+	// The unreadable file is skipped entirely; only the readable file's content
+	// is emitted (previously a spurious leading blank line was appended).
+	assert.Equal(t, "good content\n", out)
+}
+
+// rsyslogFixtureFiles resolves rsyslog.conf.files against the include fixture
+// and returns the paths it reports.
+func rsyslogFixtureFiles(t *testing.T) []string {
+	t.Helper()
+	return rsyslogFixtureFilesFrom(t, "testdata/rsyslog_includes.toml")
+}
+
+// rsyslogFixtureFilesFrom resolves rsyslog.conf.files against an arbitrary
+// mock fixture and returns the file paths it reports.
+func rsyslogFixtureFilesFrom(t *testing.T, fixture string) []string {
+	t.Helper()
+
+	fixturePath, err := filepath.Abs(fixture)
+	require.NoError(t, err)
+
+	asset := &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "arch",
+			Family: []string{"linux", "unix"},
+		},
+	}
+	conn, err := mock.New(0, asset, mock.WithPath(fixturePath))
+	require.NoError(t, err)
+
+	runtime := &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+
+	raw, err := CreateResource(runtime, "rsyslog.conf", map[string]*llx.RawData{
+		"path": llx.StringData("/etc/rsyslog.conf"),
+	})
+	require.NoError(t, err)
+
+	files := raw.(*mqlRsyslogConf).GetFiles()
+	require.NoError(t, files.Error)
+
+	paths := make([]string, 0, len(files.Data))
+	for _, f := range files.Data {
+		paths = append(paths, f.(*mqlFile).Path.Data)
+	}
+	return paths
+}
+
+// $IncludeConfig patterns are globs, and they have to resolve for directories
+// other than the conventional `<conf>.d` — that one is also picked up by the
+// legacy fallback, which masks a broken include expansion.
+func TestRsyslogConf_IncludeExpansion(t *testing.T) {
+	paths := rsyslogFixtureFiles(t)
+
+	t.Run("reports every included file exactly once", func(t *testing.T) {
+		assert.ElementsMatch(t, []string{
+			"/etc/rsyslog.conf",
+			"/etc/rsyslog.d/50-default.conf",
+			"/etc/rsyslog.extra/10-site.conf",
+			"/etc/rsyslog.single.conf",
+			"/etc/rsyslog.deep/90-deep.conf",
+		}, paths)
 	})
 
-	t.Run("content aggregates all files", func(t *testing.T) {
-		res := x.TestQuery(t, "rsyslog.conf.content")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-		content := res[0].Data.Value.(string)
-		// Main conf content
-		assert.Contains(t, content, "$ModLoad imuxsock")
-		// Fragment content from rsyslog.d/50-default.conf
-		assert.Contains(t, content, "kern.* /var/log/kern.log")
+	t.Run("expands a glob outside the conventional .d directory", func(t *testing.T) {
+		assert.Contains(t, paths, "/etc/rsyslog.extra/10-site.conf")
 	})
 
-	t.Run("settings strips comments and blanks", func(t *testing.T) {
-		res := x.TestQuery(t, "rsyslog.conf.settings")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-		settings := res[0].Data.Value.([]any)
-		assert.Greater(t, len(settings), 0)
-		// Verify comment-only and blank lines are excluded
-		for _, s := range settings {
-			line := s.(string)
-			assert.NotEmpty(t, line)
-			assert.NotEqual(t, "#", string(line[0]), "settings should not contain comment lines")
+	t.Run("applies the glob to the listing", func(t *testing.T) {
+		assert.NotContains(t, paths, "/etc/rsyslog.extra/notes.txt",
+			"notes.txt shares the directory but does not match *.conf")
+	})
+
+	t.Run("an exact include pulls in only the named file", func(t *testing.T) {
+		assert.Contains(t, paths, "/etc/rsyslog.single.conf")
+		assert.NotContains(t, paths, "/etc/other.conf",
+			"other.conf shares /etc with the include target but was not named")
+	})
+
+	t.Run("follows includes nested inside a fragment", func(t *testing.T) {
+		assert.Contains(t, paths, "/etc/rsyslog.deep/90-deep.conf")
+	})
+
+	t.Run("skips an include pointing at a missing directory", func(t *testing.T) {
+		// /etc/rsyslog.absent has no recorded listing. The walk must carry on
+		// and still report the files it could resolve.
+		for _, p := range paths {
+			assert.NotContains(t, p, "rsyslog.absent")
 		}
+		assert.Contains(t, paths, "/etc/rsyslog.conf")
+	})
+}
+
+// A wildcard in a non-terminal path segment (`/etc/rsyslog.apps/*/out.conf`)
+// must fan out across every matching subdirectory. Previously the middle glob
+// was handed to the directory search verbatim and matched nothing, so no
+// fragment was ever included.
+func TestRsyslogConf_MidPathIncludeGlob(t *testing.T) {
+	paths := rsyslogFixtureFilesFrom(t, "testdata/rsyslog_midpath_include.toml")
+
+	t.Run("expands the wildcard across every subdirectory", func(t *testing.T) {
+		assert.ElementsMatch(t, []string{
+			"/etc/rsyslog.conf",
+			"/etc/rsyslog.apps/web/out.conf",
+			"/etc/rsyslog.apps/db/out.conf",
+		}, paths)
 	})
 
-	t.Run("settings contains expected directives", func(t *testing.T) {
-		res := x.TestQuery(t, "rsyslog.conf.settings")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-		settings := res[0].Data.Value.([]any)
-		// Check for a known directive from the main conf
-		found := false
-		for _, s := range settings {
-			if s.(string) == "$ModLoad imuxsock" {
-				found = true
-				break
+	t.Run("applies the basename glob inside each matched subdirectory", func(t *testing.T) {
+		assert.NotContains(t, paths, "/etc/rsyslog.apps/web/other.conf",
+			"other.conf shares the directory but does not match out.conf")
+	})
+}
+
+func TestRsyslogIncludeMatches(t *testing.T) {
+	tests := []struct {
+		name  string
+		glob  string
+		match []string // full paths that should match
+		miss  []string // full paths that should NOT match
+	}{
+		{
+			name:  "star",
+			glob:  "*.conf",
+			match: []string{"/etc/rsyslog.d/foo.conf", "/etc/rsyslog.d/00-local.conf", "/etc/rsyslog.d/.conf"},
+			miss:  []string{"/etc/rsyslog.d/foo.conf.bak", "/etc/rsyslog.d/foo"},
+		},
+		{
+			name:  "question mark",
+			glob:  "0?-local.conf",
+			match: []string{"/etc/rsyslog.d/00-local.conf", "/etc/rsyslog.d/0a-local.conf"},
+			miss:  []string{"/etc/rsyslog.d/000-local.conf", "/etc/rsyslog.d/0-local.conf"},
+		},
+		{
+			name:  "character class",
+			glob:  "[0-9]*.conf",
+			match: []string{"/etc/rsyslog.d/0foo.conf", "/etc/rsyslog.d/9.conf"},
+			miss:  []string{"/etc/rsyslog.d/afoo.conf"},
+		},
+		{
+			name:  "regex metacharacters in the pattern are literal",
+			glob:  "foo.bar+.conf",
+			match: []string{"/etc/rsyslog.d/foo.bar+.conf"},
+			miss:  []string{"/etc/rsyslog.d/fooxbar+.conf", "/etc/rsyslog.d/foo.bar.conf"},
+		},
+		{
+			name:  "no metas",
+			glob:  "local.conf",
+			match: []string{"/etc/rsyslog.d/local.conf"},
+			miss:  []string{"/etc/rsyslog.d/localxconf", "/etc/rsyslog.d/local.conf.bak"},
+		},
+		{
+			name:  "matches the basename, not the directory",
+			glob:  "*.conf",
+			match: []string{"/etc/rsyslog.d/sub/foo.conf", "/foo.conf"},
+			miss:  []string{"/etc/foo.conf/bar"},
+		},
+		{
+			name:  "malformed glob matches nothing",
+			glob:  "[",
+			match: nil,
+			miss:  []string{"/etc/rsyslog.d/[", "/etc/rsyslog.d/foo.conf"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, m := range tt.match {
+				assert.True(t, rsyslogIncludeMatches(tt.glob, m), "expected %q to match glob %q", m, tt.glob)
 			}
-		}
-		assert.True(t, found, "settings should contain '$ModLoad imuxsock'")
-	})
+			for _, m := range tt.miss {
+				assert.False(t, rsyslogIncludeMatches(tt.glob, m), "expected %q NOT to match glob %q", m, tt.glob)
+			}
+		})
+	}
+}
 
-	t.Run("path returns default", func(t *testing.T) {
-		res := x.TestQuery(t, "rsyslog.conf.path")
-		require.NotEmpty(t, res)
-		require.NoError(t, res[0].Data.Error)
-		assert.Equal(t, "/etc/rsyslog.conf", res[0].Data.Value)
+// A fragment reached only through `<conf>.d` auto-discovery must still have its
+// own includes followed. The sweep used to append such fragments as leaves, so
+// anything they included was silently missing from rsyslog.conf.files.
+func TestRsyslogConf_DotDFragmentIncludesAreFollowed(t *testing.T) {
+	paths := rsyslogFixtureFilesFrom(t, "testdata/rsyslog_dotd_nested.toml")
+
+	assert.Contains(t, paths, "/etc/rsyslog.conf")
+	assert.Contains(t, paths, "/etc/rsyslog.d/50-frag.conf",
+		"the fragment is found by .d auto-discovery")
+	assert.Contains(t, paths, "/etc/rsyslog.nested/90-nested.conf",
+		"the fragment's own $IncludeConfig must be followed")
+	assert.NotContains(t, paths, "/etc/rsyslog.nested/notes.txt",
+		"the include glob still applies to the nested directory")
+}
+
+func TestRsyslogConfPath(t *testing.T) {
+	tests := []struct {
+		platform string
+		expected string
+	}{
+		{"freebsd", "/usr/local/etc/rsyslog.conf"},
+		{"dragonflybsd", "/usr/local/etc/rsyslog.conf"},
+		{"openbsd", "/usr/local/etc/rsyslog.conf"},
+		{"netbsd", "/usr/pkg/etc/rsyslog.conf"},
+		{"debian", "/etc/rsyslog.conf"},
+		{"ubuntu", "/etc/rsyslog.conf"},
+		{"redhat", "/etc/rsyslog.conf"},
+		{"macos", "/etc/rsyslog.conf"},
+		{"aix", "/etc/rsyslog.conf"},
+		{"solaris", "/etc/rsyslog.conf"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.platform, func(t *testing.T) {
+			assert.Equal(t, tt.expected, rsyslogConfPath(connWithPlatform(tt.platform)))
+		})
+	}
+
+	t.Run("nil platform", func(t *testing.T) {
+		conn := &mockConn{asset: &inventory.Asset{}}
+		assert.Equal(t, "/etc/rsyslog.conf", rsyslogConfPath(conn))
 	})
+}
+
+func TestStripRsyslogComment(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"no comment", "$ModLoad imuxsock", "$ModLoad imuxsock"},
+		{"trailing comment", "$ModLoad imuxsock # load unix socket input", "$ModLoad imuxsock "},
+		{"whole line comment", "# this is a comment", ""},
+		{"comment in double-quoted string is preserved", `$Template foo,"hash#tag"`, `$Template foo,"hash#tag"`},
+		{"comment in single-quoted string is preserved", `$Template foo,'hash#tag'`, `$Template foo,'hash#tag'`},
+		{"comment after closing quote is stripped", `$Template foo,"value" # comment`, `$Template foo,"value" `},
+		{"blank line", "", ""},
+		{"escaped hash is NOT special (rsyslog rule, not shell)", `key=val#after`, `key=val`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, stripRsyslogComment(tt.in))
+		})
+	}
+}
+
+func TestRsyslogConfParams(t *testing.T) {
+	s := &mqlRsyslogConf{}
+
+	content := strings.Join([]string{
+		"# rsyslog configuration",
+		"$FileCreateMode 0640",
+		"$FileOwner   syslog",  // extra spacing is trimmed
+		"$DirCreateMode\t0755", // tab separator
+		"$FileGroup adm # inline comment is stripped",
+		"module(load=\"imuxsock\")", // modern syntax is ignored
+		"*.info /var/log/messages",  // selector lines are ignored
+		"$FileCreateMode 0600",      // duplicate: last occurrence wins
+		"$ActionResumeRetryCount",   // bare directive with no value is skipped
+	}, "\n")
+
+	got, err := s.params(content)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]any{
+		"FileCreateMode": "0600",
+		"FileOwner":      "syslog",
+		"DirCreateMode":  "0755",
+		"FileGroup":      "adm",
+	}, got)
+}
+
+func TestParseRsyslogIncludes(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string
+		want    []string
+	}{
+		{
+			name:    "empty",
+			content: "",
+			want:    nil,
+		},
+		{
+			name:    "only directives unrelated to includes",
+			content: "$ModLoad imuxsock\n$ActionFileDefaultTemplate foo\n",
+			want:    nil,
+		},
+		{
+			name:    "legacy $IncludeConfig with glob",
+			content: "$IncludeConfig /etc/rsyslog.d/*.conf\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "legacy directive is case-insensitive",
+			content: "$includeconfig /etc/rsyslog.d/a.conf\n$INCLUDECONFIG /etc/rsyslog.d/b.conf\n",
+			want:    []string{"/etc/rsyslog.d/a.conf", "/etc/rsyslog.d/b.conf"},
+		},
+		{
+			name:    "legacy with trailing inline comment",
+			content: "$IncludeConfig /etc/rsyslog.d/*.conf # load fragments\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "legacy with quoted value",
+			content: `$IncludeConfig "/etc/rsyslog.d/*.conf"` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with file=",
+			content: `include(file="/etc/rsyslog.d/*.conf")` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with extra params",
+			content: `include(file="/etc/rsyslog.d/*.conf" mode="optional")` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with single-quoted value",
+			content: `include(file='/etc/rsyslog.d/*.conf')` + "\n",
+			want:    []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name:    "modern include() with unquoted value",
+			content: `include(file=/etc/rsyslog.d/local.conf)` + "\n",
+			want:    []string{"/etc/rsyslog.d/local.conf"},
+		},
+		{
+			name:    "modern include() with text= is skipped",
+			content: `include(text="ruleset(name=\"foo\") { /* ... */ }")` + "\n",
+			want:    nil,
+		},
+		{
+			name: "mixed legacy + modern + ignored directives",
+			content: `# rsyslog.conf
+$ModLoad imuxsock
+
+$IncludeConfig /etc/rsyslog.d/00-local.conf
+include(file="/etc/rsyslog.d/*.conf")
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+`,
+			want: []string{"/etc/rsyslog.d/00-local.conf", "/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name: "duplicates collapse, source order preserved",
+			content: `$IncludeConfig /a.conf
+$IncludeConfig /b.conf
+$IncludeConfig /a.conf
+include(file="/b.conf")
+`,
+			want: []string{"/a.conf", "/b.conf"},
+		},
+		{
+			name:    "false positive guard: $IncludeConfigSomething is not a match",
+			content: "$IncludeConfigSomething /tmp/x.conf\n",
+			want:    nil,
+		},
+		{
+			name:    "false positive guard: includes inside a comment are ignored",
+			content: "# example: $IncludeConfig /etc/rsyslog.d/*.conf\n",
+			want:    nil,
+		},
+		{
+			name:    "comment inside quoted include arg is preserved",
+			content: `include(file="/etc/rsyslog.d/has#hash.conf")` + "\n",
+			want:    []string{"/etc/rsyslog.d/has#hash.conf"},
+		},
+		{
+			name: "modern include() multi-line block (Ansible-style)",
+			content: `include(
+    file="/etc/rsyslog.d/*.conf"
+)
+`,
+			want: []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name: "modern include() multi-line with mode after",
+			content: `include(
+    file="/etc/rsyslog.d/*.conf"
+    mode="optional"
+)
+`,
+			want: []string{"/etc/rsyslog.d/*.conf"},
+		},
+		{
+			name: "modern include() opens and closes mid-line",
+			content: `include( file="/etc/rsyslog.d/a.conf" )
+include(file="/etc/rsyslog.d/b.conf"
+)
+`,
+			want: []string{"/etc/rsyslog.d/a.conf", "/etc/rsyslog.d/b.conf"},
+		},
+		{
+			// Unterminated blocks have no closing `)`, so the anchored
+			// regex won't match. Returning nil is correct — rsyslog itself
+			// would reject this config at load time. We surface nothing
+			// rather than guessing at a partial parse.
+			name: "unterminated include() block returns nothing",
+			content: `include(
+    file="/etc/rsyslog.d/orphan.conf"
+`,
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseRsyslogIncludes(tt.content)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestCoalesceIncludeBlocks(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want []string
+	}{
+		{
+			name: "blank lines outside blocks are dropped",
+			in:   "$ModLoad imuxsock\n\n\n$IncludeConfig /etc/rsyslog.d/x.conf\n",
+			want: []string{"$ModLoad imuxsock", "$IncludeConfig /etc/rsyslog.d/x.conf"},
+		},
+		{
+			name: "comments are stripped before coalescing",
+			in:   "include( # opens\n  file=\"/a.conf\" # path\n) # closes\n",
+			want: []string{`include( file="/a.conf" )`},
+		},
+		{
+			name: "parens inside quotes do not affect block tracking",
+			in:   `include(file="/a.conf"  text=")")` + "\n",
+			want: []string{`include(file="/a.conf"  text=")")`},
+		},
+		{
+			name: "non-include line with stray paren is not coalesced",
+			in:   "$Template foo,\"(literal)\"\n$IncludeConfig /a.conf\n",
+			want: []string{`$Template foo,"(literal)"`, "$IncludeConfig /a.conf"},
+		},
+		{
+			name: "blank lines INSIDE a block are kept as separators",
+			in:   "include(\n\n    file=\"/a.conf\"\n\n)\n",
+			want: []string{`include(  file="/a.conf"  )`},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := coalesceIncludeBlocks(tt.in)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestCountUnquotedParens(t *testing.T) {
+	tests := []struct {
+		in   string
+		want int
+	}{
+		{"include(", 1},
+		{`include(file="/a")`, 0},
+		{`include(file="/a"`, 1},
+		{"))))", -4},
+		{`"()()"`, 0},
+		{`'()'`, 0},
+		{`(text=")")`, 0},
+		{`(text="(")`, 0},
+		{`'(' "(" (`, 1}, // only the third `(` is unquoted
+	}
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			assert.Equal(t, tt.want, countUnquotedParens(tt.in))
+		})
+	}
+}
+
+func TestResolveRsyslogInclude(t *testing.T) {
+	tests := []struct {
+		name      string
+		parentDir string
+		pattern   string
+		wantDir   string
+		wantGlob  string
+	}{
+		{
+			name:      "absolute path with glob",
+			parentDir: "/etc",
+			pattern:   "/etc/rsyslog.d/*.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantGlob:  "*.conf",
+		},
+		{
+			name:      "absolute path with no glob",
+			parentDir: "/etc",
+			pattern:   "/etc/rsyslog.d/00-local.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantGlob:  "00-local.conf",
+		},
+		{
+			name:      "relative path is anchored at parent dir",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "local.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantGlob:  "local.conf",
+		},
+		{
+			name:      "relative path with subdir",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "extras/local.conf",
+			wantDir:   "/etc/rsyslog.d/extras",
+			wantGlob:  "local.conf",
+		},
+		{
+			name:      "relative path with glob",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "extras/*.conf",
+			wantDir:   "/etc/rsyslog.d/extras",
+			wantGlob:  "*.conf",
+		},
+		{
+			name:      "glob metacharacters are left intact for the matcher",
+			parentDir: "/etc",
+			pattern:   "/etc/rsyslog.d/[0-9]?-local.conf",
+			wantDir:   "/etc/rsyslog.d",
+			wantGlob:  "[0-9]?-local.conf",
+		},
+		{
+			name:      "parent traversal is cleaned",
+			parentDir: "/etc/rsyslog.d",
+			pattern:   "../rsyslog.extra/*.conf",
+			wantDir:   "/etc/rsyslog.extra",
+			wantGlob:  "*.conf",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir, glob := resolveRsyslogInclude(tt.parentDir, tt.pattern)
+			assert.Equal(t, tt.wantDir, dir)
+			assert.Equal(t, tt.wantGlob, glob)
+		})
+	}
 }

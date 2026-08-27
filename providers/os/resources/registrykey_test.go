@@ -1,114 +1,113 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package resources_test
+package resources
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"go.mondoo.com/mql/llx"
-	"go.mondoo.com/mql/types"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
-func TestResource_Registrykey(t *testing.T) {
-	t.Run("non existent registry key", func(t *testing.T) {
-		res := testWindowsQuery(t, "registrykey('HKEY_LOCAL_MACHINE\\Software\\Policies\\Microsoft\\Windows\\Personalization').exists")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, false, res[0].Data.Value)
+// When a registrykey.property is created without its fields pre-populated by
+// initRegistrykeyProperty — e.g. replaying a recording that did not capture
+// them — the compute fallbacks must fail cleanly (false / empty / null) rather
+// than erroring, so that policies querying a missing property fail gracefully
+// instead of erroring the whole check.
+func TestRegistrykeyProperty_FallbacksFailGracefully(t *testing.T) {
+	p := &mqlRegistrykeyProperty{}
+
+	exists, err := p.exists()
+	require.NoError(t, err)
+	require.False(t, exists)
+
+	data, err := p.data()
+	require.NoError(t, err)
+	require.Nil(t, data)
+
+	val, err := p.value()
+	require.NoError(t, err)
+	require.Equal(t, "", val)
+
+	typ, err := p.compute_type()
+	require.NoError(t, err)
+	require.Equal(t, "", typ)
+}
+
+func TestUserHivePath(t *testing.T) {
+	sid := "S-1-5-21-1-2-3-1001"
+	tests := []struct {
+		name    string
+		subPath string
+		want    string
+	}{
+		{"root", "", `HKEY_USERS\` + sid},
+		{"sub-path", `Software\Policies\Microsoft`, `HKEY_USERS\` + sid + `\Software\Policies\Microsoft`},
+		{"trims surrounding backslashes", `\Software\`, `HKEY_USERS\` + sid + `\Software`},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.want, userHivePath(sid, tc.subPath))
+		})
+	}
+}
+
+// The id of a per-user key/property folds in the SID so that two users reading
+// the same hive-relative path cache (and report) separately.
+func TestRegistrykeyID_PerUser(t *testing.T) {
+	t.Run("plain key keeps the absolute path as id", func(t *testing.T) {
+		k := &mqlRegistrykey{Path: plugin.TValue[string]{Data: `HKLM\Software\Foo`}}
+		id, err := k.id()
+		require.NoError(t, err)
+		require.Equal(t, `HKLM\Software\Foo`, id)
 	})
 
-	t.Run("registry key path", func(t *testing.T) {
-		res := testWindowsQuery(t, "registrykey('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System').path")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", res[0].Data.Value)
-	})
-
-	t.Run("existing registry key", func(t *testing.T) {
-		res := testWindowsQuery(t, "registrykey('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System').exists")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, true, res[0].Data.Value)
-	})
-
-	t.Run("registry key properties", func(t *testing.T) {
-		res := testWindowsQuery(t, "registrykey('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System').properties")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, 24, len(res[0].Data.Value.(map[string]any)))
-	})
-
-	t.Run("registry key children", func(t *testing.T) {
-		res := testWindowsQuery(t, "registrykey('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System').children")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Audit", res[0].Data.Value.([]any)[0])
-	})
-
-	t.Run("non-existent registry key - props", func(t *testing.T) {
-		res := testWindowsQuery(t, "registrykey('nope').properties")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, &llx.RawData{Type: types.Map(types.String, types.String)}, res[0].Data)
-	})
-
-	t.Run("non-existent registry key - items", func(t *testing.T) {
-		res := testWindowsQuery(t, "registrykey('nope').items")
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Nil(t, res[0].Data.Value)
-	})
-
-	// A missing registry property must not error when its fields are read or
-	// compared — this is what lets policies drop the
-	// `switch(x) { case _ != empty: ... default: false }` workaround around
-	// registrykey.property(...).data.
-	t.Run("missing property does not error on field access or comparison", func(t *testing.T) {
-		existPath := "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
-		queries := []string{
-			// missing property on an existing key path
-			"registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').exists",
-			"registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').data > 0",
-			"registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').data > 0 && registrykey.property(path: '" + existPath + "', name: 'DoesNotExist').data <= 30",
-			// missing property on a non-existent key path
-			"registrykey.property(path: 'HKEY_LOCAL_MACHINE\\Nope\\Nope', name: 'DoesNotExist').data > 0",
+	t.Run("per-user key folds the SID into the id", func(t *testing.T) {
+		a := &mqlRegistrykey{
+			Path:    plugin.TValue[string]{Data: `Software\Policies`},
+			UserSid: plugin.TValue[string]{Data: "S-1-5-21-1-2-3-1001"},
 		}
-		for _, q := range queries {
-			t.Run(q, func(t *testing.T) {
-				res := testWindowsQuery(t, q)
-				assert.NotEmpty(t, res)
-				last := res[len(res)-1]
-				assert.NoError(t, last.Data.Error)
-				assert.Equal(t, false, last.Data.Value)
-			})
+		b := &mqlRegistrykey{
+			Path:    plugin.TValue[string]{Data: `Software\Policies`},
+			UserSid: plugin.TValue[string]{Data: "S-1-5-21-1-2-3-1002"},
 		}
+		idA, err := a.id()
+		require.NoError(t, err)
+		idB, err := b.id()
+		require.NoError(t, err)
+		require.Equal(t, `HKEY_USERS\S-1-5-21-1-2-3-1001\Software\Policies`, idA)
+		require.NotEqual(t, idA, idB, "different users with the same hive path must have distinct ids")
 	})
 }
 
-func TestResource_RegistrykeyPerUserHive(t *testing.T) {
-	// A per-user read (userSid + ntuserDat) must resolve cleanly even when the
-	// hive can't be read (here: the mock has no recording for it). It degrades to
-	// "not present" rather than erroring, so callers don't get a false positive.
-	t.Run("property in an unreadable user hive does not exist", func(t *testing.T) {
-		res := testWindowsQuery(t, `registrykey.property(userSid: 'S-1-5-21-1-2-3-1001', ntuserDat: 'C:\Users\test\NTUSER.DAT', path: 'Software\Policies\Microsoft\Windows\CloudContent', name: 'DisableThirdPartySuggestions').exists`)
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, false, res[0].Data.Value)
+func TestRegistrykeyPropertyID_PerUser(t *testing.T) {
+	t.Run("plain property", func(t *testing.T) {
+		p := &mqlRegistrykeyProperty{
+			Path: plugin.TValue[string]{Data: `HKLM\Software\Foo`},
+			Name: plugin.TValue[string]{Data: "Bar"},
+		}
+		id, err := p.id()
+		require.NoError(t, err)
+		require.Equal(t, `HKLM\Software\Foo - Bar`, id)
 	})
 
-	t.Run("path is interpreted relative to the user hive", func(t *testing.T) {
-		res := testWindowsQuery(t, `registrykey(userSid: 'S-1-5-21-1-2-3-1001', ntuserDat: 'C:\Users\test\NTUSER.DAT', path: 'Software\Policies').path`)
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, `Software\Policies`, res[0].Data.Value)
-	})
-
-	t.Run("userSid is exposed on the key", func(t *testing.T) {
-		res := testWindowsQuery(t, `registrykey(userSid: 'S-1-5-21-1-2-3-1001', ntuserDat: 'C:\Users\test\NTUSER.DAT', path: 'Software\Policies').userSid`)
-		assert.NotEmpty(t, res)
-		assert.Empty(t, res[0].Result().Error)
-		assert.Equal(t, "S-1-5-21-1-2-3-1001", res[0].Data.Value)
+	t.Run("per-user property folds the SID into the id", func(t *testing.T) {
+		a := &mqlRegistrykeyProperty{
+			Path:    plugin.TValue[string]{Data: `Software\Policies`},
+			Name:    plugin.TValue[string]{Data: "Bar"},
+			UserSid: plugin.TValue[string]{Data: "S-1-5-21-1-2-3-1001"},
+		}
+		b := &mqlRegistrykeyProperty{
+			Path:    plugin.TValue[string]{Data: `Software\Policies`},
+			Name:    plugin.TValue[string]{Data: "Bar"},
+			UserSid: plugin.TValue[string]{Data: "S-1-5-21-1-2-3-1002"},
+		}
+		idA, err := a.id()
+		require.NoError(t, err)
+		idB, err := b.id()
+		require.NoError(t, err)
+		require.Equal(t, `HKEY_USERS\S-1-5-21-1-2-3-1001\Software\Policies - Bar`, idA)
+		require.NotEqual(t, idA, idB, "different users with the same property must have distinct ids")
 	})
 }
