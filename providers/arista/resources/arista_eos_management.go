@@ -173,7 +173,7 @@ func snmpConfig(runtime *plugin.Runtime) (*eos.SnmpConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return rc.fetchSnmpConfig(), nil
+	return rc.fetchSnmpConfig()
 }
 
 // id keys a user on the group as well as the name, since the same security

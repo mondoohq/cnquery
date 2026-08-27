@@ -150,28 +150,29 @@ func (a *mqlAristaEosStartupConfig) id() (string, error) {
 type mqlAristaEosStartupConfigInternal struct {
 	contentFetched atomic.Bool
 	contentCache   string
+	contentErr     error
 	lock           sync.Mutex
 }
 
 // fetchContent caches the startup-config so the drift comparison and a direct
 // read of `content` share one fetch.
-func (a *mqlAristaEosStartupConfig) fetchContent() string {
+func (a *mqlAristaEosStartupConfig) fetchContent() (string, error) {
 	if a.contentFetched.Load() {
-		return a.contentCache
+		return a.contentCache, a.contentErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.contentFetched.Load() {
-		return a.contentCache
+		return a.contentCache, a.contentErr
 	}
 	eosClient := aristaClient(a.MqlRuntime)
-	a.contentCache = eosClient.StartupConfig()
+	a.contentCache, a.contentErr = eosClient.StartupConfig()
 	a.contentFetched.Store(true)
-	return a.contentCache
+	return a.contentCache, a.contentErr
 }
 
 func (a *mqlAristaEosStartupConfig) content() (string, error) {
-	return a.fetchContent(), nil
+	return a.fetchContent()
 }
 
 func (a *mqlAristaEos) startupConfig() (*mqlAristaEosStartupConfig, error) {
@@ -189,7 +190,7 @@ func fetchStartupConfig(runtime *plugin.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return sc.(*mqlAristaEosStartupConfig).fetchContent(), nil
+	return sc.(*mqlAristaEosStartupConfig).fetchContent()
 }
 
 // configSavedToStartup reports whether a reload would bring the device back in

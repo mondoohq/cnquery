@@ -3,6 +3,8 @@
 
 package eos
 
+import "github.com/aristanetworks/goeapi"
+
 // Extension is one installed EOS extension.
 //
 // Extensions are RPM packages installed onto the switch, which is how
@@ -88,6 +90,8 @@ func (eos *Eos) BootConfig() (*showBootConfig, error) {
 }
 
 // StartupConfig returns the saved configuration the device loads on boot.
-func (eos *Eos) StartupConfig() string {
-	return eos.node.StartupConfig()
+// StartupConfig returns the configuration the device would come back with
+// after a reload. See RunningConfig for why the error is not discarded.
+func (eos *Eos) StartupConfig() (string, error) {
+	return configText(eos.node, goeapi.StartupConfig, "")
 }

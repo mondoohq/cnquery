@@ -5118,7 +5118,7 @@ func (c *mqlAristaEosRunningConfig) GetContent() *plugin.TValue[string] {
 type mqlAristaEosRunningConfigSection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAristaEosRunningConfigSectionInternal
+	// optional: if you define mqlAristaEosRunningConfigSectionInternal it will be used here
 	Name    plugin.TValue[string]
 	Content plugin.TValue[string]
 }

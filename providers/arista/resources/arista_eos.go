@@ -51,6 +51,7 @@ func (v *mqlAristaEosRunningConfig) id() (string, error) {
 type mqlAristaEosRunningConfigInternal struct {
 	contentFetched bool
 	contentCache   string
+	contentErr     error
 	lock           sync.Mutex
 
 	// Parsers that several resources share memoize their result here. The
@@ -70,74 +71,91 @@ type mqlAristaEosRunningConfigInternal struct {
 // fetchSnmpConfig parses the SNMP configuration once per device. The users,
 // groups, views, and notification destinations are separate collections that
 // all come out of the same walk of the running-config.
-func (a *mqlAristaEosRunningConfig) fetchSnmpConfig() *eos.SnmpConfig {
+func (a *mqlAristaEosRunningConfig) fetchSnmpConfig() (*eos.SnmpConfig, error) {
 	if a.snmpParsed.Load() {
-		return a.snmpCache
+		return a.snmpCache, nil
 	}
 	a.snmpLock.Lock()
 	defer a.snmpLock.Unlock()
 	if a.snmpParsed.Load() {
-		return a.snmpCache
+		return a.snmpCache, nil
 	}
-	a.snmpCache = eos.ParseSnmpConfig(a.fetchContent())
+	rc, err := a.fetchContent()
+	if err != nil {
+		return nil, err
+	}
+	a.snmpCache = eos.ParseSnmpConfig(rc)
 	a.snmpParsed.Store(true)
-	return a.snmpCache
+	return a.snmpCache, nil
 }
 
 // fetchSflowConfig parses the sFlow configuration once per device.
-func (a *mqlAristaEosRunningConfig) fetchSflowConfig() *eos.SflowConfig {
+func (a *mqlAristaEosRunningConfig) fetchSflowConfig() (*eos.SflowConfig, error) {
 	if a.sflowParsed.Load() {
-		return a.sflowCache
+		return a.sflowCache, nil
 	}
 	a.sflowLock.Lock()
 	defer a.sflowLock.Unlock()
 	if a.sflowParsed.Load() {
-		return a.sflowCache
+		return a.sflowCache, nil
 	}
-	a.sflowCache = eos.ParseSflowConfig(a.fetchContent())
+	rc, err := a.fetchContent()
+	if err != nil {
+		return nil, err
+	}
+	a.sflowCache = eos.ParseSflowConfig(rc)
 	a.sflowParsed.Store(true)
-	return a.sflowCache
+	return a.sflowCache, nil
 }
 
 // fetchInterfaceHardening parses the Layer 3 posture of every interface once
 // per device and keys it by interface name, so a query reading several
 // hardening fields across many interfaces still walks the config only once.
-func (a *mqlAristaEosRunningConfig) fetchInterfaceHardening() map[string]eos.InterfaceHardening {
+func (a *mqlAristaEosRunningConfig) fetchInterfaceHardening() (map[string]eos.InterfaceHardening, error) {
 	if a.hardeningDone.Load() {
-		return a.hardeningCache
+		return a.hardeningCache, nil
 	}
 	a.hardeningLock.Lock()
 	defer a.hardeningLock.Unlock()
 	if a.hardeningDone.Load() {
-		return a.hardeningCache
+		return a.hardeningCache, nil
 	}
-	parsed := eos.ParseInterfaceHardening(a.fetchContent())
+	rc, err := a.fetchContent()
+	if err != nil {
+		return nil, err
+	}
+	parsed := eos.ParseInterfaceHardening(rc)
 	cache := make(map[string]eos.InterfaceHardening, len(parsed))
 	for _, h := range parsed {
 		cache[h.Interface] = h
 	}
 	a.hardeningCache = cache
 	a.hardeningDone.Store(true)
-	return a.hardeningCache
+	return a.hardeningCache, nil
 }
 
-func (a *mqlAristaEosRunningConfig) fetchContent() string {
+// fetchContent reads the running-config once per device and remembers the
+// outcome, failure included. A failed read must not be cached as an empty
+// configuration: every parser here is a pure function of this string, and an
+// empty one parses into a device with no AAA servers, no syslog collectors and
+// no ACL bindings, which reads as a clean posture rather than as an error.
+func (a *mqlAristaEosRunningConfig) fetchContent() (string, error) {
 	if a.contentFetched {
-		return a.contentCache
+		return a.contentCache, a.contentErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.contentFetched {
-		return a.contentCache
+		return a.contentCache, a.contentErr
 	}
 	eosClient := aristaClient(a.MqlRuntime)
-	a.contentCache = eosClient.RunningConfig()
+	a.contentCache, a.contentErr = eosClient.RunningConfig()
 	a.contentFetched = true
-	return a.contentCache
+	return a.contentCache, a.contentErr
 }
 
 func (a *mqlAristaEosRunningConfig) content() (string, error) {
-	return a.fetchContent(), nil
+	return a.fetchContent()
 }
 
 func (a *mqlAristaEosRunningConfigSection) id() (string, error) {
@@ -147,21 +165,15 @@ func (a *mqlAristaEosRunningConfigSection) id() (string, error) {
 	return "arista.eos.runningConfig.section " + a.Name.Data, nil
 }
 
-type mqlAristaEosRunningConfigSectionInternal struct {
-	runningConfig string
-}
-
 func (a *mqlAristaEosRunningConfigSection) content() (string, error) {
 	if a.Name.Error != nil {
 		return "", a.Name.Error
 	}
 	name := a.Name.Data
 
-	// Use cached running config passed from parent, or fetch directly
-	content := a.runningConfig
-	if content == "" {
-		eosClient := aristaClient(a.MqlRuntime)
-		content = eosClient.RunningConfig()
+	content, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return "", err
 	}
 
 	return eos.GetSection(strings.NewReader(content), name), nil
@@ -1153,14 +1165,9 @@ func (a *mqlAristaEosMlag) interfaces() ([]any, error) {
 		return []any{}, nil
 	}
 
-	// Use the cached running config from the runningConfig resource if available,
-	// otherwise fetch directly
-	var runningConfig string
-	rcRes, err := CreateResource(a.MqlRuntime, "arista.eos.runningConfig", map[string]*llx.RawData{})
-	if err == nil {
-		runningConfig = rcRes.(*mqlAristaEosRunningConfig).fetchContent()
-	} else {
-		runningConfig = eosClient.RunningConfig()
+	runningConfig, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
 	}
 	mlagInterfaces := eos.ParseMlagInterfaces(runningConfig)
 
