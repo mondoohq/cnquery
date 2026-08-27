@@ -864,6 +864,29 @@ type Package struct {
 	// SPDX license expression (or upstream-reported license string).
 	// Empty when the backend has no source for it (e.g. Windows registry
 	// — DisplayName carries no license field).
+	//
+	// Deprecated: use 'licenses' (field 31) instead. One string cannot say
+	// whether a license was declared by the package or concluded from the files
+	// it ships, and those two disagreeing is the case a compliance document
+	// exists to surface. It cannot carry more than one license, a confidence, or
+	// the file a conclusion was read from either.
+	//
+	// Still read, and still the only source for most producers. Every renderer
+	// falls back to this field when 'licenses' is empty, so a producer that has
+	// not adopted the list renders exactly as it did before and nothing breaks on
+	// the version that introduces this marker.
+	//
+	// Note what is NOT enforced: nothing populates this field from 'licenses'. A
+	// producer that adopts the list is responsible for continuing to set this
+	// scalar to its first declared entry, or consumers still reading the scalar
+	// will silently see an empty license where one was determined. That is a
+	// convention, not a guarantee the model makes.
+	//
+	// The deprecation says which field new code should read, not that this one
+	// has stopped working. It will not be removed while unmigrated producers
+	// remain.
+	//
+	// Deprecated: Marked as deprecated in mql_sbom.proto.
 	License string `protobuf:"bytes,26,opt,name=license,proto3" json:"license,omitempty"`
 	// Time the package was installed on this asset, RFC3339 format
 	// (e.g. "2024-03-15T00:00:00Z"). Empty when the backend doesn't
@@ -895,8 +918,10 @@ type Package struct {
 	// is the case a compliance document must not flatten, and the scalar has no
 	// room for both values.
 	//
-	// The scalar stays populated with the first declared entry so consumers can
-	// migrate without a flag day.
+	// The scalar is deprecated in favour of this field. A producer adopting this
+	// list should keep the scalar set to its first declared entry so consumers
+	// can migrate without a flag day — the renderers fall back to the scalar, but
+	// nothing populates it from here.
 	Licenses []*License `protobuf:"bytes,31,rep,name=licenses,proto3" json:"licenses,omitempty"`
 	// 'copyright' holds the copyright statements found in the package's license
 	// and notice files. Attribution output needs these: no amount of license
@@ -1030,6 +1055,7 @@ func (x *Package) GetTitle() string {
 	return ""
 }
 
+// Deprecated: Marked as deprecated in mql_sbom.proto.
 func (x *Package) GetLicense() string {
 	if x != nil {
 		return x.License
@@ -1415,7 +1441,7 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x04cpes\x18\x17 \x03(\tR\x04cpes\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xfb\x04\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xff\x04\n" +
 	"\aPackage\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\"\n" +
@@ -1429,8 +1455,8 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x06origin\x18\x16 \x01(\tR\x06origin\x12\x16\n" +
 	"\x06vendor\x18\x17 \x01(\tR\x06vendor\x12\x16\n" +
 	"\x06status\x18\x18 \x01(\tR\x06status\x12\x14\n" +
-	"\x05title\x18\x19 \x01(\tR\x05title\x12\x18\n" +
-	"\alicense\x18\x1a \x01(\tR\alicense\x12!\n" +
+	"\x05title\x18\x19 \x01(\tR\x05title\x12\x1c\n" +
+	"\alicense\x18\x1a \x01(\tB\x02\x18\x01R\alicense\x12!\n" +
 	"\finstall_date\x18\x1b \x01(\tR\vinstallDate\x12\x17\n" +
 	"\abom_ref\x18\x1c \x01(\tR\x06bomRef\x12\x14\n" +
 	"\x05scope\x18\x1d \x01(\tR\x05scope\x12,\n" +

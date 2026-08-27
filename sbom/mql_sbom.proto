@@ -264,7 +264,28 @@ message Package {
   // SPDX license expression (or upstream-reported license string).
   // Empty when the backend has no source for it (e.g. Windows registry
   // — DisplayName carries no license field).
-  string license = 26;
+  //
+  // Deprecated: use 'licenses' (field 31) instead. One string cannot say
+  // whether a license was declared by the package or concluded from the files
+  // it ships, and those two disagreeing is the case a compliance document
+  // exists to surface. It cannot carry more than one license, a confidence, or
+  // the file a conclusion was read from either.
+  //
+  // Still read, and still the only source for most producers. Every renderer
+  // falls back to this field when 'licenses' is empty, so a producer that has
+  // not adopted the list renders exactly as it did before and nothing breaks on
+  // the version that introduces this marker.
+  //
+  // Note what is NOT enforced: nothing populates this field from 'licenses'. A
+  // producer that adopts the list is responsible for continuing to set this
+  // scalar to its first declared entry, or consumers still reading the scalar
+  // will silently see an empty license where one was determined. That is a
+  // convention, not a guarantee the model makes.
+  //
+  // The deprecation says which field new code should read, not that this one
+  // has stopped working. It will not be removed while unmigrated producers
+  // remain.
+  string license = 26 [deprecated = true];
   // Time the package was installed on this asset, RFC3339 format
   // (e.g. "2024-03-15T00:00:00Z"). Empty when the backend doesn't
   // surface install time (dpkg without log parsing, apk, pacman,
@@ -295,8 +316,10 @@ message Package {
   // is the case a compliance document must not flatten, and the scalar has no
   // room for both values.
   //
-  // The scalar stays populated with the first declared entry so consumers can
-  // migrate without a flag day.
+  // The scalar is deprecated in favour of this field. A producer adopting this
+  // list should keep the scalar set to its first declared entry so consumers
+  // can migrate without a flag day — the renderers fall back to the scalar, but
+  // nothing populates it from here.
   repeated License licenses = 31;
   // 'copyright' holds the copyright statements found in the package's license
   // and notice files. Attribution output needs these: no amount of license
