@@ -12,11 +12,25 @@ import (
 	"go.mondoo.com/mql/types"
 )
 
-// fetchRunningConfig returns the EOS running-config, preferring the cached
-// content on the existing arista.eos.runningConfig resource (which already
-// handles double-checked locking) so we don't issue redundant
-// `show running-config` calls when multiple security resources are queried.
+// fetchRunningConfig returns the device's running-config with banner bodies
+// blanked out. Banner text is operator-authored prose that routinely quotes
+// configuration, and every parser here scans the same namespace it sits in, so
+// command parsers must not see it. Use fetchRawRunningConfig for the banners
+// themselves and for anything that reports the config verbatim.
+//
+// Both go through the cached arista.eos.runningConfig resource, so the device
+// is asked for its configuration once however many resources are queried.
 func fetchRunningConfig(runtime *plugin.Runtime) (string, error) {
+	rc, err := runningConfigResource(runtime)
+	if err != nil {
+		return "", err
+	}
+	return rc.fetchStrippedContent()
+}
+
+// fetchRawRunningConfig returns the running-config exactly as the device
+// rendered it, banners included.
+func fetchRawRunningConfig(runtime *plugin.Runtime) (string, error) {
 	rc, err := runningConfigResource(runtime)
 	if err != nil {
 		return "", err

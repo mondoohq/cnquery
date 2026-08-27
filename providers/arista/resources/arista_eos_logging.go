@@ -102,7 +102,7 @@ func (a *mqlAristaEosLogging) hosts() ([]any, error) {
 // =====================================================================
 
 func (a *mqlAristaEos) loginBanner() (string, error) {
-	rc, err := fetchRunningConfig(a.MqlRuntime)
+	rc, err := fetchRawRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return "", err
 	}
@@ -110,7 +110,7 @@ func (a *mqlAristaEos) loginBanner() (string, error) {
 }
 
 func (a *mqlAristaEos) motdBanner() (string, error) {
-	rc, err := fetchRunningConfig(a.MqlRuntime)
+	rc, err := fetchRawRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return "", err
 	}

@@ -73,3 +73,45 @@ func ParseBanners(runningConfig string) *Banners {
 
 	return b
 }
+
+// StripBanners replaces every banner body with blank lines, leaving the rest
+// of the running-config and its line numbering untouched.
+//
+// A banner body is arbitrary operator-authored text sitting at column 0 in the
+// same namespace every command parser scans, and operational banners routinely
+// quote configuration ("do not run: no aaa root"). Scanned as config it cuts
+// both ways: a quoted line can invent a setting the device does not have, and
+// because several parsers are last-write-wins, one appearing after the real
+// line can overwrite the device's true value. Neither shows up as an error.
+//
+// ParseBanners itself reads the raw text; everything else should read this.
+func StripBanners(runningConfig string) string {
+	var out strings.Builder
+
+	scanner := bufio.NewScanner(strings.NewReader(runningConfig))
+	for scanner.Scan() {
+		line := scanner.Text()
+		out.WriteString(line)
+		out.WriteByte('\n')
+
+		switch strings.TrimSpace(line) {
+		case "banner login", "banner motd":
+		default:
+			continue
+		}
+
+		// Blank out the body up to and including the EOF terminator, so the
+		// stripped config keeps the same number of lines as the original.
+		for scanner.Scan() {
+			body := scanner.Text()
+			if strings.TrimSpace(body) == "EOF" {
+				out.WriteString(body)
+				out.WriteByte('\n')
+				break
+			}
+			out.WriteByte('\n')
+		}
+	}
+
+	return out.String()
+}
