@@ -1084,6 +1084,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.bgp.peer.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgpPeer).GetDescription()).ToDataRes(types.String)
 	},
+	"arista.eos.bgp.peer.peerGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetPeerGroup()).ToDataRes(types.String)
+	},
 	"arista.eos.routeMap.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRouteMap).GetName()).ToDataRes(types.String)
 	},
@@ -2927,6 +2930,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.bgp.peer.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosBgpPeer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.bgp.peer.peerGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).PeerGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.routeMap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7033,6 +7040,7 @@ type mqlAristaEosBgpPeer struct {
 	UpdateSource           plugin.TValue[string]
 	EbgpMultihop           plugin.TValue[int64]
 	Description            plugin.TValue[string]
+	PeerGroup              plugin.TValue[string]
 }
 
 // createAristaEosBgpPeer creates a new instance of this resource
@@ -7162,6 +7170,10 @@ func (c *mqlAristaEosBgpPeer) GetEbgpMultihop() *plugin.TValue[int64] {
 
 func (c *mqlAristaEosBgpPeer) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAristaEosBgpPeer) GetPeerGroup() *plugin.TValue[string] {
+	return &c.PeerGroup
 }
 
 // mqlAristaEosRouteMap for the arista.eos.routeMap resource
