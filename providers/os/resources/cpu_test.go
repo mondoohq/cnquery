@@ -157,9 +157,57 @@ func TestGetCpuInfoSolaris(t *testing.T) {
 	assert.Equal(t, int64(8), info.Cores)
 }
 
-// psrinfo uses the singular "core" for a single-core socket, which is the
-// common shape for a small cloud VM.
-func TestGetCpuInfoSolarisSingleCore(t *testing.T) {
+// Verbatim psrinfo -pv from a 2 OCPU Oracle Solaris 11.4.86 instance. Note the
+// nested "The core has ..." lines, which must not be mistaken for the model.
+func TestGetCpuInfoSolaris114TwoCore(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"psrinfo -pv": {
+				Stdout: "The physical processor has 2 cores and 4 virtual processors (0-3)\n" +
+					"  The core has 2 virtual processors (0-1)\n" +
+					"  The core has 2 virtual processors (2-3)\n" +
+					"    x86 (AuthenticAMD A10F11 family 25 model 17 step 1 clock 2600 MHz)\n" +
+					"      AMD EPYC 9J14 96-Core Processor\n",
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	info, err := getCpuInfoSolaris(conn)
+	require.NoError(t, err)
+
+	assert.Equal(t, "AMD", info.Manufacturer)
+	assert.Equal(t, "AMD EPYC 9J14 96-Core Processor", info.Model)
+	assert.Equal(t, int64(1), info.ProcessorCount)
+	assert.Equal(t, int64(2), info.Cores)
+}
+
+// Verbatim psrinfo -pv from a 1 OCPU Oracle Solaris 11.4.86 instance. psrinfo
+// prints no core count at all for a single-core socket, which used to be read
+// as zero cores.
+func TestGetCpuInfoSolaris114SingleCore(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"psrinfo -pv": {
+				Stdout: "The physical processor has 2 virtual processors (0-1)\n" +
+					"  x86 (AuthenticAMD A10F11 family 25 model 17 step 1 clock 2600 MHz)\n" +
+					"\tAMD EPYC 9J14 96-Core Processor\n",
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	info, err := getCpuInfoSolaris(conn)
+	require.NoError(t, err)
+
+	assert.Equal(t, "AMD", info.Manufacturer)
+	assert.Equal(t, "AMD EPYC 9J14 96-Core Processor", info.Model)
+	assert.Equal(t, int64(1), info.ProcessorCount)
+	assert.Equal(t, int64(1), info.Cores)
+}
+
+// psrinfo uses the singular "core" for a single-core socket that reports one.
+func TestGetCpuInfoSolarisSingularCoreWording(t *testing.T) {
 	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
 		Commands: map[string]*mock.Command{
 			"psrinfo -pv": {
@@ -175,26 +223,6 @@ func TestGetCpuInfoSolarisSingleCore(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "Intel", info.Manufacturer)
-	assert.Equal(t, int64(1), info.ProcessorCount)
-	assert.Equal(t, int64(1), info.Cores)
-}
-
-// A socket with a single core and no threads prints no core count at all.
-func TestGetCpuInfoSolarisSingleVirtualProcessor(t *testing.T) {
-	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
-		Commands: map[string]*mock.Command{
-			"psrinfo -pv": {
-				Stdout: "The physical processor has 1 virtual processor (0)\n" +
-					"  x86 (GenuineIntel 50654 family 6 model 85 step 4 clock 2000 MHz)\n" +
-					"        Intel(r) Xeon(r) Gold 6138 CPU @ 2.00GHz\n",
-			},
-		},
-	}))
-	require.NoError(t, err)
-
-	info, err := getCpuInfoSolaris(conn)
-	require.NoError(t, err)
-
 	assert.Equal(t, int64(1), info.ProcessorCount)
 	assert.Equal(t, int64(1), info.Cores)
 }
