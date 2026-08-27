@@ -71,6 +71,7 @@ arista.eos.aclBinding.direction 13.3.15
 arista.eos.aclBinding.family 13.3.15
 arista.eos.aclBinding.target 13.3.15
 arista.eos.aclBinding.targetName 13.3.15
+arista.eos.aclBinding.vrf 13.3.16
 arista.eos.aclBindings 13.3.15
 arista.eos.acls 13.0.1
 arista.eos.arpInspection 13.3.15

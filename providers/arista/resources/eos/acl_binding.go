@@ -35,6 +35,12 @@ type AclBinding struct {
 	Family string
 	// AclName is the name of the applied access-list.
 	AclName string
+	// VRF is the routing instance the binding is scoped to, empty when the
+	// line names none. A management service can be bound per instance, so a
+	// list applied only in the management instance leaves the service
+	// unrestricted everywhere else, and dropping the qualifier would report
+	// that as a device-wide restriction.
+	VRF string
 }
 
 // aclBindingTargets maps a top-level configuration header to the binding
@@ -98,8 +104,19 @@ func ParseAclBindings(runningConfig string) []AclBinding {
 				// EOS applies an access-group inbound unless told otherwise.
 				Direction: "in",
 			}
-			if len(fields) > 1 && (fields[1] == "in" || fields[1] == "out") {
-				binding.Direction = fields[1]
+			// The direction is the last thing on the line, but it is not
+			// always the token straight after the list name: a management
+			// service takes `ip access-group <acl> vrf <name> in`. Reading a
+			// fixed position reported such a binding as inbound whatever it
+			// said, so scan the qualifiers instead.
+			for i := 1; i < len(fields); i++ {
+				switch {
+				case fields[i] == "in" || fields[i] == "out":
+					binding.Direction = fields[i]
+				case fields[i] == "vrf" && i+1 < len(fields):
+					binding.VRF = fields[i+1]
+					i++
+				}
 			}
 			res = append(res, binding)
 		}

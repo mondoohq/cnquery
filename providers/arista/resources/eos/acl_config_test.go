@@ -278,3 +278,50 @@ func TestParseAclBindings_NegatedLineIsNotABinding(t *testing.T) {
 func TestParseAclBindings_None(t *testing.T) {
 	assert.Empty(t, ParseAclBindings("interface Ethernet1\n   description X\n"))
 }
+
+// TestParseAclBindings_DirectionIsNotPositional covers the management-service
+// form, where the direction is not the token straight after the list name.
+// Reading a fixed position reported an outbound binding as inbound, which
+// inverts what the ACL is understood to protect.
+func TestParseAclBindings_DirectionIsNotPositional(t *testing.T) {
+	bindings := ParseAclBindings(`management ssh
+   ip access-group MGMT-ACL vrf MGMT out
+!
+`)
+	require.Len(t, bindings, 1)
+	assert.Equal(t, "out", bindings[0].Direction)
+	assert.Equal(t, "MGMT", bindings[0].VRF)
+	assert.Equal(t, "MGMT-ACL", bindings[0].AclName)
+}
+
+// TestParseAclBindings_VrfIsCaptured pins the instance qualifier. A list bound
+// only in the management instance leaves the service unrestricted in every
+// other instance, including the one carrying production traffic; dropping the
+// qualifier reported that as a device-wide restriction.
+func TestParseAclBindings_VrfIsCaptured(t *testing.T) {
+	bindings := ParseAclBindings(`management ssh
+   ip access-group MGMT-ACL vrf MGMT in
+!
+`)
+	require.Len(t, bindings, 1)
+	assert.Equal(t, "MGMT", bindings[0].VRF)
+	assert.Equal(t, "in", bindings[0].Direction)
+}
+
+// TestParseAclBindings_UnqualifiedBindingHasNoVrf keeps the ordinary interface
+// form reporting no instance rather than a made-up one.
+func TestParseAclBindings_UnqualifiedBindingHasNoVrf(t *testing.T) {
+	bindings := ParseAclBindings(`interface Ethernet1
+   ip access-group EDGE-IN in
+   ip access-group EDGE-OUT out
+!
+`)
+	require.Len(t, bindings, 2)
+	for _, b := range bindings {
+		assert.Empty(t, b.VRF)
+		assert.Equal(t, "interface", b.Target)
+		assert.Equal(t, "Ethernet1", b.TargetName)
+	}
+	assert.Equal(t, "in", bindings[0].Direction)
+	assert.Equal(t, "out", bindings[1].Direction)
+}

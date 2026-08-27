@@ -1249,6 +1249,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.aclBinding.aclName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclBinding).GetAclName()).ToDataRes(types.String)
 	},
+	"arista.eos.aclBinding.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetVrf()).ToDataRes(types.String)
+	},
 	"arista.eos.aclBinding.acl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclBinding).GetAcl()).ToDataRes(types.Resource("arista.eos.acl"))
 	},
@@ -3183,6 +3186,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.aclBinding.aclName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAclBinding).AclName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.aclBinding.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -7846,6 +7853,7 @@ type mqlAristaEosAclBinding struct {
 	Direction  plugin.TValue[string]
 	Family     plugin.TValue[string]
 	AclName    plugin.TValue[string]
+	Vrf        plugin.TValue[string]
 	Acl        plugin.TValue[*mqlAristaEosAcl]
 }
 
@@ -7904,6 +7912,10 @@ func (c *mqlAristaEosAclBinding) GetFamily() *plugin.TValue[string] {
 
 func (c *mqlAristaEosAclBinding) GetAclName() *plugin.TValue[string] {
 	return &c.AclName
+}
+
+func (c *mqlAristaEosAclBinding) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
 }
 
 func (c *mqlAristaEosAclBinding) GetAcl() *plugin.TValue[*mqlAristaEosAcl] {

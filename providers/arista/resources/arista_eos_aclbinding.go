@@ -61,14 +61,17 @@ func resolveAcl(runtime *plugin.Runtime, name, family string) (*mqlAristaEosAcl,
 func (a *mqlAristaEosAclBinding) id() (string, error) {
 	for _, f := range []struct{ err error }{
 		{a.Target.Error}, {a.TargetName.Error}, {a.Family.Error},
-		{a.Direction.Error}, {a.AclName.Error},
+		{a.Direction.Error}, {a.AclName.Error}, {a.Vrf.Error},
 	} {
 		if f.err != nil {
 			return "", f.err
 		}
 	}
+	// The same list can be bound to one target per routing instance, so the
+	// instance is part of what makes a binding distinct.
 	return "arista.eos.aclBinding/" + a.Target.Data + "/" + a.TargetName.Data + "/" +
-		a.Family.Data + "/" + a.Direction.Data + "/" + a.AclName.Data, nil
+		a.Family.Data + "/" + a.Direction.Data + "/" + a.AclName.Data + "/" +
+		a.Vrf.Data, nil
 }
 
 func (a *mqlAristaEos) aclBindings() ([]any, error) {
@@ -86,6 +89,7 @@ func (a *mqlAristaEos) aclBindings() ([]any, error) {
 			"direction":  llx.StringData(b.Direction),
 			"family":     llx.StringData(b.Family),
 			"aclName":    llx.StringData(b.AclName),
+			"vrf":        llx.StringData(b.VRF),
 		})
 		if err != nil {
 			return nil, err
