@@ -1733,16 +1733,18 @@ var solaris = &PlatformResolver{
 
 		// NOTE: we have only one solaris system here, since we only get here is the family is sunos, we pass
 
-		// try to read "/etc/release" for more details
+		// try to read "/etc/release" for more details. uname already confirmed
+		// SunOS, so a missing or unreadable release file only costs us the title
+		// and version - it must not retract the platform detection itself.
 		f, err := conn.FileSystem().Open("/etc/release")
 		if err != nil {
-			return false, nil
+			return true, nil
 		}
 		defer f.Close()
 
 		c, err := io.ReadAll(f)
 		if err != nil {
-			return false, nil
+			return true, nil
 		}
 
 		release, err := ParseSolarisRelease(string(c))

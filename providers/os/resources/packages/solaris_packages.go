@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 
 	"go.mondoo.com/mql/providers/os/connection/shared"
 )
@@ -95,6 +96,13 @@ func (s *SolarisPkgManager) List() ([]Package, error) {
 	cmd, err := s.conn.RunCommand("pkg list -Hv")
 	if err != nil {
 		return nil, fmt.Errorf("could not read solaris package list")
+	}
+	// without this an unavailable or failing pkg reports an empty package list
+	// as if the system genuinely had no packages installed
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("pkg list failed with exit code %d: %s",
+			cmd.ExitStatus, strings.TrimSpace(string(stderr)))
 	}
 
 	return ParseSolarisPackages(cmd.Stdout), nil
