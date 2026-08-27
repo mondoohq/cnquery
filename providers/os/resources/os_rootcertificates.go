@@ -52,7 +52,7 @@ func initOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDat
 	} else if platform.IsFamily("bsd") {
 		paths = BsdCertFiles
 	} else {
-		return nil, nil, errors.New("root certificates are not unsupported on this platform: " + platform.Name + " " + platform.Version)
+		return nil, nil, errors.New("root certificates are not supported on this platform: " + platform.Name + " " + platform.Version)
 	}
 
 	// Take the first bundle that exists, which is what Go's own root pool does.
