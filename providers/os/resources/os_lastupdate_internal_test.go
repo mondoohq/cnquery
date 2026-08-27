@@ -39,6 +39,10 @@ func TestIsRpmPlatform(t *testing.T) {
 		{"azurelinux", &inventory.Platform{Name: "azurelinux", Family: []string{"linux", "unix", "os"}}, true},
 		{"wrlinux", &inventory.Platform{Name: "wrlinux", Family: []string{"linux", "unix", "os"}}, true},
 		{"mageia", &inventory.Platform{Name: "mageia", Family: []string{"linux", "unix", "os"}}, true},
+		// rpm based but outside the redhat family: each resolves as a platform
+		// of its own, so only the name can catch them.
+		{"altlinux", &inventory.Platform{Name: "altlinux", Family: []string{"linux", "unix", "os"}}, true},
+		{"opencloudos", &inventory.Platform{Name: "opencloudos", Family: []string{"linux", "unix", "os"}}, true},
 		{"ubuntu", &inventory.Platform{Name: "ubuntu", Family: []string{"debian", "linux", "unix", "os"}}, false},
 		{"debian", &inventory.Platform{Name: "debian", Family: []string{"debian", "linux", "unix", "os"}}, false},
 		{"alpine", &inventory.Platform{Name: "alpine", Family: []string{"linux", "unix", "os"}}, false},

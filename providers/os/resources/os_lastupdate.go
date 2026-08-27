@@ -154,9 +154,14 @@ func isContainerConnection(t shared.ConnectionType) bool {
 
 // isRpmPlatform reports whether the asset's packages come from rpm, mirroring
 // the platforms packages.ResolveSystemPkgManagers hands to RpmPkgManager.
+// altlinux and opencloudos are rpm based but live outside the redhat family
+// (neither ships a usable /etc/redhat-release, so each resolves as a platform
+// of its own), which is why they are named here rather than caught by a
+// family check.
 func isRpmPlatform(pf *inventory.Platform) bool {
 	switch pf.Name {
-	case "amazonlinux", "photon", "wrlinux", "bottlerocket", "azurelinux", "mageia":
+	case "amazonlinux", "photon", "wrlinux", "bottlerocket", "azurelinux", "mageia",
+		"altlinux", "opencloudos":
 		return true
 	}
 	return pf.IsFamily("redhat") || pf.IsFamily("euler") || pf.IsFamily("suse")
