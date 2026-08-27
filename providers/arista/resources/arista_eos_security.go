@@ -102,6 +102,34 @@ func (a *mqlAristaEosSshSettings) id() (string, error) {
 	return "arista.eos.sshSettings", nil
 }
 
+// sshSettingsArgs maps a parsed `management ssh` block onto the resource's
+// fields. It is a named function so a test can assert it covers every field
+// the schema declares: codegen accepts a declared field with no population
+// path, and the eight containment fields were declared and parsed for a
+// release without ever being mapped here.
+func sshSettingsArgs(s *eos.SshSettings) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"enabled":                llx.BoolData(s.Enabled),
+		"protocolVersion":        llx.StringData(s.ProtocolVersion),
+		"idleTimeout":            llx.IntData(int64(s.IdleTimeout)),
+		"serverPort":             llx.IntData(int64(s.ServerPort)),
+		"authenticationMode":     llx.StringData(s.AuthenticationMode),
+		"ciphers":                llx.ArrayData(stringSliceToAny(s.Ciphers), types.String),
+		"keyExchange":            llx.ArrayData(stringSliceToAny(s.KeyExchange), types.String),
+		"macs":                   llx.ArrayData(stringSliceToAny(s.Macs), types.String),
+		"hostkeyAlgorithms":      llx.ArrayData(stringSliceToAny(s.HostkeyAlgorithms), types.String),
+		"fipsRestrictions":       llx.BoolData(s.FipsRestrictions),
+		"vrfs":                   llx.ArrayData(stringSliceToAny(s.Vrfs), types.String),
+		"loginTimeout":           llx.IntData(int64(s.LoginTimeout)),
+		"connectionLimit":        llx.IntData(int64(s.ConnectionLimit)),
+		"connectionPerHostLimit": llx.IntData(int64(s.ConnectionPerHostLimit)),
+		"emptyPasswords":         llx.StringData(s.EmptyPasswords),
+		"logLevel":               llx.StringData(s.LogLevel),
+		"clientAliveInterval":    llx.IntData(int64(s.ClientAliveInterval)),
+		"clientAliveCountMax":    llx.IntData(int64(s.ClientAliveCountMax)),
+	}
+}
+
 func (a *mqlAristaEos) sshSettings() (*mqlAristaEosSshSettings, error) {
 	rc, err := fetchRunningConfig(a.MqlRuntime)
 	if err != nil {
@@ -109,18 +137,7 @@ func (a *mqlAristaEos) sshSettings() (*mqlAristaEosSshSettings, error) {
 	}
 	s := eos.ParseSshSettings(rc)
 
-	res, err := CreateResource(a.MqlRuntime, "arista.eos.sshSettings", map[string]*llx.RawData{
-		"enabled":            llx.BoolData(s.Enabled),
-		"protocolVersion":    llx.StringData(s.ProtocolVersion),
-		"idleTimeout":        llx.IntData(int64(s.IdleTimeout)),
-		"serverPort":         llx.IntData(int64(s.ServerPort)),
-		"authenticationMode": llx.StringData(s.AuthenticationMode),
-		"ciphers":            llx.ArrayData(stringSliceToAny(s.Ciphers), types.String),
-		"keyExchange":        llx.ArrayData(stringSliceToAny(s.KeyExchange), types.String),
-		"macs":               llx.ArrayData(stringSliceToAny(s.Macs), types.String),
-		"hostkeyAlgorithms":  llx.ArrayData(stringSliceToAny(s.HostkeyAlgorithms), types.String),
-		"fipsRestrictions":   llx.BoolData(s.FipsRestrictions),
-	})
+	res, err := CreateResource(a.MqlRuntime, "arista.eos.sshSettings", sshSettingsArgs(s))
 	if err != nil {
 		return nil, err
 	}
