@@ -181,18 +181,18 @@ func (r *mqlMikrotik) system() (*mqlMikrotikSystem, error) {
 		"platform":             llx.StringData(res["platform"]),
 		"architecture":         llx.StringData(res["architecture-name"]),
 		"cpu":                  llx.StringData(res["cpu"]),
-		"cpuCount":             llx.IntData(parseInt(res["cpu-count"])),
-		"cpuFrequency":         llx.IntData(parseInt(res["cpu-frequency"])),
-		"cpuLoad":              llx.IntData(parseInt(res["cpu-load"])),
-		"totalMemory":          llx.IntData(parseInt(res["total-memory"])),
-		"freeMemory":           llx.IntData(parseInt(res["free-memory"])),
-		"totalHddSpace":        llx.IntData(parseInt(res["total-hdd-space"])),
-		"freeHddSpace":         llx.IntData(parseInt(res["free-hdd-space"])),
+		"cpuCount":             intField(res, "cpu-count"),
+		"cpuFrequency":         intField(res, "cpu-frequency"),
+		"cpuLoad":              intField(res, "cpu-load"),
+		"totalMemory":          intField(res, "total-memory"),
+		"freeMemory":           intField(res, "free-memory"),
+		"totalHddSpace":        intField(res, "total-hdd-space"),
+		"freeHddSpace":         intField(res, "free-hdd-space"),
 		"badBlocks":            llx.StringData(res["bad-blocks"]),
-		"writeSectSinceReboot": llx.IntData(parseInt(res["write-sect-since-reboot"])),
-		"writeSectTotal":       llx.IntData(parseInt(res["write-sect-total"])),
+		"writeSectSinceReboot": intField(res, "write-sect-since-reboot"),
+		"writeSectTotal":       intField(res, "write-sect-total"),
 		"uptime":               llx.StringData(res["uptime"]),
-		"routerboard":          llx.BoolData(parseBool(rb["routerboard"])),
+		"routerboard":          boolField(rb, "routerboard"),
 		"model":                llx.StringData(rb["model"]),
 		"serialNumber":         llx.StringData(rb["serial-number"]),
 		"firmwareType":         llx.StringData(rb["firmware-type"]),
@@ -213,7 +213,7 @@ func newMikrotikPackage(runtime *plugin.Runtime, row map[string]string) (plugin.
 		"version":   llx.StringData(row["version"]),
 		"buildTime": llx.StringData(row["build-time"]),
 		"scheduled": llx.StringData(row["scheduled"]),
-		"disabled":  llx.BoolData(parseBool(row["disabled"])),
+		"disabled":  boolField(row, "disabled"),
 	})
 }
 
@@ -236,8 +236,8 @@ func (r *mqlMikrotik) clock() (*mqlMikrotikSystemClock, error) {
 		"date":               llx.StringData(row["date"]),
 		"timeZoneName":       llx.StringData(row["time-zone-name"]),
 		"gmtOffset":          llx.StringData(row["gmt-offset"]),
-		"dstActive":          llx.BoolData(parseBool(row["dst-active"])),
-		"timeZoneAutodetect": llx.BoolData(parseBool(row["time-zone-autodetect"])),
+		"dstActive":          boolField(row, "dst-active"),
+		"timeZoneAutodetect": boolField(row, "time-zone-autodetect"),
 	})
 	if err != nil {
 		return nil, err
@@ -252,12 +252,12 @@ func (r *mqlMikrotik) ntpClient() (*mqlMikrotikSystemNtpClient, error) {
 	}
 	res, err := CreateResource(r.MqlRuntime, "mikrotik.system.ntp.client", map[string]*llx.RawData{
 		"__id":          llx.StringData("mikrotik.system.ntp.client"),
-		"enabled":       llx.BoolData(parseBool(row["enabled"])),
+		"enabled":       boolField(row, "enabled"),
 		"mode":          llx.StringData(row["mode"]),
-		"servers":       llx.ArrayData(splitList(row["servers"]), types.String),
+		"servers":       listField(row, "servers"),
 		"status":        llx.StringData(row["status"]),
 		"syncedServer":  llx.StringData(row["synced-server"]),
-		"syncedStratum": llx.IntData(parseInt(row["synced-stratum"])),
+		"syncedStratum": intField(row, "synced-stratum"),
 	})
 	if err != nil {
 		return nil, err
@@ -272,12 +272,12 @@ func (r *mqlMikrotik) snmp() (*mqlMikrotikSnmp, error) {
 	}
 	res, err := CreateResource(r.MqlRuntime, "mikrotik.snmp", map[string]*llx.RawData{
 		"__id":           llx.StringData("mikrotik.snmp"),
-		"enabled":        llx.BoolData(parseBool(row["enabled"])),
+		"enabled":        boolField(row, "enabled"),
 		"contact":        llx.StringData(row["contact"]),
 		"location":       llx.StringData(row["location"]),
 		"engineId":       llx.StringData(row["engine-id"]),
 		"trapCommunity":  llx.StringData(row["trap-community"]),
-		"trapVersion":    llx.IntData(parseInt(row["trap-version"])),
+		"trapVersion":    intField(row, "trap-version"),
 		"trapGenerators": llx.StringData(row["trap-generators"]),
 		"srcAddress":     llx.StringData(row["src-address"]),
 	})
@@ -356,15 +356,15 @@ func (r *mqlMikrotik) dns() (*mqlMikrotikIpDns, error) {
 		"__id":                llx.StringData("mikrotik.ip.dns"),
 		"servers":             llx.StringData(row["servers"]),
 		"dynamicServers":      llx.StringData(row["dynamic-servers"]),
-		"allowRemoteRequests": llx.BoolData(parseBool(row["allow-remote-requests"])),
+		"allowRemoteRequests": boolField(row, "allow-remote-requests"),
 		"useDohServer":        llx.StringData(row["use-doh-server"]),
-		"verifyDohCert":       llx.BoolData(parseBool(row["verify-doh-cert"])),
-		"maxUdpPacketSize":    llx.IntData(parseInt(row["max-udp-packet-size"])),
+		"verifyDohCert":       boolField(row, "verify-doh-cert"),
+		"maxUdpPacketSize":    intField(row, "max-udp-packet-size"),
 		"queryServerTimeout":  llx.StringData(row["query-server-timeout"]),
 		"queryTotalTimeout":   llx.StringData(row["query-total-timeout"]),
-		"cacheSize":           llx.IntData(parseInt(row["cache-size"])),
+		"cacheSize":           intField(row, "cache-size"),
 		"cacheMaxTtl":         llx.StringData(row["cache-max-ttl"]),
-		"cacheUsed":           llx.IntData(parseInt(row["cache-used"])),
+		"cacheUsed":           intField(row, "cache-used"),
 	})
 	if err != nil {
 		return nil, err
