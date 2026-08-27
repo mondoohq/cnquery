@@ -168,14 +168,6 @@ func specUsesHostPath(spec *corev1.PodSpec) bool {
 	return false
 }
 
-func specAutomountServiceAccountToken(spec *corev1.PodSpec) bool {
-	if spec == nil {
-		return false
-	}
-	// Defaults to true when unset.
-	return spec.AutomountServiceAccountToken == nil || *spec.AutomountServiceAccountToken
-}
-
 // effectiveSeccompType resolves the seccomp profile type that applies to a
 // container: a container-level profile wins over the pod-level default, and an
 // empty string means no profile is set at either level.
@@ -343,7 +335,10 @@ func (k *mqlK8sDeployment) securitySpec() (*corev1.PodSpec, error) {
 
 func (k *mqlK8sDeployment) automountServiceAccountToken() (bool, error) {
 	spec, err := k.securitySpec()
-	return boolFromSpec(spec, err, specAutomountServiceAccountToken)
+	if err != nil {
+		return false, err
+	}
+	return effectiveAutomountServiceAccountToken(k.MqlRuntime, spec, k.Namespace.Data), nil
 }
 
 func (k *mqlK8sDeployment) hostNetwork() (bool, error) {
@@ -437,7 +432,10 @@ func (k *mqlK8sDaemonset) securitySpec() (*corev1.PodSpec, error) {
 
 func (k *mqlK8sDaemonset) automountServiceAccountToken() (bool, error) {
 	spec, err := k.securitySpec()
-	return boolFromSpec(spec, err, specAutomountServiceAccountToken)
+	if err != nil {
+		return false, err
+	}
+	return effectiveAutomountServiceAccountToken(k.MqlRuntime, spec, k.Namespace.Data), nil
 }
 
 func (k *mqlK8sDaemonset) hostNetwork() (bool, error) {
@@ -531,7 +529,10 @@ func (k *mqlK8sStatefulset) securitySpec() (*corev1.PodSpec, error) {
 
 func (k *mqlK8sStatefulset) automountServiceAccountToken() (bool, error) {
 	spec, err := k.securitySpec()
-	return boolFromSpec(spec, err, specAutomountServiceAccountToken)
+	if err != nil {
+		return false, err
+	}
+	return effectiveAutomountServiceAccountToken(k.MqlRuntime, spec, k.Namespace.Data), nil
 }
 
 func (k *mqlK8sStatefulset) hostNetwork() (bool, error) {
@@ -625,7 +626,10 @@ func (k *mqlK8sReplicaset) securitySpec() (*corev1.PodSpec, error) {
 
 func (k *mqlK8sReplicaset) automountServiceAccountToken() (bool, error) {
 	spec, err := k.securitySpec()
-	return boolFromSpec(spec, err, specAutomountServiceAccountToken)
+	if err != nil {
+		return false, err
+	}
+	return effectiveAutomountServiceAccountToken(k.MqlRuntime, spec, k.Namespace.Data), nil
 }
 
 func (k *mqlK8sReplicaset) hostNetwork() (bool, error) {
@@ -719,7 +723,10 @@ func (k *mqlK8sJob) securitySpec() (*corev1.PodSpec, error) {
 
 func (k *mqlK8sJob) automountServiceAccountToken() (bool, error) {
 	spec, err := k.securitySpec()
-	return boolFromSpec(spec, err, specAutomountServiceAccountToken)
+	if err != nil {
+		return false, err
+	}
+	return effectiveAutomountServiceAccountToken(k.MqlRuntime, spec, k.Namespace.Data), nil
 }
 
 func (k *mqlK8sJob) hostNetwork() (bool, error) {
@@ -813,7 +820,10 @@ func (k *mqlK8sCronjob) securitySpec() (*corev1.PodSpec, error) {
 
 func (k *mqlK8sCronjob) automountServiceAccountToken() (bool, error) {
 	spec, err := k.securitySpec()
-	return boolFromSpec(spec, err, specAutomountServiceAccountToken)
+	if err != nil {
+		return false, err
+	}
+	return effectiveAutomountServiceAccountToken(k.MqlRuntime, spec, k.Namespace.Data), nil
 }
 
 func (k *mqlK8sCronjob) hostNetwork() (bool, error) {
