@@ -10,11 +10,14 @@ import (
 	"go.mondoo.com/mql/v13/providers/os/connection/shared"
 )
 
-var LAUNCHD_REGEX = regexp.MustCompile(`(?m)^\s*([\d-]*)\s+(\d)\s+(.*)$`)
+// launchctl list prints three tab-separated columns: PID, the last exit
+// status, and the label. PID is a number or "-" when the job is not running.
+// The status is a signed integer: 0 for a clean exit, a positive exit code,
+// or a negative signal number (-9 for SIGKILL, -15 for SIGTERM). Matching it
+// as a single digit dropped every job that had ever been killed or exited
+// non-zero -- around 40% of the list on a normal macOS install.
+var LAUNCHD_REGEX = regexp.MustCompile(`(?m)^\s*(-|\d+)\s+(-?\d+)\s+(\S.*)$`)
 
-// PID: pid of process
-// Status: last know exit code
-// ^\s*([\d-]*)\s+(\d)\s+(.*)$
 func ParseServiceLaunchD(input io.Reader) ([]*Service, error) {
 	var services []*Service
 	content, err := io.ReadAll(input)
