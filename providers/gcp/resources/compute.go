@@ -4257,6 +4257,35 @@ func (g *mqlGcpProjectComputeServiceInstance) osLoginEnabled() (bool, error) {
 	if _, set := md.Data["enable-oslogin"]; set {
 		return metadataBoolFlag(md.Data, "enable-oslogin"), nil
 	}
+	return g.projectMetadataFlag("enable-oslogin")
+}
+
+// serialPortEnabled reports whether interactive serial console access is
+// enabled for this instance, which is what an audit of the control needs to
+// know.
+//
+// Compute Engine resolves the setting the same way it resolves OS Login: the
+// instance's own serial-port-enable metadata wins, and an instance that does
+// not set the key inherits the project's commonInstanceMetadata value. Reading
+// only the instance metadata therefore reported false for every VM in a
+// project that had switched serial console access on project-wide -- the exact
+// case the control exists to catch, and one where a false answer is
+// indistinguishable from a VM that genuinely has it off.
+func (g *mqlGcpProjectComputeServiceInstance) serialPortEnabled() (bool, error) {
+	md := g.GetMetadata()
+	if md.Error != nil {
+		return false, md.Error
+	}
+	if _, set := md.Data["serial-port-enable"]; set {
+		return metadataBoolFlag(md.Data, "serial-port-enable"), nil
+	}
+	return g.projectMetadataFlag("serial-port-enable")
+}
+
+// projectMetadataFlag reads a boolean key from the project's
+// commonInstanceMetadata, for the instance-level accessors whose setting falls
+// back to the project when the instance does not set it.
+func (g *mqlGcpProjectComputeServiceInstance) projectMetadataFlag(key string) (bool, error) {
 	if g.ProjectId.Error != nil {
 		return false, g.ProjectId.Error
 	}
@@ -4270,23 +4299,14 @@ func (g *mqlGcpProjectComputeServiceInstance) osLoginEnabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	proj := projRes.(*mqlGcpProject)
-	projMd := proj.GetCommonInstanceMetadata()
+	projMd := projRes.(*mqlGcpProject).GetCommonInstanceMetadata()
 	if projMd.Error != nil {
 		return false, projMd.Error
 	}
 	if projMd.Data == nil {
 		return false, nil
 	}
-	return metadataBoolFlag(projMd.Data, "enable-oslogin"), nil
-}
-
-func (g *mqlGcpProjectComputeServiceInstance) serialPortEnabled() (bool, error) {
-	md := g.GetMetadata()
-	if md.Error != nil {
-		return false, md.Error
-	}
-	return metadataBoolFlag(md.Data, "serial-port-enable"), nil
+	return metadataBoolFlag(projMd.Data, key), nil
 }
 
 func (g *mqlGcpProjectComputeService) projectMetadataFlag(key string) (bool, error) {
