@@ -134,12 +134,20 @@ type EnableSecretState struct {
 	Format string
 }
 
-// enableSecretFormats is the closed set of encoding selectors EOS accepts on
-// the enable password line. The selector is optional, so a token outside this
-// set is the password itself and must not be read as a format.
-var enableSecretFormats = map[string]bool{
+// passwordSecretSelectors is the closed set of encoding selectors EOS accepts
+// on a password secret, shared by the `enable secret` and `aaa root secret`
+// lines. The selector is optional on both, so a token outside this set is the
+// password itself and must never be read as a format: doing so publishes the
+// credential in a field every consumer treats as safe metadata.
+//
+// The set matches the one Arista's own eAPI library applies to the sibling
+// `username <name> secret <selector> <value>` line. It is deliberately not
+// keyEncryptionTypes: that covers the reversible encodings a shared secret
+// can use, and a TACACS+ key cannot be stored as a hash.
+var passwordSecretSelectors = map[string]bool{
 	"0":      true,
 	"5":      true,
+	"7":      true,
 	"sha512": true,
 }
 
@@ -188,7 +196,7 @@ func ParseEnableSecret(runningConfig string) *EnableSecretState {
 		}
 
 		state.Configured = true
-		if enableSecretFormats[fields[0]] {
+		if passwordSecretSelectors[fields[0]] {
 			state.Format = fields[0]
 		} else {
 			// No selector: the token is the password, and EOS documents the
