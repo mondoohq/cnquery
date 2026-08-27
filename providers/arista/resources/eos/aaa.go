@@ -347,7 +347,9 @@ type RootAccountState struct {
 	// of the three states.
 	NoPassword bool
 	// SecretFormat is the encoding selector on the secret, for example "5"
-	// or "sha512". Empty when root has no secret configured.
+	// or "sha512". Empty when root has no secret configured. A line written
+	// without a selector is cleartext, which EOS documents as equivalent to
+	// "0", and is reported as "0". The secret itself is never captured.
 	SecretFormat string
 }
 
@@ -373,7 +375,15 @@ func ParseRootAccount(runningConfig string) *RootAccountState {
 			if m := aaaRootSecretRe.FindStringSubmatch(line); m != nil {
 				state.Enabled = true
 				state.NoPassword = false
-				state.SecretFormat = m[1]
+				// The selector is optional. Taking the first token
+				// positionally publishes the root password itself when the
+				// line is written without one, so anything that is not a
+				// known selector is the secret and the line is cleartext.
+				if passwordSecretSelectors[m[1]] {
+					state.SecretFormat = m[1]
+				} else {
+					state.SecretFormat = "0"
+				}
 			}
 		}
 	}
