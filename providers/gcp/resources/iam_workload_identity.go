@@ -16,7 +16,6 @@ import (
 	"go.mondoo.com/mql/providers/gcp/connection"
 	"go.mondoo.com/mql/types"
 
-	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
@@ -44,7 +43,12 @@ func (g *mqlGcpProjectIamService) workloadIdentityPools() ([]any, error) {
 	projectId := g.ProjectId.Data
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+	// iam.CloudPlatformScope, not the cloud-platform.read-only variant the rest
+	// of this provider defaults to: the IAM API lists cloud-platform as the only
+	// accepted scope for the workload-identity and workforce pool methods, and a
+	// read-only token is rejected with ACCESS_TOKEN_SCOPE_INSUFFICIENT before
+	// any IAM permission is consulted -- so no amount of role granting fixes it.
+	client, err := conn.Client(iam.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +201,12 @@ func (g *mqlGcpProjectIamServiceWorkloadIdentityPool) providers() ([]any, error)
 	poolId := g.PoolId.Data
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
-	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope)
+	// iam.CloudPlatformScope, not the cloud-platform.read-only variant the rest
+	// of this provider defaults to: the IAM API lists cloud-platform as the only
+	// accepted scope for the workload-identity and workforce pool methods, and a
+	// read-only token is rejected with ACCESS_TOKEN_SCOPE_INSUFFICIENT before
+	// any IAM permission is consulted -- so no amount of role granting fixes it.
+	client, err := conn.Client(iam.CloudPlatformScope)
 	if err != nil {
 		return nil, err
 	}
