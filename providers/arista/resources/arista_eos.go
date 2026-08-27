@@ -1350,6 +1350,36 @@ func (a *mqlAristaEos) hardware() (*mqlAristaEosHardware, error) {
 	return res.(*mqlAristaEosHardware), nil
 }
 
+// powerSupplyTempSensors renders a power supply's temperature sensors as dict
+// rows. Every numeric leaf is widened to int64: llx only accepts JSON-native
+// types inside a dict, and a Go int makes the conversion of the whole array
+// fail, so a single un-widened value takes the field down rather than one row.
+func powerSupplyTempSensors(ps eos.PowerSupply) []any {
+	res := make([]any, 0, len(ps.TempSensors))
+	for name, sensor := range ps.TempSensors {
+		res = append(res, map[string]any{
+			"name":        name,
+			"status":      sensor.Status,
+			"temperature": int64(sensor.Temperature),
+		})
+	}
+	return res
+}
+
+// powerSupplyFans renders a power supply's fans as dict rows. See
+// powerSupplyTempSensors for why speed is widened.
+func powerSupplyFans(ps eos.PowerSupply) []any {
+	res := make([]any, 0, len(ps.Fans))
+	for name, fan := range ps.Fans {
+		res = append(res, map[string]any{
+			"name":   name,
+			"status": fan.Status,
+			"speed":  int64(fan.Speed),
+		})
+	}
+	return res
+}
+
 func (a *mqlAristaEosHardware) powerSupplies() ([]any, error) {
 	eosClient := aristaClient(a.MqlRuntime)
 
@@ -1360,25 +1390,8 @@ func (a *mqlAristaEosHardware) powerSupplies() ([]any, error) {
 
 	res := make([]any, 0, len(envPower.PowerSupplies))
 	for name, ps := range envPower.PowerSupplies {
-		// Build temp sensor dicts
-		tempSensors := make([]any, 0, len(ps.TempSensors))
-		for sensorName, sensor := range ps.TempSensors {
-			tempSensors = append(tempSensors, map[string]any{
-				"name":        sensorName,
-				"status":      sensor.Status,
-				"temperature": sensor.Temperature,
-			})
-		}
-
-		// Build fan dicts
-		fans := make([]any, 0, len(ps.Fans))
-		for fanName, fan := range ps.Fans {
-			fans = append(fans, map[string]any{
-				"name":   fanName,
-				"status": fan.Status,
-				"speed":  fan.Speed,
-			})
-		}
+		tempSensors := powerSupplyTempSensors(ps)
+		fans := powerSupplyFans(ps)
 
 		mqlPSU, err := CreateResource(a.MqlRuntime, "arista.eos.hardware.powerSupply", map[string]*llx.RawData{
 			"name":          llx.StringData(name),
