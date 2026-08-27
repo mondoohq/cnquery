@@ -72,7 +72,9 @@ func zoneFixture(t *testing.T) *dns.ClientConfig {
 	host, port, err := net.SplitHostPort(pc.LocalAddr().String())
 	require.NoError(t, err)
 
-	return &dns.ClientConfig{Servers: []string{host}, Port: port, Timeout: 2, Attempts: 1}
+	// Attempts is honoured by queryNS; Timeout is not, because queryDnsTypeAt
+	// builds a dns.Client with the library default and never reads it.
+	return &dns.ClientConfig{Servers: []string{host}, Port: port, Attempts: 1}
 }
 
 func fixtureClient(t *testing.T, fqdn string) *DnsClient {
@@ -87,8 +89,9 @@ func TestZone(t *testing.T) {
 		want string
 	}{
 		{"an apex is its own zone", "example.test", "example.test"},
+		// www.example.test is a CNAME, so this also covers that answering
+		// successfully and carrying NS records are two different questions.
 		{"a name inside a zone reports the apex", "www.example.test", "example.test"},
-		{"a CNAME answer is not a delegation", "www.example.test", "example.test"},
 		{"a delegated subdomain is its own zone", "corp.example.test", "corp.example.test"},
 		{"a name inside a delegated subzone reports that subzone", "vpn.corp.example.test", "corp.example.test"},
 		{"a name under no zone reports none", "absent.test", ""},
