@@ -145,6 +145,7 @@ dns.spfRecord.allQualifier 13.1.1
 dns.spfRecord.dnsTxt 13.1.1
 dns.spfRecord.mechanisms 13.1.1
 dns.spfRecord.version 13.1.1
+dns.zone 13.3.1
 domainName 9.0.1
 domainName.effectiveTLDPlusOne 9.0.1
 domainName.fqdn 9.0.1
