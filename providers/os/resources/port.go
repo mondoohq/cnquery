@@ -559,6 +559,22 @@ func (p *mqlPorts) parseWindowsPorts(r io.Reader, processes map[int64]*mqlProces
 
 // macOS Implementation
 
+// expandLsofWildcardAddress spells out the wildcard bind lsof writes as "*".
+// A socket bound there listens on every address on every interface, so it maps
+// to the unspecified address -- 0.0.0.0 for IPv4, :: for IPv6 -- which is how
+// the same bind reads on Linux. It is emphatically not loopback: mapping it to
+// 127.0.0.1 reports a listener reachable from the network as a local-only one,
+// and silently passes any check looking for exposed ports.
+func expandLsofWildcardAddress(address string, protocol string) string {
+	if !strings.HasPrefix(address, "*") {
+		return address
+	}
+	if strings.HasSuffix(protocol, "6") {
+		return strings.Replace(address, "*", "::", 1)
+	}
+	return strings.Replace(address, "*", "0.0.0.0", 1)
+}
+
 // listMacos reads the lsof information of all open files that are tcp sockets
 func (p *mqlPorts) listMacos() ([]any, error) {
 	users, err := p.users()
@@ -618,15 +634,7 @@ func (p *mqlPorts) listMacos() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			// lsof presents a process listening on any ipv6 address as listening on "*"
-			// change this to a more ipv6-friendly formatting
-			if strings.HasPrefix(localAddress, "*") {
-				if strings.HasSuffix(protocol, "6") {
-					localAddress = strings.Replace(localAddress, "*", "::1", 1)
-				} else {
-					localAddress = strings.Replace(localAddress, "*", "127.0.0.1", 1)
-				}
-			}
+			localAddress = expandLsofWildcardAddress(localAddress, protocol)
 
 			state, ok := TCP_STATES[fd.TcpState()]
 			if !ok {

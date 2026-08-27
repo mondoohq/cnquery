@@ -40,10 +40,42 @@ func (h *hyper) detectDarwinIOReg() (string, bool) {
 }
 
 // detectDarwinModelIdentifier uses system_profiler to detect virtualization.
+//
+// Only the model fields are matched, never the whole hardware profile. The
+// profile of a physical Mac carries the vendor name in several unrelated
+// places ("Chip: Apple M4 Pro"), and matching against all of it made every
+// Apple Silicon Mac report the "apple" key and come back as Apple
+// Virtualization. A guest names its hypervisor in the model itself --
+// "Apple Virtual Machine 1", "VMware Virtual Platform", "VirtualBox" -- so
+// those two lines carry the whole signal.
 func (h *hyper) detectDarwinModelIdentifier() (string, bool) {
 	stdout, err := h.RunCommand("system_profiler SPHardwareDataType")
 	if err != nil {
 		return "", false
 	}
-	return mapHypervisor(stdout)
+	return mapHypervisor(darwinHardwareModel(stdout))
+}
+
+// darwinHardwareModelKeys are the SPHardwareDataType labels whose values name
+// the machine. A hypervisor announces itself in one of them or not at all.
+var darwinHardwareModelKeys = []string{"Model Name", "Model Identifier"}
+
+// darwinHardwareModel returns the model values from SPHardwareDataType output,
+// joined by a newline so a key cannot match across two of them.
+func darwinHardwareModel(stdout string) string {
+	var models []string
+	for _, line := range strings.Split(stdout, "\n") {
+		label, value, found := strings.Cut(line, ":")
+		if !found {
+			continue
+		}
+		label = strings.TrimSpace(label)
+		for _, key := range darwinHardwareModelKeys {
+			if label == key {
+				models = append(models, strings.TrimSpace(value))
+				break
+			}
+		}
+	}
+	return strings.Join(models, "\n")
 }
