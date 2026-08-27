@@ -10,8 +10,13 @@ import (
 	"go/printer"
 	"go/token"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/iam/v1"
 )
 
 // TestIamServiceUsesFullCloudPlatformScope pins the OAuth scope every
@@ -36,6 +41,47 @@ import (
 // every scan authenticated with a service-account key -- the entire federated
 // trust surface, which is exactly the data a "who can assume an identity in
 // this project from outside it" audit reads.
+// fullScopeConstant matches a package-qualified reference to the SDK's
+// CloudPlatformScope constant.
+//
+// The trailing boundary is what makes this a token match rather than a
+// substring one: `CloudPlatformReadOnlyScope` never matched, but a constant
+// named `CloudPlatformScopeReadOnly` would have satisfied a plain
+// strings.Contains and been accepted as the full scope. No such constant
+// exists in google.golang.org/api today; this keeps the guard honest if one
+// ever appears.
+//
+// The package qualifier is deliberately left open. Every generated package
+// spells this constant identically and gives it the same value, and the
+// provider legitimately reaches for whichever one is already imported --
+// iam.CloudPlatformScope, compute.CloudPlatformScope,
+// sqladmin.CloudPlatformScope. Requiring `iam.` specifically would reject
+// call sites that are already correct. TestCloudPlatformScopeConstants pins
+// the values, which is the property the match actually stands in for.
+var fullScopeConstant = regexp.MustCompile(`\.CloudPlatformScope\b`)
+
+// TestCloudPlatformScopeConstants pins the two constant values the guard above
+// reasons about.
+//
+// That guard matches on a NAME, which is only meaningful while the name still
+// carries the value it does today. If the SDK renamed these, or gave
+// CloudPlatformScope the read-only URL, the guard would keep passing while
+// checking nothing -- the vacuous-pass failure mode. Assert the values.
+func TestCloudPlatformScopeConstants(t *testing.T) {
+	assert.Equal(t, "https://www.googleapis.com/auth/cloud-platform", iam.CloudPlatformScope,
+		"the guard treats CloudPlatformScope as the full cloud-platform scope")
+	assert.Equal(t, "https://www.googleapis.com/auth/cloud-platform", cloudresourcemanager.CloudPlatformScope,
+		"every generated package spells the full scope the same way, which is why the guard does not pin a package")
+	assert.NotEqual(t, iam.CloudPlatformScope, cloudresourcemanager.CloudPlatformReadOnlyScope,
+		"the read-only scope must stay distinguishable from the one the IAM API accepts")
+	assert.False(t, fullScopeConstant.MatchString("cloudresourcemanager.CloudPlatformReadOnlyScope"),
+		"the read-only constant must not satisfy the guard")
+	assert.False(t, fullScopeConstant.MatchString("iam.CloudPlatformScopeReadOnly"),
+		"a suffixed constant must not satisfy the guard by substring")
+	assert.True(t, fullScopeConstant.MatchString("iam.CloudPlatformScope"))
+	assert.True(t, fullScopeConstant.MatchString("sqladmin.CloudPlatformScope, iam.CloudPlatformScope"))
+}
+
 func TestIamServiceUsesFullCloudPlatformScope(t *testing.T) {
 	paths, err := filepath.Glob("*.go")
 	if err != nil {
@@ -68,7 +114,7 @@ func TestIamServiceUsesFullCloudPlatformScope(t *testing.T) {
 				if !strings.Contains(line, "conn.Client(") {
 					continue
 				}
-				if strings.Contains(line, "CloudPlatformScope") {
+				if fullScopeConstant.MatchString(line) {
 					continue
 				}
 				t.Errorf("%s: %s builds an iam.googleapis.com service from %s\n"+
