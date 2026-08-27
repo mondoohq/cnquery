@@ -9,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers/os/connection/mock"
 )
 
 func TestParseSolarisSmfServices(t *testing.T) {
@@ -258,6 +260,41 @@ uninitialized  22:01:39        svc:/test/uninit:default
 	assert.False(t, svc.Running, "uninitialized should not be running")
 	assert.False(t, svc.Enabled, "uninitialized should not be enabled")
 	assert.Equal(t, ServiceStopped, svc.State)
+}
+
+// Headerless output must not lose its first service.
+func TestParseSolarisSmfServicesHeaderless(t *testing.T) {
+	testOutput := `online         22:01:55        svc:/network/ssh:default
+disabled       22:01:40        svc:/network/telnet:default`
+
+	services := ParseSolarisSmfServices(strings.NewReader(testOutput))
+	require.Len(t, services, 2)
+
+	ssh := findServiceByName(services, "svc:/network/ssh:default")
+	require.NotNil(t, ssh, "the first service must not be swallowed as a header")
+	assert.True(t, ssh.Running)
+
+	telnet := findServiceByName(services, "svc:/network/telnet:default")
+	require.NotNil(t, telnet)
+	assert.False(t, telnet.Running)
+}
+
+// A failing or unavailable `svcs` must surface an error rather than reporting a
+// system with no services at all.
+func TestSolarisSmfManagerCommandFailure(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"svcs -a": {
+				Stderr:     "bash: svcs: command not found",
+				ExitStatus: 127,
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	svcs, err := (&SolarisSmfServiceManager{conn: conn}).List()
+	require.Error(t, err)
+	assert.Empty(t, svcs)
 }
 
 func findServiceByName(services []*Service, name string) *Service {

@@ -930,6 +930,17 @@ func TestSolaris11Detector(t *testing.T) {
 	assert.Equal(t, []string{"unix", "os"}, di.Family)
 }
 
+// uname already proves the host is SunOS, so an unreadable /etc/release must
+// still detect solaris - just without a title and version.
+func TestSolarisDetectorWithoutReleaseFile(t *testing.T) {
+	di, err := detectPlatformFromMock("./testdata/detect-solaris11-no-release.toml")
+	require.NoError(t, err, "platform is still detected without /etc/release")
+
+	assert.Equal(t, "solaris", di.Name, "os name should be identified")
+	assert.Equal(t, "i86pc", di.Arch, "os arch should be identified")
+	assert.Equal(t, []string{"unix", "os"}, di.Family)
+}
+
 func TestAix72Detector(t *testing.T) {
 	di, err := detectPlatformFromMock("./testdata/detect-aix72.toml")
 	assert.Nil(t, err, "was able to create the provider")
