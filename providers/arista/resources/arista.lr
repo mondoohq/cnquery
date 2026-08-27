@@ -977,6 +977,14 @@ private arista.eos.bgp.peer @defaults("peerAddress") {
   ebgpMultihop int
   // Peer description
   description string
+  // Peer group the session takes its settings from
+  //
+  // Empty when the session is configured on its own. A fabric is normally
+  // built by configuring the session controls once on a group and pointing
+  // every session at it, so a session with a group name here is protected by
+  // whatever that group sets even though its own lines say nothing. The
+  // controls above already report the inherited values.
+  peerGroup string
 }
 
 // Arista EOS route-map

@@ -91,6 +91,7 @@ arista.eos.bgp.peer.outboundPolicy 13.3.15
 arista.eos.bgp.peer.passwordConfigured 13.3.15
 arista.eos.bgp.peer.passwordEncryptionType 13.3.15
 arista.eos.bgp.peer.peerAddress 13.0.1
+arista.eos.bgp.peer.peerGroup 13.3.16
 arista.eos.bgp.peer.prefixesAccepted 13.0.1
 arista.eos.bgp.peer.prefixesReceived 13.0.1
 arista.eos.bgp.peer.remoteAs 13.0.1

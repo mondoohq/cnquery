@@ -1009,6 +1009,9 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 			// A peer present operationally but absent from the config we
 			// parsed keeps the zero values, which read as "no protection
 			// configured" — the same conclusion an empty setting warrants.
+			// A peer that takes its settings from a peer group is not that
+			// case: ParseBgpConfig has already folded the group's settings
+			// into the member, so conf carries what is actually in effect.
 			conf := configuredPeers[vrfName+"/"+peerAddr]
 			// The config is the better source for the policy names: it holds
 			// them even for a session that never came up.
@@ -1035,6 +1038,7 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 				"shutdown":               llx.BoolData(conf.Shutdown),
 				"updateSource":           llx.StringData(conf.UpdateSource),
 				"ebgpMultihop":           llx.IntData(int64(conf.EbgpMultihop)),
+				"peerGroup":              llx.StringData(conf.PeerGroup),
 			})
 			if err != nil {
 				return nil, err
