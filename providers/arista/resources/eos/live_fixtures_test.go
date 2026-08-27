@@ -9,13 +9,18 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/stretchr/testify/require"
 )
 
-// decodeLikeEapi mirrors exactly how goeapi decodes a command response into
-// one of the structs in this package: mapstructure with TagName "json" and
+// decodeLikeEapi mirrors how goeapi decodes a command response into one of the
+// structs in this package: mapstructure with TagName "json" and
 // WeaklyTypedInput OFF.
+//
+// goeapi imports mitchellh/mapstructure; this uses the maintained go-viper
+// fork, which this repo requires and which keeps the same type strictness.
+// That strictness is the whole point: it is what refuses a string for an
+// int64 field, and therefore what reproduces the failure a device produces.
 //
 // The distinction matters. encoding/json will happily read a JSON string into
 // a string field and a JSON number into an int64 field, and will also coerce
