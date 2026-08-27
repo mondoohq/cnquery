@@ -1071,7 +1071,7 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 			mqlPeer, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.peer", map[string]*llx.RawData{
 				"vrfName":                llx.StringData(vrfName),
 				"peerAddress":            llx.StringData(peerAddr),
-				"remoteAs":               llx.StringData(peerData.ASN),
+				"remoteAs":               llx.StringData(eos.ASNString(peerData.ASN)),
 				"state":                  llx.StringData(peerData.PeerState),
 				"uptime":                 llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
 				"prefixesReceived":       llx.IntData(peerData.PrefixReceived),
@@ -1098,7 +1098,7 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 		mqlVrf, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.vrf", map[string]*llx.RawData{
 			"name":     llx.StringData(vrfName),
 			"routerId": llx.StringData(vrfData.RouterID),
-			"asNumber": llx.StringData(strconv.FormatInt(vrfData.ASN, 10)),
+			"asNumber": llx.StringData(eos.ASNString(vrfData.ASN)),
 			"peers":    llx.ArrayData(peers, types.Resource("arista.eos.bgp.peer")),
 		})
 		if err != nil {
