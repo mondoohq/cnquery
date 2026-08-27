@@ -153,7 +153,22 @@ type mqlAristaEosSnmpCommunityInternal struct {
 }
 
 func (a *mqlAristaEosSnmpCommunity) id() (string, error) {
-	return "arista.eos.snmpCommunity/" + a.Name.Data, a.Name.Error
+	if a.Name.Error != nil {
+		return "", a.Name.Error
+	}
+	if a.Ipv6.Error != nil {
+		return "", a.Ipv6.Error
+	}
+	// One community is commonly declared twice, once per address family, to
+	// bind an IPv4 access-list and an IPv6 one. Keying on the name alone
+	// collapses the pair onto whichever was parsed first, so the second
+	// line's access-list disappears and the surviving row resolves its
+	// typed ACL in the wrong namespace.
+	family := "ipv4"
+	if a.Ipv6.Data {
+		family = "ipv6"
+	}
+	return "arista.eos.snmpCommunity/" + family + "/" + a.Name.Data, nil
 }
 
 func (a *mqlAristaEos) snmpCommunities() ([]any, error) {
