@@ -912,12 +912,22 @@ func (a *mqlAristaEosBgp) fetchConfig() *module.BgpConfig {
 	return a.bgpConfig
 }
 
+// enabled reports whether the device is running BGP: a `router bgp` block
+// exists and is not administratively shut down.
+//
+// This reads the running-config the provider already holds rather than the
+// eAPI client's own view, which derives the state by looking for a literal
+// `no shutdown` line and treats its absence as shut down. Not being shut down
+// is the default, and EOS omits defaults from the running-config, so that view
+// reports every conventionally-configured device as having BGP disabled, while
+// the sibling `vrfs` field lists established sessions on the same resource.
 func (a *mqlAristaEosBgp) enabled() (bool, error) {
-	cfg := a.fetchConfig()
-	if cfg == nil {
-		return false, nil
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return false, err
 	}
-	return cfg.Shutdown() != "true", nil
+	state := eos.ParseBlockAdminState(rc, "router bgp ")
+	return state.Configured && !state.Shutdown, nil
 }
 
 func (a *mqlAristaEosBgp) asNumber() (string, error) {
@@ -1129,12 +1139,16 @@ func (a *mqlAristaEosMlag) peerLink() (string, error) {
 	return cfg.PeerLink(), nil
 }
 
+// shutdown reports whether MLAG is administratively down. See bgp.enabled for
+// why this reads the running-config rather than the eAPI client's derived
+// state: the same inverted default reported a healthy MLAG pair as shut down
+// while domainId, peerAddress and peerLink all described a working peering.
 func (a *mqlAristaEosMlag) shutdown() (bool, error) {
-	cfg := a.fetchConfig()
-	if cfg == nil {
-		return false, nil
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return false, err
 	}
-	return cfg.Shutdown() == "true", nil
+	return eos.ParseBlockAdminState(rc, "mlag configuration").Shutdown, nil
 }
 
 func (a *mqlAristaEos) mlag() (*mqlAristaEosMlag, error) {
