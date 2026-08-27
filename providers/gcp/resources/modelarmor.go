@@ -176,7 +176,10 @@ func initGcpProjectModelArmorServiceTemplate(runtime *plugin.Runtime, args map[s
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {

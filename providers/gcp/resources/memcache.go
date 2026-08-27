@@ -82,7 +82,10 @@ func initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[str
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {

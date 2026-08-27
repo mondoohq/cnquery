@@ -1162,7 +1162,10 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {
@@ -1246,7 +1249,10 @@ func initGcpProjectVertexaiServiceEndpoint(runtime *plugin.Runtime, args map[str
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	region := vertexaiRegionFromName(name)
 	if region == "" {
@@ -1316,7 +1322,10 @@ func initGcpProjectVertexaiServicePipelineJob(runtime *plugin.Runtime, args map[
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	region := vertexaiRegionFromName(name)
 	if region == "" {
@@ -1386,7 +1395,10 @@ func initGcpProjectVertexaiServiceNotebookRuntimeTemplate(runtime *plugin.Runtim
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	region := vertexaiRegionFromName(name)
 	if region == "" {

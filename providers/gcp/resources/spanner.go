@@ -748,13 +748,19 @@ func initGcpProjectSpannerServiceInstanceConfig(runtime *plugin.Runtime, args ma
 	if !ok {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	projectIdRaw, ok := args["projectId"]
 	if !ok {
 		return args, nil, nil
 	}
-	projectId := projectIdRaw.Value.(string)
+	projectId, ok := projectIdRaw.Value.(string)
+	if !ok || projectId == "" {
+		return args, nil, nil
+	}
 
 	obj, err := CreateResource(runtime, "gcp.project.spannerService", map[string]*llx.RawData{
 		"projectId": llx.StringData(projectId),

@@ -309,7 +309,10 @@ func initGcpProjectDatastreamServiceConnectionProfile(runtime *plugin.Runtime, a
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {
@@ -535,7 +538,10 @@ func initGcpProjectDatastreamServicePrivateConnection(runtime *plugin.Runtime, a
 	if nameRaw == nil {
 		return args, nil, nil
 	}
-	name := nameRaw.Value.(string)
+	name, ok := nameRaw.Value.(string)
+	if !ok || name == "" {
+		return args, nil, nil
+	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
 	if !ok {

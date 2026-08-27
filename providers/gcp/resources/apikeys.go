@@ -290,7 +290,13 @@ func initGcpProjectApiKey(runtime *plugin.Runtime, args map[string]*llx.RawData)
 		return nil, nil, errors.New("gcp.project.apiKey requires a \"projectId\" argument")
 	}
 
-	obj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+	// NewResource, not CreateResource: CreateResource would cache a gcp.project
+	// carrying nothing but an id, and initGcpProject returns whatever is already
+	// cached -- so that husk would win for every later caller, and its name,
+	// state, parentId, labels, createTime and number are computed fields
+	// implemented as placeholders that only ever return "not implemented".
+	// servicegate.go spells out the same reasoning for the enablement lookup.
+	obj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
 		"id": args["projectId"],
 	})
 	if err != nil {

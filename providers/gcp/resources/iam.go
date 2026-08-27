@@ -177,7 +177,13 @@ func initGcpProjectIamServiceServiceAccount(runtime *plugin.Runtime, args map[st
 	// flag — constructing the iamService directly leaves the flag at its
 	// zero value, which short-circuits serviceAccounts() to nil and makes the
 	// SA lookup miss every typed-ref query.
-	projObj, err := CreateResource(runtime, "gcp.project", map[string]*llx.RawData{
+	// NewResource, not CreateResource: CreateResource would cache a gcp.project
+	// carrying nothing but an id, and initGcpProject returns whatever is already
+	// cached -- so that husk would win for every later caller, and its name,
+	// state, parentId, labels, createTime and number are computed fields
+	// implemented as placeholders that only ever return "not implemented".
+	// servicegate.go spells out the same reasoning for the enablement lookup.
+	projObj, err := NewResource(runtime, "gcp.project", map[string]*llx.RawData{
 		"id": args["projectId"],
 	})
 	if err != nil {

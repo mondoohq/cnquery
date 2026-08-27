@@ -159,23 +159,35 @@ func initGcpProjectComputeServiceRegion(runtime *plugin.Runtime, args map[string
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
-	if pid, ok := args["projectId"]; !ok || pid == nil {
-		args["projectId"] = llx.StringData(conn.ResourceID())
+	// projectId scopes the lookup but is not a field on this resource, so it has
+	// to be consumed here. Leaving it in args reaches SetAllData on any path
+	// that returns without a resource, which rejects it as an unknown field --
+	// a bare `gcp.project.computeService.region` then fails with
+	// "cannot set 'projectId' ... field not found" instead of resolving.
+	projectId := conn.ResourceID()
+	if pid := args["projectId"]; pid != nil {
+		if v, ok := pid.Value.(string); ok && v != "" {
+			projectId = v
+		}
 	}
+	delete(args, "projectId")
 
 	// When the caller passes a name, fetch the single region directly via
 	// Regions.Get rather than relying on a downstream regions() scan. This
 	// makes `NewResource("...region", {name, projectId})` cheap for typed
 	// references (e.g. instance.region()) when regions() has not been listed.
+	// Without a name there is nothing to look up. Returning an empty resource
+	// here would hand the runtime a husk whose every field is unset, which
+	// surfaces as "encountered a primitive with no type information" with
+	// nothing naming the cause; say what is missing instead.
 	nameArg, hasName := args["name"]
 	if !hasName || nameArg == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.computeService.region requires a "name" argument`)
 	}
 	name, ok := nameArg.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.computeService.region requires a non-empty "name" argument`)
 	}
-	projectId, _ := args["projectId"].Value.(string)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
 	if err != nil {
@@ -206,19 +218,28 @@ func initGcpProjectComputeServiceZone(runtime *plugin.Runtime, args map[string]*
 		return nil, nil, errors.New("invalid connection provided, it is not a GCP connection")
 	}
 
-	if pid, ok := args["projectId"]; !ok || pid == nil {
-		args["projectId"] = llx.StringData(conn.ResourceID())
+	// projectId scopes the lookup but is not a field on this resource. See
+	// initGcpProjectComputeServiceRegion for why it must not survive into args.
+	projectId := conn.ResourceID()
+	if pid := args["projectId"]; pid != nil {
+		if v, ok := pid.Value.(string); ok && v != "" {
+			projectId = v
+		}
 	}
+	delete(args, "projectId")
 
+	// Without a name there is nothing to look up. Returning an empty resource
+	// here would hand the runtime a husk whose every field is unset, which
+	// surfaces as "encountered a primitive with no type information" with
+	// nothing naming the cause; say what is missing instead.
 	nameArg, hasName := args["name"]
 	if !hasName || nameArg == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.computeService.zone requires a "name" argument`)
 	}
 	name, ok := nameArg.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.computeService.zone requires a non-empty "name" argument`)
 	}
-	projectId, _ := args["projectId"].Value.(string)
 
 	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, compute.ComputeReadonlyScope)
 	if err != nil {

@@ -1013,7 +1013,10 @@ func initGcpProjectPubsubServiceSchema(runtime *plugin.Runtime, args map[string]
 	if !ok || nameArg == nil {
 		return nil, nil, errors.New("gcp.project.pubsubService.schema requires a name")
 	}
-	fullName := nameArg.Value.(string)
+	fullName, ok := nameArg.Value.(string)
+	if !ok || fullName == "" {
+		return nil, nil, errors.New("gcp.project.pubsubService.schema requires a name")
+	}
 
 	// Schema names are always projects/{project}/schemas/{schema}.
 	parts := strings.Split(fullName, "/")
