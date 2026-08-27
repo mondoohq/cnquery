@@ -66,6 +66,30 @@ type mqlAristaEosRunningConfigInternal struct {
 	snmpParsed     atomic.Bool
 	snmpCache      *eos.SnmpConfig
 	snmpLock       sync.Mutex
+	strippedDone   atomic.Bool
+	strippedCache  string
+	strippedLock   sync.Mutex
+}
+
+// fetchStrippedContent returns the running-config with banner bodies blanked
+// out, which is what every command parser reads. Doing it here rather than in
+// each parser means a parser added later cannot forget it.
+func (a *mqlAristaEosRunningConfig) fetchStrippedContent() (string, error) {
+	if a.strippedDone.Load() {
+		return a.strippedCache, nil
+	}
+	a.strippedLock.Lock()
+	defer a.strippedLock.Unlock()
+	if a.strippedDone.Load() {
+		return a.strippedCache, nil
+	}
+	rc, err := a.fetchContent()
+	if err != nil {
+		return "", err
+	}
+	a.strippedCache = eos.StripBanners(rc)
+	a.strippedDone.Store(true)
+	return a.strippedCache, nil
 }
 
 // fetchSnmpConfig parses the SNMP configuration once per device. The users,

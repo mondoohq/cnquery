@@ -198,7 +198,10 @@ func fetchStartupConfig(runtime *plugin.Runtime) (string, error) {
 // so once the comment header and blank lines are removed a saved device
 // compares equal.
 func (a *mqlAristaEos) configSavedToStartup() (bool, error) {
-	running, err := fetchRunningConfig(a.MqlRuntime)
+	// Compares two renderings of the whole config, so it reads the raw text:
+	// a stripped banner on one side and an intact one on the other would be
+	// reported as drift.
+	running, err := fetchRawRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return false, err
 	}
