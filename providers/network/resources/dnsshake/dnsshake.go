@@ -284,14 +284,15 @@ func (d *DnsClient) QueryAuthoritative(dnsTypes ...string) (map[string]DnsRecord
 // queryNS asks for the NS records at a name, retrying across the configured
 // resolvers before reporting failure.
 //
-// queryDnsTypeAt sends one datagram to one server and reports a lost reply as a
-// failure, and the walk below reads a failure at a name as that name not being
-// a zone, so it climbs to the parent and answers with the parent's nameservers.
-// Those serve referrals rather than the records the caller wanted, which is how
-// a single dropped UDP packet turned authoritativeRecords into a silently wrong
-// answer instead of a slow one. A resolver is asked config.Attempts times, and
-// every configured resolver is asked, so reaching the walk's failure path means
-// no resolver could answer rather than that one packet went missing.
+// walkToDelegation treats a query that did not happen as a reason to stop
+// rather than to climb, because climbing would answer with whichever ancestor
+// did respond and hide the delegation below it. That is only sound if a query
+// that could have been answered was: queryDnsTypeAt sends one datagram to one
+// server and reports a lost reply as a failure, so a single dropped UDP packet
+// would otherwise end the walk and surface as an error on every field behind
+// it. A resolver is asked config.Attempts times, and every configured resolver
+// is asked, so the error means no resolver could answer rather than that one
+// packet went missing.
 //
 // Only a transport failure is retried. Any answer is the resolver having
 // answered, NXDOMAIN and a response carrying no NS records included, and what

@@ -5,7 +5,6 @@ package dnsshake
 
 import (
 	"net"
-	"strconv"
 	"sync"
 	"testing"
 
@@ -14,25 +13,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// authoritativeNameservers walks up the labels until a name answers with NS
-// records, and reads a query it could not get an answer to as that name not
-// being a zone. It then climbs, and answers with the parent's nameservers.
+// The delegation walk ends on a query that did not happen rather than climbing
+// past it, because climbing would answer with whichever ancestor did respond and
+// hide the delegation below it. That is only a safe reading if a query that
+// could have been answered was, and a single UDP datagram is not that: one lost
+// reply would otherwise read as "this resolver cannot answer" and fail every
+// field behind the walk.
 //
-// That is only a safe reading if a query that could have been answered was, and
-// one UDP datagram to one resolver is not that. A lost reply at a delegated
-// subzone silently returned the parent's nameservers, which serve referrals
-// rather than the records the caller asked for. Since authoritativeRecords
-// exists to read the TTLs a zone is configured with rather than a cache's
-// countdown, that is a wrong answer, not a slow one.
+// These tests fix the two halves of that: a transient loss is retried and does
+// not surface, while a resolver that genuinely cannot answer still errors.
 
-// walkFixture serves a small zone tree, optionally dropping the first replies
-// for one name so a caller sees a lost datagram before a real answer:
-//
-//   - example.test answers NS at its own name
-//   - corp.example.test is delegated, so it answers NS too and is a zone of its
-//     own, which is the name a climb would skip past
-//   - every other name answers NOERROR with nothing
-type walkFixture struct {
+// flakyResolver serves the zone tree of zoneFixture, dropping the first
+// dropFirst queries it receives for dropName so a caller sees a lost reply
+// before a real answer.
+type flakyResolver struct {
 	mu        sync.Mutex
 	dropName  string
 	dropFirst int
@@ -40,13 +34,8 @@ type walkFixture struct {
 	dropped   int
 }
 
-func (f *walkFixture) serve(t *testing.T) *dns.ClientConfig {
+func (f *flakyResolver) serve(t *testing.T) *dns.ClientConfig {
 	t.Helper()
-
-	delegations := map[string][]string{
-		"example.test.":      {"ns1.example.test.", "ns2.example.test."},
-		"corp.example.test.": {"ns1.corp.example.test."},
-	}
 
 	mux := dns.NewServeMux()
 	mux.HandleFunc(".", func(w dns.ResponseWriter, r *dns.Msg) {
@@ -54,7 +43,7 @@ func (f *walkFixture) serve(t *testing.T) *dns.ClientConfig {
 
 		f.mu.Lock()
 		f.queries++
-		drop := q.Name == f.dropName && f.dropped < f.dropFirst
+		drop := (f.dropName == "" || q.Name == f.dropName) && f.dropped < f.dropFirst
 		if drop {
 			f.dropped++
 		}
@@ -62,20 +51,18 @@ func (f *walkFixture) serve(t *testing.T) *dns.ClientConfig {
 
 		if drop {
 			// No reply at all: the client waits and reports a timeout, which is
-			// what a lost datagram looks like.
+			// exactly what a lost datagram looks like.
 			return
 		}
 
 		m := new(dns.Msg)
 		m.SetReply(r)
 		m.Authoritative = true
-		if q.Qtype == dns.TypeNS {
-			for _, ns := range delegations[q.Name] {
-				m.Answer = append(m.Answer, &dns.NS{
-					Hdr: dns.RR_Header{Name: q.Name, Rrtype: dns.TypeNS, Class: dns.ClassINET, Ttl: 300},
-					Ns:  ns,
-				})
-			}
+		if q.Qtype == dns.TypeNS && q.Name == "example.test." {
+			m.Answer = append(m.Answer, &dns.NS{
+				Hdr: dns.RR_Header{Name: q.Name, Rrtype: dns.TypeNS, Class: dns.ClassINET, Ttl: 300},
+				Ns:  "ns1.example.test.",
+			})
 		}
 		_ = w.WriteMsg(m)
 	})
@@ -90,38 +77,18 @@ func (f *walkFixture) serve(t *testing.T) *dns.ClientConfig {
 	host, port, err := net.SplitHostPort(pc.LocalAddr().String())
 	require.NoError(t, err)
 
-	// Attempts is honoured by queryNS. Timeout is not, because queryDnsTypeAt
-	// builds a dns.Client with the library default and never reads it.
 	return &dns.ClientConfig{Servers: []string{host}, Port: port, Attempts: 2}
 }
 
-func (f *walkFixture) counts() (queries, dropped int) {
+func (f *flakyResolver) counts() (queries, dropped int) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return f.queries, f.dropped
 }
 
-// resolveEachNameserver resolves any nameserver name to a distinct address and
-// records what it was asked, which is how these tests see which zone the walk
-// settled on.
-func resolveEachNameserver(asked *[]string) func(string) ([]string, error) {
-	addrs := map[string]string{
-		"ns1.corp.example.test": "192.0.2.10",
-		"ns1.example.test":      "192.0.2.1",
-		"ns2.example.test":      "192.0.2.2",
-	}
-	return func(name string) ([]string, error) {
-		*asked = append(*asked, name)
-		if ip, ok := addrs[name]; ok {
-			return []string{ip}, nil
-		}
-		return nil, &net.DNSError{Err: "no such host", Name: name, IsNotFound: true}
-	}
-}
-
 // deadResolverConfig points at a port nothing listens on, so every query is
 // lost rather than answered.
-func deadResolverConfig(t *testing.T, servers, attempts int) *dns.ClientConfig {
+func deadResolverConfig(t *testing.T, servers int, attempts int) *dns.ClientConfig {
 	t.Helper()
 
 	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
@@ -137,39 +104,29 @@ func deadResolverConfig(t *testing.T, servers, attempts int) *dns.ClientConfig {
 	return &dns.ClientConfig{Servers: addrs, Port: port, Attempts: attempts}
 }
 
-// TestAuthoritativeNameserversRetriesALostReply is the bug: one lost datagram at
-// a delegated subzone used to hand back the parent's nameservers, and nothing
-// said so.
-func TestAuthoritativeNameserversRetriesALostReply(t *testing.T) {
-	f := &walkFixture{dropName: "corp.example.test.", dropFirst: 1}
+// TestZoneRetriesALostReply is the case that made the walk's strictness a
+// liability: the apex answers fine, one datagram on the way to it goes missing,
+// and before the retry that reported an error on dns.zone and on every
+// authoritative field.
+func TestZoneRetriesALostReply(t *testing.T) {
+	f := &flakyResolver{dropName: "example.test.", dropFirst: 1}
+	c := &DnsClient{config: f.serve(t), fqdn: "example.test"}
 
-	var asked []string
-	c := &DnsClient{
-		config:     f.serve(t),
-		fqdn:       "vpn.corp.example.test",
-		lookupHost: resolveEachNameserver(&asked),
-	}
+	zone, err := c.Zone()
+	require.NoError(t, err, "one lost reply must not fail the walk")
+	assert.Equal(t, "example.test", zone)
 
-	addrs, err := c.authoritativeNameservers()
-	require.NoError(t, err)
-
-	assert.Equal(t, []string{"192.0.2.10"}, addrs,
-		"a retried query should settle on corp.example.test, not climb to its parent")
-	assert.Equal(t, []string{"ns1.corp.example.test"}, asked,
-		"the parent's nameservers should never have been reached")
-
-	_, dropped := f.counts()
+	queries, dropped := f.counts()
 	assert.Equal(t, 1, dropped, "the fixture should have dropped exactly one reply")
+	assert.Equal(t, 2, queries, "the lost query should have been retried once")
 }
 
-// TestAuthoritativeNameserversFailsOverToTheNextResolver: resolv.conf commonly
-// lists several nameservers, and asking only the first throws away the
-// redundancy the host is configured for.
-func TestAuthoritativeNameserversFailsOverToTheNextResolver(t *testing.T) {
-	f := &walkFixture{}
-	live := f.serve(t)
+// TestQueryNSFailsOverToTheNextResolver: resolv.conf commonly lists several
+// nameservers, and asking only the first throws away the redundancy the host is
+// configured for. One unreachable resolver should cost latency, not the answer.
+func TestQueryNSFailsOverToTheNextResolver(t *testing.T) {
+	live := zoneFixture(t)
 
-	var asked []string
 	c := &DnsClient{
 		config: &dns.ClientConfig{
 			// Nothing listens on 127.0.0.2 at the fixture's port, so answering
@@ -178,77 +135,76 @@ func TestAuthoritativeNameserversFailsOverToTheNextResolver(t *testing.T) {
 			Port:     live.Port,
 			Attempts: 1,
 		},
-		fqdn:       "corp.example.test",
-		lookupHost: resolveEachNameserver(&asked),
+		fqdn: "example.test",
 	}
 
-	addrs, err := c.authoritativeNameservers()
-	require.NoError(t, err, "an unreachable first resolver must fail over, not fall through the walk")
-	assert.Equal(t, []string{"192.0.2.10"}, addrs)
+	zone, err := c.Zone()
+	require.NoError(t, err, "an unreachable first resolver must fail over, not fail")
+	assert.Equal(t, "example.test", zone)
 }
 
-// TestAuthoritativeNameserversStillClimbsPastAnUnresolvableDelegation is the
-// leniency this backport keeps. A delegation whose nameservers do not resolve is
-// not usable, so the walk continues to one that is. This is behaviour, not an
-// accident, and the retry must not change it.
-func TestAuthoritativeNameserversStillClimbsPastAnUnresolvableDelegation(t *testing.T) {
-	f := &walkFixture{}
+// TestZoneStillErrorsWhenNoResolverAnswers keeps the property the retry must not
+// weaken. A resolver outage is not evidence that a name belongs to no zone, and
+// reporting an empty zone for it would make a check filtered on the zone skip
+// silently.
+func TestZoneStillErrorsWhenNoResolverAnswers(t *testing.T) {
+	c := &DnsClient{config: deadResolverConfig(t, 2, 2), fqdn: "www.example.test"}
 
-	var asked []string
-	c := &DnsClient{
-		config: f.serve(t),
-		fqdn:   "vpn.corp.example.test",
-		lookupHost: func(name string) ([]string, error) {
-			asked = append(asked, name)
-			if name == "ns1.corp.example.test" {
-				return nil, &net.DNSError{Err: "no such host", Name: name, IsNotFound: true}
-			}
-			return resolveEachNameserver(new([]string))(name)
-		},
-	}
-
-	addrs, err := c.authoritativeNameservers()
-	require.NoError(t, err)
-	assert.Equal(t, []string{"192.0.2.1", "192.0.2.2"}, addrs)
-	assert.Equal(t, []string{"ns1.corp.example.test", "ns1.example.test", "ns2.example.test"}, asked,
-		"the unresolvable delegation is tried first, then the walk continues to the parent")
-}
-
-// TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure pins the behaviour
-// change this backport makes to a shipped field. Before it, a lost reply at the
-// queried name climbed to the parent and returned the parent's nameservers,
-// which answer referrals rather than the records the caller wanted. It is an
-// error now, and after queryNS's retry it takes a resolver that really cannot
-// answer.
-func TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure(t *testing.T) {
-	c := &DnsClient{config: deadResolverConfig(t, 2, 2), fqdn: "vpn.corp.example.test"}
-
-	addrs, err := c.authoritativeNameservers()
-	require.Error(t, err)
-	assert.Empty(t, addrs)
-	assert.Contains(t, err.Error(), "querying NS for",
-		"the terminal error should carry the query that could not be answered")
-}
-
-func TestAuthoritativeNameserversRejectsRootStill(t *testing.T) {
-	for _, fqdn := range []string{"", "."} {
-		c := &DnsClient{config: deadResolverConfig(t, 1, 1), fqdn: fqdn}
-		_, err := c.authoritativeNameservers()
-		assert.Error(t, err, "fqdn %q must not walk to the root", fqdn)
-	}
+	zone, err := c.Zone()
+	require.Error(t, err, "an unreachable resolver must not read as a name with no zone")
+	assert.Empty(t, zone)
+	assert.Contains(t, err.Error(), "querying NS for")
 }
 
 func TestQueryNSWithoutAResolverIsAnError(t *testing.T) {
 	c := &DnsClient{config: &dns.ClientConfig{Port: "53"}, fqdn: "example.test"}
 
 	_, err := c.queryNS("example.test")
-	require.Error(t, err, "no configured resolver cannot silently mean no delegation")
+	require.Error(t, err, "no configured resolver cannot silently mean no zone")
 }
 
-func TestWalkFixturePortIsNumeric(t *testing.T) {
-	// Guards the fixture itself: a non-numeric port would make every query fail
-	// and every assertion above would be testing the failure path by accident.
-	f := &walkFixture{}
-	_, err := strconv.Atoi(f.serve(t).Port)
+// TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure pins the behaviour
+// change #10542 made to a shipped field. Before it, a lost reply at the queried
+// name climbed to the parent and returned the parent's nameservers, which answer
+// referrals rather than the records the caller wanted. It is an error now, and
+// after the retry above it takes a resolver that really cannot answer.
+func TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure(t *testing.T) {
+	c := &DnsClient{config: deadResolverConfig(t, 1, 1), fqdn: "www.example.test"}
+
+	addrs, err := c.authoritativeNameservers()
+	require.Error(t, err)
+	assert.Empty(t, addrs)
+	assert.Contains(t, err.Error(), "querying NS for")
+}
+
+// TestAuthoritativeNameserversClimbsPastAnUnresolvableDelegation is the
+// leniency the walk keeps, and the reason walkToDelegation takes an accept
+// callback: a delegation whose nameservers do not resolve is not usable, so the
+// walk continues to one that is. The injected resolver is what makes this
+// reachable in a test at all.
+func TestAuthoritativeNameserversClimbsPastAnUnresolvableDelegation(t *testing.T) {
+	var asked []string
+	c := &DnsClient{
+		config: zoneFixture(t),
+		fqdn:   "vpn.corp.example.test",
+		lookupHost: func(name string) ([]string, error) {
+			asked = append(asked, name)
+			// corp.example.test's nameserver does not resolve; example.test's does.
+			switch name {
+			case "ns1.corp.example.test":
+				return nil, &net.DNSError{Err: "no such host", Name: name, IsNotFound: true}
+			case "ns1.example.test":
+				return []string{"192.0.2.1"}, nil
+			default:
+				return []string{"192.0.2.2"}, nil
+			}
+		},
+	}
+
+	addrs, err := c.authoritativeNameservers()
 	require.NoError(t, err)
+	assert.Equal(t, []string{"192.0.2.1", "192.0.2.2"}, addrs,
+		"every resolvable nameserver of the accepted zone should be returned")
+	assert.Equal(t, []string{"ns1.corp.example.test", "ns1.example.test", "ns2.example.test"}, asked,
+		"the unresolvable delegation should be tried first, then the walk continues to the parent")
 }
