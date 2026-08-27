@@ -43,6 +43,8 @@ type BgpNeighborConfig struct {
 	// meaning no limit).
 	MaximumRoutes int
 	// Shutdown reports a neighbor configured but administratively down.
+	// Only the positive form is read, so this cannot distinguish a session
+	// that says nothing from one explicitly brought up with `no shutdown`.
 	Shutdown bool
 	// UpdateSource is the interface sourcing the session.
 	UpdateSource string
@@ -188,6 +190,15 @@ func inheritBgpGroupSettings(n, group *BgpNeighborConfig) {
 	if n.OutboundRouteMap == "" {
 		n.OutboundRouteMap = group.OutboundRouteMap
 	}
+	// Shutdown inherits one way only. `applyBgpNeighborSetting` recognizes
+	// `shutdown` but not `no shutdown` — the parser skips `no ` lines
+	// wholesale — so there is no value a member could carry that means
+	// "explicitly up", and a member that re-enables itself under a
+	// shut-down group is reported as down. That is a false "neighbor
+	// administratively down", not a missed control, so it is the safe
+	// direction to be wrong in. Teaching the parser `no ` prefixes would
+	// make Shutdown tri-state, and this branch has to become "the member
+	// said nothing" rather than "the member is not shut down".
 	if !n.Shutdown && group.Shutdown {
 		n.Shutdown = true
 	}
