@@ -2,7 +2,7 @@
 
 Rows captured from a real MikroTik CHR device through the RouterOS API, in the
 exact `map[string]string` shape an args builder is handed. See
-`providers/mikrotik/TESTING.MD` for how to refresh them.
+`providers/mikrotik/TESTING.md` for how to refresh them.
 
 Capture through the **API**, not the CLI: `/system/resource/print` pretty-prints
 `1766.6MiB` where the API returns the raw `2113929216` the provider parses, so
