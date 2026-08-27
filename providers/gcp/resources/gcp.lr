@@ -1781,7 +1781,11 @@ gcp.project.computeService.instance @defaults("name id") {
   // raw `publicKey`, and any trailing `comment`. Empty when no
   // instance-level keys are set; these grant access outside OS Login.
   instanceSshKeys() []dict
-  // Whether instance metadata 'serial-port-enable' is set to true (interactive serial console)
+  // Whether interactive serial console access is enabled on this instance
+  //
+  // Reads the instance metadata `serial-port-enable`, falling back to the
+  // project `commonInstanceMetadata` value when the instance does not set it,
+  // which is how Compute Engine itself resolves the setting.
   serialPortEnabled() bool
   // Private IPv6 google access type for the VM
   privateIpv6GoogleAccess string
