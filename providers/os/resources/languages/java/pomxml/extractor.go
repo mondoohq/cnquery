@@ -76,7 +76,7 @@ func (p *pomProject) Direct() languages.Packages {
 		if dep.isTestOrProvided() {
 			continue
 		}
-		direct = append(direct, depToPackage(dep, p.evidence))
+		direct = append(direct, p.depToPackage(dep))
 	}
 	return direct
 }
@@ -86,22 +86,41 @@ func (p *pomProject) Direct() languages.Packages {
 func (p *pomProject) Transitive() languages.Packages {
 	var all languages.Packages
 	for _, dep := range p.Dependencies {
-		all = append(all, depToPackage(dep, p.evidence))
+		all = append(all, p.depToPackage(dep))
 	}
 	return all
 }
 
-func depToPackage(dep pomDependency, evidence []string) *languages.Package {
-	name := dep.ArtifactId
-	if dep.GroupId != "" {
-		name = dep.GroupId + ":" + dep.ArtifactId
+// depToPackage renders one <dependency> as a package, resolving the ${...}
+// property references and the <dependencyManagement> version that decide what
+// the dependency's identity actually is.
+//
+// Both matter beyond tidiness. A version left as the literal "${jackson.version}"
+// produces a purl no advisory database and no package registry can match, so the
+// dependency is silently exempt from vulnerability correlation and from licence
+// lookup alike.
+func (p *pomProject) depToPackage(dep pomDependency) *languages.Package {
+	groupId := p.resolve(dep.GroupId)
+	artifactId := p.resolve(dep.ArtifactId)
+
+	version := p.resolve(dep.Version)
+	if version == "" {
+		// No <version> on the dependency: the project's <dependencyManagement>
+		// is where it is declared, which is the standard way a multi-module
+		// project states a version once.
+		version = p.resolve(p.managedVersion(dep.GroupId, dep.ArtifactId))
+	}
+
+	name := artifactId
+	if groupId != "" {
+		name = groupId + ":" + artifactId
 	}
 
 	return &languages.Package{
 		Name:         name,
-		Version:      dep.Version,
-		Purl:         java.NewPackageUrl(dep.GroupId, dep.ArtifactId, dep.Version),
-		Cpes:         java.NewCpes(dep.GroupId, dep.ArtifactId, dep.Version),
-		EvidenceList: java.NewEvidenceList(evidence),
+		Version:      version,
+		Purl:         java.NewPackageUrl(groupId, artifactId, version),
+		Cpes:         java.NewCpes(groupId, artifactId, version),
+		EvidenceList: java.NewEvidenceList(p.evidence),
 	}
 }
