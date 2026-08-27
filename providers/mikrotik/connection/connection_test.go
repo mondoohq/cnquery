@@ -177,3 +177,47 @@ func TestPrintOneOptionalPropagatesRealErrors(t *testing.T) {
 	// which would report an unread setting as an absent subsystem
 	require.Error(t, err)
 }
+
+// TestParseTLSOption pins the spellings an inventory may carry. The option
+// picks between the TLS API port and the plaintext one, and the RouterOS API
+// sends the password in its first sentence, so reading an unrecognized value
+// as "no TLS" put the device password on the wire in the clear and still
+// reported a successful scan. Only a literal "true" used to enable it, so an
+// inventory written `tls: "yes"` silently downgraded.
+func TestParseTLSOption(t *testing.T) {
+	for _, tc := range []struct {
+		in   string
+		want bool
+	}{
+		{"true", true}, {"True", true}, {"TRUE", true},
+		{"yes", true}, {"Yes", true}, {"1", true}, {"on", true}, {" true ", true},
+		{"", false}, {"false", false}, {"no", false}, {"0", false}, {"off", false},
+	} {
+		t.Run("accepts "+tc.in, func(t *testing.T) {
+			got, err := parseTLSOption(tc.in)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+// TestParseTLSOptionRejectsUnknown keeps an unrecognized value from silently
+// becoming plaintext. Failing the connection is the safe direction: the user
+// finds out, rather than getting a green scan over a cleartext session.
+func TestParseTLSOptionRejectsUnknown(t *testing.T) {
+	for _, in := range []string{"tls", "enabled", "ssl", "maybe"} {
+		_, err := parseTLSOption(in)
+		require.Error(t, err, "%q must not be read as false", in)
+		assert.Contains(t, err.Error(), "use true or false")
+	}
+}
+
+// TestRunAfterCloseDoesNotPanic covers the nil client. A panic in a provider
+// goroutine takes down the whole scan, not one query.
+func TestRunAfterCloseDoesNotPanic(t *testing.T) {
+	c := &MikrotikConnection{}
+	assert.NotPanics(t, func() {
+		_, err := c.Run("/system/resource/print")
+		assert.Error(t, err)
+	})
+}
