@@ -13,7 +13,7 @@
   "radsec-timeout": "3s300ms",
   "realm": "",
   "require-message-auth": "yes-for-request-resp",
-  "secret": "RadiusLabSecret",
+  "secret": "REDACTED",
   "service": "login",
   "status": "",
   "timeout": "1s"

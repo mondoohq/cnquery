@@ -6,6 +6,6 @@
   "dynamic": "false",
   "generate-policy": "no",
   "peer": "lab-peer",
-  "secret": "IpsecLabSecret"
+  "secret": "REDACTED"
  }
 ]

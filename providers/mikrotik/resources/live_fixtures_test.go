@@ -120,6 +120,8 @@ func TestLiveRowsDoNotPanic(t *testing.T) {
 		{"radius.json", radiusClientArgs},
 		{"ip-ipsec-proposal.json", ipsecProposalArgs},
 		{"ip-ipsec-identity.json", ipsecIdentityArgs},
+		{"interface-l2tp-server-server.json", l2tpServerArgs},
+		{"interface-sstp-server-server.json", sstpServerArgs},
 		{"system-script.json", scriptArgs},
 		{"system-logging.json", loggingRuleArgs},
 	} {

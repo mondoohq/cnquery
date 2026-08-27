@@ -9,10 +9,6 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
-// firewallID returns a stable cache key for a firewall rule. RouterOS always
-// includes its internal ".id" handle (e.g. "*5") in print replies; it is
-// unique within a menu and stable across the query.
-
 // --- ip.address ---
 
 type mqlMikrotikIpAddressInternal struct {
