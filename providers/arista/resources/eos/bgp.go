@@ -110,9 +110,16 @@ type showBgpNeighborsVrf struct {
 }
 
 type showBgpNeighborDetail struct {
-	PeerAddress      string `json:"peerAddress"`
-	Description      string `json:"description"`
-	ASN              string `json:"asn"`
+	PeerAddress string `json:"peerAddress"`
+	Description string `json:"description"`
+	// ASN varies between a number and a string across releases exactly as it
+	// does on showBgpVrf and showBgpPeer. Nothing reads it today, but an
+	// unread field still gates the decode: mapstructure fills the whole
+	// struct, so the wrong type here fails all of `show ip bgp neighbors`.
+	// That failure is quieter than the summary one, because the caller
+	// degrades to nil rather than erroring, and every peer silently loses its
+	// description and its inbound and outbound policies. Read via ASNString.
+	ASN              any    `json:"asn"`
 	InboundRouteMap  string `json:"inboundRouteMap"`
 	OutboundRouteMap string `json:"outboundRouteMap"`
 }

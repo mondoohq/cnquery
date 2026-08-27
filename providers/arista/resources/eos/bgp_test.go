@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -146,6 +147,47 @@ func TestASNString(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, ASNString(tc.in))
+		})
+	}
+}
+
+// TestBGPNeighborsDecodesEitherAsnForm covers the third ASN field, on
+// `show ip bgp neighbors`. Nothing reads it, but an unread field still gates
+// the decode: mapstructure fills the whole struct, so the wrong type fails the
+// entire command. That failure is quieter than the summary one, because
+// bgpVrfs degrades to nil instead of erroring, and every peer silently loses
+// its description and its inbound and outbound policies.
+func TestBGPNeighborsDecodesEitherAsnForm(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		asn  any
+	}{
+		{"string, as EOS 4.34 sends it", "65002"},
+		{"number, as older releases send it", float64(65002)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			payload := map[string]any{
+				"vrfs": map[string]any{
+					"default": map[string]any{
+						"peerList": []any{map[string]any{
+							"peerAddress":      "10.1.1.2",
+							"description":      "EBGP-PEER",
+							"asn":              tc.asn,
+							"inboundRouteMap":  "IMPORT",
+							"outboundRouteMap": "EXPORT",
+						}},
+					},
+				},
+			}
+			out := &showIPBgpNeighbors{}
+			dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{TagName: "json", Result: out})
+			require.NoError(t, err)
+			require.NoError(t, dec.Decode(payload), "a peer's description and policies are lost if this fails")
+
+			peer := out.VRFs["default"].PeerList[0]
+			assert.Equal(t, "65002", ASNString(peer.ASN))
+			assert.Equal(t, "EBGP-PEER", peer.Description)
+			assert.Equal(t, "IMPORT", peer.InboundRouteMap)
 		})
 	}
 }
