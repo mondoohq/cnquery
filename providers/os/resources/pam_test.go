@@ -1,25 +1,377 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package resources_test
+package resources
 
 import (
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/providers/os/resources/filesfind"
+	"go.mondoo.com/mql/utils/syncx"
 )
 
-func TestResource_Pam(t *testing.T) {
-	t.Run("with missing files", func(t *testing.T) {
-		res := x.TestQuery(t, "pam.conf.content")
-		assert.NotEmpty(t, res)
-		assert.Error(t, res[0].Data.Error, "returned an error")
+// newPamRuntimeWithFiles builds a runtime backed by a mock filesystem whose
+// files have the given contents, so the full files -> entries pipeline runs.
+func newPamRuntimeWithFiles(t *testing.T, files map[string]string) *plugin.Runtime {
+	t.Helper()
+
+	fileData := map[string]*mock.MockFileData{}
+	for path, content := range files {
+		fileData[path] = &mock.MockFileData{Path: path, Content: content}
+	}
+
+	conn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{Name: "arch", Family: []string{"arch", "linux"}},
+	}, mock.WithData(&mock.TomlData{Files: fileData}))
+	require.NoError(t, err)
+
+	return &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+}
+
+// newPamEntry builds a parsed service-entry resource directly for unit tests.
+func newPamEntry(pamType, control, module string, options []any) *mqlPamConfServiceEntry {
+	set := plugin.StateIsSet
+	return &mqlPamConfServiceEntry{
+		PamType: plugin.TValue[string]{Data: pamType, State: set},
+		Control: plugin.TValue[string]{Data: control, State: set},
+		Module:  plugin.TValue[string]{Data: module, State: set},
+		Options: plugin.TValue[[]any]{Data: options, State: set},
+	}
+}
+
+// newPamRuntime builds a runtime backed by a mock filesystem containing the
+// given files, so pam.conf.exists can be exercised for both the present and
+// absent cases without disturbing the shared LinuxMock recording.
+func newPamRuntime(t *testing.T, files ...string) *plugin.Runtime {
+	t.Helper()
+
+	fileData := map[string]*mock.MockFileData{}
+	for _, f := range files {
+		fileData[f] = &mock.MockFileData{Path: f}
+	}
+
+	conn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{Name: "arch", Family: []string{"arch", "linux"}},
+	}, mock.WithData(&mock.TomlData{Files: fileData}))
+	require.NoError(t, err)
+
+	return &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+}
+
+func TestPamConfExists(t *testing.T) {
+	t.Run("true when /etc/pam.conf is present", func(t *testing.T) {
+		pam := &mqlPamConf{MqlRuntime: newPamRuntime(t, "/etc/pam.conf")}
+		got, err := pam.exists()
+		require.NoError(t, err)
+		assert.True(t, got)
 	})
 
-	t.Run("exists is false without erroring when files are missing", func(t *testing.T) {
-		res := x.TestQuery(t, "pam.conf.exists")
-		assert.NotEmpty(t, res)
-		assert.NoError(t, res[0].Data.Error)
-		assert.Equal(t, false, res[0].Data.Value)
+	t.Run("true when the /etc/pam.d directory is present", func(t *testing.T) {
+		pam := &mqlPamConf{MqlRuntime: newPamRuntime(t, "/etc/pam.d")}
+		got, err := pam.exists()
+		require.NoError(t, err)
+		assert.True(t, got)
 	})
+
+	t.Run("false without erroring when no PAM config is present", func(t *testing.T) {
+		pam := &mqlPamConf{MqlRuntime: newPamRuntime(t)}
+		got, err := pam.exists()
+		require.NoError(t, err)
+		assert.False(t, got)
+	})
+}
+
+func TestPamConfPrefersPamDirOverPamConf(t *testing.T) {
+	// When /etc/pam.d exists, Linux-PAM ignores /etc/pam.conf entirely. Our
+	// parsing must do the same: only the pam.d files are read, and a service
+	// defined only in /etc/pam.conf must not appear.
+	findCmd := filesfind.BuildFilesFindCmd(defaultPamDir, false, "file", "", 0, "", nil, true)
+	conn, err := mock.New(0, &inventory.Asset{
+		Platform: &inventory.Platform{Name: "arch", Family: []string{"arch", "linux", "unix"}},
+	}, mock.WithData(&mock.TomlData{
+		Files: map[string]*mock.MockFileData{
+			defaultPamDir:         {Path: defaultPamDir, StatData: mock.FileInfo{Mode: os.ModeDir | 0o755}},
+			defaultPamDir + "/su": {Path: defaultPamDir + "/su", Content: "auth required pam_wheel.so use_uid\n"},
+			defaultPamConf:        {Path: defaultPamConf, Content: "login auth required pam_unix.so\n"},
+		},
+		Commands: map[string]*mock.Command{
+			findCmd: {Stdout: defaultPamDir + "/su\n"},
+		},
+	}))
+	require.NoError(t, err)
+	rt := &plugin.Runtime{Connection: conn, Resources: &syncx.Map[plugin.Resource]{}}
+
+	pam := &mqlPamConf{MqlRuntime: rt}
+
+	files := pam.GetFiles()
+	require.NoError(t, files.Error)
+	paths := make([]string, 0, len(files.Data))
+	for _, f := range files.Data {
+		paths = append(paths, f.(*mqlFile).Path.Data)
+	}
+	assert.Equal(t, []string{defaultPamDir + "/su"}, paths,
+		"only /etc/pam.d files are read; /etc/pam.conf is ignored")
+
+	entries := pam.GetEntries()
+	require.NoError(t, entries.Error)
+	_, hasPamDirService := entries.Data[defaultPamDir+"/su"]
+	assert.True(t, hasPamDirService, "the pam.d service is parsed")
+	_, hasPamConfService := entries.Data["login"]
+	assert.False(t, hasPamConfService,
+		"the /etc/pam.conf service must not be parsed while /etc/pam.d exists")
+}
+
+func TestPamConfServiceModules(t *testing.T) {
+	svc := &mqlPamConfService{
+		MqlRuntime: newPamRuntime(t),
+		Name:       plugin.TValue[string]{Data: "su", State: plugin.StateIsSet},
+		Entries: plugin.TValue[[]any]{Data: []any{
+			newPamEntry("auth", "required", "pam_wheel.so", []any{"use_uid", "group=sugroup"}),
+			newPamEntry("auth", "required", "pam_unix.so", []any{}),
+		}, State: plugin.StateIsSet},
+	}
+
+	mods, err := svc.modules()
+	require.NoError(t, err)
+
+	wheel, ok := mods["pam_wheel"].(*mqlPamModule)
+	require.True(t, ok, "pam_wheel keyed by canonical name (no .so)")
+	assert.True(t, wheel.Enabled.Data)
+	assert.Equal(t, "sugroup", wheel.Params.Data["group"])
+	assert.Equal(t, "", wheel.Params.Data["use_uid"], "bare flag present as empty string")
+	// Scoped cache key so a per-service module never collides with the global
+	// pam.module aggregation across all services.
+	assert.Equal(t, "pam.module/su/pam_wheel", wheel.__id)
+
+	_, hasUnix := mods["pam_unix"]
+	assert.True(t, hasUnix)
+}
+
+func TestPamConfServiceMissing(t *testing.T) {
+	// No PAM configuration on the host: the service resolves to an empty husk
+	// rather than erroring, so audits guarded by pam.conf.exists stay clean.
+	args, res, err := initPamConfService(newPamRuntime(t), map[string]*llx.RawData{
+		"name": llx.StringData("su"),
+	})
+	require.NoError(t, err)
+	require.Nil(t, res)
+	assert.Equal(t, "su", args["name"].Value)
+	assert.Equal(t, "", args["path"].Value)
+	assert.Empty(t, args["entries"].Value)
+}
+
+func TestPamConfSingleFile(t *testing.T) {
+	// Legacy single-file /etc/pam.conf: every line is prefixed with the
+	// service name. With no /etc/pam.d directory present, files() falls back
+	// to this file and entries() must split off the service column.
+	content := strings.Join([]string{
+		"# legacy single-file pam.conf",
+		"su    auth required pam_wheel.so use_uid group=sugroup",
+		"su    auth required pam_unix.so",
+		"sshd  auth required pam_unix.so",
+		"",
+	}, "\n")
+	rt := newPamRuntimeWithFiles(t, map[string]string{"/etc/pam.conf": content})
+
+	pam := &mqlPamConf{MqlRuntime: rt}
+	entries := pam.GetEntries()
+	require.NoError(t, entries.Error)
+
+	// Keyed by service name (not the file path), one service per first column.
+	suList, ok := entries.Data["su"].([]any)
+	require.True(t, ok, "entries keyed by service name 'su'")
+	assert.Len(t, suList, 2)
+	_, hasSshd := entries.Data["sshd"]
+	assert.True(t, hasSshd)
+	assert.Equal(t, "auth", suList[0].(*mqlPamConfServiceEntry).PamType.Data,
+		"service column stripped, not misparsed as pamType")
+
+	// pam.conf.service resolves the single-file service and reports the
+	// source file as its path. Run the init hook (as the executor does) then
+	// create from the resolved args.
+	args, _, err := initPamConfService(rt, map[string]*llx.RawData{
+		"name": llx.StringData("su"),
+	})
+	require.NoError(t, err)
+	res, err := CreateResource(rt, "pam.conf.service", args)
+	require.NoError(t, err)
+	svc := res.(*mqlPamConfService)
+	assert.Equal(t, "/etc/pam.conf", svc.GetPath().Data)
+
+	mods := svc.GetModules()
+	require.NoError(t, mods.Error)
+	wheel, ok := mods.Data["pam_wheel"].(*mqlPamModule)
+	require.True(t, ok)
+	assert.True(t, wheel.Enabled.Data)
+	assert.Equal(t, "sugroup", wheel.Params.Data["group"])
+	assert.Equal(t, "", wheel.Params.Data["use_uid"])
+}
+
+func TestPamConfSkipsMalformedLine(t *testing.T) {
+	// A single malformed line (too few fields for pam.ParseLine to accept)
+	// must not abort parsing of the whole configuration. The bad line is
+	// skipped and the valid entries around it are still returned, matching how
+	// the other config parsers in this package (modprobe, rsyslog) behave.
+	content := strings.Join([]string{
+		"su auth required pam_env.so",
+		"su auth required", // malformed: only two fields after the service column
+		"su account required pam_permit.so",
+		"",
+	}, "\n")
+	rt := newPamRuntimeWithFiles(t, map[string]string{"/etc/pam.conf": content})
+
+	pam := &mqlPamConf{MqlRuntime: rt}
+	entries := pam.GetEntries()
+	require.NoError(t, entries.Error, "malformed line must not fail the whole parse")
+
+	suList, ok := entries.Data["su"].([]any)
+	require.True(t, ok, "expected entries for service 'su'")
+	require.Len(t, suList, 2, "the two valid lines survive; the malformed one is skipped")
+
+	modules := []string{
+		suList[0].(*mqlPamConfServiceEntry).Module.Data,
+		suList[1].(*mqlPamConfServiceEntry).Module.Data,
+	}
+	assert.ElementsMatch(t, []string{"pam_env.so", "pam_permit.so"}, modules)
+}
+
+func TestPamConfServiceEntryParams(t *testing.T) {
+	se := &mqlPamConfServiceEntry{}
+
+	t.Run("key=value and bare flags", func(t *testing.T) {
+		got, err := se.params([]any{"use_uid", "group=wheel"})
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"use_uid": "", "group": "wheel"}, got)
+	})
+
+	t.Run("duplicate keys: last occurrence wins", func(t *testing.T) {
+		got, err := se.params([]any{"group=wheel", "group=admin"})
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{"group": "admin"}, got)
+	})
+
+	t.Run("no options yields an empty map", func(t *testing.T) {
+		got, err := se.params([]any{})
+		require.NoError(t, err)
+		assert.Equal(t, map[string]any{}, got)
+	})
+}
+
+func TestCanonicalizePamModuleName(t *testing.T) {
+	cases := []struct {
+		in       string
+		expected string
+	}{
+		{"pam_unix.so", "pam_unix"},
+		{"/lib/security/pam_faillock.so", "pam_faillock"},
+		{"pam_unix", "pam_unix"},
+		{"/lib64/security/pam_pwquality.so", "pam_pwquality"},
+		{"", ""},
+		{"pam_faillock", "pam_faillock"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			assert.Equal(t, tc.expected, canonicalizePamModuleName(tc.in))
+		})
+	}
+}
+
+func TestAggregatePamParams(t *testing.T) {
+	t.Run("single entry simple key=value", func(t *testing.T) {
+		got := aggregatePamParams([]any{"deny=5"})
+		assert.Equal(t, map[string]any{"deny": "5"}, got)
+	})
+
+	t.Run("last-write-wins across entries", func(t *testing.T) {
+		got := aggregatePamParams(
+			[]any{"deny=3"},
+			[]any{"deny=5"},
+		)
+		assert.Equal(t, map[string]any{"deny": "5"}, got)
+	})
+
+	t.Run("bare option recorded as existence marker", func(t *testing.T) {
+		got := aggregatePamParams([]any{"use_authtok"})
+		assert.Equal(t, map[string]any{"use_authtok": ""}, got)
+	})
+
+	t.Run("mixed bare and key=value", func(t *testing.T) {
+		got := aggregatePamParams([]any{"use_authtok", "deny=5", "unlock_time=900"})
+		assert.Equal(t, map[string]any{
+			"use_authtok": "",
+			"deny":        "5",
+			"unlock_time": "900",
+		}, got)
+	})
+
+	t.Run("case-normalized keys", func(t *testing.T) {
+		got := aggregatePamParams([]any{"Deny=5"})
+		assert.Equal(t, map[string]any{"deny": "5"}, got)
+	})
+
+	t.Run("empty input produces empty map", func(t *testing.T) {
+		got := aggregatePamParams()
+		assert.Equal(t, map[string]any{}, got)
+	})
+
+	t.Run("value contains equals sign is preserved", func(t *testing.T) {
+		// Bracketed forms like `default=die` aren't options — they live in
+		// the control column — but if a value itself contains an `=`, we
+		// keep everything after the first `=` as the value.
+		got := aggregatePamParams([]any{"group=admin,wheel"})
+		assert.Equal(t, map[string]any{"group": "admin,wheel"}, got)
+	})
+
+	t.Run("multi-list aggregation in order", func(t *testing.T) {
+		got := aggregatePamParams(
+			[]any{"unlock_time=600", "deny=3"},
+			[]any{"deny=5", "even_deny_root"},
+		)
+		assert.Equal(t, map[string]any{
+			"unlock_time":    "600",
+			"deny":           "5",
+			"even_deny_root": "",
+		}, got)
+	})
+}
+
+func TestIsPamControlEnabled(t *testing.T) {
+	cases := []struct {
+		control  string
+		expected bool
+	}{
+		{"required", true},
+		{"requisite", true},
+		{"sufficient", true},
+		{"optional", true},
+		{"substack", true},
+		{"include", true},
+		{"[success=1 default=ignore]", false},
+		{"[default=ignore]", false},
+		{"[default=skip]", false},
+		{"[default=die]", true},
+		{"[success=ok default=bad]", true},
+		{"", false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.control, func(t *testing.T) {
+			assert.Equal(t, tc.expected, isPamControlEnabled(tc.control))
+		})
+	}
 }

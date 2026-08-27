@@ -1,264 +1,185 @@
 // Copyright Mondoo, Inc. 2024, 2026
 // SPDX-License-Identifier: BUSL-1.1
 
-package resources_test
+package resources
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
-	"go.mondoo.com/mql/providers-sdk/v1/testutils"
-	"go.mondoo.com/mql/providers/os/resources"
+	"go.mondoo.com/mql/providers/os/connection/mock"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	sshcat "go.mondoo.com/mql/providers/os/connection/ssh/cat"
 	"go.mondoo.com/mql/utils/syncx"
 )
 
-const passwdContent = `root:x:0:0::/root:/bin/bash
-bin:x:1:1::/:/usr/bin/nologin
-daemon:x:2:2::/:/usr/bin/nologin
-mail:x:8:12::/var/spool/mail:/usr/bin/nologin
-`
-
-func TestResource_File(t *testing.T) {
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			Code:        "file('/etc/passwd').exists",
-			ResultIndex: 0, Expectation: true,
-		},
-		{
-			Code:        "file('/etc/passwd').basename",
-			ResultIndex: 0, Expectation: "passwd",
-		},
-		{
-			Code:        "file('/etc/passwd').dirname",
-			ResultIndex: 0, Expectation: "/etc",
-		},
-		{
-			Code:        "file('/etc/passwd').size",
-			ResultIndex: 0, Expectation: int64(len(passwdContent)),
-		},
-		{
-			Code:        "file('/etc/passwd').permissions.mode",
-			ResultIndex: 0, Expectation: int64(420),
-		},
-		{
-			Code:        "file('/etc/passwd').content",
-			ResultIndex: 0, Expectation: passwdContent,
-		},
-	})
+type fileCommandWrapper struct {
+	commandRunner sshcat.CommandRunner
+	sudo          *inventory.Sudo
+	commands      []string
 }
 
-func TestResource_File_NotExist(t *testing.T) {
-	x.TestSimple(t, []testutils.SimpleTest{
-		{
-			Code:        "file('Nope').exists",
-			ResultIndex: 0, Expectation: false,
-		},
-		{
-			Code:        "file('Nope').content",
-			ResultIndex: 0, Expectation: nil,
-		},
-		{
-			Code:        "file('Nope').content == 'x'",
-			ResultIndex: 0, Expectation: nil,
-		},
-		{
-			Code:        "file('Nope').size > 0",
-			ResultIndex: 0, Expectation: nil,
-		},
-		{
-			Code:        "file('Nope').permissions.mode == 420",
-			ResultIndex: 0, Expectation: nil,
-		},
-		{
-			Code:        "file('Nope').user.name == 'root'",
-			ResultIndex: 0, Expectation: nil,
-		},
-		{
-			Code:        "file('Nope').group.name == 'root'",
-			ResultIndex: 0, Expectation: nil,
-		},
-	})
+func (cw *fileCommandWrapper) RunCommand(command string) (*shared.Command, error) {
+	cmd := shared.BuildSudoCommand(cw.sudo, command)
+	cw.commands = append(cw.commands, cmd)
+	return cw.commandRunner.RunCommand(cmd)
 }
 
-func TestResource_File_Permissions(t *testing.T) {
-	testCases := []struct {
-		mode            int64
-		userReadable    bool
-		userWriteable   bool
-		userExecutable  bool
-		groupReadable   bool
-		groupWriteable  bool
-		groupExecutable bool
-		otherReadable   bool
-		otherWriteable  bool
-		otherExecutable bool
-		suid            bool
-		sgid            bool
-		sticky          bool
-		isDir           bool
-		isFile          bool
-		isSymlink       bool
+type sudoCatConnection struct {
+	asset  *inventory.Asset
+	runner *fileCommandWrapper
+	fs     afero.Fs
+}
 
-		focus      bool
-		expectedID string
-	}{
-		{
-			mode:            0o755,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: true,
-			isFile:          true,
+func newSudoCatConnection(t *testing.T) *sudoCatConnection {
+	t.Helper()
 
-			expectedID: "-rwxr-xr-x",
-		},
-		{
-			mode:            0o755,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: true,
-			isFile:          true,
-			suid:            true,
+	fixturePath, err := filepath.Abs("../connection/ssh/cat/testdata/cat.toml")
+	require.NoError(t, err)
 
-			expectedID: "-rwsr-xr-x",
-		},
-		{
-			mode:            0o655,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  false,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: true,
-			isFile:          true,
-			suid:            true,
-
-			expectedID: "-rwSr-xr-x",
-		},
-		{
-			mode:            0o755,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: true,
-			isDir:           true,
-
-			expectedID: "drwxr-xr-x",
-		},
-		{
-			mode:            0o755,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: true,
-			isDir:           true,
-			sticky:          true,
-
-			expectedID: "drwxr-xr-t",
-		},
-		{
-			mode:            0o754,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: false,
-			isDir:           true,
-			sticky:          true,
-
-			expectedID: "drwxr-xr-T",
-		},
-		{
-			mode:            0o755,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: true,
-			isFile:          true,
-			sgid:            true,
-			focus:           true,
-			expectedID:      "-rwxr-sr-x",
-		},
-		{
-			mode:            0o754,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: false,
-			otherReadable:   true,
-			otherExecutable: true,
-			isFile:          true,
-			sgid:            true,
-
-			expectedID: "-rwxr-Sr-x",
-		},
-		{
-			mode:            0o755,
-			userReadable:    true,
-			userWriteable:   true,
-			userExecutable:  true,
-			groupReadable:   true,
-			groupExecutable: true,
-			otherReadable:   true,
-			otherExecutable: true,
-			isSymlink:       true,
-
-			expectedID: "lrwxr-xr-x",
+	asset := &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:    "ubuntu",
+			Version: "22.04",
+			Family:  []string{"ubuntu", "linux"},
 		},
 	}
+	mockConn, err := mock.New(0, asset, mock.WithPath(fixturePath))
+	require.NoError(t, err)
 
-	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
+	flags := map[string]*llx.Primitive{
+		"sudo": llx.BoolPrimitive(true),
+	}
+	runner := &fileCommandWrapper{
+		commandRunner: mockConn,
+		sudo:          shared.ParseSudo(flags),
+	}
 
-	for _, tc := range testCases {
-		if !tc.focus {
-			continue
+	return &sudoCatConnection{
+		asset:  asset,
+		runner: runner,
+		fs:     sshcat.New(runner),
+	}
+}
+
+func (c *sudoCatConnection) ID() uint32                         { return 0 }
+func (c *sudoCatConnection) ParentID() uint32                   { return 0 }
+func (c *sudoCatConnection) Name() string                       { return "sudo-cat-test" }
+func (c *sudoCatConnection) Type() shared.ConnectionType        { return shared.Type_SSH }
+func (c *sudoCatConnection) Asset() *inventory.Asset            { return c.asset }
+func (c *sudoCatConnection) UpdateAsset(asset *inventory.Asset) { c.asset = asset }
+func (c *sudoCatConnection) Capabilities() shared.Capabilities {
+	return shared.Capability_File | shared.Capability_RunCommand
+}
+func (c *sudoCatConnection) RunCommand(command string) (*shared.Command, error) {
+	return c.runner.RunCommand(command)
+}
+func (c *sudoCatConnection) FileSystem() afero.Fs { return c.fs }
+func (c *sudoCatConnection) FileInfo(path string) (shared.FileInfoDetails, error) {
+	stat, err := (&afero.Afero{Fs: c.fs}).Stat(path)
+	if err != nil {
+		return shared.FileInfoDetails{}, err
+	}
+	sysStat, ok := stat.Sys().(*shared.FileInfo)
+	if !ok {
+		return shared.FileInfoDetails{}, errors.New("unexpected stat type")
+	}
+
+	return shared.FileInfoDetails{
+		Mode: shared.FileModeDetails{FileMode: stat.Mode()},
+		Size: stat.Size(),
+		Uid:  sysStat.Uid,
+		Gid:  sysStat.Gid,
+	}, nil
+}
+
+func TestFileExistsSharesStatMetadataLoad(t *testing.T) {
+	conn := newSudoCatConnection(t)
+	runtime := &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+
+	raw, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+		"path": llx.StringData("/etc/ssh/sshd_config"),
+	})
+	require.NoError(t, err)
+
+	file := raw.(*mqlFile)
+	exists := file.GetExists()
+	require.NoError(t, exists.Error)
+	require.True(t, exists.Data)
+
+	permissions := file.GetPermissions()
+	require.NoError(t, permissions.Error)
+
+	size := file.GetSize()
+	require.NoError(t, size.Error)
+
+	assert.Equal(t, 1, countRecordedCommands(conn.runner.commands, "sudo uname -s"))
+	assert.Equal(t, 1, countRecordedCommands(conn.runner.commands, `sudo sh -c 'SL=0; test -L "$1" && SL=1; test -e "$1" -o $SL -eq 1 || exit 1; r=$(stat -L "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null) && printf "%s\n" "$r" || { [ -n "$r" ] && printf "%s\n" "$r" || stat "$1" -c "$SL.%s.%f.%u.%g.%X.%Y.%C" 2>/dev/null; }' _ /etc/ssh/sshd_config`))
+}
+
+func countRecordedCommands(commands []string, target string) int {
+	count := 0
+	for _, command := range commands {
+		if command == target {
+			count++
 		}
-
-		permRaw, err := resources.CreateResource(
-			runtime,
-			"file.permissions",
-			map[string]*llx.RawData{
-				"mode":             llx.IntData(int64(tc.mode)),
-				"user_readable":    llx.BoolData(tc.userReadable),
-				"user_writeable":   llx.BoolData(tc.userWriteable),
-				"user_executable":  llx.BoolData(tc.userExecutable),
-				"group_readable":   llx.BoolData(tc.groupReadable),
-				"group_writeable":  llx.BoolData(tc.groupWriteable),
-				"group_executable": llx.BoolData(tc.groupExecutable),
-				"other_readable":   llx.BoolData(tc.otherReadable),
-				"other_writeable":  llx.BoolData(tc.otherWriteable),
-				"other_executable": llx.BoolData(tc.otherExecutable),
-				"suid":             llx.BoolData(tc.suid),
-				"sgid":             llx.BoolData(tc.sgid),
-				"sticky":           llx.BoolData(tc.sticky),
-				"isDirectory":      llx.BoolData(tc.isDir),
-				"isFile":           llx.BoolData(tc.isFile),
-				"isSymlink":        llx.BoolData(tc.isSymlink),
-			},
-		)
-		require.NoError(t, err)
-		require.Equal(t, tc.expectedID, permRaw.MqlID())
 	}
+	return count
+}
+
+// A file that exists but is owned by a uid/gid with no passwd/group entry
+// (common on minimal containers, or files left by a deleted user) must resolve
+// file.user / file.group to null and fail cleanly, rather than erroring the
+// whole check with "cannot find user for uid N".
+func TestFileOwnership_UnknownUidGid(t *testing.T) {
+	fixturePath, err := filepath.Abs("testdata/file_orphan_owner.toml")
+	require.NoError(t, err)
+
+	asset := &inventory.Asset{
+		Platform: &inventory.Platform{
+			Name:   "centos",
+			Family: []string{"linux", "unix"},
+		},
+	}
+	conn, err := mock.New(0, asset, mock.WithPath(fixturePath))
+	require.NoError(t, err)
+
+	runtime := &plugin.Runtime{
+		Connection: conn,
+		Resources:  &syncx.Map[plugin.Resource]{},
+	}
+
+	raw, err := CreateResource(runtime, "file", map[string]*llx.RawData{
+		"path": llx.StringData("/orphan"),
+	})
+	require.NoError(t, err)
+
+	file := raw.(*mqlFile)
+	// Simulate an existing file owned by a uid/gid that is not in passwd/group.
+	file.Exists = plugin.TValue[bool]{Data: true, State: plugin.StateIsSet}
+	file.statInfo = &shared.FileInfoDetails{
+		Mode: shared.FileModeDetails{FileMode: os.FileMode(0o644)},
+		Size: 10,
+		Uid:  4242,
+		Gid:  4242,
+	}
+
+	user := file.GetUser()
+	require.NoError(t, user.Error, "file.user must not error for an unknown uid")
+	assert.True(t, user.State&plugin.StateIsNull != 0, "file.user should be null for an unknown uid")
+
+	group := file.GetGroup()
+	require.NoError(t, group.Error, "file.group must not error for an unknown gid")
+	assert.True(t, group.State&plugin.StateIsNull != 0, "file.group should be null for an unknown gid")
 }

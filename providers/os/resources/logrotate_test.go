@@ -11,12 +11,11 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
-// Entry sub-resources are reachable through their singular accessor with no
-// arguments. The runtime then builds the resource with `file` unset, so id()
-// runs against a nil *mqlFile. It must report that, not dereference it.
-func TestLimitsEntryID(t *testing.T) {
+// A bare `logrotate.entry` leaves `file` unset, so id() must report the missing
+// file rather than dereferencing a nil *mqlFile.
+func TestLogrotateEntryID(t *testing.T) {
 	t.Run("missing file", func(t *testing.T) {
-		id, err := (&mqlLimitsEntry{}).id()
+		id, err := (&mqlLogrotateEntry{}).id()
 		require.Error(t, err)
 		assert.Empty(t, id)
 		assert.Contains(t, err.Error(), "missing file")
@@ -24,17 +23,19 @@ func TestLimitsEntryID(t *testing.T) {
 
 	t.Run("with file", func(t *testing.T) {
 		f := &mqlFile{}
-		f.Path.Data = "/etc/security/limits.conf"
+		f.Path.Data = "/etc/logrotate.conf"
 		f.Path.State = plugin.StateIsSet
 
-		e := &mqlLimitsEntry{}
+		e := &mqlLogrotateEntry{}
 		e.File.Data = f
 		e.File.State = plugin.StateIsSet
-		e.LineNumber.Data = 42
+		e.LineNumber.Data = 7
 		e.LineNumber.State = plugin.StateIsSet
+		e.Path.Data = "/var/log/syslog"
+		e.Path.State = plugin.StateIsSet
 
 		id, err := e.id()
 		require.NoError(t, err)
-		assert.Equal(t, "/etc/security/limits.conf:42", id)
+		assert.Equal(t, "/etc/logrotate.conf:7:/var/log/syslog", id)
 	})
 }
