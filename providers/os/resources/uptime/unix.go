@@ -24,7 +24,13 @@ import (
 // Solaris pluralizes with a parenthesized suffix instead of a bare "s",
 // printing "up 26 min(s)" and "up 5 day(s), 21:03", so each unit accepts
 // that spelling too.
-var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:\s*(\d+)\s(day(?:s|\(s\))?),)*(?:\s*(\d+)\s(hr(?:s|\(s\))?),)*(?:\s*(\d+)\s(min(?:s|\(s\))?),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)
+//
+// The separator after a unit is optional. GNU coreutils ships its own
+// `uptime`, which openSUSE Leap installs instead of the procps one, and it
+// prints "up 1 day 10:51," with no comma after the day count. Requiring the
+// comma made the whole line unparseable, so os.uptime read null on every
+// openSUSE Leap host.
+var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:\s*(\d+)\s(day(?:s|\(s\))?),?)*(?:\s*(\d+)\s(hr(?:s|\(s\))?),?)*(?:\s*(\d+)\s(min(?:s|\(s\))?),?)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)
 
 type UnixUptimeResult struct {
 	Duration           int64

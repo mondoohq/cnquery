@@ -84,3 +84,40 @@ func TestUptimeOnLinux_ReportsBothFailures(t *testing.T) {
 	assert.Contains(t, err.Error(), "uptime exited 127")
 	assert.Contains(t, err.Error(), "/proc/uptime")
 }
+
+// openSUSE Leap installs GNU coreutils' `uptime`, not the procps one. It
+// prints the day count with no comma after it -- "up 1 day 10:51," where
+// procps prints "up 1 day, 10:53," -- which the parser rejected outright, so
+// os.uptime read null on every openSUSE Leap host even though the command was
+// right there and working.
+func TestParseUnixUptime_CoreutilsNoCommaAfterDays(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		line string
+		want time.Duration
+	}{
+		{
+			// coreutils 8.32, openSUSE Leap 15.6
+			name: "coreutils leap",
+			line: " 16:31:12  up 1 day 10:51,  0 users,  load average: 0.05, 0.10, 0.19",
+			want: 34*time.Hour + 51*time.Minute,
+		},
+		{
+			name: "coreutils several days",
+			line: " 09:02:11  up 12 days 3:07,  2 users,  load average: 0.00, 0.01, 0.05",
+			want: 12*24*time.Hour + 3*time.Hour + 7*time.Minute,
+		},
+		{
+			// procps-ng, ubuntu 24.04 -- unchanged
+			name: "procps",
+			line: " 16:32:48 up 1 day, 10:53,  0 user,  load average: 0.13, 0.11, 0.18",
+			want: 34*time.Hour + 53*time.Minute,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := uptime.ParseUnixUptime(tc.line)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, time.Duration(res.Duration))
+		})
+	}
+}
