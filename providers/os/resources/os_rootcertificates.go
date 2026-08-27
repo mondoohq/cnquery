@@ -55,7 +55,11 @@ func initOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDat
 		return nil, nil, errors.New("root certificates are not unsupported on this platform: " + platform.Name + " " + platform.Version)
 	}
 
-	// search the first file that exists, it mimics the behavior go is doing
+	// Take the first bundle that exists, which is what Go's own root pool does.
+	// Collecting every path that exists instead would count one bundle several
+	// times over: on RHEL 9 all three of /etc/pki/tls/certs/ca-bundle.crt,
+	// /etc/ssl/cert.pem and /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+	// are the same 146 certificates, two of them by symlink.
 	files := []any{}
 	for i := range paths {
 		f, err := CreateResource(runtime, "file", map[string]*llx.RawData{
@@ -67,19 +71,26 @@ func initOsRootCertificates(runtime *plugin.Runtime, args map[string]*llx.RawDat
 
 		file := f.(*mqlFile)
 		if !file.GetExists().Data {
-			log.Trace().Err(err).Str("path", paths[i]).Msg("os.rootcertificates> file does not exist")
+			log.Trace().Str("path", paths[i]).Msg("os.rootcertificates> file does not exist")
 			continue
 		}
 		perm := file.GetPermissions()
 		if perm.Error != nil {
-			log.Trace().Err(err).Str("path", paths[i]).Msg("os.rootcertificates> failed to get permissions")
+			log.Trace().Err(perm.Error).Str("path", paths[i]).Msg("os.rootcertificates> failed to get permissions")
 			continue
 		}
-		if !perm.Data.GetIsFile().Data {
+		// A directory is not a bundle. Anything else is: the permissions come
+		// from an lstat, so the canonical bundle path being a symlink -- which
+		// it is on every SUSE, where /etc/ssl/ca-bundle.pem points into
+		// /var/lib/ca-certificates -- must not be mistaken for "not a file".
+		// Requiring isFile reported zero trusted roots on all of SLES 12, 15
+		// and 16 and openSUSE Leap, which reads as a host that trusts nothing.
+		if perm.Data.GetIsDirectory().Data {
 			continue
 		}
 
 		files = append(files, file)
+		break
 	}
 
 	args["files"] = llx.ArrayData(files, types.Resource("file"))
@@ -95,7 +106,11 @@ func (s *mqlOsRootCertificates) content(files []any) ([]any, error) {
 
 		content := file.GetContent()
 		if content.Error != nil {
-			return nil, content.Error
+			// a bundle we cannot read is one bundle's worth of certificates
+			// missing, not a reason to report none at all
+			log.Warn().Err(content.Error).Str("path", file.Path.Data).
+				Msg("os.rootcertificates> could not read certificate bundle")
+			continue
 		}
 		contents = append(contents, content.Data)
 	}
