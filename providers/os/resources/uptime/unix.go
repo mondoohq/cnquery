@@ -6,6 +6,7 @@ package uptime
 import (
 	"fmt"
 	"io"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -246,7 +247,9 @@ func ParseProcUptime(content string) (time.Duration, error) {
 		return 0, fmt.Errorf("could not parse %s: negative uptime %v", procUptimePath, seconds)
 	}
 
-	return time.Duration(seconds * float64(time.Second)), nil
+	// round rather than truncate: the float product of a long uptime and 1e9
+	// is not exact, so truncating drops a sub-nanosecond sliver
+	return time.Duration(math.Round(seconds * float64(time.Second))), nil
 }
 
 func (s *Unix) parse(r io.Reader) (*UnixUptimeResult, error) {
