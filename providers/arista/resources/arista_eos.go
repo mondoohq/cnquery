@@ -215,7 +215,8 @@ func (a *mqlAristaEosUser) locked() (bool, error) {
 		return false, a.Sshkey.Error
 	}
 
-	hasNoPassword := a.Nopassword.Data == "nopassword"
+	// The field carries the string "true" or "false", not the keyword itself.
+	hasNoPassword := a.Nopassword.Data == "true"
 	hasSecret := a.Secret.Data != ""
 	hasSSHKey := a.Sshkey.Data != ""
 
