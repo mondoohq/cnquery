@@ -264,7 +264,28 @@ message Package {
   // SPDX license expression (or upstream-reported license string).
   // Empty when the backend has no source for it (e.g. Windows registry
   // — DisplayName carries no license field).
-  string license = 26;
+  //
+  // Deprecated: use 'licenses' (field 31) instead. One string cannot say
+  // whether a license was declared by the package or concluded from the files
+  // it ships, and those two disagreeing is the case a compliance document
+  // exists to surface. It cannot carry more than one license, a confidence, or
+  // the file a conclusion was read from either.
+  //
+  // Still read, and still the only source for most producers. Every renderer
+  // falls back to this field when 'licenses' is empty, so a producer that has
+  // not adopted the list renders exactly as it did before and nothing breaks on
+  // the version that introduces this marker.
+  //
+  // Note what is NOT enforced: nothing populates this field from 'licenses'. A
+  // producer that adopts the list is responsible for continuing to set this
+  // scalar to its first declared entry, or consumers still reading the scalar
+  // will silently see an empty license where one was determined. That is a
+  // convention, not a guarantee the model makes.
+  //
+  // The deprecation says which field new code should read, not that this one
+  // has stopped working. It will not be removed while unmigrated producers
+  // remain.
+  string license = 26 [deprecated = true];
   // Time the package was installed on this asset, RFC3339 format
   // (e.g. "2024-03-15T00:00:00Z"). Empty when the backend doesn't
   // surface install time (dpkg without log parsing, apk, pacman,
@@ -287,6 +308,67 @@ message Package {
   // manifest records them (npm today), empty otherwise. Rendered as CycloneDX
   // `component.hashes` / SPDX package checksums — tamper-evidence.
   repeated Hash hashes = 30;
+  // 'licenses' is what is known about this package's licensing, one entry per
+  // license, each carrying how it was learned. It supersedes the 'license'
+  // scalar above, which cannot express the distinction that matters most: what
+  // a package's own manifest *declares* is not always what its shipped files
+  // say. A package declaring MIT while shipping an AGPL-3.0-only license file
+  // is the case a compliance document must not flatten, and the scalar has no
+  // room for both values.
+  //
+  // The scalar is deprecated in favour of this field. A producer adopting this
+  // list should keep the scalar set to its first declared entry so consumers
+  // can migrate without a flag day — the renderers fall back to the scalar, but
+  // nothing populates it from here.
+  repeated License licenses = 31;
+  // 'copyright' holds the copyright statements found in the package's license
+  // and notice files. Attribution output needs these: no amount of license
+  // identification substitutes for knowing who to credit.
+  repeated string copyright = 32;
+  // 'supplier' is the entity that supplied the package, as SPDX and CycloneDX
+  // both model it (a name, optionally with an email in angle brackets).
+  string supplier = 33;
+}
+
+// License is one license attributed to a package, and how that attribution was
+// arrived at.
+message License {
+  // Exactly one of 'spdx_id', 'expression' and 'name' is set, and which one it
+  // is says what kind of value this is. The distinction is not cosmetic:
+  // CycloneDX models the three mutually exclusively and rejects a document that
+  // puts an expression where an id belongs.
+  //
+  // 'spdx_id' is a bare SPDX identifier, e.g. "MIT".
+  string spdx_id = 1;
+  // 'expression' is a full SPDX expression, e.g. "MIT OR Apache-2.0".
+  string expression = 2;
+  // 'name' is a string that is neither — "BSD-like", "see LICENSE". Carrying it
+  // as a name is honest; forcing it into an id would be a claim the source does
+  // not support.
+  string name = 3;
+  // 'acquisition' says whether the package declared this license or it was
+  // concluded from the files it ships.
+  LicenseAcquisition acquisition = 4;
+  // 'confidence' is how sure the producer is, in (0,1]. A declared license is
+  // 1.0 — it is a statement, not a measurement. A license concluded by matching
+  // text carries the match's own score, so a consumer can tell a certainty from
+  // an inference rather than reading both as the same fact.
+  double confidence = 5;
+  // 'location' is the file this license was read from, relative to the scan
+  // root — the evidence behind a concluded license. Empty for a declared one,
+  // whose source is the manifest already identified by the package.
+  string location = 6;
+}
+
+// LicenseAcquisition is how a license came to be attributed to a package.
+enum LicenseAcquisition {
+  // The producer did not say.
+  LICENSE_ACQUISITION_UNSPECIFIED = 0;
+  // The package's own manifest or lockfile states this license.
+  LICENSE_ACQUISITION_DECLARED = 1;
+  // Read from the license files the package ships, which is the stronger
+  // evidence where the two disagree: the shipped text is the grant.
+  LICENSE_ACQUISITION_CONCLUDED = 2;
 }
 
 // Hash is one integrity digest of a package: an algorithm label and its

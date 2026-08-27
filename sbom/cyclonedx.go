@@ -125,6 +125,26 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 		}
 		emitted[ref] = true
 
+		// Concluded licenses and copyright are evidence, not assertion: they were
+		// read out of the files the package ships rather than stated by it, and
+		// CycloneDX has a place that says exactly that.
+		if concluded := cycloneDXLicenseList(concludedLicenses(pkg)); concluded != nil {
+			if evidence == nil {
+				evidence = &cyclonedx.Evidence{}
+			}
+			evidence.Licenses = concluded
+		}
+		if len(pkg.Copyright) > 0 {
+			if evidence == nil {
+				evidence = &cyclonedx.Evidence{}
+			}
+			copyrights := make([]cyclonedx.Copyright, 0, len(pkg.Copyright))
+			for _, c := range pkg.Copyright {
+				copyrights = append(copyrights, cyclonedx.Copyright{Text: c})
+			}
+			evidence.Copyright = &copyrights
+		}
+
 		bomPkg := cyclonedx.Component{
 			BOMRef:      ref,
 			Type:        cyclonedx.ComponentTypeLibrary,
@@ -134,7 +154,11 @@ func (ccx *CycloneDX) convertToCycloneDx(bom *Sbom) (*cyclonedx.BOM, error) {
 			CPE:         cpe,
 			Evidence:    evidence,
 			Description: pkg.Description,
-			Licenses:    cycloneDXLicenses(pkg.License),
+			Licenses:    cycloneDXDeclared(pkg),
+			Copyright:   strings.Join(pkg.Copyright, "\n"),
+		}
+		if pkg.Supplier != "" {
+			bomPkg.Supplier = &cyclonedx.OrganizationalEntity{Name: pkg.Supplier}
 		}
 		if pkg.Scope == PackageScopeDev {
 			bomPkg.Scope = cyclonedx.ScopeExcluded
@@ -340,6 +364,71 @@ var familyMap = map[string][]string{
 	"alpine":  {"linux", "unix", "os"},
 	"fedora":  {"linux", "unix", "os"},
 	"rhel":    {"linux", "unix", "os"},
+}
+
+// cycloneDXDeclared renders the licenses a package declares, preferring the
+// structured list and falling back to the legacy scalar.
+//
+// The fallback is what lets consumers migrate without a flag day: a producer
+// that has not yet populated Licenses still renders exactly as it did before.
+func cycloneDXDeclared(pkg *Package) *cyclonedx.Licenses {
+	if l := cycloneDXLicenseList(declaredLicenses(pkg)); l != nil {
+		return l
+	}
+	return cycloneDXLicenses(pkg.License)
+}
+
+// declaredLicenses returns the package's declared entries. An entry whose
+// acquisition the producer did not set counts as declared: it is what the
+// scalar always meant, so an unset value keeps the old reading rather than
+// silently demoting a license to evidence.
+func declaredLicenses(pkg *Package) []*License {
+	var out []*License
+	for _, l := range pkg.Licenses {
+		if l.GetAcquisition() != LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+// concludedLicenses returns the entries read from the files a package ships.
+func concludedLicenses(pkg *Package) []*License {
+	var out []*License
+	for _, l := range pkg.Licenses {
+		if l.GetAcquisition() == LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+// cycloneDXLicenseList renders license entries into the CycloneDX shape each
+// one's populated field calls for, dropping entries that carry no value.
+//
+// The three shapes are mutually exclusive in the schema, which is why the
+// producer says which kind it has rather than the renderer guessing: a value
+// already known to be an expression must not be emitted as an id.
+func cycloneDXLicenseList(licenses []*License) *cyclonedx.Licenses {
+	out := make(cyclonedx.Licenses, 0, len(licenses))
+	for _, l := range licenses {
+		switch {
+		case strings.TrimSpace(l.GetExpression()) != "":
+			out = append(out, cyclonedx.LicenseChoice{Expression: strings.TrimSpace(l.GetExpression())})
+		case strings.TrimSpace(l.GetSpdxId()) != "":
+			out = append(out, cyclonedx.LicenseChoice{
+				License: &cyclonedx.License{ID: strings.TrimSpace(l.GetSpdxId())},
+			})
+		case strings.TrimSpace(l.GetName()) != "":
+			out = append(out, cyclonedx.LicenseChoice{
+				License: &cyclonedx.License{Name: strings.TrimSpace(l.GetName())},
+			})
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return &out
 }
 
 // cycloneDXLicenses renders a package's declared license as a CycloneDX license

@@ -121,21 +121,29 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		// The SPDX specification requires NOASSERTION rather than an empty value
 		// for the license and copyright fields. An empty string is not valid
 		// SPDX, and a strict consumer may reject the whole document over it.
-		declared := spdxNoAssertion(pkg.License)
+		//
+		// SPDX draws exactly the distinction the license model does: *declared*
+		// is what the package says about itself, *concluded* is what this
+		// document asserts after looking. They differ precisely when it matters
+		// — a package declaring MIT while shipping AGPL-3.0-only — so where a
+		// concluded license was determined it is emitted as itself rather than
+		// echoing the declared one.
+		declared := spdxNoAssertion(spdxLicense(declaredLicenses(pkg), pkg.License, extractedLicenses))
+		concluded := spdxNoAssertion(spdxLicense(concludedLicenses(pkg), "", extractedLicenses))
+		if concluded == spdxNoAssertionValue {
+			// Nothing was concluded. Echoing the declared value is the honest
+			// reading: it is what the document has to go on, and asserting more
+			// than was determined is what NOASSERTION exists to avoid.
+			concluded = declared
+		}
 		doc.Packages = append(doc.Packages, &spdx.Package{
-			PackageSPDXIdentifier:  id,
-			PackageName:            pkg.Name,
-			PackageVersion:         pkg.Version,
-			PackageLicenseDeclared: declared,
-			// Concluded is the license this document asserts the package is
-			// under. With only a declared value to go on, the honest concluded
-			// value is the same one — asserting more than was determined is what
-			// NOASSERTION exists to avoid.
-			PackageLicenseConcluded: declared,
-			// The model carries no copyright field yet, so this states
-			// NOASSERTION rather than omitting a spec-required field. When
-			// Package gains one, this is the single line that changes.
-			PackageCopyrightText:      spdxNoAssertionValue,
+			PackageSPDXIdentifier:     id,
+			PackageName:               pkg.Name,
+			PackageVersion:            pkg.Version,
+			PackageLicenseDeclared:    declared,
+			PackageLicenseConcluded:   concluded,
+			PackageCopyrightText:      spdxNoAssertion(strings.Join(pkg.Copyright, "\n")),
+			PackageSupplier:           spdxSupplier(pkg.Supplier),
 			PackageDescription:        pkg.Description,
 			PackageExternalReferences: refs,
 			PackageFileName:           pkg.Location,
@@ -144,7 +152,8 @@ func (s *Spdx) convertToSpdx(bom *Sbom) *spdx.Document {
 		// A LicenseRef-* identifier is not on the SPDX license list, so the
 		// specification requires the document to define it before it may be
 		// referenced.
-		extractedLicenses.add(pkg.License)
+		extractedLicenses.add(declared)
+		extractedLicenses.add(concluded)
 	}
 
 	doc.OtherLicenses = extractedLicenses.render()
@@ -371,16 +380,38 @@ const licenseRefPrefix = "LicenseRef-"
 // extractedLicenseSet collects the LicenseRef-* identifiers a document
 // references, so each can be declared in hasExtractedLicensingInfos as the
 // specification requires.
-type extractedLicenseSet map[string]struct{}
+//
+// The value is the human-readable name the identifier stands for, which matters
+// for a reference synthesized from a free-form license string: "see LICENSE" is
+// not a legal identifier, so it becomes LicenseRef-see-LICENSE, and the original
+// text is the only place the reader learns what that means. Empty means the
+// identifier is all that is known and names itself.
+type extractedLicenseSet map[string]string
 
+// add registers every LicenseRef-* identifier appearing in a rendered license
+// expression. It never overwrites a name already recorded for an identifier, so
+// a reference synthesized by addNamed keeps its original text when the rendered
+// expression it landed in is scanned again.
 func (s extractedLicenseSet) add(license string) {
 	for _, tok := range strings.FieldsFunc(license, func(r rune) bool {
 		return r == ' ' || r == '\t' || r == '(' || r == ')'
 	}) {
-		if strings.HasPrefix(tok, licenseRefPrefix) {
-			s[tok] = struct{}{}
+		if !strings.HasPrefix(tok, licenseRefPrefix) {
+			continue
+		}
+		if _, ok := s[tok]; !ok {
+			s[tok] = ""
 		}
 	}
+}
+
+// addNamed registers an identifier together with the text it was synthesized
+// from.
+func (s extractedLicenseSet) addNamed(id, name string) {
+	if existing, ok := s[id]; ok && existing != "" {
+		return
+	}
+	s[id] = name
 }
 
 // render returns the collected identifiers as SPDX other-license entries, sorted
@@ -397,14 +428,126 @@ func (s extractedLicenseSet) render() []*spdx.OtherLicense {
 
 	out := make([]*spdx.OtherLicense, 0, len(ids))
 	for _, id := range ids {
+		name := s[id]
+		if name == "" {
+			name = id
+		}
 		out = append(out, &spdx.OtherLicense{
 			LicenseIdentifier: id,
 			// The text is not available here — the extractors carry an
 			// identifier, not a license body — so the field states that rather
 			// than inventing one.
 			ExtractedText: spdxNoAssertionValue,
-			LicenseName:   id,
+			LicenseName:   name,
 		})
 	}
 	return out
+}
+
+// spdxLicense renders license entries as the single value an SPDX field holds,
+// falling back to a legacy scalar when the structured list is empty.
+//
+// SPDX carries one expression per field, so several entries are joined with
+// AND: a package under two licenses is under both, and OR would grant a choice
+// the producer never reported.
+//
+// The field must hold a license *expression*, which constrains what each operand
+// may be, so the three License shapes do not all reach it the same way. Refs
+// synthesized for a free-form name are registered in extracted so the document
+// declares them before referencing them.
+//
+// The fallback scalar is passed through unchanged. It has rendered verbatim for
+// as long as the field has existed and producers set it to whatever their
+// package manager reported; re-encoding it here would rewrite what every
+// existing document says about a large share of OS packages, which is a
+// migration to make deliberately rather than as a side effect of adding a list.
+func spdxLicense(licenses []*License, fallback string, extracted extractedLicenseSet) string {
+	parts := make([]string, 0, len(licenses))
+	for _, l := range licenses {
+		if v := strings.TrimSpace(l.GetExpression()); v != "" {
+			parts = append(parts, v)
+			continue
+		}
+		if v := strings.TrimSpace(l.GetSpdxId()); v != "" {
+			parts = append(parts, v)
+			continue
+		}
+		// A free-form name is not a legal operand: "see LICENSE" has a space in
+		// it, so emitting it raw makes the field unparseable and joining it with
+		// AND produces "MIT AND see LICENSE", which reads as an expression and
+		// is not one. SPDX's encoding for a license that is not on its list is a
+		// LicenseRef-* identifier defined in hasExtractedLicensingInfos, so that
+		// is what the text becomes — the name survives, in the field that can
+		// hold it.
+		if v := strings.TrimSpace(l.GetName()); v != "" {
+			ref := spdxLicenseRef(v)
+			if ref == "" {
+				// Nothing in the name survives sanitization, so there is no
+				// identifier to reference and no way to say this in SPDX.
+				continue
+			}
+			extracted.addNamed(ref, v)
+			parts = append(parts, ref)
+		}
+	}
+	if len(parts) == 0 {
+		return strings.TrimSpace(fallback)
+	}
+	if len(parts) == 1 {
+		return parts[0]
+	}
+	for i, p := range parts {
+		if isSPDXExpression(p) {
+			// Parenthesize so joining cannot reassociate an operand: "A OR B"
+			// AND "C" is not "A OR (B AND C)". Decided on the rendered operands
+			// rather than the input count, so an entry that carried no value
+			// cannot add parentheses around the one that did.
+			parts[i] = "(" + p + ")"
+		}
+	}
+	return strings.Join(parts, " AND ")
+}
+
+// spdxLicenseRef builds the LicenseRef-* identifier that stands for a free-form
+// license name.
+//
+// SPDX restricts the part after the prefix to letters, digits, "." and "-", so
+// every other run of characters collapses to a single dash. Returns "" when the
+// name has nothing an identifier can be built from, which is the caller's signal
+// that there is no way to reference it.
+func spdxLicenseRef(name string) string {
+	var b strings.Builder
+	dash := false
+	for _, r := range name {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '.', r == '-':
+			if dash && b.Len() > 0 {
+				b.WriteByte('-')
+			}
+			dash = false
+			b.WriteRune(r)
+		default:
+			dash = true
+		}
+	}
+	id := strings.Trim(b.String(), "-.")
+	if id == "" {
+		return ""
+	}
+	return licenseRefPrefix + id
+}
+
+// spdxSupplier renders a supplier as the spec's Originator/Supplier shape, or
+// NOASSERTION when none is known.
+//
+// SPDX requires the value to be typed — "Organization: name" or "Person: name".
+// An unqualified name is not valid, and this package has no way to tell which a
+// supplier is, so it reports the type SPDX itself uses for a supplier of
+// software: an organization.
+func spdxSupplier(supplier string) *common.Supplier {
+	supplier = strings.TrimSpace(supplier)
+	if supplier == "" {
+		return &common.Supplier{Supplier: spdxNoAssertionValue}
+	}
+	return &common.Supplier{Supplier: supplier, SupplierType: "Organization"}
 }

@@ -183,6 +183,60 @@ func (ExternalIDType) EnumDescriptor() ([]byte, []int) {
 	return file_mql_sbom_proto_rawDescGZIP(), []int{1}
 }
 
+// LicenseAcquisition is how a license came to be attributed to a package.
+type LicenseAcquisition int32
+
+const (
+	// The producer did not say.
+	LicenseAcquisition_LICENSE_ACQUISITION_UNSPECIFIED LicenseAcquisition = 0
+	// The package's own manifest or lockfile states this license.
+	LicenseAcquisition_LICENSE_ACQUISITION_DECLARED LicenseAcquisition = 1
+	// Read from the license files the package ships, which is the stronger
+	// evidence where the two disagree: the shipped text is the grant.
+	LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED LicenseAcquisition = 2
+)
+
+// Enum value maps for LicenseAcquisition.
+var (
+	LicenseAcquisition_name = map[int32]string{
+		0: "LICENSE_ACQUISITION_UNSPECIFIED",
+		1: "LICENSE_ACQUISITION_DECLARED",
+		2: "LICENSE_ACQUISITION_CONCLUDED",
+	}
+	LicenseAcquisition_value = map[string]int32{
+		"LICENSE_ACQUISITION_UNSPECIFIED": 0,
+		"LICENSE_ACQUISITION_DECLARED":    1,
+		"LICENSE_ACQUISITION_CONCLUDED":   2,
+	}
+)
+
+func (x LicenseAcquisition) Enum() *LicenseAcquisition {
+	p := new(LicenseAcquisition)
+	*p = x
+	return p
+}
+
+func (x LicenseAcquisition) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LicenseAcquisition) Descriptor() protoreflect.EnumDescriptor {
+	return file_mql_sbom_proto_enumTypes[2].Descriptor()
+}
+
+func (LicenseAcquisition) Type() protoreflect.EnumType {
+	return &file_mql_sbom_proto_enumTypes[2]
+}
+
+func (x LicenseAcquisition) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LicenseAcquisition.Descriptor instead.
+func (LicenseAcquisition) EnumDescriptor() ([]byte, []int) {
+	return file_mql_sbom_proto_rawDescGZIP(), []int{2}
+}
+
 type EvidenceType int32
 
 const (
@@ -213,11 +267,11 @@ func (x EvidenceType) String() string {
 }
 
 func (EvidenceType) Descriptor() protoreflect.EnumDescriptor {
-	return file_mql_sbom_proto_enumTypes[2].Descriptor()
+	return file_mql_sbom_proto_enumTypes[3].Descriptor()
 }
 
 func (EvidenceType) Type() protoreflect.EnumType {
-	return &file_mql_sbom_proto_enumTypes[2]
+	return &file_mql_sbom_proto_enumTypes[3]
 }
 
 func (x EvidenceType) Number() protoreflect.EnumNumber {
@@ -226,7 +280,7 @@ func (x EvidenceType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use EvidenceType.Descriptor instead.
 func (EvidenceType) EnumDescriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{2}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{3}
 }
 
 // Sbom (Software Bill of Materials) represents a comprehensive inventory of
@@ -810,6 +864,29 @@ type Package struct {
 	// SPDX license expression (or upstream-reported license string).
 	// Empty when the backend has no source for it (e.g. Windows registry
 	// — DisplayName carries no license field).
+	//
+	// Deprecated: use 'licenses' (field 31) instead. One string cannot say
+	// whether a license was declared by the package or concluded from the files
+	// it ships, and those two disagreeing is the case a compliance document
+	// exists to surface. It cannot carry more than one license, a confidence, or
+	// the file a conclusion was read from either.
+	//
+	// Still read, and still the only source for most producers. Every renderer
+	// falls back to this field when 'licenses' is empty, so a producer that has
+	// not adopted the list renders exactly as it did before and nothing breaks on
+	// the version that introduces this marker.
+	//
+	// Note what is NOT enforced: nothing populates this field from 'licenses'. A
+	// producer that adopts the list is responsible for continuing to set this
+	// scalar to its first declared entry, or consumers still reading the scalar
+	// will silently see an empty license where one was determined. That is a
+	// convention, not a guarantee the model makes.
+	//
+	// The deprecation says which field new code should read, not that this one
+	// has stopped working. It will not be removed while unmigrated producers
+	// remain.
+	//
+	// Deprecated: Marked as deprecated in mql_sbom.proto.
 	License string `protobuf:"bytes,26,opt,name=license,proto3" json:"license,omitempty"`
 	// Time the package was installed on this asset, RFC3339 format
 	// (e.g. "2024-03-15T00:00:00Z"). Empty when the backend doesn't
@@ -832,7 +909,27 @@ type Package struct {
 	// dependency's Subresource-Integrity value). Populated for ecosystems whose
 	// manifest records them (npm today), empty otherwise. Rendered as CycloneDX
 	// `component.hashes` / SPDX package checksums — tamper-evidence.
-	Hashes        []*Hash `protobuf:"bytes,30,rep,name=hashes,proto3" json:"hashes,omitempty"`
+	Hashes []*Hash `protobuf:"bytes,30,rep,name=hashes,proto3" json:"hashes,omitempty"`
+	// 'licenses' is what is known about this package's licensing, one entry per
+	// license, each carrying how it was learned. It supersedes the 'license'
+	// scalar above, which cannot express the distinction that matters most: what
+	// a package's own manifest *declares* is not always what its shipped files
+	// say. A package declaring MIT while shipping an AGPL-3.0-only license file
+	// is the case a compliance document must not flatten, and the scalar has no
+	// room for both values.
+	//
+	// The scalar is deprecated in favour of this field. A producer adopting this
+	// list should keep the scalar set to its first declared entry so consumers
+	// can migrate without a flag day — the renderers fall back to the scalar, but
+	// nothing populates it from here.
+	Licenses []*License `protobuf:"bytes,31,rep,name=licenses,proto3" json:"licenses,omitempty"`
+	// 'copyright' holds the copyright statements found in the package's license
+	// and notice files. Attribution output needs these: no amount of license
+	// identification substitutes for knowing who to credit.
+	Copyright []string `protobuf:"bytes,32,rep,name=copyright,proto3" json:"copyright,omitempty"`
+	// 'supplier' is the entity that supplied the package, as SPDX and CycloneDX
+	// both model it (a name, optionally with an email in angle brackets).
+	Supplier      string `protobuf:"bytes,33,opt,name=supplier,proto3" json:"supplier,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -958,6 +1055,7 @@ func (x *Package) GetTitle() string {
 	return ""
 }
 
+// Deprecated: Marked as deprecated in mql_sbom.proto.
 func (x *Package) GetLicense() string {
 	if x != nil {
 		return x.License
@@ -993,6 +1091,132 @@ func (x *Package) GetHashes() []*Hash {
 	return nil
 }
 
+func (x *Package) GetLicenses() []*License {
+	if x != nil {
+		return x.Licenses
+	}
+	return nil
+}
+
+func (x *Package) GetCopyright() []string {
+	if x != nil {
+		return x.Copyright
+	}
+	return nil
+}
+
+func (x *Package) GetSupplier() string {
+	if x != nil {
+		return x.Supplier
+	}
+	return ""
+}
+
+// License is one license attributed to a package, and how that attribution was
+// arrived at.
+type License struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Exactly one of 'spdx_id', 'expression' and 'name' is set, and which one it
+	// is says what kind of value this is. The distinction is not cosmetic:
+	// CycloneDX models the three mutually exclusively and rejects a document that
+	// puts an expression where an id belongs.
+	//
+	// 'spdx_id' is a bare SPDX identifier, e.g. "MIT".
+	SpdxId string `protobuf:"bytes,1,opt,name=spdx_id,json=spdxId,proto3" json:"spdx_id,omitempty"`
+	// 'expression' is a full SPDX expression, e.g. "MIT OR Apache-2.0".
+	Expression string `protobuf:"bytes,2,opt,name=expression,proto3" json:"expression,omitempty"`
+	// 'name' is a string that is neither — "BSD-like", "see LICENSE". Carrying it
+	// as a name is honest; forcing it into an id would be a claim the source does
+	// not support.
+	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// 'acquisition' says whether the package declared this license or it was
+	// concluded from the files it ships.
+	Acquisition LicenseAcquisition `protobuf:"varint,4,opt,name=acquisition,proto3,enum=mondoo.sbom.v1.LicenseAcquisition" json:"acquisition,omitempty"`
+	// 'confidence' is how sure the producer is, in (0,1]. A declared license is
+	// 1.0 — it is a statement, not a measurement. A license concluded by matching
+	// text carries the match's own score, so a consumer can tell a certainty from
+	// an inference rather than reading both as the same fact.
+	Confidence float64 `protobuf:"fixed64,5,opt,name=confidence,proto3" json:"confidence,omitempty"`
+	// 'location' is the file this license was read from, relative to the scan
+	// root — the evidence behind a concluded license. Empty for a declared one,
+	// whose source is the manifest already identified by the package.
+	Location      string `protobuf:"bytes,6,opt,name=location,proto3" json:"location,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *License) Reset() {
+	*x = License{}
+	mi := &file_mql_sbom_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *License) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*License) ProtoMessage() {}
+
+func (x *License) ProtoReflect() protoreflect.Message {
+	mi := &file_mql_sbom_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use License.ProtoReflect.Descriptor instead.
+func (*License) Descriptor() ([]byte, []int) {
+	return file_mql_sbom_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *License) GetSpdxId() string {
+	if x != nil {
+		return x.SpdxId
+	}
+	return ""
+}
+
+func (x *License) GetExpression() string {
+	if x != nil {
+		return x.Expression
+	}
+	return ""
+}
+
+func (x *License) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *License) GetAcquisition() LicenseAcquisition {
+	if x != nil {
+		return x.Acquisition
+	}
+	return LicenseAcquisition_LICENSE_ACQUISITION_UNSPECIFIED
+}
+
+func (x *License) GetConfidence() float64 {
+	if x != nil {
+		return x.Confidence
+	}
+	return 0
+}
+
+func (x *License) GetLocation() string {
+	if x != nil {
+		return x.Location
+	}
+	return ""
+}
+
 // Hash is one integrity digest of a package: an algorithm label and its
 // hex-encoded value.
 type Hash struct {
@@ -1007,7 +1231,7 @@ type Hash struct {
 
 func (x *Hash) Reset() {
 	*x = Hash{}
-	mi := &file_mql_sbom_proto_msgTypes[7]
+	mi := &file_mql_sbom_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1019,7 +1243,7 @@ func (x *Hash) String() string {
 func (*Hash) ProtoMessage() {}
 
 func (x *Hash) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[7]
+	mi := &file_mql_sbom_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1032,7 +1256,7 @@ func (x *Hash) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Hash.ProtoReflect.Descriptor instead.
 func (*Hash) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{7}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Hash) GetAlg() string {
@@ -1063,7 +1287,7 @@ type Evidence struct {
 
 func (x *Evidence) Reset() {
 	*x = Evidence{}
-	mi := &file_mql_sbom_proto_msgTypes[8]
+	mi := &file_mql_sbom_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1075,7 +1299,7 @@ func (x *Evidence) String() string {
 func (*Evidence) ProtoMessage() {}
 
 func (x *Evidence) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[8]
+	mi := &file_mql_sbom_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1088,7 +1312,7 @@ func (x *Evidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Evidence.ProtoReflect.Descriptor instead.
 func (*Evidence) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{8}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Evidence) GetType() EvidenceType {
@@ -1120,7 +1344,7 @@ type Kernel struct {
 
 func (x *Kernel) Reset() {
 	*x = Kernel{}
-	mi := &file_mql_sbom_proto_msgTypes[9]
+	mi := &file_mql_sbom_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1132,7 +1356,7 @@ func (x *Kernel) String() string {
 func (*Kernel) ProtoMessage() {}
 
 func (x *Kernel) ProtoReflect() protoreflect.Message {
-	mi := &file_mql_sbom_proto_msgTypes[9]
+	mi := &file_mql_sbom_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1145,7 +1369,7 @@ func (x *Kernel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Kernel.ProtoReflect.Descriptor instead.
 func (*Kernel) Descriptor() ([]byte, []int) {
-	return file_mql_sbom_proto_rawDescGZIP(), []int{9}
+	return file_mql_sbom_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Kernel) GetName() string {
@@ -1217,7 +1441,7 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x04cpes\x18\x17 \x03(\tR\x04cpes\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x8c\x04\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xff\x04\n" +
 	"\aPackage\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\"\n" +
@@ -1231,12 +1455,26 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x06origin\x18\x16 \x01(\tR\x06origin\x12\x16\n" +
 	"\x06vendor\x18\x17 \x01(\tR\x06vendor\x12\x16\n" +
 	"\x06status\x18\x18 \x01(\tR\x06status\x12\x14\n" +
-	"\x05title\x18\x19 \x01(\tR\x05title\x12\x18\n" +
-	"\alicense\x18\x1a \x01(\tR\alicense\x12!\n" +
+	"\x05title\x18\x19 \x01(\tR\x05title\x12\x1c\n" +
+	"\alicense\x18\x1a \x01(\tB\x02\x18\x01R\alicense\x12!\n" +
 	"\finstall_date\x18\x1b \x01(\tR\vinstallDate\x12\x17\n" +
 	"\abom_ref\x18\x1c \x01(\tR\x06bomRef\x12\x14\n" +
 	"\x05scope\x18\x1d \x01(\tR\x05scope\x12,\n" +
-	"\x06hashes\x18\x1e \x03(\v2\x14.mondoo.sbom.v1.HashR\x06hashes\".\n" +
+	"\x06hashes\x18\x1e \x03(\v2\x14.mondoo.sbom.v1.HashR\x06hashes\x123\n" +
+	"\blicenses\x18\x1f \x03(\v2\x17.mondoo.sbom.v1.LicenseR\blicenses\x12\x1c\n" +
+	"\tcopyright\x18  \x03(\tR\tcopyright\x12\x1a\n" +
+	"\bsupplier\x18! \x01(\tR\bsupplier\"\xd8\x01\n" +
+	"\aLicense\x12\x17\n" +
+	"\aspdx_id\x18\x01 \x01(\tR\x06spdxId\x12\x1e\n" +
+	"\n" +
+	"expression\x18\x02 \x01(\tR\n" +
+	"expression\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12D\n" +
+	"\vacquisition\x18\x04 \x01(\x0e2\".mondoo.sbom.v1.LicenseAcquisitionR\vacquisition\x12\x1e\n" +
+	"\n" +
+	"confidence\x18\x05 \x01(\x01R\n" +
+	"confidence\x12\x1a\n" +
+	"\blocation\x18\x06 \x01(\tR\blocation\".\n" +
 	"\x04Hash\x12\x10\n" +
 	"\x03alg\x18\x01 \x01(\tR\x03alg\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value\"R\n" +
@@ -1259,7 +1497,11 @@ const file_mql_sbom_proto_rawDesc = "" +
 	"\x18EXTERNAL_ID_TYPE_AWS_ARN\x10\x02\x12\x1c\n" +
 	"\x18EXTERNAL_ID_TYPE_AWS_ORG\x10\x03\x12\x1e\n" +
 	"\x1aEXTERNAL_ID_TYPE_AZURE_SUB\x10\x04\x12\x1d\n" +
-	"\x19EXTERNAL_ID_TYPE_AZURE_ID\x10\x05*E\n" +
+	"\x19EXTERNAL_ID_TYPE_AZURE_ID\x10\x05*~\n" +
+	"\x12LicenseAcquisition\x12#\n" +
+	"\x1fLICENSE_ACQUISITION_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cLICENSE_ACQUISITION_DECLARED\x10\x01\x12!\n" +
+	"\x1dLICENSE_ACQUISITION_CONCLUDED\x10\x02*E\n" +
 	"\fEvidenceType\x12\x1d\n" +
 	"\x19EVIDENCE_TYPE_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12EVIDENCE_TYPE_FILE\x10\x01B\x18Z\x16go.mondoo.com/mql/sbomb\x06proto3"
@@ -1276,45 +1518,49 @@ func file_mql_sbom_proto_rawDescGZIP() []byte {
 	return file_mql_sbom_proto_rawDescData
 }
 
-var file_mql_sbom_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_mql_sbom_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_mql_sbom_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_mql_sbom_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_mql_sbom_proto_goTypes = []any{
-	(Status)(0),         // 0: mondoo.sbom.v1.Status
-	(ExternalIDType)(0), // 1: mondoo.sbom.v1.ExternalIDType
-	(EvidenceType)(0),   // 2: mondoo.sbom.v1.EvidenceType
-	(*Sbom)(nil),        // 3: mondoo.sbom.v1.Sbom
-	(*Dependency)(nil),  // 4: mondoo.sbom.v1.Dependency
-	(*Generator)(nil),   // 5: mondoo.sbom.v1.Generator
-	(*ExternalID)(nil),  // 6: mondoo.sbom.v1.ExternalID
-	(*Asset)(nil),       // 7: mondoo.sbom.v1.Asset
-	(*Platform)(nil),    // 8: mondoo.sbom.v1.Platform
-	(*Package)(nil),     // 9: mondoo.sbom.v1.Package
-	(*Hash)(nil),        // 10: mondoo.sbom.v1.Hash
-	(*Evidence)(nil),    // 11: mondoo.sbom.v1.Evidence
-	(*Kernel)(nil),      // 12: mondoo.sbom.v1.Kernel
-	nil,                 // 13: mondoo.sbom.v1.Asset.LabelsEntry
-	nil,                 // 14: mondoo.sbom.v1.Platform.LabelsEntry
+	(Status)(0),             // 0: mondoo.sbom.v1.Status
+	(ExternalIDType)(0),     // 1: mondoo.sbom.v1.ExternalIDType
+	(LicenseAcquisition)(0), // 2: mondoo.sbom.v1.LicenseAcquisition
+	(EvidenceType)(0),       // 3: mondoo.sbom.v1.EvidenceType
+	(*Sbom)(nil),            // 4: mondoo.sbom.v1.Sbom
+	(*Dependency)(nil),      // 5: mondoo.sbom.v1.Dependency
+	(*Generator)(nil),       // 6: mondoo.sbom.v1.Generator
+	(*ExternalID)(nil),      // 7: mondoo.sbom.v1.ExternalID
+	(*Asset)(nil),           // 8: mondoo.sbom.v1.Asset
+	(*Platform)(nil),        // 9: mondoo.sbom.v1.Platform
+	(*Package)(nil),         // 10: mondoo.sbom.v1.Package
+	(*License)(nil),         // 11: mondoo.sbom.v1.License
+	(*Hash)(nil),            // 12: mondoo.sbom.v1.Hash
+	(*Evidence)(nil),        // 13: mondoo.sbom.v1.Evidence
+	(*Kernel)(nil),          // 14: mondoo.sbom.v1.Kernel
+	nil,                     // 15: mondoo.sbom.v1.Asset.LabelsEntry
+	nil,                     // 16: mondoo.sbom.v1.Platform.LabelsEntry
 }
 var file_mql_sbom_proto_depIdxs = []int32{
-	5,  // 0: mondoo.sbom.v1.Sbom.generator:type_name -> mondoo.sbom.v1.Generator
+	6,  // 0: mondoo.sbom.v1.Sbom.generator:type_name -> mondoo.sbom.v1.Generator
 	0,  // 1: mondoo.sbom.v1.Sbom.status:type_name -> mondoo.sbom.v1.Status
-	7,  // 2: mondoo.sbom.v1.Sbom.asset:type_name -> mondoo.sbom.v1.Asset
-	9,  // 3: mondoo.sbom.v1.Sbom.packages:type_name -> mondoo.sbom.v1.Package
-	4,  // 4: mondoo.sbom.v1.Sbom.dependencies:type_name -> mondoo.sbom.v1.Dependency
+	8,  // 2: mondoo.sbom.v1.Sbom.asset:type_name -> mondoo.sbom.v1.Asset
+	10, // 3: mondoo.sbom.v1.Sbom.packages:type_name -> mondoo.sbom.v1.Package
+	5,  // 4: mondoo.sbom.v1.Sbom.dependencies:type_name -> mondoo.sbom.v1.Dependency
 	1,  // 5: mondoo.sbom.v1.ExternalID.type:type_name -> mondoo.sbom.v1.ExternalIDType
-	6,  // 6: mondoo.sbom.v1.Asset.external_ids:type_name -> mondoo.sbom.v1.ExternalID
-	8,  // 7: mondoo.sbom.v1.Asset.platform:type_name -> mondoo.sbom.v1.Platform
-	13, // 8: mondoo.sbom.v1.Asset.labels:type_name -> mondoo.sbom.v1.Asset.LabelsEntry
-	12, // 9: mondoo.sbom.v1.Asset.kernels:type_name -> mondoo.sbom.v1.Kernel
-	14, // 10: mondoo.sbom.v1.Platform.labels:type_name -> mondoo.sbom.v1.Platform.LabelsEntry
-	11, // 11: mondoo.sbom.v1.Package.evidence_list:type_name -> mondoo.sbom.v1.Evidence
-	10, // 12: mondoo.sbom.v1.Package.hashes:type_name -> mondoo.sbom.v1.Hash
-	2,  // 13: mondoo.sbom.v1.Evidence.type:type_name -> mondoo.sbom.v1.EvidenceType
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	7,  // 6: mondoo.sbom.v1.Asset.external_ids:type_name -> mondoo.sbom.v1.ExternalID
+	9,  // 7: mondoo.sbom.v1.Asset.platform:type_name -> mondoo.sbom.v1.Platform
+	15, // 8: mondoo.sbom.v1.Asset.labels:type_name -> mondoo.sbom.v1.Asset.LabelsEntry
+	14, // 9: mondoo.sbom.v1.Asset.kernels:type_name -> mondoo.sbom.v1.Kernel
+	16, // 10: mondoo.sbom.v1.Platform.labels:type_name -> mondoo.sbom.v1.Platform.LabelsEntry
+	13, // 11: mondoo.sbom.v1.Package.evidence_list:type_name -> mondoo.sbom.v1.Evidence
+	12, // 12: mondoo.sbom.v1.Package.hashes:type_name -> mondoo.sbom.v1.Hash
+	11, // 13: mondoo.sbom.v1.Package.licenses:type_name -> mondoo.sbom.v1.License
+	2,  // 14: mondoo.sbom.v1.License.acquisition:type_name -> mondoo.sbom.v1.LicenseAcquisition
+	3,  // 15: mondoo.sbom.v1.Evidence.type:type_name -> mondoo.sbom.v1.EvidenceType
+	16, // [16:16] is the sub-list for method output_type
+	16, // [16:16] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_mql_sbom_proto_init() }
@@ -1327,8 +1573,8 @@ func file_mql_sbom_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mql_sbom_proto_rawDesc), len(file_mql_sbom_proto_rawDesc)),
-			NumEnums:      3,
-			NumMessages:   12,
+			NumEnums:      4,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

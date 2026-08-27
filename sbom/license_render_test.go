@@ -206,3 +206,343 @@ func TestLicenseContentIsDeterministic(t *testing.T) {
 		}
 	}
 }
+
+// The model extension exists for one case: a package whose own manifest
+// declares one license while the files it ships say another. Flattening the two
+// into a single value is what the scalar forced, and it is the error that
+// matters most in a compliance document — it asserts a grant the shipped code
+// does not make.
+
+func splitLicenseBom() *Sbom {
+	return &Sbom{
+		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
+		Asset:     &Asset{Name: "test-asset", Platform: &Platform{Name: "linux", Version: "1"}},
+		Packages: []*Package{{
+			Name: "disagrees", Version: "1.0.0", Purl: "pkg:npm/disagrees@1.0.0",
+			// The scalar stays populated, as the migration contract requires.
+			License: "MIT",
+			Licenses: []*License{
+				{SpdxId: "MIT", Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_DECLARED, Confidence: 1},
+				{
+					SpdxId:      "AGPL-3.0-only",
+					Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED,
+					Confidence:  0.98,
+					Location:    "node_modules/disagrees/LICENSE",
+				},
+			},
+			Copyright: []string{"Copyright (c) 2019 Example Corp"},
+			Supplier:  "Example Corp",
+		}},
+	}
+}
+
+func renderBom(t *testing.T, format string, bom *Sbom) string {
+	t.Helper()
+	var b strings.Builder
+	h := New(format)
+	if h == nil {
+		t.Fatalf("no handler for %q", format)
+	}
+	if err := h.Render(&b, bom); err != nil {
+		t.Fatalf("render %s: %v", format, err)
+	}
+	return b.String()
+}
+
+func TestCycloneDXSeparatesDeclaredFromConcluded(t *testing.T) {
+	var doc struct {
+		Components []struct {
+			Name     string `json:"name"`
+			Licenses []struct {
+				License    *struct{ ID, Name string } `json:"license"`
+				Expression string                     `json:"expression"`
+			} `json:"licenses"`
+			Copyright string `json:"copyright"`
+			Supplier  *struct {
+				Name string `json:"name"`
+			} `json:"supplier"`
+			Evidence *struct {
+				Licenses []struct {
+					License *struct{ ID, Name string } `json:"license"`
+				} `json:"licenses"`
+				Copyright []struct {
+					Text string `json:"text"`
+				} `json:"copyright"`
+			} `json:"evidence"`
+		} `json:"components"`
+	}
+	if err := json.Unmarshal([]byte(renderBom(t, "cyclonedx-json", splitLicenseBom())), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	// The document also carries the asset's platform component; the package is
+	// the one under test.
+	var c = doc.Components[0]
+	found := false
+	for _, comp := range doc.Components {
+		if comp.Name == "disagrees" {
+			c, found = comp, true
+		}
+	}
+	if !found {
+		t.Fatalf("no component named disagrees in %d components", len(doc.Components))
+	}
+
+	// Declared is an assertion the package makes about itself.
+	if len(c.Licenses) != 1 || c.Licenses[0].License == nil || c.Licenses[0].License.ID != "MIT" {
+		t.Errorf("licenses = %+v, want the declared MIT", c.Licenses)
+	}
+	// Concluded is evidence: it was read out of a file rather than stated.
+	if c.Evidence == nil || len(c.Evidence.Licenses) != 1 ||
+		c.Evidence.Licenses[0].License == nil || c.Evidence.Licenses[0].License.ID != "AGPL-3.0-only" {
+		t.Errorf("evidence.licenses = %+v, want the concluded AGPL-3.0-only", c.Evidence)
+	}
+	if c.Copyright != "Copyright (c) 2019 Example Corp" {
+		t.Errorf("copyright = %q", c.Copyright)
+	}
+	if c.Evidence == nil || len(c.Evidence.Copyright) != 1 {
+		t.Errorf("evidence.copyright = %+v, want the statement that was found", c.Evidence)
+	}
+	if c.Supplier == nil || c.Supplier.Name != "Example Corp" {
+		t.Errorf("supplier = %+v", c.Supplier)
+	}
+}
+
+func TestSPDXConcludedIsNotAnEchoOfDeclared(t *testing.T) {
+	out := renderBom(t, "spdx-json", splitLicenseBom())
+	var doc struct {
+		Packages []struct {
+			LicenseDeclared  string `json:"licenseDeclared"`
+			LicenseConcluded string `json:"licenseConcluded"`
+			CopyrightText    string `json:"copyrightText"`
+			Supplier         string `json:"supplier"`
+		} `json:"packages"`
+	}
+	if err := json.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(doc.Packages) != 1 {
+		t.Fatalf("packages = %d, want 1", len(doc.Packages))
+	}
+	p := doc.Packages[0]
+	if p.LicenseDeclared != "MIT" {
+		t.Errorf("licenseDeclared = %q, want MIT", p.LicenseDeclared)
+	}
+	if p.LicenseConcluded != "AGPL-3.0-only" {
+		t.Errorf("licenseConcluded = %q, want AGPL-3.0-only — the shipped text is the grant", p.LicenseConcluded)
+	}
+	if p.CopyrightText != "Copyright (c) 2019 Example Corp" {
+		t.Errorf("copyrightText = %q", p.CopyrightText)
+	}
+	if !strings.Contains(p.Supplier, "Example Corp") {
+		t.Errorf("supplier = %q", p.Supplier)
+	}
+}
+
+// TestLegacyScalarStillRenders is the migration contract: a producer that has
+// not adopted the structured list renders exactly as it did before.
+func TestLegacyScalarStillRenders(t *testing.T) {
+	cdx := renderTo(t, "cyclonedx-json")
+	for _, want := range []string{`"MIT"`, `"MIT OR Apache-2.0"`, `"BSD-like, see LICENSE"`} {
+		if !strings.Contains(cdx, want) {
+			t.Errorf("cyclonedx output lost %s", want)
+		}
+	}
+	spdxOut := renderTo(t, "spdx-json")
+	if !strings.Contains(spdxOut, "LicenseRef-Acme-Internal") {
+		t.Error("spdx output lost the LicenseRef identifier")
+	}
+}
+
+// TestSPDXConcludedFallsBackToDeclared: with nothing concluded, echoing the
+// declared value is the honest reading — but it must be the declared value,
+// not NOASSERTION, or a document loses a license it was told about.
+func TestSPDXConcludedFallsBackToDeclared(t *testing.T) {
+	out := renderTo(t, "spdx-json")
+	var doc struct {
+		Packages []struct {
+			Name             string `json:"name"`
+			LicenseDeclared  string `json:"licenseDeclared"`
+			LicenseConcluded string `json:"licenseConcluded"`
+		} `json:"packages"`
+	}
+	if err := json.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	for _, p := range doc.Packages {
+		if p.Name == "plain-id" && (p.LicenseDeclared != "MIT" || p.LicenseConcluded != "MIT") {
+			t.Errorf("plain-id: declared=%q concluded=%q, want MIT for both", p.LicenseDeclared, p.LicenseConcluded)
+		}
+		if p.Name == "undeclared" && p.LicenseConcluded != "NOASSERTION" {
+			t.Errorf("undeclared: concluded=%q, want NOASSERTION", p.LicenseConcluded)
+		}
+	}
+}
+
+// An SPDX license field holds a license *expression*, and that constrains what
+// may go in it: an identifier from the SPDX list, a LicenseRef-* defined in the
+// document, NONE, or NOASSERTION. A free-form name — which is exactly what
+// License.name exists to carry — is none of those, so it needs encoding rather
+// than passing through.
+
+// spdxPackages decodes just the license-bearing fields of an SPDX render.
+func spdxPackages(t *testing.T, pkgs ...*Package) (map[string]struct{ Declared, Concluded string }, map[string]string) {
+	t.Helper()
+	bom := &Sbom{
+		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
+		Asset:     &Asset{Name: "test-asset", Platform: &Platform{Name: "linux", Version: "1"}},
+		Packages:  pkgs,
+	}
+	var doc struct {
+		Packages []struct {
+			Name             string `json:"name"`
+			LicenseDeclared  string `json:"licenseDeclared"`
+			LicenseConcluded string `json:"licenseConcluded"`
+		} `json:"packages"`
+		HasExtractedLicensingInfos []struct {
+			LicenseID   string `json:"licenseId"`
+			LicenseName string `json:"name"`
+		} `json:"hasExtractedLicensingInfos"`
+	}
+	if err := json.Unmarshal([]byte(renderBom(t, FormatSpdxJSON, bom)), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	byName := map[string]struct{ Declared, Concluded string }{}
+	for _, p := range doc.Packages {
+		byName[p.Name] = struct{ Declared, Concluded string }{p.LicenseDeclared, p.LicenseConcluded}
+	}
+	refs := map[string]string{}
+	for _, e := range doc.HasExtractedLicensingInfos {
+		refs[e.LicenseID] = e.LicenseName
+	}
+	return byName, refs
+}
+
+func declaredNamed(name string, licenses ...*License) *Package {
+	for _, l := range licenses {
+		if l.Acquisition == LicenseAcquisition_LICENSE_ACQUISITION_UNSPECIFIED {
+			l.Acquisition = LicenseAcquisition_LICENSE_ACQUISITION_DECLARED
+		}
+	}
+	return &Package{
+		Name: name, Version: "1.0.0", Purl: "pkg:npm/" + name + "@1.0.0",
+		Licenses: licenses,
+	}
+}
+
+// TestSPDXFreeFormNameBecomesLicenseRef: a name that is not an identifier is
+// emitted as one the document defines, and the original text survives as the
+// definition's name — otherwise the reader has a reference to something the
+// document never says the meaning of.
+func TestSPDXFreeFormNameBecomesLicenseRef(t *testing.T) {
+	pkgs, refs := spdxPackages(t, declaredNamed("free-text", &License{Name: "BSD-like, see LICENSE"}))
+
+	got := pkgs["free-text"].Declared
+	want := "LicenseRef-BSD-like-see-LICENSE"
+	if got != want {
+		t.Errorf("licenseDeclared = %q, want %q", got, want)
+	}
+	if strings.Contains(got, " ") {
+		t.Errorf("licenseDeclared = %q contains a space, which no SPDX license expression may", got)
+	}
+	if name, ok := refs[want]; !ok || name != "BSD-like, see LICENSE" {
+		t.Errorf("hasExtractedLicensingInfos[%q] name = %q (present=%v), want the original text", want, name, ok)
+	}
+}
+
+// TestSPDXNameIsNotJoinedRawIntoAnExpression is the case the join makes worse
+// than a single value: "MIT AND see LICENSE" parses as an expression right up to
+// the operand that is not one, so a consumer either rejects the document or
+// silently reads a license that does not exist.
+func TestSPDXNameIsNotJoinedRawIntoAnExpression(t *testing.T) {
+	pkgs, refs := spdxPackages(t, declaredNamed("mixed",
+		&License{SpdxId: "MIT"},
+		&License{Name: "see LICENSE"},
+	))
+
+	got := pkgs["mixed"].Declared
+	if got == "MIT AND see LICENSE" {
+		t.Fatalf("licenseDeclared = %q — a free-form name was joined in raw", got)
+	}
+	if want := "MIT AND LicenseRef-see-LICENSE"; got != want {
+		t.Errorf("licenseDeclared = %q, want %q", got, want)
+	}
+	if _, ok := refs["LicenseRef-see-LICENSE"]; !ok {
+		t.Errorf("LicenseRef-see-LICENSE is referenced but never defined; refs = %v", refs)
+	}
+}
+
+// TestSPDXParenthesizesOnlyWhatItJoins covers both sides of the grouping rule:
+// a joined expression keeps its operands together, and a value that ends up
+// alone is not wrapped just because a sibling entry carried nothing.
+func TestSPDXParenthesizesOnlyWhatItJoins(t *testing.T) {
+	pkgs, _ := spdxPackages(t,
+		declaredNamed("joined",
+			&License{Expression: "MIT OR Apache-2.0"},
+			&License{SpdxId: "AGPL-3.0-only"},
+		),
+		declaredNamed("alone",
+			&License{Expression: "MIT OR Apache-2.0"},
+			// Carries no value at all, so it renders nothing and must not
+			// change how the entry that does render is grouped.
+			&License{Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_DECLARED},
+		),
+	)
+
+	if want := "(MIT OR Apache-2.0) AND AGPL-3.0-only"; pkgs["joined"].Declared != want {
+		t.Errorf("joined licenseDeclared = %q, want %q — OR must not reassociate across the AND",
+			pkgs["joined"].Declared, want)
+	}
+	if want := "MIT OR Apache-2.0"; pkgs["alone"].Declared != want {
+		t.Errorf("alone licenseDeclared = %q, want %q — a dropped entry added parentheses",
+			pkgs["alone"].Declared, want)
+	}
+}
+
+// TestSPDXLegacyScalarPassesThroughUnchanged pins what the fix deliberately does
+// not change. Producers set the scalar to whatever their package manager
+// reported, and a large share of OS packages report something that is not an
+// SPDX expression; re-encoding those here would rewrite what every existing
+// document says. That migration is a decision, not a side effect, so the scalar
+// path stays byte-for-byte as it was.
+func TestSPDXLegacyScalarPassesThroughUnchanged(t *testing.T) {
+	pkgs, _ := spdxPackages(t, &Package{
+		Name: "scalar-free-text", Version: "1.0.0", Purl: "pkg:npm/scalar-free-text@1.0.0",
+		License: "BSD-like, see LICENSE",
+	})
+	if got := pkgs["scalar-free-text"].Declared; got != "BSD-like, see LICENSE" {
+		t.Errorf("licenseDeclared = %q, want the scalar verbatim", got)
+	}
+}
+
+func TestSPDXLicenseRef(t *testing.T) {
+	for _, tc := range []struct{ name, want string }{
+		{"MIT", "LicenseRef-MIT"},
+		{"BSD-like, see LICENSE", "LicenseRef-BSD-like-see-LICENSE"},
+		{"see LICENSE", "LicenseRef-see-LICENSE"},
+		{"GPL v2+", "LicenseRef-GPL-v2"},
+		{"Apache 2.0", "LicenseRef-Apache-2.0"},
+		// Nothing an identifier can be built from: SPDX has no way to reference
+		// this, so the caller has to drop it rather than emit a bare prefix.
+		{"?? ??", ""},
+		{"", ""},
+	} {
+		if got := spdxLicenseRef(tc.name); got != tc.want {
+			t.Errorf("spdxLicenseRef(%q) = %q, want %q", tc.name, got, tc.want)
+		}
+	}
+}
+
+// TestSPDXUnreferenceableNameIsDropped: with no identifier to build, the entry
+// cannot be referenced, and a document that names a license it never defines is
+// invalid. NOASSERTION is the honest value.
+func TestSPDXUnreferenceableNameIsDropped(t *testing.T) {
+	pkgs, refs := spdxPackages(t, declaredNamed("unnameable", &License{Name: "?? ??"}))
+	if got := pkgs["unnameable"].Declared; got != "NOASSERTION" {
+		t.Errorf("licenseDeclared = %q, want NOASSERTION", got)
+	}
+	for id := range refs {
+		if id == licenseRefPrefix || id == licenseRefPrefix+"-" {
+			t.Errorf("emitted a bare LicenseRef prefix: %q", id)
+		}
+	}
+}
