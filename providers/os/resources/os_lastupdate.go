@@ -60,10 +60,15 @@ type mqlOsBaseInternal struct {
 }
 
 // resolveLastInstalledUpdate finds the newest operating system update install
-// recorded on the asset. rpm-based platforms and Windows are answered from
-// resources that already hold the data, so neither pays for a second rpm
-// database read or a second PowerShell round trip; everything else is read from
-// its own files by the updates package.
+// recorded on the asset. rpm-based platforms and Windows are answered with
+// help from resources that already hold data the record alone lacks (the
+// vendor of every rpm, the update agent history); everything else is read
+// from its own files by the updates package.
+//
+// Whatever the source, the resolved timestamp passes one validation before
+// any field sees it: a zero time or a time materially in the future is
+// dropped, so lastUpdate, lastUpdateAge and lastUpdateSource all read null
+// together instead of a broken clock reporting the asset as freshly patched.
 func resolveLastInstalledUpdate(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, error) {
 	conn, ok := runtime.Connection.(shared.Connection)
 	if !ok {
@@ -81,13 +86,20 @@ func resolveLastInstalledUpdate(runtime *plugin.Runtime) (*updates.LastInstalled
 		return nil, nil
 	}
 
+	var update *updates.LastInstalledUpdate
+	var err error
 	switch {
 	case isRpmPlatform(asset.Platform):
-		return lastInstalledRpm(runtime)
+		update, err = lastInstalledRpm(runtime, conn, asset.Platform)
 	case asset.Platform.Name == "windows":
-		return lastInstalledWindows(runtime)
+		update, err = lastInstalledWindows(runtime)
+	default:
+		update, err = updates.ResolveLastInstalledUpdate(conn)
 	}
-	return updates.ResolveLastInstalledUpdate(conn)
+	if err != nil {
+		return nil, err
+	}
+	return updates.ValidateLastInstalledUpdate(update, time.Now()), nil
 }
 
 // isContainerAsset reports whether the asset is a container or a container
@@ -150,6 +162,23 @@ func isRpmPlatform(pf *inventory.Platform) bool {
 	return pf.IsFamily("redhat") || pf.IsFamily("euler") || pf.IsFamily("suse")
 }
 
+// isImageBasedRpmPlatform reports whether the asset updates by swapping the
+// operating system image rather than by upgrading packages: Bottlerocket, and
+// the rpm-ostree family (OpenShift's RHCOS is its own platform, Fedora CoreOS
+// is Fedora carrying VARIANT_ID=coreos). Their rpm database describes the
+// image build, and no dnf transaction log exists, so "when was a package last
+// upgraded" has no answer on them: the honest reading is null until a
+// reliable OS deployment timestamp (an ostree deployment, a Bottlerocket
+// update record) is wired up as its own source.
+func isImageBasedRpmPlatform(pf *inventory.Platform) bool {
+	switch pf.Name {
+	case "bottlerocket", "rhcos":
+		return true
+	}
+	return strings.EqualFold(pf.Labels["variant-id"], "coreos") ||
+		strings.EqualFold(pf.Metadata["variant-id"], "coreos")
+}
+
 // rpmVendorAnchors are packages that only ever come from the operating system
 // vendor. Their %{VENDOR} is what the vendor calls itself on this asset, which
 // is how the OS vendor is identified without shipping a distribution-to-vendor
@@ -161,20 +190,38 @@ func isRpmPlatform(pf *inventory.Platform) bool {
 // and "Amazon.com"). Trusting a single anchor would drop the other spelling.
 var rpmVendorAnchors = []string{"glibc", "bash", "coreutils", "systemd", "filesystem"}
 
-// lastInstalledRpm takes the newest %{INSTALLTIME} across the rpms shipped by
-// the operating system vendor. rpm records an install time per package, which
-// makes this the most precise answer available on these platforms, and it is
-// already parsed on both the command path and the static rpmdb path.
+// lastInstalledRpm takes the newest vendor package upgrade recorded in dnf's
+// rpm transaction log.
 //
-// dnf's own history database is not used: it is emptied on assets whose rpm
-// database stays intact, and reading it would need sqlite over the connection's
-// filesystem where the vendor is already in hand.
+// The rpm database itself cannot answer. It records one %{INSTALLTIME} per
+// package, and that time reads the same for an upgrade and for an operator
+// installing a vendor rpm for the first time, so `dnf install vim` would make
+// the machine look freshly patched. The transaction log is what separates the
+// two: dnf writes an Upgrade/Upgraded line pair only when a package moved to
+// a newer build. A platform that keeps no such log (SUSE's zypper, yum-era
+// RHEL, Photon's tdnf) reads null rather than borrowing the install-time
+// answer, because "installed recently" is not "updated recently".
 //
 // The vendor match is what makes the timestamp mean patch state. Without it a
-// third-party rpm - Docker CE, Grafana, a vendor's agent - counts as an
-// operating system update, and those move far more often than a distribution
-// does.
-func lastInstalledRpm(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, error) {
+// third-party rpm upgraded through dnf - Docker CE, Grafana, a vendor's agent
+// - counts as an operating system update, and those move far more often than
+// a distribution does. The vendor comes from the packages resource, which
+// already parses %{VENDOR} on both the command path and the static rpmdb
+// path, so attributing the log lines costs no extra read.
+func lastInstalledRpm(runtime *plugin.Runtime, conn shared.Connection, pf *inventory.Platform) (*updates.LastInstalledUpdate, error) {
+	// An image-based system is updated by swapping the image, which no
+	// package transaction records; see isImageBasedRpmPlatform.
+	if isImageBasedRpmPlatform(pf) {
+		return nil, nil
+	}
+
+	// Without the transaction log there is no upgrade evidence to attribute,
+	// so skip the package listing the attribution would need. This is what a
+	// SUSE or Photon host answers: their package managers never write it.
+	if !updates.DnfRpmLogPresent(conn.FileSystem()) {
+		return nil, nil
+	}
+
 	obj, err := CreateResource(runtime, "packages", nil)
 	if err != nil {
 		return nil, err
@@ -185,47 +232,42 @@ func lastInstalledRpm(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, er
 		return nil, list.Error
 	}
 
-	newest, ok := newestVendorRpmInstall(list.Data)
-	if !ok {
+	isVendor := rpmVendorPackageMatcher(list.Data)
+	if isVendor == nil {
+		// No anchor resolved a vendor, so no upgrade can be attributed. An
+		// unattributable answer is not a coarser answer, it is none.
 		return nil, nil
 	}
-	return &updates.LastInstalledUpdate{Time: newest.UTC(), Source: updates.LastUpdateSourceRpmDB}, nil
+	return updates.LastInstalledRpm(conn.FileSystem(), isVendor)
 }
 
-// newestVendorRpmInstall returns the newest install time across the rpms shipped
-// by this asset's operating system vendor, and whether one was found.
-func newestVendorRpmInstall(list []any) (time.Time, bool) {
+// rpmVendorPackageMatcher returns a predicate reporting whether a package name
+// belongs to this asset's operating system vendor, or nil when no vendor could
+// be derived. The name is the lookup key because a dnf log line carries
+// nothing else; the vendor comes from the rpm database entry the name still
+// points at, since an upgraded package keeps its name across builds.
+func rpmVendorPackageMatcher(list []any) func(name string) bool {
 	vendors := rpmOSVendors(list)
 	if len(vendors) == 0 {
-		// No anchor resolved a vendor, so no package can be attributed. An
-		// unattributable answer is not a coarser answer, it is none.
-		return time.Time{}, false
+		return nil
 	}
 
-	var newest time.Time
+	vendorPackages := make(map[string]bool, len(list))
 	for i := range list {
 		pkg, ok := list[i].(*mqlPackage)
 		if !ok {
 			continue
 		}
 		// A rpm host can also carry snap, nix or flatpak packages, whose
-		// install times say nothing about the OS.
+		// names must not vouch for a log line.
 		if pkg.Format.Data != packages.RpmPkgFormat {
 			continue
 		}
-		if _, ok := vendors[normalizeVendor(pkg.Vendor.Data)]; !ok {
-			continue
-		}
-		installed := pkg.InstallDate.Data
-		if installed == nil || installed.IsZero() {
-			continue
-		}
-		if installed.After(newest) {
-			newest = *installed
+		if _, ok := vendors[normalizeVendor(pkg.Vendor.Data)]; ok {
+			vendorPackages[pkg.Name.Data] = true
 		}
 	}
-
-	return newest, !newest.IsZero()
+	return func(name string) bool { return vendorPackages[name] }
 }
 
 // rpmOSVendors returns the set of vendor strings the anchor packages carry on
@@ -326,9 +368,10 @@ func entryCategories(entry *mqlWindowsUpdateEntry) []string {
 }
 
 // lastUpdateAge turns an install time into the duration-typed time MQL uses for
-// durations, matching how uptime is reported. A timestamp in the future (a
-// skewed clock, or a log written in a zone ahead of the scanner's) reads as zero
-// rather than as a negative age.
+// durations, matching how uptime is reported. Central validation has already
+// dropped any materially future timestamp before it reaches this point; what
+// can still land here is the few minutes of clock skew inside that tolerance,
+// which clamps to zero rather than rendering a negative age.
 func lastUpdateAge(installed time.Time) *time.Time {
 	age := time.Now().Unix() - installed.Unix()
 	if age < 0 {

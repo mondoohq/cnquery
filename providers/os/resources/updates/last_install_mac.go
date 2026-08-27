@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"howett.net/plist"
 )
@@ -22,11 +23,12 @@ const (
 	// Mac months behind on macOS as having been patched days ago.
 	macosConfigDataContentType = "config-data"
 
-	// macosCommandLineTools is the display name of the Xcode command line
-	// tools. They install through Software Update like an operating system
-	// update does, carry no config-data marker, and are a developer toolchain
-	// rather than a patch to the operating system.
-	macosCommandLineTools = "Command Line Tools"
+	// macosOSUpdatePackagePrefix is the receipt identifier prefix Apple gives
+	// operating system and security updates (com.apple.pkg.update.os.26.5.2,
+	// com.apple.pkg.update.os.SecUpd2022-004Catalina.16U4232). An identifier
+	// is the strongest evidence an entry carries: unlike a display name it is
+	// a machine-facing key, not marketing copy.
+	macosOSUpdatePackagePrefix = "com.apple.pkg.update.os"
 )
 
 // macosSoftwareUpdateProcesses are the processes that install an update through
@@ -35,6 +37,23 @@ const (
 var macosSoftwareUpdateProcesses = map[string]struct{}{
 	"softwareupdated": {},
 	"softwareupdate":  {},
+}
+
+// macosOSUpdateNamePrefixes are the display names the OS update channel uses:
+// version updates ("macOS 26.5.2", "macOS Sonoma 14.4.1"), the standalone
+// security updates of older releases ("Security Update 2022-004"), and Rapid
+// Security Responses ("macOS Security Response 13.4.1 (a)"). A matching name
+// must also carry a digit, so a bare product name cannot slip through.
+//
+// This is an allow list, not a deny list, because Software Update installs
+// far more than the operating system: Rosetta, the Xcode command line tools,
+// dictation and speech assets, config data. Any of those landing after the
+// last real update would report a stale Mac as freshly patched, so a name
+// this list does not recognize does not count, even when Apple delivered it.
+var macosOSUpdateNamePrefixes = []string{
+	"macOS ",
+	"Security Update ",
+	"Rapid Security Response",
 }
 
 func lastInstalledMacos(conn shared.Connection) (*LastInstalledUpdate, error) {
@@ -47,28 +66,42 @@ func lastInstalledMacos(conn shared.Connection) (*LastInstalledUpdate, error) {
 	defer f.Close()
 
 	t, ok, err := ParseMacosInstallHistory(f)
-	if err != nil || !ok {
-		return nil, err
+	if err != nil {
+		// A history that exists but cannot be decoded is unknown patch state,
+		// and unknown reads null: one corrupt plist must not fail a fleet
+		// query. Log it, because without that a damaged file looks identical
+		// to a Mac that genuinely has no update history.
+		log.Debug().Err(err).
+			Msg("mql[os.lastUpdate]> macOS install history cannot be parsed, reporting no answer")
+		return nil, nil
+	}
+	if !ok {
+		return nil, nil
 	}
 	return &LastInstalledUpdate{Time: t, Source: LastUpdateSourceMacosHistory}, nil
 }
 
 type macosInstallHistoryEntry struct {
-	Date           time.Time `plist:"date"`
-	DisplayName    string    `plist:"displayName"`
-	DisplayVersion string    `plist:"displayVersion"`
-	ProcessName    string    `plist:"processName"`
-	ContentType    string    `plist:"contentType"`
+	Date               time.Time `plist:"date"`
+	DisplayName        string    `plist:"displayName"`
+	DisplayVersion     string    `plist:"displayVersion"`
+	ProcessName        string    `plist:"processName"`
+	ContentType        string    `plist:"contentType"`
+	PackageIdentifiers []string  `plist:"packageIdentifiers"`
 }
 
-// ParseMacosInstallHistory returns the date of the newest Software Update
-// install in /Library/Receipts/InstallHistory.plist, ignoring third-party
-// installer runs, the config-data blobs, and the Xcode command line tools.
-// Dates in the plist are UTC.
+// ParseMacosInstallHistory returns the date of the newest macOS operating
+// system or security update in /Library/Receipts/InstallHistory.plist. Dates
+// in the plist are UTC.
 //
-// The filter stays a deny list rather than becoming an allow list on a "macOS "
-// display-name prefix: Safari and the Rapid Security Response entries are
-// genuine operating system patches that such a prefix would drop.
+// Only positive evidence counts. An entry qualifies when Software Update
+// installed it and it identifies itself as an OS update: by a
+// com.apple.pkg.update.os receipt identifier when it carries one, or by a
+// display name the OS update channel uses. Everything else Software Update
+// delivers (Rosetta, the Xcode command line tools, XProtect and other config
+// data, and any Apple product this code does not recognize) is not evidence
+// macOS was patched, so a history holding only such entries reads as no
+// record rather than as a wrong date.
 func ParseMacosInstallHistory(input io.Reader) (time.Time, bool, error) {
 	r, err := plistReadSeeker(input)
 	if err != nil {
@@ -89,7 +122,7 @@ func ParseMacosInstallHistory(input io.Reader) (time.Time, bool, error) {
 		if e.ContentType == macosConfigDataContentType {
 			continue
 		}
-		if strings.Contains(e.DisplayName, macosCommandLineTools) {
+		if !isMacosOSUpdate(e) {
 			continue
 		}
 		if e.Date.After(newest) {
@@ -101,6 +134,29 @@ func ParseMacosInstallHistory(input io.Reader) (time.Time, bool, error) {
 		return time.Time{}, false, nil
 	}
 	return newest.UTC(), true, nil
+}
+
+// isMacosOSUpdate reports whether an install-history entry is positively
+// identifiable as a macOS operating system or security update. The receipt
+// identifiers are checked first because they are the stabler signal; an entry
+// carrying none falls back to the display-name allow list.
+func isMacosOSUpdate(e macosInstallHistoryEntry) bool {
+	for _, id := range e.PackageIdentifiers {
+		if strings.HasPrefix(id, macosOSUpdatePackagePrefix) {
+			return true
+		}
+	}
+
+	name := strings.TrimSpace(e.DisplayName)
+	if !strings.ContainsAny(name, "0123456789") {
+		return false
+	}
+	for _, prefix := range macosOSUpdateNamePrefixes {
+		if strings.HasPrefix(name, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 // plistReadSeeker gives the plist decoder the seekable reader it needs. A file

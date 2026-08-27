@@ -66,11 +66,11 @@ func TestLastUpdateAge(t *testing.T) {
 	assert.InDelta(t, (48 * time.Hour).Seconds(), float64(seconds), 5)
 }
 
-// A log written in a zone ahead of the scanner's, or a skewed clock, puts the
-// install in the future. A negative age would render as a nonsense duration, so
-// it clamps to zero.
+// Central validation rejects materially future installs before any field sees
+// them, but a few minutes of clock skew pass through inside its tolerance. A
+// negative age would render as a nonsense duration, so it clamps to zero.
 func TestLastUpdateAgeClampsFutureInstall(t *testing.T) {
-	age := lastUpdateAge(time.Now().Add(24 * time.Hour))
+	age := lastUpdateAge(time.Now().Add(2 * time.Minute))
 	require.NotNil(t, age)
 	assert.Equal(t, int64(0), llx.TimeToDuration(age))
 }
@@ -203,13 +203,6 @@ func rpmTestPackageFormat(name, vendor, format string, installed *time.Time) *mq
 	}
 }
 
-func at(t *testing.T, value string) *time.Time {
-	t.Helper()
-	parsed, err := time.Parse(time.RFC3339, value)
-	require.NoError(t, err)
-	return &parsed
-}
-
 // The vendor of the anchor packages is what the operating system vendor calls
 // itself on this asset. Deriving it beats a shipped distribution table, which
 // goes stale and nulls the field on a distribution nobody added to it.
@@ -250,57 +243,96 @@ func TestRpmOSVendors(t *testing.T) {
 	})
 }
 
-func TestNewestVendorRpmInstall(t *testing.T) {
-	t.Run("third-party rpms do not count", func(t *testing.T) {
+// The matcher is what attributes a dnf log line to the operating system
+// vendor: the log carries only a package name, and the rpm database entry
+// behind that name carries the vendor.
+func TestRpmVendorPackageMatcher(t *testing.T) {
+	t.Run("vendor names vouch, third-party names do not", func(t *testing.T) {
 		// The failure this prevents: Docker CE moves far more often than a
-		// distribution does, so counting it reports an unpatched host as
-		// patched last week.
-		got, ok := newestVendorRpmInstall([]any{
-			rpmTestPackage("glibc", "Red Hat, Inc.", at(t, "2026-01-10T00:00:00Z")),
-			rpmTestPackage("kernel", "Red Hat, Inc.", at(t, "2026-02-14T09:30:00Z")),
-			rpmTestPackage("docker-ce", "Docker", at(t, "2026-08-01T12:00:00Z")),
-			rpmTestPackage("grafana", "Grafana Labs", at(t, "2026-08-20T12:00:00Z")),
-		})
-		require.True(t, ok)
-		assert.Equal(t, "2026-02-14T09:30:00Z", got.Format(time.RFC3339))
-	})
-
-	t.Run("EPEL is not the distribution vendor", func(t *testing.T) {
-		got, ok := newestVendorRpmInstall([]any{
-			rpmTestPackage("glibc", "Red Hat, Inc.", at(t, "2026-02-14T09:30:00Z")),
-			rpmTestPackage("htop", "Fedora Project", at(t, "2026-08-01T12:00:00Z")),
-		})
-		require.True(t, ok)
-		assert.Equal(t, "2026-02-14T09:30:00Z", got.Format(time.RFC3339))
-	})
-
-	t.Run("other package formats do not count", func(t *testing.T) {
-		got, ok := newestVendorRpmInstall([]any{
-			rpmTestPackage("glibc", "SUSE LLC", at(t, "2026-02-14T09:30:00Z")),
-			rpmTestPackageFormat("code", "SUSE LLC", "snap", at(t, "2026-08-01T12:00:00Z")),
-		})
-		require.True(t, ok)
-		assert.Equal(t, "2026-02-14T09:30:00Z", got.Format(time.RFC3339))
-	})
-
-	t.Run("no anchor means no answer", func(t *testing.T) {
-		_, ok := newestVendorRpmInstall([]any{
-			rpmTestPackage("nginx", "nginx.org", at(t, "2026-08-01T12:00:00Z")),
-		})
-		assert.False(t, ok, "an unattributable answer is none, not a coarser one")
-	})
-
-	t.Run("packages without an install date", func(t *testing.T) {
-		_, ok := newestVendorRpmInstall([]any{
+		// distribution does, so counting its upgrades reports an unpatched
+		// host as patched last week.
+		isVendor := rpmVendorPackageMatcher([]any{
 			rpmTestPackage("glibc", "Red Hat, Inc.", nil),
+			rpmTestPackage("kernel", "Red Hat, Inc.", nil),
+			rpmTestPackage("docker-ce", "Docker", nil),
+			rpmTestPackage("htop", "Fedora Project", nil),
 		})
-		assert.False(t, ok)
+		require.NotNil(t, isVendor)
+		assert.True(t, isVendor("glibc"))
+		assert.True(t, isVendor("kernel"))
+		assert.False(t, isVendor("docker-ce"))
+		assert.False(t, isVendor("htop"), "EPEL is not the distribution vendor")
+		assert.False(t, isVendor("removed-package"))
+	})
+
+	t.Run("other package formats do not vouch", func(t *testing.T) {
+		// A rpm host can also carry snap, nix or flatpak packages; a name
+		// coming from one of those must not attribute a rpm log line.
+		isVendor := rpmVendorPackageMatcher([]any{
+			rpmTestPackage("glibc", "SUSE LLC", nil),
+			rpmTestPackageFormat("code", "SUSE LLC", "snap", nil),
+		})
+		require.NotNil(t, isVendor)
+		assert.True(t, isVendor("glibc"))
+		assert.False(t, isVendor("code"))
+	})
+
+	t.Run("no anchor means no matcher", func(t *testing.T) {
+		isVendor := rpmVendorPackageMatcher([]any{
+			rpmTestPackage("nginx", "nginx.org", nil),
+		})
+		assert.Nil(t, isVendor, "an unattributable answer is none, not a coarser one")
 	})
 
 	t.Run("empty list", func(t *testing.T) {
-		_, ok := newestVendorRpmInstall(nil)
-		assert.False(t, ok)
+		assert.Nil(t, rpmVendorPackageMatcher(nil))
 	})
+}
+
+// An image-based system is updated by swapping the operating system image, so
+// no package transaction ever records an update. Reporting the image's rpm
+// timestamps as patch state would date the image build, not the patching.
+func TestIsImageBasedRpmPlatform(t *testing.T) {
+	tests := []struct {
+		name     string
+		platform *inventory.Platform
+		want     bool
+	}{
+		{"bottlerocket", &inventory.Platform{Name: "bottlerocket"}, true},
+		{"rhcos", &inventory.Platform{Name: "rhcos"}, true},
+		{
+			name: "fedora coreos via label",
+			platform: &inventory.Platform{
+				Name:   "fedora",
+				Labels: map[string]string{"variant-id": "coreos"},
+			},
+			want: true,
+		},
+		{
+			name: "fedora coreos via metadata",
+			platform: &inventory.Platform{
+				Name:     "fedora",
+				Metadata: map[string]string{"variant-id": "coreos"},
+			},
+			want: true,
+		},
+		{"plain fedora", &inventory.Platform{Name: "fedora"}, false},
+		{"rhel", &inventory.Platform{Name: "redhat"}, false},
+		{
+			name: "fedora workstation variant",
+			platform: &inventory.Platform{
+				Name:   "fedora",
+				Labels: map[string]string{"variant-id": "workstation"},
+			},
+			want: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.want, isImageBasedRpmPlatform(test.platform))
+		})
+	}
 }
 
 func TestNormalizeVendor(t *testing.T) {

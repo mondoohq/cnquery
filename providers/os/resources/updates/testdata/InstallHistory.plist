@@ -74,5 +74,19 @@
 		<key>processName</key>
 		<string>softwareupdated</string>
 	</dict>
+	<dict>
+		<key>date</key>
+		<date>2026-08-20T08:15:09Z</date>
+		<key>displayName</key>
+		<string>RosettaUpdateAuto</string>
+		<key>displayVersion</key>
+		<string>1.0</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.RosettaUpdateAuto</string>
+		</array>
+		<key>processName</key>
+		<string>softwareupdated</string>
+	</dict>
 </array>
 </plist>
