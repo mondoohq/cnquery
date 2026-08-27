@@ -5,6 +5,7 @@ package services
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 
@@ -25,6 +26,13 @@ func (s *SolarisSmfServiceManager) List() ([]*Service, error) {
 	cmd, err := s.conn.RunCommand("svcs -a")
 	if err != nil {
 		return nil, err
+	}
+	// without this an unavailable or failing svcs reports an empty service list
+	// as if the system genuinely ran no services
+	if cmd.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(cmd.Stderr)
+		return nil, fmt.Errorf("svcs -a failed with exit code %d: %s",
+			cmd.ExitStatus, strings.TrimSpace(string(stderr)))
 	}
 
 	return ParseSolarisSmfServices(cmd.Stdout), nil
@@ -51,11 +59,20 @@ func ParseSolarisSmfServices(r io.Reader) []*Service {
 	var services []*Service
 	scanner := bufio.NewScanner(r)
 
-	// Skip header line: "STATE          STIME           FMRI"
-	_ = scanner.Scan()
-
+	first := true
 	for scanner.Scan() {
 		line := scanner.Text()
+
+		// Drop the header line ("STATE STIME FMRI") when it is present, but only
+		// then. Skipping unconditionally loses the first service on headerless
+		// output such as `svcs -aH`.
+		if first {
+			first = false
+			if fields := strings.Fields(line); len(fields) > 0 && fields[0] == "STATE" {
+				continue
+			}
+		}
+
 		entry := parseSmfLine(line)
 		if entry == nil {
 			continue
