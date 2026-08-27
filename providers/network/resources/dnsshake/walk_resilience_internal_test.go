@@ -214,16 +214,18 @@ func TestAuthoritativeNameserversStillClimbsPastAnUnresolvableDelegation(t *test
 		"the unresolvable delegation is tried first, then the walk continues to the parent")
 }
 
-// TestAuthoritativeNameserversReportsWhyWhenNoResolverAnswers: a walk that could
-// not reach a resolver at any label used to report only that it found nothing,
-// which reads as a fact about the name.
-func TestAuthoritativeNameserversReportsWhyWhenNoResolverAnswers(t *testing.T) {
+// TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure pins the behaviour
+// change this backport makes to a shipped field. Before it, a lost reply at the
+// queried name climbed to the parent and returned the parent's nameservers,
+// which answer referrals rather than the records the caller wanted. It is an
+// error now, and after queryNS's retry it takes a resolver that really cannot
+// answer.
+func TestAuthoritativeNameserversEndsTheWalkOnAQueryFailure(t *testing.T) {
 	c := &DnsClient{config: deadResolverConfig(t, 2, 2), fqdn: "vpn.corp.example.test"}
 
 	addrs, err := c.authoritativeNameservers()
 	require.Error(t, err)
 	assert.Empty(t, addrs)
-	assert.Contains(t, err.Error(), "no authoritative nameserver found for vpn.corp.example.test")
 	assert.Contains(t, err.Error(), "querying NS for",
 		"the terminal error should carry the query that could not be answered")
 }

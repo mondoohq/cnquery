@@ -545,6 +545,24 @@ dns @defaults("fqdn") {
   init(fqdn string)
   // Fully qualified domain name (FQDN)
   fqdn string
+  // Apex of the zone that contains this name
+  //
+  // The closest enclosing name that is served as a zone of its own, which is
+  // where a zone-wide question has an answer. DNSKEY, NS and SOA records exist
+  // at a zone apex and nowhere else inside the zone, so `zone.dnssec` and
+  // `zone.records` report how the containing zone is signed and served even
+  // when the name itself publishes neither. Comparing `fqdn` against
+  // `zone.fqdn` tells an apex from a name that merely sits inside a zone,
+  // which is what scopes a zone-wide audit to the one name it can hold for.
+  //
+  // The zone is established by delegation rather than by the public suffix
+  // list, so it is the zone the name belongs to and not the registrable
+  // domain. The two agree for `www.example.com`, whose zone is `example.com`.
+  // They differ for a delegated subdomain such as `corp.example.com`, which is
+  // a zone of its own, signed with its own keys and served by its own
+  // nameservers. Null when nothing answers as a zone, such as for a name that
+  // does not resolve or a scan target given as an IP address.
+  zone(fqdn) dns
   // DNS query results keyed by record type
   //
   // Map keyed by DNS record type (such as `A`, `AAAA`, `MX`, or `TXT`),
