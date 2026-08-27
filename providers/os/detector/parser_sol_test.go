@@ -39,11 +39,11 @@ func TestSolaris11Release(t *testing.T) {
 	assert.Equal(t, "11", r.Release)
 }
 
+// Verbatim /etc/release from an Oracle Solaris 11.4.86 instance.
 func TestSolaris114Release(t *testing.T) {
-	input := `
-                             Oracle Solaris 11.4 X86
-  Copyright (c) 1983, 2018, Oracle and/or its affiliates.  All rights reserved.
-                            Assembled 16 August 2018
+	input := `                             Oracle Solaris 11.4 X86
+             Copyright (c) 1983, 2025, Oracle and/or its affiliates.
+                            Assembled 07 October 2025
 `
 
 	r, err := detector.ParseSolarisRelease(input)

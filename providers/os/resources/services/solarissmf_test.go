@@ -262,10 +262,44 @@ uninitialized  22:01:39        svc:/test/uninit:default
 	assert.Equal(t, ServiceStopped, svc.State)
 }
 
+// Verbatim `svcs -a` lines from an Oracle Solaris 11.4.86 instance. 11.4 prints
+// STIME as an ISO timestamp rather than the wall-clock time older releases used.
+func TestParseSolarisSmfServices114(t *testing.T) {
+	testOutput := `STATE          STIME               FMRI
+legacy_run     2026-08-27T07:02:19 lrc:/etc/rc2_d/S89PRESERVE
+disabled       2026-08-27T07:01:57 svc:/application/management/net-snmp:default
+online         2026-08-27T07:01:40 svc:/network/ssh:default
+offline*       2026-08-27T07:01:57 svc:/application/man-index:default
+incomplete     2026-08-27T07:01:33 svc:/system/early-manifest-import:default`
+
+	services := ParseSolarisSmfServices(strings.NewReader(testOutput))
+	require.Len(t, services, 5)
+
+	legacy := findServiceByName(services, "lrc:/etc/rc2_d/S89PRESERVE")
+	require.NotNil(t, legacy)
+	assert.True(t, legacy.Running, "legacy_run is running")
+
+	ssh := findServiceByName(services, "svc:/network/ssh:default")
+	require.NotNil(t, ssh)
+	assert.True(t, ssh.Running)
+	assert.True(t, ssh.Enabled)
+
+	// a transitioning state carries a trailing asterisk
+	manIndex := findServiceByName(services, "svc:/application/man-index:default")
+	require.NotNil(t, manIndex)
+	assert.False(t, manIndex.Running, "offline* is not yet running")
+	assert.True(t, manIndex.Enabled, "offline* is still enabled")
+
+	snmp := findServiceByName(services, "svc:/application/management/net-snmp:default")
+	require.NotNil(t, snmp)
+	assert.False(t, snmp.Running)
+	assert.False(t, snmp.Enabled)
+}
+
 // Headerless output must not lose its first service.
 func TestParseSolarisSmfServicesHeaderless(t *testing.T) {
-	testOutput := `online         22:01:55        svc:/network/ssh:default
-disabled       22:01:40        svc:/network/telnet:default`
+	testOutput := `online         2026-08-27T07:01:40 svc:/network/ssh:default
+disabled       2026-08-27T07:01:31 svc:/network/telnet:default`
 
 	services := ParseSolarisSmfServices(strings.NewReader(testOutput))
 	require.Len(t, services, 2)
