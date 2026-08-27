@@ -265,19 +265,25 @@ func (d *DnsClient) QueryAuthoritative(dnsTypes ...string) (map[string]DnsRecord
 	return res, errs.Deduplicate()
 }
 
-// authoritativeNameservers finds the addresses of the nameservers serving the
-// zone that contains the client's fqdn.
+// walkToDelegation walks up the labels of the client's fqdn and reports the
+// closest enclosing name that answers with NS records of its own, together with
+// those records.
 //
-// The NS records live at the zone apex, not at every name within it, so this
-// walks up the labels until a delegation is found: a query for
-// "www.example.com" finds nothing at that name and succeeds at "example.com".
-// The walk stops before the root so a name that resolves nowhere fails rather
-// than returning the root servers, which would answer referrals instead of the
+// NS records live at a zone apex and at the delegation points within it, not at
+// every name a zone contains, so a query for "www.example.com" answers with no
+// NS records and the walk continues at "example.com", which does. The walk
+// stops before the root so a name that resolves nowhere reports not-found
+// rather than the root servers, which would answer referrals instead of the
 // records the caller wants.
-func (d *DnsClient) authoritativeNameservers() ([]string, error) {
+//
+// accept decides whether a name that answered is the one the caller wanted;
+// returning false continues the walk. It is how authoritativeNameservers keeps
+// climbing past a delegation whose nameservers do not resolve, while Zone,
+// which only needs the name, stops at the first one.
+func (d *DnsClient) walkToDelegation(accept func(zone string, ns DnsRecord) bool) (string, bool, error) {
 	name := dns.Fqdn(d.fqdn)
 	if name == "." {
-		return nil, errors.New("cannot determine authoritative nameservers without a domain name")
+		return "", false, errors.New("cannot determine the authoritative zone without a domain name")
 	}
 
 	for labels := dns.SplitDomainName(name); len(labels) > 0; labels = labels[1:] {
@@ -285,15 +291,73 @@ func (d *DnsClient) authoritativeNameservers() ([]string, error) {
 
 		records, err := d.queryDnsTypeAt(d.config.Servers[0], true, zone, "NS")
 		if err != nil {
-			return nil, err
+			return "", false, err
 		}
 
 		ns, ok := records["NS"]
+
+		// queryDnsTypeAt reports a transport failure in the record rather than
+		// as an error, and climbing past one would answer with whichever
+		// ancestor did respond: a failed query at "corp.example.com" would
+		// report "example.com" as the zone, and the delegated subzone below it
+		// would never be seen. A query that did not happen is not evidence that
+		// the name is not a zone, so it ends the walk.
+		if ok && ns.Error != nil {
+			return "", false, errors.Wrapf(ns.Error, "querying NS for %s", zone)
+		}
+
 		if !ok || ns.RCode != dns.RcodeToString[dns.RcodeSuccess] || len(ns.RData) == 0 {
 			continue
 		}
 
-		addrs := []string{}
+		if !accept(zone, ns) {
+			continue
+		}
+
+		return zone, true, nil
+	}
+
+	return "", false, nil
+}
+
+// Zone reports the apex of the zone that contains the client's fqdn: the
+// closest enclosing name that is served as a zone of its own.
+//
+// This is the name the zone-wide configuration belongs to. DNSKEY, NS and SOA
+// records exist at a zone apex and nowhere else inside the zone, so a question
+// about how a zone is signed, or how many nameservers serve it, has an answer
+// at this name and no answer at any other name the zone contains.
+//
+// It is found by delegation rather than by the public suffix list, which is
+// what makes it the zone the name actually belongs to rather than the
+// registrable domain. The two agree for "www.example.com", whose zone is
+// "example.com"; they differ for a delegated subdomain such as
+// "corp.example.com", which is its own zone, signed with its own keys and
+// served by its own nameservers.
+//
+// It reports an empty zone, and no error, for a name that nothing answers for
+// as a zone: an unregistered domain has no apex to report, which is a fact
+// about the name rather than a failure to establish it. A query that fails is
+// the error case, and is reported as one, so a resolver outage is never
+// mistaken for a name that belongs to no zone.
+func (d *DnsClient) Zone() (string, error) {
+	zone, found, err := d.walkToDelegation(func(string, DnsRecord) bool { return true })
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", nil
+	}
+	return zone, nil
+}
+
+// authoritativeNameservers finds the addresses of the nameservers serving the
+// zone that contains the client's fqdn.
+func (d *DnsClient) authoritativeNameservers() ([]string, error) {
+	var addrs []string
+
+	_, found, err := d.walkToDelegation(func(_ string, ns DnsRecord) bool {
+		addrs = addrs[:0]
 		for _, host := range ns.RData {
 			// Nameservers are named, so each one needs resolving to an address
 			// before it can be queried. Skip any that do not resolve; as long as
@@ -304,13 +368,16 @@ func (d *DnsClient) authoritativeNameservers() ([]string, error) {
 			}
 			addrs = append(addrs, ips...)
 		}
-
-		if len(addrs) > 0 {
-			return addrs, nil
-		}
+		return len(addrs) > 0
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("no authoritative nameserver found for " + d.fqdn)
 	}
 
-	return nil, errors.New("no authoritative nameserver found for " + d.fqdn)
+	return addrs, nil
 }
 
 // queryDnsTypeAt performs the lookup against a named server.
