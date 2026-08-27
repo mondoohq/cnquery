@@ -21,7 +21,7 @@ func fetchRunningConfig(runtime *plugin.Runtime) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return rc.fetchContent(), nil
+	return rc.fetchContent()
 }
 
 // runningConfigResource returns the device's running-config resource, which the
