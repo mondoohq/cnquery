@@ -34,12 +34,18 @@ func TestParseBool(t *testing.T) {
 	}
 }
 
-func TestFirewallID(t *testing.T) {
+// TestFirewallRuleID covers the identity every firewall table now shares.
+// There used to be a second helper, firewallID, that composed exactly the same
+// key; the two tables using it had drifted from the shared row builder and
+// reported false where the others reported null for the same absent attribute.
+func TestFirewallRuleID(t *testing.T) {
 	// RouterOS supplies a stable internal .id
-	assert.Equal(t, "p/*5", firewallID("p/", map[string]string{".id": "*5", "chain": "input"}))
+	assert.Equal(t, "p/*5",
+		rowID("p/", map[string]string{".id": "*5", "chain": "input"}, "input", "", ""))
 	// fallback composes a key from chain/action/comment when .id is absent
+	row := map[string]string{"chain": "input", "action": "drop", "comment": "block ssh"}
 	assert.Equal(t, "p/input/drop/block ssh",
-		firewallID("p/", map[string]string{"chain": "input", "action": "drop", "comment": "block ssh"}))
+		rowID("p/", row, row["chain"], row["action"], row["comment"]))
 }
 
 func TestInterfaceArgs(t *testing.T) {
