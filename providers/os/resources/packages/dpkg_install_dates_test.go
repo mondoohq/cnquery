@@ -21,7 +21,8 @@ func TestParseDpkgInstallDates(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	dates := ParseDpkgInstallDates(f, time.UTC, nil)
+	dates, err := ParseDpkgInstallDates(f, time.UTC, nil)
+	require.NoError(t, err)
 
 	got, ok := dates.Get("curl", "amd64", "8.5.0-2ubuntu10.6")
 	require.True(t, ok)
@@ -138,7 +139,8 @@ func TestParseDpkgInstallDatesCases(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dates := ParseDpkgInstallDates(strings.NewReader(test.log), time.UTC, nil)
+			dates, err := ParseDpkgInstallDates(strings.NewReader(test.log), time.UTC, nil)
+			require.NoError(t, err)
 			got, ok := dates.Get(test.pkg, test.arch, test.version)
 			if test.want == "" {
 				assert.False(t, ok)
@@ -159,12 +161,14 @@ func TestParseDpkgInstallDatesUsesLocation(t *testing.T) {
 
 	log := "2026-01-02 03:04:05 install curl:amd64 <none> 8.5.0\n"
 
-	dates := ParseDpkgInstallDates(strings.NewReader(log), berlin, nil)
+	dates, err := ParseDpkgInstallDates(strings.NewReader(log), berlin, nil)
+	require.NoError(t, err)
 	got, ok := dates.Get("curl", "amd64", "8.5.0")
 	require.True(t, ok)
 	assert.Equal(t, "2026-01-02T02:04:05Z", got.Format(time.RFC3339))
 
-	dates = ParseDpkgInstallDates(strings.NewReader(log), nil, nil)
+	dates, err = ParseDpkgInstallDates(strings.NewReader(log), nil, nil)
+	require.NoError(t, err)
 	got, ok = dates.Get("curl", "amd64", "8.5.0")
 	require.True(t, ok)
 	assert.Equal(t, "2026-01-02T03:04:05Z", got.Format(time.RFC3339),
@@ -177,7 +181,8 @@ func TestDpkgInstallDatesMultiArch(t *testing.T) {
 	log := "2026-05-01 09:00:00 status installed zlib1g:amd64 1.3\n" +
 		"2026-06-01 09:00:00 status installed zlib1g:i386 1.3\n"
 
-	dates := ParseDpkgInstallDates(strings.NewReader(log), time.UTC, nil)
+	dates, err := ParseDpkgInstallDates(strings.NewReader(log), time.UTC, nil)
+	require.NoError(t, err)
 
 	got, ok := dates.Get("zlib1g", "amd64", "1.3")
 	require.True(t, ok)
@@ -203,15 +208,8 @@ func TestReadDpkgInstallDatesWalksRotations(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.1",
 		[]byte("2026-05-01 09:00:00 status installed openssl:amd64 3.0.14\n"), 0o644))
 
-	var buf bytes.Buffer
-	gz := gzip.NewWriter(&buf)
-	_, err := gz.Write([]byte("2026-04-01 09:00:00 status installed bash:amd64 5.2.21\n"))
-	require.NoError(t, err)
-	require.NoError(t, gz.Close())
-	require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.2.gz", buf.Bytes(), 0o644))
-
-	// A corrupt archive must not abort the walk.
-	require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.3.gz", []byte("not gzip"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.2.gz",
+		gzipLog(t, "2026-04-01 09:00:00 status installed bash:amd64 5.2.21\n"), 0o644))
 
 	dates := ReadDpkgInstallDates(fs, time.UTC)
 
@@ -230,4 +228,74 @@ func TestReadDpkgInstallDatesWithoutLogs(t *testing.T) {
 	assert.Empty(t, ReadDpkgInstallDates(afero.NewMemMapFs(), time.UTC),
 		"an asset whose logs are gone yields no dates rather than an error")
 	assert.Empty(t, ReadDpkgInstallDates(nil, time.UTC))
+}
+
+// A rotation that exists but cannot be read ends the walk: a package whose
+// newest placement sat inside it would otherwise be dated by an older
+// placement from a deeper rotation. What newer logs already supplied stays.
+func TestReadDpkgInstallDatesStopsAtUnreadableRotation(t *testing.T) {
+	t.Run("corrupt gzip", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log",
+			[]byte("2026-06-01 09:00:00 status installed curl:amd64 8.5.0\n"), 0o644))
+		require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.1.gz", []byte("not gzip"), 0o644))
+		require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.2",
+			[]byte("2026-04-01 09:00:00 status installed bash:amd64 5.2.21\n"), 0o644))
+
+		dates := ReadDpkgInstallDates(fs, time.UTC)
+
+		_, ok := dates.Get("curl", "amd64", "8.5.0")
+		assert.True(t, ok, "dates from logs newer than the damage stay")
+		_, ok = dates.Get("bash", "amd64", "5.2.21")
+		assert.False(t, ok, "a rotation older than the damage must not supply dates")
+	})
+
+	t.Run("truncated gzip", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log",
+			[]byte("2026-06-01 09:00:00 status installed curl:amd64 8.5.0\n"), 0o644))
+
+		// The header stays intact so the open succeeds; the read fails midway.
+		full := gzipLog(t, "2026-05-01 09:00:00 status installed openssl:amd64 3.0.14\n"+
+			"2026-05-02 09:00:00 status installed libssl3:amd64 3.0.14\n")
+		require.Greater(t, len(full), 40)
+		require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.1.gz", full[:len(full)/2], 0o644))
+
+		require.NoError(t, afero.WriteFile(fs, "/var/log/dpkg.log.2",
+			[]byte("2026-04-01 09:00:00 status installed bash:amd64 5.2.21\n"), 0o644))
+
+		dates := ReadDpkgInstallDates(fs, time.UTC)
+
+		_, ok := dates.Get("curl", "amd64", "8.5.0")
+		assert.True(t, ok, "dates from logs newer than the damage stay")
+		_, ok = dates.Get("bash", "amd64", "5.2.21")
+		assert.False(t, ok, "a rotation older than the damage must not supply dates")
+	})
+}
+
+// A stream that stops early hands back what it read alongside the error:
+// every entry parsed is a true placement event, and the error is what tells
+// the walk to stop descending.
+func TestParseDpkgInstallDatesScannerError(t *testing.T) {
+	log := "2026-05-01 09:14:12 install curl:amd64 <none> 8.5.0\n" +
+		strings.Repeat("x", dpkgMaxLine+1) + "\n" +
+		"2026-06-01 09:14:12 install bash:amd64 <none> 5.2.21\n"
+
+	dates, err := ParseDpkgInstallDates(strings.NewReader(log), time.UTC, nil)
+	assert.Error(t, err)
+
+	_, ok := dates.Get("curl", "amd64", "8.5.0")
+	assert.True(t, ok, "entries read before the failure are kept")
+	_, ok = dates.Get("bash", "amd64", "5.2.21")
+	assert.False(t, ok)
+}
+
+func gzipLog(t *testing.T, content string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	_, err := gz.Write([]byte(content))
+	require.NoError(t, err)
+	require.NoError(t, gz.Close())
+	return buf.Bytes()
 }

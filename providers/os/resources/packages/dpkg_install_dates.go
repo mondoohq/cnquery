@@ -5,7 +5,9 @@ package packages
 
 import (
 	"bufio"
+	"errors"
 	"io"
+	"io/fs"
 	"strings"
 	"time"
 
@@ -70,7 +72,13 @@ func (d DpkgInstallDates) Get(name, arch, version string) (time.Time, bool) {
 // Removals, purges, triggers and startup lines carry no version landing and are
 // skipped. Later entries win, so the map holds the most recent time each
 // version was placed.
-func ParseDpkgInstallDates(r io.Reader, loc *time.Location, into DpkgInstallDates) DpkgInstallDates {
+//
+// A stream that cannot be read to its end returns what was parsed alongside
+// the error. Every entry read is a true placement event, so the partial map is
+// worth keeping; the error is the caller's signal that anything older than
+// this stream can no longer be trusted to be the newest record (see
+// ReadDpkgInstallDates).
+func ParseDpkgInstallDates(r io.Reader, loc *time.Location, into DpkgInstallDates) (DpkgInstallDates, error) {
 	if into == nil {
 		into = DpkgInstallDates{}
 	}
@@ -113,37 +121,49 @@ func ParseDpkgInstallDates(r io.Reader, loc *time.Location, into DpkgInstallDate
 		}
 	}
 
-	// A read that stops early leaves the map short, which costs some packages
-	// their install date. That is a missing field rather than a wrong one, so
-	// the package list is still worth returning.
-	if err := scanner.Err(); err != nil {
-		log.Debug().Err(err).Msg("could not read the dpkg log to its end, some install dates are missing")
-	}
-
-	return into
+	return into, scanner.Err()
 }
 
-// ReadDpkgInstallDates walks dpkg.log and its logrotate copies and returns the
-// install times they record.
+// ReadDpkgInstallDates walks dpkg.log and its logrotate copies newest-first and
+// returns the install times they record.
 //
 // Coverage is bounded by what logrotate has kept, which distributions ship as
 // twelve monthly copies. A package that has not been touched inside that window
 // carries no date and its installDate stays null - unknown, which is what it
 // was before, rather than a wrong answer. The packages an audit cares about are
 // the ones that moved recently, and those are the ones the retained logs hold.
-func ReadDpkgInstallDates(fs afero.Fs, loc *time.Location) DpkgInstallDates {
+//
+// The walk fails closed the way the last-update readers do: only a genuinely
+// missing file moves it to the next rotation. A rotation that exists but
+// cannot be opened or read to its end (a permission problem, a corrupt or
+// truncated gzip) ends the walk instead. The dates already collected came from
+// newer logs and stay; older rotations are not consulted, because a package
+// whose newest placement sat inside the unreadable log would otherwise be
+// dated by an older placement of the same version: a stale answer where null
+// is the honest one.
+func ReadDpkgInstallDates(logFS afero.Fs, loc *time.Location) DpkgInstallDates {
 	dates := DpkgInstallDates{}
-	if fs == nil {
+	if logFS == nil {
 		return dates
 	}
 
 	for _, path := range logrotate.Paths(dpkgLogPath, logrotate.DefaultMaxRotations) {
-		f, err := logrotate.Open(fs, path)
+		f, err := logrotate.Open(logFS, path)
 		if err != nil {
-			continue
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			log.Debug().Err(err).Str("path", path).
+				Msg("mql[packages]> dpkg log rotation exists but cannot be read, skipping older rotations")
+			break
 		}
-		ParseDpkgInstallDates(f, loc, dates)
+		_, err = ParseDpkgInstallDates(f, loc, dates)
 		f.Close()
+		if err != nil {
+			log.Debug().Err(err).Str("path", path).
+				Msg("mql[packages]> dpkg log rotation cannot be read to its end, skipping older rotations")
+			break
+		}
 	}
 	return dates
 }
