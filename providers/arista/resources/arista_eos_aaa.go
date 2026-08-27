@@ -71,8 +71,15 @@ func (a *mqlAristaEosAaaRadiusServer) id() (string, error) {
 	if a.AuthPort.Error != nil {
 		return "", a.AuthPort.Error
 	}
+	if a.AcctPort.Error != nil {
+		return "", a.AcctPort.Error
+	}
+	// RADIUS splits authentication and accounting across two independently
+	// configurable ports, so one host can be defined twice differing only in
+	// the accounting port. Both belong in the key.
 	return "arista.eos.aaa.radiusServer/" + a.Vrf.Data + "/" + a.Host.Data + "/" +
-		strconv.FormatInt(a.AuthPort.Data, 10), nil
+		strconv.FormatInt(a.AuthPort.Data, 10) + "/" +
+		strconv.FormatInt(a.AcctPort.Data, 10), nil
 }
 
 func (a *mqlAristaEosAaa) radiusServerHosts() ([]any, error) {

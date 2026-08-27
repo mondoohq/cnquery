@@ -25,13 +25,153 @@ import (
 type ErrIdentifierNotFound struct {
 	Identifier string
 	Binding    string
+
+	// Provider is the id of the provider whose namespace the identifier falls
+	// under, when we can establish one, and ProviderVersion is the version of
+	// it that is installed. Together they turn "cannot find field 'x'" into a
+	// message that says which component would have to be newer -- the most
+	// common cause of the failure by far, and the one the bare message gives
+	// no hint of (ADR 040 part 1).
+	//
+	// We deliberately do not claim which version would be new *enough*: that
+	// needs a registry of schemas we do not have, and a guess here would send
+	// people chasing an upgrade that does not contain what they want.
+	Provider        string
+	ProviderVersion string
 }
 
 func (e *ErrIdentifierNotFound) Error() string {
+	var msg string
 	if e.Binding == "" {
-		return "cannot find resource for identifier '" + e.Identifier + "'"
+		msg = "cannot find resource for identifier '" + e.Identifier + "'"
+	} else {
+		msg = "cannot find field or resource '" + e.Identifier + "' in block for type '" + e.Binding + "'"
 	}
-	return "cannot find field or resource '" + e.Identifier + "' in block for type '" + e.Binding + "'"
+	if hint := e.versionHint(); hint != "" {
+		msg += " (" + hint + ")"
+	}
+	return msg
+}
+
+func (e *ErrIdentifierNotFound) versionHint() string {
+	if e.Provider == "" || e.ProviderVersion == "" {
+		return ""
+	}
+	what := "resource"
+	if e.Binding != "" {
+		what = "field"
+	}
+	return providerLabel(e.Provider) + " provider " + e.ProviderVersion +
+		" is installed; this " + what + " may require a newer one"
+}
+
+// providerLabel trims a provider id down to the name people use on the command
+// line. Ids are module paths ("go.mondoo.com/mql/providers/aws"), which are the
+// right key but the wrong thing to print.
+func providerLabel(id string) string {
+	return resources.ProviderKey(id)
+}
+
+// identifierProvider finds the provider that owns the namespace an unresolvable
+// identifier sits in, by walking the dotted name back to the longest prefix
+// that does resolve. `aws.s3.nope` gets attributed to whoever owns `aws.s3`.
+func identifierProvider(schema resources.ResourcesSchema, id string) string {
+	if schema == nil {
+		return ""
+	}
+	name := id
+	for {
+		i := strings.LastIndexByte(name, '.')
+		if i <= 0 {
+			return ""
+		}
+		name = name[:i]
+		if info := schema.Lookup(name); info != nil && info.Provider != "" {
+			return info.Provider
+		}
+	}
+}
+
+// bindingProvider attributes a failed field access to the provider that owns
+// the resource it was attempted on.
+func bindingProvider(schema resources.ResourcesSchema, typ types.Type) string {
+	if schema == nil {
+		return ""
+	}
+	name := resourceOf(typ)
+	if name == "" {
+		return ""
+	}
+	if info := schema.Lookup(name); info != nil {
+		return info.Provider
+	}
+	return ""
+}
+
+// skewHint renders the parenthetical that turns a name-resolution failure into
+// a version-skew lead, or "" when we cannot attribute the failure to a provider.
+// It is appended to the existing messages rather than replacing them, so a
+// caller that has no provenance to work with sees exactly what it saw before.
+func (c *compiler) skewHint(provider string, what string) string {
+	if provider == "" || c.Schema == nil {
+		return ""
+	}
+	version, ok := (&resources.Schema{
+		ProviderVersions: c.Schema.AllProviderVersions(),
+	}).ProviderVersion(provider)
+	if !ok {
+		return ""
+	}
+	return " (" + providerLabel(provider) + " provider " + version +
+		" is installed; this " + what + " may require a newer one)"
+}
+
+// fieldSkewHint attributes a failed field access to the provider owning the
+// resource it was attempted on.
+func (c *compiler) fieldSkewHint(typ types.Type) string {
+	return c.skewHint(bindingProvider(c.Schema, typ), "field")
+}
+
+// resourceFieldSkewHint is fieldSkewHint for the paths that already hold the
+// resource info and do not need to look it up again.
+func (c *compiler) resourceFieldSkewHint(info *resources.ResourceInfo) string {
+	if info == nil {
+		return ""
+	}
+	return c.skewHint(info.Provider, "field")
+}
+
+// notFound builds an identifier error already carrying its version context, so
+// no construction site can forget to attach it.
+func (c *compiler) notFound(id string, binding *variable) *ErrIdentifierNotFound {
+	err := &ErrIdentifierNotFound{Identifier: id}
+
+	var provider string
+	if binding == nil {
+		provider = identifierProvider(c.Schema, id)
+	} else {
+		// Both of these read the binding the caller passed, not c.Binding.
+		// They are the same object today - compileIdentifier's only caller
+		// hands it c.Binding - but reading the field here would make the
+		// reported type and the resolved provider disagree the moment a caller
+		// passes anything else, which is exactly what a nested-block binding
+		// would do.
+		err.Binding = binding.typ.Label()
+		provider = bindingProvider(c.Schema, binding.typ)
+	}
+	if provider == "" {
+		return err
+	}
+
+	err.Provider = provider
+	if c.Schema != nil {
+		if v, ok := (&resources.Schema{
+			ProviderVersions: c.Schema.AllProviderVersions(),
+		}).ProviderVersion(provider); ok {
+			err.ProviderVersion = v
+		}
+	}
+	return err
 }
 
 type ErrPropertyNotFound struct {
@@ -98,6 +238,23 @@ type CompilerConfig struct {
 	// is set per compile. Off by default, which reproduces today's behavior
 	// exactly: nothing is marked and the runtime keeps propagating null.
 	Strict bool
+
+	// Translations is the downgrade catalog of the loaded providers, and
+	// DowngradeFloor the oldest version of each provider this compile should
+	// still serve (ADR 040 part 6). Both are supplied by the caller: mqlc has no
+	// dependency on the provider machinery today and must not gain one, so
+	// whoever holds the coordinator passes these in exactly as it already
+	// passes Schema.
+	//
+	// With either empty, nothing is emitted and the bundle is what it always
+	// was - which is also what happens when the provider binaries are not
+	// available to read a catalog from.
+	//
+	// NewConfigFrom fills both in: the catalog from the runtime, and the floor
+	// from DefaultDowngradeFloor. Override DowngradeFloor to reach further back
+	// than the default window, or clear it to emit nothing.
+	Translations   llx.TranslationSource
+	DowngradeFloor map[string]string
 }
 
 func (c *CompilerConfig) EnableStats() {
@@ -106,6 +263,30 @@ func (c *CompilerConfig) EnableStats() {
 
 func (c *CompilerConfig) EnableMultiStats() {
 	c.Stats = newCompilerMultiStats()
+}
+
+// NewConfigFrom builds a compiler config from a runtime, which is NewConfig plus
+// whatever else the runtime can supply - today the downgrade translation catalog
+// (ADR 040 part 6).
+//
+// Prefer this wherever a runtime is in hand. mql is the only compiler there is,
+// so any capability that has to reach every compile has to reach it through one
+// of these constructors; a caller that assembles CompilerConfig by hand silently
+// opts out.
+//
+// A runtime with no schema yields no DowngradeFloor, so nothing is emitted. That
+// is the right outcome - a floor is meaningless without provider versions to
+// measure against - but it is silent, so a caller wondering why its floor is
+// empty should check the schema first.
+func NewConfigFrom(runtime llx.Runtime, features mql.Features) CompilerConfig {
+	conf := NewConfig(runtime.Schema(), features)
+	if src, ok := runtime.(llx.TranslationSource); ok {
+		conf.Translations = src
+	}
+	if schema := runtime.Schema(); schema != nil {
+		conf.DowngradeFloor = DefaultDowngradeFloor(schema.AllProviderVersions())
+	}
+	return conf
 }
 
 func NewConfig(schema resources.ResourcesSchema, features mql.Features) CompilerConfig {
@@ -156,6 +337,11 @@ type compiler struct {
 	blockDeps []uint64
 	props     PropsHandler
 	comment   string
+
+	// translationBlocks memoizes relocated downgrade blocks so a field read in
+	// several places shares one block instead of getting a copy each time. See
+	// compiler.translationBlock.
+	translationBlocks map[string]uint64
 
 	// a standalone code is one that doesn't call any of its bindings
 	// examples:
@@ -1180,6 +1366,11 @@ func (c *compiler) compileBoundIdentifierWithMqlCtx(id string, binding *variable
 					},
 				})
 				lastRef = c.tailRef()
+				// Downgrade fallbacks for this field (ADR 040 part 6). Field
+				// chunks are emitted from two places; both have to offer them,
+				// or whether a fallback exists would depend on how the field
+				// was reached rather than on what the field is.
+				c.emitTranslations(resource.Id, p, lastRef, types.Type(fieldinfos[i].Type))
 			}
 
 			return true, typ, nil
@@ -1442,10 +1633,10 @@ func (c *compiler) compileIdentifier(id string, callBinding *variable, calls []*
 	// suggestions
 	if callBinding == nil {
 		addResourceSuggestions(c.Schema, id, c.Result)
-		return nil, types.Nil, &ErrIdentifierNotFound{Identifier: id}
+		return nil, types.Nil, c.notFound(id, nil)
 	}
 	addFieldSuggestions(availableFields(c, callBinding.typ), id, c.Result)
-	return nil, types.Nil, &ErrIdentifierNotFound{Identifier: id, Binding: c.Binding.typ.Label()}
+	return nil, types.Nil, c.notFound(id, callBinding)
 }
 
 // compileProps handles built-in properties for this code
@@ -1723,7 +1914,7 @@ func (c *compiler) compileOperand(operand *parser.Operand) (*llx.Primitive, erro
 				// native internal operators)
 				if (typ != types.Dict && !typ.IsMap()) || !reAccessor.MatchString(id) {
 					addFieldSuggestions(availableFields(c, typ), id, c.Result)
-					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label())
+					return nil, errors.New("cannot find field '" + id + "' in " + typ.Label() + c.fieldSkewHint(typ))
 				}
 
 				// Support easy accessors for dicts and maps, e.g:
@@ -2484,6 +2675,11 @@ func compile(input string, props PropsHandler, compilerConf CompilerConfig) (*ll
 	}
 
 	res.Source = input
+
+	// ADR 040 part 1: the bundle records which schema it was compiled against
+	// and what it needs to run. Stamped after labels and assertions so it sees
+	// the finished chunk list.
+	stampProvenance(res, conf.Schema)
 
 	return res, nil
 }

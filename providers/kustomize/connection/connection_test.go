@@ -174,3 +174,32 @@ func TestLoadKustomizations_SkipsHiddenAndNoiseDirs(t *testing.T) {
 	require.Len(t, entries, 1, "only the real subdir should be discovered")
 	assert.Equal(t, realDir, entries[0].Path)
 }
+
+// BUG 8: two recognized kustomization filenames in one directory. The loader
+// took whichever read first, so mql reported that file's static fields while
+// `kustomize build` (and therefore the `resources` accessor) hard-errors with
+// "Found multiple kustomization files under: ..." — a directory reported as
+// half-valid. Mirror kustomize and refuse the directory outright.
+func TestLoadSingleKustomization_MultipleFilesIsAnError(t *testing.T) {
+	dir := t.TempDir()
+	body := "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "kustomization.yaml"), []byte(body), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Kustomization"), []byte(body), 0o600))
+
+	_, err := loadSingleKustomization(dir)
+	require.Error(t, err)
+	assert.False(t, errors.Is(err, ErrNoKustomization),
+		"an ambiguous directory is not the same as an empty one")
+	assert.Contains(t, err.Error(), "multiple kustomization files")
+}
+
+// A single recognized filename that is not the default still loads.
+func TestLoadSingleKustomization_AlternateFilenameStillLoads(t *testing.T) {
+	dir := t.TempDir()
+	body := "apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nnamespace: alt\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "kustomization.yml"), []byte(body), 0o600))
+
+	entry, err := loadSingleKustomization(dir)
+	require.NoError(t, err)
+	assert.Equal(t, "alt", entry.Kustomization.Namespace)
+}

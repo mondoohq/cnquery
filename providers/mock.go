@@ -50,6 +50,11 @@ func (s *mockProviderService) Heartbeat(req *plugin.HeartbeatReq) (*plugin.Heart
 	return nil, nil
 }
 
+// Translations: the mock provider bridges no shapes.
+func (s *mockProviderService) Translations(req *plugin.TranslationsReq) (*plugin.TranslationsRes, error) {
+	return &plugin.TranslationsRes{}, nil
+}
+
 func (s *mockProviderService) ParseCLI(req *plugin.ParseCLIReq) (*plugin.ParseCLIRes, error) {
 	if req.Connector == "upstream" {
 		return s.parseUpstreamCLI(req)

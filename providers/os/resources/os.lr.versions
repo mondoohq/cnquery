@@ -4126,6 +4126,7 @@ windows.auditPolicy.subcategory.localizedName 13.28.2
 windows.auditPolicy.subcategory.name 13.28.2
 windows.auditPolicy.subcategory.success 13.28.2
 windows.bitlocker 9.0.1
+windows.bitlocker.available 13.40.10
 windows.bitlocker.policy 13.29.1
 windows.bitlocker.policy.disableExternalDmaUnderLock 13.29.1
 windows.bitlocker.policy.driveSettings 13.29.1
@@ -4279,6 +4280,7 @@ windows.defender.signatureSettings.signatureUpdateInterval 13.29.1
 windows.defender.status 13.29.1
 windows.defender.status.amEngineVersion 13.29.1
 windows.defender.status.amProductVersion 13.29.1
+windows.defender.status.amRunningMode 13.40.10
 windows.defender.status.amServiceEnabled 13.29.1
 windows.defender.status.amServiceVersion 13.29.1
 windows.defender.status.antispywareEnabled 13.29.1
@@ -4400,6 +4402,7 @@ windows.dnsServer.diagnostics.logTcpPackets 13.40.10
 windows.dnsServer.diagnostics.logUdpPackets 13.40.10
 windows.dnsServer.diagnostics.logUnmatchedResponses 13.40.10
 windows.dnsServer.diagnostics.logUpdates 13.40.10
+windows.dnsServer.diagnostics.maxFileSizeBytes 13.40.10
 windows.dnsServer.diagnostics.maxFileSizeMb 13.40.10
 windows.dnsServer.diagnostics.saveLogsToPersistentStorage 13.40.10
 windows.dnsServer.diagnostics.useSystemEventLog 13.40.10
@@ -4733,6 +4736,7 @@ windows.schannel.protocol.serverConfigured 13.40.10
 windows.schannel.protocol.serverDisabledByDefault 13.40.10
 windows.schannel.protocol.serverEnabled 13.40.10
 windows.schannel.protocols 13.40.10
+windows.schannel.signatureAlgorithms 13.40.10
 windows.scheduledTask 13.25.1
 windows.scheduledTask.action 13.25.1
 windows.scheduledTask.action.arguments 13.25.1

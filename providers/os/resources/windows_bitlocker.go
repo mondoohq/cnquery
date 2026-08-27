@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/os/connection/shared"
 	"go.mondoo.com/mql/providers/os/registry"
@@ -30,10 +31,48 @@ const (
 	fveRDVPrefix = "RDV"
 )
 
-func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
-	conn := s.MqlRuntime.Connection.(shared.Connection)
+// mqlWindowsBitlockerInternal memoizes the single Win32_EncryptableVolume
+// read. Both `available` and `volumes` are backed by it, so asking whether
+// BitLocker can be read and then reading it costs one PowerShell process
+// rather than two.
+type mqlWindowsBitlockerInternal struct {
+	lock          sync.Mutex
+	fetched       bool
+	cachedVolumes []windows.BitLockerVolumeStatus
+	err           error
+}
 
-	volumes, err := windows.GetBitLockerVolumes(conn)
+// read returns the volume statuses, running the collection at most once. The
+// error is memoized alongside the data so a host that cannot answer reports
+// the same failure to both fields.
+func (s *mqlWindowsBitlocker) read() ([]windows.BitLockerVolumeStatus, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.fetched {
+		return s.cachedVolumes, s.err
+	}
+	s.fetched = true
+
+	conn, ok := s.MqlRuntime.Connection.(shared.Connection)
+	if !ok {
+		s.err = errors.New("windows.bitlocker is not supported on this connection")
+		return nil, s.err
+	}
+	s.cachedVolumes, s.err = windows.GetBitLockerVolumes(conn)
+	return s.cachedVolumes, s.err
+}
+
+// available reports whether the BitLocker WMI provider could be read. It is
+// the one field on this resource that never fails: it exists so a policy can
+// ask "is BitLocker present here" without triggering the very error it is
+// trying to avoid, which it could not do if the question itself could error.
+func (s *mqlWindowsBitlocker) available() (bool, error) {
+	_, err := s.read()
+	return err == nil, nil
+}
+
+func (s *mqlWindowsBitlocker) volumes() ([]any, error) {
+	volumes, err := s.read()
 	if err != nil {
 		return nil, err
 	}
@@ -300,4 +339,41 @@ func (p *mqlWindowsBitlockerPolicy) fixedDataDrives() (*mqlWindowsBitlockerPolic
 
 func (p *mqlWindowsBitlockerPolicy) removableDataDrives() (*mqlWindowsBitlockerPolicyDriveSettings, error) {
 	return p.driveSettings(fveRDVPrefix)
+}
+
+// windows.bitlocker.policy is reachable by a dotted path that is also its own
+// registered resource name: the field `policy` on `windows.bitlocker` and the
+// resource `windows.bitlocker.policy` occupy the same path. The compiler
+// resolves the longest matching resource name before it considers a field, so
+// `windows.bitlocker.policy.useAdvancedStartup` instantiates the resource
+// directly and the parent's policy() accessor never runs. The five global FVE
+// values are plain schema fields that only that accessor populates, so every
+// one stays unset, reports "provider returned no data and no error", and then
+// converts as a primitive carrying no type information.
+//
+// The result reads null, which is worse than an error: `null && null`
+// evaluates to true in MQL, so a check written in the dotted form passes on a
+// host that was never hardened.
+//
+// The per-drive-type sub-resources were never affected, because they are
+// computed accessors that read the FVE key themselves, and neither was the
+// block form `windows.bitlocker { policy { ... } }`, which binds the field
+// rather than resolving a resource name.
+func initWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error) {
+	if _, ok := args["__id"]; ok {
+		return args, nil, nil
+	}
+
+	parent, err := CreateResource(runtime, "windows.bitlocker", map[string]*llx.RawData{})
+	if err != nil {
+		return nil, nil, err
+	}
+	v := parent.(*mqlWindowsBitlocker).GetPolicy()
+	if v.Error != nil {
+		return nil, nil, v.Error
+	}
+	if v.Data == nil {
+		return nil, nil, errors.New("could not read the BitLocker policy of this host")
+	}
+	return args, v.Data, nil
 }

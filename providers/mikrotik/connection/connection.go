@@ -5,6 +5,7 @@ package connection
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"maps"
 	"net"
@@ -53,6 +54,24 @@ type MikrotikConnection struct {
 	cacheMu    sync.Mutex
 }
 
+// parseTLSOption reads the tls connection option.
+//
+// It deliberately rejects anything it does not recognize rather than treating
+// it as false. The option selects between the TLS API port and the plaintext
+// one, and the RouterOS API sends the password in its very first sentence, so
+// silently reading an unrecognized value as "no TLS" would put the device
+// password on the wire in the clear and still report a successful scan.
+func parseTLSOption(v string) (bool, error) {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "", "false", "0", "no", "off":
+		return false, nil
+	case "true", "1", "yes", "on":
+		return true, nil
+	default:
+		return false, fmt.Errorf("invalid value %q for the mikrotik tls option, use true or false", v)
+	}
+}
+
 func NewMikrotikConnection(id uint32, asset *inventory.Asset, conf *inventory.Config) (*MikrotikConnection, error) {
 	host := conf.Host
 	if host == "" {
@@ -64,16 +83,29 @@ func NewMikrotikConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 
 	user := ""
 	password := ""
-	if cred, err := vault.GetPassword(conf.Credentials); err == nil && cred != nil {
-		user = cred.User
-		password = string(cred.Secret)
+	// A credential that was supplied but could not be resolved is an error, not
+	// a reason to fall back to the default account: retrying as admin turns a
+	// vault problem into "invalid user name or password" against a username the
+	// operator never configured.
+	if len(conf.Credentials) > 0 {
+		cred, err := vault.GetPassword(conf.Credentials)
+		if err != nil {
+			return nil, fmt.Errorf("could not resolve credentials for the mikrotik device at %s: %w", host, err)
+		}
+		if cred != nil {
+			user = cred.User
+			password = string(cred.Secret)
+		}
 	}
 	if user == "" {
 		// RouterOS ships with the "admin" account by default
 		user = "admin"
 	}
 
-	useTLS := conf.Options["tls"] == "true"
+	useTLS, err := parseTLSOption(conf.Options["tls"])
+	if err != nil {
+		return nil, err
+	}
 
 	port := conf.Options["port"]
 	if port == "" && conf.Port != 0 {
@@ -91,7 +123,6 @@ func NewMikrotikConnection(id uint32, asset *inventory.Asset, conf *inventory.Co
 	timeout := 10 * time.Second
 
 	var client *routeros.Client
-	var err error
 	if useTLS {
 		tlsConfig := &tls.Config{InsecureSkipVerify: conf.Insecure}
 		client, err = routeros.DialTLSTimeout(address, user, password, tlsConfig, timeout)
@@ -134,6 +165,9 @@ func (c *MikrotikConnection) Close() {
 func (c *MikrotikConnection) Run(sentences ...string) (*routeros.Reply, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.client == nil {
+		return nil, errors.New("the mikrotik connection is closed")
+	}
 	return c.client.Run(sentences...)
 }
 

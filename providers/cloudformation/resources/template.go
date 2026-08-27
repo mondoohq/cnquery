@@ -5,6 +5,7 @@ package resources
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/aws-cloudformation/rain/cft"
@@ -121,10 +122,14 @@ func (r *mqlCloudformationTemplate) extractDict(section cft.Section) (map[string
 		// A section member's value need not be a mapping — a Metadata entry
 		// like `License: Apache-2.0` is a scalar, and Metadata is free-form.
 		// convertYamlNodeToValue accepts scalars, sequences, and mappings, so
-		// one scalar member no longer fails the whole section.
+		// one scalar member no longer fails the whole section. A member we
+		// still cannot read is dropped on its own rather than taking every
+		// other member of the section with it.
 		val, err := convertYamlNodeToValue(valueNode)
 		if err != nil {
-			return nil, err
+			log.Warn().Err(err).Str("section", string(section)).Str("member", keyNode.Value).
+				Msg("cloudformation: unreadable section member; skipping it")
+			continue
 		}
 
 		result[keyNode.Value] = val
@@ -161,6 +166,17 @@ func (r *mqlCloudformationTemplate) rules() (map[string]any, error) {
 	return r.extractDict(cft.Rules)
 }
 
+// sectionMemberID builds the cache key for a member of a template section.
+// YAML preserves duplicate mapping keys, so a template can declare two
+// resources (or outputs, or parameters) under the same logical ID. Keying the
+// resource on the logical ID alone makes the second one collide with the first
+// in the runtime cache, and the query then reports the first one's data twice
+// while the second is invisible. `contentIndex` is the member's position in the
+// section's Content slice, which is stable for a given template.
+func sectionMemberID(name string, contentIndex int) string {
+	return fmt.Sprintf("%s/%d", name, contentIndex/2)
+}
+
 func (x *mqlCloudformationResource) id() (string, error) {
 	return x.Name.Data, nil
 }
@@ -192,15 +208,15 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 
 		_, val, err := gatherMapValue(valueNode, "Type")
 		if err == nil {
-			resourceType = val.Value
+			resourceType = scalarValue(val)
 		}
 		_, val, err = gatherMapValue(valueNode, "Condition")
 		if err == nil {
-			resourceCondition = val.Value
+			resourceCondition = scalarValue(val)
 		}
 		_, val, err = gatherMapValue(valueNode, "Documentation")
 		if err == nil {
-			resourceDocumentation = val.Value
+			resourceDocumentation = scalarValue(val)
 		}
 
 		// Attributes/Properties are objects in valid CloudFormation. A
@@ -224,15 +240,24 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 			}
 		}
 
+		// DependsOn is either one logical ID or a list of them. Only scalars
+		// name a logical ID: a mapping or nested list entry has no Value, and
+		// appending it would report a dependency on the empty logical ID "".
 		var dependsOn []any
 		_, val, err = gatherMapValue(valueNode, "DependsOn")
 		if err == nil {
-			switch val.Kind {
-			case yaml.ScalarNode:
-				dependsOn = []any{val.Value}
-			case yaml.SequenceNode:
+			val = resolveAlias(val)
+			switch {
+			case val == nil:
+			case val.Kind == yaml.SequenceNode:
 				for _, item := range val.Content {
-					dependsOn = append(dependsOn, item.Value)
+					if entry := scalarValue(item); entry != "" {
+						dependsOn = append(dependsOn, entry)
+					}
+				}
+			default:
+				if entry := scalarValue(val); entry != "" {
+					dependsOn = []any{entry}
 				}
 			}
 		}
@@ -240,27 +265,18 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 		deletionPolicy := ""
 		_, val, err = gatherMapValue(valueNode, "DeletionPolicy")
 		if err == nil {
-			deletionPolicy = val.Value
+			deletionPolicy = scalarValue(val)
 		}
 
 		updateReplacePolicy := ""
 		_, val, err = gatherMapValue(valueNode, "UpdateReplacePolicy")
 		if err == nil {
-			updateReplacePolicy = val.Value
+			updateReplacePolicy = scalarValue(val)
 		}
 
-		creationPolicy, err := nodeToDict(valueNode, "CreationPolicy")
-		if err != nil {
-			return nil, err
-		}
-		updatePolicy, err := nodeToDict(valueNode, "UpdatePolicy")
-		if err != nil {
-			return nil, err
-		}
-		resourceMetadata, err := nodeToDict(valueNode, "Metadata")
-		if err != nil {
-			return nil, err
-		}
+		creationPolicy := optionalDict(valueNode, "CreationPolicy", keyNode.Value)
+		updatePolicy := optionalDict(valueNode, "UpdatePolicy", keyNode.Value)
+		resourceMetadata := optionalDict(valueNode, "Metadata", keyNode.Value)
 
 		ctx, err := r.nodeContext(keyNode, valueNode)
 		if err != nil {
@@ -268,6 +284,7 @@ func (r *mqlCloudformationTemplate) resources() ([]any, error) {
 		}
 
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.resource", map[string]*llx.RawData{
+			"__id":                llx.StringData(sectionMemberID(keyNode.Value, i)),
 			"name":                llx.StringData(keyNode.Value),
 			"type":                llx.StringData(resourceType),
 			"condition":           llx.StringData(resourceCondition),
@@ -403,25 +420,22 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 			log.Warn().Err(cerr).Str("output", keyNode.Value).Msg("cloudformation: output body is not an object; leaving empty")
 		}
 
-		value, err := nodeToDict(valueNode, "Value")
-		if err != nil {
-			return nil, err
-		}
+		value := optionalDict(valueNode, "Value", keyNode.Value)
 
 		description := ""
 		if _, n, err := gatherMapValue(valueNode, "Description"); err == nil {
-			description = n.Value
+			description = scalarValue(n)
 		}
 
 		condition := ""
 		if _, n, err := gatherMapValue(valueNode, "Condition"); err == nil {
-			condition = n.Value
+			condition = scalarValue(n)
 		}
 
 		exportName := ""
 		if _, exportNode, err := gatherMapValue(valueNode, "Export"); err == nil {
 			if _, n, err := gatherMapValue(exportNode, "Name"); err == nil {
-				exportName = n.Value
+				exportName = scalarValue(n)
 			}
 		}
 
@@ -431,6 +445,7 @@ func (r *mqlCloudformationTemplate) outputs() ([]any, error) {
 		}
 
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.output", map[string]*llx.RawData{
+			"__id":        llx.StringData(sectionMemberID(keyNode.Value, i)),
 			"name":        llx.StringData(keyNode.Value),
 			"properties":  llx.DictData(dict),
 			"value":       llx.DictData(value),
@@ -474,27 +489,27 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 
 		paramType := ""
 		if _, n, err := gatherMapValue(valueNode, "Type"); err == nil {
-			paramType = n.Value
+			paramType = scalarValue(n)
 		}
 
 		description := ""
 		if _, n, err := gatherMapValue(valueNode, "Description"); err == nil {
-			description = n.Value
+			description = scalarValue(n)
 		}
 
 		allowedPattern := ""
 		if _, n, err := gatherMapValue(valueNode, "AllowedPattern"); err == nil {
-			allowedPattern = n.Value
+			allowedPattern = scalarValue(n)
 		}
 
 		constraintDescription := ""
 		if _, n, err := gatherMapValue(valueNode, "ConstraintDescription"); err == nil {
-			constraintDescription = n.Value
+			constraintDescription = scalarValue(n)
 		}
 
 		noEcho := false
 		if _, n, err := gatherMapValue(valueNode, "NoEcho"); err == nil {
-			noEcho = parseCfnBool(n.Value)
+			noEcho = parseCfnBool(scalarValue(n))
 		}
 
 		// A constraint we can't represent degrades that single field to null.
@@ -506,15 +521,8 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 		minValue := optionalIntConstraint(valueNode, "MinValue", keyNode.Value)
 		maxValue := optionalIntConstraint(valueNode, "MaxValue", keyNode.Value)
 
-		defaultDict, err := nodeToDict(valueNode, "Default")
-		if err != nil {
-			return nil, err
-		}
-
-		allowedValues, err := nodeToDictList(valueNode, "AllowedValues")
-		if err != nil {
-			return nil, err
-		}
+		defaultDict := optionalDict(valueNode, "Default", keyNode.Value)
+		allowedValues := optionalDictList(valueNode, "AllowedValues", keyNode.Value)
 
 		ctx, err := r.nodeContext(keyNode, valueNode)
 		if err != nil {
@@ -522,7 +530,7 @@ func (r *mqlCloudformationTemplate) parameterList() ([]any, error) {
 		}
 
 		pkg, err := CreateResource(r.MqlRuntime, "cloudformation.parameter", map[string]*llx.RawData{
-			"__id":                  llx.StringData(keyNode.Value),
+			"__id":                  llx.StringData(sectionMemberID(keyNode.Value, i)),
 			"name":                  llx.StringData(keyNode.Value),
 			"type":                  llx.StringData(paramType),
 			"default":               llx.DictData(defaultDict),
@@ -568,10 +576,27 @@ func (r *mqlCloudformationTemplate) types() ([]any, error) {
 		return nil, nil
 	}
 
-	list, err := template.GetTypes()
-	if err != nil {
-		return nil, err
+	// Collect the types locally rather than through cft.GetTypes, which fails
+	// the whole call on the first resource without a literal Type (a
+	// work-in-progress entry, or one whose Type arrives through a merge key
+	// it does not resolve). One such entry must not empty the list.
+	result := make([]any, 0, len(body.Content)/2)
+	seen := make(map[string]struct{}, len(body.Content)/2)
+	for i := 0; i < len(body.Content); i += 2 {
+		_, typeNode, err := gatherMapValue(body.Content[i+1], "Type")
+		if err != nil {
+			continue
+		}
+		resourceType := scalarValue(typeNode)
+		if resourceType == "" {
+			continue
+		}
+		if _, ok := seen[resourceType]; ok {
+			continue
+		}
+		seen[resourceType] = struct{}{}
+		result = append(result, resourceType)
 	}
 
-	return convert.SliceAnyToInterface(list), nil
+	return result, nil
 }

@@ -309,6 +309,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"http.header.setCookie": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeader).GetSetCookie()).ToDataRes(types.Resource("http.header.setCookie"))
 	},
+	"http.header.setCookies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlHttpHeader).GetSetCookies()).ToDataRes(types.Array(types.Resource("http.header.setCookie")))
+	},
 	"http.header.csp": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlHttpHeader).GetCsp()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -1099,6 +1102,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"http.header.setCookie": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlHttpHeader).SetCookie, ok = plugin.RawToTValue[*mqlHttpHeaderSetCookie](v.Value, v.Error)
+		return
+	},
+	"http.header.setCookies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlHttpHeader).SetCookies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"http.header.csp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2372,6 +2379,7 @@ type mqlHttpHeader struct {
 	ReferrerPolicy      plugin.TValue[string]
 	ContentType         plugin.TValue[*mqlHttpHeaderContentType]
 	SetCookie           plugin.TValue[*mqlHttpHeaderSetCookie]
+	SetCookies          plugin.TValue[[]any]
 	Csp                 plugin.TValue[map[string]any]
 	Server              plugin.TValue[string]
 }
@@ -2496,6 +2504,22 @@ func (c *mqlHttpHeader) GetSetCookie() *plugin.TValue[*mqlHttpHeaderSetCookie] {
 		}
 
 		return c.setCookie()
+	})
+}
+
+func (c *mqlHttpHeader) GetSetCookies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SetCookies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("http.header", c.__id, "setCookies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.setCookies()
 	})
 }
 

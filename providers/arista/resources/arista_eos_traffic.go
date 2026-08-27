@@ -83,7 +83,10 @@ func (a *mqlAristaEos) sflow() (*mqlAristaEosSflow, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg := rc.fetchSflowConfig()
+	cfg, err := rc.fetchSflowConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	res, err := CreateResource(a.MqlRuntime, "arista.eos.sflow", map[string]*llx.RawData{
 		"enabled":         llx.BoolData(cfg.Enabled),
@@ -113,7 +116,10 @@ func (a *mqlAristaEosSflow) destinations() ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg := rc.fetchSflowConfig()
+	cfg, err := rc.fetchSflowConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	res := make([]any, 0, len(cfg.Destinations))
 	for _, d := range cfg.Destinations {
@@ -150,7 +156,11 @@ func (a *mqlAristaEosInterface) interfaceHardening() (eos.InterfaceHardening, er
 	if err != nil {
 		return fallback, err
 	}
-	if h, ok := rc.fetchInterfaceHardening()[a.Name.Data]; ok {
+	hardening, err := rc.fetchInterfaceHardening()
+	if err != nil {
+		return eos.InterfaceHardening{}, err
+	}
+	if h, ok := hardening[a.Name.Data]; ok {
 		return h, nil
 	}
 	return fallback, nil

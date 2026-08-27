@@ -124,5 +124,5 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20260330154417-16be699c7b31 // indirect
 	moul.io/http2curl v1.0.0 // indirect
-	sigs.k8s.io/yaml v1.6.0 // indirect
+	sigs.k8s.io/yaml v1.6.0
 )

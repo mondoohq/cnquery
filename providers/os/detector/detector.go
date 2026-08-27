@@ -75,15 +75,23 @@ func addTechnologyUrl(platform *inventory.Platform) {
 		platform.TechnologyUrlSegments = []string{"os"}
 	}
 
-	if platform.Name == "" {
-		platform.Name = "unknown"
+	// The URL needs a value in every segment, so an unnamed or unversioned
+	// platform gets a placeholder here. The placeholder stays local to the URL:
+	// writing it back onto the platform reports it as the asset's real name and
+	// version, and a rolling release without a VERSION_ID (arch, endeavouros)
+	// then keys its package PURLs to distro=<name>-unknown instead of falling
+	// back to the build id.
+	name := platform.Name
+	if name == "" {
+		name = "unknown"
 	}
-	if platform.Version == "" {
-		platform.Version = "unknown"
+	version := platform.Version
+	if version == "" {
+		version = "unknown"
 	}
 
 	platform.TechnologyUrlSegments = append(platform.TechnologyUrlSegments,
-		primaryFamily(platform), platform.Name, platform.Version)
+		primaryFamily(platform), name, version)
 }
 
 // map that is organized by platform name, to quickly determine its families
@@ -114,10 +122,17 @@ func traverseFamily(r *PlatformResolver, parents []string) map[string][]string {
 		return res
 	}
 
-	// return child (no family)
-	return map[string][]string{
-		r.Name: parents,
+	// return child (no family), under every name it can emit
+	names := r.Emits
+	if names == nil {
+		names = []string{r.Name}
 	}
+
+	res := map[string][]string{}
+	for _, name := range names {
+		res[name] = parents
+	}
+	return res
 }
 
 func Family(platform string) []string {

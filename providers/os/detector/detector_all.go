@@ -25,38 +25,50 @@ var macOS = &PlatformResolver{
 	Name:     "macos",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		// when we reach here, we know it is darwin
-		// check xml /System/Library/CoreServices/SystemVersion.plist
+		// When we reach here, we know it is darwin, and macOS is the only
+		// operating system built on it that mql can connect to. Darwin is the
+		// kernel, not a product, so the system is reported as macOS even when
+		// neither sw_vers nor the system version property list can be read.
+		pf.Name = "macos"
+		if pf.Title == "" || strings.EqualFold(pf.Title, "darwin") {
+			// uname reports the kernel name, which is not the product name
+			pf.Title = "macOS"
+		}
+
+		// sw_vers, which the darwin family reads, carries the same product name,
+		// version and build. It is a command though, so it is unavailable on a
+		// scan with no command capability (a mounted disk image, for example),
+		// where the property list is the only source left. Read it whenever it
+		// is readable and let it override.
 		f, err := conn.FileSystem().Open("/System/Library/CoreServices/SystemVersion.plist")
 		if err != nil {
-			return false, nil
+			log.Debug().Err(err).Msg("platform> could not read the macOS system version property list")
+			return true, nil
 		}
 		defer f.Close()
 
 		c, err := io.ReadAll(f)
 		if err != nil || len(c) == 0 {
-			return false, nil
+			log.Debug().Err(err).Msg("platform> macOS system version property list is empty")
+			return true, nil
 		}
 
 		sv, err := ParseMacOSSystemVersion(string(c))
-		if err != nil || len(c) == 0 {
-			return false, nil
+		if err != nil {
+			log.Debug().Err(err).Msg("platform> could not parse the macOS system version property list")
+			return true, nil
 		}
 
-		pf.Name = "macos"
-		pf.Title = sv["ProductName"]
-		pf.Version = sv["ProductVersion"]
-		pf.Build = sv["ProductBuildVersion"]
+		if len(sv["ProductName"]) > 0 {
+			pf.Title = sv["ProductName"]
+		}
+		if len(sv["ProductVersion"]) > 0 {
+			pf.Version = sv["ProductVersion"]
+		}
+		if len(sv["ProductBuildVersion"]) > 0 {
+			pf.Build = sv["ProductBuildVersion"]
+		}
 
-		return true, nil
-	},
-}
-
-// is part of the darwin platform and fallback for non-known darwin systems
-var otherDarwin = &PlatformResolver{
-	Name:     "darwin",
-	IsFamily: false,
-	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
 }
@@ -139,10 +151,13 @@ var manjaro = &PlatformResolver{
 	Name:     "manjaro",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		if pf.Name == "manjaro" {
+		// Manjaro ARM ships ID=manjaro-arm. It is the same distribution built for
+		// ARM, so it reports as manjaro rather than as a platform of its own.
+		if pf.Name == "manjaro-arm" {
+			pf.Name = "manjaro"
 			return true, nil
 		}
-		return false, nil
+		return pf.Name == "manjaro", nil
 	},
 }
 
@@ -160,6 +175,51 @@ var azurelinux = &PlatformResolver{
 			return true, nil
 		}
 		return false, nil
+	},
+}
+
+// Container-Optimized OS ships only /etc/os-release, with ID=cos. It has no
+// package manager, so this is detection only.
+var cos = &PlatformResolver{
+	Name:     "cos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "cos", nil
+	},
+}
+
+// OpenCloudOS is the Tencent-backed CentOS successor. It is rpm based, but it
+// ships /etc/system-release ("OpenCloudOS release 9.0") and no
+// /etc/redhat-release, so the redhat family declines it before any of that
+// family's children get a look. It resolves here instead, the way amazonlinux
+// and azurelinux do, and packages.go names it alongside them so it still gets
+// the rpm package manager.
+var opencloudos = &PlatformResolver{
+	Name:     "opencloudos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "opencloudos", nil
+	},
+}
+
+// Talos is an API-managed Kubernetes host: it ships no shell, no /bin or
+// /sbin, and no package database, so nothing here can be derived from a
+// command. /etc/os-release is the whole of what detection can read.
+//
+// Talos writes VERSION_ID with its own "v" prefix ("v1.13.9"). The prefix is
+// stripped so the field holds a bare version like every other platform reports:
+// pf.Version is what version comparisons in policies run against, and a leading
+// "v" makes Talos the one platform those comparisons have to special-case. The
+// prefixed string is still visible in Title, which keeps PRETTY_NAME verbatim.
+var talos = &PlatformResolver{
+	Name:     "talos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name != "talos" {
+			return false, nil
+		}
+		pf.Version = strings.TrimPrefix(pf.Version, "v")
+		return true, nil
 	},
 }
 
@@ -448,6 +508,30 @@ var kdeneon = &PlatformResolver{
 	},
 }
 
+// deepin ships dpkg/apt and /etc/debian_version, but its os-release carries
+// ID=deepin and no ID_LIKE, so the debian resolver, which requires ID=debian,
+// never claims it. It resolves inside the debian family for the package
+// manager and the debian-specific resources to be selected.
+var deepin = &PlatformResolver{
+	Name:     "deepin",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "deepin", nil
+	},
+}
+
+// openKylin ships dpkg/apt but no /etc/debian_version at all, so it cannot be
+// reached through the debian resolver, which opens that file first. The
+// debian family itself claims every linux host, so matching on the name here
+// is what puts it in the family and selects dpkg.
+var openkylin = &PlatformResolver{
+	Name:     "openkylin",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "openkylin", nil
+	},
+}
+
 // elxr is a Debian derivative (os-release carries ID=elxr, ID_LIKE=debian).
 // It ships dpkg/apt, so it has to resolve inside the debian family for the
 // package manager and the debian-specific resources to be selected.
@@ -459,6 +543,56 @@ var elxr = &PlatformResolver{
 			return true, nil
 		}
 		return false, nil
+	},
+}
+
+// rhcos is Red Hat Enterprise Linux CoreOS, the immutable rpm-ostree based RHEL
+// variant that OpenShift runs its nodes on. Its os-release carries ID="rhcos"
+// with ID_LIKE="rhel fedora", and /etc/redhat-release reads like stock RHEL
+// ("Red Hat Enterprise Linux release 9.6 (Plow)"), so os-release ID is the only
+// thing that tells the two apart. It has to be resolved before rhel: the RHCOS
+// PRETTY_NAME starts with "Red Hat", which is enough for the rhel resolver to
+// claim the host and report it as plain redhat.
+var rhcos = &PlatformResolver{
+	Name:     "rhcos",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name != "rhcos" {
+			return false, nil
+		}
+
+		osrd := NewOSReleaseDetector(conn)
+		osr, err := osrd.osrelease()
+		if err != nil {
+			log.Debug().Err(err).Msg("platform> cannot parse os-release on this rhcos system")
+			return true, nil
+		}
+
+		if len(osr["NAME"]) > 0 {
+			// PRETTY_NAME carries the build string too, e.g.
+			// "Red Hat Enterprise Linux CoreOS 9.6.20250523-0"
+			pf.Title = osr["NAME"]
+		}
+
+		// VERSION_ID is the RHCOS image build, not the RHEL release the packages
+		// are cut from. RHEL_VERSION is what package versions and advisories line
+		// up with, so it wins where the image ships it. Without it we keep what
+		// the family already read out of /etc/redhat-release, which is the same
+		// RHEL release.
+		if len(osr["RHEL_VERSION"]) > 0 {
+			pf.Version = osr["RHEL_VERSION"]
+		}
+
+		// the image build is still worth keeping, RHCOS does not ship BUILD_ID
+		if len(osr["OSTREE_VERSION"]) > 0 {
+			pf.Build = osr["OSTREE_VERSION"]
+		}
+
+		if len(osr["OPENSHIFT_VERSION"]) > 0 {
+			pf.Metadata["openshift/version"] = osr["OPENSHIFT_VERSION"]
+		}
+
+		return true, nil
 	},
 }
 
@@ -507,10 +641,33 @@ var eurolinux = &PlatformResolver{
 	},
 }
 
+// CloudLinux OS is a RHEL rebuild (os-release carries ID=cloudlinux,
+// ID_LIKE="rhel fedora centos"). Without a resolver here no child of the redhat
+// family claims it, the family gate is abandoned, and everything keyed on
+// IsFamily("redhat") goes dead: packages, updates, yum and services among them.
+var cloudlinux = &PlatformResolver{
+	Name:     "cloudlinux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		if pf.Name == "cloudlinux" {
+			return true, nil
+		}
+
+		// fallback for images that ship no os-release, only /etc/redhat-release
+		if strings.Contains(pf.Title, "CloudLinux") {
+			pf.Name = "cloudlinux"
+			return true, nil
+		}
+
+		return false, nil
+	},
+}
+
 // The centos platform resolver finds CentOS and CentOS-like platforms like alma and rocky
 var centos = &PlatformResolver{
 	Name:     "centos",
 	IsFamily: false,
+	Emits:    []string{"centos", "rockylinux", "almalinux"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// works for centos 5+
 		if strings.Contains(pf.Title, "CentOS") || pf.Name == "centos" {
@@ -552,6 +709,19 @@ var centos = &PlatformResolver{
 	},
 }
 
+// Anolis OS is the Alibaba-backed CentOS successor. It ships
+// /etc/redhat-release ("Anolis OS release 8.8") and an rpm database, so it
+// resolves inside the redhat family and picks up the rpm package manager.
+// It declares ID_LIKE="rhel fedora centos", so it is resolved before centos,
+// whose last resort is the mere existence of /etc/centos-release.
+var anolis = &PlatformResolver{
+	Name:     "anolis",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "anolis", nil
+	},
+}
+
 var fedora = &PlatformResolver{
 	Name:     "fedora",
 	IsFamily: false,
@@ -584,6 +754,7 @@ var fedora = &PlatformResolver{
 var oracle = &PlatformResolver{
 	Name:     "oracle",
 	IsFamily: false,
+	Emits:    []string{"oraclelinux"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// works for oracle 7+
 		if pf.Name == "ol" {
@@ -648,43 +819,58 @@ var amazonlinux = &PlatformResolver{
 	},
 }
 
+// Bottlerocket carries /etc/bottlerocket-release on older versions, but newer
+// ones dropped it, and on a raw root-partition scan (an EBS volume snapshot)
+// /etc is an overlay whose upper layer lives on the data partition, so neither
+// that file nor /etc/os-release is present. The canonical /usr/lib/os-release
+// always is, and the linux family detection already reads it, so the release
+// file is only an enrichment source here and the claim falls back to the name
+// os-release yielded. Gating the claim on opening the file left those systems
+// to the generic linux fallback, and a container or container image claimed by
+// that fallback is reported as "scratch".
 var bottlerocket = &PlatformResolver{
 	Name:     "bottlerocket",
 	IsFamily: false,
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		f, err := conn.FileSystem().Open("/etc/bottlerocket-release")
-		if err != nil {
-			return false, nil
-		}
-		defer f.Close()
-
-		c, err := io.ReadAll(f)
-		if err != nil || len(c) == 0 {
-			log.Debug().Err(err)
-			return false, nil
-		}
-
-		osr, err := ParseOsRelease(strings.TrimSpace(string(c)))
-		if err == nil {
-			if len(osr["ID"]) > 0 {
-				pf.Name = osr["ID"]
-			}
-			if len(osr["PRETTY_NAME"]) > 0 {
-				pf.Title = osr["PRETTY_NAME"]
-			}
-			if len(osr["VERSION_ID"]) > 0 {
-				pf.Version = osr["VERSION_ID"]
-			}
-			if len(osr["BUILD_ID"]) > 0 {
-				pf.Build = osr["BUILD_ID"]
-			}
-		}
-
-		if pf.Name == "bottlerocket" {
-			return true, nil
-		}
-		return false, nil
+		enrichFromBottlerocketRelease(pf, conn)
+		return pf.Name == "bottlerocket", nil
 	},
+}
+
+// enrichFromBottlerocketRelease overlays /etc/bottlerocket-release onto pf when
+// that file is present. Every field it sets is best-effort: a missing or
+// unreadable file leaves pf as the os-release detection left it.
+func enrichFromBottlerocketRelease(pf *inventory.Platform, conn shared.Connection) {
+	f, err := conn.FileSystem().Open("/etc/bottlerocket-release")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	c, err := io.ReadAll(f)
+	if err != nil || len(c) == 0 {
+		log.Debug().Err(err).Msg("platform> cannot read /etc/bottlerocket-release")
+		return
+	}
+
+	osr, err := ParseOsRelease(strings.TrimSpace(string(c)))
+	if err != nil {
+		log.Debug().Err(err).Msg("platform> cannot parse /etc/bottlerocket-release")
+		return
+	}
+
+	if len(osr["ID"]) > 0 {
+		pf.Name = osr["ID"]
+	}
+	if len(osr["PRETTY_NAME"]) > 0 {
+		pf.Title = osr["PRETTY_NAME"]
+	}
+	if len(osr["VERSION_ID"]) > 0 {
+		pf.Version = osr["VERSION_ID"]
+	}
+	if len(osr["BUILD_ID"]) > 0 {
+		pf.Build = osr["BUILD_ID"]
+	}
 }
 
 var windriver = &PlatformResolver{
@@ -701,6 +887,7 @@ var windriver = &PlatformResolver{
 var opensuse = &PlatformResolver{
 	Name:     "opensuse",
 	IsFamily: false,
+	Emits:    []string{"opensuse", "opensuse-leap", "opensuse-tumbleweed"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if pf.Name == "opensuse" || pf.Name == "opensuse-leap" || pf.Name == "opensuse-tumbleweed" {
 			return true, nil
@@ -729,11 +916,17 @@ var sles = &PlatformResolver{
 	},
 }
 
+// suseMicroOs claims both transactional SUSE systems: SUSE Linux Enterprise
+// Micro, which sets ID=suse-microos, and openSUSE MicroOS, which sets
+// ID=opensuse-microos. They share a read-only root, transactional-update and
+// zypper, so every consumer in the provider treats them alike, and the
+// services manager already dispatches on both names.
 var suseMicroOs = &PlatformResolver{
 	Name:     "suse-microos",
 	IsFamily: false,
+	Emits:    []string{"suse-microos", "opensuse-microos"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
-		if pf.Name == "suse-microos" {
+		if pf.Name == "suse-microos" || pf.Name == "opensuse-microos" {
 			return true, nil
 		}
 		return false, nil
@@ -805,7 +998,9 @@ var busybox = &PlatformResolver{
 			return false, nil
 		}
 
-		releaseRegex := regexp.MustCompile(`^(.+)\s(v[\d\.]+)\s*\((.*)\).*$`)
+		// busybox prints its version as "BusyBox v1.34.1 (...)"; the v is part of
+		// its banner, not the version, and every other platform reports a bare one.
+		releaseRegex := regexp.MustCompile(`^(.+)\sv([\d\.]+)\s*\((.*)\).*$`)
 		for _, rodataByteString := range rodataByteStrings {
 			rodataString := string(rodataByteString)
 			m := releaseRegex.FindStringSubmatch(rodataString)
@@ -837,6 +1032,47 @@ var photon = &PlatformResolver{
 	},
 }
 
+// ALT Linux (BaseALT) sets ID=altlinux in os-release. It also ships
+// /etc/redhat-release, /etc/fedora-release and /etc/system-release for
+// compatibility, each carrying only "ALT Container" with no distro name and no
+// version, so nothing in the redhat family can identify it from those. Without
+// a resolver of its own the generic linux fallback claimed it, and a container
+// image claimed by that fallback is reported as "scratch".
+var altlinux = &PlatformResolver{
+	Name:     "altlinux",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "altlinux", nil
+	},
+}
+
+// Void Linux ships only /etc/os-release, carrying ID=void and no version of any
+// kind because it is a rolling release. Without a resolver of its own the
+// generic linux fallback claimed it, and a container image claimed by that
+// fallback is reported as "scratch" — discarding the identity the image states
+// outright. Note the os provider has no xbps support, so packages are not
+// available on this platform; detection only.
+// Clear Linux OS ships only /etc/os-release, as a symlink to the copy in
+// /usr/lib, carrying ID=clear-linux-os. Without a resolver of its own the
+// generic linux fallback claimed it, and a container image claimed by that
+// fallback is reported as "scratch". Detection only: the os provider has no
+// swupd support, so packages are not available on this platform.
+var clearlinux = &PlatformResolver{
+	Name:     "clear-linux-os",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "clear-linux-os", nil
+	},
+}
+
+var voidlinux = &PlatformResolver{
+	Name:     "void",
+	IsFamily: false,
+	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
+		return pf.Name == "void", nil
+	},
+}
+
 var mageia = &PlatformResolver{
 	Name:     "mageia",
 	IsFamily: false,
@@ -851,6 +1087,7 @@ var mageia = &PlatformResolver{
 var mxlinux = &PlatformResolver{
 	Name:     "mxlinux",
 	IsFamily: false,
+	Emits:    []string{"mx"},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		osrd := NewOSReleaseDetector(conn)
 		lsb, err := osrd.lsbconfig()
@@ -1125,14 +1362,6 @@ var windows = &PlatformResolver{
 	},
 }
 
-var slugRe = regexp.MustCompile("[^a-z0-9]+")
-
-func slugifyDarwin(s string) string {
-	s = strings.ToLower(s)
-	s = slugRe.ReplaceAllString(s, "_")
-	return strings.Trim(s, "_")
-}
-
 var (
 	// characters that are dropped outright, so "FRITZ!OS" slugs to "fritzos"
 	// instead of gaining a separator where the punctuation used to be
@@ -1156,7 +1385,7 @@ func slugifyPlatformName(s string) string {
 var darwinFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_DARWIN,
 	IsFamily: true,
-	Children: []*PlatformResolver{macOS, otherDarwin},
+	Children: []*PlatformResolver{macOS},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		if !strings.Contains(strings.ToLower(pf.Name), "darwin") {
 			return false, nil
@@ -1166,22 +1395,20 @@ var darwinFamily = &PlatformResolver{
 		// read information from /usr/bin/sw_vers
 		osrd := NewOSReleaseDetector(conn)
 		dsv, err := osrd.darwin_swversion()
-		// ignore dsv config if we got an error
-		if err == nil {
-			if len(dsv["ProductName"]) > 0 {
-				// name needs to be slugged
-				pf.Name = slugifyDarwin(dsv["ProductName"])
-				if pf.Name == "mac_os_x" {
-					pf.Name = "macos"
-				}
-				pf.Title = dsv["ProductName"]
-			}
-			if len(dsv["ProductVersion"]) > 0 {
-				pf.Version = dsv["ProductVersion"]
-			}
-		} else {
-			// TODO: we know its darwin, but without swversion support
-			log.Error().Err(err)
+		if err != nil {
+			// we know it is darwin, the macos resolver reports what it can
+			log.Debug().Err(err).Msg("platform> could not read sw_vers")
+			return true, nil
+		}
+
+		if len(dsv["ProductName"]) > 0 {
+			pf.Title = dsv["ProductName"]
+		}
+		if len(dsv["ProductVersion"]) > 0 {
+			pf.Version = dsv["ProductVersion"]
+		}
+		if len(dsv["BuildVersion"]) > 0 {
+			pf.Build = dsv["BuildVersion"]
 		}
 
 		return true, nil
@@ -1217,8 +1444,12 @@ var redhatFamily = &PlatformResolver{
 	Name:     "redhat",
 	IsFamily: true,
 	// NOTE: oracle pretends to be redhat with /etc/redhat-release and Red Hat Linux, therefore we
-	// want to check that platform before redhat
-	Children: []*PlatformResolver{oracle, rhel, centos, fedora, scientific, eurolinux, nobara, qubes},
+	// want to check that platform before redhat. rhcos has the same problem: its
+	// /etc/redhat-release is stock RHEL and its PRETTY_NAME starts with "Red Hat",
+	// so it also has to be resolved before redhat.
+	// NOTE: cloudlinux runs before centos, whose last resort is the mere existence of
+	// /etc/centos-release, which a rebuild may ship for compatibility
+	Children: []*PlatformResolver{oracle, rhcos, rhel, cloudlinux, anolis, centos, fedora, scientific, eurolinux, nobara, qubes},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		f, err := conn.FileSystem().Open("/etc/redhat-release")
 		if err != nil {
@@ -1266,7 +1497,7 @@ var redhatFamily = &PlatformResolver{
 var debianFamily = &PlatformResolver{
 	Name:     "debian",
 	IsFamily: true,
-	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus, gardenlinux, tails, kdeneon, elxr},
+	Children: []*PlatformResolver{mxlinux, debian, ubuntu, raspbian, kali, linuxmint, popos, elementary, zorin, parrot, cumulus, gardenlinux, tails, kdeneon, elxr, deepin, openkylin},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		return true, nil
 	},
@@ -1326,7 +1557,9 @@ var eulerFamily = &PlatformResolver{
 var linuxFamily = &PlatformResolver{
 	Name:     inventory.FAMILY_LINUX,
 	IsFamily: true,
-	Children: []*PlatformResolver{archFamily, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, wizos, alpine, wolfi, nixos, gentoo, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, flatcar, cirros, defaultLinux},
+	// NOTE: altlinux runs before the redhat family, whose members probe
+	// /etc/redhat-release and /etc/fedora-release, both of which ALT ships.
+	Children: []*PlatformResolver{archFamily, altlinux, redhatFamily, debianFamily, suseFamily, eulerFamily, bottlerocket, amazonlinux, wizos, alpine, wolfi, nixos, gentoo, voidlinux, clearlinux, busybox, photon, windriver, lede, openwrt, plcnext, mageia, azurelinux, cos, flatcar, talos, opencloudos, cirros, defaultLinux},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		detected := false
 		osrd := NewOSReleaseDetector(conn)
@@ -1500,16 +1733,18 @@ var solaris = &PlatformResolver{
 
 		// NOTE: we have only one solaris system here, since we only get here is the family is sunos, we pass
 
-		// try to read "/etc/release" for more details
+		// try to read "/etc/release" for more details. uname already confirmed
+		// SunOS, so a missing or unreadable release file only costs us the title
+		// and version - it must not retract the platform detection itself.
 		f, err := conn.FileSystem().Open("/etc/release")
 		if err != nil {
-			return false, nil
+			return true, nil
 		}
 		defer f.Close()
 
 		c, err := io.ReadAll(f)
 		if err != nil {
-			return false, nil
+			return true, nil
 		}
 
 		release, err := ParseSolarisRelease(string(c))
@@ -1634,6 +1869,9 @@ var WindowsFamily = &PlatformResolver{
 var unknownOperatingSystem = &PlatformResolver{
 	Name:     "unknown-os",
 	IsFamily: false,
+	// names nothing: it is the terminal fallback and leaves the platform
+	// unnamed, so "unknown-os" is not a platform any asset can report
+	Emits: []string{},
 	Detect: func(r *PlatformResolver, pf *inventory.Platform, conn shared.Connection) (bool, error) {
 		// if we reach here, we really do not know the system
 		log.Debug().Msg("platform> we do not know the operating system, please contact support")

@@ -2202,11 +2202,11 @@ func init() {
 			Create: createWindowsExploitProtection,
 		},
 		"windows.exploitProtection.dep": {
-			// to override args, implement: initWindowsExploitProtectionDep(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionDep,
 			Create: createWindowsExploitProtectionDep,
 		},
 		"windows.exploitProtection.aslr": {
-			// to override args, implement: initWindowsExploitProtectionAslr(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionAslr,
 			Create: createWindowsExploitProtectionAslr,
 		},
 		"windows.exploitProtection.cfg": {
@@ -2214,11 +2214,11 @@ func init() {
 			Create: createWindowsExploitProtectionCfg,
 		},
 		"windows.exploitProtection.sehop": {
-			// to override args, implement: initWindowsExploitProtectionSehop(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionSehop,
 			Create: createWindowsExploitProtectionSehop,
 		},
 		"windows.exploitProtection.heap": {
-			// to override args, implement: initWindowsExploitProtectionHeap(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsExploitProtectionHeap,
 			Create: createWindowsExploitProtectionHeap,
 		},
 		"windows.smartScreen": {
@@ -2510,7 +2510,7 @@ func init() {
 			Create: createWindowsBitlocker,
 		},
 		"windows.bitlocker.policy": {
-			// to override args, implement: initWindowsBitlockerPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Init:   initWindowsBitlockerPolicy,
 			Create: createWindowsBitlockerPolicy,
 		},
 		"windows.bitlocker.policy.driveSettings": {
@@ -12697,6 +12697,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.schannel.ellipticCurves": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSchannel).GetEllipticCurves()).ToDataRes(types.Array(types.String))
 	},
+	"windows.schannel.signatureAlgorithms": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsSchannel).GetSignatureAlgorithms()).ToDataRes(types.Array(types.String))
+	},
 	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsSchannel).GetPqcKeyExchangeEnabled()).ToDataRes(types.Bool)
 	},
@@ -13495,6 +13498,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.dnsServer.diagnostics.logFilePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServerDiagnostics).GetLogFilePath()).ToDataRes(types.String)
 	},
+	"windows.dnsServer.diagnostics.maxFileSizeBytes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDnsServerDiagnostics).GetMaxFileSizeBytes()).ToDataRes(types.Int)
+	},
 	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDnsServerDiagnostics).GetMaxFileSizeMb()).ToDataRes(types.Int)
 	},
@@ -13789,6 +13795,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"windows.printerDriver.printProcessor": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsPrinterDriver).GetPrintProcessor()).ToDataRes(types.String)
 	},
+	"windows.bitlocker.available": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsBitlocker).GetAvailable()).ToDataRes(types.Bool)
+	},
 	"windows.bitlocker.volumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsBitlocker).GetVolumes()).ToDataRes(types.Array(types.Resource("windows.bitlocker.volume")))
 	},
@@ -13968,6 +13977,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"windows.defender.status.amProductVersion": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderStatus).GetAmProductVersion()).ToDataRes(types.String)
+	},
+	"windows.defender.status.amRunningMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlWindowsDefenderStatus).GetAmRunningMode()).ToDataRes(types.String)
 	},
 	"windows.defender.status.amServiceEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlWindowsDefenderStatus).GetAmServiceEnabled()).ToDataRes(types.Bool)
@@ -31312,6 +31324,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsSchannel).EllipticCurves, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"windows.schannel.signatureAlgorithms": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsSchannel).SignatureAlgorithms, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"windows.schannel.pqcKeyExchangeEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsSchannel).PqcKeyExchangeEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -32508,6 +32524,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsDnsServerDiagnostics).LogFilePath, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"windows.dnsServer.diagnostics.maxFileSizeBytes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDnsServerDiagnostics).MaxFileSizeBytes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"windows.dnsServer.diagnostics.maxFileSizeMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDnsServerDiagnostics).MaxFileSizeMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -32940,6 +32960,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlWindowsBitlocker).__id, ok = v.Value.(string)
 		return
 	},
+	"windows.bitlocker.available": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsBitlocker).Available, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"windows.bitlocker.volumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsBitlocker).Volumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -33214,6 +33238,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"windows.defender.status.amProductVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlWindowsDefenderStatus).AmProductVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"windows.defender.status.amRunningMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlWindowsDefenderStatus).AmRunningMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"windows.defender.status.amServiceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79819,7 +79847,7 @@ func (c *mqlWindowsRdp) GetCloudClipboardIntegrationDisabled() *plugin.TValue[bo
 type mqlWindowsWinrm struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsWinrmInternal it will be used here
+	mqlWindowsWinrmInternal
 	Client           plugin.TValue[*mqlWindowsWinrmClient]
 	Service          plugin.TValue[*mqlWindowsWinrmService]
 	ServiceStartMode plugin.TValue[int64]
@@ -80035,15 +80063,21 @@ func (c *mqlWindowsWinrmClient) MqlID() string {
 }
 
 func (c *mqlWindowsWinrmClient) GetAllowBasic() *plugin.TValue[bool] {
-	return &c.AllowBasic
+	return plugin.GetOrCompute[bool](&c.AllowBasic, func() (bool, error) {
+		return c.allowBasic()
+	})
 }
 
 func (c *mqlWindowsWinrmClient) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
-	return &c.AllowUnencryptedTraffic
+	return plugin.GetOrCompute[bool](&c.AllowUnencryptedTraffic, func() (bool, error) {
+		return c.allowUnencryptedTraffic()
+	})
 }
 
 func (c *mqlWindowsWinrmClient) GetAllowDigest() *plugin.TValue[bool] {
-	return &c.AllowDigest
+	return plugin.GetOrCompute[bool](&c.AllowDigest, func() (bool, error) {
+		return c.allowDigest()
+	})
 }
 
 func (c *mqlWindowsWinrmClient) GetTrustedHosts() *plugin.TValue[string] {
@@ -80056,7 +80090,7 @@ func (c *mqlWindowsWinrmClient) GetTrustedHosts() *plugin.TValue[string] {
 type mqlWindowsWinrmService struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlWindowsWinrmServiceInternal
+	// optional: if you define mqlWindowsWinrmServiceInternal it will be used here
 	AllowBasic              plugin.TValue[bool]
 	AllowUnencryptedTraffic plugin.TValue[bool]
 	DisableRunAs            plugin.TValue[bool]
@@ -80104,11 +80138,15 @@ func (c *mqlWindowsWinrmService) MqlID() string {
 }
 
 func (c *mqlWindowsWinrmService) GetAllowBasic() *plugin.TValue[bool] {
-	return &c.AllowBasic
+	return plugin.GetOrCompute[bool](&c.AllowBasic, func() (bool, error) {
+		return c.allowBasic()
+	})
 }
 
 func (c *mqlWindowsWinrmService) GetAllowUnencryptedTraffic() *plugin.TValue[bool] {
-	return &c.AllowUnencryptedTraffic
+	return plugin.GetOrCompute[bool](&c.AllowUnencryptedTraffic, func() (bool, error) {
+		return c.allowUnencryptedTraffic()
+	})
 }
 
 func (c *mqlWindowsWinrmService) GetDisableRunAs() *plugin.TValue[bool] {
@@ -80120,7 +80158,9 @@ func (c *mqlWindowsWinrmService) GetAllowAutoConfig() *plugin.TValue[bool] {
 }
 
 func (c *mqlWindowsWinrmService) GetAllowRemoteShellAccess() *plugin.TValue[bool] {
-	return &c.AllowRemoteShellAccess
+	return plugin.GetOrCompute[bool](&c.AllowRemoteShellAccess, func() (bool, error) {
+		return c.allowRemoteShellAccess()
+	})
 }
 
 func (c *mqlWindowsWinrmService) GetIpv4Filter() *plugin.TValue[string] {
@@ -80675,6 +80715,7 @@ type mqlWindowsSchannel struct {
 	// optional: if you define mqlWindowsSchannelInternal it will be used here
 	CipherSuites          plugin.TValue[[]any]
 	EllipticCurves        plugin.TValue[[]any]
+	SignatureAlgorithms   plugin.TValue[[]any]
 	PqcKeyExchangeEnabled plugin.TValue[bool]
 	Protocols             plugin.TValue[[]any]
 	Ciphers               plugin.TValue[[]any]
@@ -80728,6 +80769,12 @@ func (c *mqlWindowsSchannel) GetCipherSuites() *plugin.TValue[[]any] {
 func (c *mqlWindowsSchannel) GetEllipticCurves() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.EllipticCurves, func() ([]any, error) {
 		return c.ellipticCurves()
+	})
+}
+
+func (c *mqlWindowsSchannel) GetSignatureAlgorithms() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SignatureAlgorithms, func() ([]any, error) {
+		return c.signatureAlgorithms()
 	})
 }
 
@@ -83843,6 +83890,7 @@ type mqlWindowsDnsServerDiagnostics struct {
 	UseSystemEventLog           plugin.TValue[bool]
 	EnableLoggingToFile         plugin.TValue[bool]
 	LogFilePath                 plugin.TValue[string]
+	MaxFileSizeBytes            plugin.TValue[int64]
 	MaxFileSizeMb               plugin.TValue[int64]
 	EnableLogFileRollover       plugin.TValue[bool]
 	SaveLogsToPersistentStorage plugin.TValue[bool]
@@ -83907,6 +83955,10 @@ func (c *mqlWindowsDnsServerDiagnostics) GetEnableLoggingToFile() *plugin.TValue
 
 func (c *mqlWindowsDnsServerDiagnostics) GetLogFilePath() *plugin.TValue[string] {
 	return &c.LogFilePath
+}
+
+func (c *mqlWindowsDnsServerDiagnostics) GetMaxFileSizeBytes() *plugin.TValue[int64] {
+	return &c.MaxFileSizeBytes
 }
 
 func (c *mqlWindowsDnsServerDiagnostics) GetMaxFileSizeMb() *plugin.TValue[int64] {
@@ -84755,9 +84807,10 @@ func (c *mqlWindowsPrinterDriver) GetPrintProcessor() *plugin.TValue[string] {
 type mqlWindowsBitlocker struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlWindowsBitlockerInternal it will be used here
-	Volumes plugin.TValue[[]any]
-	Policy  plugin.TValue[*mqlWindowsBitlockerPolicy]
+	mqlWindowsBitlockerInternal
+	Available plugin.TValue[bool]
+	Volumes   plugin.TValue[[]any]
+	Policy    plugin.TValue[*mqlWindowsBitlockerPolicy]
 }
 
 // createWindowsBitlocker creates a new instance of this resource
@@ -84790,6 +84843,12 @@ func (c *mqlWindowsBitlocker) MqlName() string {
 
 func (c *mqlWindowsBitlocker) MqlID() string {
 	return c.__id
+}
+
+func (c *mqlWindowsBitlocker) GetAvailable() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.Available, func() (bool, error) {
+		return c.available()
+	})
 }
 
 func (c *mqlWindowsBitlocker) GetVolumes() *plugin.TValue[[]any] {
@@ -85553,6 +85612,7 @@ type mqlWindowsDefenderStatus struct {
 	// optional: if you define mqlWindowsDefenderStatusInternal it will be used here
 	AmEngineVersion                  plugin.TValue[string]
 	AmProductVersion                 plugin.TValue[string]
+	AmRunningMode                    plugin.TValue[string]
 	AmServiceEnabled                 plugin.TValue[bool]
 	AmServiceVersion                 plugin.TValue[string]
 	AntispywareEnabled               plugin.TValue[bool]
@@ -85639,6 +85699,10 @@ func (c *mqlWindowsDefenderStatus) GetAmEngineVersion() *plugin.TValue[string] {
 
 func (c *mqlWindowsDefenderStatus) GetAmProductVersion() *plugin.TValue[string] {
 	return &c.AmProductVersion
+}
+
+func (c *mqlWindowsDefenderStatus) GetAmRunningMode() *plugin.TValue[string] {
+	return &c.AmRunningMode
 }
 
 func (c *mqlWindowsDefenderStatus) GetAmServiceEnabled() *plugin.TValue[bool] {

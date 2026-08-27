@@ -123,7 +123,16 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		// This is supported in Debian and Ubuntu:
 		// https: // snapcraft.io/docs/distro-support
 		pms = append(pms, &SnapPkgManager{conn: conn, platform: asset.Platform})
-	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux" || asset.Platform.Name == "bottlerocket" || asset.Platform.Name == "azurelinux":
+	// ALT Linux is rpm based but is not in the redhat family: it ships
+	// /etc/redhat-release and /etc/fedora-release carrying only "ALT Container"
+	// with no distro name, so detection gives it a resolver of its own under
+	// plain linux. Without a case here it matched nothing and packages reported
+	// an error on a system with a populated rpm database.
+	case asset.Platform.Name == "altlinux":
+		fallthrough
+	// opencloudos is rpm based but ships no /etc/redhat-release, so the redhat
+	// family declines it and it resolves as a platform of its own
+	case asset.Platform.Name == "amazonlinux" || asset.Platform.Name == "photon" || asset.Platform.Name == "wrlinux" || asset.Platform.Name == "bottlerocket" || asset.Platform.Name == "azurelinux" || asset.Platform.Name == "opencloudos":
 		fallthrough
 	case asset.Platform.IsFamily("redhat") ||
 		asset.Platform.IsFamily("euler") ||
@@ -137,6 +146,8 @@ func ResolveSystemPkgManagers(conn shared.Connection) ([]OperatingSystemPkgManag
 		pms = append(pms, &SusePkgManager{RpmPkgManager{conn: conn, platform: asset.Platform}})
 	case asset.Platform.Name == "alpine" || asset.Platform.Name == "wolfi" || asset.Platform.Name == "wizos": // alpine, wolfi & wizos share apk
 		pms = append(pms, &AlpinePkgManager{conn: conn, platform: asset.Platform})
+	case asset.Platform.Name == "void": // Void Linux uses xbps
+		pms = append(pms, &XbpsPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "macos": // macos family
 		pms = append(pms, &MacOSPkgManager{conn: conn, platform: asset.Platform})
 	case asset.Platform.Name == "windows":

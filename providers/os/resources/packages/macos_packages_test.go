@@ -31,7 +31,7 @@ func TestMacOsXPackageParser(t *testing.T) {
 	}
 	m, err := packages.ParseMacOSPackages(mock, pf, c.Stdout)
 	assert.Nil(t, err)
-	assert.Equal(t, 6, len(m), "detected the right amount of packages")
+	assert.Equal(t, 7, len(m), "detected the right amount of packages")
 
 	assert.Equal(t, "Preview", m[0].Name, "pkg name detected")
 	assert.Equal(t, "10.0", m[0].Version, "pkg version detected")
@@ -70,10 +70,25 @@ func TestMacOsXPackageParser(t *testing.T) {
 
 	// Wrapped iOS apps keep their Info.plist inside Wrapper/, so there is no
 	// Contents/Info.plist to find. They report a version, so they must never
-	// be dropped by the bundle check.
+	// be dropped by the bundle check. An iPhone/iPad app running on Apple
+	// Silicon is reported alongside native Mac apps and is only
+	// distinguishable by its origin.
 	assert.Equal(t, "Victory", m[5].Name, "wrapped iOS app kept")
 	assert.Equal(t, "3.2.1", m[5].Version, "version reported by system_profiler")
 	assert.Equal(t, "pkg:macos/macos/Victory@3.2.1?arch=x86_64", m[5].PUrl)
+	assert.Equal(t, "ios_app_store", m[5].Origin, "iOS App Store provenance detected")
+
+	// system_profiler's obtained_from is surfaced as the package origin, which
+	// is what lets a consumer tell an App Store install from a direct download.
+	// Both matter for remediation: `brew upgrade` cannot update either one.
+	assert.Equal(t, "WireGuard", m[6].Name, "pkg name detected")
+	assert.Equal(t, "1.0.16", m[6].Version, "pkg version detected")
+	assert.Equal(t, "mac_app_store", m[6].Origin, "App Store provenance detected")
+
+	// The pre-existing entries keep their own provenance — this is additive,
+	// and macOS reported an empty origin for every package before now.
+	assert.Equal(t, "apple", m[0].Origin, "OS-shipped app")
+	assert.Equal(t, "identified_developer", m[2].Origin, "Developer ID-signed app")
 
 	// system_profiler enumerates every path carrying a bundle-like extension,
 	// not just application bundles. Entries with no version and no

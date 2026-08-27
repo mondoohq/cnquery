@@ -99,6 +99,10 @@ func (m *GRPCClient) StoreData(req *StoreReq) (*StoreRes, error) {
 	return m.client.StoreData(context.Background(), req)
 }
 
+func (m *GRPCClient) Translations(req *TranslationsReq) (*TranslationsRes, error) {
+	return m.client.Translations(context.Background(), req)
+}
+
 // recoverPanic converts a panic into a gRPC Internal error. The full stack
 // trace is logged locally; only a short message is sent over the wire.
 // The message is prefixed with "panic in provider " so the caller can
@@ -138,6 +142,12 @@ func (m *GRPCServer) trackRequest() func() {
 
 func (m *GRPCServer) Heartbeat(ctx context.Context, req *HeartbeatReq) (*HeartbeatRes, error) {
 	return m.Impl.Heartbeat(req)
+}
+
+func (m *GRPCServer) Translations(ctx context.Context, req *TranslationsReq) (resp *TranslationsRes, err error) {
+	defer recoverPanic("Translations", &err)
+	defer m.trackRequest()()
+	return m.Impl.Translations(req)
 }
 
 func (m *GRPCServer) ParseCLI(ctx context.Context, req *ParseCLIReq) (resp *ParseCLIRes, err error) {

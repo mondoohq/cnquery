@@ -404,7 +404,7 @@ func TestComputeLsaKerberos(t *testing.T) {
 	empty := map[string]registry.RegistryKeyItem{}
 
 	t.Run("absent in both locations yields null everywhere", func(t *testing.T) {
-		v := computeLsaKerberos(empty, empty)
+		v := computeLsaKerberos(empty, empty, true)
 		assert.Nil(t, v.SupportedEncryptionTypes)
 		assert.Nil(t, v.AllowsDesCbcCrc)
 		assert.Nil(t, v.AllowsDesCbcMd5)
@@ -424,6 +424,7 @@ func TestComputeLsaKerberos(t *testing.T) {
 		v := computeLsaKerberos(
 			items(d("SupportedEncryptionTypes", 0x18)),
 			items(d("SupportedEncryptionTypes", 0x4)),
+			true,
 		)
 		require.NotNil(t, v.SupportedEncryptionTypes)
 		assert.Equal(t, int64(0x18), *v.SupportedEncryptionTypes)
@@ -432,11 +433,39 @@ func TestComputeLsaKerberos(t *testing.T) {
 	})
 
 	t.Run("the legacy location is used when the policy value is absent", func(t *testing.T) {
-		v := computeLsaKerberos(empty, items(d("SupportedEncryptionTypes", 0x4)))
+		v := computeLsaKerberos(empty, items(d("SupportedEncryptionTypes", 0x4)), true)
 		require.NotNil(t, v.SupportedEncryptionTypes)
 		assert.Equal(t, int64(0x4), *v.SupportedEncryptionTypes)
 		require.NotNil(t, v.AllowsRc4Hmac)
 		assert.True(t, *v.AllowsRc4Hmac)
+	})
+
+	// Windows Server 2025 stopped reading the legacy location. A mask left
+	// there by a pre-2025 hardening script is inert, and reporting it would
+	// describe a configuration the host is not applying. The unsafe direction
+	// is the one asserted here: a leftover AES-only mask must not read as
+	// "RC4 is not allowed" when the built-in default set is what is in force.
+	t.Run("the legacy location is ignored where the release does not honor it", func(t *testing.T) {
+		v := computeLsaKerberos(empty, items(d("SupportedEncryptionTypes", 0x18)), false)
+		assert.Nil(t, v.SupportedEncryptionTypes)
+		assert.Nil(t, v.AllowsRc4Hmac)
+		assert.Nil(t, v.AllowsAes256)
+		assert.True(t, isNullInt(v.SupportedEncryptionTypes))
+		assert.True(t, isNullBool(v.AllowsRc4Hmac))
+	})
+
+	// the policy location keeps working on those releases; it is the only
+	// location Windows Server 2025 reads
+	t.Run("the policy location still applies where the legacy one is ignored", func(t *testing.T) {
+		v := computeLsaKerberos(
+			items(d("SupportedEncryptionTypes", 0x18)),
+			items(d("SupportedEncryptionTypes", 0x4)),
+			false,
+		)
+		require.NotNil(t, v.SupportedEncryptionTypes)
+		assert.Equal(t, int64(0x18), *v.SupportedEncryptionTypes)
+		require.NotNil(t, v.AllowsRc4Hmac)
+		assert.False(t, *v.AllowsRc4Hmac)
 	})
 
 	tests := []struct {
@@ -465,7 +494,7 @@ func TestComputeLsaKerberos(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			v := computeLsaKerberos(items(d("SupportedEncryptionTypes", tc.mask)), empty)
+			v := computeLsaKerberos(items(d("SupportedEncryptionTypes", tc.mask)), empty, true)
 
 			require.NotNil(t, v.SupportedEncryptionTypes)
 			assert.Equal(t, tc.mask, *v.SupportedEncryptionTypes, "the raw mask is reported unchanged")
@@ -545,4 +574,27 @@ func TestComputeLsaLdap(t *testing.T) {
 		v := computeLsaLdap(empty, items(d("LDAPServerIntegrity", 2)))
 		assert.Nil(t, v.ServerIntegrity)
 	})
+}
+
+// TestKerberosLegacyEtypeLastBuild pins the build the legacy-location gate turns
+// on. Windows reports its build as the platform version, so the comparison is
+// against 26100, which is Windows Server 2025 and Windows 11 24H2. Windows
+// Server 2016 (14393), 2019 (17763), and 2022 (20348) all sit below it and keep
+// the fallback.
+func TestKerberosLegacyEtypeLastBuild(t *testing.T) {
+	cases := map[string]struct {
+		build   int
+		honored bool
+	}{
+		"windows server 2016": {14393, true},
+		"windows server 2019": {17763, true},
+		"windows server 2022": {20348, true},
+		"windows server 2025": {26100, false},
+		"a later build":       {27000, false},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, c.honored, c.build < kerberosLegacyEtypeLastBuild)
+		})
+	}
 }

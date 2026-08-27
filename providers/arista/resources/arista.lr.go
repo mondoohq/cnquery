@@ -1084,6 +1084,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"arista.eos.bgp.peer.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosBgpPeer).GetDescription()).ToDataRes(types.String)
 	},
+	"arista.eos.bgp.peer.peerGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosBgpPeer).GetPeerGroup()).ToDataRes(types.String)
+	},
 	"arista.eos.routeMap.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosRouteMap).GetName()).ToDataRes(types.String)
 	},
@@ -1248,6 +1251,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"arista.eos.aclBinding.aclName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclBinding).GetAclName()).ToDataRes(types.String)
+	},
+	"arista.eos.aclBinding.vrf": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAristaEosAclBinding).GetVrf()).ToDataRes(types.String)
 	},
 	"arista.eos.aclBinding.acl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAristaEosAclBinding).GetAcl()).ToDataRes(types.Resource("arista.eos.acl"))
@@ -2929,6 +2935,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAristaEosBgpPeer).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"arista.eos.bgp.peer.peerGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosBgpPeer).PeerGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"arista.eos.routeMap.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosRouteMap).__id, ok = v.Value.(string)
 		return
@@ -3183,6 +3193,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"arista.eos.aclBinding.aclName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAristaEosAclBinding).AclName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"arista.eos.aclBinding.vrf": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAristaEosAclBinding).Vrf, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"arista.eos.aclBinding.acl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -5118,7 +5132,7 @@ func (c *mqlAristaEosRunningConfig) GetContent() *plugin.TValue[string] {
 type mqlAristaEosRunningConfigSection struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAristaEosRunningConfigSectionInternal
+	// optional: if you define mqlAristaEosRunningConfigSectionInternal it will be used here
 	Name    plugin.TValue[string]
 	Content plugin.TValue[string]
 }
@@ -7033,6 +7047,7 @@ type mqlAristaEosBgpPeer struct {
 	UpdateSource           plugin.TValue[string]
 	EbgpMultihop           plugin.TValue[int64]
 	Description            plugin.TValue[string]
+	PeerGroup              plugin.TValue[string]
 }
 
 // createAristaEosBgpPeer creates a new instance of this resource
@@ -7162,6 +7177,10 @@ func (c *mqlAristaEosBgpPeer) GetEbgpMultihop() *plugin.TValue[int64] {
 
 func (c *mqlAristaEosBgpPeer) GetDescription() *plugin.TValue[string] {
 	return &c.Description
+}
+
+func (c *mqlAristaEosBgpPeer) GetPeerGroup() *plugin.TValue[string] {
+	return &c.PeerGroup
 }
 
 // mqlAristaEosRouteMap for the arista.eos.routeMap resource
@@ -7846,6 +7865,7 @@ type mqlAristaEosAclBinding struct {
 	Direction  plugin.TValue[string]
 	Family     plugin.TValue[string]
 	AclName    plugin.TValue[string]
+	Vrf        plugin.TValue[string]
 	Acl        plugin.TValue[*mqlAristaEosAcl]
 }
 
@@ -7904,6 +7924,10 @@ func (c *mqlAristaEosAclBinding) GetFamily() *plugin.TValue[string] {
 
 func (c *mqlAristaEosAclBinding) GetAclName() *plugin.TValue[string] {
 	return &c.AclName
+}
+
+func (c *mqlAristaEosAclBinding) GetVrf() *plugin.TValue[string] {
+	return &c.Vrf
 }
 
 func (c *mqlAristaEosAclBinding) GetAcl() *plugin.TValue[*mqlAristaEosAcl] {

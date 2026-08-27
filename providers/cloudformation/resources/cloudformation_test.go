@@ -147,6 +147,9 @@ func loadTemplate(path string) (*mqlCloudformationTemplate, error) {
 			},
 		},
 	}, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	runtime := &plugin.Runtime{Resources: &syncx.Map[plugin.Resource]{}}
 	runtime.Connection = conn

@@ -44,7 +44,7 @@ func ExecStrict(query string, runtime llx.Runtime, features mql.Features, props 
 		props = mqlc.EmptyPropsHandler
 	}
 
-	conf := mqlc.NewConfig(runtime.Schema(), features)
+	conf := mqlc.NewConfigFrom(runtime, features)
 	conf.Strict = strict
 	bundle, err := mqlc.Compile(query, props, conf)
 	if err != nil {
@@ -85,6 +85,38 @@ func ExecStrict(query string, runtime llx.Runtime, features mql.Features, props 
 }
 
 func ExecuteCode(runtime llx.Runtime, codeBundle *llx.CodeBundle, props map[string]*llx.Primitive, features mql.Features) (map[string]*llx.RawResult, error) {
+	// Install any downgrade translations this reader needs (ADR 040 part 6).
+	//
+	// Patch returns the code to execute rather than editing in place, so the
+	// bundle stays shareable: one CodeBundle is executed against many assets and
+	// queries run in goroutines, and a patched copy is private to this call.
+	// A reader that needs no translation gets its own code straight back.
+	if len(codeBundle.GetTranslations()) > 0 && runtime.Schema() != nil {
+		patched, installed := llx.Patch(codeBundle.CodeV2,
+			codeBundle.GetTranslations(), runtime.Schema().AllProviderVersions())
+		if len(installed) > 0 {
+			log.Debug().Int("count", len(installed)).
+				Msg("installed downgrade translations for this provider version")
+			// Shallow copy: the patched code is the only thing that differs, and
+			// everything reported still keys on the shipped checksums.
+			nu := *codeBundle
+			nu.CodeV2 = patched
+			codeBundle = &nu
+		}
+	}
+
+	// The reverse direction: a bundle compiled before a field changed shape
+	// carries no translation for it, so the reader is the only side that can
+	// notice (ADR 040 part 6). Detection only - repairing a drift needs the
+	// inverse of the provider's own translation, and until that exists saying
+	// so is strictly better than the alternative, which is a wrong answer with
+	// no symptom.
+	if schema := runtime.Schema(); schema != nil {
+		if drift := llx.FindTypeDrift(codeBundle.CodeV2, schema); len(drift) > 0 {
+			log.Warn().Msg(llx.ReportTypeDrift(drift))
+		}
+	}
+
 	builder := internal.NewBuilder()
 
 	builder.AddQuery(codeBundle, nil, props)

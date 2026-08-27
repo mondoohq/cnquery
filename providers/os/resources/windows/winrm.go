@@ -6,6 +6,7 @@ package windows
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -36,18 +37,30 @@ $res+=[ordered]@{Address=[string]$h['Address'];Transport=[string]$h['Transport']
 }
 ConvertTo-Json -InputObject @($res) -Depth 4 -Compress`
 
-// PSGetWinRMConfig reads the WS-Management client and service settings that
-// have no registry equivalent.
+// PSGetWinRMConfig reads the live WS-Management client, service and shell
+// settings.
 //
-// These are the live values, which already carry any Group Policy setting: the
-// WinRM service applies the policy key to its own configuration, so reading
-// the policy key alone would miss a TrustedHosts set locally with
-// `winrm set winrm/config/client`, which is exactly the configuration worth
-// finding.
+// These are the effective values, which already carry any Group Policy
+// setting: the WinRM service applies the policy key to its own configuration.
+// Reading the policy key instead gets two things wrong. It misses a value set
+// locally with `winrm set winrm/config/client`, which is exactly the
+// configuration worth finding. And when the policy key is absent, which is the
+// normal state of a machine nobody has applied a WinRM GPO to, it has nothing
+// to report but a guess at what Windows would do, and the guess does not match
+// what Windows actually does: a stock Server 2016, 2019 and 2022 all report
+// Basic authentication and unencrypted traffic as off on the service, and
+// unencrypted traffic as off on the client.
+//
+// $ErrorActionPreference is Stop deliberately. Every one of these values
+// exists on a supported host, so a read that fails means the configuration
+// could not be reached, and reporting a default in its place would state as
+// fact something nobody managed to check.
 const PSGetWinRMConfig = `$ErrorActionPreference='Stop'
+function V($p){[string](Get-Item -Path ("WSMan:\localhost\"+$p)).Value}
 [ordered]@{
-Client=[ordered]@{TrustedHosts=[string](Get-Item -Path WSMan:\localhost\Client\TrustedHosts).Value}
-Service=[ordered]@{IPv4Filter=[string](Get-Item -Path WSMan:\localhost\Service\IPv4Filter).Value;IPv6Filter=[string](Get-Item -Path WSMan:\localhost\Service\IPv6Filter).Value}
+Client=[ordered]@{TrustedHosts=V 'Client\TrustedHosts';AllowBasic=V 'Client\Auth\Basic';AllowDigest=V 'Client\Auth\Digest';AllowUnencrypted=V 'Client\AllowUnencrypted'}
+Service=[ordered]@{IPv4Filter=V 'Service\IPv4Filter';IPv6Filter=V 'Service\IPv6Filter';AllowBasic=V 'Service\Auth\Basic';AllowUnencrypted=V 'Service\AllowUnencrypted'}
+Shell=[ordered]@{AllowRemoteShellAccess=V 'Shell\AllowRemoteShellAccess'}
 }|ConvertTo-Json -Depth 4 -Compress`
 
 // PSScalar decodes a WS-Management setting value.
@@ -103,6 +116,23 @@ func (l WinRMListener) PortNumber() int64 {
 // as disabled.
 func (l WinRMListener) IsEnabled() bool {
 	return strings.EqualFold(strings.TrimSpace(string(l.Enabled)), "true")
+}
+
+// Bool decodes a WS-Management boolean setting.
+//
+// The WSMan provider renders these as the strings "true" and "false".
+// Anything else means the value read was not the setting expected, and it is
+// reported as an error rather than quietly as false: "the service does not
+// allow unencrypted traffic" is precisely the assertion an audit rests on, so
+// a false here has to be a fact about the host and not a decode that missed.
+func (s PSScalar) Bool() (bool, error) {
+	switch strings.ToLower(strings.TrimSpace(string(s))) {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	}
+	return false, fmt.Errorf("expected a WS-Management boolean, got %q", string(s))
 }
 
 // ID builds the resource id of a listener.
@@ -167,17 +197,28 @@ func ParseWinRMListeners(r io.Reader) ([]WinRMListener, error) {
 type WinRMConfig struct {
 	Client  WinRMClientConfig  `json:"Client"`
 	Service WinRMServiceConfig `json:"Service"`
+	Shell   WinRMShellConfig   `json:"Shell"`
 }
 
 // WinRMClientConfig is the WS-Management client configuration.
 type WinRMClientConfig struct {
-	TrustedHosts PSScalar `json:"TrustedHosts"`
+	TrustedHosts     PSScalar `json:"TrustedHosts"`
+	AllowBasic       PSScalar `json:"AllowBasic"`
+	AllowDigest      PSScalar `json:"AllowDigest"`
+	AllowUnencrypted PSScalar `json:"AllowUnencrypted"`
 }
 
 // WinRMServiceConfig is the WS-Management service configuration.
 type WinRMServiceConfig struct {
-	IPv4Filter PSScalar `json:"IPv4Filter"`
-	IPv6Filter PSScalar `json:"IPv6Filter"`
+	IPv4Filter       PSScalar `json:"IPv4Filter"`
+	IPv6Filter       PSScalar `json:"IPv6Filter"`
+	AllowBasic       PSScalar `json:"AllowBasic"`
+	AllowUnencrypted PSScalar `json:"AllowUnencrypted"`
+}
+
+// WinRMShellConfig is the WS-Management shell (WinRS) configuration.
+type WinRMShellConfig struct {
+	AllowRemoteShellAccess PSScalar `json:"AllowRemoteShellAccess"`
 }
 
 // ParseWinRMConfig decodes the WS-Management client and service settings.

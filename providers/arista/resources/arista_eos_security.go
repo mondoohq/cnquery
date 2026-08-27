@@ -12,16 +12,30 @@ import (
 	"go.mondoo.com/mql/types"
 )
 
-// fetchRunningConfig returns the EOS running-config, preferring the cached
-// content on the existing arista.eos.runningConfig resource (which already
-// handles double-checked locking) so we don't issue redundant
-// `show running-config` calls when multiple security resources are queried.
+// fetchRunningConfig returns the device's running-config with banner bodies
+// blanked out. Banner text is operator-authored prose that routinely quotes
+// configuration, and every parser here scans the same namespace it sits in, so
+// command parsers must not see it. Use fetchRawRunningConfig for the banners
+// themselves and for anything that reports the config verbatim.
+//
+// Both go through the cached arista.eos.runningConfig resource, so the device
+// is asked for its configuration once however many resources are queried.
 func fetchRunningConfig(runtime *plugin.Runtime) (string, error) {
 	rc, err := runningConfigResource(runtime)
 	if err != nil {
 		return "", err
 	}
-	return rc.fetchContent(), nil
+	return rc.fetchStrippedContent()
+}
+
+// fetchRawRunningConfig returns the running-config exactly as the device
+// rendered it, banners included.
+func fetchRawRunningConfig(runtime *plugin.Runtime) (string, error) {
+	rc, err := runningConfigResource(runtime)
+	if err != nil {
+		return "", err
+	}
+	return rc.fetchContent()
 }
 
 // runningConfigResource returns the device's running-config resource, which the
@@ -102,6 +116,34 @@ func (a *mqlAristaEosSshSettings) id() (string, error) {
 	return "arista.eos.sshSettings", nil
 }
 
+// sshSettingsArgs maps a parsed `management ssh` block onto the resource's
+// fields. It is a named function so a test can assert it covers every field
+// the schema declares: codegen accepts a declared field with no population
+// path, and the eight containment fields were declared and parsed for a
+// release without ever being mapped here.
+func sshSettingsArgs(s *eos.SshSettings) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"enabled":                llx.BoolData(s.Enabled),
+		"protocolVersion":        llx.StringData(s.ProtocolVersion),
+		"idleTimeout":            llx.IntData(int64(s.IdleTimeout)),
+		"serverPort":             llx.IntData(int64(s.ServerPort)),
+		"authenticationMode":     llx.StringData(s.AuthenticationMode),
+		"ciphers":                llx.ArrayData(stringSliceToAny(s.Ciphers), types.String),
+		"keyExchange":            llx.ArrayData(stringSliceToAny(s.KeyExchange), types.String),
+		"macs":                   llx.ArrayData(stringSliceToAny(s.Macs), types.String),
+		"hostkeyAlgorithms":      llx.ArrayData(stringSliceToAny(s.HostkeyAlgorithms), types.String),
+		"fipsRestrictions":       llx.BoolData(s.FipsRestrictions),
+		"vrfs":                   llx.ArrayData(stringSliceToAny(s.Vrfs), types.String),
+		"loginTimeout":           llx.IntData(int64(s.LoginTimeout)),
+		"connectionLimit":        llx.IntData(int64(s.ConnectionLimit)),
+		"connectionPerHostLimit": llx.IntData(int64(s.ConnectionPerHostLimit)),
+		"emptyPasswords":         llx.StringData(s.EmptyPasswords),
+		"logLevel":               llx.StringData(s.LogLevel),
+		"clientAliveInterval":    llx.IntData(int64(s.ClientAliveInterval)),
+		"clientAliveCountMax":    llx.IntData(int64(s.ClientAliveCountMax)),
+	}
+}
+
 func (a *mqlAristaEos) sshSettings() (*mqlAristaEosSshSettings, error) {
 	rc, err := fetchRunningConfig(a.MqlRuntime)
 	if err != nil {
@@ -109,18 +151,7 @@ func (a *mqlAristaEos) sshSettings() (*mqlAristaEosSshSettings, error) {
 	}
 	s := eos.ParseSshSettings(rc)
 
-	res, err := CreateResource(a.MqlRuntime, "arista.eos.sshSettings", map[string]*llx.RawData{
-		"enabled":            llx.BoolData(s.Enabled),
-		"protocolVersion":    llx.StringData(s.ProtocolVersion),
-		"idleTimeout":        llx.IntData(int64(s.IdleTimeout)),
-		"serverPort":         llx.IntData(int64(s.ServerPort)),
-		"authenticationMode": llx.StringData(s.AuthenticationMode),
-		"ciphers":            llx.ArrayData(stringSliceToAny(s.Ciphers), types.String),
-		"keyExchange":        llx.ArrayData(stringSliceToAny(s.KeyExchange), types.String),
-		"macs":               llx.ArrayData(stringSliceToAny(s.Macs), types.String),
-		"hostkeyAlgorithms":  llx.ArrayData(stringSliceToAny(s.HostkeyAlgorithms), types.String),
-		"fipsRestrictions":   llx.BoolData(s.FipsRestrictions),
-	})
+	res, err := CreateResource(a.MqlRuntime, "arista.eos.sshSettings", sshSettingsArgs(s))
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +167,22 @@ type mqlAristaEosSnmpCommunityInternal struct {
 }
 
 func (a *mqlAristaEosSnmpCommunity) id() (string, error) {
-	return "arista.eos.snmpCommunity/" + a.Name.Data, a.Name.Error
+	if a.Name.Error != nil {
+		return "", a.Name.Error
+	}
+	if a.Ipv6.Error != nil {
+		return "", a.Ipv6.Error
+	}
+	// One community is commonly declared twice, once per address family, to
+	// bind an IPv4 access-list and an IPv6 one. Keying on the name alone
+	// collapses the pair onto whichever was parsed first, so the second
+	// line's access-list disappears and the surviving row resolves its
+	// typed ACL in the wrong namespace.
+	family := "ipv4"
+	if a.Ipv6.Data {
+		family = "ipv6"
+	}
+	return "arista.eos.snmpCommunity/" + family + "/" + a.Name.Data, nil
 }
 
 func (a *mqlAristaEos) snmpCommunities() ([]any, error) {

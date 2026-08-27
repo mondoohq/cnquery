@@ -60,7 +60,9 @@ func TestWorkloadSecurityRollups_NilSpec(t *testing.T) {
 		assert.Empty(t, specAddedCapabilities(nil), "addedCapabilities")
 		assert.False(t, specUsesHostNamespaces(nil), "usesHostNamespaces")
 		assert.False(t, specUsesHostPath(nil), "usesHostPath")
-		assert.False(t, specAutomountServiceAccountToken(nil), "automountServiceAccountToken")
+		// The automount decision now also consults the ServiceAccount; the part
+		// that reads the spec must still tolerate a nil one.
+		assert.Equal(t, "default", podServiceAccountName(nil), "podServiceAccountName")
 		assert.False(t, specUsesUnconfinedSeccomp(nil), "usesUnconfinedSeccomp")
 		assert.False(t, specHasSeccompProfile(nil), "hasSeccompProfile")
 	})

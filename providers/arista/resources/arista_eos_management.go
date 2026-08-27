@@ -173,7 +173,7 @@ func snmpConfig(runtime *plugin.Runtime) (*eos.SnmpConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return rc.fetchSnmpConfig(), nil
+	return rc.fetchSnmpConfig()
 }
 
 // id keys a user on the group as well as the name, since the same security
@@ -420,15 +420,19 @@ type mqlAristaEosSnmpHostInternal struct {
 func (a *mqlAristaEosSnmpHost) id() (string, error) {
 	for _, e := range []error{
 		a.Host.Error, a.Vrf.Error, a.Version.Error,
-		a.NotificationType.Error, a.Port.Error,
+		a.NotificationType.Error, a.Port.Error, a.SecurityLevel.Error,
 	} {
 		if e != nil {
 			return "", e
 		}
 	}
+	// A v3 destination repeats to one collector at each security level, so
+	// the level belongs in the key for the same reason it does on
+	// arista.eos.snmpGroup: without it a noauth destination hides behind an
+	// authPriv one, and the unauthenticated path is the one worth finding.
 	return "arista.eos.snmpHost/" + a.Vrf.Data + "/" + a.Host.Data + "/" +
 		strconv.FormatInt(a.Port.Data, 10) + "/" + a.Version.Data + "/" +
-		a.NotificationType.Data, nil
+		a.NotificationType.Data + "/" + a.SecurityLevel.Data, nil
 }
 
 func (a *mqlAristaEosSnmpSetting) hosts() ([]any, error) {

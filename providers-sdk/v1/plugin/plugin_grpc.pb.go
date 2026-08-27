@@ -22,14 +22,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ProviderPlugin_Heartbeat_FullMethodName   = "/cnquery.providers.v1.ProviderPlugin/Heartbeat"
-	ProviderPlugin_ParseCLI_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/ParseCLI"
-	ProviderPlugin_Connect_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/Connect"
-	ProviderPlugin_Disconnect_FullMethodName  = "/cnquery.providers.v1.ProviderPlugin/Disconnect"
-	ProviderPlugin_MockConnect_FullMethodName = "/cnquery.providers.v1.ProviderPlugin/MockConnect"
-	ProviderPlugin_Shutdown_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/Shutdown"
-	ProviderPlugin_GetData_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/GetData"
-	ProviderPlugin_StoreData_FullMethodName   = "/cnquery.providers.v1.ProviderPlugin/StoreData"
+	ProviderPlugin_Heartbeat_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/Heartbeat"
+	ProviderPlugin_Translations_FullMethodName = "/cnquery.providers.v1.ProviderPlugin/Translations"
+	ProviderPlugin_ParseCLI_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/ParseCLI"
+	ProviderPlugin_Connect_FullMethodName      = "/cnquery.providers.v1.ProviderPlugin/Connect"
+	ProviderPlugin_Disconnect_FullMethodName   = "/cnquery.providers.v1.ProviderPlugin/Disconnect"
+	ProviderPlugin_MockConnect_FullMethodName  = "/cnquery.providers.v1.ProviderPlugin/MockConnect"
+	ProviderPlugin_Shutdown_FullMethodName     = "/cnquery.providers.v1.ProviderPlugin/Shutdown"
+	ProviderPlugin_GetData_FullMethodName      = "/cnquery.providers.v1.ProviderPlugin/GetData"
+	ProviderPlugin_StoreData_FullMethodName    = "/cnquery.providers.v1.ProviderPlugin/StoreData"
 )
 
 // ProviderPluginClient is the client API for ProviderPlugin service.
@@ -37,6 +38,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProviderPluginClient interface {
 	Heartbeat(ctx context.Context, in *HeartbeatReq, opts ...grpc.CallOption) (*HeartbeatRes, error)
+	Translations(ctx context.Context, in *TranslationsReq, opts ...grpc.CallOption) (*TranslationsRes, error)
 	ParseCLI(ctx context.Context, in *ParseCLIReq, opts ...grpc.CallOption) (*ParseCLIRes, error)
 	Connect(ctx context.Context, in *ConnectReq, opts ...grpc.CallOption) (*ConnectRes, error)
 	Disconnect(ctx context.Context, in *DisconnectReq, opts ...grpc.CallOption) (*DisconnectRes, error)
@@ -58,6 +60,16 @@ func (c *providerPluginClient) Heartbeat(ctx context.Context, in *HeartbeatReq, 
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HeartbeatRes)
 	err := c.cc.Invoke(ctx, ProviderPlugin_Heartbeat_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *providerPluginClient) Translations(ctx context.Context, in *TranslationsReq, opts ...grpc.CallOption) (*TranslationsRes, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TranslationsRes)
+	err := c.cc.Invoke(ctx, ProviderPlugin_Translations_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +151,7 @@ func (c *providerPluginClient) StoreData(ctx context.Context, in *StoreReq, opts
 // for forward compatibility.
 type ProviderPluginServer interface {
 	Heartbeat(context.Context, *HeartbeatReq) (*HeartbeatRes, error)
+	Translations(context.Context, *TranslationsReq) (*TranslationsRes, error)
 	ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error)
 	Connect(context.Context, *ConnectReq) (*ConnectRes, error)
 	Disconnect(context.Context, *DisconnectReq) (*DisconnectRes, error)
@@ -158,6 +171,9 @@ type UnimplementedProviderPluginServer struct{}
 
 func (UnimplementedProviderPluginServer) Heartbeat(context.Context, *HeartbeatReq) (*HeartbeatRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Heartbeat not implemented")
+}
+func (UnimplementedProviderPluginServer) Translations(context.Context, *TranslationsReq) (*TranslationsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Translations not implemented")
 }
 func (UnimplementedProviderPluginServer) ParseCLI(context.Context, *ParseCLIReq) (*ParseCLIRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ParseCLI not implemented")
@@ -215,6 +231,24 @@ func _ProviderPlugin_Heartbeat_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProviderPluginServer).Heartbeat(ctx, req.(*HeartbeatReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProviderPlugin_Translations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TranslationsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProviderPluginServer).Translations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProviderPlugin_Translations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProviderPluginServer).Translations(ctx, req.(*TranslationsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -355,6 +389,10 @@ var ProviderPlugin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Heartbeat",
 			Handler:    _ProviderPlugin_Heartbeat_Handler,
+		},
+		{
+			MethodName: "Translations",
+			Handler:    _ProviderPlugin_Translations_Handler,
 		},
 		{
 			MethodName: "ParseCLI",

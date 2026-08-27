@@ -194,3 +194,94 @@ func TestWinRMScriptsFitCommandLine(t *testing.T) {
 	assert.LessOrEqual(t, len(PSGetWinRMListeners), PSMaxScriptLength)
 	assert.LessOrEqual(t, len(PSGetWinRMConfig), PSMaxScriptLength)
 }
+
+// The WS-Management provider reports every setting as a string, so a boolean
+// arrives as "true" or "false". Anything else means the value read was not the
+// setting expected, and has to surface as an error: reporting it as false
+// would state that the service refuses Basic authentication when nobody
+// established that.
+func TestPSScalarBool(t *testing.T) {
+	for _, tc := range []struct {
+		in   PSScalar
+		want bool
+	}{
+		{"true", true},
+		{"false", false},
+		{"True", true},
+		{"FALSE", false},
+		{" true ", true},
+	} {
+		got, err := tc.in.Bool()
+		require.NoError(t, err, "input %q", tc.in)
+		require.Equal(t, tc.want, got, "input %q", tc.in)
+	}
+
+	for _, in := range []PSScalar{"", "yes", "1", "0", "enabled"} {
+		_, err := in.Bool()
+		require.Error(t, err, "input %q should not decode to a boolean", in)
+	}
+}
+
+// The payload captured from a stock Windows Server. Every one of these is the
+// opposite of, or agrees with, what the policy-key fallback used to report:
+// service Basic and unencrypted, and client unencrypted, are all false here
+// while the fallback reported them as true.
+const stockWinRMConfig = `{"Client":{"TrustedHosts":"","AllowBasic":"true","AllowDigest":"true","AllowUnencrypted":"false"},"Service":{"IPv4Filter":"*","IPv6Filter":"*","AllowBasic":"false","AllowUnencrypted":"false"},"Shell":{"AllowRemoteShellAccess":"true"}}`
+
+func TestParseWinRMConfigStockHost(t *testing.T) {
+	config, err := ParseWinRMConfig(strings.NewReader(stockWinRMConfig))
+	require.NoError(t, err)
+
+	require.Empty(t, config.Client.TrustedHosts)
+
+	clientBasic, err := config.Client.AllowBasic.Bool()
+	require.NoError(t, err)
+	require.True(t, clientBasic, "the client offers Basic credentials on a stock host")
+
+	clientDigest, err := config.Client.AllowDigest.Bool()
+	require.NoError(t, err)
+	require.True(t, clientDigest)
+
+	clientUnenc, err := config.Client.AllowUnencrypted.Bool()
+	require.NoError(t, err)
+	require.False(t, clientUnenc, "the client refuses unencrypted requests on a stock host")
+
+	serviceBasic, err := config.Service.AllowBasic.Bool()
+	require.NoError(t, err)
+	require.False(t, serviceBasic, "the service refuses Basic authentication on a stock host")
+
+	serviceUnenc, err := config.Service.AllowUnencrypted.Bool()
+	require.NoError(t, err)
+	require.False(t, serviceUnenc, "the service refuses unencrypted traffic on a stock host")
+
+	shell, err := config.Shell.AllowRemoteShellAccess.Bool()
+	require.NoError(t, err)
+	require.True(t, shell)
+
+	require.Equal(t, PSScalar("*"), config.Service.IPv4Filter)
+	require.Equal(t, PSScalar("*"), config.Service.IPv6Filter)
+}
+
+// A host that has been hardened, to prove the fields move rather than being
+// pinned to whatever a stock host happens to report.
+func TestParseWinRMConfigHardenedHost(t *testing.T) {
+	config, err := ParseWinRMConfig(strings.NewReader(
+		`{"Client":{"TrustedHosts":"*.example.com","AllowBasic":"false","AllowDigest":"false","AllowUnencrypted":"false"},` +
+			`"Service":{"IPv4Filter":"10.0.0.0-10.0.0.255","IPv6Filter":"","AllowBasic":"false","AllowUnencrypted":"false"},` +
+			`"Shell":{"AllowRemoteShellAccess":"false"}}`))
+	require.NoError(t, err)
+
+	require.Equal(t, PSScalar("*.example.com"), config.Client.TrustedHosts)
+	require.Equal(t, PSScalar("10.0.0.0-10.0.0.255"), config.Service.IPv4Filter)
+
+	for name, v := range map[string]PSScalar{
+		"client basic":  config.Client.AllowBasic,
+		"client digest": config.Client.AllowDigest,
+		"service basic": config.Service.AllowBasic,
+		"shell access":  config.Shell.AllowRemoteShellAccess,
+	} {
+		got, err := v.Bool()
+		require.NoError(t, err, name)
+		require.False(t, got, name)
+	}
+}

@@ -202,3 +202,44 @@ func TestParseAaaConfig_ConsoleAuthorizationAbsent(t *testing.T) {
 	assert.Empty(t, a.AuthorizationConsoleCommands)
 	assert.False(t, a.SerialConsoleAuthorization)
 }
+
+// TestParseRootAccount_BareFormIsCleartextAndHidesThePassword pins the closed
+// selector set. The selector is optional on `aaa root secret`, so reading the
+// first token positionally as the format published the root account's password
+// in arista.eos.aaa.rootSecretFormat, a field every consumer reads as safe
+// metadata. The sibling `enable secret` line has had this guard from the start.
+func TestParseRootAccount_BareFormIsCleartextAndHidesThePassword(t *testing.T) {
+	const password = "ExamplePassphraseValue"
+	got := ParseRootAccount("aaa root secret " + password + "\n")
+	assert.True(t, got.Enabled)
+	assert.False(t, got.NoPassword)
+	assert.Equal(t, "0", got.SecretFormat)
+	assert.NotContains(t, got.SecretFormat, password)
+}
+
+func TestParseRootAccount_NeverCarriesTheHash(t *testing.T) {
+	const hash = "$6$Zx1ExampleSalt$ExampleHashValueOnly"
+	got := ParseRootAccount("aaa root secret sha512 " + hash + "\n")
+	assert.True(t, got.Enabled)
+	assert.Equal(t, "sha512", got.SecretFormat)
+	assert.NotContains(t, got.SecretFormat, hash)
+}
+
+// TestPasswordSecretSelectors covers every selector EOS accepts on a password
+// secret. Type 7 was missing from the set, so a reversibly-obfuscated secret
+// and a genuinely cleartext one were both reported as "0" and a check for
+// "the enable password must not be stored in cleartext" failed on a device
+// that does not store it in cleartext.
+func TestPasswordSecretSelectors(t *testing.T) {
+	for _, selector := range []string{"0", "5", "7", "sha512"} {
+		t.Run("root "+selector, func(t *testing.T) {
+			got := ParseRootAccount("aaa root secret " + selector + " SecretValue\n")
+			assert.Equal(t, selector, got.SecretFormat)
+		})
+		t.Run("enable "+selector, func(t *testing.T) {
+			got := ParseEnableSecret("enable secret " + selector + " SecretValue\n")
+			assert.True(t, got.Configured)
+			assert.Equal(t, selector, got.Format)
+		})
+	}
+}

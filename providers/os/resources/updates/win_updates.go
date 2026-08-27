@@ -34,7 +34,15 @@ const (
 // IMPORTANT: criteria is concatenated into the script verbatim, so it must be
 // a trusted constant (e.g. WindowsUpdateCriteria*), never user input.
 func windowsUpdateSearchQuery(criteria string) string {
+	// $ErrorActionPreference is Stop so a failed search is a terminating error
+	// and powershell.exe exits non-zero. Without it the COM failure is a
+	// non-terminating error: the exit status stays 0, $searcher stays null,
+	// and $searcher.Updates piped to ForEach-Object still runs the block once
+	// with a null input, so the caller is handed one empty update and reads it
+	// as a host with nothing outstanding. A host whose update agent could not
+	// be reached must fail the check, not report itself fully patched.
 	return `
+$ErrorActionPreference='Stop';
 $ProgressPreference='SilentlyContinue';
 $updateSession = new-object -com "Microsoft.Update.Session"
 $searcher = $updateSession.CreateupdateSearcher().Search("` + criteria + `")
@@ -149,12 +157,44 @@ func ParseWindowsUpdates(input io.Reader) ([]WindowsUpdate, error) {
 	var updates []WindowsUpdate
 	arrErr := json.Unmarshal(data, &updates)
 	if arrErr == nil {
-		return updates, nil
+		return dropEmptyWindowsUpdates(updates), nil
 	}
 
 	var single WindowsUpdate
 	if err := json.Unmarshal(data, &single); err != nil {
 		return nil, arrErr
 	}
-	return []WindowsUpdate{single}, nil
+	return dropEmptyWindowsUpdates([]WindowsUpdate{single}), nil
+}
+
+// dropEmptyWindowsUpdates removes records that carry no identity at all.
+//
+// A record with neither an update ID nor a title is not an update; it is what
+// a null decodes to. The script's ErrorActionPreference keeps a failed search
+// from producing one, and this keeps any other source of a blank record from
+// being counted as an outstanding update.
+//
+// The common case is that there is nothing to drop, so the input is returned
+// as it stands and nothing is allocated until a blank record is actually seen.
+func dropEmptyWindowsUpdates(updates []WindowsUpdate) []WindowsUpdate {
+	first := -1
+	for i := range updates {
+		if updates[i].UpdateID == "" && updates[i].Title == "" {
+			first = i
+			break
+		}
+	}
+	if first < 0 {
+		return updates
+	}
+
+	res := make([]WindowsUpdate, first, len(updates)-1)
+	copy(res, updates[:first])
+	for i := first + 1; i < len(updates); i++ {
+		if updates[i].UpdateID == "" && updates[i].Title == "" {
+			continue
+		}
+		res = append(res, updates[i])
+	}
+	return res
 }

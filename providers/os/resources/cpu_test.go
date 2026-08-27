@@ -157,6 +157,86 @@ func TestGetCpuInfoSolaris(t *testing.T) {
 	assert.Equal(t, int64(8), info.Cores)
 }
 
+// psrinfo uses the singular "core" for a single-core socket, which is the
+// common shape for a small cloud VM.
+func TestGetCpuInfoSolarisSingleCore(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"psrinfo -pv": {
+				Stdout: "The physical processor has 1 core and 2 virtual processors (0 1)\n" +
+					"  x86 (GenuineIntel 50654 family 6 model 85 step 4 clock 2000 MHz)\n" +
+					"        Intel(r) Xeon(r) Gold 6138 CPU @ 2.00GHz\n",
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	info, err := getCpuInfoSolaris(conn)
+	require.NoError(t, err)
+
+	assert.Equal(t, "Intel", info.Manufacturer)
+	assert.Equal(t, int64(1), info.ProcessorCount)
+	assert.Equal(t, int64(1), info.Cores)
+}
+
+// A socket with a single core and no threads prints no core count at all.
+func TestGetCpuInfoSolarisSingleVirtualProcessor(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"psrinfo -pv": {
+				Stdout: "The physical processor has 1 virtual processor (0)\n" +
+					"  x86 (GenuineIntel 50654 family 6 model 85 step 4 clock 2000 MHz)\n" +
+					"        Intel(r) Xeon(r) Gold 6138 CPU @ 2.00GHz\n",
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	info, err := getCpuInfoSolaris(conn)
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(1), info.ProcessorCount)
+	assert.Equal(t, int64(1), info.Cores)
+}
+
+// Mixed singular and plural sockets have to add up.
+func TestGetCpuInfoSolarisMixedSockets(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"psrinfo -pv": {
+				Stdout: "The physical processor has 1 core and 2 virtual processors (0 1)\n" +
+					"  x86 (GenuineIntel 50654 family 6 model 85 step 4 clock 2000 MHz)\n" +
+					"        Intel(r) Xeon(r) Gold 6138 CPU @ 2.00GHz\n" +
+					"The physical processor has 4 cores and 8 virtual processors (2-9)\n" +
+					"  x86 (GenuineIntel 50654 family 6 model 85 step 4 clock 2000 MHz)\n" +
+					"        Intel(r) Xeon(r) Gold 6138 CPU @ 2.00GHz\n",
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	info, err := getCpuInfoSolaris(conn)
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(2), info.ProcessorCount)
+	assert.Equal(t, int64(5), info.Cores)
+}
+
+func TestGetCpuInfoSolarisCommandFailure(t *testing.T) {
+	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
+		Commands: map[string]*mock.Command{
+			"psrinfo -pv": {
+				Stderr:     "bash: psrinfo: command not found",
+				ExitStatus: 127,
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	_, err = getCpuInfoSolaris(conn)
+	require.Error(t, err, "a failing psrinfo must not report a zero-core cpu")
+}
+
 func TestGetCpuInfoLinuxArmWithLscpu(t *testing.T) {
 	conn, err := mock.New(0, &inventory.Asset{}, mock.WithData(&mock.TomlData{
 		Files: map[string]*mock.MockFileData{

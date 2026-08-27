@@ -119,3 +119,8 @@ Features:
   idx: 21
   start: v13.x
   status: new
+- id: UploadResourcesData
+  desc: "Record resource data (the recording-style rows behind the resource explorer and GetResourcesData/ListResources) while scanning, and deliver it inside the uploaded scan database. Only acts together with UploadResultsV2 - resources ride the uploaded file, never the legacy StoreResults RPC. Successor to StoreResourcesData, which is retired: it required a server-side resolved-policy stamp as a second key and sent resources through the legacy RPC."
+  idx: 22
+  start: v14.x
+  status: new

@@ -42,10 +42,14 @@ type Runtime struct {
 	// coordinator is used to grab providers
 	coordinator ProvidersCoordinator
 	// providers for with open connections
-	providers       map[string]*ConnectedProvider
-	isClosed        bool
-	close           sync.Once
-	shutdownTimeout time.Duration
+	providers map[string]*ConnectedProvider
+	isClosed  bool
+	close     sync.Once
+	// translations is the downgrade catalog, built on first use so a compile
+	// that needs no fallbacks never starts a provider to ask.
+	translations     llx.TranslationSource
+	translationsOnce sync.Once
+	shutdownTimeout  time.Duration
 
 	// criticalErrors collects serious errors (e.g. recovered provider panics)
 	// that should be reported to an error tracker even though execution continues.
@@ -869,6 +873,65 @@ func (r *Runtime) EnableResourcesRecording() error {
 	return r.SetRecording(recording)
 }
 
+// EnsureResourcesRecording makes this runtime record resource data for
+// asset, regardless of when it is called relative to the runtime's
+// connection. It mounts an in-memory recording if none is mounted (the same
+// Null-only swap as EnableResourcesRecording, so a recording the caller
+// mounted — e.g. via --record — is never clobbered) and registers asset
+// with the mounted recording.
+//
+// The registration is what makes late enabling work, and it encodes three
+// invariants of the recording machinery that callers should not have to
+// know: assets are normally registered at CONNECT time (a recording mounted
+// afterwards knows no connections), AddData silently drops rows for
+// connections the recording does not know, and readers look assets up by
+// the identity on the registered asset — so asset should be the one
+// carrying the identity readers will use (e.g. the platform-assigned MRN),
+// with the connection config whose Id writes are keyed under. An asset with
+// no connections mounts the recording and skips registration: the runtime
+// has not connected yet, and connect-time registration will cover it.
+func (r *Runtime) EnsureResourcesRecording(asset *inventory.Asset) error {
+	if err := r.EnableResourcesRecording(); err != nil {
+		return err
+	}
+	if asset == nil || len(asset.Connections) == 0 {
+		return nil
+	}
+
+	providerID := ""
+	var connectionID uint32
+	if r.Provider != nil && r.Provider.Instance != nil {
+		providerID = r.Provider.Instance.ID
+	}
+	if r.Provider != nil && r.Provider.Connection != nil {
+		connectionID = r.Provider.Connection.Id
+	}
+
+	// Register under the config of the runtime's ACTIVE connection when the
+	// asset carries several: the recording indexes writes by conf.Id, and
+	// AddData silently drops rows for connection ids it does not know — so
+	// registering a non-active connection's config would reproduce exactly
+	// the silent-drop failure this method exists to prevent. Fall back to
+	// the first connection when none matches (or the runtime has not
+	// connected yet, where connect-time registration covers the rest).
+	conf := asset.Connections[0]
+	if connectionID > 0 {
+		for _, c := range asset.Connections {
+			if c != nil && c.Id == connectionID {
+				conf = c
+				break
+			}
+		}
+	}
+	if conf != nil {
+		// A nil connection config cannot be registered (EnsureAsset derefs
+		// it); in that case the recording stays mounted and connect-time
+		// registration covers the asset once a real connection exists.
+		r.recording.EnsureAsset(asset, providerID, connectionID, conf)
+	}
+	return nil
+}
+
 func (r *Runtime) SetRecording(recording llx.Recording) error {
 	r.recording = recording
 	if r.Provider == nil || r.Provider.Instance == nil {
@@ -1052,7 +1115,10 @@ func (r *Runtime) lookupResourceProvider(resource string) (*ConnectedProvider, *
 func (r *Runtime) lookupResource(resource string) (*resources.ResourceInfo, error) {
 	info := r.coordinator.Schema().Lookup(resource)
 	if info == nil {
-		return nil, errors.New("cannot find resource '" + resource + "' in schema")
+		// Typed for the same reason a missing field is: this is what version
+		// skew looks like when a whole resource is new, and the executor has to
+		// be able to tell it apart from a genuine failure.
+		return nil, &llx.ErrResourceNotFound{Resource: resource}
 	}
 
 	// prioritize ids
@@ -1083,7 +1149,10 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 	// Then find the field we are looking for
 	fieldInfo, ok := resourceInfo.Fields[field]
 	if !ok {
-		return nil, nil, nil, errors.New("cannot find field '" + field + "' in resource '" + resource + "'")
+		// Typed, because the executor has to tell this apart from other
+		// failures: a field the reader has never heard of is the signature of
+		// version skew, and only skew may be degraded rather than propagated.
+		return nil, nil, nil, &llx.ErrFieldNotFound{Resource: resource, Field: field}
 	}
 
 	fieldsPerProvider := map[string]*resources.Field{
@@ -1191,6 +1260,33 @@ func (r *Runtime) lookupFieldProvider(resource string, field string) (*Connected
 
 func (r *Runtime) Schema() resources.ResourcesSchema {
 	return r.coordinator.Schema()
+}
+
+// TranslationsFor implements llx.TranslationSource, so a compile that has a
+// runtime has the downgrade catalog too (ADR 040 part 6).
+//
+// This is what makes the mechanism reachable without any caller assembling it:
+// mql is the only compiler there is, so whatever compiles content - here or in
+// anything built on this - reaches the catalog through the runtime it already
+// has. The lookup is lazy and cached, so a compile that emits no fallbacks
+// starts no providers.
+func (r *Runtime) TranslationsFor(provider string) []*llx.TranslationStep {
+	r.translationsOnce.Do(func() {
+		r.translations = NewTranslationSource(r)
+	})
+	return r.translations.TranslationsFor(provider)
+}
+
+// UnavailableTranslationProviders names providers whose catalog could not be
+// read during this runtime's compiles, for the one aggregate warning.
+func (r *Runtime) UnavailableTranslationProviders() UnavailableProviders {
+	if r.translations == nil {
+		return nil
+	}
+	if src, ok := r.translations.(*translationSource); ok {
+		return src.Unavailable()
+	}
+	return nil
 }
 
 func (r *Runtime) asset() *inventory.Asset {

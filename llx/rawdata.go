@@ -35,6 +35,15 @@ type RawData struct {
 	// is never recorded, because only the VM creates it and only within a single
 	// chain evaluation.
 	ShortCircuited bool `json:"-"`
+	// Translated marks a value that a downgrade patch produced rather than the
+	// call the bundle was compiled with (ADR 040 part 6). Patching deliberately
+	// decouples what executes from what is reported - the result still carries
+	// the checksum the producer shipped - so without this flag a wrong
+	// translation is indistinguishable from a wrong provider.
+	//
+	// Like ShortCircuited it is execution state, not data: only the VM sets it,
+	// and it never crosses the plugin boundary or reaches a recording.
+	Translated bool `json:"-"`
 }
 
 // a helper structure exclusively used for json unmarshalling of errors

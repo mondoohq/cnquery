@@ -476,33 +476,23 @@ func TestInitKustomizeKustomization_SelectorWorks(t *testing.T) {
 	assert.Equal(t, "staging", string(nsResp.Data.Value))
 }
 
-// A selector for a path the connection didn't load returns a bare resource
-// (matching the project's "bare resource is a valid empty state" rule);
-// computed field accessors then surface a clear error instead of panicking.
-func TestInitKustomizeKustomization_UnknownPathFieldsErrorCleanly(t *testing.T) {
+// A selector for a path the connection didn't load used to fall through to
+// `args, nil, nil`. The runtime then built the resource from the `path` arg
+// alone, leaving every other field UNSET — not null, unset — which surfaces
+// client-side as "llx: encountered a primitive with no type information,
+// coercing to null" with nothing pointing at the cause. The miss is now
+// reported where it happens, the way the sibling kustomize.image init does.
+func TestInitKustomizeKustomization_UnknownPathIsNotFound(t *testing.T) {
 	srv, resp := newTestService("../testdata/basic")
 
-	createResp, err := srv.GetData(&plugin.DataReq{
+	_, err := srv.GetData(&plugin.DataReq{
 		Connection: resp.Id,
 		Resource:   "kustomize.kustomization",
 		Args: map[string]*llx.Primitive{
 			"path": llx.StringPrimitive("/does/not/exist"),
 		},
 	})
-	require.NoError(t, err)
-	require.Empty(t, createResp.Error)
-	kID := string(createResp.Data.Value)
-	require.NotEmpty(t, kID)
-
-	// Computed accessor that depends on Internal state should error
-	// (with a friendly message), not panic.
-	resp2, err := srv.GetData(&plugin.DataReq{
-		Connection: resp.Id,
-		Resource:   "kustomize.kustomization",
-		ResourceId: kID,
-		Field:      "patches",
-	})
-	require.NoError(t, err, "transport call must not fail")
-	assert.NotEmpty(t, resp2.Error, "unknown path should surface as a field error")
-	assert.Contains(t, resp2.Error, "no kustomization loaded")
+	require.Error(t, err, "an unresolvable path must not produce a husk resource")
+	assert.Contains(t, err.Error(), "no kustomization loaded for path")
+	assert.Contains(t, err.Error(), "/does/not/exist")
 }

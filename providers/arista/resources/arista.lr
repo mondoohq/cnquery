@@ -180,7 +180,11 @@ arista.eos.user @defaults("name privilege") {
   privilege string
   // User's assigned role
   role string
-  // Set to "nopassword" when the account has no password configured, empty otherwise
+  // Whether the account is configured with `nopassword`
+  //
+  // One of "true" or "false". An account written with the `nopassword`
+  // keyword has no password at all, so the only credential it can present
+  // is an SSH key.
   nopassword string
   // Specifies how the secret is encoded
   format string
@@ -973,6 +977,14 @@ private arista.eos.bgp.peer @defaults("peerAddress") {
   ebgpMultihop int
   // Peer description
   description string
+  // Peer group the session takes its settings from
+  //
+  // Empty when the session is configured on its own. A fabric is normally
+  // built by configuring the session controls once on a group and pointing
+  // every session at it, so a session with a group name here is protected by
+  // whatever that group sets even though its own lines say nothing. The
+  // controls above already report the inherited values.
+  peerGroup string
 }
 
 // Arista EOS route-map
@@ -1220,6 +1232,13 @@ private arista.eos.aclBinding @defaults("target targetName direction aclName") {
   family string
   // Name of the applied access-list
   aclName string
+  // Routing instance the binding is scoped to
+  //
+  // Empty when the line names no instance, in which case the binding
+  // applies device-wide. A management service can be bound per instance, so
+  // a list scoped to the management instance leaves the service unrestricted
+  // in every other instance, including the one carrying production traffic.
+  vrf string
   // The applied access-list, resolved from aclName
   //
   // Null when the binding names a list that is not defined on the device,

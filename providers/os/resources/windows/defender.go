@@ -334,6 +334,7 @@ func formatTimeOfDay(d time.Duration) string {
 type MpComputerStatus struct {
 	AMEngineVersion                  string
 	AMProductVersion                 string
+	AMRunningMode                    string
 	AMServiceEnabled                 bool
 	AMServiceVersion                 string
 	AntispywareEnabled               bool

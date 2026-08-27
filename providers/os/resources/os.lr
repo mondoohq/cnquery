@@ -1054,6 +1054,20 @@ package @defaults("name version") {
   // (see the `package` accessor on tool resources): the installing source
   // could not be identified. A known origin means the package is
   // manager-tracked and listed in `packages`.
+  //
+  // The exact meaning is per-backend, so compare it against values you know
+  // the backend emits rather than across platforms:
+  //
+  //   flatpak       the remote it was installed from, e.g. "flathub"
+  //   freebsd       the ports origin path, e.g. "security/sudo"
+  //   netbsd        PKGPATH
+  //   macOS         how the bundle was obtained, as classified by Gatekeeper:
+  //                 "apple", "mac_app_store", "ios_app_store",
+  //                 "identified_developer", or "unknown"
+  //
+  // On macOS this distinguishes App Store installs from everything else, which
+  // matters when choosing an update path: an App Store app cannot be upgraded
+  // with `brew upgrade`.
   origin() string
 
   // Latest version the package manager reports as available
@@ -1147,7 +1161,13 @@ private pam.conf.serviceEntry @defaults("service module") {
   // The `/etc/pam.d/<service>` file path the line came from, or the service
   // name in the first column when read from the single-file `/etc/pam.conf`.
   service string
-  // Line number in service file (used for ID)
+  // Line number the entry was read from
+  //
+  // Zero-based: the first line of the file is 0. Every other lineNumber in
+  // this provider counts from 1, including limits.entry, logrotate.entry,
+  // crontab.entry, sudoers and modprobe, so subtract nothing here and add
+  // nothing there when comparing against a text editor. The value forms part
+  // of the entry's identity, so it is kept as it is rather than renumbered.
   lineNumber int
   // PAM entry type (e.g., auth, account, password, session)
   pamType string
@@ -7454,7 +7474,14 @@ grub.config @defaults("defaultsPath grubPath") {
   params() map[string]string
   // Menu entries defined in grub.cfg
   entries() []grub.config.entry
-  // Whether GRUB password protection is enabled (superusers + password_pbkdf2)
+  // Whether GRUB password protection is enabled
+  //
+  // True when grub.cfg names a superuser and carries a matching password or
+  // password_pbkdf2 credential, including a credential kept in the user.cfg
+  // file beside grub.cfg. A credential that is still an unexpanded shell
+  // variable, such as the templated block many distributions emit
+  // unconditionally, does not count. Null when no grub.cfg exists, since a
+  // host that does not use GRUB is neither protected nor unprotected.
   passwordProtected() bool
 }
 
@@ -11360,8 +11387,9 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   //
   // One of "windowsUpdate" (direct Microsoft Update), "wsus" (a configured
   // WSUS server), "windowsUpdateForBusiness", "disabled" (the agent or
-  // automatic updates are turned off), or "unknown" (the relevant registry
-  // keys could not be read).
+  // automatic updates are turned off, through either AU\NoAutoUpdate or the
+  // legacy AUOptions encoding), or "unknown" (the relevant registry keys could
+  // not be read).
   catalogSource string
   // Configured WSUS server URL (HKLM\...\WindowsUpdate\WUServer)
   wsusServerUrl string
@@ -11388,7 +11416,13 @@ private windows.update.config @defaults("catalogSource rebootPending") {
   lastInstallSuccess time
   // Whether a reboot is pending from a previous update
   rebootPending bool
-  // Windows Update for Business policy state (HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState)
+  // Whether Windows Update for Business is configured
+  //
+  // The IsWUfBConfigured flag under
+  // HKLM\SOFTWARE\Microsoft\WindowsUpdate\UpdatePolicy\PolicyState, 1 when
+  // the host takes its update policy from Windows Update for Business. Null
+  // when the key is absent, which is the state of a host that was never
+  // enrolled.
   policyState int
 }
 
@@ -11710,25 +11744,27 @@ private windows.winrm.listener @defaults("transport port address enabled") {
 
 // WinRM client policy
 //
-// WinRM client policy under HKLM\SOFTWARE\Policies\Microsoft
-// \Windows\WinRM\Client. These are GPO-only values; when a value is absent the
-// documented Windows default applies.
+// Live WS-Management client configuration, which already reflects any Group
+// Policy setting applied to it. Reading these needs a connection that can run
+// commands.
 private windows.winrm.client @defaults("allowBasic allowUnencryptedTraffic") {
-  // Whether the WinRM client allows Basic authentication (Client\AllowBasic)
+  // Whether the WinRM client allows Basic authentication
   //
-  // Defaults to true (Windows historically allows Basic auth on the client
-  // when the policy is not configured).
-  allowBasic bool
-  // Whether the WinRM client allows unencrypted traffic (Client\AllowUnencryptedTraffic)
+  // Reports the live WS-Management value (Client\Auth\Basic), which already
+  // reflects any Group Policy setting. True on a stock Windows Server: the
+  // client will offer Basic credentials when a server asks for them.
+  allowBasic() bool
+  // Whether the WinRM client allows unencrypted traffic
   //
-  // Defaults to true (Windows historically allows unencrypted traffic on the
-  // client when the policy is not configured).
-  allowUnencryptedTraffic bool
-  // Whether the WinRM client allows Digest authentication (Client\AllowDigest)
+  // Reports the live WS-Management value (Client\AllowUnencrypted), which
+  // already reflects any Group Policy setting. False on a stock Windows
+  // Server, so the client refuses to send an unencrypted request.
+  allowUnencryptedTraffic() bool
+  // Whether the WinRM client allows Digest authentication
   //
-  // Defaults to true (Digest authentication is enabled on the client when the
-  // policy is not configured).
-  allowDigest bool
+  // Reports the live WS-Management value (Client\Auth\Digest), which already
+  // reflects any Group Policy setting. True on a stock Windows Server.
+  allowDigest() bool
   // Hosts the WinRM client trusts without mutual authentication (Client\TrustedHosts)
   //
   // A comma-separated list, empty when no host is trusted. A single "*"
@@ -11742,35 +11778,43 @@ private windows.winrm.client @defaults("allowBasic allowUnencryptedTraffic") {
 
 // WinRM service policy
 //
-// WinRM service policy under HKLM\SOFTWARE\Policies\Microsoft
-// \Windows\WinRM\Service (and the WinRS subkey). These are GPO-only values;
-// when a value is absent the documented Windows default applies.
+// The WinRM service configuration. The authentication, encryption and remote
+// shell settings are read live from WS-Management, which already reflects any
+// Group Policy applied to them, so reading those needs a connection that can
+// run commands. The remaining settings exist only under
+// HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service and fall back to
+// the documented Windows default when no policy sets them.
 private windows.winrm.service @defaults("allowBasic allowUnencryptedTraffic") {
-  // Whether the WinRM service allows Basic authentication (Service\AllowBasic)
+  // Whether the WinRM service accepts Basic authentication
   //
-  // Defaults to true (Windows historically allows Basic auth on the service
-  // when the policy is not configured).
-  allowBasic bool
-  // Whether the WinRM service allows unencrypted traffic (Service\AllowUnencryptedTraffic)
+  // Reports the live WS-Management value (Service\Auth\Basic), which already
+  // reflects any Group Policy setting. False on a stock Windows Server. Basic
+  // authentication sends the password in a reversible encoding, so a service
+  // that accepts it over an unencrypted transport is handing out credentials.
+  allowBasic() bool
+  // Whether the WinRM service accepts unencrypted traffic
   //
-  // Defaults to true (Windows historically allows unencrypted traffic on the
-  // service when the policy is not configured).
-  allowUnencryptedTraffic bool
+  // Reports the live WS-Management value (Service\AllowUnencrypted), which
+  // already reflects any Group Policy setting. False on a stock Windows
+  // Server. Together with allowBasic this is the pair worth auditing: an
+  // unencrypted transport is what turns Basic authentication into a credential
+  // disclosure.
+  allowUnencryptedTraffic() bool
   // Whether the WinRM service disallows storing RunAs credentials (Service\DisableRunAs)
   //
-  // Defaults to false (RunAs credential storage is not disabled when the
-  // policy is not configured).
+  // Read from the policy key. Defaults to false (RunAs credential storage is
+  // not disabled when the policy is not configured).
   disableRunAs bool
   // Whether the WinRM service allows remote server management / auto config (Service\AllowAutoConfig)
   //
-  // Defaults to false (the listener is not auto-configured when the policy is
-  // not configured).
+  // Read from the policy key. Defaults to false (the listener is not
+  // auto-configured when the policy is not configured).
   allowAutoConfig bool
-  // Whether WinRS allows remote shell access (Service\WinRS\AllowRemoteShellAccess)
+  // Whether WinRS allows remote shell access
   //
-  // Defaults to true (remote shell access is allowed when the policy is not
-  // configured).
-  allowRemoteShellAccess bool
+  // Reports the live WS-Management value (Shell\AllowRemoteShellAccess), which
+  // already reflects any Group Policy setting. True on a stock Windows Server.
+  allowRemoteShellAccess() bool
   // IPv4 addresses the WinRM service accepts requests on (Service\IPv4Filter)
   //
   // A comma-separated list of addresses or ranges, "*" for every IPv4 address,
@@ -11945,12 +11989,16 @@ windows.lsa {
   // set.
   //
   // Read from the policy location
-  // SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters,
-  // falling back to the legacy location Lsa\Kerberos\Parameters that Windows
-  // Server 2025 no longer honors. Null when neither location carries the value,
-  // in which case Windows uses its built-in default set rather than a
-  // configured 0. The kerberosAllows fields decode the well-known bits, since
-  // MQL has no bitwise operators to test them with.
+  // SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters.
+  // Up to Windows Server 2022 the legacy location Lsa\Kerberos\Parameters is
+  // read as a fallback when the policy value is absent. Windows Server 2025
+  // (build 26100) no longer honors that location at all, so on that release and
+  // later it is not consulted and a value left there by an older hardening
+  // script does not appear here: it is inert on the host, and reporting it
+  // would describe a configuration Windows is not applying. Null when no
+  // honored location carries the value, in which case Windows uses its built-in
+  // default set rather than a configured 0. The kerberosAllows fields decode
+  // the well-known bits, since MQL has no bitwise operators to test them with.
   kerberosSupportedEncryptionTypes() int
   // LDAP client signing requirement (Services\LDAP\LDAPClientIntegrity)
   //
@@ -12083,15 +12131,17 @@ private windows.lsa.secureChannel {
 
 // Windows Schannel TLS configuration
 //
-// Schannel (Secure Channel) TLS cipher-suite and supported-group
-// configuration that backs the Microsoft TLS/SSL stack, read from the effective
-// local Schannel store under
+// Schannel (Secure Channel) TLS cipher-suite, supported-group, and
+// signature-algorithm configuration that backs the Microsoft TLS/SSL stack, read
+// from the effective local Schannel store under
 // HKLM\SYSTEM\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL.
-// The ordered cipher-suite list is the REG_MULTI_SZ `Functions` value under the
-// 00010002 subkey and the ordered elliptic-curve / supported-group list is the
-// REG_MULTI_SZ `Functions` value under the 00010003 subkey. On Windows 11 24H2
-// and Windows Server 2025 the supported-group list is where post-quantum ML-KEM
-// key-exchange groups (for example secp256r1_mlkem768) appear once enabled.
+// The 00010002 subkey holds the ordered cipher-suite list in its REG_MULTI_SZ
+// `Functions` value and the ordered elliptic-curve / supported-group list in its
+// REG_MULTI_SZ `EccCurves` value, the same list `Get-TlsEccCurve` reports. The
+// 00010003 subkey holds the ordered signature-algorithm list in its REG_MULTI_SZ
+// `Functions` value. On Windows 11 24H2 and Windows Server 2025 the
+// supported-group list is where post-quantum ML-KEM key-exchange groups (for
+// example secp256r1_mlkem768) appear once enabled.
 //
 // When a key or value is absent (the common case on older Windows, on systems
 // using the default order, and on non-Windows platforms) the list accessors
@@ -12114,8 +12164,21 @@ private windows.lsa.secureChannel {
 windows.schannel {
   // Ordered TLS cipher suite list (REG_MULTI_SZ Functions under ...\SSL\00010002)
   cipherSuites() []string
-  // Ordered TLS elliptic-curve / supported-group list (REG_MULTI_SZ Functions under ...\SSL\00010003)
+  // Ordered TLS elliptic-curve / supported-group list (REG_MULTI_SZ EccCurves under ...\SSL\00010002)
+  //
+  // The key-exchange groups Schannel offers, in preference order, for example
+  // curve25519, NistP256, and NistP384 on a stock Windows Server. This is the
+  // list `Get-TlsEccCurve` reports and the list post-quantum ML-KEM groups join
+  // once enabled. Signature algorithms are a separate list, exposed as
+  // signatureAlgorithms.
   ellipticCurves() []string
+  // Ordered TLS signature algorithm list (REG_MULTI_SZ Functions under ...\SSL\00010003)
+  //
+  // The certificate and handshake signature algorithms Schannel offers, in
+  // preference order, spelled key type and hash separated by a slash, for
+  // example RSA/SHA256, ECDSA/SHA384, and the legacy DSA/SHA1 and RSA/SHA1.
+  // Windows Server 2022 and later also list the RSAE-PSS entries.
+  signatureAlgorithms() []string
   // Whether a post-quantum ML-KEM key-exchange group is enabled (any ellipticCurves entry contains "MLKEM", case-insensitive)
   pqcKeyExchangeEnabled() bool
   // Per-protocol client and server overrides (SCHANNEL\Protocols)
@@ -12642,6 +12705,9 @@ windows.auditPolicy.subcategory @defaults("name success failure") {
   // GUID that identifies the subcategory across Windows versions and languages
   guid string
   // Audit category the subcategory belongs to (e.g. `Logon/Logoff`)
+  //
+  // Null when the subcategory GUID is not one this provider knows, which is
+  // also the state of a subcategory that is not present on the system at all.
   category string
   // Subcategory name as reported by the system in its display language
   localizedName string
@@ -12887,10 +12953,13 @@ windows.smb {
   serverConfiguration() windows.smb.serverConfiguration
   // SMB client (LanmanWorkstation) registry configuration
   clientConfiguration() windows.smb.clientConfiguration
-  // Whether the SMBv1 client driver (mrxsmb10) is enabled (Start != 4)
+  // Whether the SMBv1 client driver (mrxsmb10) is enabled
   //
-  // True when the mrxsmb10 service Start value is anything other than 4
-  // (disabled). SMBv1 is deprecated and should be disabled.
+  // True when the mrxsmb10 service Start value is present and is anything
+  // other than 4 (disabled). False when the service key is absent, which is
+  // how a host that has had the SMB1Protocol optional feature removed looks:
+  // the feature removal deletes the key outright. Server 2019 and later ship
+  // without it. SMBv1 is deprecated and should be disabled.
   smbv1Enabled() bool
 }
 
@@ -13264,7 +13333,11 @@ private windows.acl.auditEntry @defaults("identity auditFlags rights") {
 // read once per scan in a single batched call rather than one call per field.
 // Every field requires the DNS Server role to be installed; gate an audit on
 // `windows.serverFeature(name: "DNS").installed` so the checks do not run on
-// hosts that are not name servers. Complements the client-side `dns` resource
+// hosts that are not name servers. That gate narrows an audit but does not
+// close it: a host where the role was added and the restart has not happened
+// yet reports the feature as installed while the management module is still
+// absent, and every field here reports an error on such a host rather than a
+// configuration. Complements the client-side `dns` resource
 // in the network provider, which resolves names through the public DNS system
 // and cannot see a server's own configuration.
 windows.dnsServer {
@@ -13314,10 +13387,13 @@ private windows.dnsServer.settings {
   enableVersionQuery int
   // Whether the server answers over IPv6
   enableIPv6 bool
-  // IP addresses the DNS service is configured to answer on
+  // IP addresses the DNS service answers on
   //
-  // Empty when the server has not been restricted to specific addresses, in
-  // which case it answers on every address in `allIpAddresses`.
+  // A server that has not been restricted to specific addresses reports every
+  // address it is bound to here, so this list is not empty on an unrestricted
+  // server and matches `allIpAddresses` instead. The restriction itself is
+  // therefore visible as this list being a subset of `allIpAddresses`, not as
+  // this list being empty.
   listeningIpAddresses []string
   // All IP addresses present on the host
   allIpAddresses []string
@@ -13429,8 +13505,20 @@ private windows.dnsServer.diagnostics @defaults("eventLogLevel") {
   enableLoggingToFile bool
   // Path of the debug log file, empty when the default path is used
   logFilePath string
-  // Maximum debug log file size in megabytes
-  maxFileSizeMb int
+  // Maximum debug log file size in bytes
+  //
+  // Reported by the DnsServer module as MaxMBFileSize, but the value is a
+  // byte count and not a megabyte count: the Windows default of 500000000 is
+  // 500 MB, and it is written through to the LogFileMaxSize registry value
+  // unchanged. Compare against a size in bytes.
+  maxFileSizeBytes int
+  // Maximum debug log file size, despite the name reported in bytes
+  //
+  // Deprecated in favor of maxFileSizeBytes, which carries the same value under
+  // a name that says what the unit actually is. This field is unchanged and
+  // still reports the byte count, so existing checks keep the behavior they
+  // have today. Will be removed in the next major release.
+  maxFileSizeMb @maturity("deprecated") int
   // Whether the debug log wraps rather than stopping when it reaches its size limit
   enableLogFileRollover bool
   // Whether debug log entries are flushed to disk as they are written
@@ -13549,6 +13637,16 @@ private windows.dnsServer.rootHint @defaults("nameServer") {
 // that decide who may transfer it, who may change it, and whether its answers
 // are signed. Iterated from `windows.dnsServer.zones`. The `dnssec` and
 // `signingKeys` fields are populated only for a signed zone.
+//
+// A stub or forwarder zone holds no authoritative data, so the server reports
+// no value at all for the settings that govern such data: `dynamicUpdate`,
+// `secureSecondaries` and `notify` are empty on those zones rather than
+// carrying one of the values listed below, and `isSigned` and `isWinsEnabled`
+// are false because there is nothing to sign or to resolve through WINS. An
+// audit written over the whole zone list should select the zone types it means
+// to judge, for example
+// `windows.dnsServer.zones.where(zoneType == "Primary")`, so that a stub zone
+// does not fail a check about a setting it cannot have.
 private windows.dnsServer.zone @defaults("name zoneType isSigned") {
   // Zone name, for example example.com
   name string
@@ -13559,28 +13657,33 @@ private windows.dnsServer.zone @defaults("name zoneType isSigned") {
   zoneType string
   // Which clients may register records in the zone through dynamic update
   //
-  // One of None, NonsecureAndSecure, or Secure. NonsecureAndSecure lets any
-  // host on the network create or overwrite a record without authenticating,
-  // so a zone that accepts it cannot be trusted to name what it claims to.
+  // One of None, NonsecureAndSecure, or Secure, and empty on a stub or
+  // forwarder zone, which takes no dynamic updates at all. NonsecureAndSecure
+  // lets any host on the network create or overwrite a record without
+  // authenticating, so a zone that accepts it cannot be trusted to name what
+  // it claims to.
   dynamicUpdate string
   // Which servers the zone may be transferred to
   //
   // One of NoTransfer, TransferAnyServer, TransferToZoneNameServer, or
-  // TransferToSecureServers. TransferAnyServer hands the full contents of the
+  // TransferToSecureServers, and empty on a stub or forwarder zone, which has
+  // no contents to transfer. TransferAnyServer hands the full contents of the
   // zone, and therefore an inventory of the network, to anyone who asks.
   secureSecondaries string
   // Servers explicitly allowed to transfer the zone, used when secureSecondaries is TransferToSecureServers
   secondaryServers []string
   // Which secondaries are notified when the zone changes
   //
-  // One of NoNotify, Notify, or NotifyServers.
+  // One of NoNotify, Notify, or NotifyServers, and empty on a stub or
+  // forwarder zone, which has no secondaries to notify.
   notify string
   // Servers notified when the zone changes, used when notify is NotifyServers
   notifyServers []string
   // Whether the zone is DNSSEC signed
   //
   // A signed zone serves an RRSIG alongside every answer, which is what lets
-  // a validating resolver detect a forged or modified response.
+  // a validating resolver detect a forged or modified response. False on a
+  // stub or forwarder zone, which holds no records of its own to sign.
   isSigned bool
   // Whether the zone is stored in Active Directory rather than in a zone file
   isDsIntegrated bool
@@ -13597,7 +13700,7 @@ private windows.dnsServer.zone @defaults("name zoneType isSigned") {
   // Whether the zone resolves single-label names through WINS
   //
   // WINS lookup embeds an unauthenticated legacy name service in the zone's
-  // answers.
+  // answers. False on a stub or forwarder zone, which resolves nothing itself.
   isWinsEnabled bool
   // Name of the zone file, empty for a directory-integrated zone
   zoneFile string
@@ -13780,6 +13883,16 @@ windows.printerDriver @defaults("name version manufacturer") {
 // Policy (FVE) settings under `policy`. Use it to verify that OS and data
 // drives are encrypted and protected.
 windows.bitlocker {
+  // Whether the BitLocker WMI provider can be read on this target
+  //
+  // The Win32_EncryptableVolume class that backs `volumes` is registered by
+  // the BitLocker feature, so on a host where the feature is not installed
+  // the namespace does not exist and no volume encryption state can be read
+  // at all. This field reports that without failing, so a policy can skip
+  // such a host deliberately instead of treating an unreadable host as an
+  // encrypted one. It is false when the provider cannot be read and true
+  // when it can, and it never reports an error or a null.
+  available() bool
   // Windows BitLocker volumes
   volumes() []windows.bitlocker.volume
   // BitLocker Group Policy (FVE) settings configured for this system
@@ -14012,8 +14125,15 @@ windows.defender @defaults("enabled") {
   // Configurable Defender preferences and policy (Get-MpPreference)
   preferences() windows.defender.preferences
   // Threats recorded in the Defender threat history
+  //
+  // An empty list means Defender has recorded no threats. Null means the
+  // history could not be read because Defender is not installed, and must not
+  // be read as "no threats found".
   threats() []windows.defender.threat
   // Malware detections recorded by Defender
+  //
+  // An empty list means Defender has recorded no detections. Null means the
+  // history could not be read because Defender is not installed.
   threatDetections() []windows.defender.threatDetection
 }
 
@@ -14032,6 +14152,16 @@ private windows.defender.status @defaults("antivirusEnabled realTimeProtectionEn
   amEngineVersion string
   // Antimalware client (product) version
   amProductVersion string
+  // Mode the Defender antimalware engine is running in
+  //
+  // "Normal" means Defender is the active antivirus. "Passive Mode" and
+  // "SxS Passive Mode" mean another antivirus is active and Defender is not
+  // remediating threats, even though amServiceEnabled and antivirusEnabled
+  // still report true. "EDR Block Mode" means Defender remediates only what
+  // endpoint detection and response identifies, and "Not running" means the
+  // engine is stopped. Check this before reading the protection toggles as
+  // proof the host is being defended.
+  amRunningMode string
   // Whether the Windows Defender antimalware service is running
   amServiceEnabled bool
   // Antimalware service version

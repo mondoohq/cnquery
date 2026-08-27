@@ -439,3 +439,33 @@ var Equal = map[Type]func(any, any) bool{
 		return left.(int32) == right.(int32)
 	},
 }
+
+// ResourceOf returns the resource a type names, descending through the
+// containers a field may wrap it in (a list of resources, a map of them). It
+// returns "" for every type that names no resource.
+//
+// Unlike ResourceName it never panics: callers walk types that arrive from
+// bytecode and from provider schemas, where an unexpected shape is a reason to
+// skip the value rather than to crash the query.
+func ResourceOf(typ Type) string {
+	for i := 0; i < 8; i++ {
+		if typ.NotSet() {
+			return ""
+		}
+		if typ.IsResource() {
+			return typ.ResourceName()
+		}
+		switch typ.Underlying() {
+		case ArrayLike:
+			typ = typ[1:]
+		case MapLike:
+			if len(typ) < 2 {
+				return ""
+			}
+			typ = typ[2:]
+		default:
+			return ""
+		}
+	}
+	return ""
+}

@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.mondoo.com/mql/providers-sdk/v1/mqlr/lrcore"
+	"go.mondoo.com/mql/providers-sdk/v1/resources"
 )
 
 var goCmd = &cobra.Command{
@@ -28,19 +29,21 @@ var goCmd = &cobra.Command{
 		}
 
 		failOnDups, _ := cmd.Flags().GetBool("fail-on-duplicates")
+		failOnBreaking, _ := cmd.Flags().GetBool("fail-on-breaking")
 		headerFile, _ := cmd.Flags().GetString("license-header-file")
-		runGoCmd(args[0], dist, headerFile, failOnDups)
+		runGoCmd(args[0], dist, headerFile, failOnDups, failOnBreaking)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(goCmd)
 	goCmd.Flags().Bool("fail-on-duplicates", false, "fail if duplicate LR field paths are detected")
+	goCmd.Flags().Bool("fail-on-breaking", false, "fail if the schema change is breaking and has no migration (ADR 040 part 5)")
 	goCmd.Flags().String("dist", "", "folder for output json generation")
 	goCmd.Flags().String("license-header-file", "", "optional file path to read license header from")
 }
 
-func runGoCmd(lrFile string, dist string, headerFile string, failOnDups bool) {
+func runGoCmd(lrFile string, dist string, headerFile string, failOnDups bool, failOnBreaking bool) {
 	packageName := path.Base(path.Dir(lrFile))
 	res, err := lrcore.Resolve(lrFile, func(path string) ([]byte, error) {
 		return os.ReadFile(path)
@@ -110,6 +113,16 @@ func runGoCmd(lrFile string, dist string, headerFile string, failOnDups bool) {
 	base = strings.TrimSuffix(base, ".lr")
 
 	dst := strings.TrimSuffix(lrFile, ".lr") + ".resources.json"
+
+	// ADR 040 part 5: codegen is the one place that holds both the committed
+	// schema and the new one, so it is where a breaking change gets caught in
+	// the author's PR rather than at runtime on an older client. A warning for
+	// now; the hard-fail lands with the migration lenses that would satisfy it.
+	if breaking := reportSchemaDiff(dst, schema); len(breaking) > 0 && failOnBreaking {
+		log.Fatal().Int("count", len(breaking)).
+			Msg("breaking schema changes detected, exiting")
+	}
+
 	err = os.WriteFile(dst, []byte(schemaData), 0o644)
 	if err != nil {
 		log.Fatal().Err(err).Str("dst", dst).Msg("failed to write schema json")
@@ -125,4 +138,43 @@ func runGoCmd(lrFile string, dist string, headerFile string, failOnDups bool) {
 			log.Fatal().Err(err).Str("dst", infoFile).Msg("failed to write schema json")
 		}
 	}
+}
+
+// reportSchemaDiff compares the schema about to be written against the one
+// already committed and logs what changed. It returns the breaking changes.
+//
+// A missing or unreadable previous schema is not a finding: that is a new
+// provider, or a first generation, and there is nothing to compare against.
+func reportSchemaDiff(previousPath string, nu *resources.Schema) []lrcore.Change {
+	raw, err := os.ReadFile(previousPath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Debug().Err(err).Str("path", previousPath).
+				Msg("cannot read the previous schema, skipping the change report")
+		}
+		return nil
+	}
+
+	var previous resources.Schema
+	if err := json.Unmarshal(raw, &previous); err != nil {
+		log.Warn().Err(err).Str("path", previousPath).
+			Msg("cannot parse the previous schema, skipping the change report")
+		return nil
+	}
+
+	changes := lrcore.DiffSchemas(&previous, nu)
+	if len(changes) == 0 {
+		return nil
+	}
+
+	breaking := lrcore.Breaking(changes)
+	log.Info().
+		Int("additive", len(changes)-len(breaking)).
+		Int("breaking", len(breaking)).
+		Msg("schema changed")
+
+	for _, c := range breaking {
+		log.Warn().Str("path", c.Path).Msg("breaking schema change: " + c.Detail)
+	}
+	return breaking
 }

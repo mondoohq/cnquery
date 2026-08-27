@@ -159,11 +159,31 @@ stdout = """<?xml version="1.0" encoding="UTF-8"?>
 				<key>lastModified</key>
 				<date>2026-05-21T08:57:02Z</date>
 				<key>obtained_from</key>
-				<string>mac_app_store</string>
+				<string>ios_app_store</string>
 				<key>path</key>
 				<string>/Applications/Victory.app</string>
 				<key>version</key>
 				<string>3.2.1</string>
+			</dict>
+			<dict>
+				<key>_name</key>
+				<string>WireGuard</string>
+				<key>arch_kind</key>
+				<string>arch_arm_i64</string>
+				<key>lastModified</key>
+				<date>2026-05-21T08:57:02Z</date>
+				<key>obtained_from</key>
+				<string>mac_app_store</string>
+				<key>path</key>
+				<string>/Applications/WireGuard.app</string>
+				<key>signed_by</key>
+				<array>
+					<string>Apple Mac OS Application Signing</string>
+					<string>Apple Worldwide Developer Relations Certification Authority</string>
+					<string>Apple Root CA</string>
+				</array>
+				<key>version</key>
+				<string>1.0.16</string>
 			</dict>
 		</array>
 		<key>_parentDataType</key>

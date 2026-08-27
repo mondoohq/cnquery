@@ -347,10 +347,18 @@ type RootAccountState struct {
 	// of the three states.
 	NoPassword bool
 	// SecretFormat is the encoding selector on the secret, for example "5"
-	// or "sha512". Empty when root has no secret configured.
+	// or "sha512". Empty when root has no secret configured. A line written
+	// without a selector is cleartext, which EOS documents as equivalent to
+	// "0", and is reported as "0". The secret itself is never captured.
 	SecretFormat string
 }
 
+// aaaRootSecretRe captures only the first token after `secret`, which is what
+// keeps the credential out of the result in both spellings of the line. With a
+// selector (`aaa root secret sha512 <hash>`) the hash sits in the next token
+// and is never captured at all; without one (`aaa root secret <password>`) the
+// password lands in the capture group and is discarded by the selector check
+// below rather than stored. Widening this regex would break that guarantee.
 var aaaRootSecretRe = regexp.MustCompile(`^aaa root secret\s+(\S+)`)
 
 // ParseRootAccount reports the state of the `aaa root` account.
@@ -373,7 +381,16 @@ func ParseRootAccount(runningConfig string) *RootAccountState {
 			if m := aaaRootSecretRe.FindStringSubmatch(line); m != nil {
 				state.Enabled = true
 				state.NoPassword = false
-				state.SecretFormat = m[1]
+				// The selector is optional. Taking the first token
+				// positionally publishes the root password itself when the
+				// line is written without one, so a token that is not a
+				// known selector is the secret: report the line as cleartext
+				// and let the captured value go.
+				if passwordSecretSelectors[m[1]] {
+					state.SecretFormat = m[1]
+				} else {
+					state.SecretFormat = "0"
+				}
 			}
 		}
 	}

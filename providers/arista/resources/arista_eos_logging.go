@@ -52,8 +52,11 @@ func (a *mqlAristaEos) logging() (*mqlAristaEosLogging, error) {
 // =====================================================================
 
 // id keys a collector on the tuple that makes it distinct on the device: the
-// same address can be configured twice in different VRFs, or twice in one VRF
-// on different ports.
+// same address can be configured twice in different VRFs, twice in one VRF on
+// different ports, or twice on one port over different transports. Protocol is
+// part of the key for that last case: a collector reached over TCP and one
+// reached over plaintext UDP are different egress paths, and collapsing them
+// hides whichever was parsed second behind the other's transport.
 func (a *mqlAristaEosLoggingHost) id() (string, error) {
 	if a.Host.Error != nil {
 		return "", a.Host.Error
@@ -64,8 +67,11 @@ func (a *mqlAristaEosLoggingHost) id() (string, error) {
 	if a.Port.Error != nil {
 		return "", a.Port.Error
 	}
+	if a.Protocol.Error != nil {
+		return "", a.Protocol.Error
+	}
 	return "arista.eos.logging.host/" + a.Vrf.Data + "/" + a.Host.Data + "/" +
-		strconv.FormatInt(a.Port.Data, 10), nil
+		strconv.FormatInt(a.Port.Data, 10) + "/" + a.Protocol.Data, nil
 }
 
 func (a *mqlAristaEosLogging) hosts() ([]any, error) {
@@ -96,7 +102,7 @@ func (a *mqlAristaEosLogging) hosts() ([]any, error) {
 // =====================================================================
 
 func (a *mqlAristaEos) loginBanner() (string, error) {
-	rc, err := fetchRunningConfig(a.MqlRuntime)
+	rc, err := fetchRawRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return "", err
 	}
@@ -104,7 +110,7 @@ func (a *mqlAristaEos) loginBanner() (string, error) {
 }
 
 func (a *mqlAristaEos) motdBanner() (string, error) {
-	rc, err := fetchRunningConfig(a.MqlRuntime)
+	rc, err := fetchRawRunningConfig(a.MqlRuntime)
 	if err != nil {
 		return "", err
 	}

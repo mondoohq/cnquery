@@ -43,6 +43,8 @@ type BgpNeighborConfig struct {
 	// meaning no limit).
 	MaximumRoutes int
 	// Shutdown reports a neighbor configured but administratively down.
+	// Only the positive form is read, so this cannot distinguish a session
+	// that says nothing from one explicitly brought up with `no shutdown`.
 	Shutdown bool
 	// UpdateSource is the interface sourcing the session.
 	UpdateSource string
@@ -52,6 +54,15 @@ type BgpNeighborConfig struct {
 	// routes received from and advertised to the peer.
 	InboundRouteMap  string
 	OutboundRouteMap string
+	// PeerGroup is the peer group the session takes its settings from, empty
+	// when the session is configured on its own. A fabric is normally built
+	// by configuring the controls once on a group and pointing every session
+	// at it, so reading only the session's own lines reports every member as
+	// unprotected.
+	PeerGroup string
+	// IsPeerGroup marks an entry that defines a group rather than a session.
+	// It carries the group's settings and is not itself a peer.
+	IsPeerGroup bool
 }
 
 // BgpGlobalConfig is the configured BGP state, keyed by neighbor.
@@ -138,9 +149,59 @@ func ParseBgpConfig(runningConfig string) *BgpGlobalConfig {
 	}
 
 	for _, key := range order {
-		cfg.Neighbors = append(cfg.Neighbors, *byKey[key])
+		n := byKey[key]
+		if n.PeerGroup != "" {
+			if group, ok := byKey[n.VRF+"/"+n.PeerGroup]; ok {
+				inheritBgpGroupSettings(n, group)
+			}
+		}
+		if n.IsPeerGroup {
+			continue
+		}
+		cfg.Neighbors = append(cfg.Neighbors, *n)
 	}
 	return cfg
+}
+
+// inheritBgpGroupSettings folds a peer group's settings into one of its
+// members. A setting written on the session itself wins; everything the
+// session does not set comes from the group, which is where a fabric
+// normally configures the controls exactly once.
+func inheritBgpGroupSettings(n, group *BgpNeighborConfig) {
+	if !n.PasswordConfigured && group.PasswordConfigured {
+		n.PasswordConfigured = true
+		n.PasswordEncryptionType = group.PasswordEncryptionType
+	}
+	if n.TtlMaximumHops == 0 {
+		n.TtlMaximumHops = group.TtlMaximumHops
+	}
+	if n.MaximumRoutes == 0 {
+		n.MaximumRoutes = group.MaximumRoutes
+	}
+	if n.EbgpMultihop == 0 {
+		n.EbgpMultihop = group.EbgpMultihop
+	}
+	if n.UpdateSource == "" {
+		n.UpdateSource = group.UpdateSource
+	}
+	if n.InboundRouteMap == "" {
+		n.InboundRouteMap = group.InboundRouteMap
+	}
+	if n.OutboundRouteMap == "" {
+		n.OutboundRouteMap = group.OutboundRouteMap
+	}
+	// Shutdown inherits one way only. `applyBgpNeighborSetting` recognizes
+	// `shutdown` but not `no shutdown` — the parser skips `no ` lines
+	// wholesale — so there is no value a member could carry that means
+	// "explicitly up", and a member that re-enables itself under a
+	// shut-down group is reported as down. That is a false "neighbor
+	// administratively down", not a missed control, so it is the safe
+	// direction to be wrong in. Teaching the parser `no ` prefixes would
+	// make Shutdown tri-state, and this branch has to become "the member
+	// said nothing" rather than "the member is not shut down".
+	if !n.Shutdown && group.Shutdown {
+		n.Shutdown = true
+	}
 }
 
 // applyBgpNeighborSetting folds one `neighbor <peer> ...` line into the
@@ -174,6 +235,22 @@ func applyBgpNeighborSetting(n *BgpNeighborConfig, fields []string) {
 		if len(fields) > 2 && fields[1] == "maximum-hops" {
 			n.TtlMaximumHops = atoiOrZero(fields[2])
 		}
+
+	case "peer", "peer-group":
+		// `neighbor <name> peer group` (or `peer-group`) defines a group;
+		// `neighbor <addr> peer group <name>` puts a session in one.
+		rest := fields[1:]
+		if fields[0] == "peer" {
+			if len(rest) == 0 || rest[0] != "group" {
+				return
+			}
+			rest = rest[1:]
+		}
+		if len(rest) == 0 {
+			n.IsPeerGroup = true
+			return
+		}
+		n.PeerGroup = rest[0]
 
 	case "route-map":
 		// `neighbor <peer> route-map <name> in|out`

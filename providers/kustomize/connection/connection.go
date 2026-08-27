@@ -5,6 +5,7 @@ package connection
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -241,13 +242,28 @@ func scanForKustomizations(dir string, depth int, entries *[]*KustomizationEntry
 func loadSingleKustomization(dir string) (*KustomizationEntry, error) {
 	fSys := filesys.MakeFsOnDisk()
 
+	// Count every recognized filename rather than taking the first that
+	// reads. Kustomize's own loader (target.LoadKustFile) hard-errors on more
+	// than one match, so a directory holding both kustomization.yaml and
+	// Kustomization can never be built. Picking one of them reported that
+	// file's static fields while the resources accessor failed with krusty's
+	// error, presenting the directory as half-valid.
+	var data []byte
+	matched := make([]string, 0, len(kustomizationFilenames))
 	for _, filename := range kustomizationFilenames {
 		filePath := filepath.Join(dir, filename)
-		data, err := fSys.ReadFile(filePath)
+		content, err := fSys.ReadFile(filePath)
 		if err != nil {
 			continue
 		}
+		matched = append(matched, filename)
+		data = content
+	}
 
+	switch len(matched) {
+	case 0:
+		return nil, ErrNoKustomization
+	case 1:
 		k := &types.Kustomization{}
 		if err := k.Unmarshal(data); err != nil {
 			return nil, err
@@ -264,7 +280,8 @@ func loadSingleKustomization(dir string) (*KustomizationEntry, error) {
 			Path:          dir,
 			Kustomization: k,
 		}, nil
+	default:
+		return nil, fmt.Errorf("found multiple kustomization files under %s: %s",
+			dir, strings.Join(matched, ", "))
 	}
-
-	return nil, ErrNoKustomization
 }

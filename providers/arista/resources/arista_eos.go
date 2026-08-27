@@ -51,6 +51,7 @@ func (v *mqlAristaEosRunningConfig) id() (string, error) {
 type mqlAristaEosRunningConfigInternal struct {
 	contentFetched bool
 	contentCache   string
+	contentErr     error
 	lock           sync.Mutex
 
 	// Parsers that several resources share memoize their result here. The
@@ -65,79 +66,120 @@ type mqlAristaEosRunningConfigInternal struct {
 	snmpParsed     atomic.Bool
 	snmpCache      *eos.SnmpConfig
 	snmpLock       sync.Mutex
+	strippedDone   atomic.Bool
+	strippedCache  string
+	strippedLock   sync.Mutex
+}
+
+// fetchStrippedContent returns the running-config with banner bodies blanked
+// out, which is what every command parser reads. Doing it here rather than in
+// each parser means a parser added later cannot forget it.
+func (a *mqlAristaEosRunningConfig) fetchStrippedContent() (string, error) {
+	if a.strippedDone.Load() {
+		return a.strippedCache, nil
+	}
+	a.strippedLock.Lock()
+	defer a.strippedLock.Unlock()
+	if a.strippedDone.Load() {
+		return a.strippedCache, nil
+	}
+	rc, err := a.fetchContent()
+	if err != nil {
+		return "", err
+	}
+	a.strippedCache = eos.StripBanners(rc)
+	a.strippedDone.Store(true)
+	return a.strippedCache, nil
 }
 
 // fetchSnmpConfig parses the SNMP configuration once per device. The users,
 // groups, views, and notification destinations are separate collections that
 // all come out of the same walk of the running-config.
-func (a *mqlAristaEosRunningConfig) fetchSnmpConfig() *eos.SnmpConfig {
+func (a *mqlAristaEosRunningConfig) fetchSnmpConfig() (*eos.SnmpConfig, error) {
 	if a.snmpParsed.Load() {
-		return a.snmpCache
+		return a.snmpCache, nil
 	}
 	a.snmpLock.Lock()
 	defer a.snmpLock.Unlock()
 	if a.snmpParsed.Load() {
-		return a.snmpCache
+		return a.snmpCache, nil
 	}
-	a.snmpCache = eos.ParseSnmpConfig(a.fetchContent())
+	rc, err := a.fetchContent()
+	if err != nil {
+		return nil, err
+	}
+	a.snmpCache = eos.ParseSnmpConfig(rc)
 	a.snmpParsed.Store(true)
-	return a.snmpCache
+	return a.snmpCache, nil
 }
 
 // fetchSflowConfig parses the sFlow configuration once per device.
-func (a *mqlAristaEosRunningConfig) fetchSflowConfig() *eos.SflowConfig {
+func (a *mqlAristaEosRunningConfig) fetchSflowConfig() (*eos.SflowConfig, error) {
 	if a.sflowParsed.Load() {
-		return a.sflowCache
+		return a.sflowCache, nil
 	}
 	a.sflowLock.Lock()
 	defer a.sflowLock.Unlock()
 	if a.sflowParsed.Load() {
-		return a.sflowCache
+		return a.sflowCache, nil
 	}
-	a.sflowCache = eos.ParseSflowConfig(a.fetchContent())
+	rc, err := a.fetchContent()
+	if err != nil {
+		return nil, err
+	}
+	a.sflowCache = eos.ParseSflowConfig(rc)
 	a.sflowParsed.Store(true)
-	return a.sflowCache
+	return a.sflowCache, nil
 }
 
 // fetchInterfaceHardening parses the Layer 3 posture of every interface once
 // per device and keys it by interface name, so a query reading several
 // hardening fields across many interfaces still walks the config only once.
-func (a *mqlAristaEosRunningConfig) fetchInterfaceHardening() map[string]eos.InterfaceHardening {
+func (a *mqlAristaEosRunningConfig) fetchInterfaceHardening() (map[string]eos.InterfaceHardening, error) {
 	if a.hardeningDone.Load() {
-		return a.hardeningCache
+		return a.hardeningCache, nil
 	}
 	a.hardeningLock.Lock()
 	defer a.hardeningLock.Unlock()
 	if a.hardeningDone.Load() {
-		return a.hardeningCache
+		return a.hardeningCache, nil
 	}
-	parsed := eos.ParseInterfaceHardening(a.fetchContent())
+	rc, err := a.fetchContent()
+	if err != nil {
+		return nil, err
+	}
+	parsed := eos.ParseInterfaceHardening(rc)
 	cache := make(map[string]eos.InterfaceHardening, len(parsed))
 	for _, h := range parsed {
 		cache[h.Interface] = h
 	}
 	a.hardeningCache = cache
 	a.hardeningDone.Store(true)
-	return a.hardeningCache
+	return a.hardeningCache, nil
 }
 
-func (a *mqlAristaEosRunningConfig) fetchContent() string {
+// fetchContent reads the running-config once per device and remembers the
+// outcome, failure included. A failed read must not be cached as an empty
+// configuration: every parser here is a pure function of this string, and an
+// empty one parses into a device with no AAA servers, no syslog collectors and
+// no ACL bindings, which reads as a clean posture rather than as an error.
+func (a *mqlAristaEosRunningConfig) fetchContent() (string, error) {
 	if a.contentFetched {
-		return a.contentCache
+		return a.contentCache, a.contentErr
 	}
 	a.lock.Lock()
 	defer a.lock.Unlock()
 	if a.contentFetched {
-		return a.contentCache
+		return a.contentCache, a.contentErr
 	}
 	eosClient := aristaClient(a.MqlRuntime)
-	a.contentCache = eosClient.RunningConfig()
+	a.contentCache, a.contentErr = eosClient.RunningConfig()
 	a.contentFetched = true
-	return a.contentCache
+	return a.contentCache, a.contentErr
 }
 
 func (a *mqlAristaEosRunningConfig) content() (string, error) {
-	return a.fetchContent(), nil
+	return a.fetchContent()
 }
 
 func (a *mqlAristaEosRunningConfigSection) id() (string, error) {
@@ -147,21 +189,15 @@ func (a *mqlAristaEosRunningConfigSection) id() (string, error) {
 	return "arista.eos.runningConfig.section " + a.Name.Data, nil
 }
 
-type mqlAristaEosRunningConfigSectionInternal struct {
-	runningConfig string
-}
-
 func (a *mqlAristaEosRunningConfigSection) content() (string, error) {
 	if a.Name.Error != nil {
 		return "", a.Name.Error
 	}
 	name := a.Name.Data
 
-	// Use cached running config passed from parent, or fetch directly
-	content := a.runningConfig
-	if content == "" {
-		eosClient := aristaClient(a.MqlRuntime)
-		content = eosClient.RunningConfig()
+	content, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return "", err
 	}
 
 	return eos.GetSection(strings.NewReader(content), name), nil
@@ -215,7 +251,8 @@ func (a *mqlAristaEosUser) locked() (bool, error) {
 		return false, a.Sshkey.Error
 	}
 
-	hasNoPassword := a.Nopassword.Data == "nopassword"
+	// The field carries the string "true" or "false", not the keyword itself.
+	hasNoPassword := a.Nopassword.Data == "true"
 	hasSecret := a.Secret.Data != ""
 	hasSSHKey := a.Sshkey.Data != ""
 
@@ -912,12 +949,22 @@ func (a *mqlAristaEosBgp) fetchConfig() *module.BgpConfig {
 	return a.bgpConfig
 }
 
+// enabled reports whether the device is running BGP: a `router bgp` block
+// exists and is not administratively shut down.
+//
+// This reads the running-config the provider already holds rather than the
+// eAPI client's own view, which derives the state by looking for a literal
+// `no shutdown` line and treats its absence as shut down. Not being shut down
+// is the default, and EOS omits defaults from the running-config, so that view
+// reports every conventionally-configured device as having BGP disabled, while
+// the sibling `vrfs` field lists established sessions on the same resource.
 func (a *mqlAristaEosBgp) enabled() (bool, error) {
-	cfg := a.fetchConfig()
-	if cfg == nil {
-		return false, nil
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return false, err
 	}
-	return cfg.Shutdown() != "true", nil
+	state := eos.ParseBlockAdminState(rc, "router bgp ")
+	return state.Configured && !state.Shutdown, nil
 }
 
 func (a *mqlAristaEosBgp) asNumber() (string, error) {
@@ -1008,6 +1055,9 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 			// A peer present operationally but absent from the config we
 			// parsed keeps the zero values, which read as "no protection
 			// configured" — the same conclusion an empty setting warrants.
+			// A peer that takes its settings from a peer group is not that
+			// case: ParseBgpConfig has already folded the group's settings
+			// into the member, so conf carries what is actually in effect.
 			conf := configuredPeers[vrfName+"/"+peerAddr]
 			// The config is the better source for the policy names: it holds
 			// them even for a session that never came up.
@@ -1021,7 +1071,7 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 			mqlPeer, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.peer", map[string]*llx.RawData{
 				"vrfName":                llx.StringData(vrfName),
 				"peerAddress":            llx.StringData(peerAddr),
-				"remoteAs":               llx.StringData(peerData.ASN),
+				"remoteAs":               llx.StringData(eos.ASNString(peerData.ASN)),
 				"state":                  llx.StringData(peerData.PeerState),
 				"uptime":                 llx.IntData(int64(peerData.UpDownTime)), // EOS reports uptime in whole seconds; sub-second precision is not meaningful
 				"prefixesReceived":       llx.IntData(peerData.PrefixReceived),
@@ -1034,6 +1084,7 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 				"shutdown":               llx.BoolData(conf.Shutdown),
 				"updateSource":           llx.StringData(conf.UpdateSource),
 				"ebgpMultihop":           llx.IntData(int64(conf.EbgpMultihop)),
+				"peerGroup":              llx.StringData(conf.PeerGroup),
 			})
 			if err != nil {
 				return nil, err
@@ -1047,7 +1098,7 @@ func (a *mqlAristaEosBgp) vrfs() ([]any, error) {
 		mqlVrf, err := CreateResource(a.MqlRuntime, "arista.eos.bgp.vrf", map[string]*llx.RawData{
 			"name":     llx.StringData(vrfName),
 			"routerId": llx.StringData(vrfData.RouterID),
-			"asNumber": llx.StringData(strconv.FormatInt(vrfData.ASN, 10)),
+			"asNumber": llx.StringData(eos.ASNString(vrfData.ASN)),
 			"peers":    llx.ArrayData(peers, types.Resource("arista.eos.bgp.peer")),
 		})
 		if err != nil {
@@ -1129,12 +1180,16 @@ func (a *mqlAristaEosMlag) peerLink() (string, error) {
 	return cfg.PeerLink(), nil
 }
 
+// shutdown reports whether MLAG is administratively down. See bgp.enabled for
+// why this reads the running-config rather than the eAPI client's derived
+// state: the same inverted default reported a healthy MLAG pair as shut down
+// while domainId, peerAddress and peerLink all described a working peering.
 func (a *mqlAristaEosMlag) shutdown() (bool, error) {
-	cfg := a.fetchConfig()
-	if cfg == nil {
-		return false, nil
+	rc, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return false, err
 	}
-	return cfg.Shutdown() == "true", nil
+	return eos.ParseBlockAdminState(rc, "mlag configuration").Shutdown, nil
 }
 
 func (a *mqlAristaEos) mlag() (*mqlAristaEosMlag, error) {
@@ -1153,14 +1208,9 @@ func (a *mqlAristaEosMlag) interfaces() ([]any, error) {
 		return []any{}, nil
 	}
 
-	// Use the cached running config from the runningConfig resource if available,
-	// otherwise fetch directly
-	var runningConfig string
-	rcRes, err := CreateResource(a.MqlRuntime, "arista.eos.runningConfig", map[string]*llx.RawData{})
-	if err == nil {
-		runningConfig = rcRes.(*mqlAristaEosRunningConfig).fetchContent()
-	} else {
-		runningConfig = eosClient.RunningConfig()
+	runningConfig, err := fetchRunningConfig(a.MqlRuntime)
+	if err != nil {
+		return nil, err
 	}
 	mlagInterfaces := eos.ParseMlagInterfaces(runningConfig)
 
@@ -1349,6 +1399,36 @@ func (a *mqlAristaEos) hardware() (*mqlAristaEosHardware, error) {
 	return res.(*mqlAristaEosHardware), nil
 }
 
+// powerSupplyTempSensors renders a power supply's temperature sensors as dict
+// rows. Every numeric leaf is widened to int64: llx only accepts JSON-native
+// types inside a dict, and a Go int makes the conversion of the whole array
+// fail, so a single un-widened value takes the field down rather than one row.
+func powerSupplyTempSensors(ps eos.PowerSupply) []any {
+	res := make([]any, 0, len(ps.TempSensors))
+	for name, sensor := range ps.TempSensors {
+		res = append(res, map[string]any{
+			"name":        name,
+			"status":      sensor.Status,
+			"temperature": int64(sensor.Temperature),
+		})
+	}
+	return res
+}
+
+// powerSupplyFans renders a power supply's fans as dict rows. See
+// powerSupplyTempSensors for why speed is widened.
+func powerSupplyFans(ps eos.PowerSupply) []any {
+	res := make([]any, 0, len(ps.Fans))
+	for name, fan := range ps.Fans {
+		res = append(res, map[string]any{
+			"name":   name,
+			"status": fan.Status,
+			"speed":  int64(fan.Speed),
+		})
+	}
+	return res
+}
+
 func (a *mqlAristaEosHardware) powerSupplies() ([]any, error) {
 	eosClient := aristaClient(a.MqlRuntime)
 
@@ -1359,25 +1439,8 @@ func (a *mqlAristaEosHardware) powerSupplies() ([]any, error) {
 
 	res := make([]any, 0, len(envPower.PowerSupplies))
 	for name, ps := range envPower.PowerSupplies {
-		// Build temp sensor dicts
-		tempSensors := make([]any, 0, len(ps.TempSensors))
-		for sensorName, sensor := range ps.TempSensors {
-			tempSensors = append(tempSensors, map[string]any{
-				"name":        sensorName,
-				"status":      sensor.Status,
-				"temperature": sensor.Temperature,
-			})
-		}
-
-		// Build fan dicts
-		fans := make([]any, 0, len(ps.Fans))
-		for fanName, fan := range ps.Fans {
-			fans = append(fans, map[string]any{
-				"name":   fanName,
-				"status": fan.Status,
-				"speed":  fan.Speed,
-			})
-		}
+		tempSensors := powerSupplyTempSensors(ps)
+		fans := powerSupplyFans(ps)
 
 		mqlPSU, err := CreateResource(a.MqlRuntime, "arista.eos.hardware.powerSupply", map[string]*llx.RawData{
 			"name":          llx.StringData(name),
