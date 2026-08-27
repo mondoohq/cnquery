@@ -20,7 +20,11 @@ import (
 // component is exactly zero — "up 11 days, 16 hrs" (macOS prints "N hrs"
 // instead of "N:00" for one minute every hour, so missing that form made
 // the uptime resource error once an hour).
-var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:\s*(\d+)\s(day[s]*),)*(?:\s*(\d+)\s(hr[s]*),)*(?:\s*(\d+)\s(min[s]*),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)
+//
+// Solaris pluralizes with a parenthesized suffix instead of a bare "s",
+// printing "up 26 min(s)" and "up 5 day(s), 21:03", so each unit accepts
+// that spelling too.
+var UnixUptimeRegex = regexp.MustCompile(`^.*up[\s]*(?:\s*(\d+)\s(day(?:s|\(s\))?),)*(?:\s*(\d+)\s(hr(?:s|\(s\))?),)*(?:\s*(\d+)\s(min(?:s|\(s\))?),)*(?:\s+([\d:]+),\s)*\s*(?:(\d+)\suser[s]*,\s)*\s*load\s+average[s]*:\s+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)[,\s]+(\d+[\.,]\d+)\s*$`)
 
 type UnixUptimeResult struct {
 	Duration           int64
@@ -37,18 +41,16 @@ func unixDuration(date, measure string) (int64, error) {
 		return 0, err
 	}
 
+	// "days", "day(s)" and "day" all mean the same unit
+	measure = strings.TrimSuffix(measure, "(s)")
+	measure = strings.TrimSuffix(measure, "s")
+
 	switch measure {
 	case "day":
-		fallthrough
-	case "days":
 		duration = duration * 24 * int64(time.Hour)
 	case "hr":
-		fallthrough
-	case "hrs":
 		duration = duration * int64(time.Hour)
 	case "min":
-		fallthrough
-	case "mins":
 		duration = duration * int64(time.Minute)
 	}
 	return duration, nil
