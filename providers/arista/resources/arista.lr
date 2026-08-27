@@ -1224,6 +1224,13 @@ private arista.eos.aclBinding @defaults("target targetName direction aclName") {
   family string
   // Name of the applied access-list
   aclName string
+  // Routing instance the binding is scoped to
+  //
+  // Empty when the line names no instance, in which case the binding
+  // applies device-wide. A management service can be bound per instance, so
+  // a list scoped to the management instance leaves the service unrestricted
+  // in every other instance, including the one carrying production traffic.
+  vrf string
   // The applied access-list, resolved from aclName
   //
   // Null when the binding names a list that is not defined on the device,
