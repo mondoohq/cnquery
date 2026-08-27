@@ -114,43 +114,67 @@ func (s *LinuxKernelManager) Parameters() (map[string]string, error) {
 	}
 
 	log.Debug().Msg("using /proc/sys walking to read kernel parameters")
-	fs := s.conn.FileSystem()
+	return walkProcSys(s.conn.FileSystem())
+}
+
+// walkProcSys reads every readable knob under /proc/sys.
+//
+// Plenty of them are not readable: some are mode 0600 and owned by root
+// (kernel.usermodehelper/bset among them), and some are write-only by design
+// (kernel.kexec_load_disabled, the drop_caches knobs). A scan that is not root
+// hits the first of those a few entries into the walk. Reporting that as the
+// result of the walk cost the caller every parameter, so kernel.parameters was
+// empty for any non-root scan; skip the ones we cannot read and return the
+// rest.
+func walkProcSys(fs afero.Fs) (map[string]string, error) {
 	fsUtil := afero.Afero{Fs: fs}
 	kernelParameters := make(map[string]string)
+
 	err := fsUtil.Walk(sysctlPath, func(path string, f os.FileInfo, err error) error {
-		if f != nil && !f.IsDir() {
-			stat, err := s.conn.FileSystem().Stat(path)
-			if err != nil {
-				log.Error().Err(err)
-				return nil
-			}
-			details := shared.FileModeDetails{
-				FileMode: stat.Mode(),
-			}
-			if !details.UserReadable() {
-				return nil
-			}
-
-			f, err := s.conn.FileSystem().Open(path)
-			if err != nil {
-				log.Error().Err(err)
-				return err
-			}
-
-			content, err := io.ReadAll(f)
-			if err != nil {
-				log.Error().Err(err).Msg("cannot read content")
-				return nil
-			}
-			// remove leading sysctl path
-			k := strings.ReplaceAll(path, sysctlPath, "")
-			k = strings.ReplaceAll(k, "/", ".")
-			kernelParameters[k] = strings.TrimSpace(string(content))
+		if err != nil {
+			// Walk could not even stat this entry. Skipping the directory here
+			// would drop everything after it, so keep going.
+			log.Debug().Err(err).Str("path", path).Msg("mql[kernel]> skipping unreadable sysctl entry")
+			return nil
 		}
+		if f == nil || f.IsDir() {
+			return nil
+		}
+
+		stat, err := fs.Stat(path)
+		if err != nil {
+			log.Debug().Err(err).Str("path", path).Msg("mql[kernel]> could not stat sysctl parameter")
+			return nil
+		}
+		details := shared.FileModeDetails{FileMode: stat.Mode()}
+		if !details.UserReadable() {
+			return nil
+		}
+
+		file, err := fs.Open(path)
+		if err != nil {
+			log.Debug().Err(err).Str("path", path).Msg("mql[kernel]> could not open sysctl parameter")
+			return nil
+		}
+		defer file.Close()
+
+		content, err := io.ReadAll(file)
+		if err != nil {
+			log.Debug().Err(err).Str("path", path).Msg("mql[kernel]> could not read sysctl parameter")
+			return nil
+		}
+
+		// remove leading sysctl path
+		k := strings.ReplaceAll(path, sysctlPath, "")
+		k = strings.ReplaceAll(k, "/", ".")
+		kernelParameters[k] = strings.TrimSpace(string(content))
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return kernelParameters, err
+	return kernelParameters, nil
 }
 
 func (s *LinuxKernelManager) Modules() ([]*KernelModule, error) {
