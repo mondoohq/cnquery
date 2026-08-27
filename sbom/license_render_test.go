@@ -377,3 +377,172 @@ func TestSPDXConcludedFallsBackToDeclared(t *testing.T) {
 		}
 	}
 }
+
+// An SPDX license field holds a license *expression*, and that constrains what
+// may go in it: an identifier from the SPDX list, a LicenseRef-* defined in the
+// document, NONE, or NOASSERTION. A free-form name — which is exactly what
+// License.name exists to carry — is none of those, so it needs encoding rather
+// than passing through.
+
+// spdxPackages decodes just the license-bearing fields of an SPDX render.
+func spdxPackages(t *testing.T, pkgs ...*Package) (map[string]struct{ Declared, Concluded string }, map[string]string) {
+	t.Helper()
+	bom := &Sbom{
+		Generator: &Generator{Vendor: "Mondoo, Inc", Name: "test", Version: "1"},
+		Asset:     &Asset{Name: "test-asset", Platform: &Platform{Name: "linux", Version: "1"}},
+		Packages:  pkgs,
+	}
+	var doc struct {
+		Packages []struct {
+			Name             string `json:"name"`
+			LicenseDeclared  string `json:"licenseDeclared"`
+			LicenseConcluded string `json:"licenseConcluded"`
+		} `json:"packages"`
+		HasExtractedLicensingInfos []struct {
+			LicenseID   string `json:"licenseId"`
+			LicenseName string `json:"name"`
+		} `json:"hasExtractedLicensingInfos"`
+	}
+	if err := json.Unmarshal([]byte(renderBom(t, FormatSpdxJSON, bom)), &doc); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	byName := map[string]struct{ Declared, Concluded string }{}
+	for _, p := range doc.Packages {
+		byName[p.Name] = struct{ Declared, Concluded string }{p.LicenseDeclared, p.LicenseConcluded}
+	}
+	refs := map[string]string{}
+	for _, e := range doc.HasExtractedLicensingInfos {
+		refs[e.LicenseID] = e.LicenseName
+	}
+	return byName, refs
+}
+
+func declaredNamed(name string, licenses ...*License) *Package {
+	for _, l := range licenses {
+		if l.Acquisition == LicenseAcquisition_LICENSE_ACQUISITION_UNSPECIFIED {
+			l.Acquisition = LicenseAcquisition_LICENSE_ACQUISITION_DECLARED
+		}
+	}
+	return &Package{
+		Name: name, Version: "1.0.0", Purl: "pkg:npm/" + name + "@1.0.0",
+		Licenses: licenses,
+	}
+}
+
+// TestSPDXFreeFormNameBecomesLicenseRef: a name that is not an identifier is
+// emitted as one the document defines, and the original text survives as the
+// definition's name — otherwise the reader has a reference to something the
+// document never says the meaning of.
+func TestSPDXFreeFormNameBecomesLicenseRef(t *testing.T) {
+	pkgs, refs := spdxPackages(t, declaredNamed("free-text", &License{Name: "BSD-like, see LICENSE"}))
+
+	got := pkgs["free-text"].Declared
+	want := "LicenseRef-BSD-like-see-LICENSE"
+	if got != want {
+		t.Errorf("licenseDeclared = %q, want %q", got, want)
+	}
+	if strings.Contains(got, " ") {
+		t.Errorf("licenseDeclared = %q contains a space, which no SPDX license expression may", got)
+	}
+	if name, ok := refs[want]; !ok || name != "BSD-like, see LICENSE" {
+		t.Errorf("hasExtractedLicensingInfos[%q] name = %q (present=%v), want the original text", want, name, ok)
+	}
+}
+
+// TestSPDXNameIsNotJoinedRawIntoAnExpression is the case the join makes worse
+// than a single value: "MIT AND see LICENSE" parses as an expression right up to
+// the operand that is not one, so a consumer either rejects the document or
+// silently reads a license that does not exist.
+func TestSPDXNameIsNotJoinedRawIntoAnExpression(t *testing.T) {
+	pkgs, refs := spdxPackages(t, declaredNamed("mixed",
+		&License{SpdxId: "MIT"},
+		&License{Name: "see LICENSE"},
+	))
+
+	got := pkgs["mixed"].Declared
+	if got == "MIT AND see LICENSE" {
+		t.Fatalf("licenseDeclared = %q — a free-form name was joined in raw", got)
+	}
+	if want := "MIT AND LicenseRef-see-LICENSE"; got != want {
+		t.Errorf("licenseDeclared = %q, want %q", got, want)
+	}
+	if _, ok := refs["LicenseRef-see-LICENSE"]; !ok {
+		t.Errorf("LicenseRef-see-LICENSE is referenced but never defined; refs = %v", refs)
+	}
+}
+
+// TestSPDXParenthesizesOnlyWhatItJoins covers both sides of the grouping rule:
+// a joined expression keeps its operands together, and a value that ends up
+// alone is not wrapped just because a sibling entry carried nothing.
+func TestSPDXParenthesizesOnlyWhatItJoins(t *testing.T) {
+	pkgs, _ := spdxPackages(t,
+		declaredNamed("joined",
+			&License{Expression: "MIT OR Apache-2.0"},
+			&License{SpdxId: "AGPL-3.0-only"},
+		),
+		declaredNamed("alone",
+			&License{Expression: "MIT OR Apache-2.0"},
+			// Carries no value at all, so it renders nothing and must not
+			// change how the entry that does render is grouped.
+			&License{Acquisition: LicenseAcquisition_LICENSE_ACQUISITION_DECLARED},
+		),
+	)
+
+	if want := "(MIT OR Apache-2.0) AND AGPL-3.0-only"; pkgs["joined"].Declared != want {
+		t.Errorf("joined licenseDeclared = %q, want %q — OR must not reassociate across the AND",
+			pkgs["joined"].Declared, want)
+	}
+	if want := "MIT OR Apache-2.0"; pkgs["alone"].Declared != want {
+		t.Errorf("alone licenseDeclared = %q, want %q — a dropped entry added parentheses",
+			pkgs["alone"].Declared, want)
+	}
+}
+
+// TestSPDXLegacyScalarPassesThroughUnchanged pins what the fix deliberately does
+// not change. Producers set the scalar to whatever their package manager
+// reported, and a large share of OS packages report something that is not an
+// SPDX expression; re-encoding those here would rewrite what every existing
+// document says. That migration is a decision, not a side effect, so the scalar
+// path stays byte-for-byte as it was.
+func TestSPDXLegacyScalarPassesThroughUnchanged(t *testing.T) {
+	pkgs, _ := spdxPackages(t, &Package{
+		Name: "scalar-free-text", Version: "1.0.0", Purl: "pkg:npm/scalar-free-text@1.0.0",
+		License: "BSD-like, see LICENSE",
+	})
+	if got := pkgs["scalar-free-text"].Declared; got != "BSD-like, see LICENSE" {
+		t.Errorf("licenseDeclared = %q, want the scalar verbatim", got)
+	}
+}
+
+func TestSPDXLicenseRef(t *testing.T) {
+	for _, tc := range []struct{ name, want string }{
+		{"MIT", "LicenseRef-MIT"},
+		{"BSD-like, see LICENSE", "LicenseRef-BSD-like-see-LICENSE"},
+		{"see LICENSE", "LicenseRef-see-LICENSE"},
+		{"GPL v2+", "LicenseRef-GPL-v2"},
+		{"Apache 2.0", "LicenseRef-Apache-2.0"},
+		// Nothing an identifier can be built from: SPDX has no way to reference
+		// this, so the caller has to drop it rather than emit a bare prefix.
+		{"?? ??", ""},
+		{"", ""},
+	} {
+		if got := spdxLicenseRef(tc.name); got != tc.want {
+			t.Errorf("spdxLicenseRef(%q) = %q, want %q", tc.name, got, tc.want)
+		}
+	}
+}
+
+// TestSPDXUnreferenceableNameIsDropped: with no identifier to build, the entry
+// cannot be referenced, and a document that names a license it never defines is
+// invalid. NOASSERTION is the honest value.
+func TestSPDXUnreferenceableNameIsDropped(t *testing.T) {
+	pkgs, refs := spdxPackages(t, declaredNamed("unnameable", &License{Name: "?? ??"}))
+	if got := pkgs["unnameable"].Declared; got != "NOASSERTION" {
+		t.Errorf("licenseDeclared = %q, want NOASSERTION", got)
+	}
+	for id := range refs {
+		if id == licenseRefPrefix || id == licenseRefPrefix+"-" {
+			t.Errorf("emitted a bare LicenseRef prefix: %q", id)
+		}
+	}
+}
