@@ -145,3 +145,39 @@ func TestNormalizeConfigForComparison_Empty(t *testing.T) {
 	assert.Empty(t, NormalizeConfigForComparison(""))
 	assert.Empty(t, NormalizeConfigForComparison("!\n!\n\n"))
 }
+
+// TestNormalizeConfigForComparison_DoesNotHideRenderingAsymmetry pins why
+// configSavedToStartup has to fetch its own plainly-rendered running-config.
+//
+// `show running-config all` expands every default-valued setting; `show
+// startup-config` never carries them. The normalizer only strips comments,
+// blank lines and trailing whitespace, so it cannot reconcile the two: a
+// device saved seconds earlier still compared unequal, and the control
+// reported "not saved" on every Arista device, forever.
+func TestNormalizeConfigForComparison_DoesNotHideRenderingAsymmetry(t *testing.T) {
+	allRendered := `! Command: show running-config all
+hostname leaf1
+management ssh
+   idle-timeout 60
+   no fips restrictions
+   no shutdown
+!
+`
+	plainRendered := `! Command: show startup-config
+hostname leaf1
+management ssh
+   idle-timeout 60
+!
+`
+	assert.NotEqual(t,
+		NormalizeConfigForComparison(allRendered),
+		NormalizeConfigForComparison(plainRendered),
+		"the normalizer must not appear to reconcile two different renderings; "+
+			"the fix is to fetch both sides the same way, not to strip harder")
+
+	// Same rendering, same content: equal. This is what the control relies on.
+	assert.Equal(t,
+		NormalizeConfigForComparison(plainRendered),
+		NormalizeConfigForComparison("! Command: show running-config\n"+
+			"hostname leaf1\nmanagement ssh\n   idle-timeout 60\n!\n"))
+}

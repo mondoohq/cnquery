@@ -32,6 +32,18 @@ func (eos *Eos) RunningConfig() (string, error) {
 	return configText(eos.node, goeapi.RunningConfig, "all")
 }
 
+// RunningConfigPlain returns the running-config rendered the way the
+// startup-config is, with defaults left implicit.
+//
+// RunningConfig asks for `all`, which expands every default-valued setting so
+// the parsers see the device's effective state. That is the right input for
+// parsing and the wrong input for drift comparison: the startup-config never
+// carries those defaults, so comparing the two renderings reports drift on a
+// device that was just saved.
+func (eos *Eos) RunningConfigPlain() (string, error) {
+	return configText(eos.node, goeapi.RunningConfig, "")
+}
+
 // configText fetches a configuration as text and fails loudly rather than
 // returning a partial or empty result. An EOS device never renders an empty
 // configuration, so an empty body is a failed read, not a bare device.

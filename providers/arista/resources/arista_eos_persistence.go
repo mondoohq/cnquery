@@ -194,14 +194,18 @@ func fetchStartupConfig(runtime *plugin.Runtime) (string, error) {
 }
 
 // configSavedToStartup reports whether a reload would bring the device back in
-// the state it is in now. The two configurations come from the same renderer,
-// so once the comment header and blank lines are removed a saved device
-// compares equal.
+// the state it is in now.
+//
+// Both sides must be rendered the same way. The cached running-config is
+// fetched with `all`, which expands every default so the parsers see the
+// effective state; the startup-config never carries those defaults. Comparing
+// those two returned false on every device, including one saved seconds
+// earlier, so this fetches its own plainly-rendered copy instead.
 func (a *mqlAristaEos) configSavedToStartup() (bool, error) {
-	// Compares two renderings of the whole config, so it reads the raw text:
-	// a stripped banner on one side and an intact one on the other would be
-	// reported as drift.
-	running, err := fetchRawRunningConfig(a.MqlRuntime)
+	// Not the cached fetch: that one is `all`, and it also strips banners,
+	// either of which would show up as drift that is not there.
+	eosClient := aristaClient(a.MqlRuntime)
+	running, err := eosClient.RunningConfigPlain()
 	if err != nil {
 		return false, err
 	}
