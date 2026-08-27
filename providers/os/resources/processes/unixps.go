@@ -278,7 +278,8 @@ func (upm *UnixProcessManager) listLocked() ([]*OSProcess, error) {
 func (upm *UnixProcessManager) runPs(command string) (io.Reader, error) {
 	c, err := upm.conn.RunCommand(command)
 	if err != nil {
-		return nil, fmt.Errorf("processes> could not run command")
+		// wrapped so a caller can tell a dead connection from a ps that ran
+		return nil, fmt.Errorf("processes> could not run %q: %w", command, err)
 	}
 	if c.ExitStatus != 0 {
 		stderr, _ := io.ReadAll(c.Stderr)
