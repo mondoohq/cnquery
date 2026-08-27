@@ -60,9 +60,19 @@ func TestReadSystemdFSTargetProperties(t *testing.T) {
 	assert.Equal(t, "basic.target", props["multi-user"]["After"])
 
 	// a target with no [Install] section cannot be enabled, which is what
-	// systemctl calls "static"
+	// systemctl calls "static"; one that has an [Install] section but is not
+	// symlinked into a .wants/.requires directory is "disabled", not blank
 	assert.Equal(t, "static", props["basic"]["UnitFileState"])
-	assert.NotEqual(t, "static", props["multi-user"]["UnitFileState"])
+	assert.Equal(t, "disabled", props["multi-user"]["UnitFileState"])
+}
+
+// A target symlinked into a .wants directory reads as enabled.
+func TestReadSystemdFSTargetProperties_EnabledTarget(t *testing.T) {
+	fs := targetFs(t)
+	require.NoError(t, afero.WriteFile(fs, "/etc/systemd/system/default.target.wants/multi-user.target", []byte(""), 0o644))
+
+	props := ReadSystemdFSTargetProperties(fs, []string{"multi-user"})
+	assert.Equal(t, "enabled", props["multi-user"]["UnitFileState"])
 }
 
 // A repeated list setting accumulates rather than replacing, matching systemd.

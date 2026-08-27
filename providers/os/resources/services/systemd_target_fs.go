@@ -13,10 +13,10 @@ import (
 	"github.com/spf13/afero"
 )
 
-// systemdTargetProperties are the `systemctl show` property names this package
-// can recover from a unit file on disk. The runtime state of a target
-// (ActiveState, SubState) cannot be: it exists only in a running systemd.
-var systemdTargetProperties = []string{"Description", "Wants", "Requires", "After", "Before", "FragmentPath", "UnitFileState", "LoadState"}
+// The `systemctl show` properties recoverable from a unit file on disk are
+// Description, Wants, Requires, After, Before, FragmentPath, UnitFileState and
+// LoadState. The runtime state of a target (ActiveState, SubState) is not: it
+// exists only in a running systemd.
 
 // ListSystemdFSTargetNames returns every .target unit file on disk, without the
 // .target suffix, de-duplicated by search-path precedence.
@@ -130,8 +130,17 @@ func readSystemdTargetUnit(fs afero.Fs, unitPath string) (map[string]string, err
 		}
 	}
 
-	if _, ok := props["UnitFileState"]; !ok && !hasInstall {
-		props["UnitFileState"] = "static"
+	// systemctl calls a unit with no [Install] section "static" -- there is no
+	// way to enable it -- and one that has an [Install] section but is not
+	// symlinked into a .wants/.requires directory "disabled". Leaving the
+	// latter blank would read as "not measured" for a target that is measurably
+	// off.
+	if _, ok := props["UnitFileState"]; !ok {
+		if hasInstall {
+			props["UnitFileState"] = "disabled"
+		} else {
+			props["UnitFileState"] = "static"
+		}
 	}
 
 	return props, nil
