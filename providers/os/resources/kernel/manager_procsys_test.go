@@ -85,6 +85,26 @@ func TestWalkProcSys_KeepsGoingPastAnUnreadableParameter(t *testing.T) {
 	assert.Len(t, params, 5)
 }
 
+// The three write-only knobs a stock kernel exports (vm/drop_caches,
+// vm/compact_memory, net/ipv4/route/flush) are not parameter values, and root
+// can open and read them regardless, so the mode is what keeps them out.
+func TestWalkProcSys_SkipsWriteOnlyKnobs(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/proc/sys/vm/mmap_min_addr", []byte("65536\n"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/proc/sys/vm/drop_caches", []byte("0\n"), 0o200))
+	require.NoError(t, afero.WriteFile(fs, "/proc/sys/vm/compact_memory", []byte("0\n"), 0o200))
+	require.NoError(t, afero.WriteFile(fs, "/proc/sys/net/ipv4/route/flush", []byte("\n"), 0o200))
+
+	params, err := walkProcSys(fs)
+	require.NoError(t, err)
+
+	assert.Equal(t, "65536", params["vm.mmap_min_addr"])
+	assert.NotContains(t, params, "vm.drop_caches")
+	assert.NotContains(t, params, "vm.compact_memory")
+	assert.NotContains(t, params, "net.ipv4.route.flush")
+	assert.Len(t, params, 1)
+}
+
 // A host without /proc/sys at all reports an empty map, not an error.
 func TestWalkProcSys_NoProcSys(t *testing.T) {
 	params, err := walkProcSys(afero.NewMemMapFs())

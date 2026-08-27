@@ -141,12 +141,14 @@ func walkProcSys(fs afero.Fs) (map[string]string, error) {
 			return nil
 		}
 
-		stat, err := fs.Stat(path)
-		if err != nil {
-			log.Debug().Err(err).Str("path", path).Msg("mql[kernel]> could not stat sysctl parameter")
-			return nil
-		}
-		details := shared.FileModeDetails{FileMode: stat.Mode()}
+		// A handful of knobs are write-only by design -- vm/drop_caches,
+		// vm/compact_memory and net/ipv4/route/flush are the whole set on a
+		// stock kernel. Root can open and read those anyway, so the mode is
+		// what keeps them out of a map of parameter values. The walk already
+		// stat'd this entry, so use what it handed us rather than paying
+		// another syscall per file across ~1000 of them, which on an SSH
+		// connection is ~1000 round trips.
+		details := shared.FileModeDetails{FileMode: f.Mode()}
 		if !details.UserReadable() {
 			return nil
 		}
