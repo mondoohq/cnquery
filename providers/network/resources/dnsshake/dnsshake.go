@@ -19,6 +19,22 @@ type DnsClient struct {
 	config *dns.ClientConfig
 	fqdn   string
 	sync   sync.Mutex
+
+	// lookupHost resolves a nameserver's name to addresses, defaulting to
+	// net.LookupHost. It is a field so a test can serve the whole delegation
+	// walk from its own fixture: authoritativeNameservers is otherwise
+	// untestable, because the nameserver names a fixture hands back would have
+	// to resolve through the host's real resolver.
+	lookupHost func(string) ([]string, error)
+}
+
+// resolveHost resolves a nameserver name, through the injected resolver when a
+// test supplied one.
+func (d *DnsClient) resolveHost(name string) ([]string, error) {
+	if d.lookupHost != nil {
+		return d.lookupHost(name)
+	}
+	return net.LookupHost(name)
 }
 
 type DnsRecord struct {
@@ -265,6 +281,55 @@ func (d *DnsClient) QueryAuthoritative(dnsTypes ...string) (map[string]DnsRecord
 	return res, errs.Deduplicate()
 }
 
+// queryNS asks for the NS records at a name, retrying across the configured
+// resolvers before reporting failure.
+//
+// queryDnsTypeAt sends one datagram to one server and reports a lost reply as a
+// failure, and the walk below reads a failure at a name as that name not being
+// a zone, so it climbs to the parent and answers with the parent's nameservers.
+// Those serve referrals rather than the records the caller wanted, which is how
+// a single dropped UDP packet turned authoritativeRecords into a silently wrong
+// answer instead of a slow one. A resolver is asked config.Attempts times, and
+// every configured resolver is asked, so reaching the walk's failure path means
+// no resolver could answer rather than that one packet went missing.
+//
+// Only a transport failure is retried. Any answer is the resolver having
+// answered, NXDOMAIN and a response carrying no NS records included, and what
+// it means is the caller's decision.
+func (d *DnsClient) queryNS(zone string) (map[string]DnsRecord, error) {
+	if len(d.config.Servers) == 0 {
+		return nil, errors.New("no resolver configured to query NS for " + zone)
+	}
+
+	attempts := d.config.Attempts
+	if attempts < 1 {
+		attempts = 1
+	}
+
+	var lastErr error
+	for attempt := 0; attempt < attempts; attempt++ {
+		for _, server := range d.config.Servers {
+			records, err := d.queryDnsTypeAt(server, true, zone, "NS")
+			if err != nil {
+				lastErr = err
+				continue
+			}
+
+			// queryDnsTypeAt reports a transport failure inside the record
+			// rather than as an error, so this is where a lost reply looks like
+			// one.
+			if ns, ok := records["NS"]; ok && ns.Error != nil {
+				lastErr = ns.Error
+				continue
+			}
+
+			return records, nil
+		}
+	}
+
+	return nil, errors.Wrapf(lastErr, "querying NS for %s", zone)
+}
+
 // authoritativeNameservers finds the addresses of the nameservers serving the
 // zone that contains the client's fqdn.
 //
@@ -280,12 +345,22 @@ func (d *DnsClient) authoritativeNameservers() ([]string, error) {
 		return nil, errors.New("cannot determine authoritative nameservers without a domain name")
 	}
 
+	// queryErr remembers the last query that could not be answered, so a walk
+	// that failed everywhere says why instead of only that it found nothing.
+	var queryErr error
+
 	for labels := dns.SplitDomainName(name); len(labels) > 0; labels = labels[1:] {
 		zone := strings.Join(labels, ".")
 
-		records, err := d.queryDnsTypeAt(d.config.Servers[0], true, zone, "NS")
+		records, err := d.queryNS(zone)
 		if err != nil {
-			return nil, err
+			// Every resolver failed for this name. Climbing on is the behaviour
+			// this branch has always had and it is kept deliberately, but the
+			// cause is worth carrying: without it a walk that failed at every
+			// label reports only that nothing was found, which reads as a fact
+			// about the name rather than a resolver that could not be reached.
+			queryErr = err
+			continue
 		}
 
 		ns, ok := records["NS"]
@@ -298,7 +373,7 @@ func (d *DnsClient) authoritativeNameservers() ([]string, error) {
 			// Nameservers are named, so each one needs resolving to an address
 			// before it can be queried. Skip any that do not resolve; as long as
 			// one does, the zone is reachable.
-			ips, err := net.LookupHost(strings.TrimSuffix(host, "."))
+			ips, err := d.resolveHost(strings.TrimSuffix(host, "."))
 			if err != nil {
 				continue
 			}
@@ -308,6 +383,10 @@ func (d *DnsClient) authoritativeNameservers() ([]string, error) {
 		if len(addrs) > 0 {
 			return addrs, nil
 		}
+	}
+
+	if queryErr != nil {
+		return nil, errors.Wrapf(queryErr, "no authoritative nameserver found for %s", d.fqdn)
 	}
 
 	return nil, errors.New("no authoritative nameserver found for " + d.fqdn)
