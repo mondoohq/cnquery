@@ -66,6 +66,7 @@ func TestAllResolvedResources(t *testing.T) {
 		DiscoveryDocumentDBInstances,
 		DiscoverySnsTopics,
 		DiscoverySqsQueues,
+		DiscoveryEC2InstanceAPI,
 		DiscoveryInstances,
 		DiscoverySSMInstances,
 		DiscoveryECR,
@@ -127,6 +128,7 @@ func TestAutoResolvedResources(t *testing.T) {
 		DiscoveryDocumentDBInstances,
 		DiscoverySnsTopics,
 		DiscoverySqsQueues,
+		DiscoveryEC2InstanceAPI,
 	}
 	require.ElementsMatch(t, expected, Auto)
 }

@@ -32,8 +32,8 @@ const (
 	DiscoveryResources                   = "resources"          // all the resources
 	DiscoveryECSContainersAPI            = "ecs-containers-api" // need dedup story
 	DiscoveryECRImageAPI                 = "ecr-image-api"      // need policy + dedup story
-	DiscoveryEC2InstanceAPI              = "ec2-instances-api"  // need policy + dedup story
-	DiscoverySSMInstanceAPI              = "ssm-instances-api"  // need policy + dedup story
+	DiscoveryEC2InstanceAPI              = "ec2-instances-api"
+	DiscoverySSMInstanceAPI              = "ssm-instances-api" // need policy + dedup story
 	DiscoveryS3Buckets                   = "s3-buckets"
 	DiscoveryEKSClusters                 = "eks-clusters"
 	DiscoveryCloudtrailTrails            = "cloudtrail-trails"
@@ -89,8 +89,15 @@ const (
 var AllAPIResources = []string{
 	// DiscoveryECSContainersAPI,
 	// DiscoveryECRImageAPI,
-	// DiscoveryEC2InstanceAPI,
 	// DiscoverySSMInstanceAPI,
+	// EC2 instances as API (configuration) assets. This is a second view of an
+	// instance, not a replacement for OS scanning: the API asset carries the
+	// AWS-side posture (platform aws-ec2-instance, so the internet-exposure
+	// checks gated on that platform can run at all), while an OS scan of the
+	// same instance stays its own asset. The two never collide: this asset is
+	// identified by the instance ARN plus MondooObjectID's ".../instance/<id>"
+	// form, an OS scan by awsec2.MondooInstanceID's ".../instances/<id>" form.
+	DiscoveryEC2InstanceAPI,
 	DiscoveryS3Buckets,
 	DiscoveryEKSClusters,
 	DiscoveryCloudtrailTrails,
