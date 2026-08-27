@@ -353,6 +353,12 @@ type RootAccountState struct {
 	SecretFormat string
 }
 
+// aaaRootSecretRe captures only the first token after `secret`, which is what
+// keeps the credential out of the result in both spellings of the line. With a
+// selector (`aaa root secret sha512 <hash>`) the hash sits in the next token
+// and is never captured at all; without one (`aaa root secret <password>`) the
+// password lands in the capture group and is discarded by the selector check
+// below rather than stored. Widening this regex would break that guarantee.
 var aaaRootSecretRe = regexp.MustCompile(`^aaa root secret\s+(\S+)`)
 
 // ParseRootAccount reports the state of the `aaa root` account.
@@ -377,8 +383,9 @@ func ParseRootAccount(runningConfig string) *RootAccountState {
 				state.NoPassword = false
 				// The selector is optional. Taking the first token
 				// positionally publishes the root password itself when the
-				// line is written without one, so anything that is not a
-				// known selector is the secret and the line is cleartext.
+				// line is written without one, so a token that is not a
+				// known selector is the secret: report the line as cleartext
+				// and let the captured value go.
 				if passwordSecretSelectors[m[1]] {
 					state.SecretFormat = m[1]
 				} else {
