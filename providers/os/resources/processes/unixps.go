@@ -272,52 +272,83 @@ func (upm *UnixProcessManager) listLocked() ([]*OSProcess, error) {
 	return upm.processes, nil
 }
 
+// runPs runs a ps invocation and fails loudly when it does not succeed. ps
+// writes nothing to stdout when it rejects its arguments, which would otherwise
+// parse into an empty slice and report a running host as having no processes.
+func (upm *UnixProcessManager) runPs(command string) (io.Reader, error) {
+	c, err := upm.conn.RunCommand(command)
+	if err != nil {
+		return nil, fmt.Errorf("processes> could not run command")
+	}
+	if c.ExitStatus != 0 {
+		stderr, _ := io.ReadAll(c.Stderr)
+		return nil, fmt.Errorf("processes> %q failed with exit code %d: %s",
+			command, c.ExitStatus, strings.TrimSpace(string(stderr)))
+	}
+	return c.Stdout, nil
+}
+
 // runList runs the platform-appropriate `ps` command and parses its output.
 func (upm *UnixProcessManager) runList() ([]*OSProcess, error) {
 	var entries []*ProcessEntry
 	// NOTE: improve proc parser instead of supporting multiple ps commands
-	if upm.platform.IsFamily("linux") {
-		c, err := upm.conn.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
-		if err != nil {
-			return nil, fmt.Errorf("processes> could not run command")
-		}
-
-		entries, err = ParseLinuxPsResult(c.Stdout)
+	switch {
+	case upm.platform.Name == "solaris":
+		// Solaris ships an SVR4 ps that rejects the BSD-style "axo" cluster with
+		// "ps: illegal option -- o", and has no /usr/ucb/ps to fall back on. This
+		// has to be tested before the linux family, because Solaris 11.4 ships an
+		// /etc/os-release and is therefore reported as part of it.
+		stdout, err := upm.runPs("ps -eo pid,pcpu,pmem,vsz,rss,tty,s,time,uid,args")
 		if err != nil {
 			return nil, err
 		}
-	} else if upm.platform.IsFamily("darwin") {
+
+		entries, err = ParseUnixPsResult(stdout)
+		if err != nil {
+			return nil, err
+		}
+	case upm.platform.IsFamily("linux"):
+		stdout, err := upm.runPs("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
+		if err != nil {
+			return nil, err
+		}
+
+		entries, err = ParseLinuxPsResult(stdout)
+		if err != nil {
+			return nil, err
+		}
+	case upm.platform.IsFamily("darwin"):
 		// NOTE: special case on darwin is that the ps axo only shows processes for users with terminals
 		// TODO: the same applies to OpenBSD and may result in missing processes
-		c, err := upm.conn.RunCommand("ps Axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
-		if err != nil {
-			return nil, fmt.Errorf("processes> could not run command")
-		}
-
-		entries, err = ParseLinuxPsResult(c.Stdout)
+		stdout, err := upm.runPs("ps Axo pid,pcpu,pmem,vsz,rss,tty,stat,stime,time,uid,command")
 		if err != nil {
 			return nil, err
 		}
-	} else if upm.platform.Name == "aix" {
+
+		entries, err = ParseLinuxPsResult(stdout)
+		if err != nil {
+			return nil, err
+		}
+	case upm.platform.Name == "aix":
 		// special case for aix since it does not understand x
-		c, err := upm.conn.RunCommand("ps -A -o pid,pcpu,pmem,vsz,tty,time,uid,args")
-		if err != nil {
-			return nil, fmt.Errorf("processes> could not run command")
-		}
-
-		entries, err = ParseAixPsResult(c.Stdout)
+		stdout, err := upm.runPs("ps -A -o pid,pcpu,pmem,vsz,tty,time,uid,args")
 		if err != nil {
 			return nil, err
 		}
-	} else {
+
+		entries, err = ParseAixPsResult(stdout)
+		if err != nil {
+			return nil, err
+		}
+	default:
 		// TODO: consider using different ps calls for different platforms to determine max information
 		// do not use stime since it is not available on FreeBSD
-		c, err := upm.conn.RunCommand("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,time,uid,command")
+		stdout, err := upm.runPs("ps axo pid,pcpu,pmem,vsz,rss,tty,stat,time,uid,command")
 		if err != nil {
-			return nil, fmt.Errorf("processes> could not run command")
+			return nil, err
 		}
 
-		entries, err = ParseUnixPsResult(c.Stdout)
+		entries, err = ParseUnixPsResult(stdout)
 		if err != nil {
 			return nil, err
 		}
