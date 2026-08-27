@@ -1185,8 +1185,8 @@ func initGcpProjectVertexaiServiceCustomJob(runtime *plugin.Runtime, args map[st
 		if locRaw == nil || projRaw == nil {
 			return nil, nil, errors.New("vertexai custom job init: projectId and location required when name is not a full resource path")
 		}
-		region = locRaw.Value.(string)
-		projectId = projRaw.Value.(string)
+		region, _ = locRaw.Value.(string)
+		projectId, _ = projRaw.Value.(string)
 		fullName = fmt.Sprintf("projects/%s/locations/%s/customJobs/%s", projectId, region, name)
 	}
 

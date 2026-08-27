@@ -251,7 +251,7 @@ func initGcpProjectDocumentaiServiceProcessorVersion(runtime *plugin.Runtime, ar
 		return args, nil, nil
 	}
 	nameRaw, ok := args["name"]
-	if !ok {
+	if !ok || nameRaw == nil {
 		return nil, nil, errors.New("gcp.project.documentaiService.processor.version requires a name")
 	}
 	name, ok := nameRaw.Value.(string)

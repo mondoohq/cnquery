@@ -182,12 +182,12 @@ func initGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 		return nil, nil, err
 	}
 
-	var projectId string
-	projectIdRaw := args["projectId"]
-	if projectIdRaw != nil {
-		projectId = projectIdRaw.Value.(string)
-	} else {
-		projectId = conn.ResourceID()
+	projectId := conn.ResourceID()
+	if projectIdRaw := args["projectId"]; projectIdRaw != nil {
+		projectId, ok = projectIdRaw.Value.(string)
+		if !ok || projectId == "" {
+			return nil, nil, errors.New(`gcp.service requires a non-empty "projectId" argument`)
+		}
 	}
 
 	ctx := context.Background()

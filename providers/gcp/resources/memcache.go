@@ -104,8 +104,9 @@ func initGcpProjectMemcacheServiceInstance(runtime *plugin.Runtime, args map[str
 		if locRaw == nil || projRaw == nil {
 			return nil, nil, errors.New("memcache instance init: projectId and location required when name is not a full resource path")
 		}
-		projectId = projRaw.Value.(string)
-		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, locRaw.Value.(string), name)
+		projectId, _ = projRaw.Value.(string)
+		location, _ := locRaw.Value.(string)
+		fullName = fmt.Sprintf("projects/%s/locations/%s/instances/%s", projectId, location, name)
 	}
 
 	// Ask whether the API is on before paying for a Get that cannot succeed

@@ -120,6 +120,7 @@ var huskProneInits = map[string]string{
 	"gcp.project.certificateManagerService.dnsAuthorization":          "resourcePath",
 	"gcp.project.certificateManagerService.certificateIssuanceConfig": "resourcePath",
 	"gcp.project.kmsService.keyring.cryptokey":                        "resourcePath",
+	"gcp.project.documentaiService.processor.version":                 "name",
 }
 
 // TestInitsSurviveANullSelectorArgument pins the arg-reading guards.
@@ -171,6 +172,8 @@ func TestInitsRejectAnUnusableSelector(t *testing.T) {
 		}{
 			{"no selector argument", map[string]*llx.RawData{"projectId": llx.StringData(testProjectId)}},
 			{"empty selector argument", map[string]*llx.RawData{selector: llx.StringData("")}},
+			{"nil selector argument", map[string]*llx.RawData{selector: nil}},
+			{"wrong-typed selector argument", map[string]*llx.RawData{selector: llx.IntData(7)}},
 		} {
 			t.Run(resource+"/"+tc.title, func(t *testing.T) {
 				env := setupTestEnv(t, regionZoneScopes(), projectScopes())
@@ -180,5 +183,38 @@ func TestInitsRejectAnUnusableSelector(t *testing.T) {
 					"the error should name the argument that is missing")
 			})
 		}
+	}
+}
+
+// TestGcpServiceRejectsAnUnusableProjectId covers the one argument in this set
+// that selects nothing but is still dereferenced.
+//
+// gcp.service reads args["projectId"] on its own, outside the selector table
+// above, and only guarded it against being absent. A caller that supplies the
+// key with a null or non-string value got past that guard and into a bare type
+// assertion, which panics the provider and takes the whole scan with it. Two
+// arguments also stay under the init's len(args) > 2 fast path, so this is
+// reachable from a plain query rather than only from an internal caller.
+func TestGcpServiceRejectsAnUnusableProjectId(t *testing.T) {
+	for _, tc := range []struct {
+		title     string
+		projectId *llx.RawData
+	}{
+		{"null projectId", &llx.RawData{Type: types.String}},
+		{"wrong-typed projectId", llx.IntData(7)},
+		{"empty projectId", llx.StringData("")},
+	} {
+		t.Run(tc.title, func(t *testing.T) {
+			env := setupTestEnv(t, regionZoneScopes(), projectScopes())
+			var err error
+			assert.NotPanics(t, func() {
+				_, err = NewResource(env.Runtime, "gcp.service", map[string]*llx.RawData{
+					"name":      llx.StringData("compute.googleapis.com"),
+					"projectId": tc.projectId,
+				})
+			})
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "projectId")
+		})
 	}
 }

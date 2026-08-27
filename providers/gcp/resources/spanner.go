@@ -745,7 +745,7 @@ func initGcpProjectSpannerServiceInstanceConfig(runtime *plugin.Runtime, args ma
 	}
 
 	nameRaw, ok := args["name"]
-	if !ok {
+	if !ok || nameRaw == nil {
 		return nil, nil, errors.New(`gcp.project.spannerService.instanceConfig requires a "name" argument`)
 	}
 	name, ok := nameRaw.Value.(string)
@@ -754,7 +754,7 @@ func initGcpProjectSpannerServiceInstanceConfig(runtime *plugin.Runtime, args ma
 	}
 
 	projectIdRaw, ok := args["projectId"]
-	if !ok {
+	if !ok || projectIdRaw == nil {
 		return nil, nil, errors.New(`gcp.project.spannerService.instanceConfig requires a "projectId" argument`)
 	}
 	projectId, ok := projectIdRaw.Value.(string)
