@@ -383,11 +383,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) keys() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			if isAzureNotConfigured(err) {
-				log.Warn().Err(err).Msg("could not list azure keys, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			return keyVaultPageFault(&a.Keys, res, "azure key vault keys", err)
 		}
 
 		for _, entry := range page.Value {
@@ -457,15 +453,11 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) autorotation() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			// The same data-plane listing keys() walks, so it degrades the same
-			// way: a caller holding the vault's control-plane read but not the
-			// keys data action gets 403 here, and that should not fail the whole
-			// vault list.
-			if isAzureNotConfigured(err) {
-				log.Warn().Err(err).Msg("could not list azure keys for rotation policies, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			// The same data-plane listing keys() walks, so it degrades the
+			// same way: a caller holding the vault's control-plane read but
+			// not the keys data action gets 403 here, which reports null
+			// rather than failing the whole vault list.
+			return keyVaultPageFault(&a.Autorotation, res, "azure key vault key rotation policies", err)
 		}
 
 		// Resolve auto-rotation status concurrently. Azure Key Vault has no
@@ -546,11 +538,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) secrets() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			if isAzureNotConfigured(err) {
-				log.Warn().Err(err).Msg("could not list azure secrets, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			return keyVaultPageFault(&a.Secrets, res, "azure key vault secrets", err)
 		}
 
 		for _, entry := range page.Value {
@@ -602,11 +590,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceVault) certificates() ([]any, error)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			if isAzureNotConfigured(err) {
-				log.Warn().Err(err).Msg("could not list azure certificates, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			return keyVaultPageFault(&a.Certificates, res, "azure key vault certificates", err)
 		}
 
 		for _, entry := range page.Value {
@@ -1186,11 +1170,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceKey) versions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			if isAzureNotConfigured(err) {
-				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			return keyVaultPageFault(&a.Versions, res, "azure key vault key versions", err)
 		}
 		for _, entry := range page.Value {
 			if entry == nil {
@@ -1356,11 +1336,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceCertificate) versions() ([]any, erro
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			if isAzureNotConfigured(err) {
-				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			return keyVaultPageFault(&a.Versions, res, "azure key vault certificate versions", err)
 		}
 		for _, entry := range page.Value {
 			if entry == nil {
@@ -1736,11 +1712,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceSecret) versions() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			if isAzureNotConfigured(err) {
-				log.Warn().Err(err).Msg("could not list azure versions, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			return keyVaultPageFault(&a.Versions, res, "azure key vault secret versions", err)
 		}
 		for _, entry := range page.Value {
 			if entry == nil {
@@ -1930,12 +1902,7 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) keys() ([]any, error) {
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			var respErr *azcore.ResponseError
-			if errors.As(err, &respErr) && (respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == http.StatusForbidden) {
-				log.Warn().Err(err).Str("hsm", hsmUri.Data).Msg("azure> no data-plane access to list managed HSM keys, returning partial results")
-				return res, nil
-			}
-			return nil, err
+			return keyVaultPageFault(&a.Keys, res, "managed HSM keys", err)
 		}
 
 		for _, entry := range page.Value {
@@ -2190,4 +2157,62 @@ func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) privateEndpointConnectio
 	}
 
 	return res, nil
+}
+
+// isKeyVaultReadRefused reports whether a Key Vault data-plane call was refused
+// for this identity.
+//
+// Key Vault splits its permissions in two: the control plane lists the vaults,
+// the data plane reads what is inside them, and they are granted separately. A
+// Reader on the subscription therefore sees every vault and none of its
+// contents, which is the most common credential shape there is. Key Vault
+// answers 403 when the caller holds no data action for the contents, and 401
+// when the token carries no data-plane access at all. Both mean the contents
+// were not read.
+func isKeyVaultReadRefused(err error) bool {
+	var respErr *azcore.ResponseError
+	if !errors.As(err, &respErr) {
+		return false
+	}
+	return respErr.StatusCode == http.StatusUnauthorized || respErr.StatusCode == http.StatusForbidden
+}
+
+// keyVaultPageFault decides what a Key Vault data-plane page walk reports when
+// a page fails, and is the only place that decision is made.
+//
+// A refused read reports null rather than an empty collection. The two are not
+// the same answer and must not look alike: an empty list is a claim that the
+// vault holds nothing, and a policy written as `keys.none(...)` or
+// `secrets.all(...)` passes on it. Reported for contents nobody was allowed to
+// look at, that is a silent pass on unexamined key material -- which is the
+// most dangerous way for a secrets audit to fail, because it fails as success.
+//
+// A 404, or one of the not-applicable codes, is a real absence and keeps the
+// empty list. Anything else -- a throttle, a 5xx, a transport failure -- proves
+// nothing about the contents and stays an error.
+//
+// collected is what the walk had already read. Once any row has been read, a
+// fault can only be reported as an error: returning the rows so far would
+// present a truncated collection as a complete one, and nothing downstream can
+// tell the difference. This mirrors listPaged, which makes the same call for
+// the ARM pagers.
+func keyVaultPageFault(field *plugin.TValue[[]any], collected []any, what string, err error) ([]any, error) {
+	if len(collected) > 0 {
+		return nil, errors.New("could not read all " + what + ": " + err.Error())
+	}
+
+	if isKeyVaultReadRefused(err) {
+		log.Warn().Err(err).Str("collection", what).
+			Msg("azure> not permitted to read, reporting null")
+		field.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	if isAzureFeatureUnavailable(err) {
+		log.Debug().Err(err).Str("collection", what).
+			Msg("azure> not available, reporting an empty list")
+		return []any{}, nil
+	}
+
+	return nil, err
 }
