@@ -180,7 +180,11 @@ arista.eos.user @defaults("name privilege") {
   privilege string
   // User's assigned role
   role string
-  // Set to "nopassword" when the account has no password configured, empty otherwise
+  // Whether the account is configured with `nopassword`
+  //
+  // One of "true" or "false". An account written with the `nopassword`
+  // keyword has no password at all, so the only credential it can present
+  // is an SSH key.
   nopassword string
   // Specifies how the secret is encoded
   format string
