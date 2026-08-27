@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/types"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/compute/v1"
 )
@@ -91,66 +92,91 @@ func TestRegionInitDoesNotLeakProjectIdIntoArgs(t *testing.T) {
 	})
 }
 
-// TestInitsSurviveANullNameArgument pins the arg-reading guards.
+// huskProneInits are the per-object inits that resolve one named object, each
+// with the argument that selects it. Keeping them in one table is what stops
+// the guard from being fixed in the files someone happened to look at: the
+// resourcePath-selected resources below were missed exactly that way.
+//
+// The *Service inits are deliberately absent. A bare gcp.project.<svc> is a
+// legitimate empty state whose fields come from the connection rather than a
+// lookup, so returning args there is correct.
+var huskProneInits = map[string]string{
+	"gcp.project.vertexaiService.customJob":                           "name",
+	"gcp.project.vertexaiService.endpoint":                            "name",
+	"gcp.project.vertexaiService.pipelineJob":                         "name",
+	"gcp.project.vertexaiService.notebookRuntimeTemplate":             "name",
+	"gcp.project.vertexaiService.schedule":                            "name",
+	"gcp.project.memorystoreService.instance":                         "name",
+	"gcp.project.memorystoreService.backupCollection":                 "name",
+	"gcp.project.memcacheService.instance":                            "name",
+	"gcp.project.modelArmorService.template":                          "name",
+	"gcp.project.spannerService.instanceConfig":                       "name",
+	"gcp.project.datastreamService.connectionProfile":                 "name",
+	"gcp.project.datastreamService.privateConnection":                 "name",
+	"gcp.project.storageService.bucket":                               "name",
+	"gcp.project.pubsubService.schema":                                "name",
+	"gcp.service":                                                     "name",
+	"gcp.project.certificateManagerService.certificate":               "resourcePath",
+	"gcp.project.certificateManagerService.dnsAuthorization":          "resourcePath",
+	"gcp.project.certificateManagerService.certificateIssuanceConfig": "resourcePath",
+	"gcp.project.kmsService.keyring.cryptokey":                        "resourcePath",
+}
+
+// TestInitsSurviveANullSelectorArgument pins the arg-reading guards.
 //
 // An init that reads args["name"].Value.(string) without the comma-ok form
 // panics when the value is null rather than a string, and a panic in a provider
-// takes the whole scan down rather than one field. These inits now all use the
-// guarded form.
-//
-// The guarded form then has to report the unusable argument rather than hand
-// back partial args: the runtime builds the resource from those, leaving every
-// field unset, which surfaces as "encountered a primitive with no type
-// information" with nothing naming the cause. So an unusable name is an error,
-// not an empty resource.
-//
-// Both scope sets are registered because they are disjoint beyond the shared
-// cloudresourcemanager scope: the region and zone lookups need
-// compute.ComputeReadonlyScope, while the project-backed inits need
-// iam.CloudPlatformScope and compute.CloudPlatformScope. A resource whose scope
-// set is not registered cannot build its client.
-func TestInitsSurviveANullNameArgument(t *testing.T) {
-	for _, name := range []string{
-		"gcp.project.spannerService.instanceConfig",
-		"gcp.project.memcacheService.instance",
-		"gcp.project.pubsubService.schema",
-		"gcp.service",
-	} {
-		t.Run(name, func(t *testing.T) {
+// takes down the whole scan rather than one field. A null selector must be
+// reported, not resolved to a husk.
+func TestInitsSurviveANullSelectorArgument(t *testing.T) {
+	for resource, selector := range huskProneInits {
+		t.Run(resource, func(t *testing.T) {
 			env := setupTestEnv(t, regionZoneScopes(), projectScopes())
 			var err error
 			assert.NotPanics(t, func() {
-				_, err = NewResource(env.Runtime, name, map[string]*llx.RawData{
-					"name": {Type: "\x07"},
+				_, err = NewResource(env.Runtime, resource, map[string]*llx.RawData{
+					selector: {Type: types.String},
 				})
 			})
-			assert.Error(t, err, "a null name must be reported, not resolved to a husk")
+			assert.Error(t, err, "a null %s must be reported, not resolved to a husk", selector)
 		})
 	}
 }
 
-// TestInitsRejectAnUnusableName pins the same contract for the two other ways a
-// name can be unusable: absent entirely, and present but empty. Both used to
-// return (args, nil, nil), which the runtime turns into a resource with every
-// field unset.
-func TestInitsRejectAnUnusableName(t *testing.T) {
-	for _, resource := range []string{
-		"gcp.project.spannerService.instanceConfig",
-		"gcp.project.memcacheService.instance",
-		"gcp.service",
-	} {
+// TestInitsRejectAnUnusableSelector pins the same contract for the two other
+// ways a selector can be unusable: absent entirely, and present but empty.
+//
+// Both used to return (args, nil, nil), which the runtime turns into a resource
+// with every field UNSET -- not null, unset. Reading one then surfaces
+// client-side as
+//
+//	provider returned no data and no error for a field; the field was never
+//	set on the resource (provider bug)
+//	llx: encountered a primitive with no type information, coercing to null
+//
+// with nothing naming the cause, and the husk carries an empty __id so every
+// such resource also aliases in the runtime cache. Reproduced live against a
+// real project before the change for vertexai customJob, memorystore instance,
+// storage bucket, datastream connectionProfile, spanner instanceConfig and
+// gcp.service.
+//
+// Every internal caller of these resources already guards its selector against
+// "" before resolving, so erroring here changes nothing for them; it only makes
+// a direct query say what is missing.
+func TestInitsRejectAnUnusableSelector(t *testing.T) {
+	for resource, selector := range huskProneInits {
 		for _, tc := range []struct {
 			title string
 			args  map[string]*llx.RawData
 		}{
-			{"no name argument", map[string]*llx.RawData{"projectId": llx.StringData(testProjectId)}},
-			{"empty name argument", map[string]*llx.RawData{"name": llx.StringData("")}},
+			{"no selector argument", map[string]*llx.RawData{"projectId": llx.StringData(testProjectId)}},
+			{"empty selector argument", map[string]*llx.RawData{selector: llx.StringData("")}},
 		} {
 			t.Run(resource+"/"+tc.title, func(t *testing.T) {
 				env := setupTestEnv(t, regionZoneScopes(), projectScopes())
 				_, err := NewResource(env.Runtime, resource, tc.args)
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), "name",
+				assert.Contains(t, err.Error(), selector,
 					"the error should name the argument that is missing")
 			})
 		}

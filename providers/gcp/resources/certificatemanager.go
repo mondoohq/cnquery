@@ -718,7 +718,7 @@ func initGcpProjectCertificateManagerServiceCertificate(runtime *plugin.Runtime,
 	}
 	resourcePathRaw, ok := args["resourcePath"]
 	if !ok || resourcePathRaw == nil || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.certificateManagerService.certificate requires a non-empty "resourcePath" argument`)
 	}
 	resourcePath := resourcePathRaw.Value.(string)
 
@@ -770,7 +770,7 @@ func initGcpProjectCertificateManagerServiceDnsAuthorization(runtime *plugin.Run
 	}
 	resourcePathRaw, ok := args["resourcePath"]
 	if !ok || resourcePathRaw == nil || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.certificateManagerService.dnsAuthorization requires a non-empty "resourcePath" argument`)
 	}
 	resourcePath := resourcePathRaw.Value.(string)
 
@@ -839,7 +839,7 @@ func initGcpProjectCertificateManagerServiceCertificateIssuanceConfig(runtime *p
 	}
 	resourcePathRaw, ok := args["resourcePath"]
 	if !ok || resourcePathRaw == nil || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.certificateManagerService.certificateIssuanceConfig requires a non-empty "resourcePath" argument`)
 	}
 	resourcePath := resourcePathRaw.Value.(string)
 

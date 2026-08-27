@@ -174,7 +174,7 @@ func initGcpProjectKmsServiceKeyringCryptokey(runtime *plugin.Runtime, args map[
 
 	resourcePathRaw, ok := args["resourcePath"]
 	if !ok || resourcePathRaw.Value == nil || resourcePathRaw.Value.(string) == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.kmsService.keyring.cryptokey requires a non-empty "resourcePath" argument`)
 	}
 	resourcePath := resourcePathRaw.Value.(string)
 
