@@ -47,6 +47,13 @@ func TestParseOnOff(t *testing.T) {
 		"managed mac":    {"Firewall settings cannot be modified from command line on managed Mac computers.\n", false, false},
 		"unrecognised":   {"something else entirely\n", false, false},
 		"empty is not a": {"", false, false},
+		// A bare "enabled."/"disabled." is not a toggle answer. The
+		// --getallowsigned reply ends that way, and a logging line can too, so
+		// matching the suffix would let one getter be read as another.
+		"logging detail line": {"Logging enabled. Detail level: brief\n", false, false},
+		"allowsigned line":    {"Automatically allow built-in signed software ENABLED.\n", false, false},
+		// "is on" must be a whole word, not a prefix of something else.
+		"is one": {"Firewall stealth mode is one of several settings\n", false, false},
 	} {
 		t.Run(name, func(t *testing.T) {
 			v, ok := parseOnOff(tt.stdout)

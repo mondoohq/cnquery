@@ -65,18 +65,35 @@ func parseGlobalState(stdout string) (int64, bool) {
 	return 0, false
 }
 
+// toggleOnRegex and toggleOffRegex anchor on the two sentence shapes
+// socketfilterfw uses for a toggle:
+//
+//	"Firewall stealth mode is on"                     (--getstealthmode)
+//	"Log mode is off"                                 (--getloggingmode)
+//	"Firewall has block all state set to disabled."   (--getblockall)
+//
+// They deliberately do not match a bare "enabled."/"disabled." anywhere in the
+// line. That suffix appears in replies that are not toggles at all -- the
+// --getallowsigned lines end in "signed software ENABLED." -- so accepting it
+// would let one getter's answer be read as another's.
+var (
+	toggleOnRegex  = regexp.MustCompile(`\bis on\b|\bset to enabled\b`)
+	toggleOffRegex = regexp.MustCompile(`\bis off\b|\bset to disabled\b`)
+)
+
 // parseOnOff reads a socketfilterfw toggle sentence. It returns ok=false for
 // anything it does not recognise -- notably the "settings cannot be modified
 // from command line on managed Mac computers" reply -- so an unreadable
 // setting surfaces as an error and never as a confident false.
 func parseOnOff(stdout string) (bool, bool) {
 	s := strings.ToLower(stdout)
-	switch {
-	case strings.Contains(s, "cannot be modified"):
+	if strings.Contains(s, "cannot be modified") {
 		return false, false
-	case strings.Contains(s, " is on"), strings.Contains(s, "set to enabled"), strings.Contains(s, "enabled."):
+	}
+	switch {
+	case toggleOnRegex.MatchString(s):
 		return true, true
-	case strings.Contains(s, " is off"), strings.Contains(s, "set to disabled"), strings.Contains(s, "disabled."):
+	case toggleOffRegex.MatchString(s):
 		return false, true
 	}
 	return false, false

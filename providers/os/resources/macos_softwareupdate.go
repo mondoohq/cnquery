@@ -427,9 +427,18 @@ func parseSoftwareUpdateSize(raw string) int64 {
 // shared plist helpers
 // =============================================================================
 
-// keyPresentInPlist reports whether the key was written at all. A missing key
-// is not the same as a false one: several SoftwareUpdate preferences default
-// to on and are only written once someone changes them.
+// keyPresentInPlist reports whether the key carries a value the caller can
+// read. A missing key is not the same as a false one: several SoftwareUpdate
+// preferences default to on and are only written once someone changes them, so
+// the caller has to tell "nobody set this" apart from "somebody set it off".
+//
+// A key present with a nil value counts as absent, because it answers the
+// question no better than a missing key does: boolFromPlist has no case for
+// nil and would hand back false, which is the wrong-by-default reading this
+// helper exists to prevent. Reporting it as absent routes the caller to the
+// live `softwareupdate --schedule` lookup instead. Note this is about a nil
+// decoded value, not a written `<false/>`, which is a real answer and is
+// reported as present.
 func keyPresentInPlist(d map[string]any, key string) bool {
 	v, ok := d[key]
 	return ok && v != nil
