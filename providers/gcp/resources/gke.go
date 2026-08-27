@@ -303,6 +303,11 @@ func (g *mqlGcpProjectGkeServiceClusterNodepoolConfig) bootDiskKmsKeyRef() (*mql
 	return newKmsCryptoKeyRef(g.MqlRuntime, &g.BootDiskKmsKeyRef, keyName.Data)
 }
 
+// gkeNetworkPolicyCacheKey scopes a cluster's network policy to that cluster.
+func gkeNetworkPolicyCacheKey(clusterId string) string {
+	return clusterId + "/networkPolicy"
+}
+
 func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServiceClusterNetworkPolicy, error) {
 	npConfig := g.cacheNetworkPolicyConfig
 	if npConfig == nil {
@@ -324,8 +329,15 @@ func (g *mqlGcpProjectGkeServiceCluster) networkPolicy() (*mqlGcpProjectGkeServi
 	}
 	clusterId := g.Id.Data
 
+	// The cache key has to be passed explicitly. This resource declares no
+	// id() method, so without an "__id" argument every cluster's network
+	// policy is stored under the same empty key, and CreateResource returns
+	// the first resource stored under a key -- so a cluster with network
+	// policy switched off reports the enabled neighbour's answer.
+	key := gkeNetworkPolicyCacheKey(clusterId)
 	res, err := CreateResource(g.MqlRuntime, "gcp.project.gkeService.cluster.networkPolicy", map[string]*llx.RawData{
-		"id":       llx.StringData(clusterId + "/networkPolicy"),
+		"__id":     llx.StringData(key),
+		"id":       llx.StringData(key),
 		"enabled":  llx.BoolData(enabled),
 		"provider": llx.StringData(provider),
 	})
