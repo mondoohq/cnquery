@@ -60,5 +60,19 @@
 		<key>processName</key>
 		<string>installer</string>
 	</dict>
+	<dict>
+		<key>date</key>
+		<date>2026-08-21T09:03:44Z</date>
+		<key>displayName</key>
+		<string>Command Line Tools for Xcode</string>
+		<key>displayVersion</key>
+		<string>16.4</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.CLTools_Executables</string>
+		</array>
+		<key>processName</key>
+		<string>softwareupdated</string>
+	</dict>
 </array>
 </plist>

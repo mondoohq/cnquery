@@ -4,6 +4,7 @@
 package resources
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -12,15 +13,11 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/detector"
 	"go.mondoo.com/mql/providers/os/resources/packages"
 	"go.mondoo.com/mql/providers/os/resources/updates"
+	"go.mondoo.com/mql/providers/os/resources/windows"
 )
-
-// windowsDefinitionUpdates is the classification the Windows Update Agent gives
-// Defender signature updates. They install daily, so counting them would report
-// a host years behind on Windows as patched this morning. The string is the one
-// windows.ClassifyUpdate emits.
-const windowsDefinitionUpdates = "Definition Updates"
 
 // lastUpdateCache resolves the asset's newest update install once and shares it
 // between lastUpdate, lastUpdateAge and lastUpdateSource, which would otherwise
@@ -62,11 +59,11 @@ type mqlOsBaseInternal struct {
 	lastUpdateCache
 }
 
-// resolveLastInstalledUpdate finds the newest update install recorded on the
-// asset. rpm-based platforms and Windows are answered from resources that
-// already hold the data, so neither pays for a second rpm database read or a
-// second PowerShell round trip; everything else is read from its own files by
-// the updates package.
+// resolveLastInstalledUpdate finds the newest operating system update install
+// recorded on the asset. rpm-based platforms and Windows are answered from
+// resources that already hold the data, so neither pays for a second rpm
+// database read or a second PowerShell round trip; everything else is read from
+// its own files by the updates package.
 func resolveLastInstalledUpdate(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, error) {
 	conn, ok := runtime.Connection.(shared.Connection)
 	if !ok {
@@ -74,6 +71,13 @@ func resolveLastInstalledUpdate(runtime *plugin.Runtime) (*updates.LastInstalled
 	}
 	asset := conn.Asset()
 	if asset == nil || asset.Platform == nil {
+		return nil, nil
+	}
+
+	// Containers are out of scope, and the check comes before the dispatch so
+	// no rpm listing or PowerShell round trip is paid for an asset that is
+	// going to read null anyway.
+	if isContainerAsset(conn, asset.Platform) {
 		return nil, nil
 	}
 
@@ -86,6 +90,56 @@ func resolveLastInstalledUpdate(runtime *plugin.Runtime) (*updates.LastInstalled
 	return updates.ResolveLastInstalledUpdate(conn)
 }
 
+// isContainerAsset reports whether the asset is a container or a container
+// image.
+//
+// A container is not patched, it is rebuilt, so the age of the newest install
+// recorded inside it is the age of the image build rather than a statement
+// about whether anyone is maintaining the workload. Reporting that as patch age
+// would let a base image that has not moved in a year read as freshly patched
+// on the day it was pulled, so these fields read null instead and the question
+// is left to image provenance.
+//
+// Three signals because each covers what the others miss: Kind is what the
+// platform resolver sets for a docker connection, the device type additionally
+// catches an os-release VARIANT_ID of container (an image reached over a
+// filesystem or tar connection, where Kind may be unset), and the connection
+// types cover registry scans.
+//
+// Type_Tar and Type_FileSystem are deliberately absent. A tar can be a virtual
+// machine export and a filesystem connection is routinely a mounted host root,
+// so excluding them would null the field on assets that genuinely are patched.
+func isContainerAsset(conn shared.Connection, pf *inventory.Platform) bool {
+	return isContainerPlatform(pf) || isContainerConnection(conn.Type())
+}
+
+// isContainerPlatform reports whether the detected platform is a container or a
+// container image.
+func isContainerPlatform(pf *inventory.Platform) bool {
+	if pf == nil {
+		return false
+	}
+	if pf.Kind == "container" || pf.Kind == "container-image" {
+		return true
+	}
+	return pf.Metadata[detector.MetadataDeviceType] == detector.DeviceTypeContainer
+}
+
+// isContainerConnection reports whether a connection type can only ever reach a
+// container or a container image.
+//
+// Type_Tar and Type_FileSystem are deliberately absent: a tar can be a virtual
+// machine export and a filesystem connection is routinely a mounted host root.
+func isContainerConnection(t shared.ConnectionType) bool {
+	switch t {
+	case shared.Type_DockerContainer, shared.Type_DockerImage, shared.Type_DockerSnapshot,
+		shared.Type_DockerRegistry, shared.Type_ContainerRegistry, shared.Type_RegistryImage,
+		shared.Type_DockerFile:
+		return true
+	}
+	return false
+}
+
 // isRpmPlatform reports whether the asset's packages come from rpm, mirroring
 // the platforms packages.ResolveSystemPkgManagers hands to RpmPkgManager.
 func isRpmPlatform(pf *inventory.Platform) bool {
@@ -96,12 +150,30 @@ func isRpmPlatform(pf *inventory.Platform) bool {
 	return pf.IsFamily("redhat") || pf.IsFamily("euler") || pf.IsFamily("suse")
 }
 
-// lastInstalledRpm takes the newest %{INSTALLTIME} across the installed rpms.
-// rpm records an install time per package, which makes this the most precise
-// answer available on these platforms, and it is already parsed on both the
-// command path and the static rpmdb path. dnf's own history database is not
-// used: container images routinely ship with /var/lib/dnf emptied while the rpm
-// database stays intact.
+// rpmVendorAnchors are packages that only ever come from the operating system
+// vendor. Their %{VENDOR} is what the vendor calls itself on this asset, which
+// is how the OS vendor is identified without shipping a distribution-to-vendor
+// table that goes stale and silently nulls the field on a distribution nobody
+// added to it.
+//
+// Several anchors, unioned, because a distribution can ship more than one
+// vendor string across its own packages (Amazon Linux uses both "Amazon Linux"
+// and "Amazon.com"). Trusting a single anchor would drop the other spelling.
+var rpmVendorAnchors = []string{"glibc", "bash", "coreutils", "systemd", "filesystem"}
+
+// lastInstalledRpm takes the newest %{INSTALLTIME} across the rpms shipped by
+// the operating system vendor. rpm records an install time per package, which
+// makes this the most precise answer available on these platforms, and it is
+// already parsed on both the command path and the static rpmdb path.
+//
+// dnf's own history database is not used: it is emptied on assets whose rpm
+// database stays intact, and reading it would need sqlite over the connection's
+// filesystem where the vendor is already in hand.
+//
+// The vendor match is what makes the timestamp mean patch state. Without it a
+// third-party rpm - Docker CE, Grafana, a vendor's agent - counts as an
+// operating system update, and those move far more often than a distribution
+// does.
 func lastInstalledRpm(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, error) {
 	obj, err := CreateResource(runtime, "packages", nil)
 	if err != nil {
@@ -113,15 +185,35 @@ func lastInstalledRpm(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, er
 		return nil, list.Error
 	}
 
+	newest, ok := newestVendorRpmInstall(list.Data)
+	if !ok {
+		return nil, nil
+	}
+	return &updates.LastInstalledUpdate{Time: newest.UTC(), Source: updates.LastUpdateSourceRpmDB}, nil
+}
+
+// newestVendorRpmInstall returns the newest install time across the rpms shipped
+// by this asset's operating system vendor, and whether one was found.
+func newestVendorRpmInstall(list []any) (time.Time, bool) {
+	vendors := rpmOSVendors(list)
+	if len(vendors) == 0 {
+		// No anchor resolved a vendor, so no package can be attributed. An
+		// unattributable answer is not a coarser answer, it is none.
+		return time.Time{}, false
+	}
+
 	var newest time.Time
-	for i := range list.Data {
-		pkg, ok := list.Data[i].(*mqlPackage)
+	for i := range list {
+		pkg, ok := list[i].(*mqlPackage)
 		if !ok {
 			continue
 		}
 		// A rpm host can also carry snap, nix or flatpak packages, whose
 		// install times say nothing about the OS.
 		if pkg.Format.Data != packages.RpmPkgFormat {
+			continue
+		}
+		if _, ok := vendors[normalizeVendor(pkg.Vendor.Data)]; !ok {
 			continue
 		}
 		installed := pkg.InstallDate.Data
@@ -133,17 +225,50 @@ func lastInstalledRpm(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, er
 		}
 	}
 
-	if newest.IsZero() {
-		return nil, nil
-	}
-	return &updates.LastInstalledUpdate{Time: newest.UTC(), Source: updates.LastUpdateSourceRpmDB}, nil
+	return newest, !newest.IsZero()
 }
 
-// lastInstalledWindows prefers the Windows Update Agent install history, which
-// carries a classification per update and so lets Defender signature updates be
-// dropped. When that history cannot be read it falls back to the registry's
-// last-successful-install time, which is coarser: it counts the definition
-// updates the history pass excludes, which the reported source makes visible.
+// rpmOSVendors returns the set of vendor strings the anchor packages carry on
+// this asset.
+func rpmOSVendors(list []any) map[string]struct{} {
+	vendors := map[string]struct{}{}
+	for i := range list {
+		pkg, ok := list[i].(*mqlPackage)
+		if !ok || pkg.Format.Data != packages.RpmPkgFormat {
+			continue
+		}
+		name := pkg.Name.Data
+		anchor := false
+		for _, a := range rpmVendorAnchors {
+			if name == a {
+				anchor = true
+				break
+			}
+		}
+		if !anchor {
+			continue
+		}
+		if v := normalizeVendor(pkg.Vendor.Data); v != "" {
+			vendors[v] = struct{}{}
+		}
+	}
+	return vendors
+}
+
+// normalizeVendor folds the case and trims the padding rpm vendor strings carry
+// so that two spellings of the same vendor compare equal.
+func normalizeVendor(vendor string) string {
+	return strings.ToLower(strings.TrimSpace(vendor))
+}
+
+// lastInstalledWindows takes the newest Windows Update Agent history entry that
+// patched the operating system itself.
+//
+// The registry's last-successful-install time is not used as a fallback. It is
+// a bare timestamp with no classification attached, so it counts the Defender
+// signature updates that land daily and the .NET and Office servicing this pass
+// excludes; a host years behind on Windows would read as patched this morning.
+// A connection that cannot reach the agent history reads null instead.
 func lastInstalledWindows(runtime *plugin.Runtime) (*updates.LastInstalledUpdate, error) {
 	obj, err := CreateResource(runtime, "windows.update", nil)
 	if err != nil {
@@ -153,41 +278,51 @@ func lastInstalledWindows(runtime *plugin.Runtime) (*updates.LastInstalledUpdate
 
 	installed := wu.GetInstalled()
 	if installed.Error != nil {
-		// The fallback below still produces an answer, so this is not fatal. Log
-		// it anyway: without it, a permission problem or a blocked PowerShell
-		// looks identical to a host that genuinely has no agent history, and the
-		// coarser registry source gets used with nothing to explain why.
+		// A connection that cannot reach the agent history has no answer, and
+		// no answer is null rather than an error: one Windows host that cannot
+		// run PowerShell must not fail a fleet query. Log it, because without
+		// that a permission problem or a blocked PowerShell looks identical to
+		// a host that genuinely has no history.
 		log.Debug().Err(installed.Error).
-			Msg("mql[os.lastUpdate]> windows update agent history unavailable, falling back to the registry")
-	} else {
-		var newest time.Time
-		for i := range installed.Data {
-			entry, ok := installed.Data[i].(*mqlWindowsUpdateEntry)
-			if !ok || entry.Classification.Data == windowsDefinitionUpdates {
-				continue
-			}
-			date := entry.Date.Data
-			if date == nil || date.IsZero() {
-				continue
-			}
-			if date.After(newest) {
-				newest = *date
-			}
+			Msg("mql[os.lastUpdate]> windows update agent history unavailable")
+		return nil, nil
+	}
+
+	var newest time.Time
+	for i := range installed.Data {
+		entry, ok := installed.Data[i].(*mqlWindowsUpdateEntry)
+		if !ok {
+			continue
 		}
-		if !newest.IsZero() {
-			return &updates.LastInstalledUpdate{Time: newest.UTC(), Source: updates.LastUpdateSourceWindowsUpdate}, nil
+		if !windows.IsOperatingSystemUpdate(entryCategories(entry), entry.Title.Data) {
+			continue
+		}
+		date := entry.Date.Data
+		if date == nil || date.IsZero() {
+			continue
+		}
+		if date.After(newest) {
+			newest = *date
 		}
 	}
 
-	config := wu.GetConfig()
-	if config.Error != nil || config.Data == nil {
+	if newest.IsZero() {
 		return nil, nil
 	}
-	last := config.Data.GetLastInstallSuccess()
-	if last.Error != nil || last.Data == nil || last.Data.IsZero() {
-		return nil, nil
+	return &updates.LastInstalledUpdate{Time: newest.UTC(), Source: updates.LastUpdateSourceWindowsUpdate}, nil
+}
+
+// entryCategories converts a history entry's categories to the string slice the
+// classifier takes. A non-string element is skipped rather than stringified,
+// since a category that is not a string is not a product name.
+func entryCategories(entry *mqlWindowsUpdateEntry) []string {
+	out := make([]string, 0, len(entry.Categories.Data))
+	for _, c := range entry.Categories.Data {
+		if s, ok := c.(string); ok && s != "" {
+			out = append(out, s)
+		}
 	}
-	return &updates.LastInstalledUpdate{Time: last.Data.UTC(), Source: updates.LastUpdateSourceWindowsRegistry}, nil
+	return out
 }
 
 // lastUpdateAge turns an install time into the duration-typed time MQL uses for

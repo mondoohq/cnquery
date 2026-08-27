@@ -6,6 +6,7 @@ package updates
 import (
 	"bytes"
 	"io"
+	"strings"
 	"time"
 
 	"go.mondoo.com/mql/providers/os/connection/shared"
@@ -20,6 +21,12 @@ const (
 	// They are not operating system updates, and counting them would report a
 	// Mac months behind on macOS as having been patched days ago.
 	macosConfigDataContentType = "config-data"
+
+	// macosCommandLineTools is the display name of the Xcode command line
+	// tools. They install through Software Update like an operating system
+	// update does, carry no config-data marker, and are a developer toolchain
+	// rather than a patch to the operating system.
+	macosCommandLineTools = "Command Line Tools"
 )
 
 // macosSoftwareUpdateProcesses are the processes that install an update through
@@ -56,7 +63,12 @@ type macosInstallHistoryEntry struct {
 
 // ParseMacosInstallHistory returns the date of the newest Software Update
 // install in /Library/Receipts/InstallHistory.plist, ignoring third-party
-// installer runs and the config-data blobs. Dates in the plist are UTC.
+// installer runs, the config-data blobs, and the Xcode command line tools.
+// Dates in the plist are UTC.
+//
+// The filter stays a deny list rather than becoming an allow list on a "macOS "
+// display-name prefix: Safari and the Rapid Security Response entries are
+// genuine operating system patches that such a prefix would drop.
 func ParseMacosInstallHistory(input io.Reader) (time.Time, bool, error) {
 	r, err := plistReadSeeker(input)
 	if err != nil {
@@ -75,6 +87,9 @@ func ParseMacosInstallHistory(input io.Reader) (time.Time, bool, error) {
 			continue
 		}
 		if e.ContentType == macosConfigDataContentType {
+			continue
+		}
+		if strings.Contains(e.DisplayName, macosCommandLineTools) {
 			continue
 		}
 		if e.Date.After(newest) {

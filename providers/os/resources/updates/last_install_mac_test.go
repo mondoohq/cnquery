@@ -13,9 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// The fixture holds a newer third-party installer run and a newer XProtect data
-// blob than the last real macOS update. Both have to be ignored, or a Mac months
-// behind on macOS reports as patched days ago.
+// The fixture holds a newer third-party installer run, a newer XProtect data
+// blob and a newer command line tools install than the last real macOS update.
+// All three have to be ignored, or a Mac months behind on macOS reports as
+// patched days ago.
 func TestParseMacosInstallHistory(t *testing.T) {
 	f, err := os.Open("./testdata/InstallHistory.plist")
 	require.NoError(t, err)
@@ -69,6 +70,20 @@ func TestParseMacosInstallHistoryFiltering(t *testing.T) {
 			name:    "softwareupdate cli install",
 			entries: macosEntry("2026-02-18T17:39:44Z", "RosettaUpdateAuto", "softwareupdate", ""),
 			want:    "2026-02-18T17:39:44Z",
+		},
+		{
+			// Installed by Software Update with no config-data marker, so
+			// neither existing filter catches it, and it is a developer
+			// toolchain rather than a patch to the operating system.
+			name:    "command line tools are excluded",
+			entries: macosEntry("2026-08-21T09:03:44Z", "Command Line Tools for Xcode", "softwareupdated", ""),
+			want:    "",
+		},
+		{
+			name: "command line tools do not outrank a real update",
+			entries: macosEntry("2026-07-23T10:48:32Z", "macOS 26.5.2", "softwareupdated", "") +
+				macosEntry("2026-08-21T09:03:44Z", "Command Line Tools for Xcode", "softwareupdated", ""),
+			want: "2026-07-23T10:48:32Z",
 		},
 		{
 			name:    "config data is excluded",

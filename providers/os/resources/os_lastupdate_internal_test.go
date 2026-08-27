@@ -13,6 +13,9 @@ import (
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/inventory"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	"go.mondoo.com/mql/providers/os/detector"
+	"go.mondoo.com/mql/providers/os/resources/packages"
 	"go.mondoo.com/mql/providers/os/resources/updates"
 )
 
@@ -107,4 +110,211 @@ func TestLastUpdateCacheConcurrentGet(t *testing.T) {
 		assert.Equal(t, results[0].update, results[i].update, "every caller must see the same record")
 		assert.Equal(t, results[0].err, results[i].err, "every caller must see the same error")
 	}
+}
+
+// A container is rebuilt rather than patched, so the age of the newest install
+// inside it says nothing about whether anyone is maintaining the workload. A
+// platform that lands on the wrong side of this reports an image build date as
+// patch age, which no error surfaces.
+func TestIsContainerPlatform(t *testing.T) {
+	tests := []struct {
+		name     string
+		platform *inventory.Platform
+		want     bool
+	}{
+		{"container kind", &inventory.Platform{Kind: "container", Name: "ubuntu"}, true},
+		{"container image kind", &inventory.Platform{Kind: "container-image", Name: "alpine"}, true},
+		{
+			// An image reached over a filesystem or tar connection can arrive
+			// with no Kind, and the device type is what catches it.
+			name: "device type metadata",
+			platform: &inventory.Platform{
+				Name:     "ubuntu",
+				Metadata: map[string]string{detector.MetadataDeviceType: detector.DeviceTypeContainer},
+			},
+			want: true,
+		},
+		{
+			name: "device type server",
+			platform: &inventory.Platform{
+				Name:     "ubuntu",
+				Metadata: map[string]string{detector.MetadataDeviceType: detector.DeviceTypeServer},
+			},
+			want: false,
+		},
+		{"bare host", &inventory.Platform{Kind: "baremetal", Name: "ubuntu"}, false},
+		{"virtual machine", &inventory.Platform{Kind: "virtualmachine", Name: "redhat"}, false},
+		{"no metadata", &inventory.Platform{Name: "ubuntu"}, false},
+		{"nil platform", nil, false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.want, isContainerPlatform(test.platform))
+		})
+	}
+}
+
+// The negative cases carry the weight here: a tar can be a virtual machine
+// export and a filesystem connection is routinely a mounted host root, so
+// excluding either would null the field on assets that genuinely are patched.
+func TestIsContainerConnection(t *testing.T) {
+	containers := []shared.ConnectionType{
+		shared.Type_DockerContainer,
+		shared.Type_DockerImage,
+		shared.Type_DockerSnapshot,
+		shared.Type_DockerRegistry,
+		shared.Type_ContainerRegistry,
+		shared.Type_RegistryImage,
+		shared.Type_DockerFile,
+	}
+	for _, ct := range containers {
+		t.Run(string(ct), func(t *testing.T) {
+			assert.True(t, isContainerConnection(ct))
+		})
+	}
+
+	notContainers := []shared.ConnectionType{
+		shared.Type_Local,
+		shared.Type_SSH,
+		shared.Type_Winrm,
+		shared.Type_Vagrant,
+		shared.Type_Device,
+		shared.Type_Tar,
+		shared.Type_FileSystem,
+	}
+	for _, ct := range notContainers {
+		t.Run(string(ct), func(t *testing.T) {
+			assert.False(t, isContainerConnection(ct))
+		})
+	}
+}
+
+func rpmTestPackage(name, vendor string, installed *time.Time) *mqlPackage {
+	return rpmTestPackageFormat(name, vendor, packages.RpmPkgFormat, installed)
+}
+
+func rpmTestPackageFormat(name, vendor, format string, installed *time.Time) *mqlPackage {
+	return &mqlPackage{
+		Name:        plugin.TValue[string]{Data: name, State: plugin.StateIsSet},
+		Vendor:      plugin.TValue[string]{Data: vendor, State: plugin.StateIsSet},
+		Format:      plugin.TValue[string]{Data: format, State: plugin.StateIsSet},
+		InstallDate: plugin.TValue[*time.Time]{Data: installed, State: plugin.StateIsSet},
+	}
+}
+
+func at(t *testing.T, value string) *time.Time {
+	t.Helper()
+	parsed, err := time.Parse(time.RFC3339, value)
+	require.NoError(t, err)
+	return &parsed
+}
+
+// The vendor of the anchor packages is what the operating system vendor calls
+// itself on this asset. Deriving it beats a shipped distribution table, which
+// goes stale and nulls the field on a distribution nobody added to it.
+func TestRpmOSVendors(t *testing.T) {
+	t.Run("derives the vendor from an anchor", func(t *testing.T) {
+		vendors := rpmOSVendors([]any{
+			rpmTestPackage("glibc", "Red Hat, Inc.", nil),
+			rpmTestPackage("docker-ce", "Docker", nil),
+		})
+		assert.Equal(t, map[string]struct{}{"red hat, inc.": {}}, vendors)
+	})
+
+	t.Run("unions several anchors", func(t *testing.T) {
+		// Amazon Linux ships more than one vendor string across its own
+		// packages; trusting a single anchor would drop the other spelling.
+		vendors := rpmOSVendors([]any{
+			rpmTestPackage("glibc", "Amazon Linux", nil),
+			rpmTestPackage("bash", "Amazon.com", nil),
+		})
+		assert.Len(t, vendors, 2)
+		assert.Contains(t, vendors, "amazon linux")
+		assert.Contains(t, vendors, "amazon.com")
+	})
+
+	t.Run("ignores non-rpm anchors", func(t *testing.T) {
+		vendors := rpmOSVendors([]any{
+			rpmTestPackageFormat("bash", "Snapcrafters", "snap", nil),
+		})
+		assert.Empty(t, vendors)
+	})
+
+	t.Run("ignores an anchor with no vendor", func(t *testing.T) {
+		assert.Empty(t, rpmOSVendors([]any{rpmTestPackage("glibc", "  ", nil)}))
+	})
+
+	t.Run("no anchor present", func(t *testing.T) {
+		assert.Empty(t, rpmOSVendors([]any{rpmTestPackage("nginx", "nginx.org", nil)}))
+	})
+}
+
+func TestNewestVendorRpmInstall(t *testing.T) {
+	t.Run("third-party rpms do not count", func(t *testing.T) {
+		// The failure this prevents: Docker CE moves far more often than a
+		// distribution does, so counting it reports an unpatched host as
+		// patched last week.
+		got, ok := newestVendorRpmInstall([]any{
+			rpmTestPackage("glibc", "Red Hat, Inc.", at(t, "2026-01-10T00:00:00Z")),
+			rpmTestPackage("kernel", "Red Hat, Inc.", at(t, "2026-02-14T09:30:00Z")),
+			rpmTestPackage("docker-ce", "Docker", at(t, "2026-08-01T12:00:00Z")),
+			rpmTestPackage("grafana", "Grafana Labs", at(t, "2026-08-20T12:00:00Z")),
+		})
+		require.True(t, ok)
+		assert.Equal(t, "2026-02-14T09:30:00Z", got.Format(time.RFC3339))
+	})
+
+	t.Run("EPEL is not the distribution vendor", func(t *testing.T) {
+		got, ok := newestVendorRpmInstall([]any{
+			rpmTestPackage("glibc", "Red Hat, Inc.", at(t, "2026-02-14T09:30:00Z")),
+			rpmTestPackage("htop", "Fedora Project", at(t, "2026-08-01T12:00:00Z")),
+		})
+		require.True(t, ok)
+		assert.Equal(t, "2026-02-14T09:30:00Z", got.Format(time.RFC3339))
+	})
+
+	t.Run("other package formats do not count", func(t *testing.T) {
+		got, ok := newestVendorRpmInstall([]any{
+			rpmTestPackage("glibc", "SUSE LLC", at(t, "2026-02-14T09:30:00Z")),
+			rpmTestPackageFormat("code", "SUSE LLC", "snap", at(t, "2026-08-01T12:00:00Z")),
+		})
+		require.True(t, ok)
+		assert.Equal(t, "2026-02-14T09:30:00Z", got.Format(time.RFC3339))
+	})
+
+	t.Run("no anchor means no answer", func(t *testing.T) {
+		_, ok := newestVendorRpmInstall([]any{
+			rpmTestPackage("nginx", "nginx.org", at(t, "2026-08-01T12:00:00Z")),
+		})
+		assert.False(t, ok, "an unattributable answer is none, not a coarser one")
+	})
+
+	t.Run("packages without an install date", func(t *testing.T) {
+		_, ok := newestVendorRpmInstall([]any{
+			rpmTestPackage("glibc", "Red Hat, Inc.", nil),
+		})
+		assert.False(t, ok)
+	})
+
+	t.Run("empty list", func(t *testing.T) {
+		_, ok := newestVendorRpmInstall(nil)
+		assert.False(t, ok)
+	})
+}
+
+func TestNormalizeVendor(t *testing.T) {
+	assert.Equal(t, "red hat, inc.", normalizeVendor("  Red Hat, Inc. "))
+	assert.Equal(t, "", normalizeVendor("   "))
+}
+
+func TestEntryCategories(t *testing.T) {
+	entry := &mqlWindowsUpdateEntry{
+		Categories: plugin.TValue[[]any]{
+			Data:  []any{"Security Updates", "", nil, 42, "Windows 11"},
+			State: plugin.StateIsSet,
+		},
+	}
+	assert.Equal(t, []string{"Security Updates", "Windows 11"}, entryCategories(entry),
+		"a category that is not a string is not a product name")
 }
