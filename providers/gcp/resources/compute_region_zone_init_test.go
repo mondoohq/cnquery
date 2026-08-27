@@ -97,6 +97,18 @@ func TestRegionInitDoesNotLeakProjectIdIntoArgs(t *testing.T) {
 // panics when the value is null rather than a string, and a panic in a provider
 // takes the whole scan down rather than one field. These inits now all use the
 // guarded form.
+//
+// The guarded form then has to report the unusable argument rather than hand
+// back partial args: the runtime builds the resource from those, leaving every
+// field unset, which surfaces as "encountered a primitive with no type
+// information" with nothing naming the cause. So an unusable name is an error,
+// not an empty resource.
+//
+// Both scope sets are registered because they are disjoint beyond the shared
+// cloudresourcemanager scope: the region and zone lookups need
+// compute.ComputeReadonlyScope, while the project-backed inits need
+// iam.CloudPlatformScope and compute.CloudPlatformScope. A resource whose scope
+// set is not registered cannot build its client.
 func TestInitsSurviveANullNameArgument(t *testing.T) {
 	for _, name := range []string{
 		"gcp.project.spannerService.instanceConfig",
@@ -106,13 +118,41 @@ func TestInitsSurviveANullNameArgument(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			env := setupTestEnv(t, regionZoneScopes(), projectScopes())
+			var err error
 			assert.NotPanics(t, func() {
-				// The lookup is expected to fail or come back empty; what is
-				// pinned here is that it does not panic on a null argument.
-				_, _ = NewResource(env.Runtime, name, map[string]*llx.RawData{
+				_, err = NewResource(env.Runtime, name, map[string]*llx.RawData{
 					"name": {Type: "\x07"},
 				})
 			})
+			assert.Error(t, err, "a null name must be reported, not resolved to a husk")
 		})
+	}
+}
+
+// TestInitsRejectAnUnusableName pins the same contract for the two other ways a
+// name can be unusable: absent entirely, and present but empty. Both used to
+// return (args, nil, nil), which the runtime turns into a resource with every
+// field unset.
+func TestInitsRejectAnUnusableName(t *testing.T) {
+	for _, resource := range []string{
+		"gcp.project.spannerService.instanceConfig",
+		"gcp.project.memcacheService.instance",
+		"gcp.service",
+	} {
+		for _, tc := range []struct {
+			title string
+			args  map[string]*llx.RawData
+		}{
+			{"no name argument", map[string]*llx.RawData{"projectId": llx.StringData(testProjectId)}},
+			{"empty name argument", map[string]*llx.RawData{"name": llx.StringData("")}},
+		} {
+			t.Run(resource+"/"+tc.title, func(t *testing.T) {
+				env := setupTestEnv(t, regionZoneScopes(), projectScopes())
+				_, err := NewResource(env.Runtime, resource, tc.args)
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "name",
+					"the error should name the argument that is missing")
+			})
+		}
 	}
 }

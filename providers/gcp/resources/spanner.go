@@ -746,20 +746,20 @@ func initGcpProjectSpannerServiceInstanceConfig(runtime *plugin.Runtime, args ma
 
 	nameRaw, ok := args["name"]
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.spannerService.instanceConfig requires a "name" argument`)
 	}
 	name, ok := nameRaw.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.spannerService.instanceConfig requires a non-empty "name" argument`)
 	}
 
 	projectIdRaw, ok := args["projectId"]
 	if !ok {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.spannerService.instanceConfig requires a "projectId" argument`)
 	}
 	projectId, ok := projectIdRaw.Value.(string)
 	if !ok || projectId == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.spannerService.instanceConfig requires a non-empty "projectId" argument`)
 	}
 
 	obj, err := CreateResource(runtime, "gcp.project.spannerService", map[string]*llx.RawData{

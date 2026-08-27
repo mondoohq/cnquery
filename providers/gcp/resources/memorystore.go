@@ -293,11 +293,11 @@ func initGcpProjectMemorystoreServiceInstance(runtime *plugin.Runtime, args map[
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.memorystoreService.instance requires a "name" argument`)
 	}
 	name, ok := nameRaw.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.memorystoreService.instance requires a non-empty "name" argument`)
 	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
@@ -640,11 +640,11 @@ func initGcpProjectMemorystoreServiceBackupCollection(runtime *plugin.Runtime, a
 	}
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.memorystoreService.backupCollection requires a "name" argument`)
 	}
 	name, ok := nameRaw.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.project.memorystoreService.backupCollection requires a non-empty "name" argument`)
 	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)

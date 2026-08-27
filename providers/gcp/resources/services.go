@@ -166,11 +166,11 @@ func initGcpService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[
 
 	nameRaw := args["name"]
 	if nameRaw == nil {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.service requires a "name" argument`)
 	}
 	name, ok := nameRaw.Value.(string)
 	if !ok || name == "" {
-		return args, nil, nil
+		return nil, nil, errors.New(`gcp.service requires a non-empty "name" argument`)
 	}
 
 	conn, ok := runtime.Connection.(*connection.GcpConnection)
