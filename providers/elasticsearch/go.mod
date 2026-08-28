@@ -6,7 +6,7 @@ go 1.26.6
 
 require (
 	github.com/elastic/elastic-transport-go/v8 v8.11.0
-	github.com/elastic/go-elasticsearch/v9 v9.5.0
+	github.com/elastic/go-elasticsearch/v9 v9.5.1
 	go.mondoo.com/mql v0.0.0-20260824053258-a0a7399274d4
 	go.mondoo.com/ranger-rpc v0.8.1
 )
