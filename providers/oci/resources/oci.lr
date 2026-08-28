@@ -7209,6 +7209,35 @@ private oci.database.autonomousDatabase @defaults("name") {
   // elapses, protecting recovery points against tampering or premature
   // deletion.
   isBackupRetentionLocked bool
+  // How often a long-term backup is taken
+  //
+  // One of ONE_TIME, WEEKLY, MONTHLY, or YEARLY. Null when no long-term
+  // backup schedule is configured, in which case the database keeps only
+  // the automatic backups covered by backupRetentionPeriodInDays.
+  longTermBackupRepeatCadence string
+  // Time the long-term backup schedule takes its backup
+  //
+  // For a MONTHLY cadence, a month with fewer days than the configured
+  // date takes the backup on its last day. Null when no long-term backup
+  // schedule is configured.
+  longTermBackupTimeOfBackup time
+  // Days a long-term backup is kept for
+  //
+  // Separate from backupRetentionPeriodInDays, which governs the
+  // automatic backups. Null when no long-term backup schedule is
+  // configured.
+  longTermBackupRetentionPeriodInDays int
+  // Whether the long-term backup schedule is marked for deletion
+  //
+  // True when a schedule exists but is disabled, so no long-term backup
+  // will be taken from it. Null when no schedule is configured at all,
+  // which is a different state from a schedule that was switched off.
+  longTermBackupScheduleDisabled bool
+  // Time the next long-term backup is due
+  //
+  // Null when no long-term backup schedule is configured, or when a
+  // ONE_TIME schedule has already run.
+  nextLongTermBackupTimestamp time
   // Oracle Data Safe status (REGISTERED, NOT_REGISTERED, REGISTERING, DEREGISTERING, FAILED)
   dataSafeStatus string
   // Open mode (READ_ONLY, READ_WRITE)

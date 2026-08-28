@@ -1075,7 +1075,12 @@ oci.database.autonomousDatabase.isRemoteDataGuardEnabled 13.10.1
 oci.database.autonomousDatabase.kmsKey 13.1.1
 oci.database.autonomousDatabase.kmsVault 13.1.1
 oci.database.autonomousDatabase.licenseModel 13.1.1
+oci.database.autonomousDatabase.longTermBackupRepeatCadence 13.21.1
+oci.database.autonomousDatabase.longTermBackupRetentionPeriodInDays 13.21.1
+oci.database.autonomousDatabase.longTermBackupScheduleDisabled 13.21.1
+oci.database.autonomousDatabase.longTermBackupTimeOfBackup 13.21.1
 oci.database.autonomousDatabase.name 13.1.1
+oci.database.autonomousDatabase.nextLongTermBackupTimestamp 13.21.1
 oci.database.autonomousDatabase.openMode 13.1.1
 oci.database.autonomousDatabase.permissionLevel 13.1.1
 oci.database.autonomousDatabase.privateEndpointIp 13.1.1
