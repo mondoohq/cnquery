@@ -159,28 +159,6 @@ func (c *AdminClient) ListInvites(ctx context.Context) ([]AdminInvite, error) {
 	return paginate[AdminInvite](ctx, c, "/v1/organizations/invites")
 }
 
-// API Keys
-
-type AdminAPIKey struct {
-	ID             string         `json:"id"`
-	Name           string         `json:"name"`
-	Status         string         `json:"status"`
-	CreatedAt      string         `json:"created_at"`
-	ExpiresAt      *string        `json:"expires_at"`
-	PartialKeyHint string         `json:"partial_key_hint"`
-	CreatedBy      AdminCreatedBy `json:"created_by"`
-	WorkspaceID    *string        `json:"workspace_id"`
-}
-
-type AdminCreatedBy struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
-}
-
-func (c *AdminClient) ListAPIKeys(ctx context.Context) ([]AdminAPIKey, error) {
-	return paginate[AdminAPIKey](ctx, c, "/v1/organizations/api_keys")
-}
-
 func (c *AdminClient) doRequest(ctx context.Context, method string, path string, body io.Reader) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
 	if err != nil {

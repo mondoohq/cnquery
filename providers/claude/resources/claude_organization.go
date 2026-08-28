@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/anthropics/anthropic-sdk-go"
+
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers/claude/connection"
@@ -161,56 +163,87 @@ func (r *mqlClaudeOrganization) invites() ([]interface{}, error) {
 }
 
 type mqlClaudeOrganizationApiKeyInternal struct {
-	cacheWorkspaceID *string
-	cacheCreatedByID string
+	cacheWorkspaceID               *string
+	cacheCreatedByID               string
+	cachePrincipalUserID           string
+	cachePrincipalServiceAccountID string
 }
 
 func (r *mqlClaudeOrganization) apiKeys() ([]interface{}, error) {
-	admin, err := requireAdmin(r.MqlRuntime)
+	client, err := adminSDKClient(r.MqlRuntime)
 	if err != nil {
 		return nil, err
 	}
 
-	keys, err := admin.ListAPIKeys(context.Background())
-	if err != nil {
-		return nil, err
-	}
+	pager := client.Beta.Organization.APIKeys.ListAutoPaging(
+		context.Background(), anthropic.BetaOrganizationAPIKeyListParams{})
 
-	res := make([]interface{}, 0, len(keys))
-	for _, k := range keys {
-		createdAt, err := parseTime(k.CreatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("parsing apiKey createdAt: %w", err)
-		}
-		var expiresAt time.Time
-		if k.ExpiresAt != nil {
-			expiresAt, err = parseTime(*k.ExpiresAt)
-			if err != nil {
-				return nil, fmt.Errorf("parsing apiKey expiresAt: %w", err)
-			}
-		}
+	var res []interface{}
+	for pager.Next() {
+		k := pager.Current()
 
-		mqlKey, err := CreateResource(r.MqlRuntime, "claude.organization.apiKey", map[string]*llx.RawData{
-			"__id":           llx.StringData(k.ID),
-			"id":             llx.StringData(k.ID),
-			"name":           llx.StringData(k.Name),
-			"status":         llx.StringData(k.Status),
-			"createdAt":      llx.TimeData(createdAt),
-			"expiresAt":      llx.TimeData(expiresAt),
-			"partialKeyHint": llx.StringData(k.PartialKeyHint),
-		})
+		mqlKey, err := CreateResource(r.MqlRuntime, "claude.organization.apiKey", apiKeyArgs(k))
 		if err != nil {
 			return nil, err
 		}
 
 		apiKey := mqlKey.(*mqlClaudeOrganizationApiKey)
-		apiKey.cacheWorkspaceID = k.WorkspaceID
+		apiKey.cacheWorkspaceID = nullableString(k.Scope.WorkspaceID)
 		apiKey.cacheCreatedByID = k.CreatedBy.ID
+		apiKey.cachePrincipalUserID = k.Principal.UserID
+		apiKey.cachePrincipalServiceAccountID = k.Principal.ServiceAccountID
 
 		res = append(res, mqlKey)
 	}
+	if err := pager.Err(); err != nil {
+		return nil, fmt.Errorf("listing api keys: %w", err)
+	}
 
 	return res, nil
+}
+
+// apiKeyArgs maps an organization API key onto resource arguments.
+func apiKeyArgs(k anthropic.BetaAPIKey) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":      llx.StringData(k.ID),
+		"id":        llx.StringData(k.ID),
+		"name":      llx.StringData(k.Name),
+		"status":    llx.StringData(string(k.Status)),
+		"createdAt": llx.TimeDataPtr(nullableTime(k.CreatedAt)),
+		// A key that never expires reports no expiry at all. The zero time
+		// would date it to year 1, which an expiry check reads as long
+		// expired.
+		"expiresAt":      llx.TimeDataPtr(nullableTime(k.ExpiresAt)),
+		"partialKeyHint": llx.StringData(k.PartialKeyHint),
+		"principalType":  llx.StringDataPtr(nullableString(k.Principal.Type)),
+		"scopeType":      llx.StringDataPtr(nullableString(k.Scope.Type)),
+	}
+}
+
+func (r *mqlClaudeOrganizationApiKey) principalUser() (*mqlClaudeOrganizationMember, error) {
+	member, ok, err := lookupMember(r.MqlRuntime, r.cachePrincipalUserID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		r.PrincipalUser.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return member, nil
+}
+
+func (r *mqlClaudeOrganizationApiKey) principalServiceAccount() (*mqlClaudeOrganizationServiceAccount, error) {
+	sa, ok, err := lookupOrganizationChild[*mqlClaudeOrganizationServiceAccount](
+		r.MqlRuntime, r.cachePrincipalServiceAccountID,
+		(*mqlClaudeOrganization).GetServiceAccounts)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		r.PrincipalServiceAccount.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return sa, nil
 }
 
 func (r *mqlClaudeOrganizationApiKey) createdBy() (*mqlClaudeOrganizationMember, error) {
