@@ -13,8 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func ltbBoolPtr(b bool) *bool { return &b }
-
 func TestLongTermBackupArgs(t *testing.T) {
 	backupAt := time.Date(2026, 6, 1, 2, 0, 0, 0, time.UTC)
 	nextAt := time.Date(2026, 7, 1, 2, 0, 0, 0, time.UTC)
@@ -23,7 +21,7 @@ func TestLongTermBackupArgs(t *testing.T) {
 		RepeatCadence:         database.LongTermBackUpScheduleDetailsRepeatCadenceMonthly,
 		TimeOfBackup:          &common.SDKTime{Time: backupAt},
 		RetentionPeriodInDays: intPtr(365),
-		IsDisabled:            ltbBoolPtr(false),
+		IsDisabled:            boolPtr(false),
 	}, &common.SDKTime{Time: nextAt})
 
 	assert.Equal(t, "MONTHLY", args["longTermBackupRepeatCadence"].Value)
@@ -58,7 +56,7 @@ func TestLongTermBackupArgsAreNullWithoutASchedule(t *testing.T) {
 func TestLongTermBackupArgsDistinguishDisabledFromAbsent(t *testing.T) {
 	disabled := longTermBackupArgs(&database.LongTermBackUpScheduleDetails{
 		RepeatCadence: database.LongTermBackUpScheduleDetailsRepeatCadenceYearly,
-		IsDisabled:    ltbBoolPtr(true),
+		IsDisabled:    boolPtr(true),
 	}, nil)
 	assert.Equal(t, true, disabled["longTermBackupScheduleDisabled"].Value)
 
