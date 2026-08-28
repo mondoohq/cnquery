@@ -23,6 +23,9 @@
     },
     {
       "pattern": "^https:\\/\\/docs\\.ansible\\.com\\/"
+    },
+    {
+      "pattern": "^https:\\/\\/docs\\.aws\\.amazon\\.com\\/"
     }
   ]
 }
