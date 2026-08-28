@@ -229,40 +229,47 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 					}
 				}
 
+				ltb := longTermBackupArgs(a.LongTermBackupSchedule, a.NextLongTermBackupTimeStamp)
+
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.autonomousDatabase", stringValue(a.CompartmentId), map[string]*llx.RawData{
-					"id":                          llx.StringDataPtr(a.Id),
-					"name":                        llx.StringDataPtr(a.DisplayName),
-					"dbName":                      llx.StringDataPtr(a.DbName),
-					"isRefreshableClone":          llx.BoolDataPtr(a.IsRefreshableClone),
-					"dbVersion":                   llx.StringDataPtr(a.DbVersion),
-					"dbWorkload":                  llx.StringData(string(a.DbWorkload)),
-					"isDedicated":                 llx.BoolDataPtr(a.IsDedicated),
-					"isFreeTier":                  llx.BoolDataPtr(a.IsFreeTier),
-					"cpuCoreCount":                llx.IntData(intValue(a.CpuCoreCount)),
-					"dataStorageSizeInTBs":        llx.IntData(intValue(a.DataStorageSizeInTBs)),
-					"isMtlsConnectionRequired":    llx.BoolDataPtr(a.IsMtlsConnectionRequired),
-					"isAccessControlEnabled":      llx.BoolDataPtr(a.IsAccessControlEnabled),
-					"whitelistedIps":              llx.ArrayData(convert.SliceAnyToInterface(a.WhitelistedIps), types.String),
-					"standbyWhitelistedIps":       llx.ArrayData(convert.SliceAnyToInterface(a.StandbyWhitelistedIps), types.String),
-					"isAutoScalingEnabled":        llx.BoolDataPtr(a.IsAutoScalingEnabled),
-					"isLocalDataGuardEnabled":     llx.BoolDataPtr(a.IsLocalDataGuardEnabled),
-					"isRemoteDataGuardEnabled":    llx.BoolDataPtr(a.IsRemoteDataGuardEnabled),
-					"isDataGuardEnabled":          llx.BoolDataPtr(a.IsDataGuardEnabled),
-					"backupRetentionPeriodInDays": llx.IntData(intValue(a.BackupRetentionPeriodInDays)),
-					"isBackupRetentionLocked":     llx.BoolDataPtr(a.IsBackupRetentionLocked),
-					"dataSafeStatus":              llx.StringData(string(a.DataSafeStatus)),
-					"openMode":                    llx.StringData(string(a.OpenMode)),
-					"permissionLevel":             llx.StringData(string(a.PermissionLevel)),
-					"licenseModel":                llx.StringData(string(a.LicenseModel)),
-					"privateEndpointIp":           llx.StringDataPtr(a.PrivateEndpointIp),
-					"privateEndpointLabel":        llx.StringDataPtr(a.PrivateEndpointLabel),
-					"connectionUrls":              llx.DictData(connectionUrls),
-					"publicConnectionUrls":        llx.DictData(publicConnectionUrls),
-					"state":                       llx.StringData(string(a.LifecycleState)),
-					"created":                     llx.TimeDataPtr(created),
-					"freeformTags":                llx.MapData(strMapToAny(a.FreeformTags), types.String),
-					"definedTags":                 llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
-					"systemTags":                  llx.MapData(definedTagsToAny(a.SystemTags), types.Dict),
+					"id":                                  llx.StringDataPtr(a.Id),
+					"name":                                llx.StringDataPtr(a.DisplayName),
+					"dbName":                              llx.StringDataPtr(a.DbName),
+					"isRefreshableClone":                  llx.BoolDataPtr(a.IsRefreshableClone),
+					"dbVersion":                           llx.StringDataPtr(a.DbVersion),
+					"dbWorkload":                          llx.StringData(string(a.DbWorkload)),
+					"isDedicated":                         llx.BoolDataPtr(a.IsDedicated),
+					"isFreeTier":                          llx.BoolDataPtr(a.IsFreeTier),
+					"cpuCoreCount":                        llx.IntData(intValue(a.CpuCoreCount)),
+					"dataStorageSizeInTBs":                llx.IntData(intValue(a.DataStorageSizeInTBs)),
+					"isMtlsConnectionRequired":            llx.BoolDataPtr(a.IsMtlsConnectionRequired),
+					"isAccessControlEnabled":              llx.BoolDataPtr(a.IsAccessControlEnabled),
+					"whitelistedIps":                      llx.ArrayData(convert.SliceAnyToInterface(a.WhitelistedIps), types.String),
+					"standbyWhitelistedIps":               llx.ArrayData(convert.SliceAnyToInterface(a.StandbyWhitelistedIps), types.String),
+					"isAutoScalingEnabled":                llx.BoolDataPtr(a.IsAutoScalingEnabled),
+					"isLocalDataGuardEnabled":             llx.BoolDataPtr(a.IsLocalDataGuardEnabled),
+					"isRemoteDataGuardEnabled":            llx.BoolDataPtr(a.IsRemoteDataGuardEnabled),
+					"isDataGuardEnabled":                  llx.BoolDataPtr(a.IsDataGuardEnabled),
+					"backupRetentionPeriodInDays":         llx.IntData(intValue(a.BackupRetentionPeriodInDays)),
+					"isBackupRetentionLocked":             llx.BoolDataPtr(a.IsBackupRetentionLocked),
+					"longTermBackupRepeatCadence":         ltb["longTermBackupRepeatCadence"],
+					"longTermBackupTimeOfBackup":          ltb["longTermBackupTimeOfBackup"],
+					"longTermBackupRetentionPeriodInDays": ltb["longTermBackupRetentionPeriodInDays"],
+					"longTermBackupScheduleDisabled":      ltb["longTermBackupScheduleDisabled"],
+					"nextLongTermBackupTimestamp":         ltb["nextLongTermBackupTimestamp"],
+					"dataSafeStatus":                      llx.StringData(string(a.DataSafeStatus)),
+					"openMode":                            llx.StringData(string(a.OpenMode)),
+					"permissionLevel":                     llx.StringData(string(a.PermissionLevel)),
+					"licenseModel":                        llx.StringData(string(a.LicenseModel)),
+					"privateEndpointIp":                   llx.StringDataPtr(a.PrivateEndpointIp),
+					"privateEndpointLabel":                llx.StringDataPtr(a.PrivateEndpointLabel),
+					"connectionUrls":                      llx.DictData(connectionUrls),
+					"publicConnectionUrls":                llx.DictData(publicConnectionUrls),
+					"state":                               llx.StringData(string(a.LifecycleState)),
+					"created":                             llx.TimeDataPtr(created),
+					"freeformTags":                        llx.MapData(strMapToAny(a.FreeformTags), types.String),
+					"definedTags":                         llx.MapData(definedTagsToAny(a.DefinedTags), types.Any),
+					"systemTags":                          llx.MapData(definedTagsToAny(a.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -610,4 +617,47 @@ func (o *mqlOciDatabaseAutonomousDatabaseBackup) kmsVault() (*mqlOciKmsVault, er
 		return nil, err
 	}
 	return r.(*mqlOciKmsVault), nil
+}
+
+// longTermBackupArgs maps an Autonomous Database's long-term backup schedule
+// onto resource arguments.
+//
+// A database with no long-term backup schedule leaves every one of these null.
+// Defaulting them would report a cadence and a retention the database does not
+// have, and "no schedule configured" is a different finding from "a schedule
+// exists but is switched off" -- the latter reports
+// longTermBackupScheduleDisabled true rather than null.
+func longTermBackupArgs(sched *database.LongTermBackUpScheduleDetails, next *common.SDKTime) map[string]*llx.RawData {
+	var (
+		cadence   *string
+		timeOf    *time.Time
+		retention *int
+		disabled  *bool
+	)
+	if sched != nil {
+		// The SDK leaves an unset enum as "", which would otherwise reach MQL
+		// as an empty cadence rather than as null.
+		if sched.RepeatCadence != "" {
+			c := string(sched.RepeatCadence)
+			cadence = &c
+		}
+		if sched.TimeOfBackup != nil {
+			timeOf = &sched.TimeOfBackup.Time
+		}
+		retention = sched.RetentionPeriodInDays
+		disabled = sched.IsDisabled
+	}
+
+	var nextRun *time.Time
+	if next != nil {
+		nextRun = &next.Time
+	}
+
+	return map[string]*llx.RawData{
+		"longTermBackupRepeatCadence":         llx.StringDataPtr(cadence),
+		"longTermBackupTimeOfBackup":          llx.TimeDataPtr(timeOf),
+		"longTermBackupRetentionPeriodInDays": llx.IntDataPtr(retention),
+		"longTermBackupScheduleDisabled":      llx.BoolDataPtr(disabled),
+		"nextLongTermBackupTimestamp":         llx.TimeDataPtr(nextRun),
+	}
 }

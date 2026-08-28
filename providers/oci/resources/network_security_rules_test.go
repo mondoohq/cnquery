@@ -146,10 +146,6 @@ func TestSecurityRuleFromNsgCarriesDirectionAndId(t *testing.T) {
 	assert.Equal(t, "ocid1.securityrule.oc1..abc", r.id)
 }
 
-func intPtr(i int) *int { return &i }
-
-func strPtr(s string) *string { return &s }
-
 func TestPortRangeHelperSanity(t *testing.T) {
 	pr := portRange(80, 443)
 	require.NotNil(t, pr.Min)

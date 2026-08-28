@@ -7630,6 +7630,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.database.autonomousDatabase.isBackupRetentionLocked": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetIsBackupRetentionLocked()).ToDataRes(types.Bool)
 	},
+	"oci.database.autonomousDatabase.longTermBackupRepeatCadence": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetLongTermBackupRepeatCadence()).ToDataRes(types.String)
+	},
+	"oci.database.autonomousDatabase.longTermBackupTimeOfBackup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetLongTermBackupTimeOfBackup()).ToDataRes(types.Time)
+	},
+	"oci.database.autonomousDatabase.longTermBackupRetentionPeriodInDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetLongTermBackupRetentionPeriodInDays()).ToDataRes(types.Int)
+	},
+	"oci.database.autonomousDatabase.longTermBackupScheduleDisabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetLongTermBackupScheduleDisabled()).ToDataRes(types.Bool)
+	},
+	"oci.database.autonomousDatabase.nextLongTermBackupTimestamp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciDatabaseAutonomousDatabase).GetNextLongTermBackupTimestamp()).ToDataRes(types.Time)
+	},
 	"oci.database.autonomousDatabase.dataSafeStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciDatabaseAutonomousDatabase).GetDataSafeStatus()).ToDataRes(types.String)
 	},
@@ -19894,6 +19909,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.database.autonomousDatabase.isBackupRetentionLocked": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciDatabaseAutonomousDatabase).IsBackupRetentionLocked, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.longTermBackupRepeatCadence": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).LongTermBackupRepeatCadence, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.longTermBackupTimeOfBackup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).LongTermBackupTimeOfBackup, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.longTermBackupRetentionPeriodInDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).LongTermBackupRetentionPeriodInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.longTermBackupScheduleDisabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).LongTermBackupScheduleDisabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.database.autonomousDatabase.nextLongTermBackupTimestamp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciDatabaseAutonomousDatabase).NextLongTermBackupTimestamp, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"oci.database.autonomousDatabase.dataSafeStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47661,47 +47696,52 @@ type mqlOciDatabaseAutonomousDatabase struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciDatabaseAutonomousDatabaseInternal
-	Id                          plugin.TValue[string]
-	Name                        plugin.TValue[string]
-	Compartment                 plugin.TValue[*mqlOciCompartment]
-	DbName                      plugin.TValue[string]
-	SourceDatabase              plugin.TValue[*mqlOciDatabaseAutonomousDatabase]
-	IsRefreshableClone          plugin.TValue[bool]
-	DbVersion                   plugin.TValue[string]
-	DbWorkload                  plugin.TValue[string]
-	IsDedicated                 plugin.TValue[bool]
-	IsFreeTier                  plugin.TValue[bool]
-	CpuCoreCount                plugin.TValue[int64]
-	DataStorageSizeInTBs        plugin.TValue[int64]
-	IsMtlsConnectionRequired    plugin.TValue[bool]
-	IsAccessControlEnabled      plugin.TValue[bool]
-	WhitelistedIps              plugin.TValue[[]any]
-	InternetReachable           plugin.TValue[bool]
-	StandbyWhitelistedIps       plugin.TValue[[]any]
-	IsAutoScalingEnabled        plugin.TValue[bool]
-	IsLocalDataGuardEnabled     plugin.TValue[bool]
-	IsRemoteDataGuardEnabled    plugin.TValue[bool]
-	IsDataGuardEnabled          plugin.TValue[bool]
-	BackupRetentionPeriodInDays plugin.TValue[int64]
-	IsBackupRetentionLocked     plugin.TValue[bool]
-	DataSafeStatus              plugin.TValue[string]
-	OpenMode                    plugin.TValue[string]
-	PermissionLevel             plugin.TValue[string]
-	LicenseModel                plugin.TValue[string]
-	KmsKey                      plugin.TValue[*mqlOciKmsKey]
-	KmsVault                    plugin.TValue[*mqlOciKmsVault]
-	Subnet                      plugin.TValue[*mqlOciNetworkSubnet]
-	SecurityGroups              plugin.TValue[[]any]
-	PrivateEndpointIp           plugin.TValue[string]
-	PrivateEndpointLabel        plugin.TValue[string]
-	ConnectionUrls              plugin.TValue[any]
-	PublicConnectionUrls        plugin.TValue[any]
-	State                       plugin.TValue[string]
-	Created                     plugin.TValue[*time.Time]
-	FreeformTags                plugin.TValue[map[string]any]
-	DefinedTags                 plugin.TValue[map[string]any]
-	SystemTags                  plugin.TValue[map[string]any]
-	Backups                     plugin.TValue[[]any]
+	Id                                  plugin.TValue[string]
+	Name                                plugin.TValue[string]
+	Compartment                         plugin.TValue[*mqlOciCompartment]
+	DbName                              plugin.TValue[string]
+	SourceDatabase                      plugin.TValue[*mqlOciDatabaseAutonomousDatabase]
+	IsRefreshableClone                  plugin.TValue[bool]
+	DbVersion                           plugin.TValue[string]
+	DbWorkload                          plugin.TValue[string]
+	IsDedicated                         plugin.TValue[bool]
+	IsFreeTier                          plugin.TValue[bool]
+	CpuCoreCount                        plugin.TValue[int64]
+	DataStorageSizeInTBs                plugin.TValue[int64]
+	IsMtlsConnectionRequired            plugin.TValue[bool]
+	IsAccessControlEnabled              plugin.TValue[bool]
+	WhitelistedIps                      plugin.TValue[[]any]
+	InternetReachable                   plugin.TValue[bool]
+	StandbyWhitelistedIps               plugin.TValue[[]any]
+	IsAutoScalingEnabled                plugin.TValue[bool]
+	IsLocalDataGuardEnabled             plugin.TValue[bool]
+	IsRemoteDataGuardEnabled            plugin.TValue[bool]
+	IsDataGuardEnabled                  plugin.TValue[bool]
+	BackupRetentionPeriodInDays         plugin.TValue[int64]
+	IsBackupRetentionLocked             plugin.TValue[bool]
+	LongTermBackupRepeatCadence         plugin.TValue[string]
+	LongTermBackupTimeOfBackup          plugin.TValue[*time.Time]
+	LongTermBackupRetentionPeriodInDays plugin.TValue[int64]
+	LongTermBackupScheduleDisabled      plugin.TValue[bool]
+	NextLongTermBackupTimestamp         plugin.TValue[*time.Time]
+	DataSafeStatus                      plugin.TValue[string]
+	OpenMode                            plugin.TValue[string]
+	PermissionLevel                     plugin.TValue[string]
+	LicenseModel                        plugin.TValue[string]
+	KmsKey                              plugin.TValue[*mqlOciKmsKey]
+	KmsVault                            plugin.TValue[*mqlOciKmsVault]
+	Subnet                              plugin.TValue[*mqlOciNetworkSubnet]
+	SecurityGroups                      plugin.TValue[[]any]
+	PrivateEndpointIp                   plugin.TValue[string]
+	PrivateEndpointLabel                plugin.TValue[string]
+	ConnectionUrls                      plugin.TValue[any]
+	PublicConnectionUrls                plugin.TValue[any]
+	State                               plugin.TValue[string]
+	Created                             plugin.TValue[*time.Time]
+	FreeformTags                        plugin.TValue[map[string]any]
+	DefinedTags                         plugin.TValue[map[string]any]
+	SystemTags                          plugin.TValue[map[string]any]
+	Backups                             plugin.TValue[[]any]
 }
 
 // createOciDatabaseAutonomousDatabase creates a new instance of this resource
@@ -47857,6 +47897,26 @@ func (c *mqlOciDatabaseAutonomousDatabase) GetBackupRetentionPeriodInDays() *plu
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetIsBackupRetentionLocked() *plugin.TValue[bool] {
 	return &c.IsBackupRetentionLocked
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetLongTermBackupRepeatCadence() *plugin.TValue[string] {
+	return &c.LongTermBackupRepeatCadence
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetLongTermBackupTimeOfBackup() *plugin.TValue[*time.Time] {
+	return &c.LongTermBackupTimeOfBackup
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetLongTermBackupRetentionPeriodInDays() *plugin.TValue[int64] {
+	return &c.LongTermBackupRetentionPeriodInDays
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetLongTermBackupScheduleDisabled() *plugin.TValue[bool] {
+	return &c.LongTermBackupScheduleDisabled
+}
+
+func (c *mqlOciDatabaseAutonomousDatabase) GetNextLongTermBackupTimestamp() *plugin.TValue[*time.Time] {
+	return &c.NextLongTermBackupTimestamp
 }
 
 func (c *mqlOciDatabaseAutonomousDatabase) GetDataSafeStatus() *plugin.TValue[string] {
