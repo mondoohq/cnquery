@@ -72,6 +72,30 @@ redfish.system @defaults("model powerState") {
   // controller cannot report its state, so an audit can tell an unsupported
   // or unreachable system apart from one where Secure Boot is switched off.
   secureBootEnabled() bool
+  // Secure Boot key management mode
+  //
+  // One of SetupMode, UserMode, AuditMode, or DeployedMode. SetupMode is the
+  // value that matters for an audit. The firmware enrolls any key presented to
+  // it while in Setup Mode, so a system that reports Secure Boot as enabled
+  // still accepts an attacker supplied platform key. Null when the system
+  // exposes no Secure Boot resource or the controller does not report the mode.
+  secureBootMode() string
+  // Secure Boot state of the boot cycle that is running
+  //
+  // One of Enabled or Disabled. This is what the firmware actually enforced on
+  // the current boot, which differs from the configured state when the setting
+  // changed since the last reset. Null when the system exposes no Secure Boot
+  // resource or the controller does not report the value.
+  secureBootCurrentBoot() string
+  // Trusted Platform Modules installed in the system
+  //
+  // One entry per installed module, with the keys `interfaceType` (TPM1_2,
+  // TPM2_0, or TCM1_0), `interfaceTypeSelection`, `firmwareVersion`,
+  // `firmwareVersion2`, `health`, and `state`. An empty list means the system
+  // reports no trusted module, so an audit can require that a TPM 2.0 is
+  // present and healthy before trusting measured boot or a disk encryption key
+  // sealed to it.
+  trustedModules []dict
   // Boot source override state, one of Disabled, Once, or Continuous
   //
   // Continuous is the value that matters for an audit. It keeps the system on
@@ -190,6 +214,33 @@ redfish.manager @defaults("model firmwareVersion") {
   powerState string
   // Controller date and time in ISO 8601 format
   dateTime string
+  // Whether the command shell service is enabled
+  //
+  // The command shell gives an operator a text console on the controller
+  // itself. Every console field in this resource is null when the controller
+  // does not describe the service, so an audit can tell a console that is
+  // switched off apart from one the controller never reports.
+  commandShellEnabled bool
+  // Concurrent command shell sessions the controller supports
+  commandShellMaxConcurrentSessions int
+  // Transports the command shell accepts, such as SSH, Telnet, or IPMI
+  commandShellConnectTypes []string
+  // Whether the graphical console service is enabled
+  //
+  // The graphical console carries keyboard, video, and mouse for the host,
+  // which is enough to read the screen of a running operating system or to
+  // reinstall it.
+  graphicalConsoleEnabled bool
+  // Concurrent graphical console sessions the controller supports
+  graphicalConsoleMaxConcurrentSessions int
+  // Transports the graphical console accepts, such as KVMIP or RDP
+  graphicalConsoleConnectTypes []string
+  // Whether the serial console service is enabled
+  serialConsoleEnabled bool
+  // Concurrent serial console sessions the controller supports
+  serialConsoleMaxConcurrentSessions int
+  // Transports the serial console accepts, such as SSH, Telnet, or IPMI
+  serialConsoleConnectTypes []string
   // Management network services and their enabled state and listening ports
   //
   // Deprecated in favor of `redfish.networkProtocols`, which types every field,
@@ -242,6 +293,29 @@ redfish.account @defaults("userName roleId enabled") {
   locked bool
   // Account categories, such as Redfish, SNMP, or OEM
   accountTypes []string
+  // Whether the account must change its password at the next login
+  //
+  // True on an account that still holds a password somebody else set for it,
+  // which is the state a factory or handover credential stays in until its
+  // owner logs in. Null when the controller does not report the property.
+  passwordChangeRequired bool
+  // Whether the account is restricted to the categories it declares
+  //
+  // False lets the controller reach the account through categories beyond the
+  // ones in `accountTypes`, so that list understates what the account can do.
+  // Null when the controller does not report the property.
+  strictAccountTypes bool
+  // Time the password of the account expires
+  //
+  // Null when the password does not expire or the controller reports a date the
+  // provider cannot parse, so an audit does not read a missing date as an
+  // expired password.
+  passwordExpiration time
+  // Time the account itself expires
+  //
+  // Null when the account does not expire or the controller reports a date the
+  // provider cannot parse.
+  accountExpiration time
   // Whether the login name is a known vendor default
   //
   // True when `userName` matches a name that a controller ships with from the
@@ -250,6 +324,85 @@ redfish.account @defaults("userName roleId enabled") {
   // half of the credential pair public, so an audit can require that these
   // accounts are renamed or disabled without hardcoding the vendor list.
   defaultVendorAccount bool
+}
+
+// Management controller account service
+//
+// Service that governs the local accounts on the management controller. Covers
+// the password and lockout policy applied to them, whether HTTP Basic
+// authentication is accepted, and the external directories the controller
+// federates authentication to. These are the settings that decide how much a
+// guessed or stolen out-of-band credential is worth, and the accounts
+// themselves do not report any of them. Every field is null when the
+// controller exposes no account service or omits the property, so an audit can
+// tell an unreported setting apart from one the controller reports as zero or
+// as disabled.
+redfish.accountService @defaults("minPasswordLength accountLockoutThreshold httpBasicAuth") {
+  // Whether the account service is enabled
+  serviceEnabled() bool
+  // Shortest password the controller accepts
+  minPasswordLength() int
+  // Longest password the controller accepts
+  maxPasswordLength() int
+  // Failed login attempts that lock an account out
+  //
+  // Zero means the controller never locks an account out, which leaves every
+  // local account open to unlimited password guessing from the management
+  // network.
+  accountLockoutThreshold() int
+  // Seconds an account stays locked out once the threshold is reached
+  accountLockoutDuration() int
+  // Seconds after which the failed login counter returns to zero
+  accountLockoutCounterResetAfter() int
+  // Whether the failed login counter resets on its own
+  //
+  // False keeps the counter until an administrator clears it, so waiting out
+  // the lockout duration does not restore the account.
+  accountLockoutCounterResetEnabled() bool
+  // Failed login attempts after which the controller logs the failure
+  authFailureLoggingThreshold() int
+  // Number of previous passwords the controller refuses to accept again
+  enforcePasswordHistoryCount() int
+  // Days after which a password expires
+  passwordExpirationDays() int
+  // Whether the controller forces a password change on first login
+  requireChangePasswordAction() bool
+  // Whether HTTP Basic authentication is accepted
+  //
+  // One of Enabled, Unadvertised, or Disabled. Basic authentication sends the
+  // credential on every single request instead of exchanging it once for a
+  // session token, so it is the path that leaks a password into request logs
+  // and proxies. Unadvertised means the controller still accepts it but does
+  // not offer it in its authentication challenge.
+  httpBasicAuth() string
+  // How local accounts are treated once an external directory is configured
+  //
+  // One of Enabled, Disabled, Fallback, or LocalFirst. Enabled keeps local
+  // accounts usable at all times, so a local credential still opens the
+  // controller after the directory has revoked the operator's access.
+  localAccountAuth() string
+  // Whether the controller authenticates users against LDAP
+  ldapEnabled() bool
+  // LDAP servers the controller authenticates against
+  ldapServiceAddresses() []string
+  // How the controller authenticates itself to the LDAP server
+  //
+  // One of Token, KerberosKeytab, UsernameAndPassword, or OEM. The provider
+  // reads the method only, never the credential.
+  ldapAuthenticationType() string
+  // Whether the controller authenticates users against Active Directory
+  activeDirectoryEnabled() bool
+  // Active Directory servers the controller authenticates against
+  activeDirectoryServiceAddresses() []string
+  // How the controller authenticates itself to the Active Directory server
+  //
+  // One of Token, KerberosKeytab, UsernameAndPassword, or OEM. The provider
+  // reads the method only, never the credential.
+  activeDirectoryAuthenticationType() string
+  // Whether the controller authenticates users against TACACS+
+  tacacsPlusEnabled() bool
+  // TACACS+ servers the controller authenticates against
+  tacacsPlusServiceAddresses() []string
 }
 
 // Management network protocol settings
@@ -458,13 +611,71 @@ redfish.dell @defaults("generation") {
 
 // Supermicro BMC extensions
 //
-// Supermicro-specific management data exposed by the controller, including the
-// activated node-management licenses that unlock Redfish capabilities and
-// whether BMC system lockdown mode is engaged. Populated when the connected
-// server is Supermicro hardware and empty otherwise.
-redfish.supermicro @defaults("systemLockdownEnabled") {
+// Supermicro-specific management data exposed by the controller. Covers the
+// activated node-management licenses that unlock Redfish capabilities, system
+// lockdown mode, and the hardening settings that Supermicro keeps outside the
+// standard Redfish resources: the IPMI RAKP key exchange, the host side KCS
+// interface, source address filtering, and the RADIUS, NTP, and syslog servers
+// the controller talks to. Populated when the connected server is Supermicro
+// hardware and empty otherwise. The RAKP, KCS, access control, RADIUS, NTP and
+// syslog fields are null when the controller exposes no setting of that kind,
+// so an audit can tell a setting that is switched off apart from one the
+// controller never reports. In that same case `licenses` reports an empty list
+// and `systemLockdownEnabled` reports false.
+redfish.supermicro @defaults("systemLockdownEnabled rakpEnabled") {
   // Activated license keys, such as SFT-DCMS-Single
   licenses() []string
   // Whether BMC system lockdown mode is enabled
   systemLockdownEnabled() bool
+  // Whether the controller answers the IPMI RAKP key exchange
+  //
+  // RAKP is the authentication handshake of IPMI 2.0, and it returns a salted
+  // password hash for any valid user name before the caller has proven
+  // anything. Supermicro exposes a switch for it that is separate from the
+  // IPMI interface itself, so a controller can leave IPMI enabled with the
+  // handshake closed.
+  rakpEnabled() bool
+  // Privilege level granted over the host side KCS interface
+  //
+  // One of Administrator, Operator, User, or Callback. The KCS interface is
+  // reachable from the host operating system with no credential at all, so
+  // Administrator there lets any process running as root on the host create
+  // controller accounts and reach the out-of-band network.
+  kcsPrivilege() string
+  // Whether the controller filters management access by source address
+  ipAccessControlEnabled() bool
+  // Source address filter rules
+  //
+  // One entry per rule, with the keys `address`, `prefixLength`, and `policy`
+  // (Allow or Deny). Empty when the controller reports no rule, which leaves
+  // the management interface reachable from every source that can route to it.
+  ipAccessControlRules() []dict
+  // Whether the controller authenticates users against a RADIUS server
+  radiusEnabled() bool
+  // Address of the RADIUS server
+  radiusServer() string
+  // Port of the RADIUS server
+  radiusPort() int
+  // Whether the controller synchronizes its clock over NTP
+  //
+  // A controller with no time source stamps its event log from a clock that
+  // drifts, which breaks the ordering that an incident review depends on.
+  ntpEnabled() bool
+  // Primary NTP server the controller synchronizes with
+  ntpPrimaryServer() string
+  // Secondary NTP server the controller synchronizes with
+  ntpSecondaryServer() string
+  // Whether the controller forwards its event log to a syslog server
+  //
+  // A controller with no syslog destination keeps its security event log in
+  // local storage only, so the record of who opened a console or reset the
+  // host does not survive the next reboot.
+  syslogEnabled() bool
+  // Syslog destinations the controller forwards to
+  //
+  // One entry per configured destination, with the keys `host` and `port`.
+  // Firmware older than Gen 13 1.10 and Gen 14 1.08 reports a single
+  // destination, which appears here as a list of one. Empty when the
+  // controller reports no destination.
+  syslogServers() []dict
 }

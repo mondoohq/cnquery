@@ -118,6 +118,145 @@ func parseCollectionMembers(raw []byte) ([]string, error) {
 	return members, nil
 }
 
+// consoleServiceJSON is one console service block of a Manager document.
+// ServiceEnabled and MaxConcurrentSessions are pointers so a property the
+// controller leaves out stays distinguishable from a console it reports as
+// disabled or as allowing no session.
+type consoleServiceJSON struct {
+	ServiceEnabled        *bool    `json:"ServiceEnabled"`
+	MaxConcurrentSessions *int64   `json:"MaxConcurrentSessions"`
+	ConnectTypesSupported []string `json:"ConnectTypesSupported"`
+}
+
+// managerConsolesJSON is the console services of a Manager document. Each
+// service is a pointer so a controller that does not describe a console stays
+// distinguishable from one that reports the console as disabled.
+type managerConsolesJSON struct {
+	CommandShell     *consoleServiceJSON `json:"CommandShell"`
+	GraphicalConsole *consoleServiceJSON `json:"GraphicalConsole"`
+	SerialConsole    *consoleServiceJSON `json:"SerialConsole"`
+}
+
+// parseManagerConsoles decodes the console services of a Manager document. It
+// returns an empty result when the document does not decode, so every console
+// field resolves to null rather than to a console that is switched off.
+func parseManagerConsoles(raw []byte) managerConsolesJSON {
+	var consoles managerConsolesJSON
+	if len(raw) == 0 {
+		return consoles
+	}
+	if err := json.Unmarshal(raw, &consoles); err != nil {
+		log.Debug().Err(err).Msg("redfish: could not decode the console services of a manager")
+		return managerConsolesJSON{}
+	}
+	return consoles
+}
+
+// consoleEnabled returns the enabled state of a console service, or nil when
+// the controller does not describe the service.
+func consoleEnabled(c *consoleServiceJSON) *bool {
+	if c == nil {
+		return nil
+	}
+	return c.ServiceEnabled
+}
+
+// consoleMaxSessions returns the concurrent session limit of a console
+// service, or nil when the controller does not describe the service or leaves
+// the limit out.
+func consoleMaxSessions(c *consoleServiceJSON) *int64 {
+	if c == nil {
+		return nil
+	}
+	return c.MaxConcurrentSessions
+}
+
+// consoleConnectTypes returns the transports a console service accepts. It
+// returns nil when the controller does not describe the service, so an audit
+// does not read an undescribed console as one that accepts nothing.
+func consoleConnectTypes(c *consoleServiceJSON) *llx.RawData {
+	if c == nil {
+		return llx.NilData
+	}
+	connectTypes := make([]any, 0, len(c.ConnectTypesSupported))
+	for _, t := range c.ConnectTypesSupported {
+		connectTypes = append(connectTypes, t)
+	}
+	return llx.ArrayData(connectTypes, types.String)
+}
+
+// accountFlagsJSON is the subset of a ManagerAccount document that gofish
+// decodes into plain values. The booleans are pointers here so an account on a
+// controller that does not report them resolves to null rather than to false,
+// which would state as fact that no password change is pending.
+type accountFlagsJSON struct {
+	PasswordChangeRequired *bool  `json:"PasswordChangeRequired"`
+	StrictAccountTypes     *bool  `json:"StrictAccountTypes"`
+	PasswordExpiration     string `json:"PasswordExpiration"`
+	AccountExpiration      string `json:"AccountExpiration"`
+}
+
+// parseAccountFlags decodes the optional properties of a ManagerAccount
+// document. It returns an empty result when the document does not decode, so
+// every field resolves to null.
+func parseAccountFlags(raw []byte) accountFlagsJSON {
+	var flags accountFlagsJSON
+	if len(raw) == 0 {
+		return flags
+	}
+	if err := json.Unmarshal(raw, &flags); err != nil {
+		log.Debug().Err(err).Msg("redfish: could not decode the optional properties of an account")
+		return accountFlagsJSON{}
+	}
+	return flags
+}
+
+// externalAccountProviderJSON is the subset of an external account provider
+// block the provider surfaces. Only the authentication method is read: the
+// same block also carries the password, the token, and the encryption key that
+// the controller uses to bind to the directory, and those never leave it.
+type externalAccountProviderJSON struct {
+	ServiceEnabled   *bool    `json:"ServiceEnabled"`
+	ServiceAddresses []string `json:"ServiceAddresses"`
+	Authentication   *struct {
+		AuthenticationType string `json:"AuthenticationType"`
+	} `json:"Authentication"`
+}
+
+// accountServiceJSON is the subset of a Redfish AccountService document the
+// provider surfaces. Every scalar is a pointer because zero is a meaningful
+// value for most of them: a lockout threshold of 0 means the controller never
+// locks an account out, which is a finding, while an absent threshold means
+// the controller did not say, which is not.
+type accountServiceJSON struct {
+	ServiceEnabled                    *bool  `json:"ServiceEnabled"`
+	MinPasswordLength                 *int64 `json:"MinPasswordLength"`
+	MaxPasswordLength                 *int64 `json:"MaxPasswordLength"`
+	AccountLockoutThreshold           *int64 `json:"AccountLockoutThreshold"`
+	AccountLockoutDuration            *int64 `json:"AccountLockoutDuration"`
+	AccountLockoutCounterResetAfter   *int64 `json:"AccountLockoutCounterResetAfter"`
+	AccountLockoutCounterResetEnabled *bool  `json:"AccountLockoutCounterResetEnabled"`
+	AuthFailureLoggingThreshold       *int64 `json:"AuthFailureLoggingThreshold"`
+	EnforcePasswordHistoryCount       *int64 `json:"EnforcePasswordHistoryCount"`
+	PasswordExpirationDays            *int64 `json:"PasswordExpirationDays"`
+	RequireChangePasswordAction       *bool  `json:"RequireChangePasswordAction"`
+	HTTPBasicAuth                     string `json:"HTTPBasicAuth"`
+	LocalAccountAuth                  string `json:"LocalAccountAuth"`
+
+	LDAP            *externalAccountProviderJSON `json:"LDAP"`
+	ActiveDirectory *externalAccountProviderJSON `json:"ActiveDirectory"`
+	TACACSplus      *externalAccountProviderJSON `json:"TACACSplus"`
+}
+
+// parseAccountService decodes a Redfish AccountService document.
+func parseAccountService(raw []byte) (*accountServiceJSON, error) {
+	var svc accountServiceJSON
+	if err := json.Unmarshal(raw, &svc); err != nil {
+		return nil, err
+	}
+	return &svc, nil
+}
+
 // certIdentifierJSON is the issuer or subject of a Redfish certificate.
 type certIdentifierJSON struct {
 	CommonName   string `json:"CommonName"`
@@ -564,4 +703,202 @@ func (r *mqlRedfish) serviceRootUnauthenticated() (bool, error) {
 		return false, nil
 	}
 	return answers, nil
+}
+
+// mqlRedfishAccountServiceInternal holds the account service document, which
+// every field of the resource reads. The provider decodes the document itself
+// rather than reading the values gofish already decoded, because gofish types
+// most of them as plain integers and booleans: that collapses a property the
+// controller never reported into the same zero a controller reports when it
+// disables a control.
+type mqlRedfishAccountServiceInternal struct {
+	once   sync.Once
+	loaded bool
+	svc    *accountServiceJSON
+}
+
+func (r *mqlRedfishAccountService) id() (string, error) {
+	return "redfish.accountService", nil
+}
+
+// load fetches and decodes the account service once. loaded stays false when
+// the controller exposes no account service or the fetch fails, so every field
+// resolves to null instead of to an unrestricted policy.
+func (r *mqlRedfishAccountService) load() {
+	r.once.Do(func() {
+		accountService, err := redfishConn(r.MqlRuntime).AccountService()
+		if err != nil {
+			log.Warn().Err(err).Msg("redfish: could not read the account service")
+			return
+		}
+		if accountService == nil {
+			return
+		}
+		svc, err := parseAccountService(accountService.RawData)
+		if err != nil {
+			log.Warn().Err(err).Msg("redfish: could not decode the account service")
+			return
+		}
+		r.svc = svc
+		r.loaded = true
+	})
+}
+
+// value returns the decoded account service, or an empty document when the
+// controller exposes none, so an accessor can read a property without a nil
+// check of its own. It loads the document, because an accessor reads the
+// property as an argument and Go evaluates that before calling the helper that
+// would otherwise have loaded it.
+func (r *mqlRedfishAccountService) value() *accountServiceJSON {
+	r.load()
+	if r.svc == nil {
+		return &accountServiceJSON{}
+	}
+	return r.svc
+}
+
+// boolField resolves an optional boolean, marking the field null when the
+// controller exposes no account service or omits the property.
+func (r *mqlRedfishAccountService) boolField(field *plugin.TValue[bool], value *bool) (bool, error) {
+	r.load()
+	if !r.loaded || value == nil {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return *value, nil
+}
+
+func (r *mqlRedfishAccountService) intField(field *plugin.TValue[int64], value *int64) (int64, error) {
+	r.load()
+	if !r.loaded || value == nil {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return 0, nil
+	}
+	return *value, nil
+}
+
+func (r *mqlRedfishAccountService) stringField(field *plugin.TValue[string], value string) (string, error) {
+	r.load()
+	if !r.loaded || value == "" {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return value, nil
+}
+
+func (r *mqlRedfishAccountService) serviceEnabled() (bool, error) {
+	return r.boolField(&r.ServiceEnabled, r.value().ServiceEnabled)
+}
+
+func (r *mqlRedfishAccountService) minPasswordLength() (int64, error) {
+	return r.intField(&r.MinPasswordLength, r.value().MinPasswordLength)
+}
+
+func (r *mqlRedfishAccountService) maxPasswordLength() (int64, error) {
+	return r.intField(&r.MaxPasswordLength, r.value().MaxPasswordLength)
+}
+
+func (r *mqlRedfishAccountService) accountLockoutThreshold() (int64, error) {
+	return r.intField(&r.AccountLockoutThreshold, r.value().AccountLockoutThreshold)
+}
+
+func (r *mqlRedfishAccountService) accountLockoutDuration() (int64, error) {
+	return r.intField(&r.AccountLockoutDuration, r.value().AccountLockoutDuration)
+}
+
+func (r *mqlRedfishAccountService) accountLockoutCounterResetAfter() (int64, error) {
+	return r.intField(&r.AccountLockoutCounterResetAfter, r.value().AccountLockoutCounterResetAfter)
+}
+
+func (r *mqlRedfishAccountService) accountLockoutCounterResetEnabled() (bool, error) {
+	return r.boolField(&r.AccountLockoutCounterResetEnabled, r.value().AccountLockoutCounterResetEnabled)
+}
+
+func (r *mqlRedfishAccountService) authFailureLoggingThreshold() (int64, error) {
+	return r.intField(&r.AuthFailureLoggingThreshold, r.value().AuthFailureLoggingThreshold)
+}
+
+func (r *mqlRedfishAccountService) enforcePasswordHistoryCount() (int64, error) {
+	return r.intField(&r.EnforcePasswordHistoryCount, r.value().EnforcePasswordHistoryCount)
+}
+
+func (r *mqlRedfishAccountService) passwordExpirationDays() (int64, error) {
+	return r.intField(&r.PasswordExpirationDays, r.value().PasswordExpirationDays)
+}
+
+func (r *mqlRedfishAccountService) requireChangePasswordAction() (bool, error) {
+	return r.boolField(&r.RequireChangePasswordAction, r.value().RequireChangePasswordAction)
+}
+
+func (r *mqlRedfishAccountService) httpBasicAuth() (string, error) {
+	return r.stringField(&r.HttpBasicAuth, r.value().HTTPBasicAuth)
+}
+
+func (r *mqlRedfishAccountService) localAccountAuth() (string, error) {
+	return r.stringField(&r.LocalAccountAuth, r.value().LocalAccountAuth)
+}
+
+// providerEnabled reports whether an external account provider is enabled.
+func (r *mqlRedfishAccountService) providerEnabled(field *plugin.TValue[bool], p *externalAccountProviderJSON) (bool, error) {
+	if p == nil {
+		return r.boolField(field, nil)
+	}
+	return r.boolField(field, p.ServiceEnabled)
+}
+
+// providerAddresses returns the servers an external account provider points
+// at. It resolves to null when the controller describes no such provider, so
+// an audit does not read an undescribed provider as one with no server.
+func (r *mqlRedfishAccountService) providerAddresses(field *plugin.TValue[[]any], p *externalAccountProviderJSON) ([]any, error) {
+	r.load()
+	if !r.loaded || p == nil {
+		field.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	addresses := make([]any, 0, len(p.ServiceAddresses))
+	for _, a := range p.ServiceAddresses {
+		addresses = append(addresses, a)
+	}
+	return addresses, nil
+}
+
+// providerAuthType returns the method an external account provider uses to
+// authenticate the controller itself. The credential is never read.
+func (r *mqlRedfishAccountService) providerAuthType(field *plugin.TValue[string], p *externalAccountProviderJSON) (string, error) {
+	if p == nil || p.Authentication == nil {
+		return r.stringField(field, "")
+	}
+	return r.stringField(field, p.Authentication.AuthenticationType)
+}
+
+func (r *mqlRedfishAccountService) ldapEnabled() (bool, error) {
+	return r.providerEnabled(&r.LdapEnabled, r.value().LDAP)
+}
+
+func (r *mqlRedfishAccountService) ldapServiceAddresses() ([]any, error) {
+	return r.providerAddresses(&r.LdapServiceAddresses, r.value().LDAP)
+}
+
+func (r *mqlRedfishAccountService) ldapAuthenticationType() (string, error) {
+	return r.providerAuthType(&r.LdapAuthenticationType, r.value().LDAP)
+}
+
+func (r *mqlRedfishAccountService) activeDirectoryEnabled() (bool, error) {
+	return r.providerEnabled(&r.ActiveDirectoryEnabled, r.value().ActiveDirectory)
+}
+
+func (r *mqlRedfishAccountService) activeDirectoryServiceAddresses() ([]any, error) {
+	return r.providerAddresses(&r.ActiveDirectoryServiceAddresses, r.value().ActiveDirectory)
+}
+
+func (r *mqlRedfishAccountService) activeDirectoryAuthenticationType() (string, error) {
+	return r.providerAuthType(&r.ActiveDirectoryAuthenticationType, r.value().ActiveDirectory)
+}
+
+func (r *mqlRedfishAccountService) tacacsPlusEnabled() (bool, error) {
+	return r.providerEnabled(&r.TacacsPlusEnabled, r.value().TACACSplus)
+}
+
+func (r *mqlRedfishAccountService) tacacsPlusServiceAddresses() ([]any, error) {
+	return r.providerAddresses(&r.TacacsPlusServiceAddresses, r.value().TACACSplus)
 }

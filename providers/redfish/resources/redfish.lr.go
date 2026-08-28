@@ -24,6 +24,7 @@ const (
 	ResourceRedfishManager           string = "redfish.manager"
 	ResourceRedfishChassisEnclosure  string = "redfish.chassisEnclosure"
 	ResourceRedfishAccount           string = "redfish.account"
+	ResourceRedfishAccountService    string = "redfish.accountService"
 	ResourceRedfishNetworkProtocol   string = "redfish.networkProtocol"
 	ResourceRedfishCertificate       string = "redfish.certificate"
 	ResourceRedfishSessionService    string = "redfish.sessionService"
@@ -69,6 +70,10 @@ func init() {
 		"redfish.account": {
 			// to override args, implement: initRedfishAccount(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createRedfishAccount,
+		},
+		"redfish.accountService": {
+			// to override args, implement: initRedfishAccountService(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createRedfishAccountService,
 		},
 		"redfish.networkProtocol": {
 			// to override args, implement: initRedfishNetworkProtocol(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -233,6 +238,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"redfish.system.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishSystem).GetSecureBootEnabled()).ToDataRes(types.Bool)
 	},
+	"redfish.system.secureBootMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSystem).GetSecureBootMode()).ToDataRes(types.String)
+	},
+	"redfish.system.secureBootCurrentBoot": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSystem).GetSecureBootCurrentBoot()).ToDataRes(types.String)
+	},
+	"redfish.system.trustedModules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSystem).GetTrustedModules()).ToDataRes(types.Array(types.Dict))
+	},
 	"redfish.system.bootSourceOverrideEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishSystem).GetBootSourceOverrideEnabled()).ToDataRes(types.String)
 	},
@@ -341,6 +355,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"redfish.manager.dateTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishManager).GetDateTime()).ToDataRes(types.String)
 	},
+	"redfish.manager.commandShellEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetCommandShellEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.manager.commandShellMaxConcurrentSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetCommandShellMaxConcurrentSessions()).ToDataRes(types.Int)
+	},
+	"redfish.manager.commandShellConnectTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetCommandShellConnectTypes()).ToDataRes(types.Array(types.String))
+	},
+	"redfish.manager.graphicalConsoleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetGraphicalConsoleEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.manager.graphicalConsoleMaxConcurrentSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetGraphicalConsoleMaxConcurrentSessions()).ToDataRes(types.Int)
+	},
+	"redfish.manager.graphicalConsoleConnectTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetGraphicalConsoleConnectTypes()).ToDataRes(types.Array(types.String))
+	},
+	"redfish.manager.serialConsoleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetSerialConsoleEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.manager.serialConsoleMaxConcurrentSessions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetSerialConsoleMaxConcurrentSessions()).ToDataRes(types.Int)
+	},
+	"redfish.manager.serialConsoleConnectTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishManager).GetSerialConsoleConnectTypes()).ToDataRes(types.Array(types.String))
+	},
 	"redfish.manager.networkProtocol": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishManager).GetNetworkProtocol()).ToDataRes(types.Dict)
 	},
@@ -380,8 +421,83 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"redfish.account.accountTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishAccount).GetAccountTypes()).ToDataRes(types.Array(types.String))
 	},
+	"redfish.account.passwordChangeRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccount).GetPasswordChangeRequired()).ToDataRes(types.Bool)
+	},
+	"redfish.account.strictAccountTypes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccount).GetStrictAccountTypes()).ToDataRes(types.Bool)
+	},
+	"redfish.account.passwordExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccount).GetPasswordExpiration()).ToDataRes(types.Time)
+	},
+	"redfish.account.accountExpiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccount).GetAccountExpiration()).ToDataRes(types.Time)
+	},
 	"redfish.account.defaultVendorAccount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishAccount).GetDefaultVendorAccount()).ToDataRes(types.Bool)
+	},
+	"redfish.accountService.serviceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetServiceEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.accountService.minPasswordLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetMinPasswordLength()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.maxPasswordLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetMaxPasswordLength()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.accountLockoutThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetAccountLockoutThreshold()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.accountLockoutDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetAccountLockoutDuration()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.accountLockoutCounterResetAfter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetAccountLockoutCounterResetAfter()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.accountLockoutCounterResetEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetAccountLockoutCounterResetEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.accountService.authFailureLoggingThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetAuthFailureLoggingThreshold()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.enforcePasswordHistoryCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetEnforcePasswordHistoryCount()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.passwordExpirationDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetPasswordExpirationDays()).ToDataRes(types.Int)
+	},
+	"redfish.accountService.requireChangePasswordAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetRequireChangePasswordAction()).ToDataRes(types.Bool)
+	},
+	"redfish.accountService.httpBasicAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetHttpBasicAuth()).ToDataRes(types.String)
+	},
+	"redfish.accountService.localAccountAuth": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetLocalAccountAuth()).ToDataRes(types.String)
+	},
+	"redfish.accountService.ldapEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetLdapEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.accountService.ldapServiceAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetLdapServiceAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"redfish.accountService.ldapAuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetLdapAuthenticationType()).ToDataRes(types.String)
+	},
+	"redfish.accountService.activeDirectoryEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetActiveDirectoryEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.accountService.activeDirectoryServiceAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetActiveDirectoryServiceAddresses()).ToDataRes(types.Array(types.String))
+	},
+	"redfish.accountService.activeDirectoryAuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetActiveDirectoryAuthenticationType()).ToDataRes(types.String)
+	},
+	"redfish.accountService.tacacsPlusEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetTacacsPlusEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.accountService.tacacsPlusServiceAddresses": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetTacacsPlusServiceAddresses()).ToDataRes(types.Array(types.String))
 	},
 	"redfish.networkProtocol.hostName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishNetworkProtocol).GetHostName()).ToDataRes(types.String)
@@ -554,6 +670,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"redfish.supermicro.systemLockdownEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishSupermicro).GetSystemLockdownEnabled()).ToDataRes(types.Bool)
 	},
+	"redfish.supermicro.rakpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetRakpEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.supermicro.kcsPrivilege": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetKcsPrivilege()).ToDataRes(types.String)
+	},
+	"redfish.supermicro.ipAccessControlEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetIpAccessControlEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.supermicro.ipAccessControlRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetIpAccessControlRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"redfish.supermicro.radiusEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetRadiusEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.supermicro.radiusServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetRadiusServer()).ToDataRes(types.String)
+	},
+	"redfish.supermicro.radiusPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetRadiusPort()).ToDataRes(types.Int)
+	},
+	"redfish.supermicro.ntpEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetNtpEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.supermicro.ntpPrimaryServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetNtpPrimaryServer()).ToDataRes(types.String)
+	},
+	"redfish.supermicro.ntpSecondaryServer": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetNtpSecondaryServer()).ToDataRes(types.String)
+	},
+	"redfish.supermicro.syslogEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetSyslogEnabled()).ToDataRes(types.Bool)
+	},
+	"redfish.supermicro.syslogServers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishSupermicro).GetSyslogServers()).ToDataRes(types.Array(types.Dict))
+	},
 }
 
 func GetData(resource plugin.Resource, field string, args map[string]*llx.RawData) *plugin.DataRes {
@@ -652,6 +804,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"redfish.system.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRedfishSystem).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.system.secureBootMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSystem).SecureBootMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.system.secureBootCurrentBoot": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSystem).SecureBootCurrentBoot, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.system.trustedModules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSystem).TrustedModules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"redfish.system.bootSourceOverrideEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -814,6 +978,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlRedfishManager).DateTime, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"redfish.manager.commandShellEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).CommandShellEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.commandShellMaxConcurrentSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).CommandShellMaxConcurrentSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.commandShellConnectTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).CommandShellConnectTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.graphicalConsoleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).GraphicalConsoleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.graphicalConsoleMaxConcurrentSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).GraphicalConsoleMaxConcurrentSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.graphicalConsoleConnectTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).GraphicalConsoleConnectTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.serialConsoleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).SerialConsoleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.serialConsoleMaxConcurrentSessions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).SerialConsoleMaxConcurrentSessions, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.manager.serialConsoleConnectTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishManager).SerialConsoleConnectTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"redfish.manager.networkProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRedfishManager).NetworkProtocol, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -874,8 +1074,112 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlRedfishAccount).AccountTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"redfish.account.passwordChangeRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccount).PasswordChangeRequired, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.account.strictAccountTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccount).StrictAccountTypes, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.account.passwordExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccount).PasswordExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"redfish.account.accountExpiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccount).AccountExpiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"redfish.account.defaultVendorAccount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRedfishAccount).DefaultVendorAccount, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).__id, ok = v.Value.(string)
+		return
+	},
+	"redfish.accountService.serviceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).ServiceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.minPasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).MinPasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.maxPasswordLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).MaxPasswordLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.accountLockoutThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).AccountLockoutThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.accountLockoutDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).AccountLockoutDuration, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.accountLockoutCounterResetAfter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).AccountLockoutCounterResetAfter, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.accountLockoutCounterResetEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).AccountLockoutCounterResetEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.authFailureLoggingThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).AuthFailureLoggingThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.enforcePasswordHistoryCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).EnforcePasswordHistoryCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.passwordExpirationDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).PasswordExpirationDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.requireChangePasswordAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).RequireChangePasswordAction, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.httpBasicAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).HttpBasicAuth, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.localAccountAuth": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).LocalAccountAuth, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.ldapEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).LdapEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.ldapServiceAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).LdapServiceAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.ldapAuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).LdapAuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.activeDirectoryEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).ActiveDirectoryEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.activeDirectoryServiceAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).ActiveDirectoryServiceAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.activeDirectoryAuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).ActiveDirectoryAuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.tacacsPlusEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).TacacsPlusEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.tacacsPlusServiceAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).TacacsPlusServiceAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"redfish.networkProtocol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -1138,6 +1442,54 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlRedfishSupermicro).SystemLockdownEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
+	"redfish.supermicro.rakpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).RakpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.kcsPrivilege": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).KcsPrivilege, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.ipAccessControlEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).IpAccessControlEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.ipAccessControlRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).IpAccessControlRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.radiusEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).RadiusEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.radiusServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).RadiusServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.radiusPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).RadiusPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.ntpEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).NtpEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.ntpPrimaryServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).NtpPrimaryServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.ntpSecondaryServer": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).NtpSecondaryServer, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.syslogEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).SyslogEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"redfish.supermicro.syslogServers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishSupermicro).SyslogServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 }
 
 func SetData(resource plugin.Resource, field string, val *llx.RawData) error {
@@ -1365,6 +1717,9 @@ type mqlRedfishSystem struct {
 	PowerState                plugin.TValue[string]
 	SystemType                plugin.TValue[string]
 	SecureBootEnabled         plugin.TValue[bool]
+	SecureBootMode            plugin.TValue[string]
+	SecureBootCurrentBoot     plugin.TValue[string]
+	TrustedModules            plugin.TValue[[]any]
 	BootSourceOverrideEnabled plugin.TValue[string]
 	BootSourceOverrideTarget  plugin.TValue[string]
 	BootSourceOverrideMode    plugin.TValue[string]
@@ -1450,6 +1805,22 @@ func (c *mqlRedfishSystem) GetSecureBootEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.SecureBootEnabled, func() (bool, error) {
 		return c.secureBootEnabled()
 	})
+}
+
+func (c *mqlRedfishSystem) GetSecureBootMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecureBootMode, func() (string, error) {
+		return c.secureBootMode()
+	})
+}
+
+func (c *mqlRedfishSystem) GetSecureBootCurrentBoot() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.SecureBootCurrentBoot, func() (string, error) {
+		return c.secureBootCurrentBoot()
+	})
+}
+
+func (c *mqlRedfishSystem) GetTrustedModules() *plugin.TValue[[]any] {
+	return &c.TrustedModules
 }
 
 func (c *mqlRedfishSystem) GetBootSourceOverrideEnabled() *plugin.TValue[string] {
@@ -1748,14 +2119,23 @@ type mqlRedfishManager struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlRedfishManagerInternal
-	Uuid            plugin.TValue[string]
-	Manufacturer    plugin.TValue[string]
-	Model           plugin.TValue[string]
-	FirmwareVersion plugin.TValue[string]
-	ManagerType     plugin.TValue[string]
-	PowerState      plugin.TValue[string]
-	DateTime        plugin.TValue[string]
-	NetworkProtocol plugin.TValue[any]
+	Uuid                                  plugin.TValue[string]
+	Manufacturer                          plugin.TValue[string]
+	Model                                 plugin.TValue[string]
+	FirmwareVersion                       plugin.TValue[string]
+	ManagerType                           plugin.TValue[string]
+	PowerState                            plugin.TValue[string]
+	DateTime                              plugin.TValue[string]
+	CommandShellEnabled                   plugin.TValue[bool]
+	CommandShellMaxConcurrentSessions     plugin.TValue[int64]
+	CommandShellConnectTypes              plugin.TValue[[]any]
+	GraphicalConsoleEnabled               plugin.TValue[bool]
+	GraphicalConsoleMaxConcurrentSessions plugin.TValue[int64]
+	GraphicalConsoleConnectTypes          plugin.TValue[[]any]
+	SerialConsoleEnabled                  plugin.TValue[bool]
+	SerialConsoleMaxConcurrentSessions    plugin.TValue[int64]
+	SerialConsoleConnectTypes             plugin.TValue[[]any]
+	NetworkProtocol                       plugin.TValue[any]
 }
 
 // createRedfishManager creates a new instance of this resource
@@ -1816,6 +2196,42 @@ func (c *mqlRedfishManager) GetPowerState() *plugin.TValue[string] {
 
 func (c *mqlRedfishManager) GetDateTime() *plugin.TValue[string] {
 	return &c.DateTime
+}
+
+func (c *mqlRedfishManager) GetCommandShellEnabled() *plugin.TValue[bool] {
+	return &c.CommandShellEnabled
+}
+
+func (c *mqlRedfishManager) GetCommandShellMaxConcurrentSessions() *plugin.TValue[int64] {
+	return &c.CommandShellMaxConcurrentSessions
+}
+
+func (c *mqlRedfishManager) GetCommandShellConnectTypes() *plugin.TValue[[]any] {
+	return &c.CommandShellConnectTypes
+}
+
+func (c *mqlRedfishManager) GetGraphicalConsoleEnabled() *plugin.TValue[bool] {
+	return &c.GraphicalConsoleEnabled
+}
+
+func (c *mqlRedfishManager) GetGraphicalConsoleMaxConcurrentSessions() *plugin.TValue[int64] {
+	return &c.GraphicalConsoleMaxConcurrentSessions
+}
+
+func (c *mqlRedfishManager) GetGraphicalConsoleConnectTypes() *plugin.TValue[[]any] {
+	return &c.GraphicalConsoleConnectTypes
+}
+
+func (c *mqlRedfishManager) GetSerialConsoleEnabled() *plugin.TValue[bool] {
+	return &c.SerialConsoleEnabled
+}
+
+func (c *mqlRedfishManager) GetSerialConsoleMaxConcurrentSessions() *plugin.TValue[int64] {
+	return &c.SerialConsoleMaxConcurrentSessions
+}
+
+func (c *mqlRedfishManager) GetSerialConsoleConnectTypes() *plugin.TValue[[]any] {
+	return &c.SerialConsoleConnectTypes
 }
 
 func (c *mqlRedfishManager) GetNetworkProtocol() *plugin.TValue[any] {
@@ -1903,12 +2319,16 @@ type mqlRedfishAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlRedfishAccountInternal it will be used here
-	UserName             plugin.TValue[string]
-	RoleId               plugin.TValue[string]
-	Enabled              plugin.TValue[bool]
-	Locked               plugin.TValue[bool]
-	AccountTypes         plugin.TValue[[]any]
-	DefaultVendorAccount plugin.TValue[bool]
+	UserName               plugin.TValue[string]
+	RoleId                 plugin.TValue[string]
+	Enabled                plugin.TValue[bool]
+	Locked                 plugin.TValue[bool]
+	AccountTypes           plugin.TValue[[]any]
+	PasswordChangeRequired plugin.TValue[bool]
+	StrictAccountTypes     plugin.TValue[bool]
+	PasswordExpiration     plugin.TValue[*time.Time]
+	AccountExpiration      plugin.TValue[*time.Time]
+	DefaultVendorAccount   plugin.TValue[bool]
 }
 
 // createRedfishAccount creates a new instance of this resource
@@ -1963,8 +2383,215 @@ func (c *mqlRedfishAccount) GetAccountTypes() *plugin.TValue[[]any] {
 	return &c.AccountTypes
 }
 
+func (c *mqlRedfishAccount) GetPasswordChangeRequired() *plugin.TValue[bool] {
+	return &c.PasswordChangeRequired
+}
+
+func (c *mqlRedfishAccount) GetStrictAccountTypes() *plugin.TValue[bool] {
+	return &c.StrictAccountTypes
+}
+
+func (c *mqlRedfishAccount) GetPasswordExpiration() *plugin.TValue[*time.Time] {
+	return &c.PasswordExpiration
+}
+
+func (c *mqlRedfishAccount) GetAccountExpiration() *plugin.TValue[*time.Time] {
+	return &c.AccountExpiration
+}
+
 func (c *mqlRedfishAccount) GetDefaultVendorAccount() *plugin.TValue[bool] {
 	return &c.DefaultVendorAccount
+}
+
+// mqlRedfishAccountService for the redfish.accountService resource
+type mqlRedfishAccountService struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlRedfishAccountServiceInternal
+	ServiceEnabled                    plugin.TValue[bool]
+	MinPasswordLength                 plugin.TValue[int64]
+	MaxPasswordLength                 plugin.TValue[int64]
+	AccountLockoutThreshold           plugin.TValue[int64]
+	AccountLockoutDuration            plugin.TValue[int64]
+	AccountLockoutCounterResetAfter   plugin.TValue[int64]
+	AccountLockoutCounterResetEnabled plugin.TValue[bool]
+	AuthFailureLoggingThreshold       plugin.TValue[int64]
+	EnforcePasswordHistoryCount       plugin.TValue[int64]
+	PasswordExpirationDays            plugin.TValue[int64]
+	RequireChangePasswordAction       plugin.TValue[bool]
+	HttpBasicAuth                     plugin.TValue[string]
+	LocalAccountAuth                  plugin.TValue[string]
+	LdapEnabled                       plugin.TValue[bool]
+	LdapServiceAddresses              plugin.TValue[[]any]
+	LdapAuthenticationType            plugin.TValue[string]
+	ActiveDirectoryEnabled            plugin.TValue[bool]
+	ActiveDirectoryServiceAddresses   plugin.TValue[[]any]
+	ActiveDirectoryAuthenticationType plugin.TValue[string]
+	TacacsPlusEnabled                 plugin.TValue[bool]
+	TacacsPlusServiceAddresses        plugin.TValue[[]any]
+}
+
+// createRedfishAccountService creates a new instance of this resource
+func createRedfishAccountService(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlRedfishAccountService{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	if res.__id == "" {
+		res.__id, err = res.id()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("redfish.accountService", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlRedfishAccountService) MqlName() string {
+	return "redfish.accountService"
+}
+
+func (c *mqlRedfishAccountService) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlRedfishAccountService) GetServiceEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ServiceEnabled, func() (bool, error) {
+		return c.serviceEnabled()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetMinPasswordLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MinPasswordLength, func() (int64, error) {
+		return c.minPasswordLength()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetMaxPasswordLength() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.MaxPasswordLength, func() (int64, error) {
+		return c.maxPasswordLength()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetAccountLockoutThreshold() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AccountLockoutThreshold, func() (int64, error) {
+		return c.accountLockoutThreshold()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetAccountLockoutDuration() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AccountLockoutDuration, func() (int64, error) {
+		return c.accountLockoutDuration()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetAccountLockoutCounterResetAfter() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AccountLockoutCounterResetAfter, func() (int64, error) {
+		return c.accountLockoutCounterResetAfter()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetAccountLockoutCounterResetEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccountLockoutCounterResetEnabled, func() (bool, error) {
+		return c.accountLockoutCounterResetEnabled()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetAuthFailureLoggingThreshold() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.AuthFailureLoggingThreshold, func() (int64, error) {
+		return c.authFailureLoggingThreshold()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetEnforcePasswordHistoryCount() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.EnforcePasswordHistoryCount, func() (int64, error) {
+		return c.enforcePasswordHistoryCount()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetPasswordExpirationDays() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.PasswordExpirationDays, func() (int64, error) {
+		return c.passwordExpirationDays()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetRequireChangePasswordAction() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RequireChangePasswordAction, func() (bool, error) {
+		return c.requireChangePasswordAction()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetHttpBasicAuth() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HttpBasicAuth, func() (string, error) {
+		return c.httpBasicAuth()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetLocalAccountAuth() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LocalAccountAuth, func() (string, error) {
+		return c.localAccountAuth()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetLdapEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LdapEnabled, func() (bool, error) {
+		return c.ldapEnabled()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetLdapServiceAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LdapServiceAddresses, func() ([]any, error) {
+		return c.ldapServiceAddresses()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetLdapAuthenticationType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LdapAuthenticationType, func() (string, error) {
+		return c.ldapAuthenticationType()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetActiveDirectoryEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ActiveDirectoryEnabled, func() (bool, error) {
+		return c.activeDirectoryEnabled()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetActiveDirectoryServiceAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ActiveDirectoryServiceAddresses, func() ([]any, error) {
+		return c.activeDirectoryServiceAddresses()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetActiveDirectoryAuthenticationType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ActiveDirectoryAuthenticationType, func() (string, error) {
+		return c.activeDirectoryAuthenticationType()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetTacacsPlusEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.TacacsPlusEnabled, func() (bool, error) {
+		return c.tacacsPlusEnabled()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetTacacsPlusServiceAddresses() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.TacacsPlusServiceAddresses, func() ([]any, error) {
+		return c.tacacsPlusServiceAddresses()
+	})
 }
 
 // mqlRedfishNetworkProtocol for the redfish.networkProtocol resource
@@ -2553,8 +3180,20 @@ type mqlRedfishSupermicro struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlRedfishSupermicroInternal
-	Licenses              plugin.TValue[[]any]
-	SystemLockdownEnabled plugin.TValue[bool]
+	Licenses               plugin.TValue[[]any]
+	SystemLockdownEnabled  plugin.TValue[bool]
+	RakpEnabled            plugin.TValue[bool]
+	KcsPrivilege           plugin.TValue[string]
+	IpAccessControlEnabled plugin.TValue[bool]
+	IpAccessControlRules   plugin.TValue[[]any]
+	RadiusEnabled          plugin.TValue[bool]
+	RadiusServer           plugin.TValue[string]
+	RadiusPort             plugin.TValue[int64]
+	NtpEnabled             plugin.TValue[bool]
+	NtpPrimaryServer       plugin.TValue[string]
+	NtpSecondaryServer     plugin.TValue[string]
+	SyslogEnabled          plugin.TValue[bool]
+	SyslogServers          plugin.TValue[[]any]
 }
 
 // createRedfishSupermicro creates a new instance of this resource
@@ -2603,5 +3242,77 @@ func (c *mqlRedfishSupermicro) GetLicenses() *plugin.TValue[[]any] {
 func (c *mqlRedfishSupermicro) GetSystemLockdownEnabled() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.SystemLockdownEnabled, func() (bool, error) {
 		return c.systemLockdownEnabled()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetRakpEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RakpEnabled, func() (bool, error) {
+		return c.rakpEnabled()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetKcsPrivilege() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.KcsPrivilege, func() (string, error) {
+		return c.kcsPrivilege()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetIpAccessControlEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IpAccessControlEnabled, func() (bool, error) {
+		return c.ipAccessControlEnabled()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetIpAccessControlRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.IpAccessControlRules, func() ([]any, error) {
+		return c.ipAccessControlRules()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetRadiusEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RadiusEnabled, func() (bool, error) {
+		return c.radiusEnabled()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetRadiusServer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RadiusServer, func() (string, error) {
+		return c.radiusServer()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetRadiusPort() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.RadiusPort, func() (int64, error) {
+		return c.radiusPort()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetNtpEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.NtpEnabled, func() (bool, error) {
+		return c.ntpEnabled()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetNtpPrimaryServer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NtpPrimaryServer, func() (string, error) {
+		return c.ntpPrimaryServer()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetNtpSecondaryServer() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.NtpSecondaryServer, func() (string, error) {
+		return c.ntpSecondaryServer()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetSyslogEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SyslogEnabled, func() (bool, error) {
+		return c.syslogEnabled()
+	})
+}
+
+func (c *mqlRedfishSupermicro) GetSyslogServers() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SyslogServers, func() ([]any, error) {
+		return c.syslogServers()
 	})
 }
