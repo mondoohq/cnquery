@@ -12,8 +12,8 @@ import (
 
 var Config = plugin.Provider{
 	Name:            "github",
-	ID:              "go.mondoo.com/mql/providers/github",
-	Version:         "13.9.0",
+	ID:              "go.mondoo.com/cnquery/v9/providers/github",
+	Version:         "13.9.2",
 	ConnectionTypes: []string{provider.ConnectionType},
 	// GitHub's 5,000 requests/hour is already the binding constraint on a large
 	// organization, and there is a secondary limit on concurrent requests, so
