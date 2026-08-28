@@ -76,6 +76,53 @@ func initDns(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]
 	return args, nil, nil
 }
 
+// zone reports the apex of the zone that contains the domain, as a dns resource
+// for that name.
+//
+// The records that describe a zone as a whole (DNSKEY, NS, SOA) exist at its
+// apex and nowhere else inside it, so a question about how a zone is signed, or
+// how many nameservers serve it, has an answer at this name and no answer at
+// any other name the zone contains. Reading those fields through here answers
+// for the containing zone; comparing fqdn against the returned fqdn tells an
+// apex from a name that merely sits inside a zone.
+//
+// The zone is null rather than an error when the name belongs to no zone, which
+// covers an unregistered domain and a scan target given as an IP address (see
+// params for the empty-fqdn substitution). A failed query is still an error: a
+// resolver outage must not read as a name that has no zone.
+func (d *mqlDns) zone(fqdn string) (*mqlDns, error) {
+	if fqdn == "" {
+		d.Zone.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	dnsShaker, err := dnsshake.New(fqdn)
+	if err != nil {
+		return nil, err
+	}
+
+	zone, err := dnsShaker.Zone()
+	if err != nil {
+		return nil, err
+	}
+	if zone == "" {
+		d.Zone.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	// An apex is its own zone. NewResource consults the runtime cache, so this
+	// resolves back to the receiver rather than building a second resource for
+	// the same name, and the record sweep behind it is shared either way.
+	res, err := NewResource(d.MqlRuntime, "dns", map[string]*llx.RawData{
+		"fqdn": llx.StringData(zone),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.(*mqlDns), nil
+}
+
 func (d *mqlDns) params(fqdn string) (any, error) {
 	// initDns substitutes an empty fqdn when the scan target is an IP address
 	// rather than a hostname. Querying an empty name resolves the DNS ROOT ZONE,

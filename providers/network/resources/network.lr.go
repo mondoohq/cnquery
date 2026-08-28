@@ -696,6 +696,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"dns.fqdn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetFqdn()).ToDataRes(types.String)
 	},
+	"dns.zone": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDns).GetZone()).ToDataRes(types.Resource("dns"))
+	},
 	"dns.params": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDns).GetParams()).ToDataRes(types.Dict)
 	},
@@ -1552,6 +1555,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"dns.fqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDns).Fqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"dns.zone": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDns).Zone, ok = plugin.RawToTValue[*mqlDns](v.Value, v.Error)
 		return
 	},
 	"dns.params": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3876,6 +3883,7 @@ type mqlDns struct {
 	__id       string
 	// optional: if you define mqlDnsInternal it will be used here
 	Fqdn                 plugin.TValue[string]
+	Zone                 plugin.TValue[*mqlDns]
 	Params               plugin.TValue[any]
 	AuthoritativeParams  plugin.TValue[any]
 	Records              plugin.TValue[[]any]
@@ -3928,6 +3936,27 @@ func (c *mqlDns) MqlID() string {
 
 func (c *mqlDns) GetFqdn() *plugin.TValue[string] {
 	return &c.Fqdn
+}
+
+func (c *mqlDns) GetZone() *plugin.TValue[*mqlDns] {
+	return plugin.GetOrCompute[*mqlDns](&c.Zone, func() (*mqlDns, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("dns", c.__id, "zone")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlDns), nil
+			}
+		}
+
+		vargFqdn := c.GetFqdn()
+		if vargFqdn.Error != nil {
+			return nil, vargFqdn.Error
+		}
+
+		return c.zone(vargFqdn.Data)
+	})
 }
 
 func (c *mqlDns) GetParams() *plugin.TValue[any] {
