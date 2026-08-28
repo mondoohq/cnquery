@@ -2623,6 +2623,11 @@ gcp.project.computeService.vpnTunnel.targetVpnGateway 11.6.6
 gcp.project.computeService.vpnTunnel.vpnGateway 13.6.1
 gcp.project.computeService.vpnTunnel.vpnGatewayInterface 11.6.6
 gcp.project.computeService.vpnTunnels 11.6.6
+gcp.project.computeService.wafExpressionSet 13.37.1
+gcp.project.computeService.wafExpressionSet.aliases 13.37.1
+gcp.project.computeService.wafExpressionSet.expressions 13.37.1
+gcp.project.computeService.wafExpressionSet.id 13.37.1
+gcp.project.computeService.wafExpressionSets 13.37.1
 gcp.project.computeService.zone 9.0.0
 gcp.project.computeService.zone.created 9.0.0
 gcp.project.computeService.zone.description 9.0.0

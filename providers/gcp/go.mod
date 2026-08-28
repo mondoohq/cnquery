@@ -18,12 +18,12 @@ require (
 	cloud.google.com/go/certificatemanager v1.15.0
 	cloud.google.com/go/cloudbuild v1.33.0
 	cloud.google.com/go/cloudtasks v1.19.0
-	cloud.google.com/go/compute v1.66.0
-	cloud.google.com/go/container v1.53.1
+	cloud.google.com/go/compute v1.67.0
+	cloud.google.com/go/container v1.54.0
 	cloud.google.com/go/containeranalysis v0.19.0
 	cloud.google.com/go/datastream v1.21.0
 	cloud.google.com/go/deploy v1.33.0
-	cloud.google.com/go/discoveryengine v1.32.0
+	cloud.google.com/go/discoveryengine v1.33.0
 	cloud.google.com/go/dlp v1.36.1
 	cloud.google.com/go/documentai v1.49.0
 	cloud.google.com/go/eventarc v1.25.0
@@ -44,7 +44,7 @@ require (
 	cloud.google.com/go/networkmanagement v1.30.0
 	cloud.google.com/go/orgpolicy v1.20.0
 	cloud.google.com/go/privilegedaccessmanager v1.1.0
-	cloud.google.com/go/pubsub/v2 v2.6.2
+	cloud.google.com/go/pubsub/v2 v2.7.0
 	cloud.google.com/go/recommender v1.19.0
 	cloud.google.com/go/redis v1.25.0
 	cloud.google.com/go/run v1.22.0
@@ -52,7 +52,7 @@ require (
 	cloud.google.com/go/security v1.27.0
 	cloud.google.com/go/securitycenter v1.46.0
 	cloud.google.com/go/serviceusage v1.15.0
-	cloud.google.com/go/spanner v1.94.0
+	cloud.google.com/go/spanner v1.95.0
 	github.com/aws/smithy-go v1.27.9
 	github.com/cockroachdb/errors v1.14.0
 	github.com/google/go-containerregistry v0.21.9
@@ -63,7 +63,7 @@ require (
 	go.mondoo.com/mql v0.0.0-20260824053258-a0a7399274d4
 	go.mondoo.com/ranger-rpc v0.8.1
 	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.293.0
+	google.golang.org/api v0.294.0
 	// Held back: cloud.google.com/go/accesscontextmanager v1.15.0 (the latest
 	// release) imports google.golang.org/genproto/googleapis/identity/
 	// accesscontextmanager/type, which go-genproto deleted in
@@ -297,7 +297,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260819154853-08b0e4226688 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 // indirect
-	google.golang.org/grpc v1.83.1
+	google.golang.org/grpc v1.83.2
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect

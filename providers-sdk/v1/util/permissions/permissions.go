@@ -1223,6 +1223,11 @@ var gcpPermissionOverrides = map[string]map[string]string{
 		// regionInstanceGroups permission namespace in GCP IAM.
 		"InstanceGroups.ListInstances":       "compute.instanceGroups.list",
 		"RegionInstanceGroups.ListInstances": "compute.instanceGroups.list",
+		// Listing the preconfigured WAF expression sets is governed by
+		// compute.securityPolicies.list; there is no separate permission for it,
+		// and the generic derivation lowercases the method name into
+		// "compute.securityPolicies.listpreconfiguredexpressionsets".
+		"SecurityPolicies.ListPreconfiguredExpressionSets": "compute.securityPolicies.list",
 		// Reading a project's Shared VPC position is governed by
 		// compute.projects.get; there are no getXpnHost or getXpnResources
 		// permissions, and the generic derivation lowercases the method name into

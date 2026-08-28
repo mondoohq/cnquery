@@ -262,6 +262,7 @@ const (
 	ResourceGcpProjectAlloydbServiceClusterUser                                        string = "gcp.project.alloydbService.cluster.user"
 	ResourceGcpProjectAlloydbServiceInstance                                           string = "gcp.project.alloydbService.instance"
 	ResourceGcpProjectAlloydbServiceBackup                                             string = "gcp.project.alloydbService.backup"
+	ResourceGcpProjectComputeServiceWafExpressionSet                                   string = "gcp.project.computeService.wafExpressionSet"
 	ResourceGcpProjectComputeServiceSecurityPolicy                                     string = "gcp.project.computeService.securityPolicy"
 	ResourceGcpProjectComputeServiceSecurityPolicyRule                                 string = "gcp.project.computeService.securityPolicy.rule"
 	ResourceGcpProjectComputeServiceSslPolicy                                          string = "gcp.project.computeService.sslPolicy"
@@ -1492,6 +1493,10 @@ func init() {
 		"gcp.project.alloydbService.backup": {
 			// to override args, implement: initGcpProjectAlloydbServiceBackup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectAlloydbServiceBackup,
+		},
+		"gcp.project.computeService.wafExpressionSet": {
+			// to override args, implement: initGcpProjectComputeServiceWafExpressionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectComputeServiceWafExpressionSet,
 		},
 		"gcp.project.computeService.securityPolicy": {
 			// to override args, implement: initGcpProjectComputeServiceSecurityPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3829,6 +3834,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.computeService.securityPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetSecurityPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.securityPolicy")))
+	},
+	"gcp.project.computeService.wafExpressionSets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeService).GetWafExpressionSets()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.wafExpressionSet")))
 	},
 	"gcp.project.computeService.sslPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeService).GetSslPolicies()).ToDataRes(types.Array(types.Resource("gcp.project.computeService.sslPolicy")))
@@ -11521,6 +11529,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.alloydbService.backup.kmsKey": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectAlloydbServiceBackup).GetKmsKey()).ToDataRes(types.Resource("gcp.project.kmsService.keyring.cryptokey"))
+	},
+	"gcp.project.computeService.wafExpressionSet.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceWafExpressionSet).GetId()).ToDataRes(types.String)
+	},
+	"gcp.project.computeService.wafExpressionSet.aliases": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceWafExpressionSet).GetAliases()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.computeService.wafExpressionSet.expressions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectComputeServiceWafExpressionSet).GetExpressions()).ToDataRes(types.Array(types.Dict))
 	},
 	"gcp.project.computeService.securityPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectComputeServiceSecurityPolicy).GetId()).ToDataRes(types.String)
@@ -20672,6 +20689,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.computeService.securityPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectComputeService).SecurityPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeService).WafExpressionSets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.sslPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31780,6 +31801,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.alloydbService.backup.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectAlloydbServiceBackup).KmsKey, ok = plugin.RawToTValue[*mqlGcpProjectKmsServiceKeyringCryptokey](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSet).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSet.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSet).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSet.aliases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSet).Aliases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.computeService.wafExpressionSet.expressions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectComputeServiceWafExpressionSet).Expressions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.computeService.securityPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47625,6 +47662,7 @@ type mqlGcpProjectComputeService struct {
 	Addresses                  plugin.TValue[[]any]
 	ForwardingRules            plugin.TValue[[]any]
 	SecurityPolicies           plugin.TValue[[]any]
+	WafExpressionSets          plugin.TValue[[]any]
 	SslPolicies                plugin.TValue[[]any]
 	SslCertificates            plugin.TValue[[]any]
 	VpnGateways                plugin.TValue[[]any]
@@ -47949,6 +47987,22 @@ func (c *mqlGcpProjectComputeService) GetSecurityPolicies() *plugin.TValue[[]any
 		}
 
 		return c.securityPolicies()
+	})
+}
+
+func (c *mqlGcpProjectComputeService) GetWafExpressionSets() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.WafExpressionSets, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.computeService", c.__id, "wafExpressionSets")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.wafExpressionSets()
 	})
 }
 
@@ -73555,6 +73609,60 @@ func (c *mqlGcpProjectAlloydbServiceBackup) GetKmsKey() *plugin.TValue[*mqlGcpPr
 
 		return c.kmsKey()
 	})
+}
+
+// mqlGcpProjectComputeServiceWafExpressionSet for the gcp.project.computeService.wafExpressionSet resource
+type mqlGcpProjectComputeServiceWafExpressionSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectComputeServiceWafExpressionSetInternal it will be used here
+	Id          plugin.TValue[string]
+	Aliases     plugin.TValue[[]any]
+	Expressions plugin.TValue[[]any]
+}
+
+// createGcpProjectComputeServiceWafExpressionSet creates a new instance of this resource
+func createGcpProjectComputeServiceWafExpressionSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectComputeServiceWafExpressionSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.computeService.wafExpressionSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSet) MqlName() string {
+	return "gcp.project.computeService.wafExpressionSet"
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSet) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSet) GetAliases() *plugin.TValue[[]any] {
+	return &c.Aliases
+}
+
+func (c *mqlGcpProjectComputeServiceWafExpressionSet) GetExpressions() *plugin.TValue[[]any] {
+	return &c.Expressions
 }
 
 // mqlGcpProjectComputeServiceSecurityPolicy for the gcp.project.computeService.securityPolicy resource
