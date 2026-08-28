@@ -372,7 +372,9 @@ claude.skill @defaults("id displayTitle") {
   displayTitle string
   // Skill source
   //
-  // One of custom or anthropic.
+  // One of custom (authored in the workspace), anthropic (published by
+  // Anthropic and read-only), anthropic_example (an Anthropic-published
+  // sample), or plugin (resolved from an installed plugin).
   source string
   // Latest version identifier
   latestVersion string
@@ -540,6 +542,12 @@ claude.organization @defaults("id name") {
   costReport() []claude.organization.costEntry
   // Compliance activity log entries
   activities() []claude.organization.activity
+  // Service accounts in the organization
+  serviceAccounts() []claude.organization.serviceAccount
+  // Workload identity federation issuers the organization trusts
+  federationIssuers() []claude.organization.federationIssuer
+  // Rules mapping federated identities onto organization access
+  federationRules() []claude.organization.federationRule
 }
 
 // Claude organization workspace
@@ -660,6 +668,24 @@ claude.organization.apiKey @defaults("id name status") {
   createdBy() claude.organization.member
   // Workspace this key belongs to
   workspace() claude.organization.workspace
+  // Kind of principal the key acts as
+  //
+  // One of user_actor when the key acts as an organization member, or
+  // service_account_actor when it acts as a service account. Null when
+  // the key is bound to no principal at all, which covers legacy keys
+  // and keys minted through workload identity federation.
+  principalType string
+  // Organization member the key acts as, when it is bound to one
+  principalUser() claude.organization.member
+  // Service account the key acts as, when it is bound to one
+  principalServiceAccount() claude.organization.serviceAccount
+  // Extent of the key's access
+  //
+  // One of workspace when the key is confined to a single workspace, or
+  // organization when it is a principal-bound key with no workspace and
+  // so reaches the whole organization. An organization-scoped key is the
+  // broader credential of the two.
+  scopeType string
 }
 
 // Claude organization rate limit group
@@ -737,6 +763,182 @@ claude.organization.costEntry @defaults("startingAt costType") {
   //
   // Null for buckets that are not scoped to a single workspace.
   workspace() claude.organization.workspace
+}
+
+// Claude organization service account
+//
+// Non-human principal in the Claude organization, holding its own API keys and
+// its own organization role. A service account is standing, unattended access:
+// it does not expire with a person leaving, so its role and its archive state
+// are worth auditing directly. Read `organizationRole` to see how much the
+// account can reach and `archivedAt` to tell a retired account from a live
+// one, and reach its keys through claude.organization.apiKey where
+// principalServiceAccount names this account.
+claude.organization.serviceAccount @defaults("id name organizationRole") {
+  // Service account identifier
+  id string
+  // Service account display name
+  name string
+  // Description recorded on the service account
+  description string
+  // Role the service account holds in the organization
+  //
+  // One of admin or developer. An admin service account can administer
+  // the organization without a person being involved.
+  organizationRole string
+  // Timestamp when the service account was created
+  createdAt time
+  // Timestamp when the service account was last updated
+  updatedAt time
+  // Timestamp when the service account was archived
+  //
+  // Null while the account is active. An archived account keeps its
+  // record but can no longer be used.
+  archivedAt time
+  // Tagged identifier of the actor that created the account
+  //
+  // Prefixed user_ for an organization member or svac_ for another
+  // service account, so an account created by another account is
+  // visible as such.
+  createdByActorId string
+  // Tagged identifier of the actor that last updated the account
+  //
+  // Prefixed user_ or svac_. Null when the account has not been updated
+  // since it was created.
+  updatedByActorId string
+  // Tagged identifier of the actor that archived the account
+  //
+  // Prefixed user_ or svac_. Null while the account is active.
+  archivedByActorId string
+}
+
+// Claude workload identity federation issuer
+//
+// External token issuer the organization trusts to authenticate workloads, so
+// that code running outside Claude can obtain credentials without a
+// long-lived API key. The issuer is the trust anchor: `issuerUrl` names whose
+// tokens are accepted, `maxJwtLifetimeSeconds` caps how long one of those
+// tokens stays valid, and `checkJti` reports whether replayed tokens are
+// rejected. `archivedAt` separates a retired trust anchor from one still in
+// force. The rules deciding what an accepted token may reach are reached
+// through `rules`.
+claude.organization.federationIssuer @defaults("id name issuerUrl") {
+  // Issuer identifier
+  id string
+  // Issuer display name
+  name string
+  // URL of the external token issuer
+  //
+  // A token is accepted only when its iss claim matches this URL, so
+  // this names exactly whose identities the organization trusts.
+  issuerUrl string
+  // Whether the JWT ID is checked so replayed tokens are rejected
+  checkJti bool
+  // Longest lifetime, in seconds, accepted on a token from this issuer
+  //
+  // A token presented more than this many seconds after it was issued
+  // is rejected regardless of its own expiry claim.
+  maxJwtLifetimeSeconds int
+  // Timestamp when JWKS polling was switched off
+  //
+  // Null while polling is active. With polling off, the organization
+  // stops picking up the issuer's key rotations.
+  jwksPollingDisabledAt time
+  // Result of the most recent attempt to fetch the issuer's keys
+  //
+  // Keys include `status` and the timestamps of the last attempt, so a
+  // trust anchor whose key fetch has been failing is visible here.
+  pollStatus dict
+  // Key material configuration for the issuer
+  //
+  // Either a discovery URL the organization polls, or keys supplied
+  // inline.
+  jwks dict
+  // Timestamp when the issuer was registered
+  createdAt time
+  // Timestamp when the issuer was last updated
+  updatedAt time
+  // Timestamp when the issuer was archived
+  //
+  // Null while the issuer is trusted. An archived issuer no longer
+  // authenticates workloads.
+  archivedAt time
+  // Tagged identifier of the actor that registered the issuer
+  //
+  // Prefixed user_ or svac_.
+  createdByActorId string
+  // Rules that accept tokens from this issuer
+  rules() []claude.organization.federationRule
+}
+
+// Claude workload identity federation rule
+//
+// Rule deciding which federated identities from a trusted issuer receive
+// access, and what that access reaches. This is where an external workload
+// becomes a principal inside the organization, so a rule that matches too
+// broadly is a standing grant to anyone who can obtain a matching token. Read
+// `matchSubjectPrefix`, `matchAudience`, `matchClaims` and `matchCondition`
+// together to see how narrowly the rule matches, and `appliesToAllWorkspaces`
+// with `workspaces` to see how far the resulting access reaches.
+claude.organization.federationRule @defaults("id name") {
+  // Rule identifier
+  id string
+  // Rule display name
+  name string
+  // Description recorded on the rule
+  description string
+  // Issuer whose tokens this rule accepts
+  issuer() claude.organization.federationIssuer
+  // Whether the rule grants access to every workspace
+  //
+  // True makes the rule organization-wide, so `workspaces` does not
+  // bound it and a new workspace is covered as soon as it is created.
+  appliesToAllWorkspaces bool
+  // Workspaces the rule grants access to
+  //
+  // Empty when appliesToAllWorkspaces is true, in which case the rule
+  // is not confined to a workspace list.
+  workspaces() []claude.organization.workspace
+  // Service account a matching identity acts as
+  serviceAccount() claude.organization.serviceAccount
+  // Audience a token must carry to match
+  //
+  // Null when the rule does not constrain the aud claim, which widens
+  // the rule to tokens minted for any audience.
+  matchAudience string
+  // Prefix a token's subject must start with to match
+  //
+  // Null when the rule does not constrain the sub claim. A short or
+  // absent prefix matches many more identities than a full subject.
+  matchSubjectPrefix string
+  // Claims a token must carry, as claim name to required value
+  //
+  // Empty when the rule matches on no claims beyond the subject and
+  // the audience.
+  matchClaims map[string]string
+  // Additional expression a token must satisfy to match
+  //
+  // Null when the rule carries no extra condition.
+  matchCondition string
+  // Attributes recorded on the rule
+  attributes map[string]string
+  // OAuth scope granted to a matching identity
+  oauthScope string
+  // Lifetime, in seconds, of the credential issued to a matching identity
+  tokenLifetimeSeconds int
+  // Timestamp when the rule was created
+  createdAt time
+  // Timestamp when the rule was last updated
+  updatedAt time
+  // Timestamp when the rule was archived
+  //
+  // Null while the rule is in force. An archived rule no longer grants
+  // access.
+  archivedAt time
+  // Tagged identifier of the actor that created the rule
+  //
+  // Prefixed user_ or svac_.
+  createdByActorId string
 }
 
 // Claude organization compliance activity

@@ -436,24 +436,15 @@ func (r *mqlClaude) skills() ([]interface{}, error) {
 	for pager.Next() {
 		s := pager.Current()
 
-		createdAt, err := parseTime(s.CreatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("parsing skill createdAt: %w", err)
-		}
-		updatedAt, err := parseTime(s.UpdatedAt)
-		if err != nil {
-			return nil, fmt.Errorf("parsing skill updatedAt: %w", err)
-		}
-
 		mqlSkill, err := CreateResource(r.MqlRuntime, "claude.skill", map[string]*llx.RawData{
 			"__id":          llx.StringData(s.ID),
 			"id":            llx.StringData(s.ID),
-			"displayTitle":  llx.StringData(s.DisplayTitle),
-			"source":        llx.StringData(s.Source),
-			"latestVersion": llx.StringData(s.LatestVersion),
-			"createdAt":     llx.TimeData(createdAt),
-			"updatedAt":     llx.TimeData(updatedAt),
-			"type":          llx.StringData(s.Type),
+			"displayTitle":  llx.StringData(s.DisplayName),
+			"source":        llx.StringData(string(s.Source.Type)),
+			"latestVersion": llx.StringData(s.LatestVersionID),
+			"createdAt":     llx.TimeData(s.CreatedAt),
+			"updatedAt":     llx.TimeData(s.UpdatedAt),
+			"type":          llx.StringData(string(s.Type)),
 		})
 		if err != nil {
 			return nil, err
