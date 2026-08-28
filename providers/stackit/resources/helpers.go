@@ -125,6 +125,21 @@ func stringMap(in map[string]string) map[string]any {
 	return out
 }
 
+// stringPtrMap converts a map[string]*string into the any-valued form MQL
+// expects. A nil value stays nil so it reads as null rather than as an empty
+// string: the API distinguishes a parameter set to "" from one it did not send.
+func stringPtrMap(in map[string]*string) map[string]any {
+	out := make(map[string]any, len(in))
+	for k, v := range in {
+		if v == nil {
+			out[k] = nil
+			continue
+		}
+		out[k] = *v
+	}
+	return out
+}
+
 // strSliceData wraps a []string for assignment to a `[]string` field.
 func strSliceData(in []string) *llx.RawData {
 	return llx.ArrayData(strSlice(in), types.String)

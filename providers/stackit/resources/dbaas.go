@@ -714,7 +714,7 @@ func (r *mqlStackitObservabilityInstance) parameters() (any, error) {
 	if !ok || params == nil {
 		return map[string]any{}, nil
 	}
-	return stringMap(*params), nil
+	return stringPtrMap(*params), nil
 }
 
 func (r *mqlStackitObservabilityInstance) isUpdatable() (bool, error) {
