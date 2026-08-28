@@ -187,6 +187,7 @@ openai.project.rateLimit.maxRequestsPerMinute 13.0.12
 openai.project.rateLimit.maxTokensPerMinute 13.0.12
 openai.project.rateLimit.model 13.0.12
 openai.project.rateLimits 13.0.12
+openai.project.residency 13.1.3
 openai.project.roles 13.0.12
 openai.project.serviceAccount 13.0.0
 openai.project.serviceAccount.createdAt 13.0.0

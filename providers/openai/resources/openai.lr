@@ -522,6 +522,17 @@ openai.project @defaults("id name status") @maturity("preview") {
   createdAt time
   // Archive timestamp (null if active)
   archivedAt time
+  // Geography the project's data is stored and processed in
+  //
+  // One of GLOBAL, US_STORAGE_PROCESSING, EU_STORAGE_PROCESSING,
+  // JP_STORAGE, KR_STORAGE, CA_STORAGE, SG_STORAGE, IN_STORAGE,
+  // AU_STORAGE, GB_STORAGE, AE_STORAGE, or AE_STORAGE_PROCESSING. A
+  // value ending in STORAGE_PROCESSING pins both storage and inference
+  // to the region, where a plain STORAGE value pins storage only and
+  // lets inference run elsewhere. Null when the organization has no
+  // residency configuration, in which case data is not pinned to any
+  // region.
+  residency string
   // API keys in this project (requires admin API key)
   apiKeys() []openai.project.apiKey
   // Service accounts in this project (requires admin API key)

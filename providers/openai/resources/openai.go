@@ -35,6 +35,16 @@ func unixToNullableTime(ts int64) *time.Time {
 	return &t
 }
 
+// emptyToNil maps an empty string to nil so an absent enum reaches MQL as null
+// rather than as "". The OpenAI API omits these fields entirely when unset, and
+// an empty string would read as a real value the project does not have.
+func emptyToNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 // dataPlaneClient returns the project-scoped client used for data-plane
 // collections (models, files, vector stores, fine-tuning). It returns a
 // descriptive error when the connection was built from an admin key (which

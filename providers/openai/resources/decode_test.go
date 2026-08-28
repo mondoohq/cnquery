@@ -342,3 +342,37 @@ func TestRoleAssignmentIsDirectIsUnknownWithoutSources(t *testing.T) {
 	assert.True(t, known)
 	assert.False(t, isDirect)
 }
+
+func TestMapProjectResidency(t *testing.T) {
+	var p openai.Project
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"id": "proj_0000",
+		"object": "organization.project",
+		"name": "Production",
+		"status": "active",
+		"residency": "EU_STORAGE_PROCESSING",
+		"created_at": 1711471533
+	}`), &p))
+
+	args := mapProject(p)
+	assert.Equal(t, "EU_STORAGE_PROCESSING", args["residency"].Value,
+		"a project pinned to a region must report that region, not the SDK's typed wrapper")
+}
+
+// A project with no residency configuration must read as null. The SDK types
+// Residency as a bare string, so a mapping that skips the empty check reports
+// "" -- which a policy comparing against a region name cannot distinguish from
+// a project that was never read.
+func TestMapProjectResidencyIsNullWhenAbsent(t *testing.T) {
+	var p openai.Project
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"id": "proj_0001",
+		"object": "organization.project",
+		"name": "Sandbox",
+		"status": "active",
+		"created_at": 1711471533
+	}`), &p))
+
+	args := mapProject(p)
+	assert.Nil(t, args["residency"].Value)
+}

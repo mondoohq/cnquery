@@ -622,6 +622,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"openai.project.archivedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiProject).GetArchivedAt()).ToDataRes(types.Time)
 	},
+	"openai.project.residency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOpenaiProject).GetResidency()).ToDataRes(types.String)
+	},
 	"openai.project.apiKeys": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOpenaiProject).GetApiKeys()).ToDataRes(types.Array(types.Resource("openai.project.apiKey")))
 	},
@@ -1533,6 +1536,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"openai.project.archivedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOpenaiProject).ArchivedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"openai.project.residency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOpenaiProject).Residency, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"openai.project.apiKeys": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -3570,6 +3577,7 @@ type mqlOpenaiProject struct {
 	Status                  plugin.TValue[string]
 	CreatedAt               plugin.TValue[*time.Time]
 	ArchivedAt              plugin.TValue[*time.Time]
+	Residency               plugin.TValue[string]
 	ApiKeys                 plugin.TValue[[]any]
 	ServiceAccounts         plugin.TValue[[]any]
 	Users                   plugin.TValue[[]any]
@@ -3642,6 +3650,10 @@ func (c *mqlOpenaiProject) GetCreatedAt() *plugin.TValue[*time.Time] {
 
 func (c *mqlOpenaiProject) GetArchivedAt() *plugin.TValue[*time.Time] {
 	return &c.ArchivedAt
+}
+
+func (c *mqlOpenaiProject) GetResidency() *plugin.TValue[string] {
+	return &c.Residency
 }
 
 func (c *mqlOpenaiProject) GetApiKeys() *plugin.TValue[[]any] {
