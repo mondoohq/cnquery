@@ -45,9 +45,16 @@ func (p *pomProperties) UnmarshalXML(d *xml.Decoder, start xml.StartElement) err
 	for {
 		tok, err := d.Token()
 		if err != nil {
-			// io.EOF on a truncated document: keep what was read rather than
-			// discarding every property because the file ended early.
-			return nil //nolint:nilerr
+			// Every error reaching here is a decoding failure, an early end of
+			// document included: inside an open <properties> element the
+			// decoder reports that as an *xml.SyntaxError ("unexpected EOF"),
+			// never a bare io.EOF, and a well-formed block returns at its
+			// EndElement before EOF is reachable at all. So there is no case to
+			// single out, and reporting the failure matters here: a property
+			// that silently fails to load makes every version referring to it
+			// unresolvable, and an unresolvable version is a dependency no
+			// advisory can match.
+			return err
 		}
 		switch t := tok.(type) {
 		case xml.StartElement:
@@ -144,15 +151,60 @@ func (p *pomProject) property(name string) (string, bool) {
 	return v, true
 }
 
+// managedDependency finds the <dependencyManagement> entry for a dependency.
+//
+// groupId and artifactId must already be resolved, and the entry's own
+// coordinates are resolved before comparing, because either side may be written
+// as a property: a <dependency> commonly says ${project.groupId} where the
+// management section says the literal, and a management section importing a
+// family of artifacts commonly does the reverse. Comparing the two as written
+// matches only when they happen to be spelled the same way, and a miss is
+// silent: the dependency simply comes out with no version, which is the outcome
+// resolving versions at all was meant to prevent.
+func (p *pomProject) managedDependency(groupId, artifactId string) (pomDependency, bool) {
+	for _, m := range p.DependencyManagement.Dependencies {
+		if p.resolve(m.GroupId) == groupId && p.resolve(m.ArtifactId) == artifactId {
+			return m, true
+		}
+	}
+	return pomDependency{}, false
+}
+
 // managedVersion returns the version <dependencyManagement> declares for a
 // dependency, which is what applies when the <dependency> states none.
 func (p *pomProject) managedVersion(groupId, artifactId string) string {
-	for _, m := range p.DependencyManagement.Dependencies {
-		if m.GroupId == groupId && m.ArtifactId == artifactId {
-			return m.Version
-		}
+	m, ok := p.managedDependency(groupId, artifactId)
+	if !ok {
+		return ""
 	}
-	return ""
+	return m.Version
+}
+
+// effectiveScope reports the scope that applies to a dependency: its own when it
+// states one, otherwise the scope <dependencyManagement> declares.
+//
+// Maven applies a managed scope exactly as it applies a managed version, and the
+// two have to be read together. A <dependency> on junit that omits both, against
+// a management section declaring 4.13.2 and scope test, is a test dependency at
+// 4.13.2 — reading only the version promotes it into the production set with a
+// real, matchable purl, so it arrives in an SBOM as something the application
+// ships.
+func (p *pomProject) effectiveScope(dep pomDependency) string {
+	if scope := p.resolve(dep.Scope); scope != "" {
+		return scope
+	}
+	m, ok := p.managedDependency(p.resolve(dep.GroupId), p.resolve(dep.ArtifactId))
+	if !ok {
+		return ""
+	}
+	return p.resolve(m.Scope)
+}
+
+// isTestOrProvided reports whether a dependency's effective scope makes it a
+// non-production dependency.
+func (p *pomProject) isTestOrProvided(dep pomDependency) bool {
+	scope := p.effectiveScope(dep)
+	return scope == "test" || scope == "provided"
 }
 
 // pomParent represents the parent POM reference.
@@ -191,9 +243,4 @@ func (p *pomProject) effectiveVersion() string {
 		return p.Parent.Version
 	}
 	return ""
-}
-
-// isTestOrProvided returns true if the dependency scope indicates a non-production dependency.
-func (d *pomDependency) isTestOrProvided() bool {
-	return d.Scope == "test" || d.Scope == "provided"
 }

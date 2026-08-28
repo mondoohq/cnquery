@@ -73,7 +73,7 @@ func (p *pomProject) Root() *languages.Package {
 func (p *pomProject) Direct() languages.Packages {
 	var direct languages.Packages
 	for _, dep := range p.Dependencies {
-		if dep.isTestOrProvided() {
+		if p.isTestOrProvided(dep) {
 			continue
 		}
 		direct = append(direct, p.depToPackage(dep))
@@ -108,7 +108,7 @@ func (p *pomProject) depToPackage(dep pomDependency) *languages.Package {
 		// No <version> on the dependency: the project's <dependencyManagement>
 		// is where it is declared, which is the standard way a multi-module
 		// project states a version once.
-		version = p.resolve(p.managedVersion(dep.GroupId, dep.ArtifactId))
+		version = p.resolve(p.managedVersion(groupId, artifactId))
 	}
 
 	name := artifactId
