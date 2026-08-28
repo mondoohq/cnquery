@@ -7,7 +7,7 @@ go 1.26.6
 require (
 	github.com/stretchr/testify v1.12.1
 	go.mondoo.com/mql v0.0.0-20260824053258-a0a7399274d4
-	go.mongodb.org/atlas-sdk/v20250312023 v20250312023.1.0
+	go.mongodb.org/atlas-sdk/v20250312024 v20250312024.0.0
 )
 
 require (
