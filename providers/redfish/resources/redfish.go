@@ -60,6 +60,7 @@ func (r *mqlRedfish) systems() ([]any, error) {
 			"bootSourceOverrideTarget":  llx.StringData(overrideTarget),
 			"bootSourceOverrideMode":    llx.StringData(string(s.Boot.BootSourceOverrideMode)),
 			"persistentBootOverride":    llx.BoolData(isPersistentBootOverride(overrideEnabled, overrideTarget)),
+			"trustedModules":            llx.ArrayData(trustedModuleDicts(s.TrustedModules), types.Dict),
 		})
 		if err != nil {
 			return nil, err
@@ -79,6 +80,12 @@ func (r *mqlRedfish) managers() ([]any, error) {
 
 	res := make([]any, 0, len(managers))
 	for _, m := range managers {
+		// The console services are decoded from the manager document the
+		// provider already holds, because gofish types their ServiceEnabled as
+		// a plain bool: that reports a console the controller never described
+		// as one that is switched off.
+		consoles := parseManagerConsoles(m.RawData)
+
 		o, err := CreateResource(r.MqlRuntime, "redfish.manager", map[string]*llx.RawData{
 			"__id":            llx.StringData(m.ODataID),
 			"uuid":            llx.StringData(m.UUID),
@@ -88,6 +95,16 @@ func (r *mqlRedfish) managers() ([]any, error) {
 			"managerType":     llx.StringData(string(m.ManagerType)),
 			"powerState":      llx.StringData(string(m.PowerState)),
 			"dateTime":        llx.StringData(m.DateTime),
+
+			"commandShellEnabled":                   llx.BoolDataPtr(consoleEnabled(consoles.CommandShell)),
+			"commandShellMaxConcurrentSessions":     llx.IntDataPtr(consoleMaxSessions(consoles.CommandShell)),
+			"commandShellConnectTypes":              consoleConnectTypes(consoles.CommandShell),
+			"graphicalConsoleEnabled":               llx.BoolDataPtr(consoleEnabled(consoles.GraphicalConsole)),
+			"graphicalConsoleMaxConcurrentSessions": llx.IntDataPtr(consoleMaxSessions(consoles.GraphicalConsole)),
+			"graphicalConsoleConnectTypes":          consoleConnectTypes(consoles.GraphicalConsole),
+			"serialConsoleEnabled":                  llx.BoolDataPtr(consoleEnabled(consoles.SerialConsole)),
+			"serialConsoleMaxConcurrentSessions":    llx.IntDataPtr(consoleMaxSessions(consoles.SerialConsole)),
+			"serialConsoleConnectTypes":             consoleConnectTypes(consoles.SerialConsole),
 		})
 		if err != nil {
 			return nil, err
@@ -127,10 +144,12 @@ func (r *mqlRedfish) chassis() ([]any, error) {
 }
 
 func (r *mqlRedfish) accounts() ([]any, error) {
-	svc := redfishConn(r.MqlRuntime).Client().Service
-	accountService, err := svc.AccountService()
+	accountService, err := redfishConn(r.MqlRuntime).AccountService()
 	if err != nil {
 		return nil, err
+	}
+	if accountService == nil {
+		return []any{}, nil
 	}
 	accounts, err := accountService.Accounts()
 	if err != nil {
@@ -144,14 +163,24 @@ func (r *mqlRedfish) accounts() ([]any, error) {
 			accountTypes = append(accountTypes, string(t))
 		}
 
+		// The optional properties are decoded from the account document the
+		// provider already holds, because gofish types them as plain values:
+		// that reports an account on a controller which never mentioned a
+		// pending password change as one with no change pending.
+		flags := parseAccountFlags(a.RawData)
+
 		o, err := CreateResource(r.MqlRuntime, "redfish.account", map[string]*llx.RawData{
-			"__id":                 llx.StringData(a.ODataID),
-			"userName":             llx.StringData(a.UserName),
-			"roleId":               llx.StringData(a.RoleID),
-			"enabled":              llx.BoolData(a.Enabled),
-			"locked":               llx.BoolData(a.Locked),
-			"accountTypes":         llx.ArrayData(accountTypes, types.String),
-			"defaultVendorAccount": llx.BoolData(isDefaultVendorAccountName(a.UserName)),
+			"__id":                   llx.StringData(a.ODataID),
+			"userName":               llx.StringData(a.UserName),
+			"roleId":                 llx.StringData(a.RoleID),
+			"enabled":                llx.BoolData(a.Enabled),
+			"locked":                 llx.BoolData(a.Locked),
+			"accountTypes":           llx.ArrayData(accountTypes, types.String),
+			"defaultVendorAccount":   llx.BoolData(isDefaultVendorAccountName(a.UserName)),
+			"passwordChangeRequired": llx.BoolDataPtr(flags.PasswordChangeRequired),
+			"strictAccountTypes":     llx.BoolDataPtr(flags.StrictAccountTypes),
+			"passwordExpiration":     llx.TimeDataPtr(parseRedfishTime(flags.PasswordExpiration)),
+			"accountExpiration":      llx.TimeDataPtr(parseRedfishTime(flags.AccountExpiration)),
 		})
 		if err != nil {
 			return nil, err
@@ -192,10 +221,62 @@ func (r *mqlRedfish) firmware() ([]any, error) {
 	return res, nil
 }
 
+// trustedModuleDicts maps the trusted modules of a system. A value the
+// controller leaves out is written as null rather than as an empty string, so
+// an audit does not read a withheld interface type as a reported one.
+func trustedModuleDicts(modules []schemas.TrustedModules) []any {
+	res := make([]any, 0, len(modules))
+	for _, m := range modules {
+		res = append(res, map[string]any{
+			"interfaceType":          emptyStringToNil(string(m.InterfaceType)),
+			"interfaceTypeSelection": emptyStringToNil(string(m.InterfaceTypeSelection)),
+			"firmwareVersion":        emptyStringToNil(m.FirmwareVersion),
+			"firmwareVersion2":       emptyStringToNil(m.FirmwareVersion2),
+			"health":                 emptyStringToNil(string(m.Status.Health)),
+			"state":                  emptyStringToNil(string(m.Status.State)),
+		})
+	}
+	return res
+}
+
+// emptyStringToNil maps an empty string to a null dict value, so a property the
+// controller withheld stays distinguishable from one it reported as empty.
+func emptyStringToNil(s string) any {
+	if s == "" {
+		return nil
+	}
+	return s
+}
+
 // mqlRedfishSystemInternal caches the source system so sub-collections can be
-// resolved without re-fetching the parent.
+// resolved without re-fetching the parent, and the Secure Boot resource, which
+// three fields read.
 type mqlRedfishSystemInternal struct {
 	sys *schemas.ComputerSystem
+
+	secureBootOnce   sync.Once
+	secureBoot       *schemas.SecureBoot
+	secureBootLoaded bool
+}
+
+// loadSecureBoot fetches the Secure Boot resource of the system once. loaded
+// stays false when the system exposes none or the controller cannot report it,
+// so every field reading it resolves to null rather than to Secure Boot being
+// switched off.
+func (r *mqlRedfishSystem) loadSecureBoot() (*schemas.SecureBoot, bool) {
+	r.secureBootOnce.Do(func() {
+		if r.sys == nil {
+			return
+		}
+		sb, err := r.sys.SecureBoot()
+		if err != nil || sb == nil {
+			log.Debug().Err(err).Msg("redfish: system serves no secure boot resource")
+			return
+		}
+		r.secureBoot = sb
+		r.secureBootLoaded = true
+	})
+	return r.secureBoot, r.secureBootLoaded
 }
 
 // secureBootEnabled reports whether UEFI Secure Boot is enabled. It is null
@@ -203,16 +284,37 @@ type mqlRedfishSystemInternal struct {
 // report its state, so an unsupported or unreachable system is not conflated
 // with one where Secure Boot is switched off.
 func (r *mqlRedfishSystem) secureBootEnabled() (bool, error) {
-	if r.sys == nil {
-		r.SecureBootEnabled.State = plugin.StateIsNull | plugin.StateIsSet
-		return false, nil
-	}
-	sb, err := r.sys.SecureBoot()
-	if err != nil || sb == nil {
+	sb, ok := r.loadSecureBoot()
+	if !ok {
 		r.SecureBootEnabled.State = plugin.StateIsNull | plugin.StateIsSet
 		return false, nil
 	}
 	return sb.SecureBootEnable, nil
+}
+
+// secureBootMode reports the Secure Boot key management mode. SetupMode is the
+// state in which the firmware enrolls any key presented to it, so a system can
+// report Secure Boot as enabled and still accept an attacker supplied platform
+// key.
+func (r *mqlRedfishSystem) secureBootMode() (string, error) {
+	sb, ok := r.loadSecureBoot()
+	if !ok || sb.SecureBootMode == "" {
+		r.SecureBootMode.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return string(sb.SecureBootMode), nil
+}
+
+// secureBootCurrentBoot reports what the firmware enforced on the boot that is
+// running, which differs from the configured state when the setting changed
+// since the last reset.
+func (r *mqlRedfishSystem) secureBootCurrentBoot() (string, error) {
+	sb, ok := r.loadSecureBoot()
+	if !ok || sb.SecureBootCurrentBoot == "" {
+		r.SecureBootCurrentBoot.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return string(sb.SecureBootCurrentBoot), nil
 }
 
 func (r *mqlRedfishSystem) processors() ([]any, error) {
@@ -492,68 +594,288 @@ func (r *mqlRedfishDell) biosReleaseDate() (string, error) {
 	return r.cachedBiosReleaseDate, nil
 }
 
+// smcDocument memoizes one Supermicro OEM document across the managers that
+// might serve it. loaded stays false when no manager serves the document, so a
+// field reading it can resolve to null rather than to a setting that is
+// switched off.
+type smcDocument[T any] struct {
+	once   sync.Once
+	loaded bool
+	value  *T
+}
+
+// get returns the document, fetching it from the first manager that serves it.
+// A manager that is not Supermicro hardware, or that omits the link, fails the
+// fetch and is skipped rather than ending the search: license data and the
+// hardening settings can sit on different managers of the same server.
+func (d *smcDocument[T]) get(managers []*smc.Manager, fetch func(*smc.Manager) (*T, error)) (*T, bool) {
+	d.once.Do(func() {
+		for _, m := range managers {
+			v, err := fetch(m)
+			if err != nil || v == nil {
+				continue
+			}
+			d.value = v
+			d.loaded = true
+			return
+		}
+	})
+	return d.value, d.loaded
+}
+
 // mqlRedfishSupermicroInternal caches the Supermicro OEM data, which lives in
-// linked sub-resources (license manager, system lockdown) rather than inline
-// in the manager's OEM block.
+// linked sub-resources (license manager, system lockdown, RAKP, KCS, IP access
+// control, RADIUS, NTP, syslog) rather than inline in the manager's OEM block.
+// Each document is fetched only by the fields that read it, so querying one
+// setting does not pull the rest.
 type mqlRedfishSupermicroInternal struct {
-	once           sync.Once
-	cachedLicenses []any
-	cachedLockdown bool
+	managersOnce sync.Once
+	managers     []*smc.Manager
+
+	licenseDoc  smcDocument[smc.QueryLicense]
+	lockdownDoc smcDocument[smc.SysLockdown]
+	rakpDoc     smcDocument[smc.SMCRAKP]
+	kcsDoc      smcDocument[smc.KCSInterface]
+	ipAccessDoc smcDocument[smc.IPAccessControl]
+	radiusDoc   smcDocument[smc.RADIUS]
+	ntpDoc      smcDocument[smc.NTP]
+	syslogDoc   smcDocument[smc.Syslog]
 }
 
 func (r *mqlRedfishSupermicro) id() (string, error) {
 	return "redfish.supermicro", nil
 }
 
-func (r *mqlRedfishSupermicro) load() {
-	r.once.Do(func() {
+// smcManagers returns the management controllers as Supermicro OEM managers.
+// FromManager succeeds on any controller, leaving the OEM links empty when the
+// hardware is not Supermicro, so the per-document fetches are what actually
+// decide whether a setting exists.
+func (r *mqlRedfishSupermicro) smcManagers() []*smc.Manager {
+	r.managersOnce.Do(func() {
 		managers, err := redfishConn(r.MqlRuntime).Managers()
 		if err != nil {
 			log.Warn().Err(err).Msg("redfish: could not list managers for Supermicro OEM detection")
 			return
 		}
-		// License data and system-lockdown state can live on different managers,
-		// so accumulate each independently rather than stopping at the first
-		// manager that carries either one.
-		gotLicenses := false
-		gotLockdown := false
+		res := make([]*smc.Manager, 0, len(managers))
 		for _, m := range managers {
 			smcManager, err := smc.FromManager(m)
 			if err != nil {
 				continue
 			}
-
-			if !gotLicenses {
-				if lm, err := smcManager.LicenseManager(); err == nil && lm != nil {
-					if ql, err := lm.QueryLicense(); err == nil && ql != nil {
-						licenses := make([]any, 0, len(ql.Licenses))
-						for _, license := range ql.Licenses {
-							licenses = append(licenses, license)
-						}
-						r.cachedLicenses = licenses
-						gotLicenses = true
-					}
-				}
-			}
-			if !gotLockdown {
-				if sl, err := smcManager.SysLockdown(); err == nil && sl != nil {
-					r.cachedLockdown = sl.Enabled
-					gotLockdown = true
-				}
-			}
-			if gotLicenses && gotLockdown {
-				return
-			}
+			res = append(res, smcManager)
 		}
+		r.managers = res
 	})
+	return r.managers
 }
 
+// licenses returns the activated node-management license keys. It keeps the
+// behavior it shipped with: an empty list when the controller reports none.
 func (r *mqlRedfishSupermicro) licenses() ([]any, error) {
-	r.load()
-	return r.cachedLicenses, nil
+	license, ok := r.licenseDoc.get(r.smcManagers(), func(m *smc.Manager) (*smc.QueryLicense, error) {
+		lm, err := m.LicenseManager()
+		if err != nil || lm == nil {
+			return nil, err
+		}
+		return lm.QueryLicense()
+	})
+	if !ok {
+		return []any{}, nil
+	}
+	res := make([]any, 0, len(license.Licenses))
+	for _, l := range license.Licenses {
+		res = append(res, l)
+	}
+	return res, nil
 }
 
+// systemLockdownEnabled reports whether BMC system lockdown mode is engaged.
+// It keeps the behavior it shipped with: false when the controller reports no
+// lockdown setting.
 func (r *mqlRedfishSupermicro) systemLockdownEnabled() (bool, error) {
-	r.load()
-	return r.cachedLockdown, nil
+	lockdown, ok := r.lockdownDoc.get(r.smcManagers(), (*smc.Manager).SysLockdown)
+	if !ok {
+		return false, nil
+	}
+	return lockdown.Enabled, nil
+}
+
+func (r *mqlRedfishSupermicro) rakpEnabled() (bool, error) {
+	rakp, ok := r.rakpDoc.get(r.smcManagers(), (*smc.Manager).SMCRAKP)
+	if !ok {
+		r.RakpEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return rakp.Mode == smc.SMCRAKPTypeEnabled, nil
+}
+
+func (r *mqlRedfishSupermicro) kcsPrivilege() (string, error) {
+	kcs, ok := r.kcsDoc.get(r.smcManagers(), (*smc.Manager).KCSInterface)
+	if !ok || kcs.Privilege == "" {
+		r.KcsPrivilege.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return kcs.Privilege, nil
+}
+
+// smcOemLinks are the Supermicro OEM links of a manager document. gofish parses
+// every one of these into an unexported field and exposes a getter for each,
+// except for IPAccessControl, so that link is recovered here and handed back to
+// the SDK's own getter.
+type smcOemLinks struct {
+	Oem struct {
+		Supermicro struct {
+			IPAccessControl odataRef `json:"IPAccessControl"`
+		} `json:"Supermicro"`
+	} `json:"Oem"`
+}
+
+// smcIPAccessControl fetches the IP access control document of a controller. It
+// returns nil without an error when the controller links none, which is the
+// case on every manager that is not Supermicro hardware.
+func smcIPAccessControl(m *smc.Manager) (*smc.IPAccessControl, error) {
+	var links smcOemLinks
+	if len(m.RawData) == 0 {
+		return nil, nil
+	}
+	if err := json.Unmarshal(m.RawData, &links); err != nil {
+		log.Debug().Err(err).Msg("redfish: could not decode the Supermicro OEM links of a manager")
+		return nil, nil
+	}
+	uri := links.Oem.Supermicro.IPAccessControl.ODataID
+	if uri == "" {
+		return nil, nil
+	}
+	return smc.GetIPAccessControl(m.GetClient(), uri)
+}
+
+func (r *mqlRedfishSupermicro) ipAccessControlEnabled() (bool, error) {
+	ipac, ok := r.ipAccessDoc.get(r.smcManagers(), smcIPAccessControl)
+	if !ok {
+		r.IpAccessControlEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return ipac.Enabled, nil
+}
+
+func (r *mqlRedfishSupermicro) ipAccessControlRules() ([]any, error) {
+	ipac, ok := r.ipAccessDoc.get(r.smcManagers(), smcIPAccessControl)
+	if !ok {
+		r.IpAccessControlRules.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	rules, err := ipac.FilterRules()
+	if err != nil {
+		// The controller advertises the rule collection but does not serve it.
+		log.Debug().Err(err).Msg("redfish: controller serves no IP access control rules")
+		r.IpAccessControlRules.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	res := make([]any, 0, len(rules))
+	for _, rule := range rules {
+		res = append(res, map[string]any{
+			"address":      rule.Address,
+			"prefixLength": int64(rule.PrefixLength),
+			"policy":       string(rule.Policy),
+		})
+	}
+	return res, nil
+}
+
+func (r *mqlRedfishSupermicro) radiusEnabled() (bool, error) {
+	radius, ok := r.radiusDoc.get(r.smcManagers(), (*smc.Manager).RADIUS)
+	if !ok {
+		r.RadiusEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return radius.Enabled, nil
+}
+
+func (r *mqlRedfishSupermicro) radiusServer() (string, error) {
+	radius, ok := r.radiusDoc.get(r.smcManagers(), (*smc.Manager).RADIUS)
+	if !ok || radius.Server == "" {
+		r.RadiusServer.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return radius.Server, nil
+}
+
+func (r *mqlRedfishSupermicro) radiusPort() (int64, error) {
+	radius, ok := r.radiusDoc.get(r.smcManagers(), (*smc.Manager).RADIUS)
+	if !ok {
+		r.RadiusPort.State = plugin.StateIsNull | plugin.StateIsSet
+		return 0, nil
+	}
+	return int64(radius.Port), nil
+}
+
+func (r *mqlRedfishSupermicro) ntpEnabled() (bool, error) {
+	ntp, ok := r.ntpDoc.get(r.smcManagers(), (*smc.Manager).NTP)
+	if !ok {
+		r.NtpEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return ntp.Enabled, nil
+}
+
+func (r *mqlRedfishSupermicro) ntpPrimaryServer() (string, error) {
+	ntp, ok := r.ntpDoc.get(r.smcManagers(), (*smc.Manager).NTP)
+	if !ok || ntp.PrimaryServer == "" {
+		r.NtpPrimaryServer.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return ntp.PrimaryServer, nil
+}
+
+func (r *mqlRedfishSupermicro) ntpSecondaryServer() (string, error) {
+	ntp, ok := r.ntpDoc.get(r.smcManagers(), (*smc.Manager).NTP)
+	if !ok || ntp.SecondaryServer == "" {
+		r.NtpSecondaryServer.State = plugin.StateIsNull | plugin.StateIsSet
+		return "", nil
+	}
+	return ntp.SecondaryServer, nil
+}
+
+func (r *mqlRedfishSupermicro) syslogEnabled() (bool, error) {
+	syslog, ok := r.syslogDoc.get(r.smcManagers(), (*smc.Manager).Syslog)
+	if !ok {
+		r.SyslogEnabled.State = plugin.StateIsNull | plugin.StateIsSet
+		return false, nil
+	}
+	return syslog.Enabled, nil
+}
+
+// syslogServers returns the destinations the controller forwards its event log
+// to. gofish fills Servers for both document shapes, so firmware that reports a
+// single destination appears here as a list of one.
+func (r *mqlRedfishSupermicro) syslogServers() ([]any, error) {
+	syslog, ok := r.syslogDoc.get(r.smcManagers(), (*smc.Manager).Syslog)
+	if !ok {
+		r.SyslogServers.State = plugin.StateIsNull | plugin.StateIsSet
+		return nil, nil
+	}
+	return syslogServerDicts(syslog), nil
+}
+
+// syslogServerDicts maps the syslog destinations of a Supermicro controller.
+// gofish fills Servers for both shapes of the document, so firmware that
+// reports a single destination as a string appears here as a list of one. It
+// also fills Servers with one address-less entry when the controller forwards
+// nowhere, and that entry is dropped rather than reported as a destination,
+// because a controller that forwards nothing is the finding. A port the
+// controller leaves out is written as null rather than as zero.
+func syslogServerDicts(syslog *smc.Syslog) []any {
+	res := make([]any, 0, len(syslog.Servers))
+	for _, s := range syslog.Servers {
+		if s.ServerIP == "" {
+			continue
+		}
+		var port any
+		if s.Port != nil {
+			port = int64(*s.Port)
+		}
+		res = append(res, map[string]any{"host": s.ServerIP, "port": port})
+	}
+	return res
 }

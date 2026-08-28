@@ -461,3 +461,318 @@ func TestIsPersistentBootOverride(t *testing.T) {
 		})
 	}
 }
+
+// idracAccountService is a recorded AccountService document of a Dell iDRAC 9.
+// It reports a full lockout policy, an LDAP provider, and an Active Directory
+// provider that is configured but switched off. PasswordExpirationDays is
+// explicitly null, which is how a controller says a password never expires.
+const idracAccountService = `{
+  "@odata.id": "/redfish/v1/AccountService",
+  "@odata.type": "#AccountService.v1_12_0.AccountService",
+  "AccountLockoutCounterResetAfter": 60,
+  "AccountLockoutCounterResetEnabled": true,
+  "AccountLockoutDuration": 60,
+  "AccountLockoutThreshold": 3,
+  "AuthFailureLoggingThreshold": 3,
+  "EnforcePasswordHistoryCount": 5,
+  "HTTPBasicAuth": "Enabled",
+  "LocalAccountAuth": "Enabled",
+  "MaxPasswordLength": 40,
+  "MinPasswordLength": 8,
+  "PasswordExpirationDays": null,
+  "RequireChangePasswordAction": false,
+  "ServiceEnabled": true,
+  "ActiveDirectory": {
+    "ServiceEnabled": false,
+    "ServiceAddresses": [],
+    "Authentication": {"AuthenticationType": "UsernameAndPassword", "Password": null}
+  },
+  "LDAP": {
+    "ServiceEnabled": true,
+    "ServiceAddresses": ["ldaps://dc1.example.com"],
+    "Authentication": {"AuthenticationType": "UsernameAndPassword", "Password": null}
+  }
+}`
+
+// iloAccountService is a recorded AccountService document of an HPE iLO 5. It
+// omits most of the policy and reports a lockout threshold of zero, which is
+// the controller stating that it never locks an account out.
+const iloAccountService = `{
+  "@odata.id": "/redfish/v1/AccountService",
+  "@odata.type": "#AccountService.v1_3_0.AccountService",
+  "AccountLockoutDuration": 0,
+  "AccountLockoutThreshold": 0,
+  "MinPasswordLength": 8,
+  "ServiceEnabled": true
+}`
+
+func TestParseAccountServiceReportedPolicy(t *testing.T) {
+	svc, err := parseAccountService([]byte(idracAccountService))
+	if err != nil {
+		t.Fatalf("parseAccountService() error = %v", err)
+	}
+
+	intFields := map[string]struct {
+		got  *int64
+		want int64
+	}{
+		"MinPasswordLength":               {svc.MinPasswordLength, 8},
+		"MaxPasswordLength":               {svc.MaxPasswordLength, 40},
+		"AccountLockoutThreshold":         {svc.AccountLockoutThreshold, 3},
+		"AccountLockoutDuration":          {svc.AccountLockoutDuration, 60},
+		"AccountLockoutCounterResetAfter": {svc.AccountLockoutCounterResetAfter, 60},
+		"AuthFailureLoggingThreshold":     {svc.AuthFailureLoggingThreshold, 3},
+		"EnforcePasswordHistoryCount":     {svc.EnforcePasswordHistoryCount, 5},
+	}
+	for name, tc := range intFields {
+		if tc.got == nil {
+			t.Errorf("%s = null, want %d", name, tc.want)
+			continue
+		}
+		if *tc.got != tc.want {
+			t.Errorf("%s = %d, want %d", name, *tc.got, tc.want)
+		}
+	}
+
+	if svc.HTTPBasicAuth != "Enabled" {
+		t.Errorf("HTTPBasicAuth = %q, want %q", svc.HTTPBasicAuth, "Enabled")
+	}
+	if svc.LocalAccountAuth != "Enabled" {
+		t.Errorf("LocalAccountAuth = %q, want %q", svc.LocalAccountAuth, "Enabled")
+	}
+	if svc.ServiceEnabled == nil || !*svc.ServiceEnabled {
+		t.Errorf("ServiceEnabled = %v, want true", svc.ServiceEnabled)
+	}
+	if svc.AccountLockoutCounterResetEnabled == nil || !*svc.AccountLockoutCounterResetEnabled {
+		t.Errorf("AccountLockoutCounterResetEnabled = %v, want true", svc.AccountLockoutCounterResetEnabled)
+	}
+	// An explicit JSON null means the password never expires, and that is not
+	// the same statement as a controller reporting zero days.
+	if svc.PasswordExpirationDays != nil {
+		t.Errorf("PasswordExpirationDays = %d, want null", *svc.PasswordExpirationDays)
+	}
+}
+
+func TestParseAccountServiceZeroIsNotNull(t *testing.T) {
+	svc, err := parseAccountService([]byte(iloAccountService))
+	if err != nil {
+		t.Fatalf("parseAccountService() error = %v", err)
+	}
+
+	// A reported threshold of zero is a finding: the controller never locks an
+	// account out. Reading it as null would hide that.
+	if svc.AccountLockoutThreshold == nil {
+		t.Fatal("AccountLockoutThreshold = null, want 0")
+	}
+	if *svc.AccountLockoutThreshold != 0 {
+		t.Errorf("AccountLockoutThreshold = %d, want 0", *svc.AccountLockoutThreshold)
+	}
+	if svc.AccountLockoutDuration == nil || *svc.AccountLockoutDuration != 0 {
+		t.Errorf("AccountLockoutDuration = %v, want 0", svc.AccountLockoutDuration)
+	}
+
+	// The controller says nothing about these, so none may read as zero or as
+	// an empty policy value.
+	nullFields := map[string]*int64{
+		"MaxPasswordLength":               svc.MaxPasswordLength,
+		"AccountLockoutCounterResetAfter": svc.AccountLockoutCounterResetAfter,
+		"AuthFailureLoggingThreshold":     svc.AuthFailureLoggingThreshold,
+		"EnforcePasswordHistoryCount":     svc.EnforcePasswordHistoryCount,
+		"PasswordExpirationDays":          svc.PasswordExpirationDays,
+	}
+	for name, got := range nullFields {
+		if got != nil {
+			t.Errorf("%s = %d, want null", name, *got)
+		}
+	}
+	if svc.RequireChangePasswordAction != nil {
+		t.Errorf("RequireChangePasswordAction = %v, want null", *svc.RequireChangePasswordAction)
+	}
+	if svc.HTTPBasicAuth != "" {
+		t.Errorf("HTTPBasicAuth = %q, want empty", svc.HTTPBasicAuth)
+	}
+}
+
+func TestParseAccountServiceExternalProviders(t *testing.T) {
+	svc, err := parseAccountService([]byte(idracAccountService))
+	if err != nil {
+		t.Fatalf("parseAccountService() error = %v", err)
+	}
+
+	if svc.LDAP == nil {
+		t.Fatal("LDAP = null, want a provider")
+	}
+	if svc.LDAP.ServiceEnabled == nil || !*svc.LDAP.ServiceEnabled {
+		t.Errorf("LDAP.ServiceEnabled = %v, want true", svc.LDAP.ServiceEnabled)
+	}
+	if len(svc.LDAP.ServiceAddresses) != 1 || svc.LDAP.ServiceAddresses[0] != "ldaps://dc1.example.com" {
+		t.Errorf("LDAP.ServiceAddresses = %v, want one ldaps address", svc.LDAP.ServiceAddresses)
+	}
+	if svc.LDAP.Authentication == nil || svc.LDAP.Authentication.AuthenticationType != "UsernameAndPassword" {
+		t.Errorf("LDAP.Authentication = %v, want UsernameAndPassword", svc.LDAP.Authentication)
+	}
+
+	// Configured but switched off is not the same as absent, and both differ
+	// from a provider the controller never mentions.
+	if svc.ActiveDirectory == nil {
+		t.Fatal("ActiveDirectory = null, want a disabled provider")
+	}
+	if svc.ActiveDirectory.ServiceEnabled == nil || *svc.ActiveDirectory.ServiceEnabled {
+		t.Errorf("ActiveDirectory.ServiceEnabled = %v, want false", svc.ActiveDirectory.ServiceEnabled)
+	}
+	if svc.TACACSplus != nil {
+		t.Error("TACACSplus is set on a document that does not mention it")
+	}
+}
+
+// tacacsAccountService is an AccountService document of a controller that
+// federates authentication to TACACS+, which the iDRAC and iLO documents above
+// do not mention at all.
+const tacacsAccountService = `{
+  "@odata.id": "/redfish/v1/AccountService",
+  "ServiceEnabled": true,
+  "LocalAccountAuth": "Fallback",
+  "TACACSplus": {
+    "ServiceEnabled": true,
+    "ServiceAddresses": ["tacacs1.example.com:49", "tacacs2.example.com:49"],
+    "Authentication": {"AuthenticationType": "Token", "Token": null},
+    "TACACSplusService": {"PasswordExchangeProtocols": ["PAP"]}
+  }
+}`
+
+func TestParseAccountServiceTACACSplus(t *testing.T) {
+	svc, err := parseAccountService([]byte(tacacsAccountService))
+	if err != nil {
+		t.Fatalf("parseAccountService() error = %v", err)
+	}
+
+	if svc.TACACSplus == nil {
+		t.Fatal("TACACSplus = null, want a provider")
+	}
+	if svc.TACACSplus.ServiceEnabled == nil || !*svc.TACACSplus.ServiceEnabled {
+		t.Errorf("TACACSplus.ServiceEnabled = %v, want true", svc.TACACSplus.ServiceEnabled)
+	}
+	if len(svc.TACACSplus.ServiceAddresses) != 2 {
+		t.Errorf("TACACSplus.ServiceAddresses = %v, want two servers", svc.TACACSplus.ServiceAddresses)
+	}
+	// The authentication method is read for TACACS+ the same way it is for LDAP
+	// and Active Directory.
+	if svc.TACACSplus.Authentication == nil || svc.TACACSplus.Authentication.AuthenticationType != "Token" {
+		t.Errorf("TACACSplus.Authentication = %v, want Token", svc.TACACSplus.Authentication)
+	}
+
+	// Local accounts stay usable when the directory is unreachable, which is a
+	// different posture from Enabled and from Disabled.
+	if svc.LocalAccountAuth != "Fallback" {
+		t.Errorf("LocalAccountAuth = %q, want Fallback", svc.LocalAccountAuth)
+	}
+}
+
+func TestParseAccountServiceMalformed(t *testing.T) {
+	if _, err := parseAccountService([]byte(`{not json`)); err == nil {
+		t.Error("parseAccountService() accepted malformed input")
+	}
+}
+
+// iloManagerConsoles is a recorded Manager document of an HPE iLO 5. It reports
+// a command shell and a graphical console but no serial console.
+const iloManagerConsoles = `{
+  "@odata.id": "/redfish/v1/Managers/1",
+  "@odata.type": "#Manager.v1_5_1.Manager",
+  "CommandShell": {
+    "ConnectTypesSupported": ["SSH", "Oem"],
+    "MaxConcurrentSessions": 9,
+    "ServiceEnabled": true
+  },
+  "GraphicalConsole": {
+    "ConnectTypesSupported": ["KVMIP"],
+    "MaxConcurrentSessions": 10,
+    "ServiceEnabled": false
+  }
+}`
+
+func TestParseManagerConsoles(t *testing.T) {
+	consoles := parseManagerConsoles([]byte(iloManagerConsoles))
+
+	enabled := consoleEnabled(consoles.CommandShell)
+	if enabled == nil || !*enabled {
+		t.Errorf("command shell enabled = %v, want true", enabled)
+	}
+	if got := consoleMaxSessions(consoles.CommandShell); got == nil || *got != 9 {
+		t.Errorf("command shell max sessions = %v, want 9", got)
+	}
+
+	// A console the controller reports as disabled must read false, not null.
+	enabled = consoleEnabled(consoles.GraphicalConsole)
+	if enabled == nil || *enabled {
+		t.Errorf("graphical console enabled = %v, want false", enabled)
+	}
+
+	// The document describes no serial console, so it may not read as one that
+	// is switched off and accepts no session.
+	if got := consoleEnabled(consoles.SerialConsole); got != nil {
+		t.Errorf("serial console enabled = %v, want null", *got)
+	}
+	if got := consoleMaxSessions(consoles.SerialConsole); got != nil {
+		t.Errorf("serial console max sessions = %d, want null", *got)
+	}
+}
+
+func TestParseManagerConsolesMalformed(t *testing.T) {
+	// A document that does not decode leaves every console null rather than
+	// reporting all three as switched off.
+	consoles := parseManagerConsoles([]byte(`{not json`))
+	if consoles.CommandShell != nil || consoles.GraphicalConsole != nil || consoles.SerialConsole != nil {
+		t.Errorf("parseManagerConsoles(malformed) = %+v, want every console null", consoles)
+	}
+	if consoles := parseManagerConsoles(nil); consoles.CommandShell != nil {
+		t.Error("parseManagerConsoles(nil) reported a command shell")
+	}
+}
+
+// idracAccount is a recorded ManagerAccount document of a Dell iDRAC 9. It
+// reports PasswordChangeRequired and an account expiry, and says nothing about
+// StrictAccountTypes or a password expiry.
+const idracAccount = `{
+  "@odata.id": "/redfish/v1/AccountService/Accounts/2",
+  "@odata.type": "#ManagerAccount.v1_6_0.ManagerAccount",
+  "UserName": "root",
+  "RoleId": "Administrator",
+  "Enabled": true,
+  "Locked": false,
+  "PasswordChangeRequired": false,
+  "AccountExpiration": "2027-01-01T00:00:00+00:00"
+}`
+
+func TestParseAccountFlags(t *testing.T) {
+	flags := parseAccountFlags([]byte(idracAccount))
+
+	// Reported as false: the account has no pending password change.
+	if flags.PasswordChangeRequired == nil || *flags.PasswordChangeRequired {
+		t.Errorf("PasswordChangeRequired = %v, want false", flags.PasswordChangeRequired)
+	}
+	// Never mentioned: reading this as false would state that the account is
+	// not restricted to its declared categories, which the controller did not say.
+	if flags.StrictAccountTypes != nil {
+		t.Errorf("StrictAccountTypes = %v, want null", *flags.StrictAccountTypes)
+	}
+	if flags.AccountExpiration != "2027-01-01T00:00:00+00:00" {
+		t.Errorf("AccountExpiration = %q, want the reported timestamp", flags.AccountExpiration)
+	}
+	if parseRedfishTime(flags.AccountExpiration) == nil {
+		t.Error("AccountExpiration does not parse as a Redfish timestamp")
+	}
+	if flags.PasswordExpiration != "" {
+		t.Errorf("PasswordExpiration = %q, want empty", flags.PasswordExpiration)
+	}
+	if parseRedfishTime(flags.PasswordExpiration) != nil {
+		t.Error("an unreported password expiry parsed to a time")
+	}
+}
+
+func TestParseAccountFlagsMalformed(t *testing.T) {
+	flags := parseAccountFlags([]byte(`{not json`))
+	if flags.PasswordChangeRequired != nil || flags.StrictAccountTypes != nil {
+		t.Errorf("parseAccountFlags(malformed) = %+v, want every flag null", flags)
+	}
+}
