@@ -33,6 +33,7 @@ redfish.accountService.minPasswordLength 13.1.1
 redfish.accountService.passwordExpirationDays 13.1.1
 redfish.accountService.requireChangePasswordAction 13.1.1
 redfish.accountService.serviceEnabled 13.1.1
+redfish.accountService.tacacsPlusAuthenticationType 13.1.1
 redfish.accountService.tacacsPlusEnabled 13.1.1
 redfish.accountService.tacacsPlusServiceAddresses 13.1.1
 redfish.accounts 13.0.0

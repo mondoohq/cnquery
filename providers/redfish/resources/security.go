@@ -902,3 +902,7 @@ func (r *mqlRedfishAccountService) tacacsPlusEnabled() (bool, error) {
 func (r *mqlRedfishAccountService) tacacsPlusServiceAddresses() ([]any, error) {
 	return r.providerAddresses(&r.TacacsPlusServiceAddresses, r.value().TACACSplus)
 }
+
+func (r *mqlRedfishAccountService) tacacsPlusAuthenticationType() (string, error) {
+	return r.providerAuthType(&r.TacacsPlusAuthenticationType, r.value().TACACSplus)
+}

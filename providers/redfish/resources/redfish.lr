@@ -403,6 +403,11 @@ redfish.accountService @defaults("minPasswordLength accountLockoutThreshold http
   tacacsPlusEnabled() bool
   // TACACS+ servers the controller authenticates against
   tacacsPlusServiceAddresses() []string
+  // How the controller authenticates itself to the TACACS+ server
+  //
+  // One of Token, KerberosKeytab, UsernameAndPassword, or OEM. The provider
+  // reads the method only, never the shared secret.
+  tacacsPlusAuthenticationType() string
 }
 
 // Management network protocol settings

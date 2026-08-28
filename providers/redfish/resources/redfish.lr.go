@@ -499,6 +499,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"redfish.accountService.tacacsPlusServiceAddresses": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishAccountService).GetTacacsPlusServiceAddresses()).ToDataRes(types.Array(types.String))
 	},
+	"redfish.accountService.tacacsPlusAuthenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlRedfishAccountService).GetTacacsPlusAuthenticationType()).ToDataRes(types.String)
+	},
 	"redfish.networkProtocol.hostName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlRedfishNetworkProtocol).GetHostName()).ToDataRes(types.String)
 	},
@@ -1180,6 +1183,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"redfish.accountService.tacacsPlusServiceAddresses": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlRedfishAccountService).TacacsPlusServiceAddresses, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"redfish.accountService.tacacsPlusAuthenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlRedfishAccountService).TacacsPlusAuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"redfish.networkProtocol.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -2429,6 +2436,7 @@ type mqlRedfishAccountService struct {
 	ActiveDirectoryAuthenticationType plugin.TValue[string]
 	TacacsPlusEnabled                 plugin.TValue[bool]
 	TacacsPlusServiceAddresses        plugin.TValue[[]any]
+	TacacsPlusAuthenticationType      plugin.TValue[string]
 }
 
 // createRedfishAccountService creates a new instance of this resource
@@ -2591,6 +2599,12 @@ func (c *mqlRedfishAccountService) GetTacacsPlusEnabled() *plugin.TValue[bool] {
 func (c *mqlRedfishAccountService) GetTacacsPlusServiceAddresses() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.TacacsPlusServiceAddresses, func() ([]any, error) {
 		return c.tacacsPlusServiceAddresses()
+	})
+}
+
+func (c *mqlRedfishAccountService) GetTacacsPlusAuthenticationType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.TacacsPlusAuthenticationType, func() (string, error) {
+		return c.tacacsPlusAuthenticationType()
 	})
 }
 

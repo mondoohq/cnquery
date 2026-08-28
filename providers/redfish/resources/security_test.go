@@ -625,6 +625,49 @@ func TestParseAccountServiceExternalProviders(t *testing.T) {
 	}
 }
 
+// tacacsAccountService is an AccountService document of a controller that
+// federates authentication to TACACS+, which the iDRAC and iLO documents above
+// do not mention at all.
+const tacacsAccountService = `{
+  "@odata.id": "/redfish/v1/AccountService",
+  "ServiceEnabled": true,
+  "LocalAccountAuth": "Fallback",
+  "TACACSplus": {
+    "ServiceEnabled": true,
+    "ServiceAddresses": ["tacacs1.example.com:49", "tacacs2.example.com:49"],
+    "Authentication": {"AuthenticationType": "Token", "Token": null},
+    "TACACSplusService": {"PasswordExchangeProtocols": ["PAP"]}
+  }
+}`
+
+func TestParseAccountServiceTACACSplus(t *testing.T) {
+	svc, err := parseAccountService([]byte(tacacsAccountService))
+	if err != nil {
+		t.Fatalf("parseAccountService() error = %v", err)
+	}
+
+	if svc.TACACSplus == nil {
+		t.Fatal("TACACSplus = null, want a provider")
+	}
+	if svc.TACACSplus.ServiceEnabled == nil || !*svc.TACACSplus.ServiceEnabled {
+		t.Errorf("TACACSplus.ServiceEnabled = %v, want true", svc.TACACSplus.ServiceEnabled)
+	}
+	if len(svc.TACACSplus.ServiceAddresses) != 2 {
+		t.Errorf("TACACSplus.ServiceAddresses = %v, want two servers", svc.TACACSplus.ServiceAddresses)
+	}
+	// The authentication method is read for TACACS+ the same way it is for LDAP
+	// and Active Directory.
+	if svc.TACACSplus.Authentication == nil || svc.TACACSplus.Authentication.AuthenticationType != "Token" {
+		t.Errorf("TACACSplus.Authentication = %v, want Token", svc.TACACSplus.Authentication)
+	}
+
+	// Local accounts stay usable when the directory is unreachable, which is a
+	// different posture from Enabled and from Disabled.
+	if svc.LocalAccountAuth != "Fallback" {
+		t.Errorf("LocalAccountAuth = %q, want Fallback", svc.LocalAccountAuth)
+	}
+}
+
 func TestParseAccountServiceMalformed(t *testing.T) {
 	if _, err := parseAccountService([]byte(`{not json`)); err == nil {
 		t.Error("parseAccountService() accepted malformed input")
