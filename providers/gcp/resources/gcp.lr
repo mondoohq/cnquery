@@ -1404,6 +1404,8 @@ private gcp.project.computeService {
   forwardingRules() []gcp.project.computeService.forwardingRule
   // Cloud Armor security policies
   securityPolicies() []gcp.project.computeService.securityPolicy
+  // Preconfigured WAF expression sets a security policy rule can reference
+  wafExpressionSets() []gcp.project.computeService.wafExpressionSet
   // SSL/TLS policies for load balancers
   sslPolicies() []gcp.project.computeService.sslPolicy
   // SSL/TLS certificates
@@ -10127,6 +10129,35 @@ private gcp.project.alloydbService.backup @defaults("name") {
   updatedAt time
   // Customer-managed KMS key used for backup encryption (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
+}
+
+// Cloud Armor preconfigured WAF expression set
+//
+// One of the web application firewall rule sets Google maintains and a Cloud
+// Armor security policy rule can reference by name, such as the OWASP core
+// rule set families covering SQL injection or cross-site scripting. Read
+// these alongside gcp.project.computeService.securityPolicy to see which rule
+// sets a policy could be running and at what strictness: the `id` field is
+// the set identifier a rule names, for example sqli-v33-stable, and each
+// entry in `expressions` carries the paranoia level its expression belongs
+// to.
+private gcp.project.computeService.wafExpressionSet @defaults("id aliases") {
+  // Expression set identifier a security policy rule references
+  id string
+  // Alternate identifiers for the set
+  //
+  // A generic suffix such as stable lets a rule follow newer expressions
+  // without being rewritten, so a rule naming an alias tracks whichever
+  // version that alias currently points at.
+  aliases []string
+  // Individual WAF expressions the set contains
+  //
+  // Each entry carries `id`, the expression identifier naming the attack
+  // definition it detects (for example owasp-crs-v030301-id942100-sqli),
+  // and `sensitivity`, the ModSecurity paranoia level from 1 to 4 the
+  // expression belongs to. A sensitivity of 0 marks an expression applied
+  // only when a rule opts into it by name.
+  expressions []dict
 }
 
 // Google Cloud (GCP) Compute Cloud Armor security policy

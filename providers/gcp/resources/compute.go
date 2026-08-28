@@ -3385,6 +3385,97 @@ func (g *mqlGcpProjectComputeServiceSecurityPolicyRule) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }
 
+// wafExpressionSets lists the preconfigured WAF rule sets a Cloud Armor
+// security policy rule can reference.
+//
+// The sets are maintained by Google rather than by the project, so the same
+// identifiers come back for every project. The cache key still carries the
+// project id, or scanning two projects in one run would make the second
+// project's sets resolve to the first project's resources.
+func (g *mqlGcpProjectComputeService) wafExpressionSets() ([]any, error) {
+	enabled, err := g.serviceEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
+	if g.ProjectId.Error != nil {
+		return nil, g.ProjectId.Error
+	}
+	projectId := g.ProjectId.Data
+
+	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
+
+	client, err := conn.Client(cloudresourcemanager.CloudPlatformReadOnlyScope, iam.CloudPlatformScope, compute.CloudPlatformScope)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	computeSvc, err := compute.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := computeSvc.SecurityPolicies.ListPreconfiguredExpressionSets(projectId).Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []any{}
+	for _, set := range wafExpressionSetsFromResponse(resp) {
+		args, err := wafExpressionSetArgs(projectId, set)
+		if err != nil {
+			return nil, err
+		}
+		mqlSet, err := CreateResource(g.MqlRuntime, "gcp.project.computeService.wafExpressionSet", args)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSet)
+	}
+	return res, nil
+}
+
+// wafExpressionSetsFromResponse walks to the expression sets inside the
+// response. Every level is optional in the API, and a nil at any of them is an
+// empty list rather than a failure.
+func wafExpressionSetsFromResponse(resp *compute.SecurityPoliciesListPreconfiguredExpressionSetsResponse) []*compute.WafExpressionSet {
+	if resp == nil || resp.PreconfiguredExpressionSets == nil || resp.PreconfiguredExpressionSets.WafRules == nil {
+		return nil
+	}
+	return resp.PreconfiguredExpressionSets.WafRules.ExpressionSets
+}
+
+// wafExpressionSetArgs maps one expression set onto resource arguments.
+func wafExpressionSetArgs(projectId string, set *compute.WafExpressionSet) (map[string]*llx.RawData, error) {
+	aliases := make([]any, 0, len(set.Aliases))
+	for _, a := range set.Aliases {
+		aliases = append(aliases, a)
+	}
+
+	expressions := make([]any, 0, len(set.Expressions))
+	for _, e := range set.Expressions {
+		if e == nil {
+			continue
+		}
+		d, err := convert.JsonToDict(e)
+		if err != nil {
+			return nil, err
+		}
+		expressions = append(expressions, d)
+	}
+
+	return map[string]*llx.RawData{
+		"__id":        llx.StringData(projectId + "/wafExpressionSet/" + set.Id),
+		"id":          llx.StringData(set.Id),
+		"aliases":     llx.ArrayData(aliases, types.String),
+		"expressions": llx.ArrayData(expressions, types.Dict),
+	}, nil
+}
+
 func (g *mqlGcpProjectComputeService) securityPolicies() ([]any, error) {
 	enabled, err := g.serviceEnabled()
 	if err != nil {
