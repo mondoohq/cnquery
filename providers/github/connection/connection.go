@@ -35,6 +35,14 @@ const (
 	OPTION_ENTERPRISE_URL          = "enterprise-url"
 )
 
+// githubRequestTimeout bounds a single HTTP attempt end-to-end (dial, TLS,
+// headers, body). Without it a connection that stops responding blocks the
+// calling goroutine indefinitely — and scans execute assets with
+// parallelism=1, so one stuck call silently wedges the entire scan until
+// something external kills the process. GitHub API responses are bounded
+// JSON documents; even large tree listings finish in seconds.
+const githubRequestTimeout = 5 * time.Minute
+
 type GithubConnection struct {
 	plugin.Connection
 	asset  *inventory.Asset
@@ -223,7 +231,12 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	retryClient.Logger = zerologadapter.New(log.Logger)
 
 	if httpClient == nil {
-		httpClient = http.DefaultClient
+		// A fresh client, not http.DefaultClient: the timeout below must not
+		// leak onto the shared default client.
+		httpClient = &http.Client{}
+	}
+	if httpClient.Timeout == 0 {
+		httpClient.Timeout = githubRequestTimeout
 	}
 	retryClient.HTTPClient = httpClient
 
@@ -260,7 +273,7 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 				if err != nil {                                                      // Must be impossible to hit errors here, but just in case
 					return time.Second * 8
 				}
-				return time.Second * time.Duration(sec)
+				return rateLimitWait(time.Second*time.Duration(sec), attemptNum)
 			}
 			// Primary and Secondary rate limit
 			if resp.Header.Get("x-ratelimit-remaining") == "0" {
@@ -269,7 +282,7 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 					return time.Second * 8
 				}
 				tm := time.Unix(unix, 0)
-				return tm.Sub(time.Now().UTC()) // time.Until might not use UTC, depending on the server configuration
+				return rateLimitWait(tm.Sub(time.Now().UTC()), attemptNum) // time.Until might not use UTC, depending on the server configuration
 			}
 		}
 
@@ -278,4 +291,12 @@ func newGithubRetryableClient(httpClient *http.Client) *http.Client {
 	}
 
 	return retryClient.StandardClient()
+}
+
+// rateLimitWait logs a rate-limit wait at warn level before it is slept: at
+// the default log level these sleeps are otherwise invisible, and a scan
+// waiting out a quota reset looks exactly like a hang.
+func rateLimitWait(wait time.Duration, attemptNum int) time.Duration {
+	log.Warn().Dur("wait", wait).Int("attempt", attemptNum).Msg("github API rate limited, waiting before retry")
+	return wait
 }
