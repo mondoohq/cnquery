@@ -23,6 +23,7 @@ func mapProject(p openai.Project) map[string]*llx.RawData {
 		"status":     llx.StringData(string(p.Status)),
 		"createdAt":  llx.TimeDataPtr(unixToNullableTime(p.CreatedAt)),
 		"archivedAt": llx.TimeDataPtr(unixToNullableTime(p.ArchivedAt)),
+		"residency":  llx.StringDataPtr(emptyToNil(string(p.Residency))),
 	}
 }
 
