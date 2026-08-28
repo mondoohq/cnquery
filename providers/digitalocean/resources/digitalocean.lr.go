@@ -40,6 +40,7 @@ const (
 	ResourceDigitaloceanLoadBalancerListener                            string = "digitalocean.loadBalancer.listener"
 	ResourceDigitaloceanVpc                                             string = "digitalocean.vpc"
 	ResourceDigitaloceanVpcMember                                       string = "digitalocean.vpc.member"
+	ResourceDigitaloceanVpcRoute                                        string = "digitalocean.vpc.route"
 	ResourceDigitaloceanVpcPeering                                      string = "digitalocean.vpcPeering"
 	ResourceDigitaloceanKubernetesCluster                               string = "digitalocean.kubernetes.cluster"
 	ResourceDigitaloceanKubernetesNodePool                              string = "digitalocean.kubernetes.nodePool"
@@ -206,6 +207,10 @@ func init() {
 		"digitalocean.vpc.member": {
 			// to override args, implement: initDigitaloceanVpcMember(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createDigitaloceanVpcMember,
+		},
+		"digitalocean.vpc.route": {
+			// to override args, implement: initDigitaloceanVpcRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createDigitaloceanVpcRoute,
 		},
 		"digitalocean.vpcPeering": {
 			// to override args, implement: initDigitaloceanVpcPeering(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -1489,6 +1494,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"digitalocean.vpc.members": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpc).GetMembers()).ToDataRes(types.Array(types.Resource("digitalocean.vpc.member")))
 	},
+	"digitalocean.vpc.routes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpc).GetRoutes()).ToDataRes(types.Array(types.Resource("digitalocean.vpc.route")))
+	},
 	"digitalocean.vpc.member.vpcId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpcMember).GetVpcId()).ToDataRes(types.String)
 	},
@@ -1503,6 +1511,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"digitalocean.vpc.member.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpcMember).GetCreatedAt()).ToDataRes(types.Time)
+	},
+	"digitalocean.vpc.route.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcRoute).GetId()).ToDataRes(types.String)
+	},
+	"digitalocean.vpc.route.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcRoute).GetType()).ToDataRes(types.String)
+	},
+	"digitalocean.vpc.route.destinationCidr": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcRoute).GetDestinationCidr()).ToDataRes(types.String)
+	},
+	"digitalocean.vpc.route.targetUrns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcRoute).GetTargetUrns()).ToDataRes(types.Array(types.String))
+	},
+	"digitalocean.vpc.route.modifiable": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcRoute).GetModifiable()).ToDataRes(types.Bool)
+	},
+	"digitalocean.vpc.route.createdAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlDigitaloceanVpcRoute).GetCreatedAt()).ToDataRes(types.Time)
 	},
 	"digitalocean.vpcPeering.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlDigitaloceanVpcPeering).GetId()).ToDataRes(types.String)
@@ -5066,6 +5092,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlDigitaloceanVpc).Members, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"digitalocean.vpc.routes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpc).Routes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"digitalocean.vpc.member.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanVpcMember).__id, ok = v.Value.(string)
 		return
@@ -5088,6 +5118,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"digitalocean.vpc.member.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlDigitaloceanVpcMember).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.route.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcRoute).__id, ok = v.Value.(string)
+		return
+	},
+	"digitalocean.vpc.route.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcRoute).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.route.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcRoute).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.route.destinationCidr": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcRoute).DestinationCidr, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.route.targetUrns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcRoute).TargetUrns, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.route.modifiable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcRoute).Modifiable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"digitalocean.vpc.route.createdAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlDigitaloceanVpcRoute).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"digitalocean.vpcPeering.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -11805,6 +11863,7 @@ type mqlDigitaloceanVpc struct {
 	Default     plugin.TValue[bool]
 	Urn         plugin.TValue[string]
 	Members     plugin.TValue[[]any]
+	Routes      plugin.TValue[[]any]
 }
 
 // createDigitaloceanVpc creates a new instance of this resource
@@ -11892,6 +11951,22 @@ func (c *mqlDigitaloceanVpc) GetMembers() *plugin.TValue[[]any] {
 	})
 }
 
+func (c *mqlDigitaloceanVpc) GetRoutes() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.Routes, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("digitalocean.vpc", c.__id, "routes")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.routes()
+	})
+}
+
 // mqlDigitaloceanVpcMember for the digitalocean.vpc.member resource
 type mqlDigitaloceanVpcMember struct {
 	MqlRuntime *plugin.Runtime
@@ -11953,6 +12028,75 @@ func (c *mqlDigitaloceanVpcMember) GetName() *plugin.TValue[string] {
 }
 
 func (c *mqlDigitaloceanVpcMember) GetCreatedAt() *plugin.TValue[*time.Time] {
+	return &c.CreatedAt
+}
+
+// mqlDigitaloceanVpcRoute for the digitalocean.vpc.route resource
+type mqlDigitaloceanVpcRoute struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlDigitaloceanVpcRouteInternal it will be used here
+	Id              plugin.TValue[string]
+	Type            plugin.TValue[string]
+	DestinationCidr plugin.TValue[string]
+	TargetUrns      plugin.TValue[[]any]
+	Modifiable      plugin.TValue[bool]
+	CreatedAt       plugin.TValue[*time.Time]
+}
+
+// createDigitaloceanVpcRoute creates a new instance of this resource
+func createDigitaloceanVpcRoute(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlDigitaloceanVpcRoute{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("digitalocean.vpc.route", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlDigitaloceanVpcRoute) MqlName() string {
+	return "digitalocean.vpc.route"
+}
+
+func (c *mqlDigitaloceanVpcRoute) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlDigitaloceanVpcRoute) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlDigitaloceanVpcRoute) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlDigitaloceanVpcRoute) GetDestinationCidr() *plugin.TValue[string] {
+	return &c.DestinationCidr
+}
+
+func (c *mqlDigitaloceanVpcRoute) GetTargetUrns() *plugin.TValue[[]any] {
+	return &c.TargetUrns
+}
+
+func (c *mqlDigitaloceanVpcRoute) GetModifiable() *plugin.TValue[bool] {
+	return &c.Modifiable
+}
+
+func (c *mqlDigitaloceanVpcRoute) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 

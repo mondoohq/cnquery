@@ -1111,6 +1111,14 @@ digitalocean.vpc.member.vpcId 13.15.3
 digitalocean.vpc.members 13.15.3
 digitalocean.vpc.name 13.0.1
 digitalocean.vpc.region 13.0.1
+digitalocean.vpc.route 13.15.3
+digitalocean.vpc.route.createdAt 13.15.3
+digitalocean.vpc.route.destinationCidr 13.15.3
+digitalocean.vpc.route.id 13.15.3
+digitalocean.vpc.route.modifiable 13.15.3
+digitalocean.vpc.route.targetUrns 13.15.3
+digitalocean.vpc.route.type 13.15.3
+digitalocean.vpc.routes 13.15.3
 digitalocean.vpc.urn 13.10.2
 digitalocean.vpcNatGateway 13.4.2
 digitalocean.vpcNatGateway.createdAt 13.4.2
