@@ -7,7 +7,7 @@ go 1.26.6
 require (
 	go.mondoo.com/mql v0.0.0-20260824053258-a0a7399274d4
 	go.mondoo.com/ranger-rpc v0.8.1
-	go.mongodb.org/mongo-driver/v2 v2.8.0
+	go.mongodb.org/mongo-driver/v2 v2.8.2
 )
 
 require (
