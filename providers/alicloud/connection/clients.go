@@ -26,7 +26,7 @@ import (
 	kmsclient "github.com/alibabacloud-go/kms-20160120/v4/client"
 	nasclient "github.com/alibabacloud-go/nas-20170626/v4/client"
 	nlbclient "github.com/alibabacloud-go/nlb-20220430/v4/client"
-	polardbclient "github.com/alibabacloud-go/polardb-20170801/v8/client"
+	polardbclient "github.com/alibabacloud-go/polardb-20170801/v9/client"
 	rkvclient "github.com/alibabacloud-go/r-kvstore-20150101/v7/client"
 	ramclient "github.com/alibabacloud-go/ram-20150501/v2/client"
 	rdsclient "github.com/alibabacloud-go/rds-20140815/v16/client"
