@@ -1026,6 +1026,8 @@ digitalocean.vpc @defaults("id name region") {
   urn string
   // Resources placed inside the VPC
   members() []digitalocean.vpc.member
+  // Routes directing traffic out of the VPC
+  routes() []digitalocean.vpc.route
 }
 
 // Resource placed inside a DigitalOcean VPC
@@ -1045,6 +1047,37 @@ private digitalocean.vpc.member @defaults("name urn") {
   // Member name
   name string
   // Time the resource joined the VPC; null when the API reports no join time
+  createdAt time
+}
+
+// DigitalOcean VPC route
+//
+// Static or dynamic route attached to a VPC, directing traffic for a
+// destination range at one or more resources inside the network. Read
+// `destinationCidr` together with `targetUrns` to see where traffic for a
+// range actually leaves the VPC, which is what decides whether a subnet
+// egresses through an inspected appliance or straight out. The
+// `modifiable` field separates routes DigitalOcean creates and manages
+// from routes an operator added, and `type` reports whether the route was
+// configured statically or learned dynamically.
+private digitalocean.vpc.route @defaults("destinationCidr type targetUrns") {
+  // Route ID
+  id string
+  // How the route was configured
+  //
+  // One of STATIC for a route an operator configured, or DYNAMIC for a
+  // route the network learned.
+  type string
+  // Destination IP range (CIDR) the route matches
+  destinationCidr string
+  // Uniform resource names (URNs) of the resources traffic is directed to
+  targetUrns []string
+  // Whether the route can be changed
+  //
+  // False for routes DigitalOcean creates and manages itself, which an
+  // operator cannot edit or remove.
+  modifiable bool
+  // Time the route was created; null when the API reports no creation time
   createdAt time
 }
 

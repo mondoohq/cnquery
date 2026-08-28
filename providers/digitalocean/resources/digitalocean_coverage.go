@@ -101,6 +101,75 @@ func (r *mqlDigitaloceanVpc) members() ([]interface{}, error) {
 	return out, nil
 }
 
+// ----- VPC routes -----
+
+// routes lists the routes directing traffic out of the VPC.
+func (r *mqlDigitaloceanVpc) routes() ([]interface{}, error) {
+	vpcID := r.Id.Data
+	if vpcID == "" {
+		return nil, errors.New("cannot list VPC routes without a VPC id")
+	}
+
+	conn := r.MqlRuntime.Connection.(*connection.DigitaloceanConnection)
+	client := conn.Client()
+
+	routes, err := paginate(context.Background(), func(c context.Context, o *godo.ListOptions) ([]*godo.Route, *godo.Response, error) {
+		return client.Routes.ListVPCRoutes(c, vpcID, o)
+	})
+	if err != nil {
+		// A VPC removed between the listing and this call answers 404, which
+		// is genuinely an empty route table. Denied and transient reads
+		// propagate rather than being reported as "no routes".
+		if isDoNotFound(err) {
+			return []interface{}{}, nil
+		}
+		return nil, err
+	}
+
+	out := make([]interface{}, 0, len(routes))
+	for _, rt := range routes {
+		// godo hands back a slice of pointers; a nil entry would panic the
+		// provider and take the whole scan with it.
+		if rt == nil || rt.ID == "" {
+			continue
+		}
+		args, err := vpcRouteArgs(vpcID, rt)
+		if err != nil {
+			return nil, err
+		}
+		res, err := CreateResource(r.MqlRuntime, "digitalocean.vpc.route", args)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+// vpcRouteArgs maps a godo route onto the resource arguments. The route ID is
+// only unique within its VPC, so the cache key carries both.
+func vpcRouteArgs(vpcID string, rt *godo.Route) (map[string]*llx.RawData, error) {
+	id, err := resourceID("digitalocean.vpc.route", vpcID, rt.ID)
+	if err != nil {
+		return nil, err
+	}
+	targets := make([]interface{}, len(rt.TargetURNs))
+	for i, u := range rt.TargetURNs {
+		targets[i] = u
+	}
+	return map[string]*llx.RawData{
+		"__id":            llx.StringData(id),
+		"id":              llx.StringData(rt.ID),
+		"type":            llx.StringData(rt.Type),
+		"destinationCidr": llx.StringData(rt.DestinationCIDR),
+		"targetUrns":      llx.ArrayData(targets, types.String),
+		"modifiable":      llx.BoolData(rt.Modifiable),
+		// An absent creation time stays null rather than becoming the zero
+		// time, which would report 1 January year 1 as a real date.
+		"createdAt": llx.TimeDataPtr(timePtr(rt.CreatedAt)),
+	}, nil
+}
+
 // ----- Kubernetes cluster identity -----
 
 // kubeconfigUsername returns the RBAC subject the platform-issued
