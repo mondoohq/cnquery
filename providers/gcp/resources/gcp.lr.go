@@ -198,6 +198,8 @@ const (
 	ResourceGcpProjectCloudFunctionV2                                                  string = "gcp.project.cloudFunctionV2"
 	ResourceGcpProjectCloudFunctionV2BuildConfig                                       string = "gcp.project.cloudFunctionV2.buildConfig"
 	ResourceGcpProjectCloudFunctionV2ServiceConfig                                     string = "gcp.project.cloudFunctionV2.serviceConfig"
+	ResourceGcpProjectCloudFunctionSecretEnvVar                                        string = "gcp.project.cloudFunction.secretEnvVar"
+	ResourceGcpProjectCloudFunctionSecretVolume                                        string = "gcp.project.cloudFunction.secretVolume"
 	ResourceGcpProjectCloudFunctionV2EventTrigger                                      string = "gcp.project.cloudFunctionV2.eventTrigger"
 	ResourceGcpProjectDataplexService                                                  string = "gcp.project.dataplexService"
 	ResourceGcpProjectDataplexServiceLake                                              string = "gcp.project.dataplexService.lake"
@@ -1248,6 +1250,14 @@ func init() {
 		"gcp.project.cloudFunctionV2.serviceConfig": {
 			// to override args, implement: initGcpProjectCloudFunctionV2ServiceConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectCloudFunctionV2ServiceConfig,
+		},
+		"gcp.project.cloudFunction.secretEnvVar": {
+			// to override args, implement: initGcpProjectCloudFunctionSecretEnvVar(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudFunctionSecretEnvVar,
+		},
+		"gcp.project.cloudFunction.secretVolume": {
+			// to override args, implement: initGcpProjectCloudFunctionSecretVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectCloudFunctionSecretVolume,
 		},
 		"gcp.project.cloudFunctionV2.eventTrigger": {
 			// to override args, implement: initGcpProjectCloudFunctionV2EventTrigger(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9287,6 +9297,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.cloudFunction.secretVolumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetSecretVolumes()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.cloudFunction.boundSecretEnvVars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunction).GetBoundSecretEnvVars()).ToDataRes(types.Array(types.Resource("gcp.project.cloudFunction.secretEnvVar")))
+	},
+	"gcp.project.cloudFunction.boundSecretVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunction).GetBoundSecretVolumes()).ToDataRes(types.Array(types.Resource("gcp.project.cloudFunction.secretVolume")))
+	},
 	"gcp.project.cloudFunction.dockerRepositoryRef": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunction).GetDockerRepositoryRef()).ToDataRes(types.Resource("gcp.project.artifactRegistryService.repository"))
 	},
@@ -9442,6 +9458,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.cloudFunctionV2.serviceConfig.secretVolumes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetSecretVolumes()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.boundSecretEnvVars": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetBoundSecretEnvVars()).ToDataRes(types.Array(types.Resource("gcp.project.cloudFunction.secretEnvVar")))
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.boundSecretVolumes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).GetBoundSecretVolumes()).ToDataRes(types.Array(types.Resource("gcp.project.cloudFunction.secretVolume")))
+	},
+	"gcp.project.cloudFunction.secretEnvVar.key": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionSecretEnvVar).GetKey()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunction.secretEnvVar.secret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionSecretEnvVar).GetSecret()).ToDataRes(types.Resource("gcp.project.secretmanagerService.secret"))
+	},
+	"gcp.project.cloudFunction.secretEnvVar.version": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionSecretEnvVar).GetVersion()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunction.secretVolume.mountPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionSecretVolume).GetMountPath()).ToDataRes(types.String)
+	},
+	"gcp.project.cloudFunction.secretVolume.secret": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionSecretVolume).GetSecret()).ToDataRes(types.Resource("gcp.project.secretmanagerService.secret"))
+	},
+	"gcp.project.cloudFunction.secretVolume.versionPaths": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectCloudFunctionSecretVolume).GetVersionPaths()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectCloudFunctionV2EventTrigger).GetId()).ToDataRes(types.String)
@@ -28967,6 +29007,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectCloudFunction).SecretVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.cloudFunction.boundSecretEnvVars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunction).BoundSecretEnvVars, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.boundSecretVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunction).BoundSecretVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.cloudFunction.dockerRepositoryRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunction).DockerRepositoryRef, ok = plugin.RawToTValue[*mqlGcpProjectArtifactRegistryServiceRepository](v.Value, v.Error)
 		return
@@ -29185,6 +29233,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.cloudFunctionV2.serviceConfig.secretVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).SecretVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.boundSecretEnvVars": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).BoundSecretEnvVars, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunctionV2.serviceConfig.boundSecretVolumes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionV2ServiceConfig).BoundSecretVolumes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.secretEnvVar.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretEnvVar).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudFunction.secretEnvVar.key": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretEnvVar).Key, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.secretEnvVar.secret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretEnvVar).Secret, ok = plugin.RawToTValue[*mqlGcpProjectSecretmanagerServiceSecret](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.secretEnvVar.version": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretEnvVar).Version, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.secretVolume.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretVolume).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.cloudFunction.secretVolume.mountPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretVolume).MountPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.secretVolume.secret": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretVolume).Secret, ok = plugin.RawToTValue[*mqlGcpProjectSecretmanagerServiceSecret](v.Value, v.Error)
+		return
+	},
+	"gcp.project.cloudFunction.secretVolume.versionPaths": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectCloudFunctionSecretVolume).VersionPaths, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.cloudFunctionV2.eventTrigger.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66689,6 +66777,8 @@ type mqlGcpProjectCloudFunction struct {
 	BuildName             plugin.TValue[string]
 	SecretEnvVars         plugin.TValue[map[string]any]
 	SecretVolumes         plugin.TValue[[]any]
+	BoundSecretEnvVars    plugin.TValue[[]any]
+	BoundSecretVolumes    plugin.TValue[[]any]
 	DockerRepositoryRef   plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepository]
 	DockerRegistry        plugin.TValue[string]
 	IamPolicy             plugin.TValue[[]any]
@@ -66935,6 +67025,14 @@ func (c *mqlGcpProjectCloudFunction) GetSecretEnvVars() *plugin.TValue[map[strin
 
 func (c *mqlGcpProjectCloudFunction) GetSecretVolumes() *plugin.TValue[[]any] {
 	return &c.SecretVolumes
+}
+
+func (c *mqlGcpProjectCloudFunction) GetBoundSecretEnvVars() *plugin.TValue[[]any] {
+	return &c.BoundSecretEnvVars
+}
+
+func (c *mqlGcpProjectCloudFunction) GetBoundSecretVolumes() *plugin.TValue[[]any] {
+	return &c.BoundSecretVolumes
 }
 
 func (c *mqlGcpProjectCloudFunction) GetDockerRepositoryRef() *plugin.TValue[*mqlGcpProjectArtifactRegistryServiceRepository] {
@@ -67289,6 +67387,8 @@ type mqlGcpProjectCloudFunctionV2ServiceConfig struct {
 	AllTrafficOnLatestRevision plugin.TValue[bool]
 	SecretEnvironmentVariables plugin.TValue[[]any]
 	SecretVolumes              plugin.TValue[[]any]
+	BoundSecretEnvVars         plugin.TValue[[]any]
+	BoundSecretVolumes         plugin.TValue[[]any]
 }
 
 // createGcpProjectCloudFunctionV2ServiceConfig creates a new instance of this resource
@@ -67426,6 +67526,146 @@ func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetSecretEnvironmentVariable
 
 func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetSecretVolumes() *plugin.TValue[[]any] {
 	return &c.SecretVolumes
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetBoundSecretEnvVars() *plugin.TValue[[]any] {
+	return &c.BoundSecretEnvVars
+}
+
+func (c *mqlGcpProjectCloudFunctionV2ServiceConfig) GetBoundSecretVolumes() *plugin.TValue[[]any] {
+	return &c.BoundSecretVolumes
+}
+
+// mqlGcpProjectCloudFunctionSecretEnvVar for the gcp.project.cloudFunction.secretEnvVar resource
+type mqlGcpProjectCloudFunctionSecretEnvVar struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudFunctionSecretEnvVarInternal
+	Key     plugin.TValue[string]
+	Secret  plugin.TValue[*mqlGcpProjectSecretmanagerServiceSecret]
+	Version plugin.TValue[string]
+}
+
+// createGcpProjectCloudFunctionSecretEnvVar creates a new instance of this resource
+func createGcpProjectCloudFunctionSecretEnvVar(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudFunctionSecretEnvVar{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudFunction.secretEnvVar", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretEnvVar) MqlName() string {
+	return "gcp.project.cloudFunction.secretEnvVar"
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretEnvVar) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretEnvVar) GetKey() *plugin.TValue[string] {
+	return &c.Key
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretEnvVar) GetSecret() *plugin.TValue[*mqlGcpProjectSecretmanagerServiceSecret] {
+	return plugin.GetOrCompute[*mqlGcpProjectSecretmanagerServiceSecret](&c.Secret, func() (*mqlGcpProjectSecretmanagerServiceSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunction.secretEnvVar", c.__id, "secret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectSecretmanagerServiceSecret), nil
+			}
+		}
+
+		return c.secret()
+	})
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretEnvVar) GetVersion() *plugin.TValue[string] {
+	return &c.Version
+}
+
+// mqlGcpProjectCloudFunctionSecretVolume for the gcp.project.cloudFunction.secretVolume resource
+type mqlGcpProjectCloudFunctionSecretVolume struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectCloudFunctionSecretVolumeInternal
+	MountPath    plugin.TValue[string]
+	Secret       plugin.TValue[*mqlGcpProjectSecretmanagerServiceSecret]
+	VersionPaths plugin.TValue[map[string]any]
+}
+
+// createGcpProjectCloudFunctionSecretVolume creates a new instance of this resource
+func createGcpProjectCloudFunctionSecretVolume(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectCloudFunctionSecretVolume{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.cloudFunction.secretVolume", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretVolume) MqlName() string {
+	return "gcp.project.cloudFunction.secretVolume"
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretVolume) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretVolume) GetMountPath() *plugin.TValue[string] {
+	return &c.MountPath
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretVolume) GetSecret() *plugin.TValue[*mqlGcpProjectSecretmanagerServiceSecret] {
+	return plugin.GetOrCompute[*mqlGcpProjectSecretmanagerServiceSecret](&c.Secret, func() (*mqlGcpProjectSecretmanagerServiceSecret, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.cloudFunction.secretVolume", c.__id, "secret")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectSecretmanagerServiceSecret), nil
+			}
+		}
+
+		return c.secret()
+	})
+}
+
+func (c *mqlGcpProjectCloudFunctionSecretVolume) GetVersionPaths() *plugin.TValue[map[string]any] {
+	return &c.VersionPaths
 }
 
 // mqlGcpProjectCloudFunctionV2EventTrigger for the gcp.project.cloudFunctionV2.eventTrigger resource

@@ -7576,21 +7576,20 @@ private gcp.project.cloudFunction @defaults("name") {
   buildId string
   // Cloud Build name of the function deployment
   buildName string
-  // Secret environment variables
+  // Secret environment variable dicts
   //
-  // Secret Manager secrets exposed to the function as environment variables,
-  // keyed by the environment variable name. Each value has keys: `projectId`
-  // (project holding the secret), `secret` (the secret name), and `version`
-  // (the bound secret version).
-  secretEnvVars map[string]dict
-  // Secret volumes
+  // Deprecated in favor of boundSecretEnvVars. Keyed by environment variable
+  // name, each value carrying `projectId`, `secret`, and `version`.
+  secretEnvVars @maturity("deprecated") map[string]dict
+  // Secret volume dicts
   //
-  // Secret Manager secrets mounted into the function's filesystem. Each entry
-  // has keys: `mountPath` (directory the secret is mounted at), `projectId`
-  // (project holding the secret), `secret` (the secret name), and `versions`
-  // (a list of `{version, path}` objects mapping each mounted secret version
-  // to its relative file path under the mount).
-  secretVolumes []dict
+  // Deprecated in favor of boundSecretVolumes. Each entry carries
+  // `mountPath`, `projectId`, `secret`, and `versions`.
+  secretVolumes @maturity("deprecated") []dict
+  // Secret Manager secrets exposed to the function as environment variables
+  boundSecretEnvVars []gcp.project.cloudFunction.secretEnvVar
+  // Secret Manager secrets mounted into the function filesystem
+  boundSecretVolumes []gcp.project.cloudFunction.secretVolume
   // Artifact Registry repository that stores the function's built image
   dockerRepositoryRef() gcp.project.artifactRegistryService.repository
   // Docker registry to use for this deployment
@@ -7732,20 +7731,54 @@ private gcp.project.cloudFunctionV2.serviceConfig @defaults("service timeoutSeco
   iamServiceAccount() gcp.project.iamService.serviceAccount
   // Whether all traffic is routed to the latest revision
   allTrafficOnLatestRevision bool
-  // Secret environment variables
+  // Secret environment variable dicts
   //
-  // Each entry exposes a Secret Manager secret as an environment variable,
-  // with keys `key` (the environment variable name), `projectId` (project
-  // holding the secret), `secret` (secret name), and `version` (secret
-  // version, or "latest").
-  secretEnvironmentVariables []dict
-  // Secret volume mounts
+  // Deprecated in favor of boundSecretEnvVars. Each entry carries `key`,
+  // `projectId`, `secret`, and `version`.
+  secretEnvironmentVariables @maturity("deprecated") []dict
+  // Secret volume dicts
   //
-  // Each entry mounts a Secret Manager secret as files, with keys `mountPath`
-  // (directory the secret is mounted at), `projectId` (project holding the
-  // secret), `secret` (secret name), and `versions` (a list of `version` /
-  // `path` pairs mapping each secret version to a file under the mount path).
-  secretVolumes []dict
+  // Deprecated in favor of boundSecretVolumes. Each entry carries
+  // `mountPath`, `projectId`, `secret`, and `versions`.
+  secretVolumes @maturity("deprecated") []dict
+  // Secret Manager secrets exposed to the function as environment variables
+  boundSecretEnvVars []gcp.project.cloudFunction.secretEnvVar
+  // Secret Manager secrets mounted into the function filesystem
+  boundSecretVolumes []gcp.project.cloudFunction.secretVolume
+}
+
+// Secret Manager secret bound to a Cloud Function as an environment variable
+//
+// One secret exposed to a function's runtime under an environment variable
+// name. `secret` resolves the Secret Manager secret, so its rotation policy,
+// replication and IAM policy can be read from the function that consumes it,
+// and `version` records whether the function is pinned to a version or follows
+// "latest".
+private gcp.project.cloudFunction.secretEnvVar @defaults("key version") {
+  // Environment variable name the secret value is exposed under
+  key string
+  // Secret Manager secret the value comes from
+  secret() gcp.project.secretmanagerService.secret
+  // Secret version bound to the variable, or "latest" to follow the newest enabled version
+  version string
+}
+
+// Secret Manager secret mounted into a Cloud Function filesystem
+//
+// One secret mounted as files under `mountPath`. `secret` resolves the Secret
+// Manager secret and `versionPaths` maps each mounted version to its file path
+// relative to the mount, so a function pinned to an old version is visible
+// without reading the function's code.
+private gcp.project.cloudFunction.secretVolume @defaults("mountPath") {
+  // Directory the secret is mounted at
+  mountPath string
+  // Secret Manager secret the files come from
+  secret() gcp.project.secretmanagerService.secret
+  // Mounted secret versions, keyed by version, valued by the file path relative to the mount
+  //
+  // Empty when the whole secret is mounted under its own name rather than
+  // specific versions being mapped to paths.
+  versionPaths map[string]string
 }
 
 // Google Cloud (GCP) Cloud Function v2 event trigger

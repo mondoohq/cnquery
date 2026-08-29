@@ -324,6 +324,31 @@ func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, projectId str
 		secretVolumes = append(secretVolumes, d)
 	}
 
+	envBindings := make([]cloudFunctionSecretBinding, 0, len(cfg.SecretEnvironmentVariables))
+	for _, v := range cfg.SecretEnvironmentVariables {
+		envBindings = append(envBindings, cloudFunctionSecretBinding{
+			key: v.Key, projectID: v.ProjectId, secret: v.Secret, version: v.Version,
+		})
+	}
+	volumeBindings := make([]cloudFunctionSecretBinding, 0, len(cfg.SecretVolumes))
+	for _, v := range cfg.SecretVolumes {
+		paths := make(map[string]string, len(v.Versions))
+		for _, vv := range v.Versions {
+			paths[vv.Version] = vv.Path
+		}
+		volumeBindings = append(volumeBindings, cloudFunctionSecretBinding{
+			mountPath: v.MountPath, projectID: v.ProjectId, secret: v.Secret, versionPaths: paths,
+		})
+	}
+	boundSecretEnvVars, err := newMqlFunctionSecretEnvVars(runtime, parentName+"/serviceConfig", envBindings)
+	if err != nil {
+		return nil, err
+	}
+	boundSecretVolumes, err := newMqlFunctionSecretVolumes(runtime, parentName+"/serviceConfig", volumeBindings)
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := CreateResource(runtime, "gcp.project.cloudFunctionV2.serviceConfig", map[string]*llx.RawData{
 		"id":                         llx.StringData(parentName + "/serviceConfig"),
 		"service":                    llx.StringData(cfg.Service),
@@ -342,6 +367,8 @@ func fnV2ServiceConfig(runtime *plugin.Runtime, parentName string, projectId str
 		"allTrafficOnLatestRevision": llx.BoolData(cfg.AllTrafficOnLatestRevision),
 		"secretEnvironmentVariables": llx.ArrayData(secretEnvVars, types.Dict),
 		"secretVolumes":              llx.ArrayData(secretVolumes, types.Dict),
+		"boundSecretEnvVars":         llx.ArrayData(boundSecretEnvVars, types.Resource("gcp.project.cloudFunction.secretEnvVar")),
+		"boundSecretVolumes":         llx.ArrayData(boundSecretVolumes, types.Resource("gcp.project.cloudFunction.secretVolume")),
 	})
 	if err != nil {
 		return nil, err

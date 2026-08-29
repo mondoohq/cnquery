@@ -123,6 +123,31 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 			secretVolumes = append(secretVolumes, vol)
 		}
 
+		envBindings := make([]cloudFunctionSecretBinding, 0, len(f.SecretEnvironmentVariables))
+		for _, v := range f.SecretEnvironmentVariables {
+			envBindings = append(envBindings, cloudFunctionSecretBinding{
+				key: v.Key, projectID: v.ProjectId, secret: v.Secret, version: v.Version,
+			})
+		}
+		volumeBindings := make([]cloudFunctionSecretBinding, 0, len(f.SecretVolumes))
+		for _, v := range f.SecretVolumes {
+			paths := make(map[string]string, len(v.Versions))
+			for _, vv := range v.Versions {
+				paths[vv.Version] = vv.Path
+			}
+			volumeBindings = append(volumeBindings, cloudFunctionSecretBinding{
+				mountPath: v.MountPath, projectID: v.ProjectId, secret: v.Secret, versionPaths: paths,
+			})
+		}
+		boundSecretEnvVars, err := newMqlFunctionSecretEnvVars(g.MqlRuntime, f.Name, envBindings)
+		if err != nil {
+			return nil, err
+		}
+		boundSecretVolumes, err := newMqlFunctionSecretVolumes(g.MqlRuntime, f.Name, volumeBindings)
+		if err != nil {
+			return nil, err
+		}
+
 		var sourceUploadUrl, sourceArchiveUrl string
 		var sourceRepository map[string]any
 		switch f.SourceCode.(type) {
@@ -193,6 +218,8 @@ func (g *mqlGcpProject) cloudFunctions() ([]any, error) {
 			"buildName":           llx.StringData(f.BuildName),
 			"secretEnvVars":       llx.MapData(secretEnvVars, types.Dict),
 			"secretVolumes":       llx.ArrayData(secretVolumes, types.Dict),
+			"boundSecretEnvVars":  llx.ArrayData(boundSecretEnvVars, types.Resource("gcp.project.cloudFunction.secretEnvVar")),
+			"boundSecretVolumes":  llx.ArrayData(boundSecretVolumes, types.Resource("gcp.project.cloudFunction.secretVolume")),
 			"dockerRegistry":      llx.StringData(f.DockerRegistry.String()),
 		})
 		if err != nil {

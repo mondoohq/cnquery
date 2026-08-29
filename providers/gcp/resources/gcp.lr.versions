@@ -1299,6 +1299,8 @@ gcp.project.cloudDomainsService.registrations 13.18.1
 gcp.project.cloudFunction 9.0.0
 gcp.project.cloudFunction.allowsUnauthenticated 13.19.2
 gcp.project.cloudFunction.availableMemoryMb 9.0.0
+gcp.project.cloudFunction.boundSecretEnvVars 13.37.1
+gcp.project.cloudFunction.boundSecretVolumes 13.37.1
 gcp.project.cloudFunction.buildEnvVars 9.0.0
 gcp.project.cloudFunction.buildId 9.0.0
 gcp.project.cloudFunction.buildName 9.0.0
@@ -1326,7 +1328,15 @@ gcp.project.cloudFunction.name 9.0.0
 gcp.project.cloudFunction.networkRef 13.21.2
 gcp.project.cloudFunction.projectId 9.0.0
 gcp.project.cloudFunction.runtime 9.0.0
+gcp.project.cloudFunction.secretEnvVar 13.37.1
+gcp.project.cloudFunction.secretEnvVar.key 13.37.1
+gcp.project.cloudFunction.secretEnvVar.secret 13.37.1
+gcp.project.cloudFunction.secretEnvVar.version 13.37.1
 gcp.project.cloudFunction.secretEnvVars 9.0.0
+gcp.project.cloudFunction.secretVolume 13.37.1
+gcp.project.cloudFunction.secretVolume.mountPath 13.37.1
+gcp.project.cloudFunction.secretVolume.secret 13.37.1
+gcp.project.cloudFunction.secretVolume.versionPaths 13.37.1
 gcp.project.cloudFunction.secretVolumes 9.0.0
 gcp.project.cloudFunction.serviceAccount 13.16.3
 gcp.project.cloudFunction.serviceAccountEmail 9.0.0
@@ -1379,6 +1389,8 @@ gcp.project.cloudFunctionV2.serviceConfig.allTrafficOnLatestRevision 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.availableCpu 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.availableMemory 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.binaryAuthorizationPolicy 13.32.1
+gcp.project.cloudFunctionV2.serviceConfig.boundSecretEnvVars 13.37.1
+gcp.project.cloudFunctionV2.serviceConfig.boundSecretVolumes 13.37.1
 gcp.project.cloudFunctionV2.serviceConfig.environmentVariables 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.iamServiceAccount 13.7.2
 gcp.project.cloudFunctionV2.serviceConfig.id 13.7.2
