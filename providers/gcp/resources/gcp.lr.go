@@ -400,6 +400,7 @@ const (
 	ResourceGcpSccOrganizationSettings                                                 string = "gcp.scc.organizationSettings"
 	ResourceGcpSccSource                                                               string = "gcp.scc.source"
 	ResourceGcpSccFinding                                                              string = "gcp.scc.finding"
+	ResourceGcpSccFindingInternetExposure                                              string = "gcp.scc.finding.internetExposure"
 	ResourceGcpSccNotificationConfig                                                   string = "gcp.scc.notificationConfig"
 	ResourceGcpSccMuteConfig                                                           string = "gcp.scc.muteConfig"
 	ResourceGcpSccBigQueryExport                                                       string = "gcp.scc.bigQueryExport"
@@ -2050,6 +2051,10 @@ func init() {
 		"gcp.scc.finding": {
 			// to override args, implement: initGcpSccFinding(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpSccFinding,
+		},
+		"gcp.scc.finding.internetExposure": {
+			// to override args, implement: initGcpSccFindingInternetExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpSccFindingInternetExposure,
 		},
 		"gcp.scc.notificationConfig": {
 			// to override args, implement: initGcpSccNotificationConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -16298,8 +16303,47 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.scc.finding.externalExposure": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccFinding).GetExternalExposure()).ToDataRes(types.Dict)
 	},
+	"gcp.scc.finding.internetExposure": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFinding).GetInternetExposure()).ToDataRes(types.Resource("gcp.scc.finding.internetExposure"))
+	},
 	"gcp.scc.finding.toxicCombination": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccFinding).GetToxicCombination()).ToDataRes(types.Dict)
+	},
+	"gcp.scc.finding.internetExposure.publicIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetPublicIpAddress()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.publicPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetPublicPort()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.privateIpAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetPrivateIpAddress()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.privatePort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetPrivatePort()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.exposedService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetExposedService()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.exposedEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetExposedEndpoint()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.loadBalancerFirewallPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetLoadBalancerFirewallPolicy()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.serviceFirewallPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetServiceFirewallPolicy()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.forwardingRule": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetForwardingRule()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.backendService": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetBackendService()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.instanceGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetInstanceGroup()).ToDataRes(types.String)
+	},
+	"gcp.scc.finding.internetExposure.networkEndpointGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpSccFindingInternetExposure).GetNetworkEndpointGroup()).ToDataRes(types.String)
 	},
 	"gcp.scc.notificationConfig.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpSccNotificationConfig).GetName()).ToDataRes(types.String)
@@ -38956,8 +39000,64 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpSccFinding).ExternalExposure, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.scc.finding.internetExposure": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFinding).InternetExposure, ok = plugin.RawToTValue[*mqlGcpSccFindingInternetExposure](v.Value, v.Error)
+		return
+	},
 	"gcp.scc.finding.toxicCombination": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpSccFinding).ToxicCombination, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.scc.finding.internetExposure.publicIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).PublicIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.publicPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).PublicPort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.privateIpAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).PrivateIpAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.privatePort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).PrivatePort, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.exposedService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).ExposedService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.exposedEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).ExposedEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.loadBalancerFirewallPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).LoadBalancerFirewallPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.serviceFirewallPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).ServiceFirewallPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.forwardingRule": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).ForwardingRule, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.backendService": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).BackendService, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.instanceGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).InstanceGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.scc.finding.internetExposure.networkEndpointGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpSccFindingInternetExposure).NetworkEndpointGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"gcp.scc.notificationConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -90449,6 +90549,7 @@ type mqlGcpSccFinding struct {
 	ResourceName     plugin.TValue[string]
 	Chokepoint       plugin.TValue[any]
 	ExternalExposure plugin.TValue[any]
+	InternetExposure plugin.TValue[*mqlGcpSccFindingInternetExposure]
 	ToxicCombination plugin.TValue[any]
 }
 
@@ -90581,8 +90682,111 @@ func (c *mqlGcpSccFinding) GetExternalExposure() *plugin.TValue[any] {
 	return &c.ExternalExposure
 }
 
+func (c *mqlGcpSccFinding) GetInternetExposure() *plugin.TValue[*mqlGcpSccFindingInternetExposure] {
+	return &c.InternetExposure
+}
+
 func (c *mqlGcpSccFinding) GetToxicCombination() *plugin.TValue[any] {
 	return &c.ToxicCombination
+}
+
+// mqlGcpSccFindingInternetExposure for the gcp.scc.finding.internetExposure resource
+type mqlGcpSccFindingInternetExposure struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpSccFindingInternetExposureInternal it will be used here
+	PublicIpAddress            plugin.TValue[string]
+	PublicPort                 plugin.TValue[string]
+	PrivateIpAddress           plugin.TValue[string]
+	PrivatePort                plugin.TValue[string]
+	ExposedService             plugin.TValue[string]
+	ExposedEndpoint            plugin.TValue[string]
+	LoadBalancerFirewallPolicy plugin.TValue[string]
+	ServiceFirewallPolicy      plugin.TValue[string]
+	ForwardingRule             plugin.TValue[string]
+	BackendService             plugin.TValue[string]
+	InstanceGroup              plugin.TValue[string]
+	NetworkEndpointGroup       plugin.TValue[string]
+}
+
+// createGcpSccFindingInternetExposure creates a new instance of this resource
+func createGcpSccFindingInternetExposure(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpSccFindingInternetExposure{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.scc.finding.internetExposure", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpSccFindingInternetExposure) MqlName() string {
+	return "gcp.scc.finding.internetExposure"
+}
+
+func (c *mqlGcpSccFindingInternetExposure) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetPublicIpAddress() *plugin.TValue[string] {
+	return &c.PublicIpAddress
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetPublicPort() *plugin.TValue[string] {
+	return &c.PublicPort
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetPrivateIpAddress() *plugin.TValue[string] {
+	return &c.PrivateIpAddress
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetPrivatePort() *plugin.TValue[string] {
+	return &c.PrivatePort
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetExposedService() *plugin.TValue[string] {
+	return &c.ExposedService
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetExposedEndpoint() *plugin.TValue[string] {
+	return &c.ExposedEndpoint
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetLoadBalancerFirewallPolicy() *plugin.TValue[string] {
+	return &c.LoadBalancerFirewallPolicy
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetServiceFirewallPolicy() *plugin.TValue[string] {
+	return &c.ServiceFirewallPolicy
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetForwardingRule() *plugin.TValue[string] {
+	return &c.ForwardingRule
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetBackendService() *plugin.TValue[string] {
+	return &c.BackendService
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetInstanceGroup() *plugin.TValue[string] {
+	return &c.InstanceGroup
+}
+
+func (c *mqlGcpSccFindingInternetExposure) GetNetworkEndpointGroup() *plugin.TValue[string] {
+	return &c.NetworkEndpointGroup
 }
 
 // mqlGcpSccNotificationConfig for the gcp.scc.notificationConfig resource

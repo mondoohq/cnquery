@@ -15323,14 +15323,16 @@ private gcp.scc.finding @defaults("name category severity") {
   // through. The `relatedFindings` key lists the resource names of other
   // findings that share this chokepoint.
   chokepoint dict
-  // External exposure details for the finding
+  // External exposure dict
   //
-  // Describes how the affected resource is reachable from the internet. Keys:
-  // `privateIpAddress`, `privatePort`, `publicIpAddress`, `publicPort`,
-  // `exposedService`, `exposedEndpoint`, `loadBalancerFirewallPolicy`,
-  // `serviceFirewallPolicy`, `forwardingRule`, `backendService`,
-  // `instanceGroup`, and `networkEndpointGroup`.
-  externalExposure dict
+  // Deprecated in favor of internetExposure. Carries `privateIpAddress`,
+  // `privatePort`, `publicIpAddress`, `publicPort`, `exposedService`,
+  // `exposedEndpoint`, `loadBalancerFirewallPolicy`, `serviceFirewallPolicy`,
+  // `forwardingRule`, `backendService`, `instanceGroup`, and
+  // `networkEndpointGroup`.
+  externalExposure @maturity("deprecated") dict
+  // How the affected resource is reachable from the internet
+  internetExposure gcp.scc.finding.internetExposure
   // Toxic combination details for the finding
   //
   // A toxic combination is a set of otherwise-benign findings that together
@@ -15338,6 +15340,47 @@ private gcp.scc.finding @defaults("name category severity") {
   // combined exposure) and `relatedFindings` (resource names of the findings
   // that make up the combination).
   toxicCombination dict
+}
+
+// Internet reachability of a Security Command Center finding
+//
+// The path by which the resource a finding was raised against is reachable from
+// the internet: the `publicIpAddress` and `publicPort` traffic arrives on, the
+// `privateIpAddress` and `privatePort` it lands on, the `exposedService` and
+// `exposedEndpoint` naming what answers, and the Google Cloud resources in
+// between. `loadBalancerFirewallPolicy` and `serviceFirewallPolicy` name the
+// policies filtering that traffic, so a finding with a public port and no
+// firewall policy is one nothing is standing in front of.
+//
+// The resource fields are full resource names rather than resolved resources.
+// Findings are organization-wide, while the Compute Engine resources are read
+// per project, so a resource named here often sits outside the connected
+// project and would read as null.
+private gcp.scc.finding.internetExposure @defaults("publicIpAddress publicPort exposedService") {
+  // Public IP address the resource is reachable on
+  publicIpAddress string
+  // Public port the resource is reachable on
+  publicPort string
+  // Private IP address the public traffic is delivered to
+  privateIpAddress string
+  // Private port the public traffic is delivered to
+  privatePort string
+  // Service exposed on the public endpoint, for example HTTP or SSH
+  exposedService string
+  // Endpoint the exposed service answers on
+  exposedEndpoint string
+  // Full resource name of the firewall policy filtering traffic to the load balancer, empty when none applies
+  loadBalancerFirewallPolicy string
+  // Full resource name of the firewall policy filtering traffic to the service, empty when none applies
+  serviceFirewallPolicy string
+  // Full resource name of the forwarding rule carrying the traffic
+  forwardingRule string
+  // Full resource name of the backend service the traffic is routed to
+  backendService string
+  // Full resource name of the instance group backing the service
+  instanceGroup string
+  // Full resource name of the network endpoint group backing the service
+  networkEndpointGroup string
 }
 
 // Google Cloud Security Command Center notification config
