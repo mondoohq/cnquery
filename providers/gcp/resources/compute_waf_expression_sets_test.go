@@ -25,21 +25,33 @@ func TestWafExpressionSetArgs(t *testing.T) {
 	assert.Equal(t, "sqli-v33-stable", args["id"].Value)
 	assert.Equal(t, []interface{}{"sqli-stable"}, args["aliases"].Value)
 
-	exprs, ok := args["expressions"].Value.([]interface{})
+	sensitivities, ok := args["expressionSensitivities"].Value.(map[string]interface{})
 	require.True(t, ok)
-	require.Len(t, exprs, 2)
+	require.Len(t, sensitivities, 2)
 
-	first, ok := exprs[0].(map[string]interface{})
-	require.True(t, ok)
-	assert.Equal(t, "owasp-crs-v030301-id942100-sqli", first["id"])
 	// Sensitivity is the ModSecurity paranoia level and is the reason this
 	// resource is worth reading: a policy running a set at level 1 catches far
 	// less than the same set at level 3. Dropping it would leave the
 	// expressions indistinguishable from a bare ID list.
-	assert.EqualValues(t, 1, first["sensitivity"])
+	assert.EqualValues(t, 1, sensitivities["owasp-crs-v030301-id942100-sqli"])
+	assert.EqualValues(t, 3, sensitivities["owasp-crs-v030301-id942110-sqli"])
+}
 
-	second := exprs[1].(map[string]interface{})
-	assert.EqualValues(t, 3, second["sensitivity"])
+// A sensitivity of 0 marks an expression applied only when a rule opts into it
+// by name. It is a real level, not an absent one, so the entry has to survive
+// into the map rather than being dropped as a zero value.
+func TestWafExpressionSetArgsKeepsZeroSensitivity(t *testing.T) {
+	args, err := wafExpressionSetArgs("proj-1", &compute.WafExpressionSet{
+		Id: "sqli-v33-stable",
+		Expressions: []*compute.WafExpressionSetExpression{
+			{Id: "owasp-crs-v030301-id942100-sqli", Sensitivity: 0},
+		},
+	})
+	require.NoError(t, err)
+
+	sensitivities := args["expressionSensitivities"].Value.(map[string]interface{})
+	require.Contains(t, sensitivities, "owasp-crs-v030301-id942100-sqli")
+	assert.EqualValues(t, 0, sensitivities["owasp-crs-v030301-id942100-sqli"])
 }
 
 // The expression sets are Google-maintained and identical across projects, so
@@ -61,7 +73,7 @@ func TestWafExpressionSetArgsEmptyCollections(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, []interface{}{}, args["aliases"].Value)
-	assert.Equal(t, []interface{}{}, args["expressions"].Value)
+	assert.Equal(t, map[string]interface{}{}, args["expressionSensitivities"].Value)
 }
 
 // Every level of the response is optional in the API. A nil anywhere in the

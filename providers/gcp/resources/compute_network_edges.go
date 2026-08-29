@@ -745,8 +745,10 @@ func (g *mqlGcpProjectComputeServiceInstanceGroup) instances() ([]any, error) {
 // ---------------------------------------------------------------
 
 type mqlGcpProjectComputeServiceInstanceNetworkInterfaceInternal struct {
-	cacheNetworkUrl    string
-	cacheSubnetworkUrl string
+	cacheNetworkUrl        string
+	cacheSubnetworkUrl     string
+	cacheAccessConfigs     []*compute.AccessConfig
+	cacheIpv6AccessConfigs []*compute.AccessConfig
 }
 
 // newMqlComputeNetworkInterface builds a typed network-interface resource for a
@@ -784,6 +786,8 @@ func newMqlComputeNetworkInterface(runtime *plugin.Runtime, instanceID uint64, n
 	nic := res.(*mqlGcpProjectComputeServiceInstanceNetworkInterface)
 	nic.cacheNetworkUrl = ni.Network
 	nic.cacheSubnetworkUrl = ni.Subnetwork
+	nic.cacheAccessConfigs = ni.AccessConfigs
+	nic.cacheIpv6AccessConfigs = ni.Ipv6AccessConfigs
 	return nic, nil
 }
 
