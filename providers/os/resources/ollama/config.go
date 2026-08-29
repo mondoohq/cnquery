@@ -142,7 +142,7 @@ func Resolve(vars map[string]string, home string, settings *ServerSettings) *Con
 
 	envNoCloud := boolVar(vars, "OLLAMA_NO_CLOUD", false)
 	fileNoCloud := settings != nil && settings.DisableOllamaCloud
-	c.CloudEnabled = !(envNoCloud || fileNoCloud)
+	c.CloudEnabled = !envNoCloud && !fileNoCloud
 	switch {
 	case envNoCloud && fileNoCloud:
 		c.CloudDisabledSource = "both"
