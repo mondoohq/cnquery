@@ -16972,14 +16972,25 @@ private aws.apigateway.stage @defaults("arn") {
   cacheClusterStatus string
   // Whether the stage response cache is encrypted, from the default method settings
   cacheDataEncrypted bool
-  // Access-log configuration for the stage
+  // CloudWatch log group receiving the stage access log
   //
-  // Keys: destinationArn (CloudWatch Logs log group or Kinesis Data
-  // Firehose delivery stream) and format (the $context log format
-  // string). Null when access logging is off. Mirrors
-  // `aws.apigatewayv2.stage.accessLogSettings`, so one check can cover
+  // Null when access logging is off, and also when the destination is a
+  // Kinesis Data Firehose delivery stream rather than a log group. Read
+  // accessLogDestinationArn to tell those two cases apart.
+  accessLogGroup() aws.cloudwatch.loggroup
+  // ARN of the destination receiving the stage access log
+  //
+  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
+  // stream. Empty when access logging is off, which is the reading an
+  // access-logging check is looking for. Mirrors
+  // `aws.apigatewayv2.stage.accessLogDestinationArn`, so one check can cover
   // REST and HTTP APIs the same way.
-  accessLogSettings dict
+  accessLogDestinationArn string
+  // Format of the stage access log
+  //
+  // A single line built from $context variables, which must include at least
+  // $context.requestId. Empty when access logging is off.
+  accessLogFormat string
   // Client certificate ID for mutual TLS with backend
   clientCertificateId string
   // WAF web ACL associated with the stage
@@ -17250,8 +17261,34 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   stageVariables map[string]string
   // Default per-route settings
   //
-  // Keys: throttlingBurstLimit, throttlingRateLimit, detailedMetricsEnabled, dataTraceEnabled, loggingLevel.
-  defaultRouteSettings dict
+  // Deprecated in favor of defaultRouteDataTraceEnabled,
+  // defaultRouteDetailedMetricsEnabled, defaultRouteLoggingLevel,
+  // defaultRouteThrottlingBurstLimit, and defaultRouteThrottlingRateLimit.
+  // Keys: throttlingBurstLimit, throttlingRateLimit, detailedMetricsEnabled,
+  // dataTraceEnabled, loggingLevel.
+  defaultRouteSettings @maturity("deprecated") dict
+  // Whether data trace logging is enabled by default for routes on the stage
+  //
+  // Data traces record full request and response bodies into CloudWatch Logs,
+  // so leaving this on in production writes payloads, including any secrets
+  // they carry, into the log group. Supported only for WebSocket APIs.
+  defaultRouteDataTraceEnabled bool
+  // Whether detailed CloudWatch metrics are enabled by default for routes on the stage
+  defaultRouteDetailedMetricsEnabled bool
+  // Default execution logging level for routes on the stage
+  //
+  // One of INFO, ERROR, or OFF. Supported only for WebSocket APIs.
+  defaultRouteLoggingLevel string
+  // Default throttling burst limit for routes on the stage
+  //
+  // 0 when the stage sets no default burst limit, in which case the
+  // account-level limit applies.
+  defaultRouteThrottlingBurstLimit int
+  // Default throttling steady-state rate limit for routes on the stage, in requests per second
+  //
+  // 0 when the stage sets no default rate limit, in which case the
+  // account-level limit applies.
+  defaultRouteThrottlingRateLimit float
   // Per-route setting overrides
   //
   // Keyed by route key; each value carries the same shape as
@@ -17260,10 +17297,28 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   routeSettings dict
   // Access-log configuration
   //
-  // Keys: destinationArn (CloudWatch Logs log group or Kinesis Data
-  // Firehose delivery stream) and format (the $context log format
-  // string). Null when access logging is off.
-  accessLogSettings dict
+  // Deprecated in favor of accessLogGroup, accessLogDestinationArn, and
+  // accessLogFormat. Keys: destinationArn (CloudWatch Logs log group or
+  // Kinesis Data Firehose delivery stream) and format (the $context log
+  // format string). Null when access logging is off.
+  accessLogSettings @maturity("deprecated") dict
+  // CloudWatch log group receiving the stage access log
+  //
+  // Null when access logging is off, and also when the destination is a
+  // Kinesis Data Firehose delivery stream rather than a log group. Read
+  // accessLogDestinationArn to tell those two cases apart.
+  accessLogGroup() aws.cloudwatch.loggroup
+  // ARN of the destination receiving the stage access log
+  //
+  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
+  // stream. Empty when access logging is off, which is the reading an
+  // access-logging check is looking for.
+  accessLogDestinationArn string
+  // Format of the stage access log
+  //
+  // A single line built from $context variables, which must include at least
+  // $context.requestId. Empty when access logging is off.
+  accessLogFormat string
   // Whether the stage is owned and managed by another AWS service
   apiGatewayManaged bool
   // Status message of the most recent deployment
@@ -18792,11 +18847,48 @@ private aws.ec2.clientVpnEndpoint @defaults("id status region") {
   // Session timeout in hours
   sessionTimeoutHours int
   // Client connect options (Lambda ARN, enabled flag)
-  clientConnectOptions dict
+  //
+  // Deprecated in favor of clientConnectEnabled and clientConnectFunction.
+  clientConnectOptions @maturity("deprecated") dict
   // Client login banner options (banner text, enabled flag)
-  clientLoginBannerOptions dict
+  //
+  // Deprecated in favor of loginBannerEnabled and loginBannerText.
+  clientLoginBannerOptions @maturity("deprecated") dict
   // Connection logging options (CloudWatch log group/stream, enabled flag)
-  connectionLogOptions dict
+  //
+  // Deprecated in favor of connectionLoggingEnabled, connectionLogGroup, and
+  // connectionLogStreamName.
+  connectionLogOptions @maturity("deprecated") dict
+  // Whether client connection logging is enabled for the endpoint
+  //
+  // Without it there is no record of who connected to the VPN, when, or from
+  // where, so a compromised client credential leaves no trace.
+  connectionLoggingEnabled bool
+  // CloudWatch log group receiving connection logs for the endpoint
+  //
+  // Null when connection logging is disabled or no log group is configured.
+  connectionLogGroup() aws.cloudwatch.loggroup
+  // CloudWatch log stream receiving connection logs for the endpoint
+  //
+  // Empty when connection logging is disabled or the endpoint writes to a
+  // stream it names per connection rather than a fixed one.
+  connectionLogStreamName string
+  // Whether the client login banner is enabled
+  loginBannerEnabled bool
+  // Text shown in the banner when a VPN session is established
+  //
+  // Empty when the banner is disabled. Up to 1400 UTF-8 characters.
+  loginBannerText string
+  // Whether client connect handling is enabled for the endpoint
+  //
+  // When enabled, a Lambda function authorizes each connection in addition to
+  // the endpoint's own authentication options.
+  clientConnectEnabled bool
+  // Lambda function that authorizes connections to the endpoint
+  //
+  // Null when client connect handling is disabled or no function is
+  // configured.
+  clientConnectFunction() aws.lambda.function
   // Authentication methods enabled on the endpoint
   //
   // Each entry carries Type (certificate-authentication,

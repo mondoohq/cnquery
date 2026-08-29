@@ -21913,8 +21913,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigateway.stage.cacheDataEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetCacheDataEncrypted()).ToDataRes(types.Bool)
 	},
-	"aws.apigateway.stage.accessLogSettings": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayStage).GetAccessLogSettings()).ToDataRes(types.Dict)
+	"aws.apigateway.stage.accessLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStage).GetAccessLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.apigateway.stage.accessLogDestinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStage).GetAccessLogDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.apigateway.stage.accessLogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStage).GetAccessLogFormat()).ToDataRes(types.String)
 	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetClientCertificateId()).ToDataRes(types.String)
@@ -22222,11 +22228,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigatewayv2.stage.defaultRouteSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteSettings()).ToDataRes(types.Dict)
 	},
+	"aws.apigatewayv2.stage.defaultRouteDataTraceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteDataTraceEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.apigatewayv2.stage.defaultRouteDetailedMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteDetailedMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.apigatewayv2.stage.defaultRouteLoggingLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteLoggingLevel()).ToDataRes(types.String)
+	},
+	"aws.apigatewayv2.stage.defaultRouteThrottlingBurstLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteThrottlingBurstLimit()).ToDataRes(types.Int)
+	},
+	"aws.apigatewayv2.stage.defaultRouteThrottlingRateLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteThrottlingRateLimit()).ToDataRes(types.Float)
+	},
 	"aws.apigatewayv2.stage.routeSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetRouteSettings()).ToDataRes(types.Dict)
 	},
 	"aws.apigatewayv2.stage.accessLogSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogSettings()).ToDataRes(types.Dict)
+	},
+	"aws.apigatewayv2.stage.accessLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.apigatewayv2.stage.accessLogDestinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.apigatewayv2.stage.accessLogFormat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogFormat()).ToDataRes(types.String)
 	},
 	"aws.apigatewayv2.stage.apiGatewayManaged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetApiGatewayManaged()).ToDataRes(types.Bool)
@@ -23847,6 +23877,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.clientVpnEndpoint.connectionLogOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLogOptions()).ToDataRes(types.Dict)
+	},
+	"aws.ec2.clientVpnEndpoint.connectionLoggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.clientVpnEndpoint.connectionLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.ec2.clientVpnEndpoint.connectionLogStreamName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetConnectionLogStreamName()).ToDataRes(types.String)
+	},
+	"aws.ec2.clientVpnEndpoint.loginBannerEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetLoginBannerEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.clientVpnEndpoint.loginBannerText": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetLoginBannerText()).ToDataRes(types.String)
+	},
+	"aws.ec2.clientVpnEndpoint.clientConnectEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetClientConnectEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ec2.clientVpnEndpoint.clientConnectFunction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetClientConnectFunction()).ToDataRes(types.Resource("aws.lambda.function"))
 	},
 	"aws.ec2.clientVpnEndpoint.authenticationOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2ClientVpnEndpoint).GetAuthenticationOptions()).ToDataRes(types.Array(types.Dict))
@@ -61632,8 +61683,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayStage).CacheDataEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.apigateway.stage.accessLogSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayStage).AccessLogSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+	"aws.apigateway.stage.accessLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStage).AccessLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.stage.accessLogDestinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStage).AccessLogDestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.stage.accessLogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStage).AccessLogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62080,12 +62139,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayv2Stage).DefaultRouteSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.apigatewayv2.stage.defaultRouteDataTraceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).DefaultRouteDataTraceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.defaultRouteDetailedMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).DefaultRouteDetailedMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.defaultRouteLoggingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).DefaultRouteLoggingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.defaultRouteThrottlingBurstLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).DefaultRouteThrottlingBurstLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.defaultRouteThrottlingRateLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).DefaultRouteThrottlingRateLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
 	"aws.apigatewayv2.stage.routeSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayv2Stage).RouteSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
 	"aws.apigatewayv2.stage.accessLogSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayv2Stage).AccessLogSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.accessLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).AccessLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.accessLogDestinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).AccessLogDestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.accessLogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).AccessLogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.apigatewayv2.stage.apiGatewayManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -64438,6 +64529,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.clientVpnEndpoint.connectionLogOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLogOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.connectionLoggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.connectionLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.connectionLogStreamName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ConnectionLogStreamName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.loginBannerEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).LoginBannerEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.loginBannerText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).LoginBannerText, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.clientConnectEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ClientConnectEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.clientVpnEndpoint.clientConnectFunction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2ClientVpnEndpoint).ClientConnectFunction, ok = plugin.RawToTValue[*mqlAwsLambdaFunction](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.clientVpnEndpoint.authenticationOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -148552,24 +148671,26 @@ type mqlAwsApigatewayStage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsApigatewayStageInternal
-	Arn                  plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	TracingEnabled       plugin.TValue[bool]
-	Description          plugin.TValue[string]
-	DeploymentId         plugin.TValue[string]
-	MethodSettings       plugin.TValue[any]
-	CacheClusterEnabled  plugin.TValue[bool]
-	CacheClusterSize     plugin.TValue[string]
-	CacheClusterStatus   plugin.TValue[string]
-	CacheDataEncrypted   plugin.TValue[bool]
-	AccessLogSettings    plugin.TValue[any]
-	ClientCertificateId  plugin.TValue[string]
-	WebAcl               plugin.TValue[*mqlAwsWafAcl]
-	CreatedAt            plugin.TValue[*time.Time]
-	LastUpdatedAt        plugin.TValue[*time.Time]
-	DocumentationVersion plugin.TValue[string]
-	Variables            plugin.TValue[map[string]any]
-	Tags                 plugin.TValue[map[string]any]
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	TracingEnabled          plugin.TValue[bool]
+	Description             plugin.TValue[string]
+	DeploymentId            plugin.TValue[string]
+	MethodSettings          plugin.TValue[any]
+	CacheClusterEnabled     plugin.TValue[bool]
+	CacheClusterSize        plugin.TValue[string]
+	CacheClusterStatus      plugin.TValue[string]
+	CacheDataEncrypted      plugin.TValue[bool]
+	AccessLogGroup          plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	AccessLogDestinationArn plugin.TValue[string]
+	AccessLogFormat         plugin.TValue[string]
+	ClientCertificateId     plugin.TValue[string]
+	WebAcl                  plugin.TValue[*mqlAwsWafAcl]
+	CreatedAt               plugin.TValue[*time.Time]
+	LastUpdatedAt           plugin.TValue[*time.Time]
+	DocumentationVersion    plugin.TValue[string]
+	Variables               plugin.TValue[map[string]any]
+	Tags                    plugin.TValue[map[string]any]
 }
 
 // createAwsApigatewayStage creates a new instance of this resource
@@ -148649,8 +148770,28 @@ func (c *mqlAwsApigatewayStage) GetCacheDataEncrypted() *plugin.TValue[bool] {
 	return &c.CacheDataEncrypted
 }
 
-func (c *mqlAwsApigatewayStage) GetAccessLogSettings() *plugin.TValue[any] {
-	return &c.AccessLogSettings
+func (c *mqlAwsApigatewayStage) GetAccessLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.AccessLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.stage", c.__id, "accessLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.accessLogGroup()
+	})
+}
+
+func (c *mqlAwsApigatewayStage) GetAccessLogDestinationArn() *plugin.TValue[string] {
+	return &c.AccessLogDestinationArn
+}
+
+func (c *mqlAwsApigatewayStage) GetAccessLogFormat() *plugin.TValue[string] {
+	return &c.AccessLogFormat
 }
 
 func (c *mqlAwsApigatewayStage) GetClientCertificateId() *plugin.TValue[string] {
@@ -149578,23 +149719,31 @@ type mqlAwsApigatewayv2Stage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsApigatewayv2StageInternal it will be used here
-	StageName                   plugin.TValue[string]
-	ApiId                       plugin.TValue[string]
-	Region                      plugin.TValue[string]
-	Api                         plugin.TValue[*mqlAwsApigatewayv2Api]
-	Description                 plugin.TValue[string]
-	AutoDeploy                  plugin.TValue[bool]
-	DeploymentId                plugin.TValue[string]
-	ClientCertificateId         plugin.TValue[string]
-	StageVariables              plugin.TValue[map[string]any]
-	DefaultRouteSettings        plugin.TValue[any]
-	RouteSettings               plugin.TValue[any]
-	AccessLogSettings           plugin.TValue[any]
-	ApiGatewayManaged           plugin.TValue[bool]
-	LastDeploymentStatusMessage plugin.TValue[string]
-	Tags                        plugin.TValue[map[string]any]
-	CreatedAt                   plugin.TValue[*time.Time]
-	UpdatedAt                   plugin.TValue[*time.Time]
+	StageName                          plugin.TValue[string]
+	ApiId                              plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	Api                                plugin.TValue[*mqlAwsApigatewayv2Api]
+	Description                        plugin.TValue[string]
+	AutoDeploy                         plugin.TValue[bool]
+	DeploymentId                       plugin.TValue[string]
+	ClientCertificateId                plugin.TValue[string]
+	StageVariables                     plugin.TValue[map[string]any]
+	DefaultRouteSettings               plugin.TValue[any]
+	DefaultRouteDataTraceEnabled       plugin.TValue[bool]
+	DefaultRouteDetailedMetricsEnabled plugin.TValue[bool]
+	DefaultRouteLoggingLevel           plugin.TValue[string]
+	DefaultRouteThrottlingBurstLimit   plugin.TValue[int64]
+	DefaultRouteThrottlingRateLimit    plugin.TValue[float64]
+	RouteSettings                      plugin.TValue[any]
+	AccessLogSettings                  plugin.TValue[any]
+	AccessLogGroup                     plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	AccessLogDestinationArn            plugin.TValue[string]
+	AccessLogFormat                    plugin.TValue[string]
+	ApiGatewayManaged                  plugin.TValue[bool]
+	LastDeploymentStatusMessage        plugin.TValue[string]
+	Tags                               plugin.TValue[map[string]any]
+	CreatedAt                          plugin.TValue[*time.Time]
+	UpdatedAt                          plugin.TValue[*time.Time]
 }
 
 // createAwsApigatewayv2Stage creates a new instance of this resource
@@ -149686,12 +149835,56 @@ func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteSettings() *plugin.TValue[any] 
 	return &c.DefaultRouteSettings
 }
 
+func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteDataTraceEnabled() *plugin.TValue[bool] {
+	return &c.DefaultRouteDataTraceEnabled
+}
+
+func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteDetailedMetricsEnabled() *plugin.TValue[bool] {
+	return &c.DefaultRouteDetailedMetricsEnabled
+}
+
+func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteLoggingLevel() *plugin.TValue[string] {
+	return &c.DefaultRouteLoggingLevel
+}
+
+func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteThrottlingBurstLimit() *plugin.TValue[int64] {
+	return &c.DefaultRouteThrottlingBurstLimit
+}
+
+func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteThrottlingRateLimit() *plugin.TValue[float64] {
+	return &c.DefaultRouteThrottlingRateLimit
+}
+
 func (c *mqlAwsApigatewayv2Stage) GetRouteSettings() *plugin.TValue[any] {
 	return &c.RouteSettings
 }
 
 func (c *mqlAwsApigatewayv2Stage) GetAccessLogSettings() *plugin.TValue[any] {
 	return &c.AccessLogSettings
+}
+
+func (c *mqlAwsApigatewayv2Stage) GetAccessLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.AccessLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigatewayv2.stage", c.__id, "accessLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.accessLogGroup()
+	})
+}
+
+func (c *mqlAwsApigatewayv2Stage) GetAccessLogDestinationArn() *plugin.TValue[string] {
+	return &c.AccessLogDestinationArn
+}
+
+func (c *mqlAwsApigatewayv2Stage) GetAccessLogFormat() *plugin.TValue[string] {
+	return &c.AccessLogFormat
 }
 
 func (c *mqlAwsApigatewayv2Stage) GetApiGatewayManaged() *plugin.TValue[bool] {
@@ -155519,6 +155712,13 @@ type mqlAwsEc2ClientVpnEndpoint struct {
 	ClientConnectOptions            plugin.TValue[any]
 	ClientLoginBannerOptions        plugin.TValue[any]
 	ConnectionLogOptions            plugin.TValue[any]
+	ConnectionLoggingEnabled        plugin.TValue[bool]
+	ConnectionLogGroup              plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	ConnectionLogStreamName         plugin.TValue[string]
+	LoginBannerEnabled              plugin.TValue[bool]
+	LoginBannerText                 plugin.TValue[string]
+	ClientConnectEnabled            plugin.TValue[bool]
+	ClientConnectFunction           plugin.TValue[*mqlAwsLambdaFunction]
 	AuthenticationOptions           plugin.TValue[[]any]
 	TransitGateway                  plugin.TValue[*mqlAwsEc2Transitgateway]
 	TransitGatewayAvailabilityZones plugin.TValue[[]any]
@@ -155672,6 +155872,58 @@ func (c *mqlAwsEc2ClientVpnEndpoint) GetClientLoginBannerOptions() *plugin.TValu
 
 func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogOptions() *plugin.TValue[any] {
 	return &c.ConnectionLogOptions
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLoggingEnabled() *plugin.TValue[bool] {
+	return &c.ConnectionLoggingEnabled
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.ConnectionLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnEndpoint", c.__id, "connectionLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.connectionLogGroup()
+	})
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetConnectionLogStreamName() *plugin.TValue[string] {
+	return &c.ConnectionLogStreamName
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetLoginBannerEnabled() *plugin.TValue[bool] {
+	return &c.LoginBannerEnabled
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetLoginBannerText() *plugin.TValue[string] {
+	return &c.LoginBannerText
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetClientConnectEnabled() *plugin.TValue[bool] {
+	return &c.ClientConnectEnabled
+}
+
+func (c *mqlAwsEc2ClientVpnEndpoint) GetClientConnectFunction() *plugin.TValue[*mqlAwsLambdaFunction] {
+	return plugin.GetOrCompute[*mqlAwsLambdaFunction](&c.ClientConnectFunction, func() (*mqlAwsLambdaFunction, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ec2.clientVpnEndpoint", c.__id, "clientConnectFunction")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsLambdaFunction), nil
+			}
+		}
+
+		return c.clientConnectFunction()
+	})
 }
 
 func (c *mqlAwsEc2ClientVpnEndpoint) GetAuthenticationOptions() *plugin.TValue[[]any] {

@@ -42,10 +42,12 @@ func (a *mqlAwsEc2ClientVpnEndpoint) id() (string, error) {
 type mqlAwsEc2ClientVpnEndpointInternal struct {
 	cacheServerCertificateArn string
 	securityGroupIdHandler
-	cacheVpcId            *string
-	cacheTransitGatewayId *string
-	region                string
-	accountID             string
+	cacheVpcId                    *string
+	cacheTransitGatewayId         *string
+	cacheConnectionLogGroupName   string
+	cacheClientConnectFunctionArn string
+	region                        string
+	accountID                     string
 }
 
 func (a *mqlAwsEc2) clientVpnEndpoints() ([]any, error) {
@@ -99,6 +101,26 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 						dnsServers = append(dnsServers, dns)
 					}
 
+					var connectionLoggingEnabled bool
+					var connectionLogGroupName, connectionLogStreamName string
+					if ep.ConnectionLogOptions != nil {
+						connectionLoggingEnabled = convert.ToValue(ep.ConnectionLogOptions.Enabled)
+						connectionLogGroupName = convert.ToValue(ep.ConnectionLogOptions.CloudwatchLogGroup)
+						connectionLogStreamName = convert.ToValue(ep.ConnectionLogOptions.CloudwatchLogStream)
+					}
+					var loginBannerEnabled bool
+					var loginBannerText string
+					if ep.ClientLoginBannerOptions != nil {
+						loginBannerEnabled = convert.ToValue(ep.ClientLoginBannerOptions.Enabled)
+						loginBannerText = convert.ToValue(ep.ClientLoginBannerOptions.BannerText)
+					}
+					var clientConnectEnabled bool
+					var clientConnectFunctionArn string
+					if ep.ClientConnectOptions != nil {
+						clientConnectEnabled = convert.ToValue(ep.ClientConnectOptions.Enabled)
+						clientConnectFunctionArn = convert.ToValue(ep.ClientConnectOptions.LambdaFunctionArn)
+					}
+
 					clientConnectOpts, _ := convert.JsonToDict(ep.ClientConnectOptions)
 					clientBannerOpts, _ := convert.JsonToDict(ep.ClientLoginBannerOptions)
 					connectionLogOpts, _ := convert.JsonToDict(ep.ConnectionLogOptions)
@@ -140,6 +162,11 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 							"clientConnectOptions":            llx.DictData(clientConnectOpts),
 							"clientLoginBannerOptions":        llx.DictData(clientBannerOpts),
 							"connectionLogOptions":            llx.DictData(connectionLogOpts),
+							"connectionLoggingEnabled":        llx.BoolData(connectionLoggingEnabled),
+							"connectionLogStreamName":         llx.StringData(connectionLogStreamName),
+							"loginBannerEnabled":              llx.BoolData(loginBannerEnabled),
+							"loginBannerText":                 llx.StringData(loginBannerText),
+							"clientConnectEnabled":            llx.BoolData(clientConnectEnabled),
 							"authenticationOptions":           llx.ArrayData(authOpts, types.Any),
 							"transitGatewayAvailabilityZones": llx.ArrayData(tgwAZs, types.String),
 							"tags":                            llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
@@ -152,6 +179,8 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 					mqlCvpn := mqlEp.(*mqlAwsEc2ClientVpnEndpoint)
 					mqlCvpn.cacheVpcId = ep.VpcId
 					mqlCvpn.cacheTransitGatewayId = tgwIdPtr
+					mqlCvpn.cacheConnectionLogGroupName = connectionLogGroupName
+					mqlCvpn.cacheClientConnectFunctionArn = clientConnectFunctionArn
 					mqlCvpn.region = region
 					mqlCvpn.accountID = conn.AccountId()
 
@@ -170,6 +199,36 @@ func (a *mqlAwsEc2) getClientVpnEndpoints(conn *connection.AwsConnection) []*job
 		tasks = append(tasks, jobpool.NewJob(f))
 	}
 	return tasks
+}
+
+func (a *mqlAwsEc2ClientVpnEndpoint) connectionLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	if a.cacheConnectionLogGroupName == "" {
+		a.ConnectionLogGroup.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	// EC2 reports the log group by name; the log group init only accepts an
+	// ARN, so build one from the endpoint's own region and account.
+	res, err := NewResource(a.MqlRuntime, "aws.cloudwatch.loggroup", map[string]*llx.RawData{
+		"arn": llx.StringData(fmt.Sprintf(logGroupArnPattern, a.region, a.accountID, a.cacheConnectionLogGroupName)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCloudwatchLoggroup), nil
+}
+
+func (a *mqlAwsEc2ClientVpnEndpoint) clientConnectFunction() (*mqlAwsLambdaFunction, error) {
+	if a.cacheClientConnectFunctionArn == "" {
+		a.ClientConnectFunction.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "aws.lambda.function", map[string]*llx.RawData{
+		"arn": llx.StringData(a.cacheClientConnectFunctionArn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsLambdaFunction), nil
 }
 
 func (a *mqlAwsEc2ClientVpnEndpoint) securityGroups() ([]any, error) {

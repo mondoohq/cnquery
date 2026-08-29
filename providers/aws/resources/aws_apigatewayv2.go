@@ -243,29 +243,59 @@ func newMqlAwsApigatewayv2Stage(runtime *plugin.Runtime, region, apiId string, s
 	if s.StageName != nil {
 		stageName = *s.StageName
 	}
+
+	var dataTrace, detailedMetrics bool
+	var loggingLevel string
+	var burstLimit int64
+	var rateLimit float64
+	if s.DefaultRouteSettings != nil {
+		dataTrace = convert.ToValue(s.DefaultRouteSettings.DataTraceEnabled)
+		detailedMetrics = convert.ToValue(s.DefaultRouteSettings.DetailedMetricsEnabled)
+		loggingLevel = string(s.DefaultRouteSettings.LoggingLevel)
+		burstLimit = int64(convert.ToValue(s.DefaultRouteSettings.ThrottlingBurstLimit))
+		rateLimit = convert.ToValue(s.DefaultRouteSettings.ThrottlingRateLimit)
+	}
+
+	var accessLogDestinationArn, accessLogFormat string
+	if s.AccessLogSettings != nil {
+		accessLogDestinationArn = convert.ToValue(s.AccessLogSettings.DestinationArn)
+		accessLogFormat = convert.ToValue(s.AccessLogSettings.Format)
+	}
+
 	res, err := CreateResource(runtime, "aws.apigatewayv2.stage", map[string]*llx.RawData{
-		"__id":                        llx.StringData(apigatewayv2StageId(region, apiId, stageName)),
-		"stageName":                   llx.StringData(stageName),
-		"apiId":                       llx.StringData(apiId),
-		"region":                      llx.StringData(region),
-		"description":                 llx.StringDataPtr(s.Description),
-		"autoDeploy":                  llx.BoolDataPtr(s.AutoDeploy),
-		"deploymentId":                llx.StringDataPtr(s.DeploymentId),
-		"clientCertificateId":         llx.StringDataPtr(s.ClientCertificateId),
-		"stageVariables":              llx.MapData(stringMapToAny(s.StageVariables), types.String),
-		"defaultRouteSettings":        llx.DictData(defaultRouteSettings),
-		"routeSettings":               llx.DictData(routeSettings),
-		"accessLogSettings":           llx.DictData(accessLog),
-		"apiGatewayManaged":           llx.BoolDataPtr(s.ApiGatewayManaged),
-		"lastDeploymentStatusMessage": llx.StringDataPtr(s.LastDeploymentStatusMessage),
-		"tags":                        llx.MapData(stringMapToAny(s.Tags), types.String),
-		"createdAt":                   llx.TimeDataPtr(s.CreatedDate),
-		"updatedAt":                   llx.TimeDataPtr(s.LastUpdatedDate),
+		"__id":                               llx.StringData(apigatewayv2StageId(region, apiId, stageName)),
+		"stageName":                          llx.StringData(stageName),
+		"apiId":                              llx.StringData(apiId),
+		"region":                             llx.StringData(region),
+		"description":                        llx.StringDataPtr(s.Description),
+		"autoDeploy":                         llx.BoolDataPtr(s.AutoDeploy),
+		"deploymentId":                       llx.StringDataPtr(s.DeploymentId),
+		"clientCertificateId":                llx.StringDataPtr(s.ClientCertificateId),
+		"stageVariables":                     llx.MapData(stringMapToAny(s.StageVariables), types.String),
+		"defaultRouteSettings":               llx.DictData(defaultRouteSettings),
+		"routeSettings":                      llx.DictData(routeSettings),
+		"accessLogSettings":                  llx.DictData(accessLog),
+		"defaultRouteDataTraceEnabled":       llx.BoolData(dataTrace),
+		"defaultRouteDetailedMetricsEnabled": llx.BoolData(detailedMetrics),
+		"defaultRouteLoggingLevel":           llx.StringData(loggingLevel),
+		"defaultRouteThrottlingBurstLimit":   llx.IntData(burstLimit),
+		"defaultRouteThrottlingRateLimit":    llx.FloatData(rateLimit),
+		"accessLogDestinationArn":            llx.StringData(accessLogDestinationArn),
+		"accessLogFormat":                    llx.StringData(accessLogFormat),
+		"apiGatewayManaged":                  llx.BoolDataPtr(s.ApiGatewayManaged),
+		"lastDeploymentStatusMessage":        llx.StringDataPtr(s.LastDeploymentStatusMessage),
+		"tags":                               llx.MapData(stringMapToAny(s.Tags), types.String),
+		"createdAt":                          llx.TimeDataPtr(s.CreatedDate),
+		"updatedAt":                          llx.TimeDataPtr(s.LastUpdatedDate),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return res.(*mqlAwsApigatewayv2Stage), nil
+}
+
+func (a *mqlAwsApigatewayv2Stage) accessLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	return resolveAccessLogGroup(a.MqlRuntime, a.AccessLogDestinationArn.Data, &a.AccessLogGroup.State)
 }
 
 func apigatewayv2StageId(region, apiId, stageName string) string {
