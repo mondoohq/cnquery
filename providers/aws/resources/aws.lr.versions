@@ -4474,6 +4474,7 @@ aws.efs.filesystem.arn 11.15.2
 aws.efs.filesystem.availabilityZone 11.15.2
 aws.efs.filesystem.availabilityZoneId 13.39.2
 aws.efs.filesystem.backupPolicy 11.15.2
+aws.efs.filesystem.backupPolicyStatus 13.53.4
 aws.efs.filesystem.cloudformationStack 13.39.2
 aws.efs.filesystem.createdAt 11.15.2
 aws.efs.filesystem.creationToken 13.39.2
@@ -4508,6 +4509,7 @@ aws.efs.filesystem.replicationDestination.fileSystem 13.41.1
 aws.efs.filesystem.replicationDestination.lastReplicatedTimestamp 13.12.1
 aws.efs.filesystem.replicationDestination.region 13.12.1
 aws.efs.filesystem.replicationDestination.status 13.12.1
+aws.efs.filesystem.replicationOverwriteProtection 13.53.4
 aws.efs.filesystem.sizeInBytes 13.12.1
 aws.efs.filesystem.tags 11.15.2
 aws.efs.filesystem.throughputMode 13.12.1
@@ -6343,6 +6345,7 @@ aws.identitycenter.permissionSet.customerManagedPolicies 13.12.1
 aws.identitycenter.permissionSet.description 13.6.3
 aws.identitycenter.permissionSet.inlinePolicy 13.6.3
 aws.identitycenter.permissionSet.managedPolicies 13.6.3
+aws.identitycenter.permissionSet.managedPolicyRefs 13.53.4
 aws.identitycenter.permissionSet.name 13.6.3
 aws.identitycenter.permissionSet.permissionsBoundary 13.12.1
 aws.identitycenter.permissionSet.relayState 13.6.3

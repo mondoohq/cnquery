@@ -147,6 +147,10 @@ type mqlAwsIdentitycenterPermissionSetInternal struct {
 	fetched          atomic.Bool
 	lock             sync.Mutex
 	descResp         *ssoadmin.DescribePermissionSetOutput
+
+	managedPoliciesOnce sync.Once
+	managedPoliciesList []ssotypes.AttachedManagedPolicy
+	managedPoliciesErr  error
 }
 
 func (a *mqlAwsIdentitycenterPermissionSet) id() (string, error) {
@@ -259,30 +263,67 @@ func (a *mqlAwsIdentitycenterPermissionSet) inlinePolicy() (string, error) {
 	return *resp.InlinePolicy, nil
 }
 
-func (a *mqlAwsIdentitycenterPermissionSet) managedPolicies() ([]any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	svc := conn.SsoAdmin("")
-	ctx := context.Background()
+// listManagedPolicies walks the AWS managed policies attached to the permission
+// set once and hands the same list to both the deprecated dict field and the
+// policy references, rather than paginating the same API twice.
+func (a *mqlAwsIdentitycenterPermissionSet) listManagedPolicies() ([]ssotypes.AttachedManagedPolicy, error) {
+	a.managedPoliciesOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.SsoAdmin("")
+		ctx := context.Background()
 
-	instanceArn := a.cacheInstanceArn
-	psArn := a.Arn.Data
-	res := []any{}
+		instanceArn := a.cacheInstanceArn
+		psArn := a.Arn.Data
 
-	paginator := ssoadmin.NewListManagedPoliciesInPermissionSetPaginator(svc, &ssoadmin.ListManagedPoliciesInPermissionSetInput{
-		InstanceArn:      &instanceArn,
-		PermissionSetArn: &psArn,
+		paginator := ssoadmin.NewListManagedPoliciesInPermissionSetPaginator(svc, &ssoadmin.ListManagedPoliciesInPermissionSetInput{
+			InstanceArn:      &instanceArn,
+			PermissionSetArn: &psArn,
+		})
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if err != nil {
+				a.managedPoliciesErr = err
+				return
+			}
+			a.managedPoliciesList = append(a.managedPoliciesList, page.AttachedManagedPolicies...)
+		}
 	})
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	return a.managedPoliciesList, a.managedPoliciesErr
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) managedPolicies() ([]any, error) {
+	policies, err := a.listManagedPolicies()
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for _, mp := range policies {
+		res = append(res, map[string]any{
+			"arn":  convert.ToValue(mp.Arn),
+			"name": convert.ToValue(mp.Name),
+		})
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIdentitycenterPermissionSet) managedPolicyRefs() ([]any, error) {
+	policies, err := a.listManagedPolicies()
+	if err != nil {
+		return nil, err
+	}
+	res := []any{}
+	for _, mp := range policies {
+		arnVal := convert.ToValue(mp.Arn)
+		if arnVal == "" {
+			continue
+		}
+		mqlPolicy, err := NewResource(a.MqlRuntime, "aws.iam.policy", map[string]*llx.RawData{
+			"arn": llx.StringData(arnVal),
+		})
 		if err != nil {
 			return nil, err
 		}
-		for _, mp := range page.AttachedManagedPolicies {
-			res = append(res, map[string]any{
-				"arn":  convert.ToValue(mp.Arn),
-				"name": convert.ToValue(mp.Name),
-			})
-		}
+		res = append(res, mqlPolicy)
 	}
 	return res, nil
 }

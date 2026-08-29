@@ -6700,6 +6700,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.filesystem.backupPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicy()).ToDataRes(types.Dict)
 	},
+	"aws.efs.filesystem.backupPolicyStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetBackupPolicyStatus()).ToDataRes(types.String)
+	},
 	"aws.efs.filesystem.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetRegion()).ToDataRes(types.String)
 	},
@@ -6762,6 +6765,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.efs.filesystem.fileSystemProtection": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystem).GetFileSystemProtection()).ToDataRes(types.Dict)
+	},
+	"aws.efs.filesystem.replicationOverwriteProtection": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsFilesystem).GetReplicationOverwriteProtection()).ToDataRes(types.String)
 	},
 	"aws.efs.filesystem.lifecycleConfiguration.transitionToIA": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsFilesystemLifecycleConfiguration).GetTransitionToIA()).ToDataRes(types.String)
@@ -34330,6 +34336,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.identitycenter.permissionSet.managedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterPermissionSet).GetManagedPolicies()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.identitycenter.permissionSet.managedPolicyRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIdentitycenterPermissionSet).GetManagedPolicyRefs()).ToDataRes(types.Array(types.Resource("aws.iam.policy")))
+	},
 	"aws.identitycenter.permissionSet.customerManagedPolicies": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIdentitycenterPermissionSet).GetCustomerManagedPolicies()).ToDataRes(types.Array(types.Dict))
 	},
@@ -39632,6 +39641,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsFilesystem).BackupPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.efs.filesystem.backupPolicyStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).BackupPolicyStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.efs.filesystem.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).Region, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -39714,6 +39727,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.efs.filesystem.fileSystemProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsFilesystem).FileSystemProtection, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.filesystem.replicationOverwriteProtection": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsFilesystem).ReplicationOverwriteProtection, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.efs.filesystem.lifecycleConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -79780,6 +79797,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIdentitycenterPermissionSet).ManagedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.identitycenter.permissionSet.managedPolicyRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIdentitycenterPermissionSet).ManagedPolicyRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.identitycenter.permissionSet.customerManagedPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIdentitycenterPermissionSet).CustomerManagedPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -90660,34 +90681,36 @@ type mqlAwsEfsFilesystem struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEfsFilesystemInternal
-	Name                         plugin.TValue[string]
-	Id                           plugin.TValue[string]
-	Arn                          plugin.TValue[string]
-	Encrypted                    plugin.TValue[bool]
-	OwnerId                      plugin.TValue[string]
-	KmsKey                       plugin.TValue[*mqlAwsKmsKey]
-	BackupPolicy                 plugin.TValue[any]
-	Region                       plugin.TValue[string]
-	AvailabilityZone             plugin.TValue[string]
-	AvailabilityZoneId           plugin.TValue[string]
-	CreationToken                plugin.TValue[string]
-	ProvisionedThroughputInMibps plugin.TValue[float64]
-	Tags                         plugin.TValue[map[string]any]
-	CloudformationStack          plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy                    plugin.TValue[string]
-	CreatedAt                    plugin.TValue[*time.Time]
-	MountTargets                 plugin.TValue[[]any]
-	AccessPoints                 plugin.TValue[[]any]
-	FileSystemPolicy             plugin.TValue[string]
-	PolicyStatements             plugin.TValue[[]any]
-	IsPublic                     plugin.TValue[bool]
-	PerformanceMode              plugin.TValue[string]
-	ThroughputMode               plugin.TValue[string]
-	SizeInBytes                  plugin.TValue[int64]
-	LifecycleState               plugin.TValue[string]
-	LifecycleConfiguration       plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration]
-	ReplicationConfiguration     plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration]
-	FileSystemProtection         plugin.TValue[any]
+	Name                           plugin.TValue[string]
+	Id                             plugin.TValue[string]
+	Arn                            plugin.TValue[string]
+	Encrypted                      plugin.TValue[bool]
+	OwnerId                        plugin.TValue[string]
+	KmsKey                         plugin.TValue[*mqlAwsKmsKey]
+	BackupPolicy                   plugin.TValue[any]
+	BackupPolicyStatus             plugin.TValue[string]
+	Region                         plugin.TValue[string]
+	AvailabilityZone               plugin.TValue[string]
+	AvailabilityZoneId             plugin.TValue[string]
+	CreationToken                  plugin.TValue[string]
+	ProvisionedThroughputInMibps   plugin.TValue[float64]
+	Tags                           plugin.TValue[map[string]any]
+	CloudformationStack            plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                      plugin.TValue[string]
+	CreatedAt                      plugin.TValue[*time.Time]
+	MountTargets                   plugin.TValue[[]any]
+	AccessPoints                   plugin.TValue[[]any]
+	FileSystemPolicy               plugin.TValue[string]
+	PolicyStatements               plugin.TValue[[]any]
+	IsPublic                       plugin.TValue[bool]
+	PerformanceMode                plugin.TValue[string]
+	ThroughputMode                 plugin.TValue[string]
+	SizeInBytes                    plugin.TValue[int64]
+	LifecycleState                 plugin.TValue[string]
+	LifecycleConfiguration         plugin.TValue[*mqlAwsEfsFilesystemLifecycleConfiguration]
+	ReplicationConfiguration       plugin.TValue[*mqlAwsEfsFilesystemReplicationConfiguration]
+	FileSystemProtection           plugin.TValue[any]
+	ReplicationOverwriteProtection plugin.TValue[string]
 }
 
 // createAwsEfsFilesystem creates a new instance of this resource
@@ -90766,6 +90789,12 @@ func (c *mqlAwsEfsFilesystem) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
 func (c *mqlAwsEfsFilesystem) GetBackupPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.BackupPolicy, func() (any, error) {
 		return c.backupPolicy()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetBackupPolicyStatus() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BackupPolicyStatus, func() (string, error) {
+		return c.backupPolicyStatus()
 	})
 }
 
@@ -90930,6 +90959,12 @@ func (c *mqlAwsEfsFilesystem) GetReplicationConfiguration() *plugin.TValue[*mqlA
 func (c *mqlAwsEfsFilesystem) GetFileSystemProtection() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.FileSystemProtection, func() (any, error) {
 		return c.fileSystemProtection()
+	})
+}
+
+func (c *mqlAwsEfsFilesystem) GetReplicationOverwriteProtection() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.ReplicationOverwriteProtection, func() (string, error) {
+		return c.replicationOverwriteProtection()
 	})
 }
 
@@ -193699,6 +193734,7 @@ type mqlAwsIdentitycenterPermissionSet struct {
 	CreatedAt               plugin.TValue[*time.Time]
 	InlinePolicy            plugin.TValue[string]
 	ManagedPolicies         plugin.TValue[[]any]
+	ManagedPolicyRefs       plugin.TValue[[]any]
 	CustomerManagedPolicies plugin.TValue[[]any]
 	PermissionsBoundary     plugin.TValue[any]
 	Tags                    plugin.TValue[map[string]any]
@@ -193784,6 +193820,22 @@ func (c *mqlAwsIdentitycenterPermissionSet) GetInlinePolicy() *plugin.TValue[str
 func (c *mqlAwsIdentitycenterPermissionSet) GetManagedPolicies() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ManagedPolicies, func() ([]any, error) {
 		return c.managedPolicies()
+	})
+}
+
+func (c *mqlAwsIdentitycenterPermissionSet) GetManagedPolicyRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ManagedPolicyRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.identitycenter.permissionSet", c.__id, "managedPolicyRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.managedPolicyRefs()
 	})
 }
 

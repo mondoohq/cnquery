@@ -1940,10 +1940,16 @@ private aws.efs.filesystem @defaults("name id region") {
   kmsKey() aws.kms.key
   // Backup policy for the file system
   //
-  // Dict with a `BackupPolicy` object whose `Status` reports the automatic
-  // backup state, one of ENABLED, ENABLING, DISABLED, or DISABLING. Null
-  // when the file system has no backup policy configured.
-  backupPolicy() dict
+  // Deprecated in favor of backupPolicyStatus. Dict with a `BackupPolicy`
+  // object whose `Status` reports the automatic backup state. Null when the
+  // file system has no backup policy configured.
+  backupPolicy() @maturity("deprecated") dict
+  // Automatic backup state for the file system
+  //
+  // One of ENABLED, ENABLING, DISABLED, or DISABLING. Empty when the file
+  // system has no backup policy configured, which reads the same way as
+  // DISABLED: nothing is backing the file system up.
+  backupPolicyStatus() string
   // Region in which the file system exists
   region string
   // Availability zone where the file system exists if a specific AZ is defined
@@ -1993,10 +1999,15 @@ private aws.efs.filesystem @defaults("name id region") {
   replicationConfiguration() aws.efs.filesystem.replicationConfiguration
   // File system protection configuration
   //
-  // Dict with a `replicationOverwriteProtection` key reporting whether the
-  // file system is guarded against being overwritten by an incoming
-  // replication, one of ENABLED, DISABLED, or REPLICATING.
-  fileSystemProtection() dict
+  // Deprecated in favor of replicationOverwriteProtection. Dict with a
+  // `replicationOverwriteProtection` key.
+  fileSystemProtection() @maturity("deprecated") dict
+  // Whether the file system is guarded against being overwritten by an incoming replication
+  //
+  // One of ENABLED, DISABLED, or REPLICATING. DISABLED means a replication
+  // configuration pointed at this file system may overwrite its contents.
+  // Empty when the service reports no protection setting.
+  replicationOverwriteProtection() string
 }
 
 // AWS EFS lifecycle configuration
@@ -29041,9 +29052,18 @@ private aws.identitycenter.permissionSet @defaults("arn name") {
   inlinePolicy() string
   // AWS managed policies attached to the permission set
   //
-  // Each entry has the keys `arn` (the managed policy ARN) and `name` (the
-  // managed policy name).
-  managedPolicies() []dict
+  // Deprecated in favor of managedPolicyRefs. Each entry has the keys `arn`
+  // (the managed policy ARN) and `name` (the managed policy name).
+  managedPolicies() @maturity("deprecated") []dict
+  // AWS managed policies attached to the permission set
+  //
+  // A permission set is provisioned as an IAM role into every account it is
+  // assigned to, so the policies attached here become effective permissions
+  // across the organization. Resolving them to policies means a query can
+  // carry on into the statements and reach hasWildcardAllow, rather than
+  // stopping at a name. Empty when only customer managed policies or an
+  // inline policy are attached.
+  managedPolicyRefs() []aws.iam.policy
   // Customer managed policies attached to the permission set
   //
   // Each entry has the keys `name` (the policy name) and `path` (the IAM

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
@@ -65,6 +66,36 @@ func (a *mqlAwsEfs) filesystems() ([]any, error) {
 type mqlAwsEfsFilesystemInternal struct {
 	cacheKmsKeyID             *string
 	cacheFileSystemProtection *efstypes.FileSystemProtectionDescription
+
+	backupPolicyOnce sync.Once
+	backupPolicyResp *efs.DescribeBackupPolicyOutput
+	backupPolicyErr  error
+}
+
+// fetchBackupPolicy reads the file system's backup policy once and hands it to
+// both fields derived from it. A 404 means the file system has no backup
+// policy, which reads the same way as DISABLED; any other error (403, 5xx,
+// ...) propagates, because a null status would let a backup check pass on a
+// file system nobody could read.
+func (a *mqlAwsEfsFilesystem) fetchBackupPolicy() (*efs.DescribeBackupPolicyOutput, error) {
+	a.backupPolicyOnce.Do(func() {
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Efs(a.Region.Data)
+		id := a.Id.Data
+		resp, err := svc.DescribeBackupPolicy(context.Background(), &efs.DescribeBackupPolicyInput{
+			FileSystemId: &id,
+		})
+		if err != nil {
+			var respErr *http.ResponseError
+			if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
+				return
+			}
+			a.backupPolicyErr = err
+			return
+		}
+		a.backupPolicyResp = resp
+	})
+	return a.backupPolicyResp, a.backupPolicyErr
 }
 
 func buildEfsFilesystemResource(runtime *plugin.Runtime, region string, fs efstypes.FileSystemDescription) (*mqlAwsEfsFilesystem, error) {
@@ -194,30 +225,19 @@ func initAwsEfsFilesystem(runtime *plugin.Runtime, args map[string]*llx.RawData)
 }
 
 func (a *mqlAwsEfsFilesystem) backupPolicy() (any, error) {
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-	id := a.Id.Data
-	region := a.Region.Data
-
-	svc := conn.Efs(region)
-	ctx := context.Background()
-
-	backupPolicy, err := svc.DescribeBackupPolicy(ctx, &efs.DescribeBackupPolicyInput{
-		FileSystemId: &id,
-	})
-	if err != nil {
-		// A 404 means the filesystem has no backup policy; treat as absent.
-		// Any other error (403, 5xx, …) must propagate, not be swallowed.
-		var respErr *http.ResponseError
-		if errors.As(err, &respErr) && respErr.HTTPStatusCode() == 404 {
-			return nil, nil
-		}
+	resp, err := a.fetchBackupPolicy()
+	if err != nil || resp == nil {
 		return nil, err
 	}
-	res, err := convert.JsonToDict(backupPolicy)
-	if err != nil {
-		return nil, err
+	return convert.JsonToDict(resp)
+}
+
+func (a *mqlAwsEfsFilesystem) backupPolicyStatus() (string, error) {
+	resp, err := a.fetchBackupPolicy()
+	if err != nil || resp == nil || resp.BackupPolicy == nil {
+		return "", err
 	}
-	return res, nil
+	return string(resp.BackupPolicy.Status), nil
 }
 
 func (a *mqlAwsEfsFilesystem) lifecycleConfiguration() (*mqlAwsEfsFilesystemLifecycleConfiguration, error) {
@@ -405,6 +425,13 @@ func (a *mqlAwsEfsFilesystem) fileSystemProtection() (any, error) {
 		"replicationOverwriteProtection": string(a.cacheFileSystemProtection.ReplicationOverwriteProtection),
 	}
 	return result, nil
+}
+
+func (a *mqlAwsEfsFilesystem) replicationOverwriteProtection() (string, error) {
+	if a.cacheFileSystemProtection == nil {
+		return "", nil
+	}
+	return string(a.cacheFileSystemProtection.ReplicationOverwriteProtection), nil
 }
 
 func efsTagsToMap(tags []efstypes.Tag) map[string]any {
