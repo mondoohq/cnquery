@@ -5210,30 +5210,100 @@ private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled provider
 private gcp.project.gkeService.cluster.addonsConfig @defaults("httpLoadBalancing horizontalPodAutoscaling kubernetesDashboard networkPolicyConfig cloudRunConfig dnsCacheConfig configConnectorConfig gcePersistentDiskCsiDriverConfig gcpFilestoreCsiDriverConfig gkeBackupAgentConfig gcsFuseCsiDriverConfig statefulHaConfig") {
   // Internal ID for this resource
   id string
-  // Configuration for the HTTP (L7) load balancing controller addon
-  httpLoadBalancing dict
-  // Configuration for the horizontal pod autoscaling feature
-  horizontalPodAutoscaling dict
-  // Configuration for the Kubernetes Dashboard
-  kubernetesDashboard dict
-  // Configuration for NetworkPolicy
-  networkPolicyConfig dict
-  // Configuration for the Cloud Run addon
-  cloudRunConfig dict
-  // Configuration for NodeLocalDNS, a DNS cache running on cluster nodes
-  dnsCacheConfig dict
-  // Configuration for the ConfigConnector addon
-  configConnectorConfig dict
-  // Configuration for the Compute Engine Persistent Disk CSI driver
-  gcePersistentDiskCsiDriverConfig dict
-  // Configuration for the GCP Filestore CSI driver
-  gcpFilestoreCsiDriverConfig dict
-  // Configuration for the backup for GKE agent addon
-  gkeBackupAgentConfig dict
-  // Configuration for the Cloud Storage Fuse CSI driver
-  gcsFuseCsiDriverConfig dict
-  // Configuration for the StatefulHA add-on.
-  statefulHaConfig dict
+  // HTTP load balancing controller addon dict
+  //
+  // Deprecated in favor of httpLoadBalancingDisabled. Carries `disabled`.
+  httpLoadBalancing @maturity("deprecated") dict
+  // Horizontal pod autoscaling addon dict
+  //
+  // Deprecated in favor of horizontalPodAutoscalingDisabled. Carries
+  // `disabled`.
+  horizontalPodAutoscaling @maturity("deprecated") dict
+  // Kubernetes Dashboard addon dict
+  //
+  // Deprecated in favor of kubernetesDashboardDisabled. Carries `disabled`.
+  kubernetesDashboard @maturity("deprecated") dict
+  // NetworkPolicy addon dict
+  //
+  // Deprecated in favor of networkPolicyConfigDisabled. Carries `disabled`.
+  networkPolicyConfig @maturity("deprecated") dict
+  // Cloud Run addon dict
+  //
+  // Deprecated in favor of cloudRunDisabled and cloudRunLoadBalancerType.
+  // Carries `disabled` and `loadBalancerType`.
+  cloudRunConfig @maturity("deprecated") dict
+  // NodeLocalDNS addon dict
+  //
+  // Deprecated in favor of dnsCacheEnabled. Carries `enabled`.
+  dnsCacheConfig @maturity("deprecated") dict
+  // ConfigConnector addon dict
+  //
+  // Deprecated in favor of configConnectorEnabled. Carries `enabled`.
+  configConnectorConfig @maturity("deprecated") dict
+  // Compute Engine Persistent Disk CSI driver addon dict
+  //
+  // Deprecated in favor of gcePersistentDiskCsiDriverEnabled. Carries
+  // `enabled`.
+  gcePersistentDiskCsiDriverConfig @maturity("deprecated") dict
+  // Filestore CSI driver addon dict
+  //
+  // Deprecated in favor of gcpFilestoreCsiDriverEnabled. Carries `enabled`.
+  gcpFilestoreCsiDriverConfig @maturity("deprecated") dict
+  // Backup for GKE agent addon dict
+  //
+  // Deprecated in favor of gkeBackupAgentEnabled. Carries `enabled`.
+  gkeBackupAgentConfig @maturity("deprecated") dict
+  // Cloud Storage FUSE CSI driver addon dict
+  //
+  // Deprecated in favor of gcsFuseCsiDriverEnabled. Carries `enabled`.
+  gcsFuseCsiDriverConfig @maturity("deprecated") dict
+  // StatefulHA addon dict
+  //
+  // Deprecated in favor of statefulHaEnabled. Carries `enabled`.
+  statefulHaConfig @maturity("deprecated") dict
+  // Whether the HTTP (L7) load balancing controller addon is turned off
+  //
+  // With the addon off, an Ingress object does not provision a Google Cloud
+  // HTTP(S) load balancer.
+  httpLoadBalancingDisabled bool
+  // Whether the horizontal pod autoscaling addon is turned off
+  horizontalPodAutoscalingDisabled bool
+  // Whether the Kubernetes Dashboard addon is turned off
+  //
+  // The dashboard is deprecated by GKE and runs with broad cluster
+  // permissions, so leaving it enabled widens the cluster's attack surface.
+  kubernetesDashboardDisabled bool
+  // Whether the NetworkPolicy addon is turned off
+  //
+  // With the addon off, the cluster does not enforce NetworkPolicy objects,
+  // so every Pod can reach every other Pod regardless of the policies
+  // applied to the namespace.
+  networkPolicyConfigDisabled bool
+  // Whether the Cloud Run addon is turned off
+  cloudRunDisabled bool
+  // Load balancer the Cloud Run addon provisions for the cluster
+  //
+  // One of LOAD_BALANCER_TYPE_EXTERNAL, LOAD_BALANCER_TYPE_INTERNAL, or
+  // LOAD_BALANCER_TYPE_UNSPECIFIED. An external load balancer publishes the
+  // Cloud Run services on the internet.
+  cloudRunLoadBalancerType string
+  // Whether NodeLocalDNS, a DNS cache running on the cluster nodes, is enabled
+  dnsCacheEnabled bool
+  // Whether the ConfigConnector addon is enabled
+  //
+  // Config Connector manages Google Cloud resources from inside the cluster,
+  // so its service account holds project-level permissions.
+  configConnectorEnabled bool
+  // Whether the Compute Engine Persistent Disk CSI driver is enabled
+  gcePersistentDiskCsiDriverEnabled bool
+  // Whether the Filestore CSI driver is enabled
+  gcpFilestoreCsiDriverEnabled bool
+  // Whether the Backup for GKE agent addon is enabled
+  gkeBackupAgentEnabled bool
+  // Whether the Cloud Storage FUSE CSI driver is enabled
+  gcsFuseCsiDriverEnabled bool
+  // Whether the StatefulHA addon is enabled
+  statefulHaEnabled bool
 }
 
 // Google Kubernetes Engine (GKE) cluster IP allocation policy
