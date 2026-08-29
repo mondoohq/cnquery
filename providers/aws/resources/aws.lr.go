@@ -17395,6 +17395,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.s3control.accountPublicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3control).GetAccountPublicAccessBlock()).ToDataRes(types.Dict)
 	},
+	"aws.s3control.accountBlockPublicAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3control).GetAccountBlockPublicAcls()).ToDataRes(types.Bool)
+	},
+	"aws.s3control.accountBlockPublicPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3control).GetAccountBlockPublicPolicy()).ToDataRes(types.Bool)
+	},
+	"aws.s3control.accountIgnorePublicAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3control).GetAccountIgnorePublicAcls()).ToDataRes(types.Bool)
+	},
+	"aws.s3control.accountRestrictPublicBuckets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3control).GetAccountRestrictPublicBuckets()).ToDataRes(types.Bool)
+	},
 	"aws.s3.buckets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3).GetBuckets()).ToDataRes(types.Array(types.Resource("aws.s3.bucket")))
 	},
@@ -17580,6 +17592,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.s3.bucket.accessPoint.publicAccessBlock": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetPublicAccessBlock()).ToDataRes(types.Dict)
+	},
+	"aws.s3.bucket.accessPoint.blockPublicAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetBlockPublicAcls()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.accessPoint.blockPublicPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetBlockPublicPolicy()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.accessPoint.ignorePublicAcls": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetIgnorePublicAcls()).ToDataRes(types.Bool)
+	},
+	"aws.s3.bucket.accessPoint.restrictPublicBuckets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsS3BucketAccessPoint).GetRestrictPublicBuckets()).ToDataRes(types.Bool)
 	},
 	"aws.s3.bucket.accessPoint.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsS3BucketAccessPoint).GetPolicy()).ToDataRes(types.String)
@@ -55251,6 +55275,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsS3control).AccountPublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.s3control.accountBlockPublicAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3control).AccountBlockPublicAcls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3control.accountBlockPublicPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3control).AccountBlockPublicPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3control.accountIgnorePublicAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3control).AccountIgnorePublicAcls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3control.accountRestrictPublicBuckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3control).AccountRestrictPublicBuckets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.s3.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3).__id, ok = v.Value.(string)
 		return
@@ -55513,6 +55553,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.s3.bucket.accessPoint.publicAccessBlock": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsS3BucketAccessPoint).PublicAccessBlock, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.blockPublicAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).BlockPublicAcls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.blockPublicPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).BlockPublicPolicy, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.ignorePublicAcls": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).IgnorePublicAcls, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.s3.bucket.accessPoint.restrictPublicBuckets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsS3BucketAccessPoint).RestrictPublicBuckets, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.s3.bucket.accessPoint.policy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -133003,8 +133059,12 @@ func (c *mqlAwsCloudtrailChannel) GetTags() *plugin.TValue[map[string]any] {
 type mqlAwsS3control struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsS3controlInternal it will be used here
-	AccountPublicAccessBlock plugin.TValue[any]
+	mqlAwsS3controlInternal
+	AccountPublicAccessBlock     plugin.TValue[any]
+	AccountBlockPublicAcls       plugin.TValue[bool]
+	AccountBlockPublicPolicy     plugin.TValue[bool]
+	AccountIgnorePublicAcls      plugin.TValue[bool]
+	AccountRestrictPublicBuckets plugin.TValue[bool]
 }
 
 // createAwsS3control creates a new instance of this resource
@@ -133047,6 +133107,30 @@ func (c *mqlAwsS3control) MqlID() string {
 func (c *mqlAwsS3control) GetAccountPublicAccessBlock() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.AccountPublicAccessBlock, func() (any, error) {
 		return c.accountPublicAccessBlock()
+	})
+}
+
+func (c *mqlAwsS3control) GetAccountBlockPublicAcls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccountBlockPublicAcls, func() (bool, error) {
+		return c.accountBlockPublicAcls()
+	})
+}
+
+func (c *mqlAwsS3control) GetAccountBlockPublicPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccountBlockPublicPolicy, func() (bool, error) {
+		return c.accountBlockPublicPolicy()
+	})
+}
+
+func (c *mqlAwsS3control) GetAccountIgnorePublicAcls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccountIgnorePublicAcls, func() (bool, error) {
+		return c.accountIgnorePublicAcls()
+	})
+}
+
+func (c *mqlAwsS3control) GetAccountRestrictPublicBuckets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.AccountRestrictPublicBuckets, func() (bool, error) {
+		return c.accountRestrictPublicBuckets()
 	})
 }
 
@@ -133734,15 +133818,19 @@ type mqlAwsS3BucketAccessPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsS3BucketAccessPointInternal
-	Arn               plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Bucket            plugin.TValue[*mqlAwsS3Bucket]
-	BucketAccountId   plugin.TValue[string]
-	NetworkOrigin     plugin.TValue[string]
-	Vpc               plugin.TValue[*mqlAwsVpc]
-	Alias             plugin.TValue[string]
-	PublicAccessBlock plugin.TValue[any]
-	Policy            plugin.TValue[string]
+	Arn                   plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Bucket                plugin.TValue[*mqlAwsS3Bucket]
+	BucketAccountId       plugin.TValue[string]
+	NetworkOrigin         plugin.TValue[string]
+	Vpc                   plugin.TValue[*mqlAwsVpc]
+	Alias                 plugin.TValue[string]
+	PublicAccessBlock     plugin.TValue[any]
+	BlockPublicAcls       plugin.TValue[bool]
+	BlockPublicPolicy     plugin.TValue[bool]
+	IgnorePublicAcls      plugin.TValue[bool]
+	RestrictPublicBuckets plugin.TValue[bool]
+	Policy                plugin.TValue[string]
 }
 
 // createAwsS3BucketAccessPoint creates a new instance of this resource
@@ -133837,6 +133925,30 @@ func (c *mqlAwsS3BucketAccessPoint) GetAlias() *plugin.TValue[string] {
 func (c *mqlAwsS3BucketAccessPoint) GetPublicAccessBlock() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.PublicAccessBlock, func() (any, error) {
 		return c.publicAccessBlock()
+	})
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetBlockPublicAcls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockPublicAcls, func() (bool, error) {
+		return c.blockPublicAcls()
+	})
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetBlockPublicPolicy() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.BlockPublicPolicy, func() (bool, error) {
+		return c.blockPublicPolicy()
+	})
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetIgnorePublicAcls() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.IgnorePublicAcls, func() (bool, error) {
+		return c.ignorePublicAcls()
+	})
+}
+
+func (c *mqlAwsS3BucketAccessPoint) GetRestrictPublicBuckets() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.RestrictPublicBuckets, func() (bool, error) {
+		return c.restrictPublicBuckets()
 	})
 }
 

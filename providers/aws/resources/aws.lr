@@ -12431,9 +12431,33 @@ private aws.cloudtrail.channel @defaults("name sourceType") {
 // account-level Block Public Access configuration (the four settings
 // that ignore or restrict bucket and object ACLs and policies allowing
 // public access).
-aws.s3control @defaults("accountPublicAccessBlock") {
+aws.s3control @defaults("accountBlockPublicAcls accountBlockPublicPolicy accountIgnorePublicAcls accountRestrictPublicBuckets") {
   // Account level public access configuration for S3
-  accountPublicAccessBlock() dict
+  //
+  // Deprecated in favor of accountBlockPublicAcls, accountBlockPublicPolicy,
+  // accountIgnorePublicAcls, and accountRestrictPublicBuckets, which carry the
+  // same four settings as booleans. Keys `BlockPublicAcls`,
+  // `BlockPublicPolicy`, `IgnorePublicAcls`, and `RestrictPublicBuckets`, each
+  // a boolean. Null when the account has no Block Public Access configuration.
+  accountPublicAccessBlock() @maturity("deprecated") dict
+  // Whether new public ACLs are blocked account-wide
+  //
+  // False when the account has no Block Public Access configuration at all,
+  // which is the same reading as the setting being off: the protection is not
+  // in effect either way.
+  accountBlockPublicAcls() bool
+  // Whether new public bucket policies are blocked account-wide
+  //
+  // False when the account has no Block Public Access configuration.
+  accountBlockPublicPolicy() bool
+  // Whether existing public ACLs are ignored account-wide
+  //
+  // False when the account has no Block Public Access configuration.
+  accountIgnorePublicAcls() bool
+  // Whether cross-account access through public policies is restricted account-wide
+  //
+  // False when the account has no Block Public Access configuration.
+  accountRestrictPublicBuckets() bool
 }
 
 // Amazon Simple Storage Service (S3)
@@ -12646,13 +12670,13 @@ private aws.s3.bucket.eventNotification @defaults("id type events") {
 
 // Amazon S3 bucket access point
 //
-// Examine an S3 access point, a named endpoint attached to a bucket that
-// can have its own resource `policy()` and `publicAccessBlock()` separate
-// from the parent `bucket()`. `networkOrigin` distinguishes Internet-facing
-// from VPC-restricted access points (the latter resolve `vpc()` to the
-// allowed `aws.vpc`), `bucketAccountId` shows the account that owns the
-// underlying bucket, and `alias` exposes the access-point alias usable in
-// place of the bucket name in S3 API calls.
+// A named endpoint attached to a bucket that can carry its own resource
+// `policy` and Block Public Access settings separate from the `bucket` it
+// fronts. `networkOrigin` distinguishes Internet-facing from VPC-restricted
+// access points, the latter resolving `vpc` to the allowed `aws.vpc`;
+// `bucketAccountId` names the account that owns the underlying bucket, and
+// `alias` exposes the access-point alias usable in place of the bucket name
+// in S3 API calls.
 private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   // ARN of the access point
   arn string
@@ -12669,7 +12693,30 @@ private aws.s3.bucket.accessPoint @defaults("name networkOrigin") {
   // Alias of the access point
   alias string
   // Public access block configuration for the access point
-  publicAccessBlock() dict
+  //
+  // Deprecated in favor of blockPublicAcls, blockPublicPolicy,
+  // ignorePublicAcls, and restrictPublicBuckets, which carry the same four
+  // settings as booleans. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
+  publicAccessBlock() @maturity("deprecated") dict
+  // Whether new public ACLs through the access point are blocked
+  //
+  // False when the access point has no Block Public Access configuration at
+  // all, which is the same reading as the setting being off: the protection
+  // is not in effect either way.
+  blockPublicAcls() bool
+  // Whether new public policies on the access point are blocked
+  //
+  // False when the access point has no Block Public Access configuration.
+  blockPublicPolicy() bool
+  // Whether existing public ACLs are ignored through the access point
+  //
+  // False when the access point has no Block Public Access configuration.
+  ignorePublicAcls() bool
+  // Whether cross-account access through public policies is restricted on the access point
+  //
+  // False when the access point has no Block Public Access configuration.
+  restrictPublicBuckets() bool
   // Resource policy attached to the access point
   policy() string
 }
