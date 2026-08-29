@@ -6,6 +6,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/goldengate"
@@ -98,6 +99,19 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 					return nil, err
 				}
 
+				dbEndpoints, err := o.newDbSystemEndpoints(stringValue(s.Id), s.Endpoints)
+				if err != nil {
+					return nil, err
+				}
+
+				var deleteProtected *bool
+				var automaticBackupRetention, finalBackup string
+				if dp := s.DeletionPolicy; dp != nil {
+					deleteProtected = dp.IsDeleteProtected
+					automaticBackupRetention = string(dp.AutomaticBackupRetention)
+					finalBackup = string(dp.FinalBackup)
+				}
+
 				var backupPolicy, deletionPolicy map[string]any
 				if s.BackupPolicy != nil {
 					backupPolicy, err = convert.JsonToDict(s.BackupPolicy)
@@ -125,8 +139,12 @@ func (o *mqlOciMysql) dbSystems() ([]any, error) {
 					"crashRecovery":             llx.StringData(string(s.CrashRecovery)),
 					"databaseManagement":        llx.StringData(string(s.DatabaseManagement)),
 					"endpoints":                 llx.ArrayData(endpoints, types.Dict),
+					"dbEndpoints":               llx.ArrayData(dbEndpoints, types.Resource("oci.mysql.dbSystem.endpoint")),
 					"backupPolicy":              llx.DictData(backupPolicy),
 					"deletionPolicy":            llx.DictData(deletionPolicy),
+					"deleteProtected":           llx.BoolDataPtr(deleteProtected),
+					"automaticBackupRetention":  llx.StringData(automaticBackupRetention),
+					"finalBackup":               llx.StringData(finalBackup),
 					"availabilityDomain":        llx.StringDataPtr(s.AvailabilityDomain),
 					"faultDomain":               llx.StringDataPtr(s.FaultDomain),
 					"state":                     llx.StringData(string(s.LifecycleState)),
@@ -490,17 +508,26 @@ func (o *mqlOciNosql) tables() ([]any, error) {
 				t := tables[i]
 
 				var tableLimits map[string]any
-				if t.TableLimits != nil {
-					tableLimits, err = convert.JsonToDict(t.TableLimits)
+				limits := t.TableLimits
+				if limits != nil {
+					tableLimits, err = convert.JsonToDict(limits)
 					if err != nil {
 						return nil, err
 					}
+				} else {
+					// No limits reported leaves every limit null rather than
+					// reading as a table capped at zero.
+					limits = &nosql.TableLimits{}
 				}
 
 				mqlTable, err := CreateResource(o.MqlRuntime, "oci.nosql.table", map[string]*llx.RawData{
 					"id":                llx.StringDataPtr(t.Id),
 					"name":              llx.StringDataPtr(t.Name),
 					"tableLimits":       llx.DictData(tableLimits),
+					"maxReadUnits":      llx.IntDataPtr(limits.MaxReadUnits),
+					"maxWriteUnits":     llx.IntDataPtr(limits.MaxWriteUnits),
+					"maxStorageInGBs":   llx.IntDataPtr(limits.MaxStorageInGBs),
+					"capacityMode":      llx.StringData(string(limits.CapacityMode)),
 					"isMultiRegion":     llx.BoolData(boolValue(t.IsMultiRegion)),
 					"isAutoReclaimable": llx.BoolData(boolValue(t.IsAutoReclaimable)),
 					"timeOfExpiration":  sdkTimeData(t.TimeOfExpiration),
@@ -571,11 +598,16 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 				c := clusters[i]
 
 				var backupPolicy, outboundClusterConfig map[string]any
-				if c.BackupPolicy != nil {
-					backupPolicy, err = convert.JsonToDict(c.BackupPolicy)
+				policy := c.BackupPolicy
+				if policy != nil {
+					backupPolicy, err = convert.JsonToDict(policy)
 					if err != nil {
 						return nil, err
 					}
+				} else {
+					// No policy reported leaves the fields null rather than
+					// reading as backups explicitly disabled.
+					policy = &opensearch.BackupPolicy{}
 				}
 				if c.OutboundClusterConfig != nil {
 					outboundClusterConfig, err = convert.JsonToDict(c.OutboundClusterConfig)
@@ -585,22 +617,25 @@ func (o *mqlOciOpensearch) clusters() ([]any, error) {
 				}
 
 				mqlCluster, err := CreateResource(o.MqlRuntime, "oci.opensearch.cluster", map[string]*llx.RawData{
-					"id":                    llx.StringDataPtr(c.Id),
-					"name":                  llx.StringDataPtr(c.DisplayName),
-					"softwareVersion":       llx.StringDataPtr(c.SoftwareVersion),
-					"securityMode":          llx.StringData(string(c.SecurityMode)),
-					"outboundClusterConfig": llx.DictData(outboundClusterConfig),
-					"backupPolicy":          llx.DictData(backupPolicy),
-					"totalStorageGB":        llx.IntDataDefault(c.TotalStorageGB, 0),
-					"availabilityDomains":   llx.ArrayData(stringsToAny(c.AvailabilityDomains), types.String),
-					"securityAttributes":    llx.MapData(definedTagsToAny(c.SecurityAttributes), types.Dict),
-					"state":                 llx.StringData(string(c.LifecycleState)),
-					"stateDetails":          llx.StringDataPtr(c.LifecycleDetails),
-					"created":               sdkTimeData(c.TimeCreated),
-					"updated":               sdkTimeData(c.TimeUpdated),
-					"freeformTags":          llx.MapData(strMapToAny(c.FreeformTags), types.String),
-					"definedTags":           llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
-					"systemTags":            llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
+					"id":                     llx.StringDataPtr(c.Id),
+					"name":                   llx.StringDataPtr(c.DisplayName),
+					"softwareVersion":        llx.StringDataPtr(c.SoftwareVersion),
+					"securityMode":           llx.StringData(string(c.SecurityMode)),
+					"outboundClusterConfig":  llx.DictData(outboundClusterConfig),
+					"backupPolicy":           llx.DictData(backupPolicy),
+					"backupEnabled":          llx.BoolDataPtr(policy.IsEnabled),
+					"backupRetentionInDays":  llx.IntDataPtr(policy.RetentionInDays),
+					"backupFrequencyInHours": llx.IntDataPtr(policy.FrequencyInHours),
+					"totalStorageGB":         llx.IntDataDefault(c.TotalStorageGB, 0),
+					"availabilityDomains":    llx.ArrayData(stringsToAny(c.AvailabilityDomains), types.String),
+					"securityAttributes":     llx.MapData(definedTagsToAny(c.SecurityAttributes), types.Dict),
+					"state":                  llx.StringData(string(c.LifecycleState)),
+					"stateDetails":           llx.StringDataPtr(c.LifecycleDetails),
+					"created":                sdkTimeData(c.TimeCreated),
+					"updated":                sdkTimeData(c.TimeUpdated),
+					"freeformTags":           llx.MapData(strMapToAny(c.FreeformTags), types.String),
+					"definedTags":            llx.MapData(definedTagsToAny(c.DefinedTags), types.Any),
+					"systemTags":             llx.MapData(definedTagsToAny(c.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -1052,4 +1087,43 @@ func (o *mqlOciGoldenGateDeployment) securityGroups() ([]any, error) {
 		return []any{}, nil
 	}
 	return resolveOciSecurityGroups(o.MqlRuntime, stringsToAny(detail.NsgIds))
+}
+
+// newDbSystemEndpoints builds the address resources a MySQL database system
+// answers on. The endpoints are keyed by address and port together: a system
+// publishes the classic and X protocol on the same address, and a read replica
+// can share an address with the primary.
+//
+// resourceId stays a string. Which kind of resource it names varies with
+// resourceType, and only the LOAD_BALANCER case points at something this
+// provider models.
+func (o *mqlOciMysql) newDbSystemEndpoints(dbSystemID string, endpoints []mysql.DbSystemEndpoint) ([]any, error) {
+	res := make([]any, 0, len(endpoints))
+	for i := range endpoints {
+		e := endpoints[i]
+
+		modes := make([]any, 0, len(e.Modes))
+		for _, m := range e.Modes {
+			modes = append(modes, string(m))
+		}
+
+		mqlEndpoint, err := CreateResource(o.MqlRuntime, "oci.mysql.dbSystem.endpoint", map[string]*llx.RawData{
+			"__id":             llx.StringData(dbSystemID + "/endpoint/" + stringValue(e.IpAddress) + "/" + strconv.FormatInt(intValue(e.Port), 10)),
+			"ipAddress":        llx.StringDataPtr(e.IpAddress),
+			"hostname":         llx.StringDataPtr(e.Hostname),
+			"port":             llx.IntDataPtr(e.Port),
+			"portX":            llx.IntDataPtr(e.PortX),
+			"ipAddressVersion": llx.StringData(string(e.IpAddressVersion)),
+			"modes":            llx.ArrayData(modes, types.String),
+			"status":           llx.StringData(string(e.Status)),
+			"statusDetails":    llx.StringDataPtr(e.StatusDetails),
+			"resourceType":     llx.StringData(string(e.ResourceType)),
+			"resourceId":       llx.StringDataPtr(e.ResourceId),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlEndpoint)
+	}
+	return res, nil
 }

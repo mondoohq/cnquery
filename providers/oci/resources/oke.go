@@ -464,6 +464,13 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			isForceDeleteAfterGraceDuration = boolValue(s.IsForceDeleteAfterGraceDuration)
 		}
 
+		nodeShape := np.NodeShapeConfig
+		if nodeShape == nil {
+			// Fixed shapes carry no shape config; the sizing is the shape's, so
+			// both fields stay null rather than reading as zero.
+			nodeShape = &containerengine.NodeShapeConfig{}
+		}
+
 		var isNodeCyclingEnabled bool
 		var cyclingMaximumUnavailable, cyclingMaximumSurge string
 		if c := np.NodePoolCyclingDetails; c != nil {
@@ -490,6 +497,8 @@ func (o *mqlOciOkeCluster) nodePools() ([]any, error) {
 			"kubernetesVersion":   llx.StringDataPtr(np.KubernetesVersion),
 			"nodeShape":           llx.StringDataPtr(np.NodeShape),
 			"nodeShapeConfig":     llx.DictData(nodeShapeConfig),
+			"nodeOcpus":           llx.FloatDataPtr(nodeShape.Ocpus),
+			"nodeMemoryInGBs":     llx.FloatDataPtr(nodeShape.MemoryInGBs),
 			"bootVolumeSizeInGBs": llx.IntDataPtr(bootVolumeSizeInGBs),
 			"sshPublicKey":        llx.StringDataPtr(np.SshPublicKey),
 			"state":               llx.StringData(string(np.LifecycleState)),

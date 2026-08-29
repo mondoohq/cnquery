@@ -299,6 +299,53 @@ func (o *mqlOciStreamingStreamPool) kafkaSettings() (any, error) {
 	return convert.JsonToDict(detail.KafkaSettings)
 }
 
+func (o *mqlOciStreamingStreamPool) kafkaBootstrapServers() (string, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return "", err
+	}
+	if detail.KafkaSettings == nil {
+		return "", nil
+	}
+	return stringValue(detail.KafkaSettings.BootstrapServers), nil
+}
+
+func (o *mqlOciStreamingStreamPool) kafkaAutoCreateTopicsEnabled() (bool, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return false, err
+	}
+	if detail.KafkaSettings == nil || detail.KafkaSettings.AutoCreateTopicsEnable == nil {
+		o.KafkaAutoCreateTopicsEnabled.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
+	}
+	return *detail.KafkaSettings.AutoCreateTopicsEnable, nil
+}
+
+func (o *mqlOciStreamingStreamPool) kafkaLogRetentionHours() (int64, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return 0, err
+	}
+	if detail.KafkaSettings == nil || detail.KafkaSettings.LogRetentionHours == nil {
+		o.KafkaLogRetentionHours.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return int64(*detail.KafkaSettings.LogRetentionHours), nil
+}
+
+func (o *mqlOciStreamingStreamPool) kafkaNumPartitions() (int64, error) {
+	detail, err := o.getDetail()
+	if err != nil {
+		return 0, err
+	}
+	if detail.KafkaSettings == nil || detail.KafkaSettings.NumPartitions == nil {
+		o.KafkaNumPartitions.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return int64(*detail.KafkaSettings.NumPartitions), nil
+}
+
 // ociCustomEncryptionKeyId pulls the KMS key OCID out of a stream pool's
 // encryption block. A NONE key state means Oracle-managed encryption, which
 // carries no customer key to resolve.

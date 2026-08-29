@@ -69,17 +69,36 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 					return nil, err
 				}
 
+				var tracingEnabled *bool
+				var apmDomainID string
+				if tc := app.TraceConfig; tc != nil {
+					tracingEnabled = tc.IsEnabled
+					apmDomainID = stringValue(tc.DomainId)
+				}
+
+				var imagePolicyEnabled *bool
+				var imagePolicyKeyIDs []string
+				if ipc := app.ImagePolicyConfig; ipc != nil {
+					imagePolicyEnabled = ipc.IsPolicyEnabled
+					for _, kd := range ipc.KeyDetails {
+						imagePolicyKeyIDs = append(imagePolicyKeyIDs, stringValue(kd.KmsKeyId))
+					}
+				}
+
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.functions.application", stringValue(app.CompartmentId), map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(app.Id),
-					"name":              llx.StringDataPtr(app.DisplayName),
-					"state":             llx.StringData(string(app.LifecycleState)),
-					"shape":             llx.StringData(string(app.Shape)),
-					"traceConfig":       llx.DictData(traceConfig),
-					"imagePolicyConfig": llx.DictData(imagePolicyConfig),
-					"created":           llx.TimeDataPtr(created),
-					"timeUpdated":       llx.TimeDataPtr(timeUpdated),
-					"freeformTags":      llx.MapData(strMapToAny(app.FreeformTags), types.String),
-					"definedTags":       llx.MapData(definedTagsToAny(app.DefinedTags), types.Any),
+					"id":                 llx.StringDataPtr(app.Id),
+					"name":               llx.StringDataPtr(app.DisplayName),
+					"state":              llx.StringData(string(app.LifecycleState)),
+					"shape":              llx.StringData(string(app.Shape)),
+					"traceConfig":        llx.DictData(traceConfig),
+					"tracingEnabled":     llx.BoolDataPtr(tracingEnabled),
+					"apmDomainId":        llx.StringData(apmDomainID),
+					"imagePolicyConfig":  llx.DictData(imagePolicyConfig),
+					"imagePolicyEnabled": llx.BoolDataPtr(imagePolicyEnabled),
+					"created":            llx.TimeDataPtr(created),
+					"timeUpdated":        llx.TimeDataPtr(timeUpdated),
+					"freeformTags":       llx.MapData(strMapToAny(app.FreeformTags), types.String),
+					"definedTags":        llx.MapData(definedTagsToAny(app.DefinedTags), types.Any),
 				})
 				if err != nil {
 					return nil, err
@@ -97,10 +116,33 @@ func (o *mqlOciFunctions) applications() ([]any, error) {
 
 type mqlOciFunctionsApplicationInternal struct {
 	ociCompartmentRef
-	app            ociRetryLazy[*functions.Application]
-	cacheRegion    string
-	cacheSubnetIDs []string
-	cacheNsgIDs    []string
+	app                   ociRetryLazy[*functions.Application]
+	cacheRegion           string
+	cacheSubnetIDs        []string
+	cacheNsgIDs           []string
+	cacheImagePolicyKeyID []string
+}
+
+// imagePolicyKeys resolves the vault keys trusted to verify image signatures.
+//
+// Empty both when signature verification is off and when it is on with no key
+// configured, which leaves nothing to verify against. imagePolicyEnabled is
+// what separates the two.
+func (o *mqlOciFunctionsApplication) imagePolicyKeys() ([]any, error) {
+	res := make([]any, 0, len(o.cacheImagePolicyKeyID))
+	for _, id := range o.cacheImagePolicyKeyID {
+		if id == "" {
+			continue
+		}
+		key, err := NewResource(o.MqlRuntime, "oci.kms.key", map[string]*llx.RawData{
+			"id": llx.StringData(id),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, key)
+	}
+	return res, nil
 }
 
 func (o *mqlOciFunctionsApplication) id() (string, error) {
@@ -222,6 +264,11 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			return nil, err
 		}
 
+		var tracingEnabled *bool
+		if tc := fn.TraceConfig; tc != nil {
+			tracingEnabled = tc.IsEnabled
+		}
+
 		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.functions.function", stringValue(fn.CompartmentId), map[string]*llx.RawData{
 			"id":               llx.StringDataPtr(fn.Id),
 			"name":             llx.StringDataPtr(fn.DisplayName),
@@ -234,6 +281,7 @@ func (o *mqlOciFunctionsApplication) functions() ([]any, error) {
 			"timeoutInSeconds": llx.IntData(intValue(fn.TimeoutInSeconds)),
 			"invokeEndpoint":   llx.StringDataPtr(fn.InvokeEndpoint),
 			"traceConfig":      llx.DictData(traceConfig),
+			"tracingEnabled":   llx.BoolDataPtr(tracingEnabled),
 			"created":          llx.TimeDataPtr(created),
 			"timeUpdated":      llx.TimeDataPtr(timeUpdated),
 			"freeformTags":     llx.MapData(strMapToAny(fn.FreeformTags), types.String),

@@ -105,6 +105,54 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 					return nil, err
 				}
 
+				// PlatformConfig is an SDK interface with 29 implementations,
+				// but the four shielded-instance and confidential-computing
+				// getters are declared on the interface itself, so they are
+				// read without a type switch and a member the SDK does not
+				// know still answers them.
+				var secureBoot, trustedPlatformModule, measuredBoot, memoryEncryption *bool
+				if pc := instance.PlatformConfig; pc != nil {
+					secureBoot = pc.GetIsSecureBootEnabled()
+					trustedPlatformModule = pc.GetIsTrustedPlatformModuleEnabled()
+					measuredBoot = pc.GetIsMeasuredBootEnabled()
+					memoryEncryption = pc.GetIsMemoryEncryptionEnabled()
+				}
+
+				var (
+					pvEncryptionInTransit, consistentVolumeNaming *bool
+					bootVolumeType, remoteDataVolumeType          string
+					firmware, networkType                         string
+				)
+				if lo := instance.LaunchOptions; lo != nil {
+					pvEncryptionInTransit = lo.IsPvEncryptionInTransitEnabled
+					consistentVolumeNaming = lo.IsConsistentVolumeNamingEnabled
+					bootVolumeType = string(lo.BootVolumeType)
+					remoteDataVolumeType = string(lo.RemoteDataVolumeType)
+					firmware = string(lo.Firmware)
+					networkType = string(lo.NetworkType)
+				}
+
+				shape := instance.ShapeConfig
+				if shape == nil {
+					// A nil shape config leaves every sizing field null rather
+					// than reporting a zero-OCPU instance.
+					shape = &core.InstanceShapeConfig{}
+				}
+
+				// Boot volume sizing and the customer-managed key only exist on
+				// the image branch of the source union. On the boot-volume
+				// branch they stay null, which says the instance reuses an
+				// existing volume rather than that it was created with no key.
+				var (
+					bootVolumeSizeInGBs, bootVolumeVpusPerGB *int64
+					bootVolumeKmsKeyID                       string
+				)
+				if src, ok := instance.SourceDetails.(core.InstanceSourceViaImageDetails); ok {
+					bootVolumeSizeInGBs = src.BootVolumeSizeInGBs
+					bootVolumeVpusPerGB = src.BootVolumeVpusPerGB
+					bootVolumeKmsKeyID = stringValue(src.KmsKeyId)
+				}
+
 				// Nested values, so it cannot ride metadata's map[string]string.
 				// Left null rather than emptied when the instance carries none,
 				// so "no extended metadata" and "an empty object" stay apart.
@@ -156,35 +204,60 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 				}
 
 				mqlInstance, err := CreateResource(o.MqlRuntime, "oci.compute.instance", map[string]*llx.RawData{
-					"id":                          llx.StringDataPtr(instance.Id),
-					"name":                        llx.StringDataPtr(instance.DisplayName),
-					"region":                      llx.ResourceData(regionResource, "oci.region"),
-					"created":                     llx.TimeDataPtr(created),
-					"state":                       llx.StringData(string(instance.LifecycleState)),
-					"shape":                       llx.StringDataPtr(instance.Shape),
-					"availabilityDomain":          llx.StringDataPtr(instance.AvailabilityDomain),
-					"compartment":                 llx.ResourceData(compartment, "oci.compartment"),
-					"faultDomain":                 llx.StringDataPtr(instance.FaultDomain),
-					"dedicatedVmHostId":           llx.StringDataPtr(instance.DedicatedVmHostId),
-					"platformConfig":              llx.DictData(platformConfig),
-					"launchOptions":               llx.DictData(launchOptions),
-					"instanceOptions":             llx.DictData(instanceOptions),
-					"legacyImdsEndpointsDisabled": llx.BoolData(legacyImdsDisabled),
-					"monitoringDisabled":          llx.BoolData(monitoringDisabled),
-					"managementDisabled":          llx.BoolData(managementDisabled),
-					"allPluginsDisabled":          llx.BoolData(allPluginsDisabled),
-					"agentPlugins":                llx.MapData(agentPlugins, types.String),
-					"shapeConfig":                 llx.DictData(shapeConfig),
-					"sourceDetails":               llx.DictData(sourceDetails),
-					"metadata":                    llx.MapData(metadata, types.String),
-					"extendedMetadata":            llx.DictData(extendedMetadata),
-					"ipxeScript":                  llx.StringDataPtr(instance.IpxeScript),
-					"timeMaintenanceRebootDue":    llx.TimeDataPtr(timeMaintenanceRebootDue),
-					"securityAttributes":          llx.MapData(definedTagsToAny(instance.SecurityAttributes), types.Dict),
-					"securityAttributesState":     llx.StringData(string(instance.SecurityAttributesState)),
-					"freeformTags":                llx.MapData(strMapToAny(instance.FreeformTags), types.String),
-					"definedTags":                 llx.MapData(definedTagsToAny(instance.DefinedTags), types.Any),
-					"systemTags":                  llx.MapData(definedTagsToAny(instance.SystemTags), types.Dict),
+					"id":                            llx.StringDataPtr(instance.Id),
+					"name":                          llx.StringDataPtr(instance.DisplayName),
+					"region":                        llx.ResourceData(regionResource, "oci.region"),
+					"created":                       llx.TimeDataPtr(created),
+					"state":                         llx.StringData(string(instance.LifecycleState)),
+					"shape":                         llx.StringDataPtr(instance.Shape),
+					"availabilityDomain":            llx.StringDataPtr(instance.AvailabilityDomain),
+					"compartment":                   llx.ResourceData(compartment, "oci.compartment"),
+					"faultDomain":                   llx.StringDataPtr(instance.FaultDomain),
+					"dedicatedVmHostId":             llx.StringDataPtr(instance.DedicatedVmHostId),
+					"platformConfig":                llx.DictData(platformConfig),
+					"secureBootEnabled":             llx.BoolDataPtr(secureBoot),
+					"trustedPlatformModuleEnabled":  llx.BoolDataPtr(trustedPlatformModule),
+					"measuredBootEnabled":           llx.BoolDataPtr(measuredBoot),
+					"memoryEncryptionEnabled":       llx.BoolDataPtr(memoryEncryption),
+					"launchOptions":                 llx.DictData(launchOptions),
+					"pvEncryptionInTransitEnabled":  llx.BoolDataPtr(pvEncryptionInTransit),
+					"bootVolumeType":                llx.StringData(bootVolumeType),
+					"remoteDataVolumeType":          llx.StringData(remoteDataVolumeType),
+					"firmware":                      llx.StringData(firmware),
+					"networkType":                   llx.StringData(networkType),
+					"consistentVolumeNamingEnabled": llx.BoolDataPtr(consistentVolumeNaming),
+					"instanceOptions":               llx.DictData(instanceOptions),
+					"legacyImdsEndpointsDisabled":   llx.BoolData(legacyImdsDisabled),
+					"monitoringDisabled":            llx.BoolData(monitoringDisabled),
+					"managementDisabled":            llx.BoolData(managementDisabled),
+					"allPluginsDisabled":            llx.BoolData(allPluginsDisabled),
+					"agentPlugins":                  llx.MapData(agentPlugins, types.String),
+					"shapeConfig":                   llx.DictData(shapeConfig),
+					"ocpus":                         llx.FloatDataPtr(shape.Ocpus),
+					"memoryInGBs":                   llx.FloatDataPtr(shape.MemoryInGBs),
+					"baselineOcpuUtilization":       llx.StringData(string(shape.BaselineOcpuUtilization)),
+					"processorDescription":          llx.StringDataPtr(shape.ProcessorDescription),
+					"networkingBandwidthInGbps":     llx.FloatDataPtr(shape.NetworkingBandwidthInGbps),
+					"maxVnicAttachments":            llx.IntDataPtr(shape.MaxVnicAttachments),
+					"gpus":                          llx.IntDataPtr(shape.Gpus),
+					"gpuDescription":                llx.StringDataPtr(shape.GpuDescription),
+					"localDisks":                    llx.IntDataPtr(shape.LocalDisks),
+					"localDisksTotalSizeInGBs":      llx.FloatDataPtr(shape.LocalDisksTotalSizeInGBs),
+					"localDiskDescription":          llx.StringDataPtr(shape.LocalDiskDescription),
+					"vcpus":                         llx.IntDataPtr(shape.Vcpus),
+					"localVolumeSizeInGBs":          llx.IntDataPtr(shape.LocalVolumeSizeInGBs),
+					"sourceDetails":                 llx.DictData(sourceDetails),
+					"bootVolumeSizeInGBs":           llx.IntDataPtr(bootVolumeSizeInGBs),
+					"bootVolumeVpusPerGB":           llx.IntDataPtr(bootVolumeVpusPerGB),
+					"metadata":                      llx.MapData(metadata, types.String),
+					"extendedMetadata":              llx.DictData(extendedMetadata),
+					"ipxeScript":                    llx.StringDataPtr(instance.IpxeScript),
+					"timeMaintenanceRebootDue":      llx.TimeDataPtr(timeMaintenanceRebootDue),
+					"securityAttributes":            llx.MapData(definedTagsToAny(instance.SecurityAttributes), types.Dict),
+					"securityAttributesState":       llx.StringData(string(instance.SecurityAttributesState)),
+					"freeformTags":                  llx.MapData(strMapToAny(instance.FreeformTags), types.String),
+					"definedTags":                   llx.MapData(definedTagsToAny(instance.DefinedTags), types.Any),
+					"systemTags":                    llx.MapData(definedTagsToAny(instance.SystemTags), types.Dict),
 				})
 				if err != nil {
 					return nil, err
@@ -193,6 +266,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 				mqlInst.cacheRegion = region
 				mqlInst.cacheImageID = stringValue(instance.ImageId)
 				mqlInst.cacheCompartmentID = stringValue(instance.CompartmentId)
+				mqlInst.cacheBootVolumeKmsKeyID = bootVolumeKmsKeyID
 				if src, ok := instance.SourceDetails.(core.InstanceSourceViaBootVolumeDetails); ok {
 					mqlInst.cacheBootVolumeID = stringValue(src.BootVolumeId)
 				}
@@ -224,10 +298,21 @@ func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, comput
 }
 
 type mqlOciComputeInstanceInternal struct {
-	cacheImageID       string
-	cacheRegion        string
-	cacheBootVolumeID  string
-	cacheCompartmentID string
+	cacheImageID            string
+	cacheRegion             string
+	cacheBootVolumeID       string
+	cacheCompartmentID      string
+	cacheBootVolumeKmsKeyID string
+}
+
+// bootVolumeKmsKey resolves the customer-managed key the instance's boot volume
+// was created with.
+//
+// Only the image branch of the source union carries one. An instance launched
+// from an existing boot volume reports null, which says the key was chosen when
+// that volume was created rather than that there is none.
+func (o *mqlOciComputeInstance) bootVolumeKmsKey() (*mqlOciKmsKey, error) {
+	return resolveOciKmsKey(o.MqlRuntime, o.cacheBootVolumeKmsKeyID, &o.BootVolumeKmsKey)
 }
 
 func (o *mqlOciComputeInstance) id() (string, error) {

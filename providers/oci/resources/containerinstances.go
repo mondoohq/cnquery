@@ -107,6 +107,13 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					return nil, err
 				}
 
+				shape := ci.ShapeConfig
+				if shape == nil {
+					// A nil shape config leaves the sizing fields null rather
+					// than reporting a zero-OCPU instance.
+					shape = &containerinstances.ContainerInstanceShapeConfig{}
+				}
+
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.containerInstances.instance", stringValue(ci.CompartmentId), map[string]*llx.RawData{
 					"id":                               llx.StringDataPtr(ci.Id),
 					"name":                             llx.StringDataPtr(ci.DisplayName),
@@ -114,6 +121,10 @@ func (o *mqlOciContainerInstances) instances() ([]any, error) {
 					"state":                            llx.StringData(string(ci.LifecycleState)),
 					"shape":                            llx.StringDataPtr(ci.Shape),
 					"shapeConfig":                      llx.DictData(shapeConfig),
+					"ocpus":                            llx.FloatDataPtr(shape.Ocpus),
+					"memoryInGBs":                      llx.FloatDataPtr(shape.MemoryInGBs),
+					"processorDescription":             llx.StringDataPtr(shape.ProcessorDescription),
+					"networkingBandwidthInGbps":        llx.FloatDataPtr(shape.NetworkingBandwidthInGbps),
 					"containerCount":                   llx.IntData(intValue(ci.ContainerCount)),
 					"containerRestartPolicy":           llx.StringData(string(ci.ContainerRestartPolicy)),
 					"faultDomain":                      llx.StringDataPtr(ci.FaultDomain),
@@ -187,6 +198,13 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			return nil, err
 		}
 
+		limits := c.ResourceConfig
+		if limits == nil {
+			// No resource config means the container inherits the instance
+			// defaults, so both limits stay null rather than reading as zero.
+			limits = &containerinstances.ContainerResourceConfig{}
+		}
+
 		sec := ociContainerSecurityContext(c.SecurityContext)
 
 		mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.containerInstances.container", stringValue(c.CompartmentId), map[string]*llx.RawData{
@@ -198,6 +216,8 @@ func (o *mqlOciContainerInstancesInstance) containers() ([]any, error) {
 			"imageUrl":                    llx.StringDataPtr(c.ImageUrl),
 			"isResourcePrincipalDisabled": llx.BoolDataPtr(c.IsResourcePrincipalDisabled),
 			"resourceConfig":              llx.DictData(resourceConfig),
+			"vcpusLimit":                  llx.FloatDataPtr(limits.VcpusLimit),
+			"memoryLimitInGBs":            llx.FloatDataPtr(limits.MemoryLimitInGBs),
 			"runAsUser":                   llx.IntDataPtr(sec.runAsUser),
 			"runAsGroup":                  llx.IntDataPtr(sec.runAsGroup),
 			"isNonRootUserCheckEnabled":   llx.BoolData(sec.nonRootUserCheck),

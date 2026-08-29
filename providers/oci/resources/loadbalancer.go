@@ -67,6 +67,27 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					created = &lb.TimeCreated.Time
 				}
 
+				addresses := make([]any, 0, len(lb.IpAddresses))
+				for _, ip := range lb.IpAddresses {
+					mqlAddress, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.ipAddress", map[string]*llx.RawData{
+						"__id":      llx.StringData(stringValue(lb.Id) + "/ipAddress/" + stringValue(ip.IpAddress)),
+						"ipAddress": llx.StringDataPtr(ip.IpAddress),
+						// Faithful to the SDK: null when the balancer does not
+						// report the flag. ociLoadBalancerHasPublicIp reads a
+						// null as public, matching the fallback the deprecated
+						// dict resolves eagerly.
+						"isPublic": llx.BoolDataPtr(ip.IsPublic),
+					})
+					if err != nil {
+						return nil, err
+					}
+					mqlAddr := mqlAddress.(*mqlOciLoadBalancerIpAddress)
+					if ip.ReservedIp != nil {
+						mqlAddr.cacheReservedIpID = stringValue(ip.ReservedIp.Id)
+					}
+					addresses = append(addresses, mqlAddr)
+				}
+
 				ipAddresses := make([]any, 0, len(lb.IpAddresses))
 				for _, ip := range lb.IpAddresses {
 					// isPublic is optional on the SDK model, and exposure()
@@ -110,6 +131,7 @@ func (o *mqlOciLoadBalancer) loadBalancers() ([]any, error) {
 					"requestIdHeader":           llx.StringDataPtr(lb.RequestIdHeader),
 					"hostnames":                 llx.MapData(hostnames, types.String),
 					"ipAddresses":               llx.ArrayData(ipAddresses, types.Dict),
+					"addresses":                 llx.ArrayData(addresses, types.Resource("oci.loadBalancer.ipAddress")),
 					"isDeleteProtectionEnabled": llx.BoolDataPtr(lb.IsDeleteProtectionEnabled),
 					"securityAttributes":        llx.MapData(definedTagsToAny(lb.SecurityAttributes), types.Dict),
 					"state":                     llx.StringData(string(lb.LifecycleState)),
@@ -385,6 +407,13 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 			return nil, err
 		}
 
+		hc := bs.HealthChecker
+		if hc == nil {
+			// A backend set with no health checker leaves every probe field
+			// null rather than reporting a probe configured with empty values.
+			hc = &loadbalancer.HealthChecker{}
+		}
+
 		// A backend set with no SslConfiguration talks to its backends in the
 		// clear. The booleans stay false rather than null so that an assertion
 		// requiring verification fails on such a set instead of passing on a
@@ -403,13 +432,23 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		lbId := o.Id.Data
 		bsId := lbId + "/backendSet/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.backendSet", map[string]*llx.RawData{
-			"__id":                  llx.StringData(bsId),
-			"name":                  llx.StringData(name),
-			"policy":                llx.StringDataPtr(bs.Policy),
-			"healthChecker":         llx.DictData(healthChecker),
-			"backendCount":          llx.IntData(int64(len(bs.Backends))),
-			"backendMaxConnections": llx.IntDataPtr(bs.BackendMaxConnections),
-			"sslProtocols":          llx.ArrayData(ssl.protocols, types.String),
+			"__id":          llx.StringData(bsId),
+			"name":          llx.StringData(name),
+			"policy":        llx.StringDataPtr(bs.Policy),
+			"healthChecker": llx.DictData(healthChecker),
+
+			"healthCheckProtocol":          llx.StringDataPtr(hc.Protocol),
+			"healthCheckPort":              llx.IntDataPtr(hc.Port),
+			"healthCheckUrlPath":           llx.StringDataPtr(hc.UrlPath),
+			"healthCheckReturnCode":        llx.IntDataPtr(hc.ReturnCode),
+			"healthCheckResponseBodyRegex": llx.StringDataPtr(hc.ResponseBodyRegex),
+			"healthCheckRetries":           llx.IntDataPtr(hc.Retries),
+			"healthCheckTimeoutInMillis":   llx.IntDataPtr(hc.TimeoutInMillis),
+			"healthCheckIntervalInMillis":  llx.IntDataPtr(hc.IntervalInMillis),
+			"healthCheckForcePlainText":    llx.BoolDataPtr(hc.IsForcePlainText),
+			"backendCount":                 llx.IntData(int64(len(bs.Backends))),
+			"backendMaxConnections":        llx.IntDataPtr(bs.BackendMaxConnections),
+			"sslProtocols":                 llx.ArrayData(ssl.protocols, types.String),
 
 			"sslVerifyPeerCertificate": llx.BoolData(ssl.verifyPeerCertificate),
 			"sslVerifyDepth":           llx.IntDataPtr(ssl.verifyDepth),
@@ -662,4 +701,16 @@ func (o *mqlOciLoadBalancerListener) id() (string, error) {
 
 func (o *mqlOciLoadBalancerBackendSet) id() (string, error) {
 	return o.__id, nil
+}
+
+type mqlOciLoadBalancerIpAddressInternal struct {
+	cacheReservedIpID string
+}
+
+// reservedIp resolves the reserved public IP backing this address.
+//
+// Null on an ephemeral address, which is released with the load balancer rather
+// than staying registered in the VCN.
+func (o *mqlOciLoadBalancerIpAddress) reservedIp() (*mqlOciNetworkPublicIp, error) {
+	return resolveRef(o.MqlRuntime, "oci.network.publicIp", o.cacheReservedIpID, &o.ReservedIp)
 }

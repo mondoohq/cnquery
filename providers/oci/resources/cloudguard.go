@@ -450,6 +450,7 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 			labels                 []string
 			isConfigurationAllowed bool
 			configurations         []any
+			settings               []any
 		)
 		if rule.DetectorDetails != nil {
 			isEnabled = boolValue(rule.DetectorDetails.IsEnabled)
@@ -461,6 +462,11 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 			isConfigurationAllowed = boolValue(rule.DetectorDetails.IsConfigurationAllowed)
 
 			configurations, err = convert.JsonToDictSlice(rule.DetectorDetails.Configurations)
+			if err != nil {
+				return nil, err
+			}
+
+			settings, err = o.newDetectorConfigurations(stringValue(rule.Id), rule.DetectorDetails.Configurations)
 			if err != nil {
 				return nil, err
 			}
@@ -485,6 +491,7 @@ func (o *mqlOciCloudGuardDetectorRecipe) rules() ([]any, error) {
 			"problemThreshold":       llx.IntData(problemThreshold),
 			"labels":                 llx.ArrayData(stringsToAny(labels), types.String),
 			"configurations":         llx.ArrayData(configurations, types.Dict),
+			"settings":               llx.ArrayData(settings, types.Resource("oci.cloudGuard.detectorRule.configuration")),
 			"isConfigurationAllowed": llx.BoolData(isConfigurationAllowed),
 			"isCloneable":            llx.BoolData(boolValue(rule.IsCloneable)),
 			"managedListTypes":       llx.ArrayData(stringsToAny(managedListTypes), types.String),
@@ -854,4 +861,46 @@ type mqlOciCloudGuardSecurityPolicyInternal struct {
 
 type mqlOciCloudGuardTargetInternal struct {
 	ociCompartmentRef
+}
+
+// newDetectorConfigurations builds the setting resources for one detector rule.
+//
+// The nested value, allowed-value and additional-property lists stay dicts:
+// each is a small name/value pair with no identity of its own, so a resource
+// per row would add a cache key and a schema entry without adding query power.
+func (o *mqlOciCloudGuardDetectorRecipe) newDetectorConfigurations(ruleID string, configurations []cloudguard.DetectorConfiguration) ([]any, error) {
+	res := make([]any, 0, len(configurations))
+	for i := range configurations {
+		c := configurations[i]
+
+		values, err := convert.JsonToDictSlice(c.Values)
+		if err != nil {
+			return nil, err
+		}
+		allowedValues, err := convert.JsonToDictSlice(c.AllowedValues)
+		if err != nil {
+			return nil, err
+		}
+		additionalProperties, err := convert.JsonToDictSlice(c.AdditionalProperties)
+		if err != nil {
+			return nil, err
+		}
+
+		mqlConfig, err := CreateResource(o.MqlRuntime, "oci.cloudGuard.detectorRule.configuration", map[string]*llx.RawData{
+			"__id":                  llx.StringData(o.Id.Data + "/" + ruleID + "/configuration/" + stringValue(c.ConfigKey)),
+			"configKey":             llx.StringDataPtr(c.ConfigKey),
+			"name":                  llx.StringDataPtr(c.Name),
+			"value":                 llx.StringDataPtr(c.Value),
+			"dataType":              llx.StringDataPtr(c.DataType),
+			"values":                llx.ArrayData(values, types.Dict),
+			"allowedValuesDataType": llx.StringDataPtr(c.AllowedValuesDataType),
+			"allowedValues":         llx.ArrayData(allowedValues, types.Dict),
+			"additionalProperties":  llx.ArrayData(additionalProperties, types.Dict),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlConfig)
+	}
+	return res, nil
 }

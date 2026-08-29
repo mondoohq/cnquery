@@ -280,6 +280,8 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 				mqlAdb.cacheVaultID = stringValue(a.VaultId)
 				mqlAdb.cacheSubnetID = stringValue(a.SubnetId)
 				mqlAdb.cacheSourceID = stringValue(a.SourceId)
+				mqlAdb.cacheConnectionUrls = a.ConnectionUrls
+				mqlAdb.cachePublicConnectionUrls = a.PublicConnectionUrls
 				res = append(res, mqlAdb)
 			}
 
@@ -289,11 +291,52 @@ func (o *mqlOciDatabase) autonomousDatabases() ([]any, error) {
 
 type mqlOciDatabaseAutonomousDatabaseInternal struct {
 	ociCompartmentRef
-	cacheNsgIDs   []any
-	cacheKmsKeyID string
-	cacheVaultID  string
-	cacheSubnetID string
-	cacheSourceID string
+	cacheNsgIDs               []any
+	cacheKmsKeyID             string
+	cacheVaultID              string
+	cacheSubnetID             string
+	cacheSourceID             string
+	cacheConnectionUrls       *database.AutonomousDatabaseConnectionUrls
+	cachePublicConnectionUrls *database.AutonomousDatabaseConnectionUrls
+}
+
+// newOciAutonomousDatabaseConsoleUrls builds one console-URL resource. The
+// endpoint name is part of the cache key because a database publishes the same
+// consoles twice, once privately and once on its public endpoint, and the two
+// sets are different answers to the same audit.
+func newOciAutonomousDatabaseConsoleUrls(runtime *plugin.Runtime, dbID, endpoint string, urls *database.AutonomousDatabaseConnectionUrls) (*mqlOciDatabaseAutonomousDatabaseConsoleUrls, error) {
+	res, err := CreateResource(runtime, "oci.database.autonomousDatabase.consoleUrls", map[string]*llx.RawData{
+		"__id":                             llx.StringData(dbID + "/" + endpoint),
+		"sqlDevWebUrl":                     llx.StringDataPtr(urls.SqlDevWebUrl),
+		"apexUrl":                          llx.StringDataPtr(urls.ApexUrl),
+		"machineLearningUserManagementUrl": llx.StringDataPtr(urls.MachineLearningUserManagementUrl),
+		"graphStudioUrl":                   llx.StringDataPtr(urls.GraphStudioUrl),
+		"mongoDbUrl":                       llx.StringDataPtr(urls.MongoDbUrl),
+		"machineLearningNotebookUrl":       llx.StringDataPtr(urls.MachineLearningNotebookUrl),
+		"ordsUrl":                          llx.StringDataPtr(urls.OrdsUrl),
+		"databaseTransformsUrl":            llx.StringDataPtr(urls.DatabaseTransformsUrl),
+		"spatialStudioUrl":                 llx.StringDataPtr(urls.SpatialStudioUrl),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciDatabaseAutonomousDatabaseConsoleUrls), nil
+}
+
+func (o *mqlOciDatabaseAutonomousDatabase) managementUrls() (*mqlOciDatabaseAutonomousDatabaseConsoleUrls, error) {
+	if o.cacheConnectionUrls == nil {
+		o.ManagementUrls.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newOciAutonomousDatabaseConsoleUrls(o.MqlRuntime, o.Id.Data, "consoleUrls", o.cacheConnectionUrls)
+}
+
+func (o *mqlOciDatabaseAutonomousDatabase) publicManagementUrls() (*mqlOciDatabaseAutonomousDatabaseConsoleUrls, error) {
+	if o.cachePublicConnectionUrls == nil {
+		o.PublicManagementUrls.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	return newOciAutonomousDatabaseConsoleUrls(o.MqlRuntime, o.Id.Data, "publicConsoleUrls", o.cachePublicConnectionUrls)
 }
 
 func (o *mqlOciDatabaseAutonomousDatabase) id() (string, error) {

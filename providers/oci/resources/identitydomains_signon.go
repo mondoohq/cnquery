@@ -385,18 +385,35 @@ func (o *mqlOciIdentityDomain) networkPerimeters() ([]any, error) {
 	for i := range perimeters {
 		perimeter := perimeters[i]
 
-		addresses, err := convert.JsonToDictSlice(perimeter.IpAddresses)
+		addressDicts, err := convert.JsonToDictSlice(perimeter.IpAddresses)
 		if err != nil {
 			return nil, err
 		}
 
+		perimeterID := o.Id.Data + "/networkPerimeter/" + stringValue(perimeter.Id)
+		addresses := make([]any, 0, len(perimeter.IpAddresses))
+		for j := range perimeter.IpAddresses {
+			entry := perimeter.IpAddresses[j]
+			mqlAddress, err := CreateResource(o.MqlRuntime, "oci.identity.domain.networkPerimeter.address", map[string]*llx.RawData{
+				"__id":    llx.StringData(perimeterID + "/address/" + stringValue(entry.Value)),
+				"value":   llx.StringDataPtr(entry.Value),
+				"type":    llx.StringData(string(entry.Type)),
+				"version": llx.StringData(string(entry.Version)),
+			})
+			if err != nil {
+				return nil, err
+			}
+			addresses = append(addresses, mqlAddress)
+		}
+
 		mqlPerimeter, err := CreateResource(o.MqlRuntime, "oci.identity.domain.networkPerimeter", map[string]*llx.RawData{
-			"__id":        llx.StringData(o.Id.Data + "/networkPerimeter/" + stringValue(perimeter.Id)),
+			"__id":        llx.StringData(perimeterID),
 			"id":          llx.StringDataPtr(perimeter.Id),
 			"ocid":        llx.StringDataPtr(perimeter.Ocid),
 			"name":        llx.StringDataPtr(perimeter.Name),
 			"description": llx.StringDataPtr(perimeter.Description),
-			"ipAddresses": llx.ArrayData(addresses, types.Dict),
+			"ipAddresses": llx.ArrayData(addressDicts, types.Dict),
+			"addresses":   llx.ArrayData(addresses, types.Resource("oci.identity.domain.networkPerimeter.address")),
 			"created":     llx.TimeDataPtr(ociScimCreatedAt(perimeter.Meta)),
 		})
 		if err != nil {
