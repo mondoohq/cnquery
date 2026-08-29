@@ -632,13 +632,15 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			// Username is the deprecated HTTP basic-auth field; a non-empty value
 			// means basic auth is enabled (read solely for the audit signal).
 			basicAuthEnabled = c.MasterAuth.Username != ""
+			// Password and ClientKey are deliberately not published. They are
+			// the control-plane basic-auth password and the client private
+			// key; the audit signals they would serve are already carried by
+			// basicAuthEnabled and clientCertificateEnabled above.
 			masterAuth = map[string]any{
 				"username":                c.MasterAuth.Username,
-				"password":                c.MasterAuth.Password,
 				"clientCertificateConfig": clientCertCfg,
 				"clusterCaCertificate":    c.MasterAuth.ClusterCaCertificate,
 				"clientCertificate":       c.MasterAuth.ClientCertificate,
-				"clientKey":               c.MasterAuth.ClientKey,
 			}
 		}
 
