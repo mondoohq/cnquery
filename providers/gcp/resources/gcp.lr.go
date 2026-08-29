@@ -173,6 +173,7 @@ const (
 	ResourceGcpProjectKmsServiceRetiredResource                                        string = "gcp.project.kmsService.retiredResource"
 	ResourceGcpEssentialContact                                                        string = "gcp.essentialContact"
 	ResourceGcpProjectApiKey                                                           string = "gcp.project.apiKey"
+	ResourceGcpProjectApiKeyRestrictionsApiTarget                                      string = "gcp.project.apiKey.restrictions.apiTarget"
 	ResourceGcpProjectApiKeyRestrictions                                               string = "gcp.project.apiKey.restrictions"
 	ResourceGcpProjectLoggingservice                                                   string = "gcp.project.loggingservice"
 	ResourceGcpLoggingSettings                                                         string = "gcp.loggingSettings"
@@ -187,6 +188,7 @@ const (
 	ResourceGcpProjectIamServiceRole                                                   string = "gcp.project.iamService.role"
 	ResourceGcpProjectIamServiceServiceAccount                                         string = "gcp.project.iamService.serviceAccount"
 	ResourceGcpProjectIamServiceServiceAccountKey                                      string = "gcp.project.iamService.serviceAccount.key"
+	ResourceGcpProjectIamServiceDenyPolicyDenyRule                                     string = "gcp.project.iamService.denyPolicy.denyRule"
 	ResourceGcpProjectIamServiceDenyPolicy                                             string = "gcp.project.iamService.denyPolicy"
 	ResourceGcpProjectIamServiceWorkloadIdentityPool                                   string = "gcp.project.iamService.workloadIdentityPool"
 	ResourceGcpProjectIamServiceWorkloadIdentityPoolProvider                           string = "gcp.project.iamService.workloadIdentityPool.provider"
@@ -1147,6 +1149,10 @@ func init() {
 			Init:   initGcpProjectApiKey,
 			Create: createGcpProjectApiKey,
 		},
+		"gcp.project.apiKey.restrictions.apiTarget": {
+			// to override args, implement: initGcpProjectApiKeyRestrictionsApiTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectApiKeyRestrictionsApiTarget,
+		},
 		"gcp.project.apiKey.restrictions": {
 			Init:   initGcpProjectApiKeyRestrictions,
 			Create: createGcpProjectApiKeyRestrictions,
@@ -1202,6 +1208,10 @@ func init() {
 		"gcp.project.iamService.serviceAccount.key": {
 			// to override args, implement: initGcpProjectIamServiceServiceAccountKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectIamServiceServiceAccountKey,
+		},
+		"gcp.project.iamService.denyPolicy.denyRule": {
+			// to override args, implement: initGcpProjectIamServiceDenyPolicyDenyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectIamServiceDenyPolicyDenyRule,
 		},
 		"gcp.project.iamService.denyPolicy": {
 			// to override args, implement: initGcpProjectIamServiceDenyPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8500,6 +8510,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.apiKey.managedBy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKey).GetManagedBy()).ToDataRes(types.String)
 	},
+	"gcp.project.apiKey.restrictions.apiTarget.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictionsApiTarget).GetService()).ToDataRes(types.String)
+	},
+	"gcp.project.apiKey.restrictions.apiTarget.methods": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictionsApiTarget).GetMethods()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.apiKey.restrictions.parentResourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetParentResourcePath()).ToDataRes(types.String)
 	},
@@ -8509,14 +8525,26 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.apiKey.restrictions.apiTargets": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetApiTargets()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.apiKey.restrictions.allowedApiTargets": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAllowedApiTargets()).ToDataRes(types.Array(types.Resource("gcp.project.apiKey.restrictions.apiTarget")))
+	},
 	"gcp.project.apiKey.restrictions.browserKeyRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetBrowserKeyRestrictions()).ToDataRes(types.Dict)
+	},
+	"gcp.project.apiKey.restrictions.allowedReferrers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAllowedReferrers()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.apiKey.restrictions.iosKeyRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetIosKeyRestrictions()).ToDataRes(types.Dict)
 	},
+	"gcp.project.apiKey.restrictions.allowedBundleIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAllowedBundleIds()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.apiKey.restrictions.serverKeyRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetServerKeyRestrictions()).ToDataRes(types.Dict)
+	},
+	"gcp.project.apiKey.restrictions.allowedIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAllowedIps()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.apiKey.restrictions.unrestricted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetUnrestricted()).ToDataRes(types.Bool)
@@ -8899,6 +8927,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.iamService.serviceAccount.key.ageInDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceServiceAccountKey).GetAgeInDays()).ToDataRes(types.Int)
 	},
+	"gcp.project.iamService.denyPolicy.denyRule.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.deniedPrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetDeniedPrincipals()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.exceptionPrincipals": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetExceptionPrincipals()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.deniedPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetDeniedPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.exceptionPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetExceptionPermissions()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionExpression": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetDenialConditionExpression()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionTitle": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetDenialConditionTitle()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetDenialConditionDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionLocation": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).GetDenialConditionLocation()).ToDataRes(types.String)
+	},
 	"gcp.project.iamService.denyPolicy.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetName()).ToDataRes(types.String)
 	},
@@ -8913,6 +8968,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.iamService.denyPolicy.rules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"gcp.project.iamService.denyPolicy.denyRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetDenyRules()).ToDataRes(types.Array(types.Resource("gcp.project.iamService.denyPolicy.denyRule")))
 	},
 	"gcp.project.iamService.denyPolicy.etag": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectIamServiceDenyPolicy).GetEtag()).ToDataRes(types.String)
@@ -27785,6 +27843,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectApiKey).ManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"gcp.project.apiKey.restrictions.apiTarget.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsApiTarget).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.apiKey.restrictions.apiTarget.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsApiTarget).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.restrictions.apiTarget.methods": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsApiTarget).Methods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.apiKey.restrictions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).__id, ok = v.Value.(string)
 		return
@@ -27801,16 +27871,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectApiKeyRestrictions).ApiTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.apiKey.restrictions.allowedApiTargets": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).AllowedApiTargets, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.apiKey.restrictions.browserKeyRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).BrowserKeyRestrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.restrictions.allowedReferrers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).AllowedReferrers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiKey.restrictions.iosKeyRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).IosKeyRestrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.apiKey.restrictions.allowedBundleIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).AllowedBundleIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.apiKey.restrictions.serverKeyRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).ServerKeyRestrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.restrictions.allowedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).AllowedIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiKey.restrictions.unrestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28373,6 +28459,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectIamServiceServiceAccountKey).AgeInDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
+	"gcp.project.iamService.denyPolicy.denyRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.deniedPrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).DeniedPrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.exceptionPrincipals": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).ExceptionPrincipals, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.deniedPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).DeniedPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.exceptionPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).ExceptionPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionExpression": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).DenialConditionExpression, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionTitle": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).DenialConditionTitle, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).DenialConditionDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRule.denialConditionLocation": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicyDenyRule).DenialConditionLocation, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"gcp.project.iamService.denyPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceDenyPolicy).__id, ok = v.Value.(string)
 		return
@@ -28395,6 +28521,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.iamService.denyPolicy.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectIamServiceDenyPolicy).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.iamService.denyPolicy.denyRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectIamServiceDenyPolicy).DenyRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.iamService.denyPolicy.etag": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -64208,6 +64338,55 @@ func (c *mqlGcpProjectApiKey) GetManagedBy() *plugin.TValue[string] {
 	})
 }
 
+// mqlGcpProjectApiKeyRestrictionsApiTarget for the gcp.project.apiKey.restrictions.apiTarget resource
+type mqlGcpProjectApiKeyRestrictionsApiTarget struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectApiKeyRestrictionsApiTargetInternal it will be used here
+	Service plugin.TValue[string]
+	Methods plugin.TValue[[]any]
+}
+
+// createGcpProjectApiKeyRestrictionsApiTarget creates a new instance of this resource
+func createGcpProjectApiKeyRestrictionsApiTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectApiKeyRestrictionsApiTarget{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.apiKey.restrictions.apiTarget", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsApiTarget) MqlName() string {
+	return "gcp.project.apiKey.restrictions.apiTarget"
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsApiTarget) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsApiTarget) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsApiTarget) GetMethods() *plugin.TValue[[]any] {
+	return &c.Methods
+}
+
 // mqlGcpProjectApiKeyRestrictions for the gcp.project.apiKey.restrictions resource
 type mqlGcpProjectApiKeyRestrictions struct {
 	MqlRuntime *plugin.Runtime
@@ -64216,9 +64395,13 @@ type mqlGcpProjectApiKeyRestrictions struct {
 	ParentResourcePath      plugin.TValue[string]
 	AndroidKeyRestrictions  plugin.TValue[any]
 	ApiTargets              plugin.TValue[[]any]
+	AllowedApiTargets       plugin.TValue[[]any]
 	BrowserKeyRestrictions  plugin.TValue[any]
+	AllowedReferrers        plugin.TValue[[]any]
 	IosKeyRestrictions      plugin.TValue[any]
+	AllowedBundleIds        plugin.TValue[[]any]
 	ServerKeyRestrictions   plugin.TValue[any]
+	AllowedIps              plugin.TValue[[]any]
 	Unrestricted            plugin.TValue[bool]
 	AppliedRestrictionTypes plugin.TValue[[]any]
 }
@@ -64272,16 +64455,32 @@ func (c *mqlGcpProjectApiKeyRestrictions) GetApiTargets() *plugin.TValue[[]any] 
 	return &c.ApiTargets
 }
 
+func (c *mqlGcpProjectApiKeyRestrictions) GetAllowedApiTargets() *plugin.TValue[[]any] {
+	return &c.AllowedApiTargets
+}
+
 func (c *mqlGcpProjectApiKeyRestrictions) GetBrowserKeyRestrictions() *plugin.TValue[any] {
 	return &c.BrowserKeyRestrictions
+}
+
+func (c *mqlGcpProjectApiKeyRestrictions) GetAllowedReferrers() *plugin.TValue[[]any] {
+	return &c.AllowedReferrers
 }
 
 func (c *mqlGcpProjectApiKeyRestrictions) GetIosKeyRestrictions() *plugin.TValue[any] {
 	return &c.IosKeyRestrictions
 }
 
+func (c *mqlGcpProjectApiKeyRestrictions) GetAllowedBundleIds() *plugin.TValue[[]any] {
+	return &c.AllowedBundleIds
+}
+
 func (c *mqlGcpProjectApiKeyRestrictions) GetServerKeyRestrictions() *plugin.TValue[any] {
 	return &c.ServerKeyRestrictions
+}
+
+func (c *mqlGcpProjectApiKeyRestrictions) GetAllowedIps() *plugin.TValue[[]any] {
+	return &c.AllowedIps
 }
 
 func (c *mqlGcpProjectApiKeyRestrictions) GetUnrestricted() *plugin.TValue[bool] {
@@ -65744,6 +65943,90 @@ func (c *mqlGcpProjectIamServiceServiceAccountKey) GetAgeInDays() *plugin.TValue
 	})
 }
 
+// mqlGcpProjectIamServiceDenyPolicyDenyRule for the gcp.project.iamService.denyPolicy.denyRule resource
+type mqlGcpProjectIamServiceDenyPolicyDenyRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectIamServiceDenyPolicyDenyRuleInternal it will be used here
+	Description                plugin.TValue[string]
+	DeniedPrincipals           plugin.TValue[[]any]
+	ExceptionPrincipals        plugin.TValue[[]any]
+	DeniedPermissions          plugin.TValue[[]any]
+	ExceptionPermissions       plugin.TValue[[]any]
+	DenialConditionExpression  plugin.TValue[string]
+	DenialConditionTitle       plugin.TValue[string]
+	DenialConditionDescription plugin.TValue[string]
+	DenialConditionLocation    plugin.TValue[string]
+}
+
+// createGcpProjectIamServiceDenyPolicyDenyRule creates a new instance of this resource
+func createGcpProjectIamServiceDenyPolicyDenyRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectIamServiceDenyPolicyDenyRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.iamService.denyPolicy.denyRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) MqlName() string {
+	return "gcp.project.iamService.denyPolicy.denyRule"
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetDeniedPrincipals() *plugin.TValue[[]any] {
+	return &c.DeniedPrincipals
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetExceptionPrincipals() *plugin.TValue[[]any] {
+	return &c.ExceptionPrincipals
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetDeniedPermissions() *plugin.TValue[[]any] {
+	return &c.DeniedPermissions
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetExceptionPermissions() *plugin.TValue[[]any] {
+	return &c.ExceptionPermissions
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetDenialConditionExpression() *plugin.TValue[string] {
+	return &c.DenialConditionExpression
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetDenialConditionTitle() *plugin.TValue[string] {
+	return &c.DenialConditionTitle
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetDenialConditionDescription() *plugin.TValue[string] {
+	return &c.DenialConditionDescription
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicyDenyRule) GetDenialConditionLocation() *plugin.TValue[string] {
+	return &c.DenialConditionLocation
+}
+
 // mqlGcpProjectIamServiceDenyPolicy for the gcp.project.iamService.denyPolicy resource
 type mqlGcpProjectIamServiceDenyPolicy struct {
 	MqlRuntime *plugin.Runtime
@@ -65754,6 +66037,7 @@ type mqlGcpProjectIamServiceDenyPolicy struct {
 	DisplayName plugin.TValue[string]
 	Annotations plugin.TValue[map[string]any]
 	Rules       plugin.TValue[[]any]
+	DenyRules   plugin.TValue[[]any]
 	Etag        plugin.TValue[string]
 	Created     plugin.TValue[*time.Time]
 	Updated     plugin.TValue[*time.Time]
@@ -65814,6 +66098,10 @@ func (c *mqlGcpProjectIamServiceDenyPolicy) GetAnnotations() *plugin.TValue[map[
 
 func (c *mqlGcpProjectIamServiceDenyPolicy) GetRules() *plugin.TValue[[]any] {
 	return &c.Rules
+}
+
+func (c *mqlGcpProjectIamServiceDenyPolicy) GetDenyRules() *plugin.TValue[[]any] {
+	return &c.DenyRules
 }
 
 func (c *mqlGcpProjectIamServiceDenyPolicy) GetEtag() *plugin.TValue[string] {

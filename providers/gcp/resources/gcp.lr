@@ -6611,6 +6611,18 @@ private gcp.project.apiKey @defaults("name") {
   managedBy() string
 }
 
+// API target of a Google Cloud API key restriction
+//
+// One service an API key is permitted to call, and the methods within it. An
+// empty `methods` list permits every method of the service. A key with no API
+// targets at all may call every API enabled in the project.
+private gcp.project.apiKey.restrictions.apiTarget @defaults("service methods") {
+  // Service the key may call, for example compute.googleapis.com
+  service string
+  // Methods of the service the key may call, empty when every method is permitted
+  methods []string
+}
+
 // Google Cloud (GCP) project API key restrictions
 //
 // Access restrictions applied to a GCP API key: Android app restrictions,
@@ -6626,27 +6638,42 @@ private gcp.project.apiKey.restrictions {
   // Dict with `allowedApplications`, a list of `{packageName,
   // sha1Fingerprint}` entries identifying each permitted Android app.
   androidKeyRestrictions dict
-  // API targets the key is restricted to
+  // API target dicts
   //
-  // Each entry is a `{service, methods}` dict: `service` is the target
-  // service name and `methods` is the list of allowed methods (an empty
-  // list means all methods of that service).
-  apiTargets []dict
-  // HTTP referrers allowed to use the key
+  // Deprecated in favor of allowedApiTargets. Each entry carries `service`
+  // and `methods`.
+  apiTargets @maturity("deprecated") []dict
+  // Services and methods the key may call
   //
-  // Dict with `allowedReferrers`, a list of referrer patterns permitted to
-  // use the key.
-  browserKeyRestrictions dict
-  // iOS apps allowed to use the key
+  // An empty list means the key may call every API enabled in the project,
+  // which is the state that turns a leaked key into project-wide access.
+  allowedApiTargets []gcp.project.apiKey.restrictions.apiTarget
+  // Browser restriction dict
   //
-  // Dict with `allowedBundleIds`, a list of iOS bundle IDs permitted to use
-  // the key.
-  iosKeyRestrictions dict
-  // IP addresses allowed to use the key
+  // Deprecated in favor of allowedReferrers. Carries `allowedReferrers`.
+  browserKeyRestrictions @maturity("deprecated") dict
+  // HTTP referrer patterns permitted to use the key
   //
-  // Dict with `allowedIps`, a list of IPv4 or IPv6 addresses or CIDR ranges
-  // permitted to use the key.
-  serverKeyRestrictions dict
+  // A pattern of `*` permits every referrer, which is no restriction at all.
+  // Null when the key carries no browser restriction.
+  allowedReferrers []string
+  // iOS restriction dict
+  //
+  // Deprecated in favor of allowedBundleIds. Carries `allowedBundleIds`.
+  iosKeyRestrictions @maturity("deprecated") dict
+  // iOS bundle IDs permitted to use the key
+  //
+  // Null when the key carries no iOS restriction.
+  allowedBundleIds []string
+  // Server restriction dict
+  //
+  // Deprecated in favor of allowedIps. Carries `allowedIps`.
+  serverKeyRestrictions @maturity("deprecated") dict
+  // IPv4 and IPv6 addresses and CIDR ranges permitted to use the key
+  //
+  // A range of 0.0.0.0/0 permits every caller, which is no restriction at
+  // all. Null when the key carries no server restriction.
+  allowedIps []string
   // Whether the API key has no restrictions configured (no app/IP/referrer/API target restriction). Unrestricted keys are higher risk.
   unrestricted() bool
   // Names of the restriction categories actually set on the key
@@ -7124,6 +7151,38 @@ private gcp.project.iamService.serviceAccount.key @defaults("name") {
   ageInDays() int
 }
 
+// Deny rule of an IAM deny policy
+//
+// One rule of a deny policy: the `deniedPrincipals` that lose the
+// `deniedPermissions`, and the `exceptionPrincipals` and
+// `exceptionPermissions` carved back out of the denial. A deny rule overrides
+// every allow policy that would otherwise grant the permission, so reading the
+// deny rules is the only way to know what a principal can actually do. The
+// `denialConditionExpression` gates when the denial fires, and a rule carrying
+// one denies nothing outside the cases the expression matches.
+private gcp.project.iamService.denyPolicy.denyRule @defaults("deniedPrincipals deniedPermissions") {
+  // Human-readable description of the rule
+  description string
+  // Principals denied the permissions, in IAM v2 principal format
+  //
+  // A value of `principalSet://goog/public:all` denies every principal.
+  deniedPrincipals []string
+  // Principals exempted from the denial, in IAM v2 principal format
+  exceptionPrincipals []string
+  // Permissions the denied principals lose, in service.resource.verb form
+  deniedPermissions []string
+  // Permissions carved back out of the denial for the denied principals
+  exceptionPermissions []string
+  // CEL expression gating when the denial fires, empty when it always fires
+  denialConditionExpression string
+  // Short title of the denial condition
+  denialConditionTitle string
+  // Description of the denial condition
+  denialConditionDescription string
+  // Source position of the denial condition, used when reporting an error in the expression
+  denialConditionLocation string
+}
+
 // Google Cloud (GCP) IAM deny policy
 //
 // Deny rules that block principals from using specific permissions on the
@@ -7141,14 +7200,14 @@ private gcp.project.iamService.denyPolicy @defaults("displayName name") {
   displayName string
   // Arbitrary user-supplied metadata attached to the policy
   annotations map[string]string
-  // Deny rules that make up the policy
+  // Deny rule dicts
   //
-  // Each rule is a dict with `description`, `deniedPrincipals`,
-  // `deniedPermissions`, `exceptionPrincipals`, and `exceptionPermissions`
-  // (lists of strings), plus an optional `denialCondition` dict carrying the
-  // CEL `expression`, `title`, `description`, and `location` that gates when
-  // the denial fires.
-  rules []dict
+  // Deprecated in favor of denyRules. Each entry carries `description`,
+  // `deniedPrincipals`, `deniedPermissions`, `exceptionPrincipals`,
+  // `exceptionPermissions`, and an optional `denialCondition`.
+  rules @maturity("deprecated") []dict
+  // Deny rules that make up the policy
+  denyRules []gcp.project.iamService.denyPolicy.denyRule
   // Etag for optimistic concurrency control
   etag string
   // Creation timestamp

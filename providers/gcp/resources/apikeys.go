@@ -71,6 +71,13 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 			mqlServerKeyRestr any
 			mqlApiTargets     = []any{}
 		)
+		// Null, not empty: a key with no browser restriction has no referrer
+		// allowlist at all, which is a different claim from an allowlist that
+		// permits nothing.
+		allowedReferrers := llx.NilData
+		allowedBundleIds := llx.NilData
+		allowedIps := llx.NilData
+		allowedApiTargets := []any{}
 		if k.Restrictions != nil {
 			if k.Restrictions.AndroidKeyRestrictions != nil {
 
@@ -112,6 +119,16 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 						return nil, err
 					}
 					mqlApiTargets = append(mqlApiTargets, target)
+
+					mqlTarget, err := CreateResource(g.MqlRuntime, "gcp.project.apiKey.restrictions.apiTarget", map[string]*llx.RawData{
+						"__id":    llx.StringData(k.Name + "/apiTarget/" + a.Service),
+						"service": llx.StringData(a.Service),
+						"methods": llx.ArrayData(convert.SliceAnyToInterface(a.Methods), types.String),
+					})
+					if err != nil {
+						return nil, err
+					}
+					allowedApiTargets = append(allowedApiTargets, mqlTarget)
 				}
 			}
 
@@ -126,6 +143,7 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				allowedReferrers = llx.ArrayData(convert.SliceAnyToInterface(k.Restrictions.BrowserKeyRestrictions.AllowedReferrers), types.String)
 			}
 
 			if k.Restrictions.IosKeyRestrictions != nil {
@@ -139,6 +157,7 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				allowedBundleIds = llx.ArrayData(convert.SliceAnyToInterface(k.Restrictions.IosKeyRestrictions.AllowedBundleIds), types.String)
 			}
 
 			if k.Restrictions.ServerKeyRestrictions != nil {
@@ -152,6 +171,7 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				allowedIps = llx.ArrayData(convert.SliceAnyToInterface(k.Restrictions.ServerKeyRestrictions.AllowedIps), types.String)
 			}
 
 		}
@@ -163,6 +183,10 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 			"iosKeyRestrictions":     llx.DictData(mqlIosRestr),
 			"serverKeyRestrictions":  llx.DictData(mqlServerKeyRestr),
 			"apiTargets":             llx.ArrayData(mqlApiTargets, types.Dict),
+			"allowedReferrers":       allowedReferrers,
+			"allowedBundleIds":       allowedBundleIds,
+			"allowedIps":             allowedIps,
+			"allowedApiTargets":      llx.ArrayData(allowedApiTargets, types.Resource("gcp.project.apiKey.restrictions.apiTarget")),
 		})
 		if err != nil {
 			return nil, err
@@ -380,6 +404,10 @@ func initGcpProjectApiKeyRestrictions(runtime *plugin.Runtime, args map[string]*
 		args["browserKeyRestrictions"] = llx.NilData
 		args["iosKeyRestrictions"] = llx.NilData
 		args["serverKeyRestrictions"] = llx.NilData
+		args["allowedReferrers"] = llx.NilData
+		args["allowedBundleIds"] = llx.NilData
+		args["allowedIps"] = llx.NilData
+		args["allowedApiTargets"] = llx.NilData
 		return args, nil, nil
 	}
 	return args, restrictions.Data, nil
