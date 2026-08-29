@@ -47,6 +47,17 @@ func intValue(i *int) int64 {
 	return int64(*i)
 }
 
+// intPtrToInt64 widens an optional SDK int so llx.IntDataPtr can tell an absent
+// value from a zero one. Dropping the pointer here would report "no lead time
+// configured" and "a lead time of zero weeks" as the same answer.
+func intPtrToInt64(i *int) *int64 {
+	if i == nil {
+		return nil
+	}
+	v := int64(*i)
+	return &v
+}
+
 // isOcid returns true if the string looks like a valid OCI resource identifier.
 // OCI uses placeholder values like "ORACLE_MANAGED_KEY" for system-managed
 // resources; those should not be resolved via init lookups.

@@ -77,6 +77,7 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				maintenance := ociMaintenanceWindowArgs(s.MaintenanceWindow)
 
 				mqlInstance, err := createOciResourceInCompartment(o.MqlRuntime, "oci.database.dbSystem", stringValue(s.CompartmentId), map[string]*llx.RawData{
 					"id":                   llx.StringDataPtr(s.Id),
@@ -112,6 +113,17 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 					"securityAttributes":         llx.MapData(definedTagsToAny(s.SecurityAttributes), types.Dict),
 					"maintenanceWindow":          llx.DictData(maintenanceWindow),
 					"lifecycleDetails":           llx.StringDataPtr(s.LifecycleDetails),
+
+					"maintenancePreference":                 maintenance["preference"],
+					"maintenancePatchingMode":               maintenance["patchingMode"],
+					"maintenanceCustomActionTimeoutEnabled": maintenance["customActionTimeoutEnabled"],
+					"maintenanceCustomActionTimeoutInMins":  maintenance["customActionTimeoutInMins"],
+					"maintenanceMonthlyPatchingEnabled":     maintenance["monthlyPatchingEnabled"],
+					"maintenanceMonths":                     maintenance["months"],
+					"maintenanceWeeksOfMonth":               maintenance["weeksOfMonth"],
+					"maintenanceDaysOfWeek":                 maintenance["daysOfWeek"],
+					"maintenanceHoursOfDay":                 maintenance["hoursOfDay"],
+					"maintenanceLeadTimeInWeeks":            maintenance["leadTimeInWeeks"],
 				})
 				if err != nil {
 					return nil, err
@@ -128,6 +140,57 @@ func (o *mqlOciDatabase) dbSystems() ([]any, error) {
 
 			return res, nil
 		})
+}
+
+// ociMaintenanceWindowArgs flattens a DB system's maintenance window onto the
+// system itself. A system that has never had a window configured carries none
+// at all, and every value reads null rather than the zero of its type, so
+// "patched on a rolling basis" is not reported for a system nobody configured.
+func ociMaintenanceWindowArgs(w *database.MaintenanceWindow) map[string]*llx.RawData {
+	if w == nil {
+		return map[string]*llx.RawData{
+			"preference":                 llx.NilData,
+			"patchingMode":               llx.NilData,
+			"customActionTimeoutEnabled": llx.NilData,
+			"customActionTimeoutInMins":  llx.NilData,
+			"monthlyPatchingEnabled":     llx.NilData,
+			"months":                     llx.NilData,
+			"weeksOfMonth":               llx.NilData,
+			"daysOfWeek":                 llx.NilData,
+			"hoursOfDay":                 llx.NilData,
+			"leadTimeInWeeks":            llx.NilData,
+		}
+	}
+
+	months := make([]any, 0, len(w.Months))
+	for _, m := range w.Months {
+		months = append(months, string(m.Name))
+	}
+	daysOfWeek := make([]any, 0, len(w.DaysOfWeek))
+	for _, d := range w.DaysOfWeek {
+		daysOfWeek = append(daysOfWeek, string(d.Name))
+	}
+	weeksOfMonth := make([]any, 0, len(w.WeeksOfMonth))
+	for _, v := range w.WeeksOfMonth {
+		weeksOfMonth = append(weeksOfMonth, int64(v))
+	}
+	hoursOfDay := make([]any, 0, len(w.HoursOfDay))
+	for _, v := range w.HoursOfDay {
+		hoursOfDay = append(hoursOfDay, int64(v))
+	}
+
+	return map[string]*llx.RawData{
+		"preference":                 llx.StringData(string(w.Preference)),
+		"patchingMode":               llx.StringData(string(w.PatchingMode)),
+		"customActionTimeoutEnabled": llx.BoolDataPtr(w.IsCustomActionTimeoutEnabled),
+		"customActionTimeoutInMins":  llx.IntDataPtr(intPtrToInt64(w.CustomActionTimeoutInMins)),
+		"monthlyPatchingEnabled":     llx.BoolDataPtr(w.IsMonthlyPatchingEnabled),
+		"months":                     llx.ArrayData(months, types.String),
+		"weeksOfMonth":               llx.ArrayData(weeksOfMonth, types.Int),
+		"daysOfWeek":                 llx.ArrayData(daysOfWeek, types.String),
+		"hoursOfDay":                 llx.ArrayData(hoursOfDay, types.Int),
+		"leadTimeInWeeks":            llx.IntDataPtr(intPtrToInt64(w.LeadTimeInWeeks)),
+	}
 }
 
 type mqlOciDatabaseDbSystemInternal struct {
