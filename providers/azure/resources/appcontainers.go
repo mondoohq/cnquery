@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -745,6 +746,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 	httpsOnly := true
 	corsOrigins := []any{}
 	ipRules := []any{}
+	ingressIpRestrictions := []any{}
 	registries := []any{}
 	registryUsesIdentity := false
 	secretNames := []any{}
@@ -819,6 +821,29 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 						return nil, err
 					}
 					ipRules = d
+				}
+				for i, rule := range ing.IPSecurityRestrictions {
+					if rule == nil {
+						continue
+					}
+					// The rule name is unique within an app's ingress; the
+					// position covers a rule the API returned without one.
+					key := convert.ToValue(rule.Name)
+					if key == "" {
+						key = strconv.Itoa(i)
+					}
+					mqlRule, err := CreateResource(runtime, "azure.subscription.containerAppService.containerApp.ipRestriction",
+						map[string]*llx.RawData{
+							"__id":           llx.StringData(subResourceCacheID(nil, convert.ToValue(entry.ID), "ingressIpRestrictions", key)),
+							"name":           llx.StringDataPtr(rule.Name),
+							"description":    llx.StringDataPtr(rule.Description),
+							"ipAddressRange": llx.StringDataPtr(rule.IPAddressRange),
+							"action":         llx.StringDataPtr(stringEnumPtr(rule.Action)),
+						})
+					if err != nil {
+						return nil, err
+					}
+					ingressIpRestrictions = append(ingressIpRestrictions, mqlRule)
 				}
 			}
 			if len(cfg.Registries) > 0 {
@@ -919,6 +944,7 @@ func acaContainerAppToMQL(runtime *plugin.Runtime, entry *apps.ContainerApp) (pl
 			"clientCertificateMode":    llx.StringData(clientCertMode),
 			"corsAllowedOrigins":       llx.ArrayData(corsOrigins, types.String),
 			"ipSecurityRestrictions":   llx.ArrayData(ipRules, types.Dict),
+			"ingressIpRestrictions":    llx.ArrayData(ingressIpRestrictions, types.Resource("azure.subscription.containerAppService.containerApp.ipRestriction")),
 			"workloadProfileName":      llx.StringData(workloadProfile),
 			"minReplicas":              llx.IntDataDefault(minReplicas, 0),
 			"maxReplicas":              llx.IntDataDefault(maxReplicas, 0),

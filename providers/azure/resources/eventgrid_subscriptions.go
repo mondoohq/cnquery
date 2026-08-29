@@ -324,6 +324,7 @@ func (a *mqlAzureSubscriptionEventGridService) namespaces() ([]any, error) {
 			var topicSpacesHostname, routeTopicResourceID string
 			isZoneRedundant := false
 			inboundIPRules := []any{}
+			inboundIPRuleActions := map[string]any{}
 			var maxSessions, maxSessionExpiry *int64
 
 			if props := ns.Properties; props != nil {
@@ -332,6 +333,7 @@ func (a *mqlAzureSubscriptionEventGridService) namespaces() ([]any, error) {
 				minTLS = string(convert.ToValue(props.MinimumTLSVersionAllowed))
 				isZoneRedundant = convert.ToValue(props.IsZoneRedundant)
 
+				inboundIPRuleActions = eventGridIpRuleActions(props.InboundIPRules)
 				for _, rule := range props.InboundIPRules {
 					if rule == nil {
 						continue
@@ -376,6 +378,7 @@ func (a *mqlAzureSubscriptionEventGridService) namespaces() ([]any, error) {
 					"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
 					"minimumTlsVersionAllowed": llx.StringData(minTLS),
 					"inboundIpRules":           llx.ArrayData(inboundIPRules, types.Dict),
+					"inboundIpRuleActions":     llx.MapData(inboundIPRuleActions, types.String),
 					"topicSpacesState":         llx.StringData(topicSpacesState),
 					"topicSpacesHostname":      llx.StringData(topicSpacesHostname),
 					"routeTopicResourceId":     llx.StringData(routeTopicResourceID),

@@ -652,6 +652,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 	}
 
 	ipRules := []any{}
+	ipRuleActions := map[string]any{}
 	for _, r := range props.IPRules {
 		if r == nil {
 			continue
@@ -664,6 +665,9 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 			entry["action"] = string(*r.Action)
 		}
 		ipRules = append(ipRules, entry)
+		if r.IPMask != nil {
+			ipRuleActions[*r.IPMask] = string(convert.ToValue(r.Action))
+		}
 	}
 
 	vnetRules := []any{}
@@ -698,6 +702,7 @@ func (a *mqlAzureSubscriptionServiceBusServiceNamespace) networkRules() (*mqlAzu
 		"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 		"trustedServiceAccessEnabled": llx.BoolData(trustedServiceAccess),
 		"ipRules":                     llx.ArrayData(ipRules, types.Dict),
+		"ipRuleActions":               llx.MapData(ipRuleActions, types.String),
 		"virtualNetworkRules":         llx.ArrayData(vnetRules, types.Resource("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule")),
 	})
 	if err != nil {

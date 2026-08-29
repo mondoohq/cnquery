@@ -463,6 +463,7 @@ const (
 	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponent                         string = "azure.subscription.containerAppService.managedEnvironment.daprComponent"
 	ResourceAzureSubscriptionContainerAppServiceManagedEnvironmentCertificate                           string = "azure.subscription.containerAppService.managedEnvironment.certificate"
 	ResourceAzureSubscriptionContainerAppServiceContainerApp                                            string = "azure.subscription.containerAppService.containerApp"
+	ResourceAzureSubscriptionContainerAppServiceContainerAppIpRestriction                               string = "azure.subscription.containerAppService.containerApp.ipRestriction"
 	ResourceAzureSubscriptionContainerAppServiceContainerAppContainer                                   string = "azure.subscription.containerAppService.containerApp.container"
 	ResourceAzureSubscriptionContainerAppServiceContainerAppRevision                                    string = "azure.subscription.containerAppService.containerApp.revision"
 	ResourceAzureSubscriptionContainerAppServiceContainerAppAuthConfig                                  string = "azure.subscription.containerAppService.containerApp.authConfig"
@@ -2357,6 +2358,10 @@ func init() {
 		"azure.subscription.containerAppService.containerApp": {
 			Init:   initAzureSubscriptionContainerAppServiceContainerApp,
 			Create: createAzureSubscriptionContainerAppServiceContainerApp,
+		},
+		"azure.subscription.containerAppService.containerApp.ipRestriction": {
+			// to override args, implement: initAzureSubscriptionContainerAppServiceContainerAppIpRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionContainerAppServiceContainerAppIpRestriction,
 		},
 		"azure.subscription.containerAppService.containerApp.container": {
 			// to override args, implement: initAzureSubscriptionContainerAppServiceContainerAppContainer(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -17629,6 +17634,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.networkRules.ipRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetIpRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.serviceBusService.namespace.networkRules.ipRuleActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetIpRuleActions()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule")))
 	},
@@ -17875,6 +17883,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.networkRules.ipRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetIpRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.eventHubService.namespace.networkRules.ipRuleActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetIpRuleActions()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).GetVirtualNetworkRules()).ToDataRes(types.Array(types.Resource("azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule")))
 	},
@@ -17995,6 +18006,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.topic.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.eventGridService.topic.inboundIpRuleActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetInboundIpRuleActions()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.eventGridService.topic.identityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceTopic).GetIdentityType()).ToDataRes(types.String)
 	},
@@ -18085,6 +18099,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventGridService.domain.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.eventGridService.domain.inboundIpRuleActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetInboundIpRuleActions()).ToDataRes(types.Map(types.String, types.String))
+	},
 	"azure.subscription.eventGridService.domain.identityType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceDomain).GetIdentityType()).ToDataRes(types.String)
 	},
@@ -18165,6 +18182,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.eventGridService.namespace.inboundIpRules": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetInboundIpRules()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.eventGridService.namespace.inboundIpRuleActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetInboundIpRuleActions()).ToDataRes(types.Map(types.String, types.String))
 	},
 	"azure.subscription.eventGridService.namespace.topicSpacesState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventGridServiceNamespace).GetTopicSpacesState()).ToDataRes(types.String)
@@ -19048,6 +19068,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerAppService.containerApp.ipSecurityRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).GetIpSecurityRestrictions()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.containerAppService.containerApp.ingressIpRestrictions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).GetIngressIpRestrictions()).ToDataRes(types.Array(types.Resource("azure.subscription.containerAppService.containerApp.ipRestriction")))
+	},
 	"azure.subscription.containerAppService.containerApp.workloadProfileName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).GetWorkloadProfileName()).ToDataRes(types.String)
 	},
@@ -19095,6 +19118,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.containerAppService.containerApp.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).GetName()).ToDataRes(types.String)
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).GetDescription()).ToDataRes(types.String)
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.ipAddressRange": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).GetIpAddressRange()).ToDataRes(types.String)
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.action": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).GetAction()).ToDataRes(types.String)
 	},
 	"azure.subscription.containerAppService.containerApp.container.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceContainerAppContainer).GetId()).ToDataRes(types.String)
@@ -44700,6 +44735,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.serviceBusService.namespace.networkRules.ipRuleActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).IpRuleActions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -45060,6 +45099,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventHubService.namespace.networkRules.ipRuleActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).IpRuleActions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules).VirtualNetworkRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -45244,6 +45287,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventGridServiceTopic).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventGridService.topic.inboundIpRuleActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceTopic).InboundIpRuleActions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventGridService.topic.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventGridServiceTopic).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -45372,6 +45419,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventGridServiceDomain).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.eventGridService.domain.inboundIpRuleActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceDomain).InboundIpRuleActions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.eventGridService.domain.identityType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventGridServiceDomain).IdentityType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -45486,6 +45537,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.eventGridService.namespace.inboundIpRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionEventGridServiceNamespace).InboundIpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.eventGridService.namespace.inboundIpRuleActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventGridServiceNamespace).InboundIpRuleActions, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventGridService.namespace.topicSpacesState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46788,6 +46843,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).IpSecurityRestrictions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.containerAppService.containerApp.ingressIpRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).IngressIpRestrictions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.containerAppService.containerApp.workloadProfileName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).WorkloadProfileName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -46850,6 +46909,26 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.containerAppService.containerApp.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionContainerAppServiceContainerApp).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.ipAddressRange": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).IpAddressRange, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.containerAppService.containerApp.ipRestriction.action": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction).Action, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.containerAppService.containerApp.container.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -104278,6 +104357,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules struct {
 	PublicNetworkAccess         plugin.TValue[string]
 	TrustedServiceAccessEnabled plugin.TValue[bool]
 	IpRules                     plugin.TValue[[]any]
+	IpRuleActions               plugin.TValue[map[string]any]
 	VirtualNetworkRules         plugin.TValue[[]any]
 }
 
@@ -104327,6 +104407,10 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetTrustedS
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetIpRules() *plugin.TValue[[]any] {
 	return &c.IpRules
+}
+
+func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetIpRuleActions() *plugin.TValue[map[string]any] {
+	return &c.IpRuleActions
 }
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespaceNetworkRules) GetVirtualNetworkRules() *plugin.TValue[[]any] {
@@ -105198,6 +105282,7 @@ type mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules struct {
 	PublicNetworkAccess         plugin.TValue[string]
 	TrustedServiceAccessEnabled plugin.TValue[bool]
 	IpRules                     plugin.TValue[[]any]
+	IpRuleActions               plugin.TValue[map[string]any]
 	VirtualNetworkRules         plugin.TValue[[]any]
 }
 
@@ -105247,6 +105332,10 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetTrustedSer
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetIpRules() *plugin.TValue[[]any] {
 	return &c.IpRules
+}
+
+func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetIpRuleActions() *plugin.TValue[map[string]any] {
+	return &c.IpRuleActions
 }
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespaceNetworkRules) GetVirtualNetworkRules() *plugin.TValue[[]any] {
@@ -105736,6 +105825,7 @@ type mqlAzureSubscriptionEventGridServiceTopic struct {
 	MinimumTlsVersionAllowed       plugin.TValue[string]
 	DataResidencyBoundary          plugin.TValue[string]
 	InboundIpRules                 plugin.TValue[[]any]
+	InboundIpRuleActions           plugin.TValue[map[string]any]
 	IdentityType                   plugin.TValue[string]
 	PrivateEndpointConnectionCount plugin.TValue[int64]
 	SystemMetadata                 plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -105829,6 +105919,10 @@ func (c *mqlAzureSubscriptionEventGridServiceTopic) GetDataResidencyBoundary() *
 
 func (c *mqlAzureSubscriptionEventGridServiceTopic) GetInboundIpRules() *plugin.TValue[[]any] {
 	return &c.InboundIpRules
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceTopic) GetInboundIpRuleActions() *plugin.TValue[map[string]any] {
+	return &c.InboundIpRuleActions
 }
 
 func (c *mqlAzureSubscriptionEventGridServiceTopic) GetIdentityType() *plugin.TValue[string] {
@@ -106014,6 +106108,7 @@ type mqlAzureSubscriptionEventGridServiceDomain struct {
 	AutoCreateTopicWithFirstSubscription plugin.TValue[bool]
 	AutoDeleteTopicWithLastSubscription  plugin.TValue[bool]
 	InboundIpRules                       plugin.TValue[[]any]
+	InboundIpRuleActions                 plugin.TValue[map[string]any]
 	IdentityType                         plugin.TValue[string]
 	PrivateEndpointConnectionCount       plugin.TValue[int64]
 	SystemMetadata                       plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -106115,6 +106210,10 @@ func (c *mqlAzureSubscriptionEventGridServiceDomain) GetAutoDeleteTopicWithLastS
 
 func (c *mqlAzureSubscriptionEventGridServiceDomain) GetInboundIpRules() *plugin.TValue[[]any] {
 	return &c.InboundIpRules
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceDomain) GetInboundIpRuleActions() *plugin.TValue[map[string]any] {
+	return &c.InboundIpRuleActions
 }
 
 func (c *mqlAzureSubscriptionEventGridServiceDomain) GetIdentityType() *plugin.TValue[string] {
@@ -106276,6 +106375,7 @@ type mqlAzureSubscriptionEventGridServiceNamespace struct {
 	PublicNetworkAccess                        plugin.TValue[string]
 	MinimumTlsVersionAllowed                   plugin.TValue[string]
 	InboundIpRules                             plugin.TValue[[]any]
+	InboundIpRuleActions                       plugin.TValue[map[string]any]
 	TopicSpacesState                           plugin.TValue[string]
 	MaximumClientSessionsPerAuthenticationName plugin.TValue[int64]
 	MaximumSessionExpiryInHours                plugin.TValue[int64]
@@ -106356,6 +106456,10 @@ func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetMinimumTlsVersionAllo
 
 func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetInboundIpRules() *plugin.TValue[[]any] {
 	return &c.InboundIpRules
+}
+
+func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetInboundIpRuleActions() *plugin.TValue[map[string]any] {
+	return &c.InboundIpRuleActions
 }
 
 func (c *mqlAzureSubscriptionEventGridServiceNamespace) GetTopicSpacesState() *plugin.TValue[string] {
@@ -109507,6 +109611,7 @@ type mqlAzureSubscriptionContainerAppServiceContainerApp struct {
 	ClientCertificateMode    plugin.TValue[string]
 	CorsAllowedOrigins       plugin.TValue[[]any]
 	IpSecurityRestrictions   plugin.TValue[[]any]
+	IngressIpRestrictions    plugin.TValue[[]any]
 	WorkloadProfileName      plugin.TValue[string]
 	MinReplicas              plugin.TValue[int64]
 	MaxReplicas              plugin.TValue[int64]
@@ -109666,6 +109771,10 @@ func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetIpSecurityRestr
 	return &c.IpSecurityRestrictions
 }
 
+func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetIngressIpRestrictions() *plugin.TValue[[]any] {
+	return &c.IngressIpRestrictions
+}
+
 func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetWorkloadProfileName() *plugin.TValue[string] {
 	return &c.WorkloadProfileName
 }
@@ -109812,6 +109921,65 @@ func (c *mqlAzureSubscriptionContainerAppServiceContainerApp) GetSystemMetadata(
 
 		return c.systemMetadata()
 	})
+}
+
+// mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction for the azure.subscription.containerAppService.containerApp.ipRestriction resource
+type mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionContainerAppServiceContainerAppIpRestrictionInternal it will be used here
+	Name           plugin.TValue[string]
+	Description    plugin.TValue[string]
+	IpAddressRange plugin.TValue[string]
+	Action         plugin.TValue[string]
+}
+
+// createAzureSubscriptionContainerAppServiceContainerAppIpRestriction creates a new instance of this resource
+func createAzureSubscriptionContainerAppServiceContainerAppIpRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.containerAppService.containerApp.ipRestriction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction) MqlName() string {
+	return "azure.subscription.containerAppService.containerApp.ipRestriction"
+}
+
+func (c *mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction) GetIpAddressRange() *plugin.TValue[string] {
+	return &c.IpAddressRange
+}
+
+func (c *mqlAzureSubscriptionContainerAppServiceContainerAppIpRestriction) GetAction() *plugin.TValue[string] {
+	return &c.Action
 }
 
 // mqlAzureSubscriptionContainerAppServiceContainerAppContainer for the azure.subscription.containerAppService.containerApp.container resource

@@ -87,6 +87,20 @@ func eventGridIpRulesToDict(rules []*eventgrid.InboundIPRule) []any {
 	return out
 }
 
+// eventGridIpRuleActions keys the inbound IP rules by the address range they
+// match, so an audit can look a range up directly instead of scanning a list
+// of two-key dicts.
+func eventGridIpRuleActions(rules []*eventgrid.InboundIPRule) map[string]any {
+	out := map[string]any{}
+	for _, r := range rules {
+		if r == nil || r.IPMask == nil {
+			continue
+		}
+		out[*r.IPMask] = string(convert.ToValue(r.Action))
+	}
+	return out
+}
+
 func eventGridIdentityType(identity *eventgrid.IdentityInfo) string {
 	if identity == nil || identity.Type == nil {
 		return ""
@@ -128,6 +142,7 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 				minimumTlsVersionAllowed string
 				dataResidencyBoundary    string
 				inboundIpRules           []any
+				inboundIpRuleActions     = map[string]any{}
 				privateEndpointCount     int64
 			)
 			if p := t.Properties; p != nil {
@@ -156,6 +171,7 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 					dataResidencyBoundary = string(*p.DataResidencyBoundary)
 				}
 				inboundIpRules = eventGridIpRulesToDict(p.InboundIPRules)
+				inboundIpRuleActions = eventGridIpRuleActions(p.InboundIPRules)
 				privateEndpointCount = int64(len(p.PrivateEndpointConnections))
 			}
 
@@ -174,6 +190,7 @@ func (a *mqlAzureSubscriptionEventGridService) topics() ([]any, error) {
 					"minimumTlsVersionAllowed":       llx.StringData(minimumTlsVersionAllowed),
 					"dataResidencyBoundary":          llx.StringData(dataResidencyBoundary),
 					"inboundIpRules":                 llx.ArrayData(inboundIpRules, types.Dict),
+					"inboundIpRuleActions":           llx.MapData(inboundIpRuleActions, types.String),
 					"identityType":                   llx.StringData(eventGridIdentityType(t.Identity)),
 					"privateEndpointConnectionCount": llx.IntData(privateEndpointCount),
 				})
@@ -292,6 +309,7 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 				autoCreateTopicWithFirstSubscription bool
 				autoDeleteTopicWithLastSubscription  bool
 				inboundIpRules                       []any
+				inboundIpRuleActions                 = map[string]any{}
 				privateEndpointCount                 int64
 			)
 			if p := d.Properties; p != nil {
@@ -326,6 +344,7 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 					autoDeleteTopicWithLastSubscription = *p.AutoDeleteTopicWithLastSubscription
 				}
 				inboundIpRules = eventGridIpRulesToDict(p.InboundIPRules)
+				inboundIpRuleActions = eventGridIpRuleActions(p.InboundIPRules)
 				privateEndpointCount = int64(len(p.PrivateEndpointConnections))
 			}
 
@@ -346,6 +365,7 @@ func (a *mqlAzureSubscriptionEventGridService) domains() ([]any, error) {
 					"autoCreateTopicWithFirstSubscription": llx.BoolData(autoCreateTopicWithFirstSubscription),
 					"autoDeleteTopicWithLastSubscription":  llx.BoolData(autoDeleteTopicWithLastSubscription),
 					"inboundIpRules":                       llx.ArrayData(inboundIpRules, types.Dict),
+					"inboundIpRuleActions":                 llx.MapData(inboundIpRuleActions, types.String),
 					"identityType":                         llx.StringData(eventGridIdentityType(d.Identity)),
 					"privateEndpointConnectionCount":       llx.IntData(privateEndpointCount),
 				})

@@ -14943,8 +14943,17 @@ private azure.subscription.serviceBusService.namespace.networkRules @defaults("d
   publicNetworkAccess string
   // Whether Microsoft-owned trusted services can bypass the rule set
   trustedServiceAccessEnabled bool
-  // IP allow rules. Each entry is `{ipMask, action}` where `action` is "Allow".
-  ipRules []dict
+  // IP allow rules
+  //
+  // Deprecated in favor of ipRuleActions.
+  ipRules @maturity("deprecated") []dict
+  // Action applied to each allowed IP address or CIDR range, keyed by the range
+  //
+  // For example `ipRuleActions["203.0.113.0/24"]` is "Allow". A namespace
+  // whose defaultAction is Deny reaches only the ranges listed here, so an
+  // empty map with defaultAction Deny means nothing on the public network
+  // reaches it.
+  ipRuleActions map[string]string
   // Virtual network rules; each references a subnet
   virtualNetworkRules []azure.subscription.serviceBusService.namespace.networkRules.virtualNetworkRule
 }
@@ -15202,8 +15211,17 @@ private azure.subscription.eventHubService.namespace.networkRules @defaults("def
   publicNetworkAccess string
   // Whether Microsoft-owned trusted services can bypass the rule set
   trustedServiceAccessEnabled bool
-  // IP allow rules. Each entry is `{ipMask, action}` where `action` is "Allow".
-  ipRules []dict
+  // IP allow rules
+  //
+  // Deprecated in favor of ipRuleActions.
+  ipRules @maturity("deprecated") []dict
+  // Action applied to each allowed IP address or CIDR range, keyed by the range
+  //
+  // For example `ipRuleActions["203.0.113.0/24"]` is "Allow". A namespace
+  // whose defaultAction is Deny reaches only the ranges listed here, so an
+  // empty map with defaultAction Deny means nothing on the public network
+  // reaches it.
+  ipRuleActions map[string]string
   // Virtual network rules; each references a subnet
   virtualNetworkRules []azure.subscription.eventHubService.namespace.networkRules.virtualNetworkRule
 }
@@ -15330,8 +15348,16 @@ azure.subscription.eventGridService.topic @defaults("name location publicNetwork
   minimumTlsVersionAllowed string
   // Data residency boundary ("WithinGeopair" or "WithinRegion")
   dataResidencyBoundary string
-  // Inbound IP rules; each entry has ipMask and action ("Allow")
-  inboundIpRules []dict
+  // Inbound IP rules
+  //
+  // Deprecated in favor of inboundIpRuleActions.
+  inboundIpRules @maturity("deprecated") []dict
+  // Action applied to each allowed IP address or CIDR range, keyed by the range
+  //
+  // For example `inboundIpRuleActions["203.0.113.0/24"]` is "Allow". The
+  // rules apply only while publicNetworkAccess is Enabled; an empty map
+  // then leaves the resource reachable from anywhere.
+  inboundIpRuleActions map[string]string
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
   // Number of private endpoint connections to the topic
@@ -15415,8 +15441,16 @@ azure.subscription.eventGridService.domain @defaults("name location publicNetwor
   autoCreateTopicWithFirstSubscription bool
   // Whether domain topics are auto-deleted when the last subscription is deleted
   autoDeleteTopicWithLastSubscription bool
-  // Inbound IP rules; each entry has ipMask and action ("Allow")
-  inboundIpRules []dict
+  // Inbound IP rules
+  //
+  // Deprecated in favor of inboundIpRuleActions.
+  inboundIpRules @maturity("deprecated") []dict
+  // Action applied to each allowed IP address or CIDR range, keyed by the range
+  //
+  // For example `inboundIpRuleActions["203.0.113.0/24"]` is "Allow". The
+  // rules apply only while publicNetworkAccess is Enabled; an empty map
+  // then leaves the resource reachable from anywhere.
+  inboundIpRuleActions map[string]string
   // Identity type ("None", "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned")
   identityType string
   // Number of private endpoint connections to the domain
@@ -15519,11 +15553,16 @@ azure.subscription.eventGridService.namespace @defaults("name location publicNet
   publicNetworkAccess string
   // Minimum TLS version accepted from clients ("1.0", "1.1", "1.2")
   minimumTlsVersionAllowed string
-  // Inbound IP rules; each entry has ipMask and action ("Allow")
+  // Inbound IP rules
   //
-  // Only consulted when publicNetworkAccess is "Enabled". An empty list
-  // with public access enabled permits every source address.
-  inboundIpRules []dict
+  // Deprecated in favor of inboundIpRuleActions.
+  inboundIpRules @maturity("deprecated") []dict
+  // Action applied to each allowed IP address or CIDR range, keyed by the range
+  //
+  // For example `inboundIpRuleActions["203.0.113.0/24"]` is "Allow". Only
+  // consulted when publicNetworkAccess is "Enabled"; an empty map with
+  // public access enabled permits every source address.
+  inboundIpRuleActions map[string]string
   // Whether the MQTT broker is enabled ("Enabled" or "Disabled")
   topicSpacesState string
   // Maximum simultaneous client sessions per authentication name
@@ -16506,10 +16545,14 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   corsAllowedOrigins []string
   // IP security restrictions on ingress
   //
-  // Each entry has `name`, `description`, `ipAddressRange` (CIDR), and
-  // `action` ("Allow" or "Deny"). A rule set is all-Allow or all-Deny;
-  // when Allow rules are present, every other source IP is denied.
-  ipSecurityRestrictions []dict
+  // Deprecated in favor of ingressIpRestrictions.
+  ipSecurityRestrictions @maturity("deprecated") []dict
+  // IP security restrictions on ingress
+  //
+  // A rule set is all-Allow or all-Deny. When Allow rules are present
+  // every other source address is denied, so an empty list on an app with
+  // external ingress means the app answers the whole internet.
+  ingressIpRestrictions []azure.subscription.containerAppService.containerApp.ipRestriction
   // Workload profile name in the parent environment ("Consumption" by default)
   workloadProfileName string
   // Min replica count
@@ -16554,6 +16597,22 @@ azure.subscription.containerAppService.containerApp @defaults("name location pro
   revisions() []azure.subscription.containerAppService.containerApp.revision
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Ingress IP restriction rule of a container app
+//
+// One CIDR range the app's ingress allows or denies, together with the name
+// and description the rule carries. A rule set is all-Allow or all-Deny: when
+// Allow rules are present every source outside them is denied.
+private azure.subscription.containerAppService.containerApp.ipRestriction @defaults("name ipAddressRange action") {
+  // Name of the restriction rule
+  name string
+  // Description of the restriction rule
+  description string
+  // CIDR range the rule matches
+  ipAddressRange string
+  // Whether the rule allows or denies the range ("Allow" or "Deny")
+  action string
 }
 
 // Container definition inside a Container App
