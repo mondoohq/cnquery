@@ -6,6 +6,7 @@ package resources
 import (
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 // gkeAddonsConfigArgs maps a cluster's addon configuration onto resource
@@ -114,4 +115,56 @@ func gkeAddonsConfigArgs(id string, cfg *containerpb.AddonsConfig) map[string]*l
 		"gcsFuseCsiDriverEnabled":           llx.BoolData(gcsFuseCsiDriverEnabled),
 		"statefulHaEnabled":                 llx.BoolData(statefulHaEnabled),
 	}
+}
+
+// newMqlGkeControlPlaneEndpoints promotes the control plane endpoint
+// configuration of a cluster. Returns llx.NilData for a cluster that reports no
+// configuration, which is what a cluster still on the legacy
+// privateClusterConfig fields does.
+//
+// Every bool in the message is optional, so an unset one stays null rather than
+// reporting false: "GKE did not say" and "the endpoint is off" are different
+// claims about whether an API server is reachable.
+func newMqlGkeControlPlaneEndpoints(runtime *plugin.Runtime, clusterID string, cfg *containerpb.ControlPlaneEndpointsConfig) (*llx.RawData, error) {
+	if cfg == nil {
+		return llx.NilData, nil
+	}
+
+	args := map[string]*llx.RawData{
+		"__id": llx.StringData(clusterID + "/controlPlaneEndpoints"),
+	}
+
+	if ip := cfg.GetIpEndpointsConfig(); ip != nil {
+		args["ipEndpointsEnabled"] = llx.BoolDataPtr(ip.Enabled)
+		args["publicEndpointEnabled"] = llx.BoolDataPtr(ip.EnablePublicEndpoint)
+		args["globalAccess"] = llx.BoolDataPtr(ip.GlobalAccess)
+		args["publicEndpointAddress"] = llx.StringData(ip.PublicEndpoint)
+		args["privateEndpointAddress"] = llx.StringData(ip.PrivateEndpoint)
+		args["privateEndpointSubnetwork"] = llx.StringData(ip.PrivateEndpointSubnetwork)
+	} else {
+		args["ipEndpointsEnabled"] = llx.NilData
+		args["publicEndpointEnabled"] = llx.NilData
+		args["globalAccess"] = llx.NilData
+		args["publicEndpointAddress"] = llx.StringData("")
+		args["privateEndpointAddress"] = llx.StringData("")
+		args["privateEndpointSubnetwork"] = llx.StringData("")
+	}
+
+	if dns := cfg.GetDnsEndpointConfig(); dns != nil {
+		args["dnsEndpoint"] = llx.StringData(dns.Endpoint)
+		args["dnsAllowExternalTraffic"] = llx.BoolDataPtr(dns.AllowExternalTraffic)
+		args["dnsK8sTokensEnabled"] = llx.BoolDataPtr(dns.EnableK8STokensViaDns)
+		args["dnsK8sCertsEnabled"] = llx.BoolDataPtr(dns.EnableK8SCertsViaDns)
+	} else {
+		args["dnsEndpoint"] = llx.StringData("")
+		args["dnsAllowExternalTraffic"] = llx.NilData
+		args["dnsK8sTokensEnabled"] = llx.NilData
+		args["dnsK8sCertsEnabled"] = llx.NilData
+	}
+
+	res, err := CreateResource(runtime, "gcp.project.gkeService.cluster.controlPlaneEndpoints", args)
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, "gcp.project.gkeService.cluster.controlPlaneEndpoints"), nil
 }

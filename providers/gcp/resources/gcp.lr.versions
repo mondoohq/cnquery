@@ -3472,6 +3472,17 @@ gcp.project.gkeService.cluster.complianceStandards 13.32.1
 gcp.project.gkeService.cluster.conditions 13.16.3
 gcp.project.gkeService.cluster.confidentialNodesConfig 9.0.0
 gcp.project.gkeService.cluster.confidentialNodesEnabled 13.18.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsAllowExternalTraffic 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsEndpoint 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsK8sCertsEnabled 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsK8sTokensEnabled 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.globalAccess 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.ipEndpointsEnabled 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.privateEndpointAddress 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.privateEndpointSubnetwork 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.publicEndpointAddress 13.37.1
+gcp.project.gkeService.cluster.controlPlaneEndpoints.publicEndpointEnabled 13.37.1
 gcp.project.gkeService.cluster.controlPlaneEndpointsConfig 13.16.3
 gcp.project.gkeService.cluster.controlPlaneInternetReachable 13.24.1
 gcp.project.gkeService.cluster.controlPlaneLoggingComponents 13.18.1

@@ -125,6 +125,7 @@ const (
 	ResourceGcpProjectGkeServiceClusterMaintenancePolicy                               string = "gcp.project.gkeService.cluster.maintenancePolicy"
 	ResourceGcpProjectGkeServiceClusterSecurityPostureConfig                           string = "gcp.project.gkeService.cluster.securityPostureConfig"
 	ResourceGcpProjectGkeServiceClusterNetworkPolicy                                   string = "gcp.project.gkeService.cluster.networkPolicy"
+	ResourceGcpProjectGkeServiceClusterControlPlaneEndpoints                           string = "gcp.project.gkeService.cluster.controlPlaneEndpoints"
 	ResourceGcpProjectGkeServiceClusterAddonsConfig                                    string = "gcp.project.gkeService.cluster.addonsConfig"
 	ResourceGcpProjectGkeServiceClusterIpAllocationPolicy                              string = "gcp.project.gkeService.cluster.ipAllocationPolicy"
 	ResourceGcpProjectGkeServiceClusterNetworkConfig                                   string = "gcp.project.gkeService.cluster.networkConfig"
@@ -949,6 +950,10 @@ func init() {
 		"gcp.project.gkeService.cluster.networkPolicy": {
 			// to override args, implement: initGcpProjectGkeServiceClusterNetworkPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectGkeServiceClusterNetworkPolicy,
+		},
+		"gcp.project.gkeService.cluster.controlPlaneEndpoints": {
+			// to override args, implement: initGcpProjectGkeServiceClusterControlPlaneEndpoints(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectGkeServiceClusterControlPlaneEndpoints,
 		},
 		"gcp.project.gkeService.cluster.addonsConfig": {
 			// to override args, implement: initGcpProjectGkeServiceClusterAddonsConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7047,6 +7052,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.gkeService.cluster.controlPlaneEndpointsConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetControlPlaneEndpointsConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceCluster).GetControlPlaneEndpoints()).ToDataRes(types.Resource("gcp.project.gkeService.cluster.controlPlaneEndpoints"))
+	},
 	"gcp.project.gkeService.cluster.controlPlanePublicEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceCluster).GetControlPlanePublicEndpointEnabled()).ToDataRes(types.Bool)
 	},
@@ -7319,6 +7327,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.gkeService.cluster.networkPolicy.provider": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterNetworkPolicy).GetProvider()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.ipEndpointsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetIpEndpointsEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.publicEndpointEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetPublicEndpointEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.globalAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetGlobalAccess()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.publicEndpointAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetPublicEndpointAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.privateEndpointAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetPrivateEndpointAddress()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.privateEndpointSubnetwork": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetPrivateEndpointSubnetwork()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetDnsEndpoint()).ToDataRes(types.String)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsAllowExternalTraffic": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetDnsAllowExternalTraffic()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsK8sTokensEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetDnsK8sTokensEnabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsK8sCertsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GetDnsK8sCertsEnabled()).ToDataRes(types.Bool)
 	},
 	"gcp.project.gkeService.cluster.addonsConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectGkeServiceClusterAddonsConfig).GetId()).ToDataRes(types.String)
@@ -25470,6 +25508,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectGkeServiceCluster).ControlPlaneEndpointsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceCluster).ControlPlaneEndpoints, ok = plugin.RawToTValue[*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints](v.Value, v.Error)
+		return
+	},
 	"gcp.project.gkeService.cluster.controlPlanePublicEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceCluster).ControlPlanePublicEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -25852,6 +25894,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.gkeService.cluster.networkPolicy.provider": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectGkeServiceClusterNetworkPolicy).Provider, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.ipEndpointsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).IpEndpointsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.publicEndpointEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).PublicEndpointEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.globalAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).GlobalAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.publicEndpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).PublicEndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.privateEndpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).PrivateEndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.privateEndpointSubnetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).PrivateEndpointSubnetwork, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).DnsEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsAllowExternalTraffic": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).DnsAllowExternalTraffic, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsK8sTokensEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).DnsK8sTokensEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.gkeService.cluster.controlPlaneEndpoints.dnsK8sCertsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints).DnsK8sCertsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"gcp.project.gkeService.cluster.addonsConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -58391,6 +58477,7 @@ type mqlGcpProjectGkeServiceCluster struct {
 	BasicAuthEnabled                         plugin.TValue[bool]
 	PrivateClusterConfig                     plugin.TValue[any]
 	ControlPlaneEndpointsConfig              plugin.TValue[any]
+	ControlPlaneEndpoints                    plugin.TValue[*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints]
 	ControlPlanePublicEndpointEnabled        plugin.TValue[bool]
 	MasterAuthorizedNetworksCidrs            plugin.TValue[[]any]
 	MasterAuthorizedNetworksAllowed          plugin.TValue[bool]
@@ -58646,6 +58733,10 @@ func (c *mqlGcpProjectGkeServiceCluster) GetPrivateClusterConfig() *plugin.TValu
 
 func (c *mqlGcpProjectGkeServiceCluster) GetControlPlaneEndpointsConfig() *plugin.TValue[any] {
 	return &c.ControlPlaneEndpointsConfig
+}
+
+func (c *mqlGcpProjectGkeServiceCluster) GetControlPlaneEndpoints() *plugin.TValue[*mqlGcpProjectGkeServiceClusterControlPlaneEndpoints] {
+	return &c.ControlPlaneEndpoints
 }
 
 func (c *mqlGcpProjectGkeServiceCluster) GetControlPlanePublicEndpointEnabled() *plugin.TValue[bool] {
@@ -59307,6 +59398,95 @@ func (c *mqlGcpProjectGkeServiceClusterNetworkPolicy) GetEnabled() *plugin.TValu
 
 func (c *mqlGcpProjectGkeServiceClusterNetworkPolicy) GetProvider() *plugin.TValue[string] {
 	return &c.Provider
+}
+
+// mqlGcpProjectGkeServiceClusterControlPlaneEndpoints for the gcp.project.gkeService.cluster.controlPlaneEndpoints resource
+type mqlGcpProjectGkeServiceClusterControlPlaneEndpoints struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectGkeServiceClusterControlPlaneEndpointsInternal it will be used here
+	IpEndpointsEnabled        plugin.TValue[bool]
+	PublicEndpointEnabled     plugin.TValue[bool]
+	GlobalAccess              plugin.TValue[bool]
+	PublicEndpointAddress     plugin.TValue[string]
+	PrivateEndpointAddress    plugin.TValue[string]
+	PrivateEndpointSubnetwork plugin.TValue[string]
+	DnsEndpoint               plugin.TValue[string]
+	DnsAllowExternalTraffic   plugin.TValue[bool]
+	DnsK8sTokensEnabled       plugin.TValue[bool]
+	DnsK8sCertsEnabled        plugin.TValue[bool]
+}
+
+// createGcpProjectGkeServiceClusterControlPlaneEndpoints creates a new instance of this resource
+func createGcpProjectGkeServiceClusterControlPlaneEndpoints(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectGkeServiceClusterControlPlaneEndpoints{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.gkeService.cluster.controlPlaneEndpoints", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) MqlName() string {
+	return "gcp.project.gkeService.cluster.controlPlaneEndpoints"
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetIpEndpointsEnabled() *plugin.TValue[bool] {
+	return &c.IpEndpointsEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetPublicEndpointEnabled() *plugin.TValue[bool] {
+	return &c.PublicEndpointEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetGlobalAccess() *plugin.TValue[bool] {
+	return &c.GlobalAccess
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetPublicEndpointAddress() *plugin.TValue[string] {
+	return &c.PublicEndpointAddress
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetPrivateEndpointAddress() *plugin.TValue[string] {
+	return &c.PrivateEndpointAddress
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetPrivateEndpointSubnetwork() *plugin.TValue[string] {
+	return &c.PrivateEndpointSubnetwork
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetDnsEndpoint() *plugin.TValue[string] {
+	return &c.DnsEndpoint
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetDnsAllowExternalTraffic() *plugin.TValue[bool] {
+	return &c.DnsAllowExternalTraffic
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetDnsK8sTokensEnabled() *plugin.TValue[bool] {
+	return &c.DnsK8sTokensEnabled
+}
+
+func (c *mqlGcpProjectGkeServiceClusterControlPlaneEndpoints) GetDnsK8sCertsEnabled() *plugin.TValue[bool] {
+	return &c.DnsK8sCertsEnabled
 }
 
 // mqlGcpProjectGkeServiceClusterAddonsConfig for the gcp.project.gkeService.cluster.addonsConfig resource

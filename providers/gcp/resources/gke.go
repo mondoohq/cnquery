@@ -735,6 +735,12 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			return nil, err
 		}
 
+		controlPlaneEndpoints, err := newMqlGkeControlPlaneEndpoints(g.MqlRuntime,
+			fmt.Sprintf("gcp.project.gkeService.cluster/%s", c.Id), c.ControlPlaneEndpointsConfig)
+		if err != nil {
+			return nil, err
+		}
+
 		loggingConfig, err := protoToDict(c.LoggingConfig)
 		if err != nil {
 			return nil, err
@@ -900,6 +906,7 @@ func (g *mqlGcpProjectGkeService) clusters() ([]any, error) {
 			"nodeAutoprovisioning":                     nodeAutoprovisioningData,
 			"meshCertificates":                         llx.DictData(meshCertificates),
 			"controlPlaneEndpointsConfig":              llx.DictData(controlPlaneEndpointsConfig),
+			"controlPlaneEndpoints":                    controlPlaneEndpoints,
 			"controlPlanePublicEndpointEnabled":        llx.BoolData(controlPlanePublicEndpointEnabled),
 			"masterAuthorizedNetworksCidrs":            llx.ArrayData(masterAuthorizedNetworksCidrs, types.String),
 			"masterAuthorizedNetworksAllowed":          llx.BoolData(masterAuthorizedNetworksAllowed),

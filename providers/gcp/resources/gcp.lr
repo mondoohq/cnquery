@@ -4869,6 +4869,8 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // whether it is allowed. Replaces the legacy `masterAuthorizedNetworksConfig`
   // and the access-related fields of `privateClusterConfig`.
   controlPlaneEndpointsConfig dict
+  // How the cluster's control plane can be reached
+  controlPlaneEndpoints gcp.project.gkeService.cluster.controlPlaneEndpoints
   // Whether the control plane is reachable through a public IP endpoint
   //
   // True when the modern `controlPlaneEndpointsConfig.ipEndpointsConfig`
@@ -5204,6 +5206,46 @@ private gcp.project.gkeService.cluster.networkPolicy @defaults("enabled provider
   enabled bool
   // Network policy provider (CALICO)
   provider string
+}
+
+// Control plane endpoints of a GKE cluster
+//
+// How the Kubernetes API server of a cluster can be reached, across both the IP
+// and the DNS endpoint. `publicEndpointEnabled` together with
+// `publicEndpointAddress` is what puts the API server on the internet, and
+// `globalAccess` widens the private endpoint from the control plane's own
+// region to every region in the VPC. On the DNS side `dnsAllowExternalTraffic`
+// decides whether the managed DNS endpoint answers from outside the VPC, and
+// `dnsK8sTokensEnabled` and `dnsK8sCertsEnabled` decide which credentials that
+// endpoint accepts. Replaces the access-related fields of the legacy private
+// cluster configuration.
+private gcp.project.gkeService.cluster.controlPlaneEndpoints @defaults("publicEndpointEnabled dnsAllowExternalTraffic") {
+  // Whether the IP endpoints of the control plane are enabled at all
+  ipEndpointsEnabled bool
+  // Whether the control plane is reachable through its public IP endpoint
+  publicEndpointEnabled bool
+  // Whether the private endpoint is reachable from every region in the VPC
+  //
+  // When false, only clients in the control plane's own region reach the
+  // private endpoint.
+  globalAccess bool
+  // Public IP address of the control plane, empty when no public endpoint is enabled
+  publicEndpointAddress string
+  // Internal IP address of the control plane
+  privateEndpointAddress string
+  // Subnetwork the private endpoint is allocated from
+  privateEndpointSubnetwork string
+  // Managed DNS name of the control plane, empty when the DNS endpoint is not configured
+  dnsEndpoint string
+  // Whether the DNS endpoint answers requests originating outside the VPC
+  //
+  // With this enabled the control plane is reachable from the internet through
+  // its DNS name, regardless of the IP endpoint configuration.
+  dnsAllowExternalTraffic bool
+  // Whether the DNS endpoint accepts Kubernetes service account tokens
+  dnsK8sTokensEnabled bool
+  // Whether the DNS endpoint serves Kubernetes client certificates
+  dnsK8sCertsEnabled bool
 }
 
 // Google Kubernetes Engine (GKE) cluster addons config
