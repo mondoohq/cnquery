@@ -3160,9 +3160,15 @@ func (a *mqlAwsEc2Snapshot) kmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsEc2Snapshot) isPublic() (bool, error) {
-	perms, _, err := a.fetchCreateVolumePermissions()
+	perms, denied, err := a.fetchCreateVolumePermissions()
 	if err != nil {
 		return false, err
+	}
+	if denied {
+		// Reading false out of a denied call would assert the snapshot is
+		// definitively not public when its permissions were never read.
+		a.IsPublic.State = plugin.StateIsSet | plugin.StateIsNull
+		return false, nil
 	}
 	for _, p := range perms {
 		if p.Group == ec2types.PermissionGroupAll {
@@ -3216,6 +3222,7 @@ func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
 		return nil, err
 	}
 	if denied {
+		a.CreateVolumePermission.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	return convert.JsonToDictSlice(perms)
