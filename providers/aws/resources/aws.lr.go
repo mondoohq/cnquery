@@ -30196,6 +30196,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.glue.securityConfiguration.jobBookmarksEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryption()).ToDataRes(types.Dict)
 	},
+	"aws.glue.securityConfiguration.s3EncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3EncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.glue.securityConfiguration.s3EncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetS3EncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.glue.securityConfiguration.cloudWatchEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.glue.securityConfiguration.cloudWatchEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetCloudWatchEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.glue.securityConfiguration.jobBookmarksEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.glue.securityConfiguration.jobBookmarksEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetJobBookmarksEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.glue.securityConfiguration.dataQualityEncryptionMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetDataQualityEncryptionMode()).ToDataRes(types.String)
+	},
+	"aws.glue.securityConfiguration.dataQualityEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsGlueSecurityConfiguration).GetDataQualityEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.glue.securityConfiguration.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsGlueSecurityConfiguration).GetRegion()).ToDataRes(types.String)
 	},
@@ -73661,6 +73685,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.glue.securityConfiguration.jobBookmarksEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.s3EncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).S3EncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.s3EncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).S3EncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.cloudWatchEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.cloudWatchEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).CloudWatchEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.jobBookmarksEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.jobBookmarksEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).JobBookmarksEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.dataQualityEncryptionMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).DataQualityEncryptionMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.glue.securityConfiguration.dataQualityEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsGlueSecurityConfiguration).DataQualityEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.glue.securityConfiguration.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -178660,13 +178716,21 @@ func (c *mqlAwsGlueCatalogExportEncryption) GetKmsKey() *plugin.TValue[*mqlAwsKm
 type mqlAwsGlueSecurityConfiguration struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsGlueSecurityConfigurationInternal it will be used here
-	Name                   plugin.TValue[string]
-	CreatedAt              plugin.TValue[*time.Time]
-	S3Encryption           plugin.TValue[any]
-	CloudWatchEncryption   plugin.TValue[any]
-	JobBookmarksEncryption plugin.TValue[any]
-	Region                 plugin.TValue[string]
+	mqlAwsGlueSecurityConfigurationInternal
+	Name                         plugin.TValue[string]
+	CreatedAt                    plugin.TValue[*time.Time]
+	S3Encryption                 plugin.TValue[any]
+	CloudWatchEncryption         plugin.TValue[any]
+	JobBookmarksEncryption       plugin.TValue[any]
+	S3EncryptionMode             plugin.TValue[string]
+	S3EncryptionKmsKey           plugin.TValue[*mqlAwsKmsKey]
+	CloudWatchEncryptionMode     plugin.TValue[string]
+	CloudWatchEncryptionKmsKey   plugin.TValue[*mqlAwsKmsKey]
+	JobBookmarksEncryptionMode   plugin.TValue[string]
+	JobBookmarksEncryptionKmsKey plugin.TValue[*mqlAwsKmsKey]
+	DataQualityEncryptionMode    plugin.TValue[string]
+	DataQualityEncryptionKmsKey  plugin.TValue[*mqlAwsKmsKey]
+	Region                       plugin.TValue[string]
 }
 
 // createAwsGlueSecurityConfiguration creates a new instance of this resource
@@ -178719,6 +178783,86 @@ func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryption() *plugin.TVal
 
 func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryption() *plugin.TValue[any] {
 	return &c.JobBookmarksEncryption
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetS3EncryptionMode() *plugin.TValue[string] {
+	return &c.S3EncryptionMode
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetS3EncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.S3EncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "s3EncryptionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.s3EncryptionKmsKey()
+	})
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryptionMode() *plugin.TValue[string] {
+	return &c.CloudWatchEncryptionMode
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetCloudWatchEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.CloudWatchEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "cloudWatchEncryptionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.cloudWatchEncryptionKmsKey()
+	})
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryptionMode() *plugin.TValue[string] {
+	return &c.JobBookmarksEncryptionMode
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetJobBookmarksEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.JobBookmarksEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "jobBookmarksEncryptionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.jobBookmarksEncryptionKmsKey()
+	})
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetDataQualityEncryptionMode() *plugin.TValue[string] {
+	return &c.DataQualityEncryptionMode
+}
+
+func (c *mqlAwsGlueSecurityConfiguration) GetDataQualityEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.DataQualityEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.glue.securityConfiguration", c.__id, "dataQualityEncryptionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.dataQualityEncryptionKmsKey()
+	})
 }
 
 func (c *mqlAwsGlueSecurityConfiguration) GetRegion() *plugin.TValue[string] {

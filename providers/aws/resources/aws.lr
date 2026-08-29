@@ -24985,16 +24985,59 @@ private aws.glue.securityConfiguration @defaults("name") {
   createdAt time
   // S3 encryption configuration
   //
-  // Shape: {S3EncryptionMode: DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}. Controls how data the job or crawler writes to Amazon S3 is encrypted; DISABLED means no server-side encryption is applied by Glue.
-  s3Encryption dict
+  // Deprecated in favor of s3EncryptionMode and s3EncryptionKmsKey. Shape:
+  // {S3EncryptionMode: DISABLED|SSE-KMS|SSE-S3, KmsKeyArn}.
+  s3Encryption @maturity("deprecated") dict
   // CloudWatch encryption configuration
   //
-  // Shape: {CloudWatchEncryptionMode: DISABLED|SSE-KMS, KmsKeyArn}. Controls how logs sent to CloudWatch Logs are encrypted.
-  cloudWatchEncryption dict
+  // Deprecated in favor of cloudWatchEncryptionMode and
+  // cloudWatchEncryptionKmsKey. Shape: {CloudWatchEncryptionMode:
+  // DISABLED|SSE-KMS, KmsKeyArn}.
+  cloudWatchEncryption @maturity("deprecated") dict
   // Job bookmarks encryption configuration
   //
-  // Shape: {JobBookmarksEncryptionMode: DISABLED|CSE-KMS, KmsKeyArn}. Controls how job bookmark state, which tracks already-processed data, is encrypted.
-  jobBookmarksEncryption dict
+  // Deprecated in favor of jobBookmarksEncryptionMode and
+  // jobBookmarksEncryptionKmsKey. Shape: {JobBookmarksEncryptionMode:
+  // DISABLED|CSE-KMS, KmsKeyArn}.
+  jobBookmarksEncryption @maturity("deprecated") dict
+  // Encryption mode applied to data the job or crawler writes to Amazon S3
+  //
+  // One of DISABLED, SSE-KMS, or SSE-S3. DISABLED means Glue applies no
+  // server-side encryption of its own to the data it writes. Empty when the
+  // security configuration carries no S3 encryption entry at all.
+  s3EncryptionMode string
+  // KMS key encrypting data the job or crawler writes to Amazon S3
+  //
+  // Null unless the S3 encryption mode is SSE-KMS with a key of your own.
+  s3EncryptionKmsKey() aws.kms.key
+  // Encryption mode applied to logs the job or crawler sends to CloudWatch Logs
+  //
+  // One of DISABLED or SSE-KMS. Empty when the security configuration carries
+  // no CloudWatch encryption entry.
+  cloudWatchEncryptionMode string
+  // KMS key encrypting logs the job or crawler sends to CloudWatch Logs
+  //
+  // Null unless the CloudWatch encryption mode is SSE-KMS.
+  cloudWatchEncryptionKmsKey() aws.kms.key
+  // Encryption mode applied to job bookmark state
+  //
+  // One of DISABLED or CSE-KMS. Job bookmarks record which data a job has
+  // already processed, so the state names the objects a job has read. Empty
+  // when the security configuration carries no job bookmark encryption entry.
+  jobBookmarksEncryptionMode string
+  // KMS key encrypting job bookmark state
+  //
+  // Null unless the job bookmarks encryption mode is CSE-KMS.
+  jobBookmarksEncryptionKmsKey() aws.kms.key
+  // Encryption mode applied to Glue Data Quality assets
+  //
+  // One of DISABLED or SSE-KMS. Empty when the security configuration carries
+  // no Data Quality encryption entry.
+  dataQualityEncryptionMode string
+  // KMS key encrypting Glue Data Quality assets
+  //
+  // Null unless the Data Quality encryption mode is SSE-KMS.
+  dataQualityEncryptionKmsKey() aws.kms.key
   // Region where the security configuration exists
   region string
 }

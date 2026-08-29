@@ -1082,6 +1082,24 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	return args, nil, nil
 }
 
+// resolveKmsKeyRef turns an optional KMS key ARN carried on another resource
+// into a key resource, marking the field null when no key is configured. The
+// caller passes the address of its own field state because a singular resource
+// accessor that returns nil without setting one panics the runtime.
+func resolveKmsKeyRef(runtime *plugin.Runtime, keyArn *string, state *plugin.State) (*mqlAwsKmsKey, error) {
+	if keyArn == nil || *keyArn == "" {
+		*state = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(runtime, "aws.kms.key", map[string]*llx.RawData{
+		"arn": llx.StringDataPtr(keyArn),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsKmsKey), nil
+}
+
 func resolveKmsKeyMetadata(conn *connection.AwsConnection, keyRef, region string) (*types.KeyMetadata, error) {
 	if region != "" {
 		return describeKmsKeyInRegion(conn, keyRef, region)
