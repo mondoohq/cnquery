@@ -7,8 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/recommender/apiv1/recommenderpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	dns "google.golang.org/api/dns/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -85,4 +87,47 @@ func TestDnssecStateEnabled(t *testing.T) {
 			assert.Equal(t, tt.want, dnssecStateEnabled(tt.cfg))
 		})
 	}
+}
+
+// TestProtoToDictEmitsDocumentedKeysAndEnumNames pins the encoding bug that
+// made several shipped dicts undocumentable.
+//
+// convert.JsonToDict is encoding/json over a protobuf-generated struct, and
+// those structs carry snake_case json tags with enums rendered as their numeric
+// value. gcp.recommendation.primaryImpact therefore documented `category`,
+// `costProjection` and friends while actually emitting `{"category": 2, ...}`.
+// protoToDict marshals through protojson, which is what the schema documents.
+func TestProtoToDictEmitsDocumentedKeysAndEnumNames(t *testing.T) {
+	impact := &recommenderpb.Impact{
+		Category: recommenderpb.Impact_SECURITY,
+		Service:  "compute.googleapis.com",
+	}
+
+	// The hazard being guarded against.
+	viaEncodingJSON, err := convert.JsonToDict(impact)
+	require.NoError(t, err)
+	assert.EqualValues(t, float64(recommenderpb.Impact_SECURITY), viaEncodingJSON["category"],
+		"encoding/json renders the enum as its number")
+
+	got, err := protoToDict(impact)
+	require.NoError(t, err)
+	assert.Equal(t, "SECURITY", got["category"])
+	assert.Equal(t, "compute.googleapis.com", got["service"])
+}
+
+// TestProtoToDictSlicePreservesOrderAndNilInput guards the helper the recommender,
+// Network Connectivity and Privileged Access Manager listers share.
+func TestProtoToDictSlicePreservesOrderAndNilInput(t *testing.T) {
+	got, err := protoToDictSlice([]*recommenderpb.Impact{
+		{Category: recommenderpb.Impact_COST},
+		{Category: recommenderpb.Impact_SECURITY},
+	})
+	require.NoError(t, err)
+	require.Len(t, got, 2)
+	assert.Equal(t, "COST", got[0].(map[string]any)["category"])
+	assert.Equal(t, "SECURITY", got[1].(map[string]any)["category"])
+
+	empty, err := protoToDictSlice([]*recommenderpb.Impact{})
+	require.NoError(t, err)
+	assert.Empty(t, empty)
 }

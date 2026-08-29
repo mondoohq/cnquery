@@ -224,6 +224,22 @@ func protoToDict(msg proto.Message) (map[string]any, error) {
 	return result, nil
 }
 
+// protoToDictSlice converts a slice of protobuf messages the same way
+// protoToDict converts one. Use it instead of convert.JsonToDictSlice for
+// protobuf-generated types: encoding/json emits their snake_case json tags and
+// renders enums as numbers, neither of which matches what the schema documents.
+func protoToDictSlice[T proto.Message](msgs []T) ([]any, error) {
+	res := make([]any, 0, len(msgs))
+	for _, msg := range msgs {
+		d, err := protoToDict(msg)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, d)
+	}
+	return res, nil
+}
+
 func (g *mqlGcpRetryConfig) id() (string, error) {
 	return g.Id.Data, g.Id.Error
 }

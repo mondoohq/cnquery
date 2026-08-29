@@ -152,7 +152,7 @@ func (g *mqlGcpProjectPrivilegedAccessManagerService) entitlements() ([]any, err
 			return nil, err
 		}
 
-		eligibleUsers, err := convert.JsonToDictSlice(e.GetEligibleUsers())
+		eligibleUsers, err := protoToDictSlice(e.GetEligibleUsers())
 		if err != nil {
 			return nil, err
 		}
