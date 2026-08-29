@@ -3140,10 +3140,32 @@ private gcp.project.storageService.bucket @defaults("id") {
   objectRetentionMode string
   // Automatic storage class management (enabled, toggleTime, terminalStorageClass)
   autoclass dict
-  // Bucket-level access control list (legacy, only populated when uniform bucket-level access is disabled)
-  acl() []dict
-  // Default access control list applied to newly-created objects (legacy, only populated when uniform bucket-level access is disabled)
-  defaultObjectAcl() []dict
+  // Bucket-level access control list dicts
+  //
+  // Deprecated in favor of accessControl. Each entry carries `entity`,
+  // `entityId`, `role`, `email`, `domain`, `projectTeam`, `bucket`, `id`,
+  // `etag`, `kind`, and `selfLink`.
+  acl() @maturity("deprecated") []dict
+  // Default object access control list dicts
+  //
+  // Deprecated in favor of defaultObjectAccessControl. Each entry carries the
+  // same keys as `acl` plus `object` and `generation`.
+  defaultObjectAcl() @maturity("deprecated") []dict
+  // Legacy access control list granting access to the bucket itself
+  //
+  // Each entry names one grantee and the role it holds. An entity of
+  // `allUsers` or `allAuthenticatedUsers` is a public grant. Null, not empty,
+  // when uniform bucket-level access is enabled: the bucket then has no
+  // legacy ACL at all, which is a different fact from an ACL that exists and
+  // grants nothing.
+  accessControl() []gcp.project.storageService.bucket.accessControl
+  // Legacy access control list applied to newly created objects
+  //
+  // The grants every object written to the bucket receives unless the write
+  // overrides them, so a public entity here makes new objects public without
+  // touching the bucket ACL. Null, not empty, when uniform bucket-level
+  // access is enabled.
+  defaultObjectAccessControl() []gcp.project.storageService.bucket.accessControl
   // Whether the bucket is publicly accessible via any mechanism
   //
   // Reflects IAM policy, bucket ACL, or default object ACL. Returns false when iamConfiguration.publicAccessPrevention is "enforced".
@@ -3160,6 +3182,11 @@ private gcp.project.storageService.bucket @defaults("id") {
   // `Enabled`. `publicNetworkSource` lists allowed public CIDR ranges;
   // `vpcNetworkSources` lists allowed VPC networks with their CIDR ranges.
   ipFilter dict
+  // Networks permitted to reach the bucket and its objects
+  //
+  // Null when the bucket has no IP filter configured, which leaves it
+  // reachable from anywhere its IAM policy allows.
+  ipFilterConfig gcp.project.storageService.bucket.ipFilterConfig
   // Hierarchical namespace configuration
   //
   // Shape: `{enabled}`. When enabled, the bucket uses folder-based filesystem
@@ -3220,6 +3247,72 @@ private gcp.project.storageService.bucket @defaults("id") {
   // `softDeletePolicy` which configures object-level soft-delete retention.
   // Null on live buckets.
   softDeleteTime time
+}
+
+// Legacy access control entry on a Cloud Storage bucket
+//
+// One grantee of the bucket's legacy ACL, or of the default ACL applied to new
+// objects. `entity` names the grantee and is what an exposure audit reads:
+// `allUsers` makes the grant anonymous and `allAuthenticatedUsers` opens it to
+// every Google account, while `user-`, `group-`, `domain-`, and `project-`
+// prefixed entities name a specific principal. `role` is the access it carries,
+// one of READER, WRITER, or OWNER.
+private gcp.project.storageService.bucket.accessControl @defaults("entity role") {
+  // Grantee of the access
+  //
+  // One of `allUsers`, `allAuthenticatedUsers`, `user-{userId}`,
+  // `user-{email}`, `group-{groupId}`, `group-{email}`, `domain-{domain}`, or
+  // `project-{team}-{projectNumber}`.
+  entity string
+  // Identifier of the grantee, empty for the `allUsers` and `allAuthenticatedUsers` entities
+  entityId string
+  // Access the grantee holds, one of READER, WRITER, or OWNER
+  role string
+  // Email address of the grantee, set when the entity names a user or group by email
+  email string
+  // Domain of the grantee, set when the entity names a domain
+  domain string
+  // Project number the grantee team belongs to, set when the entity names a project team
+  projectTeamId string
+  // Project team the grantee belongs to, one of owners, editors, or viewers
+  projectTeamRole string
+}
+
+// IP filter of a Cloud Storage bucket
+//
+// The networks permitted to reach a bucket and its objects. The filter is only
+// enforced when `mode` is Enabled, so a bucket carrying a full set of allowed
+// sources with the mode left Disabled is still reachable from anywhere its IAM
+// policy allows. `publicAllowedIpCidrRanges` lists the public ranges that may
+// reach it and `vpcSources` the VPC networks, each with its own permitted
+// ranges. `allowAllServiceAgentAccess` exempts Google Cloud service agents
+// from the filter entirely, and `allowCrossOrgVpcs` lets networks outside the
+// bucket's own organization appear in the VPC sources.
+private gcp.project.storageService.bucket.ipFilterConfig @defaults("mode") {
+  // Whether the filter is enforced, one of Enabled or Disabled
+  mode string
+  // Whether Google Cloud service agents may reach the bucket regardless of the filter
+  allowAllServiceAgentAccess bool
+  // Whether VPC networks outside the bucket's own organization may be named as sources
+  allowCrossOrgVpcs bool
+  // Public IPv4 and IPv6 CIDR ranges permitted to reach the bucket
+  //
+  // A range of 0.0.0.0/0 permits every public address, which leaves an enabled
+  // filter no narrower than no filter at all.
+  publicAllowedIpCidrRanges []string
+  // VPC networks permitted to reach the bucket, each with its own allowed ranges
+  vpcSources []gcp.project.storageService.bucket.ipFilterConfig.vpcSource
+}
+
+// VPC network permitted to reach a Cloud Storage bucket
+//
+// One entry of a bucket IP filter's VPC source list: the `network` traffic may
+// arrive from, and the CIDR ranges within it that are permitted.
+private gcp.project.storageService.bucket.ipFilterConfig.vpcSource @defaults("allowedIpCidrRanges") {
+  // VPC network traffic may reach the bucket from
+  network() gcp.project.computeService.network
+  // CIDR ranges within the network permitted to reach the bucket
+  allowedIpCidrRanges []string
 }
 
 // Google Cloud bucket's lifecycle configuration

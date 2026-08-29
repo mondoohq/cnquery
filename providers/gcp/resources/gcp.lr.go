@@ -81,6 +81,9 @@ const (
 	ResourceGcpProjectStorageService                                                   string = "gcp.project.storageService"
 	ResourceGcpProjectStorageServiceHmacKey                                            string = "gcp.project.storageService.hmacKey"
 	ResourceGcpProjectStorageServiceBucket                                             string = "gcp.project.storageService.bucket"
+	ResourceGcpProjectStorageServiceBucketAccessControl                                string = "gcp.project.storageService.bucket.accessControl"
+	ResourceGcpProjectStorageServiceBucketIpFilterConfig                               string = "gcp.project.storageService.bucket.ipFilterConfig"
+	ResourceGcpProjectStorageServiceBucketIpFilterConfigVpcSource                      string = "gcp.project.storageService.bucket.ipFilterConfig.vpcSource"
 	ResourceGcpProjectStorageServiceBucketLifecycleRule                                string = "gcp.project.storageService.bucket.lifecycleRule"
 	ResourceGcpProjectStorageServiceBucketLifecycleRuleAction                          string = "gcp.project.storageService.bucket.lifecycleRuleAction"
 	ResourceGcpProjectStorageServiceBucketLifecycleRuleCondition                       string = "gcp.project.storageService.bucket.lifecycleRuleCondition"
@@ -775,6 +778,18 @@ func init() {
 		"gcp.project.storageService.bucket": {
 			Init:   initGcpProjectStorageServiceBucket,
 			Create: createGcpProjectStorageServiceBucket,
+		},
+		"gcp.project.storageService.bucket.accessControl": {
+			// to override args, implement: initGcpProjectStorageServiceBucketAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketAccessControl,
+		},
+		"gcp.project.storageService.bucket.ipFilterConfig": {
+			// to override args, implement: initGcpProjectStorageServiceBucketIpFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketIpFilterConfig,
+		},
+		"gcp.project.storageService.bucket.ipFilterConfig.vpcSource": {
+			// to override args, implement: initGcpProjectStorageServiceBucketIpFilterConfigVpcSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectStorageServiceBucketIpFilterConfigVpcSource,
 		},
 		"gcp.project.storageService.bucket.lifecycleRule": {
 			// to override args, implement: initGcpProjectStorageServiceBucketLifecycleRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5587,6 +5602,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.storageService.bucket.defaultObjectAcl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetDefaultObjectAcl()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.storageService.bucket.accessControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetAccessControl()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.bucket.accessControl")))
+	},
+	"gcp.project.storageService.bucket.defaultObjectAccessControl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetDefaultObjectAccessControl()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.bucket.accessControl")))
+	},
 	"gcp.project.storageService.bucket.public": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetPublic()).ToDataRes(types.Bool)
 	},
@@ -5595,6 +5616,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.storageService.bucket.ipFilter": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetIpFilter()).ToDataRes(types.Dict)
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucket).GetIpFilterConfig()).ToDataRes(types.Resource("gcp.project.storageService.bucket.ipFilterConfig"))
 	},
 	"gcp.project.storageService.bucket.hierarchicalNamespace": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetHierarchicalNamespace()).ToDataRes(types.Dict)
@@ -5625,6 +5649,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"gcp.project.storageService.bucket.softDeleteTime": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucket).GetSoftDeleteTime()).ToDataRes(types.Time)
+	},
+	"gcp.project.storageService.bucket.accessControl.entity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketAccessControl).GetEntity()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.accessControl.entityId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketAccessControl).GetEntityId()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.accessControl.role": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketAccessControl).GetRole()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.accessControl.email": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketAccessControl).GetEmail()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.accessControl.domain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketAccessControl).GetDomain()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.accessControl.projectTeamId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketAccessControl).GetProjectTeamId()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.accessControl.projectTeamRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketAccessControl).GetProjectTeamRole()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.mode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).GetMode()).ToDataRes(types.String)
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.allowAllServiceAgentAccess": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).GetAllowAllServiceAgentAccess()).ToDataRes(types.Bool)
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.allowCrossOrgVpcs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).GetAllowCrossOrgVpcs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.publicAllowedIpCidrRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).GetPublicAllowedIpCidrRanges()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.vpcSources": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).GetVpcSources()).ToDataRes(types.Array(types.Resource("gcp.project.storageService.bucket.ipFilterConfig.vpcSource")))
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.vpcSource.network": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource).GetNetwork()).ToDataRes(types.Resource("gcp.project.computeService.network"))
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.vpcSource.allowedIpCidrRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource).GetAllowedIpCidrRanges()).ToDataRes(types.Array(types.String))
 	},
 	"gcp.project.storageService.bucket.lifecycleRule.action": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectStorageServiceBucketLifecycleRule).GetAction()).ToDataRes(types.Resource("gcp.project.storageService.bucket.lifecycleRuleAction"))
@@ -23487,6 +23553,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectStorageServiceBucket).DefaultObjectAcl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.storageService.bucket.accessControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).AccessControl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.defaultObjectAccessControl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).DefaultObjectAccessControl, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.storageService.bucket.public": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).Public, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -23497,6 +23571,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.bucket.ipFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).IpFilter, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucket).IpFilterConfig, ok = plugin.RawToTValue[*mqlGcpProjectStorageServiceBucketIpFilterConfig](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.hierarchicalNamespace": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23537,6 +23615,74 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"gcp.project.storageService.bucket.softDeleteTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectStorageServiceBucket).SoftDeleteTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.entity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).Entity, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.entityId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).EntityId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.role": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).Role, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.email": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).Email, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.domain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).Domain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.projectTeamId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).ProjectTeamId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.accessControl.projectTeamRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketAccessControl).ProjectTeamRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.mode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).Mode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.allowAllServiceAgentAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).AllowAllServiceAgentAccess, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.allowCrossOrgVpcs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).AllowCrossOrgVpcs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.publicAllowedIpCidrRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).PublicAllowedIpCidrRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.vpcSources": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfig).VpcSources, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.vpcSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.vpcSource.network": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource).Network, ok = plugin.RawToTValue[*mqlGcpProjectComputeServiceNetwork](v.Value, v.Error)
+		return
+	},
+	"gcp.project.storageService.bucket.ipFilterConfig.vpcSource.allowedIpCidrRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource).AllowedIpCidrRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"gcp.project.storageService.bucket.lifecycleRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -53963,9 +54109,12 @@ type mqlGcpProjectStorageServiceBucket struct {
 	Autoclass                       plugin.TValue[any]
 	Acl                             plugin.TValue[[]any]
 	DefaultObjectAcl                plugin.TValue[[]any]
+	AccessControl                   plugin.TValue[[]any]
+	DefaultObjectAccessControl      plugin.TValue[[]any]
 	Public                          plugin.TValue[bool]
 	DlpDataProfile                  plugin.TValue[*mqlGcpProjectDlpServiceFileStoreDataProfile]
 	IpFilter                        plugin.TValue[any]
+	IpFilterConfig                  plugin.TValue[*mqlGcpProjectStorageServiceBucketIpFilterConfig]
 	HierarchicalNamespace           plugin.TValue[any]
 	CustomPlacementConfig           plugin.TValue[any]
 	Logging                         plugin.TValue[any]
@@ -54199,6 +54348,38 @@ func (c *mqlGcpProjectStorageServiceBucket) GetDefaultObjectAcl() *plugin.TValue
 	})
 }
 
+func (c *mqlGcpProjectStorageServiceBucket) GetAccessControl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.AccessControl, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService.bucket", c.__id, "accessControl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.accessControl()
+	})
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetDefaultObjectAccessControl() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.DefaultObjectAccessControl, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService.bucket", c.__id, "defaultObjectAccessControl")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.defaultObjectAccessControl()
+	})
+}
+
 func (c *mqlGcpProjectStorageServiceBucket) GetPublic() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.Public, func() (bool, error) {
 		return c.public()
@@ -54223,6 +54404,10 @@ func (c *mqlGcpProjectStorageServiceBucket) GetDlpDataProfile() *plugin.TValue[*
 
 func (c *mqlGcpProjectStorageServiceBucket) GetIpFilter() *plugin.TValue[any] {
 	return &c.IpFilter
+}
+
+func (c *mqlGcpProjectStorageServiceBucket) GetIpFilterConfig() *plugin.TValue[*mqlGcpProjectStorageServiceBucketIpFilterConfig] {
+	return &c.IpFilterConfig
 }
 
 func (c *mqlGcpProjectStorageServiceBucket) GetHierarchicalNamespace() *plugin.TValue[any] {
@@ -54277,6 +54462,205 @@ func (c *mqlGcpProjectStorageServiceBucket) GetOwner() *plugin.TValue[any] {
 
 func (c *mqlGcpProjectStorageServiceBucket) GetSoftDeleteTime() *plugin.TValue[*time.Time] {
 	return &c.SoftDeleteTime
+}
+
+// mqlGcpProjectStorageServiceBucketAccessControl for the gcp.project.storageService.bucket.accessControl resource
+type mqlGcpProjectStorageServiceBucketAccessControl struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectStorageServiceBucketAccessControlInternal it will be used here
+	Entity          plugin.TValue[string]
+	EntityId        plugin.TValue[string]
+	Role            plugin.TValue[string]
+	Email           plugin.TValue[string]
+	Domain          plugin.TValue[string]
+	ProjectTeamId   plugin.TValue[string]
+	ProjectTeamRole plugin.TValue[string]
+}
+
+// createGcpProjectStorageServiceBucketAccessControl creates a new instance of this resource
+func createGcpProjectStorageServiceBucketAccessControl(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketAccessControl{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.accessControl", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) MqlName() string {
+	return "gcp.project.storageService.bucket.accessControl"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) GetEntity() *plugin.TValue[string] {
+	return &c.Entity
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) GetEntityId() *plugin.TValue[string] {
+	return &c.EntityId
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) GetRole() *plugin.TValue[string] {
+	return &c.Role
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) GetEmail() *plugin.TValue[string] {
+	return &c.Email
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) GetDomain() *plugin.TValue[string] {
+	return &c.Domain
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) GetProjectTeamId() *plugin.TValue[string] {
+	return &c.ProjectTeamId
+}
+
+func (c *mqlGcpProjectStorageServiceBucketAccessControl) GetProjectTeamRole() *plugin.TValue[string] {
+	return &c.ProjectTeamRole
+}
+
+// mqlGcpProjectStorageServiceBucketIpFilterConfig for the gcp.project.storageService.bucket.ipFilterConfig resource
+type mqlGcpProjectStorageServiceBucketIpFilterConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectStorageServiceBucketIpFilterConfigInternal it will be used here
+	Mode                       plugin.TValue[string]
+	AllowAllServiceAgentAccess plugin.TValue[bool]
+	AllowCrossOrgVpcs          plugin.TValue[bool]
+	PublicAllowedIpCidrRanges  plugin.TValue[[]any]
+	VpcSources                 plugin.TValue[[]any]
+}
+
+// createGcpProjectStorageServiceBucketIpFilterConfig creates a new instance of this resource
+func createGcpProjectStorageServiceBucketIpFilterConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketIpFilterConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.ipFilterConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfig) MqlName() string {
+	return "gcp.project.storageService.bucket.ipFilterConfig"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfig) GetMode() *plugin.TValue[string] {
+	return &c.Mode
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfig) GetAllowAllServiceAgentAccess() *plugin.TValue[bool] {
+	return &c.AllowAllServiceAgentAccess
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfig) GetAllowCrossOrgVpcs() *plugin.TValue[bool] {
+	return &c.AllowCrossOrgVpcs
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfig) GetPublicAllowedIpCidrRanges() *plugin.TValue[[]any] {
+	return &c.PublicAllowedIpCidrRanges
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfig) GetVpcSources() *plugin.TValue[[]any] {
+	return &c.VpcSources
+}
+
+// mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource for the gcp.project.storageService.bucket.ipFilterConfig.vpcSource resource
+type mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSourceInternal
+	Network             plugin.TValue[*mqlGcpProjectComputeServiceNetwork]
+	AllowedIpCidrRanges plugin.TValue[[]any]
+}
+
+// createGcpProjectStorageServiceBucketIpFilterConfigVpcSource creates a new instance of this resource
+func createGcpProjectStorageServiceBucketIpFilterConfigVpcSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.storageService.bucket.ipFilterConfig.vpcSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource) MqlName() string {
+	return "gcp.project.storageService.bucket.ipFilterConfig.vpcSource"
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource) GetNetwork() *plugin.TValue[*mqlGcpProjectComputeServiceNetwork] {
+	return plugin.GetOrCompute[*mqlGcpProjectComputeServiceNetwork](&c.Network, func() (*mqlGcpProjectComputeServiceNetwork, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("gcp.project.storageService.bucket.ipFilterConfig.vpcSource", c.__id, "network")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlGcpProjectComputeServiceNetwork), nil
+			}
+		}
+
+		return c.network()
+	})
+}
+
+func (c *mqlGcpProjectStorageServiceBucketIpFilterConfigVpcSource) GetAllowedIpCidrRanges() *plugin.TValue[[]any] {
+	return &c.AllowedIpCidrRanges
 }
 
 // mqlGcpProjectStorageServiceBucketLifecycleRule for the gcp.project.storageService.bucket.lifecycleRule resource
