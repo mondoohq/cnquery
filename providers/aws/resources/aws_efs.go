@@ -527,22 +527,48 @@ func (a *mqlAwsEfsFilesystem) accessPoints() ([]any, error) {
 				}
 			}
 
-			args := map[string]*llx.RawData{
-				"__id":           llx.StringDataPtr(ap.AccessPointArn),
-				"accessPointId":  llx.StringDataPtr(ap.AccessPointId),
-				"arn":            llx.StringDataPtr(ap.AccessPointArn),
-				"name":           llx.StringDataPtr(ap.Name),
-				"lifecycleState": llx.StringData(string(ap.LifeCycleState)),
-				"region":         llx.StringData(region),
-				"tags":           llx.MapData(efsTagsToMap(ap.Tags), types.String),
+			// A nil PosixUser or RootDirectory is not "empty", it means the
+			// access point enforces no identity or no root of its own, so the
+			// scalars stay null rather than reporting uid 0 and path "".
+			var posixUid, posixGid, rootOwnerUid, rootOwnerGid *int64
+			var rootPath, rootPermissions *string
+			secondaryGids := []any{}
+			if ap.PosixUser != nil {
+				posixUid = ap.PosixUser.Uid
+				posixGid = ap.PosixUser.Gid
+				secondaryGids = convert.SliceAnyToInterface(ap.PosixUser.SecondaryGids)
+			}
+			if ap.RootDirectory != nil {
+				rootPath = ap.RootDirectory.Path
+				if ci := ap.RootDirectory.CreationInfo; ci != nil {
+					rootOwnerUid = ci.OwnerUid
+					rootOwnerGid = ci.OwnerGid
+					rootPermissions = ci.Permissions
+				}
 			}
 
-			if posixUser != nil {
-				args["posixUser"] = llx.DictData(posixUser)
+			args := map[string]*llx.RawData{
+				"__id":                     llx.StringDataPtr(ap.AccessPointArn),
+				"accessPointId":            llx.StringDataPtr(ap.AccessPointId),
+				"arn":                      llx.StringDataPtr(ap.AccessPointArn),
+				"name":                     llx.StringDataPtr(ap.Name),
+				"lifecycleState":           llx.StringData(string(ap.LifeCycleState)),
+				"region":                   llx.StringData(region),
+				"tags":                     llx.MapData(efsTagsToMap(ap.Tags), types.String),
+				"posixUid":                 llx.IntDataPtr(posixUid),
+				"posixGid":                 llx.IntDataPtr(posixGid),
+				"posixSecondaryGids":       llx.ArrayData(secondaryGids, types.Int),
+				"rootDirectoryPath":        llx.StringDataPtr(rootPath),
+				"rootDirectoryOwnerUid":    llx.IntDataPtr(rootOwnerUid),
+				"rootDirectoryOwnerGid":    llx.IntDataPtr(rootOwnerGid),
+				"rootDirectoryPermissions": llx.StringDataPtr(rootPermissions),
 			}
-			if rootDirectory != nil {
-				args["rootDirectory"] = llx.DictData(rootDirectory)
-			}
+
+			// Set unconditionally: a key left out of the args map leaves the
+			// field unset rather than null, and reading an unset field crosses
+			// the plugin boundary with no type information.
+			args["posixUser"] = llx.DictData(posixUser)
+			args["rootDirectory"] = llx.DictData(rootDirectory)
 
 			mqlAccessPoint, err := CreateResource(a.MqlRuntime, ResourceAwsEfsAccessPoint, args)
 			if err != nil {

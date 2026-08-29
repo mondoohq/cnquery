@@ -1082,18 +1082,23 @@ func initAwsKmsKey(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[s
 	return args, nil, nil
 }
 
-// resolveKmsKeyRef turns an optional KMS key ARN carried on another resource
-// into a key resource, marking the field null when no key is configured. The
-// caller passes the address of its own field state because a singular resource
-// accessor that returns nil without setting one panics the runtime.
-func resolveKmsKeyRef(runtime *plugin.Runtime, keyArn *string, state *plugin.State) (*mqlAwsKmsKey, error) {
-	if keyArn == nil || *keyArn == "" {
+// resolveKmsKeyRef turns an optional KMS key reference carried on another
+// resource into a key resource, marking the field null when no key is
+// configured. The reference may be an ARN, an alias, or a bare key ID; the
+// last of those cannot name its own region, so the caller supplies the region
+// of the resource holding the reference. The caller also passes the address of
+// its own field state, because a singular resource accessor that returns nil
+// without setting one panics the runtime.
+func resolveKmsKeyRef(runtime *plugin.Runtime, keyRef *string, region string, state *plugin.State) (*mqlAwsKmsKey, error) {
+	if keyRef == nil || *keyRef == "" {
 		*state = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	res, err := NewResource(runtime, "aws.kms.key", map[string]*llx.RawData{
-		"arn": llx.StringDataPtr(keyArn),
-	})
+	args := map[string]*llx.RawData{"arn": llx.StringDataPtr(keyRef)}
+	if region != "" {
+		args["region"] = llx.StringData(region)
+	}
+	res, err := NewResource(runtime, "aws.kms.key", args)
 	if err != nil {
 		return nil, err
 	}

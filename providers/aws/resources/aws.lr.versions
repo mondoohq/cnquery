@@ -4457,9 +4457,16 @@ aws.efs.accessPoint.arn 11.15.2
 aws.efs.accessPoint.fileSystem 13.41.1
 aws.efs.accessPoint.lifecycleState 11.15.2
 aws.efs.accessPoint.name 11.15.2
+aws.efs.accessPoint.posixGid 13.53.4
+aws.efs.accessPoint.posixSecondaryGids 13.53.4
+aws.efs.accessPoint.posixUid 13.53.4
 aws.efs.accessPoint.posixUser 11.15.2
 aws.efs.accessPoint.region 11.15.2
 aws.efs.accessPoint.rootDirectory 11.15.2
+aws.efs.accessPoint.rootDirectoryOwnerGid 13.53.4
+aws.efs.accessPoint.rootDirectoryOwnerUid 13.53.4
+aws.efs.accessPoint.rootDirectoryPath 13.53.4
+aws.efs.accessPoint.rootDirectoryPermissions 13.53.4
 aws.efs.accessPoint.tags 11.15.2
 aws.efs.filesystem 11.15.2
 aws.efs.filesystem.accessPoints 11.15.2
@@ -4925,6 +4932,7 @@ aws.elasticbeanstalk.environments 11.16.1
 aws.elb 11.15.2
 aws.elb.classicLoadBalancers 11.15.2
 aws.elb.listener 11.15.2
+aws.elb.listener.advertiseTrustStoreCaNames 13.53.4
 aws.elb.listener.alpnPolicy 11.15.2
 aws.elb.listener.arn 11.15.2
 aws.elb.listener.certificate 13.53.4
@@ -4934,8 +4942,10 @@ aws.elb.listener.certificate.isDefault 13.53.4
 aws.elb.listener.certificates 11.15.2
 aws.elb.listener.defaultActions 11.15.2
 aws.elb.listener.forwardTargetGroups 13.43.1
+aws.elb.listener.ignoreClientCertificateExpiry 13.53.4
 aws.elb.listener.loadBalancer 13.12.1
 aws.elb.listener.mutualAuthentication 13.49.1
+aws.elb.listener.mutualAuthenticationMode 13.53.4
 aws.elb.listener.port 11.15.2
 aws.elb.listener.protocol 11.15.2
 aws.elb.listener.rule 13.49.1
@@ -4951,6 +4961,7 @@ aws.elb.listener.sslPolicy 11.15.2
 aws.elb.listener.sslPolicyRef 13.49.1
 aws.elb.listener.tags 13.53.1
 aws.elb.listener.trustStore 13.49.1
+aws.elb.listener.trustStoreAssociationStatus 13.53.4
 aws.elb.loadBalancers 11.15.2
 aws.elb.loadbalancer 11.15.2
 aws.elb.loadbalancer.arn 11.15.2
@@ -7105,6 +7116,8 @@ aws.macie.bucket.region 13.23.2
 aws.macie.bucket.replicationDetails 13.23.2
 aws.macie.bucket.sensitivityScore 13.23.2
 aws.macie.bucket.serverSideEncryption 13.23.2
+aws.macie.bucket.serverSideEncryptionKmsKey 13.53.4
+aws.macie.bucket.serverSideEncryptionType 13.53.4
 aws.macie.bucket.sharedAccess 13.23.2
 aws.macie.bucket.sizeInBytes 13.23.2
 aws.macie.bucket.sizeInBytesCompressed 13.23.2

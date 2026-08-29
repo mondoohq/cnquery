@@ -668,6 +668,12 @@ func (a *mqlAwsMacie) buckets() ([]any, error) {
 func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region string) (*mqlAwsMacieBucket, error) {
 	publicAccess, _ := convert.JsonToDict(bm.PublicAccess)
 	serverSideEncryption, _ := convert.JsonToDict(bm.ServerSideEncryption)
+	sseType := ""
+	var sseKmsKeyRef *string
+	if bm.ServerSideEncryption != nil {
+		sseType = string(bm.ServerSideEncryption.Type)
+		sseKmsKeyRef = bm.ServerSideEncryption.KmsMasterKeyId
+	}
 	jobDetails, _ := convert.JsonToDict(bm.JobDetails)
 	replicationDetails, _ := convert.JsonToDict(bm.ReplicationDetails)
 	objectCountByEncryptionType, _ := convert.JsonToDict(bm.ObjectCountByEncryptionType)
@@ -747,6 +753,7 @@ func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region 
 		"sharedAccess":                       llx.StringData(string(bm.SharedAccess)),
 		"publicAccess":                       llx.DictData(publicAccess),
 		"serverSideEncryption":               llx.DictData(serverSideEncryption),
+		"serverSideEncryptionType":           llx.StringData(sseType),
 		"versioning":                         llx.BoolData(versioning),
 		"allowsUnencryptedObjectUploads":     llx.StringData(string(bm.AllowsUnencryptedObjectUploads)),
 		"automatedDiscoveryMonitoringStatus": llx.StringData(string(bm.AutomatedDiscoveryMonitoringStatus)),
@@ -762,7 +769,19 @@ func newMqlMacieBucket(runtime *plugin.Runtime, bm types.BucketMetadata, region 
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlAwsMacieBucket), nil
+	mqlBucket := res.(*mqlAwsMacieBucket)
+	mqlBucket.cacheServerSideEncryptionKmsKeyRef = sseKmsKeyRef
+	return mqlBucket, nil
+}
+
+type mqlAwsMacieBucketInternal struct {
+	// Macie reports the default encryption key as an ARN or as a bare key ID,
+	// which is why this is a key reference rather than an ARN.
+	cacheServerSideEncryptionKmsKeyRef *string
+}
+
+func (a *mqlAwsMacieBucket) serverSideEncryptionKmsKey() (*mqlAwsKmsKey, error) {
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheServerSideEncryptionKmsKeyRef, a.Region.Data, &a.ServerSideEncryptionKmsKey.State)
 }
 
 func (a *mqlAwsMacieBucket) id() (string, error) {

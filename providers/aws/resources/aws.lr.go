@@ -6847,6 +6847,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.efs.accessPoint.rootDirectory": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectory()).ToDataRes(types.Dict)
 	},
+	"aws.efs.accessPoint.posixUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetPosixUid()).ToDataRes(types.Int)
+	},
+	"aws.efs.accessPoint.posixGid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetPosixGid()).ToDataRes(types.Int)
+	},
+	"aws.efs.accessPoint.posixSecondaryGids": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetPosixSecondaryGids()).ToDataRes(types.Array(types.Int))
+	},
+	"aws.efs.accessPoint.rootDirectoryPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryPath()).ToDataRes(types.String)
+	},
+	"aws.efs.accessPoint.rootDirectoryOwnerUid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryOwnerUid()).ToDataRes(types.Int)
+	},
+	"aws.efs.accessPoint.rootDirectoryOwnerGid": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryOwnerGid()).ToDataRes(types.Int)
+	},
+	"aws.efs.accessPoint.rootDirectoryPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEfsAccessPoint).GetRootDirectoryPermissions()).ToDataRes(types.String)
+	},
 	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEfsAccessPoint).GetLifecycleState()).ToDataRes(types.String)
 	},
@@ -12196,6 +12217,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elb.listener.mutualAuthentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetMutualAuthentication()).ToDataRes(types.Dict)
 	},
+	"aws.elb.listener.mutualAuthenticationMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetMutualAuthenticationMode()).ToDataRes(types.String)
+	},
+	"aws.elb.listener.ignoreClientCertificateExpiry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetIgnoreClientCertificateExpiry()).ToDataRes(types.Bool)
+	},
+	"aws.elb.listener.advertiseTrustStoreCaNames": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetAdvertiseTrustStoreCaNames()).ToDataRes(types.String)
+	},
+	"aws.elb.listener.trustStoreAssociationStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElbListener).GetTrustStoreAssociationStatus()).ToDataRes(types.String)
+	},
 	"aws.elb.listener.trustStore": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElbListener).GetTrustStore()).ToDataRes(types.Resource("aws.elb.truststore"))
 	},
@@ -13212,6 +13245,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.bucket.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieBucket).GetServerSideEncryption()).ToDataRes(types.Dict)
+	},
+	"aws.macie.bucket.serverSideEncryptionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetServerSideEncryptionType()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.serverSideEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetServerSideEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.macie.bucket.versioning": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieBucket).GetVersioning()).ToDataRes(types.Bool)
@@ -39809,6 +39848,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEfsAccessPoint).RootDirectory, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.efs.accessPoint.posixUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).PosixUid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.posixGid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).PosixGid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.posixSecondaryGids": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).PosixSecondaryGids, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.rootDirectoryPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).RootDirectoryPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.rootDirectoryOwnerUid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).RootDirectoryOwnerUid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.rootDirectoryOwnerGid": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).RootDirectoryOwnerGid, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.efs.accessPoint.rootDirectoryPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEfsAccessPoint).RootDirectoryPermissions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.efs.accessPoint.lifecycleState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEfsAccessPoint).LifecycleState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -47577,6 +47644,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElbListener).MutualAuthentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.elb.listener.mutualAuthenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).MutualAuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.ignoreClientCertificateExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).IgnoreClientCertificateExpiry, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.advertiseTrustStoreCaNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).AdvertiseTrustStoreCaNames, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elb.listener.trustStoreAssociationStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElbListener).TrustStoreAssociationStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.elb.listener.trustStore": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElbListener).TrustStore, ok = plugin.RawToTValue[*mqlAwsElbTruststore](v.Value, v.Error)
 		return
@@ -49047,6 +49130,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.bucket.serverSideEncryption": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieBucket).ServerSideEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.serverSideEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ServerSideEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.serverSideEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ServerSideEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.macie.bucket.versioning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -91212,15 +91303,22 @@ type mqlAwsEfsAccessPoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEfsAccessPointInternal
-	AccessPointId  plugin.TValue[string]
-	Arn            plugin.TValue[string]
-	FileSystem     plugin.TValue[*mqlAwsEfsFilesystem]
-	Name           plugin.TValue[string]
-	PosixUser      plugin.TValue[any]
-	RootDirectory  plugin.TValue[any]
-	LifecycleState plugin.TValue[string]
-	Tags           plugin.TValue[map[string]any]
-	Region         plugin.TValue[string]
+	AccessPointId            plugin.TValue[string]
+	Arn                      plugin.TValue[string]
+	FileSystem               plugin.TValue[*mqlAwsEfsFilesystem]
+	Name                     plugin.TValue[string]
+	PosixUser                plugin.TValue[any]
+	RootDirectory            plugin.TValue[any]
+	PosixUid                 plugin.TValue[int64]
+	PosixGid                 plugin.TValue[int64]
+	PosixSecondaryGids       plugin.TValue[[]any]
+	RootDirectoryPath        plugin.TValue[string]
+	RootDirectoryOwnerUid    plugin.TValue[int64]
+	RootDirectoryOwnerGid    plugin.TValue[int64]
+	RootDirectoryPermissions plugin.TValue[string]
+	LifecycleState           plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
+	Region                   plugin.TValue[string]
 }
 
 // createAwsEfsAccessPoint creates a new instance of this resource
@@ -91289,6 +91387,34 @@ func (c *mqlAwsEfsAccessPoint) GetPosixUser() *plugin.TValue[any] {
 
 func (c *mqlAwsEfsAccessPoint) GetRootDirectory() *plugin.TValue[any] {
 	return &c.RootDirectory
+}
+
+func (c *mqlAwsEfsAccessPoint) GetPosixUid() *plugin.TValue[int64] {
+	return &c.PosixUid
+}
+
+func (c *mqlAwsEfsAccessPoint) GetPosixGid() *plugin.TValue[int64] {
+	return &c.PosixGid
+}
+
+func (c *mqlAwsEfsAccessPoint) GetPosixSecondaryGids() *plugin.TValue[[]any] {
+	return &c.PosixSecondaryGids
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRootDirectoryPath() *plugin.TValue[string] {
+	return &c.RootDirectoryPath
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRootDirectoryOwnerUid() *plugin.TValue[int64] {
+	return &c.RootDirectoryOwnerUid
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRootDirectoryOwnerGid() *plugin.TValue[int64] {
+	return &c.RootDirectoryOwnerGid
+}
+
+func (c *mqlAwsEfsAccessPoint) GetRootDirectoryPermissions() *plugin.TValue[string] {
+	return &c.RootDirectoryPermissions
 }
 
 func (c *mqlAwsEfsAccessPoint) GetLifecycleState() *plugin.TValue[string] {
@@ -111901,21 +112027,25 @@ type mqlAwsElbListener struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsElbListenerInternal
-	Arn                  plugin.TValue[string]
-	LoadBalancer         plugin.TValue[*mqlAwsElbLoadbalancer]
-	Port                 plugin.TValue[int64]
-	Protocol             plugin.TValue[string]
-	SslPolicy            plugin.TValue[string]
-	DefaultActions       plugin.TValue[[]any]
-	ForwardTargetGroups  plugin.TValue[[]any]
-	Certificates         plugin.TValue[[]any]
-	AlpnPolicy           plugin.TValue[[]any]
-	SslPolicyRef         plugin.TValue[*mqlAwsElbSslPolicy]
-	MutualAuthentication plugin.TValue[any]
-	TrustStore           plugin.TValue[*mqlAwsElbTruststore]
-	Rules                plugin.TValue[[]any]
-	SniCertificates      plugin.TValue[[]any]
-	Tags                 plugin.TValue[map[string]any]
+	Arn                           plugin.TValue[string]
+	LoadBalancer                  plugin.TValue[*mqlAwsElbLoadbalancer]
+	Port                          plugin.TValue[int64]
+	Protocol                      plugin.TValue[string]
+	SslPolicy                     plugin.TValue[string]
+	DefaultActions                plugin.TValue[[]any]
+	ForwardTargetGroups           plugin.TValue[[]any]
+	Certificates                  plugin.TValue[[]any]
+	AlpnPolicy                    plugin.TValue[[]any]
+	SslPolicyRef                  plugin.TValue[*mqlAwsElbSslPolicy]
+	MutualAuthentication          plugin.TValue[any]
+	MutualAuthenticationMode      plugin.TValue[string]
+	IgnoreClientCertificateExpiry plugin.TValue[bool]
+	AdvertiseTrustStoreCaNames    plugin.TValue[string]
+	TrustStoreAssociationStatus   plugin.TValue[string]
+	TrustStore                    plugin.TValue[*mqlAwsElbTruststore]
+	Rules                         plugin.TValue[[]any]
+	SniCertificates               plugin.TValue[[]any]
+	Tags                          plugin.TValue[map[string]any]
 }
 
 // createAwsElbListener creates a new instance of this resource
@@ -112033,6 +112163,22 @@ func (c *mqlAwsElbListener) GetSslPolicyRef() *plugin.TValue[*mqlAwsElbSslPolicy
 
 func (c *mqlAwsElbListener) GetMutualAuthentication() *plugin.TValue[any] {
 	return &c.MutualAuthentication
+}
+
+func (c *mqlAwsElbListener) GetMutualAuthenticationMode() *plugin.TValue[string] {
+	return &c.MutualAuthenticationMode
+}
+
+func (c *mqlAwsElbListener) GetIgnoreClientCertificateExpiry() *plugin.TValue[bool] {
+	return &c.IgnoreClientCertificateExpiry
+}
+
+func (c *mqlAwsElbListener) GetAdvertiseTrustStoreCaNames() *plugin.TValue[string] {
+	return &c.AdvertiseTrustStoreCaNames
+}
+
+func (c *mqlAwsElbListener) GetTrustStoreAssociationStatus() *plugin.TValue[string] {
+	return &c.TrustStoreAssociationStatus
 }
 
 func (c *mqlAwsElbListener) GetTrustStore() *plugin.TValue[*mqlAwsElbTruststore] {
@@ -115622,7 +115768,7 @@ func (c *mqlAwsMacieCustomDataIdentifier) GetTags() *plugin.TValue[map[string]an
 type mqlAwsMacieBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsMacieBucketInternal it will be used here
+	mqlAwsMacieBucketInternal
 	Arn                                plugin.TValue[string]
 	Name                               plugin.TValue[string]
 	Region                             plugin.TValue[string]
@@ -115640,6 +115786,8 @@ type mqlAwsMacieBucket struct {
 	SharedAccess                       plugin.TValue[string]
 	PublicAccess                       plugin.TValue[any]
 	ServerSideEncryption               plugin.TValue[any]
+	ServerSideEncryptionType           plugin.TValue[string]
+	ServerSideEncryptionKmsKey         plugin.TValue[*mqlAwsKmsKey]
 	Versioning                         plugin.TValue[bool]
 	AllowsUnencryptedObjectUploads     plugin.TValue[string]
 	AutomatedDiscoveryMonitoringStatus plugin.TValue[string]
@@ -115768,6 +115916,26 @@ func (c *mqlAwsMacieBucket) GetPublicAccess() *plugin.TValue[any] {
 
 func (c *mqlAwsMacieBucket) GetServerSideEncryption() *plugin.TValue[any] {
 	return &c.ServerSideEncryption
+}
+
+func (c *mqlAwsMacieBucket) GetServerSideEncryptionType() *plugin.TValue[string] {
+	return &c.ServerSideEncryptionType
+}
+
+func (c *mqlAwsMacieBucket) GetServerSideEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.ServerSideEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.bucket", c.__id, "serverSideEncryptionKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.serverSideEncryptionKmsKey()
+	})
 }
 
 func (c *mqlAwsMacieBucket) GetVersioning() *plugin.TValue[bool] {

@@ -555,19 +555,19 @@ func newMqlAwsGlueSecurityConfiguration(runtime *plugin.Runtime, region string, 
 }
 
 func (a *mqlAwsGlueSecurityConfiguration) s3EncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheS3EncryptionKmsKeyArn, &a.S3EncryptionKmsKey.State)
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheS3EncryptionKmsKeyArn, a.Region.Data, &a.S3EncryptionKmsKey.State)
 }
 
 func (a *mqlAwsGlueSecurityConfiguration) cloudWatchEncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheCloudWatchEncryptionKmsKeyArn, &a.CloudWatchEncryptionKmsKey.State)
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheCloudWatchEncryptionKmsKeyArn, a.Region.Data, &a.CloudWatchEncryptionKmsKey.State)
 }
 
 func (a *mqlAwsGlueSecurityConfiguration) jobBookmarksEncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheJobBookmarksEncryptionKmsKeyArn, &a.JobBookmarksEncryptionKmsKey.State)
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheJobBookmarksEncryptionKmsKeyArn, a.Region.Data, &a.JobBookmarksEncryptionKmsKey.State)
 }
 
 func (a *mqlAwsGlueSecurityConfiguration) dataQualityEncryptionKmsKey() (*mqlAwsKmsKey, error) {
-	return resolveKmsKeyRef(a.MqlRuntime, a.cacheDataQualityEncryptionKmsKeyArn, &a.DataQualityEncryptionKmsKey.State)
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheDataQualityEncryptionKmsKeyArn, a.Region.Data, &a.DataQualityEncryptionKmsKey.State)
 }
 
 func (a *mqlAwsGlue) databases() ([]any, error) {

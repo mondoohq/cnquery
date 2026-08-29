@@ -666,12 +666,18 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 
 			var mutualAuth any
 			mutualAuthTrustStoreArn := ""
+			var mutualAuthMode, advertiseTrustStoreCaNames, trustStoreAssociationStatus string
+			var ignoreClientCertificateExpiry bool
 			if l.MutualAuthentication != nil {
 				mutualAuth, err = convert.JsonToDict(l.MutualAuthentication)
 				if err != nil {
 					return nil, err
 				}
 				mutualAuthTrustStoreArn = convert.ToValue(l.MutualAuthentication.TrustStoreArn)
+				mutualAuthMode = convert.ToValue(l.MutualAuthentication.Mode)
+				ignoreClientCertificateExpiry = convert.ToValue(l.MutualAuthentication.IgnoreClientCertificateExpiry)
+				advertiseTrustStoreCaNames = string(l.MutualAuthentication.AdvertiseTrustStoreCaNames)
+				trustStoreAssociationStatus = string(l.MutualAuthentication.TrustStoreAssociationStatus)
 			}
 
 			args := map[string]*llx.RawData{
@@ -684,6 +690,11 @@ func (a *mqlAwsElbLoadbalancer) listeners() ([]any, error) {
 				"certificates":         llx.ArrayData(certificates, types.Dict),
 				"alpnPolicy":           llx.ArrayData(llx.TArr2Raw(l.AlpnPolicy), types.String),
 				"mutualAuthentication": llx.DictData(mutualAuth),
+
+				"mutualAuthenticationMode":      llx.StringData(mutualAuthMode),
+				"ignoreClientCertificateExpiry": llx.BoolData(ignoreClientCertificateExpiry),
+				"advertiseTrustStoreCaNames":    llx.StringData(advertiseTrustStoreCaNames),
+				"trustStoreAssociationStatus":   llx.StringData(trustStoreAssociationStatus),
 			}
 
 			mqlListener, err := CreateResource(a.MqlRuntime, "aws.elb.listener", args)

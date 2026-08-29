@@ -2073,15 +2073,53 @@ private aws.efs.accessPoint @defaults("accessPointId name") {
   fileSystem() aws.efs.filesystem
   // Access point name
   name string
-  // POSIX user identity (uid, gid, secondaryGids)
-  posixUser dict
+  // POSIX user identity
+  //
+  // Deprecated in favor of posixUid, posixGid, and posixSecondaryGids. Dict
+  // with `uid`, `gid`, and `secondaryGids`.
+  posixUser @maturity("deprecated") dict
   // Root directory configuration
   //
-  // Dict with `path` (the directory within the file system exposed to NFS
-  // clients through this access point) and `creationInfo`, an object with
-  // `ownerUid`, `ownerGid`, and `permissions` that EFS applies when it
-  // creates the root directory.
-  rootDirectory dict
+  // Deprecated in favor of rootDirectoryPath, rootDirectoryOwnerUid,
+  // rootDirectoryOwnerGid, and rootDirectoryPermissions. Dict with `path` and
+  // `creationInfo`, an object with `ownerUid`, `ownerGid`, and `permissions`.
+  rootDirectory @maturity("deprecated") dict
+  // POSIX user ID that every request through the access point runs as
+  //
+  // EFS overrides the NFS client's own identity with this one, so it decides
+  // what the client can reach on the file system. A value of 0 makes every
+  // client root. Null when the access point enforces no user identity and the
+  // client's own uid is used.
+  posixUid int
+  // POSIX group ID that every request through the access point runs as
+  //
+  // Null when the access point enforces no user identity.
+  posixGid int
+  // Secondary POSIX group IDs applied to requests through the access point
+  //
+  // Up to 16 additional groups, each widening what the request can reach.
+  // Empty when none are configured.
+  posixSecondaryGids []int
+  // Directory within the file system exposed to NFS clients through the access point
+  //
+  // A client reaching the access point sees this directory as the root and
+  // cannot escape it, so a path of "/" exposes the whole file system. Empty
+  // when the access point does not restrict the root.
+  rootDirectoryPath string
+  // Owner user ID EFS applies when it creates the root directory
+  //
+  // Null when the access point supplies no creation info, in which case EFS
+  // does not create the directory and a missing path fails the mount.
+  rootDirectoryOwnerUid int
+  // Owner group ID EFS applies when it creates the root directory
+  //
+  // Null when the access point supplies no creation info.
+  rootDirectoryOwnerGid int
+  // POSIX permission bits EFS applies when it creates the root directory
+  //
+  // A three- or four-digit octal string, for example "0755". Empty when the
+  // access point supplies no creation info.
+  rootDirectoryPermissions string
   // Access point state
   lifecycleState string
   // Resource tags
@@ -7084,10 +7122,35 @@ private aws.elb.listener @defaults("arn port protocol") {
   sslPolicyRef() aws.elb.sslPolicy
   // Mutual TLS authentication settings for the listener
   //
-  // Has `Mode` (off, passthrough, or verify), `TrustStoreArn`,
-  // `IgnoreClientCertificateExpiry`, `AdvertiseTrustStoreCaNames`, and
-  // `TrustStoreAssociationStatus`. Empty for listeners without mTLS.
-  mutualAuthentication dict
+  // Deprecated in favor of mutualAuthenticationMode,
+  // ignoreClientCertificateExpiry, advertiseTrustStoreCaNames,
+  // trustStoreAssociationStatus, and the trustStore reference. Has `Mode`,
+  // `TrustStoreArn`, `IgnoreClientCertificateExpiry`,
+  // `AdvertiseTrustStoreCaNames`, and `TrustStoreAssociationStatus`. Empty for
+  // listeners without mTLS.
+  mutualAuthentication @maturity("deprecated") dict
+  // Client certificate handling method for the listener
+  //
+  // One of off, passthrough, or verify, defaulting to off. Only verify
+  // actually validates the client certificate against the trust store;
+  // passthrough forwards it to the target without checking it, so a listener
+  // in passthrough mode is not authenticating anyone.
+  mutualAuthenticationMode string
+  // Whether expired client certificates are accepted
+  //
+  // True means a client presenting a certificate past its expiry is still
+  // admitted. False for listeners without mutual TLS.
+  ignoreClientCertificateExpiry bool
+  // Whether trust store CA certificate names are advertised to clients
+  //
+  // One of on or off. Empty for listeners without mutual TLS.
+  advertiseTrustStoreCaNames string
+  // Association status of the shared trust store
+  //
+  // One of active or removed. A removed trust store leaves a listener in
+  // verify mode with nothing to verify against. Empty for listeners without
+  // mutual TLS.
+  trustStoreAssociationStatus string
   // Trust store used to verify client certificates on mutual TLS listeners
   trustStore() aws.elb.truststore
   // Rules that route requests reaching the listener
@@ -8165,8 +8228,22 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   sharedAccess string
   // Public-access summary, including whether the bucket is publicly accessible and the account-level and bucket-level permissions that determine it
   publicAccess dict
-  // Default server-side encryption settings (type and KMS key, if any)
-  serverSideEncryption dict
+  // Default server-side encryption settings
+  //
+  // Deprecated in favor of serverSideEncryptionType and
+  // serverSideEncryptionKmsKey. Keys `Type` and `KmsMasterKeyId`.
+  serverSideEncryption @maturity("deprecated") dict
+  // Default server-side encryption algorithm configured on the bucket
+  //
+  // One of NONE, AES256, aws:kms, or aws:kms:dsse. NONE means the bucket's
+  // default encryption settings specify no server-side encryption behavior
+  // for new objects.
+  serverSideEncryptionType string
+  // KMS key configured as the bucket's default server-side encryption key
+  //
+  // Null unless the encryption type is one of the KMS modes. Macie reports
+  // the key as an ARN or as a bare key ID, and both resolve.
+  serverSideEncryptionKmsKey() aws.kms.key
   // Whether versioning is enabled for the bucket
   versioning bool
   // Whether the bucket policy requires server-side encryption of new objects: FALSE (required), TRUE (not required or no policy), UNKNOWN
