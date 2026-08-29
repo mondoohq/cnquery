@@ -4922,20 +4922,22 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   // One of `DISABLED` or `PROJECT_SINGLETON_POLICY_ENFORCE`.
   // Replaces the legacy boolean `binaryAuthorization.enabled` flag.
   binaryAuthorizationEvaluationMode string
-  // Legacy ABAC authorization configuration
-  legacyAbac dict
+  // Legacy ABAC config dict
+  //
+  // Deprecated in favor of legacyAbacEnabled. containerpb.LegacyAbac has
+  // exactly one field, so this dict only ever carried `enabled`.
+  legacyAbac @maturity("deprecated") dict
   // Whether the legacy ABAC authorizer is enabled on the cluster
   legacyAbacEnabled bool
-  // Control plane authentication information
+  // Control plane authentication dict
   //
-  // Keys: `username` (basic-auth username, empty when basic auth is off),
-  // `clientCertificateConfig` (whether the cluster issues a client
-  // certificate), `clusterCaCertificate` (the cluster certificate authority
-  // certificate), and `clientCertificate` (the issued client certificate).
-  // The basic-auth password and the client private key are deliberately not
-  // published; read `basicAuthEnabled` and `clientCertificateEnabled` for the
-  // audit signals instead.
-  masterAuth dict
+  // Deprecated in favor of clientCertificateEnabled and basicAuthEnabled,
+  // which carry the two signals worth auditing. Carries `username`,
+  // `clientCertificateConfig`, `clusterCaCertificate`, and
+  // `clientCertificate`. The basic-auth password and the client private key
+  // are deliberately not published; the rest of the message is credential
+  // material.
+  masterAuth @maturity("deprecated") dict
   // Whether client certificate authentication to the control plane is enabled
   //
   // True when the cluster issues a client certificate (MasterAuth client
@@ -10097,10 +10099,11 @@ private gcp.project.bigtableService.cluster @defaults("name") {
   defaultStorageType string
   // Encryption configuration (CMEK)
   //
-  // Present when customer-managed encryption is enabled, with the key
-  // `kmsKeyName` giving the KMS key that protects the cluster. Null for
-  // Google-managed encryption.
-  encryptionConfig dict
+  // Cluster encryption config dict
+  //
+  // Deprecated in favor of kmsKey. The message has exactly one field, so this
+  // dict only ever carried `kmsKeyName`.
+  encryptionConfig @maturity("deprecated") dict
   // Customer-managed KMS key used for cluster encryption (null when Google-managed)
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Node scaling factor
@@ -12688,8 +12691,10 @@ private gcp.project.healthcareService.dataset @defaults("name timeZone") {
   name string
   // Default IANA time zone used by the dataset (e.g. "America/New_York")
   timeZone string
-  // Customer-managed encryption key configuration (includes kmsKeyName)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. The dict carries only `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // DICOM stores in this dataset
@@ -14280,8 +14285,11 @@ private gcp.project.vertexaiService.metadataStore @defaults("name state") {
   description string
   // State information of the metadata store
   state dict
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Dataplex integration config
@@ -14327,8 +14335,11 @@ private gcp.project.vertexaiService.model @defaults("name displayName") {
   trainingPipeline string
   // Artifact URI
   artifactUri string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14371,8 +14382,11 @@ private gcp.project.vertexaiService.endpoint @defaults("name displayName") {
   description string
   // Models deployed to this endpoint
   deployments []gcp.project.vertexaiService.endpoint.deployment
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // VPC network used for private endpoints (resolved from network)
@@ -14471,8 +14485,11 @@ private gcp.project.vertexaiService.pipelineJob @defaults("name displayName stat
   serviceAccountRef() gcp.project.iamService.serviceAccount
   // VPC network the resource is attached to (resolved from network)
   networkRef() gcp.project.computeService.network
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Template URI
@@ -14520,8 +14537,11 @@ private gcp.project.vertexaiService.dataset @defaults("name displayName") {
   metadataSchemaUri string
   // User-defined metadata payload conforming to metadataSchemaUri
   metadata dict
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14552,8 +14572,11 @@ private gcp.project.vertexaiService.featureOnlineStore @defaults("name state") {
   optimized dict
   // Dedicated serving endpoint
   dedicatedServingEndpoint dict
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14586,8 +14609,11 @@ private gcp.project.vertexaiService.tensorboard @defaults("displayName") {
   isDefault bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14624,8 +14650,11 @@ private gcp.project.vertexaiService.customJob @defaults("displayName state") {
   enableWebAccess bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Error details (if failed)
@@ -14668,8 +14697,11 @@ private gcp.project.vertexaiService.index @defaults("displayName") {
   deployedIndexes []dict
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Index update method (BATCH_UPDATE, STREAM_UPDATE)
@@ -14706,8 +14738,11 @@ private gcp.project.vertexaiService.indexEndpoint @defaults("displayName") {
   publicEndpointDomainName string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14779,8 +14814,11 @@ private gcp.project.vertexaiService.notebookRuntime @defaults("displayName runti
   softwareConfig dict
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14844,8 +14882,11 @@ private gcp.project.vertexaiService.notebookRuntimeTemplate @defaults("displayNa
   etag string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Resource-level IAM policy bindings governing who can use this template
@@ -14887,8 +14928,11 @@ private gcp.project.vertexaiService.notebookExecutionJob @defaults("displayName 
   executionTimeoutSeconds int
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -14930,8 +14974,11 @@ private gcp.project.vertexaiService.reasoningEngine @defaults("displayName agent
   agentFramework string
   // Full deployment specification (package spec, deployment spec, class methods)
   spec dict
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // User-defined key/value labels for organizing the resource
@@ -14960,8 +15007,11 @@ private gcp.project.vertexaiService.ragCorpus @defaults("displayName") {
   description string
   // Corpus status (indexing state and errors)
   corpusStatus dict
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15018,8 +15068,11 @@ private gcp.project.vertexaiService.persistentResource @defaults("displayName st
   resourceRuntimeSpec dict
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15086,8 +15139,11 @@ private gcp.project.vertexaiService.deploymentResourcePool @defaults("name") {
   disableContainerLogging bool
   // Dedicated resources (machine spec and autoscaling)
   dedicatedResources dict
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15112,8 +15168,11 @@ private gcp.project.vertexaiService.cachedContent @defaults("displayName model")
   usageMetadata dict
   // Time the cache expires
   expireTime time
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15156,8 +15215,11 @@ private gcp.project.vertexaiService.batchPredictionJob @defaults("displayName st
   disableContainerLogging bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15208,8 +15270,11 @@ private gcp.project.vertexaiService.tuningJob @defaults("tunedModelDisplayName s
   serviceAccount() gcp.project.iamService.serviceAccount
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15254,8 +15319,11 @@ private gcp.project.vertexaiService.trainingPipeline @defaults("displayName stat
   state string
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15300,8 +15368,11 @@ private gcp.project.vertexaiService.hyperparameterTuningJob @defaults("displayNa
   networkRef() gcp.project.computeService.network
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
@@ -15344,8 +15415,11 @@ private gcp.project.vertexaiService.modelDeploymentMonitoringJob @defaults("disp
   enableMonitoringPipelineLogs bool
   // User-defined key/value labels for organizing the resource
   labels map[string]string
-  // Encryption spec (CMEK)
-  encryptionSpec dict
+  // Encryption spec dict
+  //
+  // Deprecated in favor of kmsKey. aiplatformpb.EncryptionSpec has exactly one
+  // field, so this dict only ever carried `kmsKeyName`.
+  encryptionSpec @maturity("deprecated") dict
   // Customer-managed Cloud KMS key used to encrypt this resource at rest
   kmsKey() gcp.project.kmsService.keyring.cryptokey
   // Creation time
