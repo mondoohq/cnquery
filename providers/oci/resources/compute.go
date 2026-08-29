@@ -110,13 +110,7 @@ func (o *mqlOciCompute) instances() ([]any, error) {
 				// getters are declared on the interface itself, so they are
 				// read without a type switch and a member the SDK does not
 				// know still answers them.
-				var secureBoot, trustedPlatformModule, measuredBoot, memoryEncryption *bool
-				if pc := instance.PlatformConfig; pc != nil {
-					secureBoot = pc.GetIsSecureBootEnabled()
-					trustedPlatformModule = pc.GetIsTrustedPlatformModuleEnabled()
-					measuredBoot = pc.GetIsMeasuredBootEnabled()
-					memoryEncryption = pc.GetIsMemoryEncryptionEnabled()
-				}
+				secureBoot, trustedPlatformModule, measuredBoot, memoryEncryption := ociShieldedInstanceFlags(instance.PlatformConfig)
 
 				var (
 					pvEncryptionInTransit, consistentVolumeNaming *bool
@@ -295,6 +289,25 @@ func (o *mqlOciCompute) getComputeInstancesForRegion(ctx context.Context, comput
 	}
 
 	return instances, nil
+}
+
+// ociShieldedInstanceFlags reads the shielded-instance and
+// confidential-computing settings off an instance's platform configuration.
+//
+// core.PlatformConfig is an interface with a member per platform variant, but
+// these four getters are declared on the interface itself, so a variant the
+// pinned SDK does not know about still answers them and no type switch is
+// needed. A shape that does not offer these features carries no platform
+// configuration at all, and every flag stays nil so the schema reports null
+// rather than reporting Secure Boot as disabled on a shape that cannot run it.
+func ociShieldedInstanceFlags(pc core.PlatformConfig) (secureBoot, trustedPlatformModule, measuredBoot, memoryEncryption *bool) {
+	if pc == nil {
+		return nil, nil, nil, nil
+	}
+	return pc.GetIsSecureBootEnabled(),
+		pc.GetIsTrustedPlatformModuleEnabled(),
+		pc.GetIsMeasuredBootEnabled(),
+		pc.GetIsMemoryEncryptionEnabled()
 }
 
 type mqlOciComputeInstanceInternal struct {

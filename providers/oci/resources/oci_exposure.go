@@ -110,23 +110,28 @@ func ociSecurityRuleOpensIngress(rule *mqlOciNetworkSecurityRule) (bool, error) 
 	if direction.Error != nil {
 		return false, direction.Error
 	}
-	if !strings.EqualFold(direction.Data, securityRuleIngress) {
-		return false, nil
-	}
-
 	sourceType := rule.GetSourceType()
 	if sourceType.Error != nil {
 		return false, sourceType.Error
 	}
-	if sourceType.Data != "" && !strings.EqualFold(sourceType.Data, "CIDR_BLOCK") {
-		return false, nil
-	}
-
 	source := rule.GetSource()
 	if source.Error != nil {
 		return false, source.Error
 	}
-	return ociCidrOpensInternet(source.Data), nil
+	return ociRuleValuesOpenIngress(direction.Data, sourceType.Data, source.Data), nil
+}
+
+// ociRuleValuesOpenIngress is the predicate itself, over the three values that
+// decide it. Both rule sources normalize onto securityRule before they reach
+// MQL, so the same three values arrive whichever layer wrote the rule.
+func ociRuleValuesOpenIngress(direction, sourceType, source string) bool {
+	if !strings.EqualFold(direction, securityRuleIngress) {
+		return false
+	}
+	if sourceType != "" && !strings.EqualFold(sourceType, "CIDR_BLOCK") {
+		return false
+	}
+	return ociCidrOpensInternet(source)
 }
 
 // ociOpenIngressRules filters a list of security rule resources down to the
