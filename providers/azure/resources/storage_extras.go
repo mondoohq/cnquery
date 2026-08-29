@@ -971,11 +971,20 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) tables() ([]any, error) {
 					signedIdentifiers = append(signedIdentifiers, entry)
 				}
 			}
+			var tablePolicies []*storage.TableSignedIdentifier
+			if t.TableProperties != nil {
+				tablePolicies = t.TableProperties.SignedIdentifiers
+			}
+			storedAccessPolicies, err := storedAccessPoliciesToMql(a.MqlRuntime, convert.ToValue(t.ID), tableStoredAccessPolicies(tablePolicies))
+			if err != nil {
+				return nil, err
+			}
 			mqlTable, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.table",
 				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(t.ID),
-					"name":              llx.StringDataPtr(t.Name),
-					"signedIdentifiers": llx.ArrayData(signedIdentifiers, types.Dict),
+					"id":                   llx.StringDataPtr(t.ID),
+					"name":                 llx.StringDataPtr(t.Name),
+					"signedIdentifiers":    llx.ArrayData(signedIdentifiers, types.Dict),
+					"storedAccessPolicies": llx.ArrayData(storedAccessPolicies, types.Resource("azure.subscription.storageService.account.storedAccessPolicy")),
 				})
 			if err != nil {
 				return nil, err

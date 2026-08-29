@@ -6633,7 +6633,7 @@ azure.subscription.storageService.account.container.objectLevelImmutabilityEnabl
 azure.subscription.storageService.account.container.properties 9.0.1
 azure.subscription.storageService.account.container.publicAccess 11.6.1
 azure.subscription.storageService.account.container.remainingRetentionDays 11.6.2
-azure.subscription.storageService.account.container.signedIdentifiers 13.36.1
+azure.subscription.storageService.account.container.storedAccessPolicies 13.36.1
 azure.subscription.storageService.account.container.systemMetadata 13.28.1
 azure.subscription.storageService.account.container.type 9.0.1
 azure.subscription.storageService.account.containers 9.0.1
@@ -6838,7 +6838,7 @@ azure.subscription.storageService.account.queue.approximateMessageCount 13.10.2
 azure.subscription.storageService.account.queue.id 13.10.2
 azure.subscription.storageService.account.queue.metadata 13.10.2
 azure.subscription.storageService.account.queue.name 13.10.2
-azure.subscription.storageService.account.queue.signedIdentifiers 13.36.1
+azure.subscription.storageService.account.queue.storedAccessPolicies 13.36.1
 azure.subscription.storageService.account.queue.systemMetadata 13.28.1
 azure.subscription.storageService.account.queueProperties 9.0.1
 azure.subscription.storageService.account.queues 13.10.2
@@ -6895,11 +6895,17 @@ azure.subscription.storageService.account.staticWebsiteConfig.errorDocument404Pa
 azure.subscription.storageService.account.staticWebsiteConfig.indexDocument 13.12.2
 azure.subscription.storageService.account.statusOfPrimary 11.6.2
 azure.subscription.storageService.account.statusOfSecondary 11.6.2
+azure.subscription.storageService.account.storedAccessPolicy 13.36.1
+azure.subscription.storageService.account.storedAccessPolicy.expiryTime 13.36.1
+azure.subscription.storageService.account.storedAccessPolicy.id 13.36.1
+azure.subscription.storageService.account.storedAccessPolicy.permission 13.36.1
+azure.subscription.storageService.account.storedAccessPolicy.startTime 13.36.1
 azure.subscription.storageService.account.systemMetadata 13.19.2
 azure.subscription.storageService.account.table 13.10.2
 azure.subscription.storageService.account.table.id 13.10.2
 azure.subscription.storageService.account.table.name 13.10.2
 azure.subscription.storageService.account.table.signedIdentifiers 13.10.2
+azure.subscription.storageService.account.table.storedAccessPolicies 13.36.1
 azure.subscription.storageService.account.table.systemMetadata 13.28.1
 azure.subscription.storageService.account.tableProperties 9.0.1
 azure.subscription.storageService.account.tables 13.10.2

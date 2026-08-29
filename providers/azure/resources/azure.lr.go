@@ -161,6 +161,7 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccount                                                      string = "azure.subscription.storageService.account"
 	ResourceAzureSubscriptionStorageServiceAccountQueue                                                 string = "azure.subscription.storageService.account.queue"
 	ResourceAzureSubscriptionStorageServiceAccountTable                                                 string = "azure.subscription.storageService.account.table"
+	ResourceAzureSubscriptionStorageServiceAccountStoredAccessPolicy                                    string = "azure.subscription.storageService.account.storedAccessPolicy"
 	ResourceAzureSubscriptionStorageServiceAccountLocalUser                                             string = "azure.subscription.storageService.account.localUser"
 	ResourceAzureSubscriptionStorageServiceAccountLocalUserPermissionScope                              string = "azure.subscription.storageService.account.localUser.permissionScope"
 	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                        string = "azure.subscription.storageService.account.dataProtection"
@@ -1143,6 +1144,10 @@ func init() {
 		"azure.subscription.storageService.account.table": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountTable(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountTable,
+		},
+		"azure.subscription.storageService.account.storedAccessPolicy": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountStoredAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountStoredAccessPolicy,
 		},
 		"azure.subscription.storageService.account.localUser": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountLocalUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9091,8 +9096,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.queue.approximateMessageCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetApproximateMessageCount()).ToDataRes(types.Int)
 	},
-	"azure.subscription.storageService.account.queue.signedIdentifiers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetSignedIdentifiers()).ToDataRes(types.Array(types.Dict))
+	"azure.subscription.storageService.account.queue.storedAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetStoredAccessPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.storedAccessPolicy")))
 	},
 	"azure.subscription.storageService.account.queue.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountQueue).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -9106,8 +9111,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.table.signedIdentifiers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountTable).GetSignedIdentifiers()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.storageService.account.table.storedAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountTable).GetStoredAccessPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.storedAccessPolicy")))
+	},
 	"azure.subscription.storageService.account.table.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountTable).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.permission": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).GetPermission()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.startTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).GetStartTime()).ToDataRes(types.Time)
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.expiryTime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).GetExpiryTime()).ToDataRes(types.Time)
 	},
 	"azure.subscription.storageService.account.localUser.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).GetId()).ToDataRes(types.String)
@@ -9463,8 +9483,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.container.remainingRetentionDays": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetRemainingRetentionDays()).ToDataRes(types.Int)
 	},
-	"azure.subscription.storageService.account.container.signedIdentifiers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetSignedIdentifiers()).ToDataRes(types.Array(types.Dict))
+	"azure.subscription.storageService.account.container.storedAccessPolicies": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetStoredAccessPolicies()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.storedAccessPolicy")))
 	},
 	"azure.subscription.storageService.account.container.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountContainer).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -32184,8 +32204,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).ApproximateMessageCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.storageService.account.queue.signedIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).SignedIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.storageService.account.queue.storedAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountQueue).StoredAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.queue.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32208,8 +32228,32 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccountTable).SignedIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.table.storedAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountTable).StoredAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.table.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountTable).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.permission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).Permission, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.startTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).StartTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.storedAccessPolicy.expiryTime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy).ExpiryTime, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.localUser.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32752,8 +32796,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).RemainingRetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.storageService.account.container.signedIdentifiers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).SignedIdentifiers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"azure.subscription.storageService.account.container.storedAccessPolicies": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountContainer).StoredAccessPolicies, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.container.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -73563,7 +73607,7 @@ type mqlAzureSubscriptionStorageServiceAccountQueue struct {
 	Name                    plugin.TValue[string]
 	Metadata                plugin.TValue[map[string]any]
 	ApproximateMessageCount plugin.TValue[int64]
-	SignedIdentifiers       plugin.TValue[[]any]
+	StoredAccessPolicies    plugin.TValue[[]any]
 	SystemMetadata          plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -73622,9 +73666,19 @@ func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetApproximateMessageCo
 	})
 }
 
-func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetSignedIdentifiers() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.SignedIdentifiers, func() ([]any, error) {
-		return c.signedIdentifiers()
+func (c *mqlAzureSubscriptionStorageServiceAccountQueue) GetStoredAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StoredAccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account.queue", c.__id, "storedAccessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storedAccessPolicies()
 	})
 }
 
@@ -73649,10 +73703,11 @@ type mqlAzureSubscriptionStorageServiceAccountTable struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionStorageServiceAccountTableInternal
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	SignedIdentifiers plugin.TValue[[]any]
-	SystemMetadata    plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	SignedIdentifiers    plugin.TValue[[]any]
+	StoredAccessPolicies plugin.TValue[[]any]
+	SystemMetadata       plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionStorageServiceAccountTable creates a new instance of this resource
@@ -73704,6 +73759,10 @@ func (c *mqlAzureSubscriptionStorageServiceAccountTable) GetSignedIdentifiers() 
 	return &c.SignedIdentifiers
 }
 
+func (c *mqlAzureSubscriptionStorageServiceAccountTable) GetStoredAccessPolicies() *plugin.TValue[[]any] {
+	return &c.StoredAccessPolicies
+}
+
 func (c *mqlAzureSubscriptionStorageServiceAccountTable) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -73718,6 +73777,65 @@ func (c *mqlAzureSubscriptionStorageServiceAccountTable) GetSystemMetadata() *pl
 
 		return c.systemMetadata()
 	})
+}
+
+// mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy for the azure.subscription.storageService.account.storedAccessPolicy resource
+type mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicyInternal it will be used here
+	Id         plugin.TValue[string]
+	Permission plugin.TValue[string]
+	StartTime  plugin.TValue[*time.Time]
+	ExpiryTime plugin.TValue[*time.Time]
+}
+
+// createAzureSubscriptionStorageServiceAccountStoredAccessPolicy creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountStoredAccessPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.storedAccessPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy) MqlName() string {
+	return "azure.subscription.storageService.account.storedAccessPolicy"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy) GetPermission() *plugin.TValue[string] {
+	return &c.Permission
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy) GetStartTime() *plugin.TValue[*time.Time] {
+	return &c.StartTime
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountStoredAccessPolicy) GetExpiryTime() *plugin.TValue[*time.Time] {
+	return &c.ExpiryTime
 }
 
 // mqlAzureSubscriptionStorageServiceAccountLocalUser for the azure.subscription.storageService.account.localUser resource
@@ -74929,7 +75047,7 @@ type mqlAzureSubscriptionStorageServiceAccountContainer struct {
 	Deleted                                         plugin.TValue[bool]
 	DeletedTime                                     plugin.TValue[*time.Time]
 	RemainingRetentionDays                          plugin.TValue[int64]
-	SignedIdentifiers                               plugin.TValue[[]any]
+	StoredAccessPolicies                            plugin.TValue[[]any]
 	SystemMetadata                                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -75066,9 +75184,19 @@ func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetRemainingRetenti
 	return &c.RemainingRetentionDays
 }
 
-func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetSignedIdentifiers() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.SignedIdentifiers, func() ([]any, error) {
-		return c.signedIdentifiers()
+func (c *mqlAzureSubscriptionStorageServiceAccountContainer) GetStoredAccessPolicies() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.StoredAccessPolicies, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.storageService.account.container", c.__id, "storedAccessPolicies")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.storedAccessPolicies()
 	})
 }
 

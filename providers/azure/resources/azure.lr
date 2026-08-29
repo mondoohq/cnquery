@@ -6439,13 +6439,12 @@ private azure.subscription.storageService.account.queue @defaults("id name") {
   approximateMessageCount() int
   // Stored access policies on the queue
   //
-  // Each entry has `id`, `permission`, `startTime`, and `expiryTime`. A
-  // shared access signature bound to one of these policies can be revoked
+  // A shared access signature bound to one of these policies can be revoked
   // server-side by deleting or expiring the policy; a signature issued
   // without one cannot be withdrawn before it expires. Empty when the
   // queue carries no policies. Read from the queue service rather than
   // Azure Resource Manager, so it needs data access to the queue.
-  signedIdentifiers() []dict
+  storedAccessPolicies() []azure.subscription.storageService.account.storedAccessPolicy
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -6456,10 +6455,43 @@ private azure.subscription.storageService.account.table @defaults("id name") {
   id string
   // Table name
   name string
-  // Stored access policies (SAS) on the table; each entry has id, permission, startTime, expiryTime
-  signedIdentifiers []dict
+  // Stored access policies on the table
+  //
+  // Deprecated in favor of storedAccessPolicies.
+  signedIdentifiers @maturity("deprecated") []dict
+  // Stored access policies on the table
+  //
+  // A shared access signature bound to one of these policies can be revoked
+  // server-side by deleting or expiring the policy; a signature issued
+  // without one cannot be withdrawn before it expires. Empty when the table
+  // carries no policies.
+  storedAccessPolicies []azure.subscription.storageService.account.storedAccessPolicy
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Stored access policy on a storage account container, queue or table
+//
+// Named policy that a shared access signature can be bound to. The policy is
+// what makes such a signature revocable: deleting or expiring it withdraws
+// every signature issued against it, where a signature issued with its
+// permissions and expiry inline stays valid until it expires on its own.
+private azure.subscription.storageService.account.storedAccessPolicy @defaults("id permission expiryTime") {
+  // Policy identifier a shared access signature binds to
+  id string
+  // Permission letters the policy grants
+  //
+  // Any of "r" (read), "a" (add), "c" (create), "w" (write), "d" (delete),
+  // "l" (list), "u" (update), and "p" (process), concatenated. The set
+  // that applies depends on the service the policy sits on.
+  permission string
+  // When the policy starts granting access; null when it grants access immediately
+  startTime time
+  // When the policy stops granting access
+  //
+  // Null when the policy sets no expiry, which leaves every signature bound
+  // to it valid until the policy itself is deleted.
+  expiryTime time
 }
 
 // Local user configured on a storage account for SFTP/SSH access
@@ -6824,13 +6856,12 @@ private azure.subscription.storageService.account.container @defaults("id name")
   remainingRetentionDays int
   // Stored access policies on the container
   //
-  // Each entry has `id`, `permission`, `startTime`, and `expiryTime`. A
-  // shared access signature bound to one of these policies can be revoked
+  // A shared access signature bound to one of these policies can be revoked
   // server-side by deleting or expiring the policy; a signature issued
   // without one cannot be withdrawn before it expires. Empty when the
   // container carries no policies. Read from the blob service rather than
   // Azure Resource Manager, so it needs data access to the container.
-  signedIdentifiers() []dict
+  storedAccessPolicies() []azure.subscription.storageService.account.storedAccessPolicy
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
