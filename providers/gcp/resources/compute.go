@@ -2973,10 +2973,11 @@ func (g *mqlGcpProjectComputeService) backendServices() ([]any, error) {
 
 				var mqlIap any
 				if b.Iap != nil {
+					// Oauth2ClientSecret is deliberately not published. The
+					// sha256 below is the form callers should compare against.
 					mqlIap = map[string]any{
 						"serviceEnabled":           b.Iap.Enabled,
 						"oauth2ClientId":           b.Iap.Oauth2ClientId,
-						"oauth2ClientSecret":       b.Iap.Oauth2ClientSecret,
 						"oauth2ClientSecretSha256": b.Iap.Oauth2ClientSecretSha256,
 					}
 				}

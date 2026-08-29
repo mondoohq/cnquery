@@ -2751,7 +2751,12 @@ private gcp.project.computeService.backendService @defaults("name") {
   healthChecks []string
   // Health checks that probe this backend service
   healthCheckRefs() []gcp.project.computeService.healthCheck
-  // Identity-aware proxy configuration
+  // Identity-Aware Proxy configuration
+  //
+  // Keys: `serviceEnabled` (bool, whether IAP gates access to the backend
+  // service), `oauth2ClientId` (OAuth2 client ID used by IAP), and
+  // `oauth2ClientSecretSha256` (SHA-256 hash of the OAuth2 client secret).
+  // The OAuth2 client secret itself is deliberately not published.
   iap dict
   // Load balancer type
   loadBalancingScheme string
@@ -4703,7 +4708,15 @@ private gcp.project.gkeService.cluster @defaults("name description location stat
   legacyAbac dict
   // Whether the legacy ABAC authorizer is enabled on the cluster
   legacyAbacEnabled bool
-  // Authentication information for accessing the master endpoint
+  // Control plane authentication information
+  //
+  // Keys: `username` (basic-auth username, empty when basic auth is off),
+  // `clientCertificateConfig` (whether the cluster issues a client
+  // certificate), `clusterCaCertificate` (the cluster certificate authority
+  // certificate), and `clientCertificate` (the issued client certificate).
+  // The basic-auth password and the client private key are deliberately not
+  // published; read `basicAuthEnabled` and `clientCertificateEnabled` for the
+  // audit signals instead.
   masterAuth dict
   // Whether client certificate authentication to the control plane is enabled
   //
