@@ -6574,12 +6574,28 @@ private gcp.loggingSettings @defaults("name disableDefaultSink storageLocation")
   loggingServiceAccountId string
   // Storage location for the _Default and _Required log buckets of new projects and folders
   storageLocation string
-  // Overrides for the built-in _Default sink configuration
+  // Default sink override dict
   //
-  // Holds `filter`, the inclusion filter applied to the `_Default` sink in place
-  // of the built-in one, and `exclusions`, the additional exclusion filters
-  // applied to it. Either can silently narrow what the sink retains.
-  defaultSinkConfig dict
+  // Deprecated in favor of defaultSinkFilter, defaultSinkFilterMode, and
+  // defaultSinkExclusions. Carries `filter`, `mode`, and `exclusions`.
+  defaultSinkConfig @maturity("deprecated") dict
+  // Inclusion filter applied to the _Default sink in place of the built-in one
+  //
+  // Empty when the built-in filter is left in place. A narrower filter here
+  // routes fewer entries into the _Default sink than the sink's own
+  // configuration suggests.
+  defaultSinkFilter string
+  // How the override filter combines with the built-in _Default sink filter
+  //
+  // One of OVERWRITE, APPEND, or FILTER_MODE_UNSPECIFIED. OVERWRITE replaces
+  // the built-in filter outright.
+  defaultSinkFilterMode string
+  // Additional exclusion filters applied to the _Default sink
+  //
+  // Each entry drops matching entries before they reach the sink's
+  // destination, so an enabled exclusion here silently narrows what every
+  // project created under this node retains.
+  defaultSinkExclusions []gcp.project.loggingservice.sink.exclusion
 }
 
 // Google Cloud (GCP) Cloud Logging bucket
@@ -6738,15 +6754,42 @@ private gcp.project.loggingservice.sink @defaults("destination") {
   includeChildren bool
   // Whether the sink is disabled. A disabled sink stops exporting log entries.
   disabled bool
+  // Per-sink exclusion filter dicts
+  //
+  // Deprecated in favor of exclusionRules. Each entry carries `name`,
+  // `description`, `filter`, and `disabled`.
+  exclusions @maturity("deprecated") []dict
   // Per-sink exclusion filters
   //
   // Each entry drops matching log entries from this sink's export before they
-  // reach the destination, with keys `name` (the exclusion identifier),
-  // `description`, `filter` (the advanced log filter selecting entries to
-  // drop), and `disabled` (whether the exclusion is currently inactive).
-  exclusions []dict
+  // reach the destination. An enabled exclusion is the quiet way a sink stops
+  // carrying a log category the sink's own filter says it exports.
+  exclusionRules []gcp.project.loggingservice.sink.exclusion
   // Whether the sink exports every log entry because its filter is empty
   capturesAllLogs() bool
+}
+
+// Exclusion filter attached to a log sink
+//
+// A single exclusion applied to one sink, dropping matching entries from that
+// sink's export before they reach its destination. The `filter` selects the
+// entries to drop and `disabled` records whether the exclusion is currently
+// inactive, so an enabled exclusion naming an audit log category is how a sink
+// comes to carry less than its own filter promises. The same shape is applied
+// to the built-in _Default sink through the Log Router settings.
+private gcp.project.loggingservice.sink.exclusion @defaults("name disabled filter") {
+  // Exclusion name, unique within the sink it is attached to
+  name string
+  // Human-readable description of the exclusion
+  description string
+  // Advanced log filter selecting the entries to drop
+  filter string
+  // Whether the exclusion is disabled, which leaves the matching entries in place
+  disabled bool
+  // Creation timestamp
+  created time
+  // Last update timestamp
+  updated time
 }
 
 // Google Cloud (GCP) Cloud Logging exclusion filter

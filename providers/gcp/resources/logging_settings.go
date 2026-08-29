@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 	"go.mondoo.com/mql/providers-sdk/v1/util/convert"
 	"go.mondoo.com/mql/providers/gcp/connection"
+	"go.mondoo.com/mql/types"
 	"google.golang.org/api/logging/v2"
 	"google.golang.org/api/option"
 )
@@ -51,11 +52,24 @@ func newMqlLoggingSettings(runtime *plugin.Runtime, settings *logging.Settings, 
 		return nil, err
 	}
 
+	var defaultSinkFilter, defaultSinkFilterMode string
+	var defaultSinkExclusionsSrc []*logging.LogExclusion
+	if settings.DefaultSinkConfig != nil {
+		defaultSinkFilter = settings.DefaultSinkConfig.Filter
+		defaultSinkFilterMode = settings.DefaultSinkConfig.Mode
+		defaultSinkExclusionsSrc = settings.DefaultSinkConfig.Exclusions
+	}
+
 	name := settings.Name
 	if name == "" {
 		// Name is output-only and can come back empty; fall back to the requested
 		// node so the resource still has a stable cache key.
 		name = fallbackName
+	}
+
+	defaultSinkExclusions, err := newMqlLogExclusions(runtime, "gcp.loggingSettings/"+name+"/defaultSink", defaultSinkExclusionsSrc)
+	if err != nil {
+		return nil, err
 	}
 
 	res, err := CreateResource(runtime, "gcp.loggingSettings", map[string]*llx.RawData{
@@ -66,6 +80,9 @@ func newMqlLoggingSettings(runtime *plugin.Runtime, settings *logging.Settings, 
 		"loggingServiceAccountId": llx.StringData(settings.LoggingServiceAccountId),
 		"storageLocation":         llx.StringData(settings.StorageLocation),
 		"defaultSinkConfig":       llx.DictData(defaultSinkConfig),
+		"defaultSinkFilter":       llx.StringData(defaultSinkFilter),
+		"defaultSinkFilterMode":   llx.StringData(defaultSinkFilterMode),
+		"defaultSinkExclusions":   llx.ArrayData(defaultSinkExclusions, types.Resource("gcp.project.loggingservice.sink.exclusion")),
 	})
 	if err != nil {
 		return nil, err

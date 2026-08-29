@@ -326,6 +326,12 @@ func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
 				})
 			}
 
+			exclusionRules, err := newMqlLogExclusions(g.MqlRuntime,
+				fmt.Sprintf("gcp.project.loggingservice.sink/%s/%s", projectId, s.Name), s.Exclusions)
+			if err != nil {
+				return err
+			}
+
 			args := map[string]*llx.RawData{
 				"id":              llx.StringData(s.Name),
 				"projectId":       llx.StringData(projectId),
@@ -335,6 +341,7 @@ func (g *mqlGcpProjectLoggingservice) sinks() ([]any, error) {
 				"includeChildren": llx.BoolData(s.IncludeChildren),
 				"disabled":        llx.BoolData(s.Disabled),
 				"exclusions":      llx.ArrayData(exclusions, types.Dict),
+				"exclusionRules":  llx.ArrayData(exclusionRules, types.Resource("gcp.project.loggingservice.sink.exclusion")),
 			}
 			if !strings.HasPrefix(s.Destination, "storage.googleapis.com/") {
 				args["storageBucket"] = llx.NilData
@@ -886,4 +893,45 @@ func (g *mqlGcpFolderLoggingService) sinks() ([]any, error) {
 // isEnabled reports whether the API is enabled on this project.
 func (g *mqlGcpProjectLoggingservice) isEnabled() (bool, error) {
 	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_logging)
+}
+
+// newMqlLogExclusions maps a list of logging.LogExclusion onto the shared
+// sink-exclusion resource.
+//
+// The same message shape is attached to an export sink and to the _Default
+// sink override in the Log Router settings, so both paths share one resource.
+// The cache key is scoped to the parent, because an exclusion name is only
+// unique within the sink it hangs off: two sinks in a project are free to name
+// an exclusion "exclude-dataflow" and would otherwise resolve to whichever one
+// was read first.
+func newMqlLogExclusions(runtime *plugin.Runtime, parentID string, exclusions []*logging.LogExclusion) ([]any, error) {
+	res := make([]any, 0, len(exclusions))
+	for _, e := range exclusions {
+		if e == nil {
+			continue
+		}
+		mqlExclusion, err := CreateResource(runtime, "gcp.project.loggingservice.sink.exclusion", logExclusionArgs(parentID, e))
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlExclusion)
+	}
+	return res, nil
+}
+
+// logExclusionArgs maps one exclusion onto resource arguments.
+//
+// createTime and updateTime are output-only and absent on an exclusion that has
+// never been updated. They stay null rather than becoming the zero time, which
+// would report 1 January year 1 as the date an exclusion was last changed.
+func logExclusionArgs(parentID string, e *logging.LogExclusion) map[string]*llx.RawData {
+	return map[string]*llx.RawData{
+		"__id":        llx.StringData(parentID + "/exclusion/" + e.Name),
+		"name":        llx.StringData(e.Name),
+		"description": llx.StringData(e.Description),
+		"filter":      llx.StringData(e.Filter),
+		"disabled":    llx.BoolData(e.Disabled),
+		"created":     llx.TimeDataPtr(parseTime(e.CreateTime)),
+		"updated":     llx.TimeDataPtr(parseTime(e.UpdateTime)),
+	}
 }

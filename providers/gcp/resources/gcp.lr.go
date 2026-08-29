@@ -177,6 +177,7 @@ const (
 	ResourceGcpProjectLoggingserviceBucketIndexConfig                                  string = "gcp.project.loggingservice.bucket.indexConfig"
 	ResourceGcpProjectLoggingserviceMetric                                             string = "gcp.project.loggingservice.metric"
 	ResourceGcpProjectLoggingserviceSink                                               string = "gcp.project.loggingservice.sink"
+	ResourceGcpProjectLoggingserviceSinkExclusion                                      string = "gcp.project.loggingservice.sink.exclusion"
 	ResourceGcpProjectLoggingserviceExclusion                                          string = "gcp.project.loggingservice.exclusion"
 	ResourceGcpProjectIamService                                                       string = "gcp.project.iamService"
 	ResourceGcpProjectIamServiceRole                                                   string = "gcp.project.iamService.role"
@@ -1156,6 +1157,10 @@ func init() {
 		"gcp.project.loggingservice.sink": {
 			// to override args, implement: initGcpProjectLoggingserviceSink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectLoggingserviceSink,
+		},
+		"gcp.project.loggingservice.sink.exclusion": {
+			// to override args, implement: initGcpProjectLoggingserviceSinkExclusion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectLoggingserviceSinkExclusion,
 		},
 		"gcp.project.loggingservice.exclusion": {
 			// to override args, implement: initGcpProjectLoggingserviceExclusion(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -8452,6 +8457,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.loggingSettings.defaultSinkConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkConfig()).ToDataRes(types.Dict)
 	},
+	"gcp.loggingSettings.defaultSinkFilter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkFilter()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.defaultSinkFilterMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkFilterMode()).ToDataRes(types.String)
+	},
+	"gcp.loggingSettings.defaultSinkExclusions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpLoggingSettings).GetDefaultSinkExclusions()).ToDataRes(types.Array(types.Resource("gcp.project.loggingservice.sink.exclusion")))
+	},
 	"gcp.project.loggingservice.bucket.projectId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceBucket).GetProjectId()).ToDataRes(types.String)
 	},
@@ -8602,8 +8616,29 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.loggingservice.sink.exclusions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceSink).GetExclusions()).ToDataRes(types.Array(types.Dict))
 	},
+	"gcp.project.loggingservice.sink.exclusionRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSink).GetExclusionRules()).ToDataRes(types.Array(types.Resource("gcp.project.loggingservice.sink.exclusion")))
+	},
 	"gcp.project.loggingservice.sink.capturesAllLogs": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceSink).GetCapturesAllLogs()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.sink.exclusion.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSinkExclusion).GetName()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.sink.exclusion.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSinkExclusion).GetDescription()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.sink.exclusion.filter": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSinkExclusion).GetFilter()).ToDataRes(types.String)
+	},
+	"gcp.project.loggingservice.sink.exclusion.disabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSinkExclusion).GetDisabled()).ToDataRes(types.Bool)
+	},
+	"gcp.project.loggingservice.sink.exclusion.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSinkExclusion).GetCreated()).ToDataRes(types.Time)
+	},
+	"gcp.project.loggingservice.sink.exclusion.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectLoggingserviceSinkExclusion).GetUpdated()).ToDataRes(types.Time)
 	},
 	"gcp.project.loggingservice.exclusion.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectLoggingserviceExclusion).GetName()).ToDataRes(types.String)
@@ -27523,6 +27558,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpLoggingSettings).DefaultSinkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"gcp.loggingSettings.defaultSinkFilter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).DefaultSinkFilter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.defaultSinkFilterMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).DefaultSinkFilterMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.loggingSettings.defaultSinkExclusions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpLoggingSettings).DefaultSinkExclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.bucket.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceBucket).__id, ok = v.Value.(string)
 		return
@@ -27743,8 +27790,40 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectLoggingserviceSink).Exclusions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.loggingservice.sink.exclusionRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSink).ExclusionRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.loggingservice.sink.capturesAllLogs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectLoggingserviceSink).CapturesAllLogs, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSinkExclusion).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusion.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSinkExclusion).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusion.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSinkExclusion).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusion.filter": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSinkExclusion).Filter, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusion.disabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSinkExclusion).Disabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusion.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSinkExclusion).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"gcp.project.loggingservice.sink.exclusion.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectLoggingserviceSinkExclusion).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"gcp.project.loggingservice.exclusion.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -63587,6 +63666,9 @@ type mqlGcpLoggingSettings struct {
 	LoggingServiceAccountId plugin.TValue[string]
 	StorageLocation         plugin.TValue[string]
 	DefaultSinkConfig       plugin.TValue[any]
+	DefaultSinkFilter       plugin.TValue[string]
+	DefaultSinkFilterMode   plugin.TValue[string]
+	DefaultSinkExclusions   plugin.TValue[[]any]
 }
 
 // createGcpLoggingSettings creates a new instance of this resource
@@ -63652,6 +63734,18 @@ func (c *mqlGcpLoggingSettings) GetStorageLocation() *plugin.TValue[string] {
 
 func (c *mqlGcpLoggingSettings) GetDefaultSinkConfig() *plugin.TValue[any] {
 	return &c.DefaultSinkConfig
+}
+
+func (c *mqlGcpLoggingSettings) GetDefaultSinkFilter() *plugin.TValue[string] {
+	return &c.DefaultSinkFilter
+}
+
+func (c *mqlGcpLoggingSettings) GetDefaultSinkFilterMode() *plugin.TValue[string] {
+	return &c.DefaultSinkFilterMode
+}
+
+func (c *mqlGcpLoggingSettings) GetDefaultSinkExclusions() *plugin.TValue[[]any] {
+	return &c.DefaultSinkExclusions
 }
 
 // mqlGcpProjectLoggingserviceBucket for the gcp.project.loggingservice.bucket resource
@@ -64115,6 +64209,7 @@ type mqlGcpProjectLoggingserviceSink struct {
 	IncludeChildren plugin.TValue[bool]
 	Disabled        plugin.TValue[bool]
 	Exclusions      plugin.TValue[[]any]
+	ExclusionRules  plugin.TValue[[]any]
 	CapturesAllLogs plugin.TValue[bool]
 }
 
@@ -64203,10 +64298,83 @@ func (c *mqlGcpProjectLoggingserviceSink) GetExclusions() *plugin.TValue[[]any] 
 	return &c.Exclusions
 }
 
+func (c *mqlGcpProjectLoggingserviceSink) GetExclusionRules() *plugin.TValue[[]any] {
+	return &c.ExclusionRules
+}
+
 func (c *mqlGcpProjectLoggingserviceSink) GetCapturesAllLogs() *plugin.TValue[bool] {
 	return plugin.GetOrCompute[bool](&c.CapturesAllLogs, func() (bool, error) {
 		return c.capturesAllLogs()
 	})
+}
+
+// mqlGcpProjectLoggingserviceSinkExclusion for the gcp.project.loggingservice.sink.exclusion resource
+type mqlGcpProjectLoggingserviceSinkExclusion struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectLoggingserviceSinkExclusionInternal it will be used here
+	Name        plugin.TValue[string]
+	Description plugin.TValue[string]
+	Filter      plugin.TValue[string]
+	Disabled    plugin.TValue[bool]
+	Created     plugin.TValue[*time.Time]
+	Updated     plugin.TValue[*time.Time]
+}
+
+// createGcpProjectLoggingserviceSinkExclusion creates a new instance of this resource
+func createGcpProjectLoggingserviceSinkExclusion(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectLoggingserviceSinkExclusion{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.loggingservice.sink.exclusion", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) MqlName() string {
+	return "gcp.project.loggingservice.sink.exclusion"
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) GetDescription() *plugin.TValue[string] {
+	return &c.Description
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) GetFilter() *plugin.TValue[string] {
+	return &c.Filter
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) GetDisabled() *plugin.TValue[bool] {
+	return &c.Disabled
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlGcpProjectLoggingserviceSinkExclusion) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
 }
 
 // mqlGcpProjectLoggingserviceExclusion for the gcp.project.loggingservice.exclusion resource

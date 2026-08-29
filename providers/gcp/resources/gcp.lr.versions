@@ -141,6 +141,9 @@ gcp.insight.stateInfo 13.34.2
 gcp.insight.targetResources 13.34.2
 gcp.loggingSettings 13.34.2
 gcp.loggingSettings.defaultSinkConfig 13.34.2
+gcp.loggingSettings.defaultSinkExclusions 13.37.1
+gcp.loggingSettings.defaultSinkFilter 13.37.1
+gcp.loggingSettings.defaultSinkFilterMode 13.37.1
 gcp.loggingSettings.disableDefaultSink 13.34.2
 gcp.loggingSettings.kmsKeyName 13.34.2
 gcp.loggingSettings.kmsServiceAccountId 13.34.2
@@ -4116,6 +4119,14 @@ gcp.project.loggingservice.sink 9.0.0
 gcp.project.loggingservice.sink.capturesAllLogs 13.18.1
 gcp.project.loggingservice.sink.destination 9.0.0
 gcp.project.loggingservice.sink.disabled 13.32.1
+gcp.project.loggingservice.sink.exclusion 13.37.1
+gcp.project.loggingservice.sink.exclusion.created 13.37.1
+gcp.project.loggingservice.sink.exclusion.description 13.37.1
+gcp.project.loggingservice.sink.exclusion.disabled 13.37.1
+gcp.project.loggingservice.sink.exclusion.filter 13.37.1
+gcp.project.loggingservice.sink.exclusion.name 13.37.1
+gcp.project.loggingservice.sink.exclusion.updated 13.37.1
+gcp.project.loggingservice.sink.exclusionRules 13.37.1
 gcp.project.loggingservice.sink.exclusions 13.32.1
 gcp.project.loggingservice.sink.filter 9.0.0
 gcp.project.loggingservice.sink.id 9.0.0
