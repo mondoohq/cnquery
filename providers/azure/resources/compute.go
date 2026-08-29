@@ -247,12 +247,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 	if err != nil {
 		return nil, err
 	}
-	var principalId *string
-	var userAssignedIdentityIds []string
-	if vm.Identity != nil {
-		principalId = vm.Identity.PrincipalID
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vm.Identity.UserAssignedIdentities)
-	}
+	vmIdentity := orZero(vm.Identity)
 
 	vmIDStr := ""
 	if vm.ID != nil {
@@ -266,48 +261,49 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		return nil, err
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.computeService.vm",
-		map[string]*llx.RawData{
-			"id":                            llx.StringDataPtr(id),
-			"name":                          llx.StringDataPtr(vm.Name),
-			"location":                      llx.StringDataPtr(vm.Location),
-			"zones":                         llx.ArrayData(strPtrsToAny(vm.Zones), types.String),
-			"tags":                          llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
-			"type":                          llx.StringDataPtr(vm.Type),
-			"properties":                    llx.DictData(properties),
-			"encryptionAtHost":              llx.BoolDataPtr(encryptionAtHost),
-			"securityType":                  llx.StringDataPtr(securityType),
-			"secureBootEnabled":             llx.BoolDataPtr(secureBootEnabled),
-			"vtpmEnabled":                   llx.BoolDataPtr(vtpmEnabled),
-			"proxyAgentEnabled":             llx.BoolDataPtr(proxyAgentEnabled),
-			"proxyAgentMode":                llx.StringDataPtr(proxyAgentMode),
-			"proxyAgentAddExtension":        llx.BoolDataPtr(proxyAgentAddExtension),
-			"fipsEncryptionEnabled":         llx.BoolDataPtr(fipsEncryptionEnabled),
-			"resiliencyProfile":             llx.DictData(resiliencyProfileDict),
-			"scheduledEventsPolicy":         llx.DictData(scheduledEventsPolicyDict),
-			"computerName":                  llx.StringDataPtr(computerName),
-			"adminUsername":                 llx.StringDataPtr(adminUsername),
-			"licenseType":                   llx.StringDataPtr(licenseType),
-			"managedBy":                     llx.StringDataPtr(vm.ManagedBy),
-			"vmId":                          llx.StringDataPtr(vmId),
-			"provisioningState":             llx.StringDataPtr(provisioningState),
-			"timeCreated":                   llx.TimeDataPtr(timeCreated),
-			"sshPublicKeys":                 llx.ArrayData(sshPublicKeys, types.Dict),
-			"disablePasswordAuthentication": llx.BoolDataPtr(disablePasswordAuth),
-			"osType":                        llx.StringDataPtr(osType),
-			"provisionVMAgent":              llx.BoolDataPtr(provisionVMAgent),
-			"enableAutomaticUpdates":        llx.BoolDataPtr(enableAutomaticUpdates),
-			"patchMode":                     llx.StringData(patchMode),
-			"imageReference":                llx.ResourceData(mqlImageRef, mqlImageRef.MqlName()),
-			"bootDiagnosticsEnabled":        llx.BoolData(bootDiagnosticsEnabled),
-			"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
-			"identity":                      llx.DictData(identityDict),
-			"principalId":                   llx.StringDataPtr(principalId),
-			"allowExtensionOperations":      llx.BoolDataPtr(guestAccess.allowExtensionOperations),
-			"requireGuestProvisionSignal":   llx.BoolDataPtr(guestAccess.requireGuestProvisionSignal),
-			"winRmHttpListenerEnabled":      llx.BoolDataPtr(guestAccess.winRmHTTPListenerEnabled),
-			"winRmHttpsListenerEnabled":     llx.BoolDataPtr(guestAccess.winRmHTTPSListenerEnabled),
-		})
+	vmArgs := map[string]*llx.RawData{
+		"id":                            llx.StringDataPtr(id),
+		"name":                          llx.StringDataPtr(vm.Name),
+		"location":                      llx.StringDataPtr(vm.Location),
+		"zones":                         llx.ArrayData(strPtrsToAny(vm.Zones), types.String),
+		"tags":                          llx.MapData(convert.PtrMapStrToInterface(vm.Tags), types.String),
+		"type":                          llx.StringDataPtr(vm.Type),
+		"properties":                    llx.DictData(properties),
+		"encryptionAtHost":              llx.BoolDataPtr(encryptionAtHost),
+		"securityType":                  llx.StringDataPtr(securityType),
+		"secureBootEnabled":             llx.BoolDataPtr(secureBootEnabled),
+		"vtpmEnabled":                   llx.BoolDataPtr(vtpmEnabled),
+		"proxyAgentEnabled":             llx.BoolDataPtr(proxyAgentEnabled),
+		"proxyAgentMode":                llx.StringDataPtr(proxyAgentMode),
+		"proxyAgentAddExtension":        llx.BoolDataPtr(proxyAgentAddExtension),
+		"fipsEncryptionEnabled":         llx.BoolDataPtr(fipsEncryptionEnabled),
+		"resiliencyProfile":             llx.DictData(resiliencyProfileDict),
+		"scheduledEventsPolicy":         llx.DictData(scheduledEventsPolicyDict),
+		"computerName":                  llx.StringDataPtr(computerName),
+		"adminUsername":                 llx.StringDataPtr(adminUsername),
+		"licenseType":                   llx.StringDataPtr(licenseType),
+		"managedBy":                     llx.StringDataPtr(vm.ManagedBy),
+		"vmId":                          llx.StringDataPtr(vmId),
+		"provisioningState":             llx.StringDataPtr(provisioningState),
+		"timeCreated":                   llx.TimeDataPtr(timeCreated),
+		"sshPublicKeys":                 llx.ArrayData(sshPublicKeys, types.Dict),
+		"disablePasswordAuthentication": llx.BoolDataPtr(disablePasswordAuth),
+		"osType":                        llx.StringDataPtr(osType),
+		"provisionVMAgent":              llx.BoolDataPtr(provisionVMAgent),
+		"enableAutomaticUpdates":        llx.BoolDataPtr(enableAutomaticUpdates),
+		"patchMode":                     llx.StringData(patchMode),
+		"imageReference":                llx.ResourceData(mqlImageRef, mqlImageRef.MqlName()),
+		"bootDiagnosticsEnabled":        llx.BoolData(bootDiagnosticsEnabled),
+		"bootDiagnosticsStorageUri":     llx.StringData(bootDiagnosticsStorageUri),
+		"identity":                      llx.DictData(identityDict),
+		"allowExtensionOperations":      llx.BoolDataPtr(guestAccess.allowExtensionOperations),
+		"requireGuestProvisionSignal":   llx.BoolDataPtr(guestAccess.requireGuestProvisionSignal),
+		"winRmHttpListenerEnabled":      llx.BoolDataPtr(guestAccess.winRmHTTPListenerEnabled),
+		"winRmHttpsListenerEnabled":     llx.BoolDataPtr(guestAccess.winRmHTTPSListenerEnabled),
+	}
+	userAssignedIdentityIds := addIdentity(vmArgs, vmIdentity.Type, vmIdentity.PrincipalID, vmIdentity.TenantID, vmIdentity.UserAssignedIdentities)
+
+	res, err := CreateResource(runtime, "azure.subscription.computeService.vm", vmArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -583,6 +579,8 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		"sku":               llx.DictData(sku),
 		"properties":        llx.DictData(properties),
 	}
+	diskSku := orZero(disk.SKU)
+	addSkuFields(args, skuName(diskSku.Name), skuTier(diskSku.Tier))
 
 	// Cached for secureVmDiskEncryptionSet(); the confidential-VM guest state
 	// key is a separate encryption set from the disk's own, so it cannot be
@@ -1196,21 +1194,24 @@ func diskEncryptionSetToMql(runtime *plugin.Runtime, des compute.DiskEncryptionS
 		}
 	}
 
-	res, err := CreateResource(runtime, ResourceAzureSubscriptionComputeServiceDiskEncryptionSet,
-		map[string]*llx.RawData{
-			"id":                                llx.StringDataPtr(des.ID),
-			"name":                              llx.StringDataPtr(des.Name),
-			"location":                          llx.StringDataPtr(des.Location),
-			"tags":                              llx.MapData(convert.PtrMapStrToInterface(des.Tags), types.String),
-			"type":                              llx.StringDataPtr(des.Type),
-			"identity":                          llx.DictData(identity),
-			"encryptionType":                    llx.StringData(encryptionType),
-			"activeKeyUrl":                      llx.StringData(activeKeyUrl),
-			"activeKeySourceVaultId":            llx.StringData(activeKeySourceVaultId),
-			"rotationToLatestKeyVersionEnabled": llx.BoolDataPtr(rotationToLatestKeyVersionEnabled),
-			"lastKeyRotationTimestamp":          llx.TimeDataPtr(lastKeyRotationTimestamp),
-			"provisioningState":                 llx.StringData(provisioningState),
-		})
+	desArgs := map[string]*llx.RawData{
+		"id":                                llx.StringDataPtr(des.ID),
+		"name":                              llx.StringDataPtr(des.Name),
+		"location":                          llx.StringDataPtr(des.Location),
+		"tags":                              llx.MapData(convert.PtrMapStrToInterface(des.Tags), types.String),
+		"type":                              llx.StringDataPtr(des.Type),
+		"identity":                          llx.DictData(identity),
+		"encryptionType":                    llx.StringData(encryptionType),
+		"activeKeyUrl":                      llx.StringData(activeKeyUrl),
+		"activeKeySourceVaultId":            llx.StringData(activeKeySourceVaultId),
+		"rotationToLatestKeyVersionEnabled": llx.BoolDataPtr(rotationToLatestKeyVersionEnabled),
+		"lastKeyRotationTimestamp":          llx.TimeDataPtr(lastKeyRotationTimestamp),
+		"provisioningState":                 llx.StringData(provisioningState),
+	}
+	desIdentity := orZero(des.Identity)
+	userAssignedIdentityIds := addIdentity(desArgs, desIdentity.Type, desIdentity.PrincipalID, desIdentity.TenantID, desIdentity.UserAssignedIdentities)
+
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionComputeServiceDiskEncryptionSet, desArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -1218,12 +1219,19 @@ func diskEncryptionSetToMql(runtime *plugin.Runtime, des compute.DiskEncryptionS
 	if err != nil {
 		return nil, err
 	}
-	res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).cacheSystemData = sysData
-	return res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet), nil
+	mqlDes := res.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet)
+	mqlDes.cacheSystemData = sysData
+	mqlDes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
+	return mqlDes, nil
 }
 
 type mqlAzureSubscriptionComputeServiceDiskEncryptionSetInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -1569,6 +1577,8 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		"sku":        llx.DictData(sku),
 		"properties": llx.DictData(properties),
 	}
+	snapSku := orZero(snap.SKU)
+	addSkuFields(args, skuName(snapSku.Name), skuTier(snapSku.Tier))
 
 	var cacheSourceDiskId, cacheDESId, cacheSecureVMDESId *string
 	if snap.Properties != nil {

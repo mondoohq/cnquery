@@ -421,7 +421,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 				}
 			}
 
-			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.batchEndpoint", map[string]*llx.RawData{
+			epArgs := map[string]*llx.RawData{
 				"id":                    llx.StringDataPtr(ep.ID),
 				"name":                  llx.StringDataPtr(ep.Name),
 				"location":              llx.StringDataPtr(ep.Location),
@@ -435,7 +435,10 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 				"defaultDeploymentName": llx.StringData(defaultDeploymentName),
 				"identity":              llx.DictData(identity),
 				"properties":            llx.MapData(convert.PtrMapStrToInterface(properties), types.String),
-			})
+			}
+			epIdentity := orZero(ep.Identity)
+			epUserAssignedIdentityIds := addIdentity(epArgs, epIdentity.Type, epIdentity.PrincipalID, epIdentity.TenantID, epIdentity.UserAssignedIdentities)
+			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.batchEndpoint", epArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -443,7 +446,9 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 			if err != nil {
 				return nil, err
 			}
-			mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).cacheSystemData = sysData
+			mqlBatchEp := mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint)
+			mqlBatchEp.cacheSystemData = sysData
+			mqlBatchEp.cacheUserAssignedIdentityIds = epUserAssignedIdentityIds
 			res = append(res, mqlEp)
 		}
 	}
@@ -451,7 +456,12 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) id() (string, error) {
@@ -563,7 +573,7 @@ func mlBatchDeploymentToMql(runtime *plugin.Runtime, dep *ml.BatchDeployment) (*
 		resources, _ = convert.JsonToDict(p.Resources)
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment", map[string]*llx.RawData{
+	depArgs := map[string]*llx.RawData{
 		"id":                        llx.StringDataPtr(dep.ID),
 		"name":                      llx.StringDataPtr(dep.Name),
 		"location":                  llx.StringDataPtr(dep.Location),
@@ -584,7 +594,10 @@ func mlBatchDeploymentToMql(runtime *plugin.Runtime, dep *ml.BatchDeployment) (*
 		"resources":                 llx.DictData(resources),
 		"identity":                  llx.DictData(identity),
 		"properties":                llx.MapData(convert.PtrMapStrToInterface(properties), types.String),
-	})
+	}
+	depIdentity := orZero(dep.Identity)
+	depUserAssignedIdentityIds := addIdentity(depArgs, depIdentity.Type, depIdentity.PrincipalID, depIdentity.TenantID, depIdentity.UserAssignedIdentities)
+	res, err := CreateResource(runtime, "azure.subscription.machineLearningService.workspace.batchEndpoint.deployment", depArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -594,11 +607,17 @@ func mlBatchDeploymentToMql(runtime *plugin.Runtime, dep *ml.BatchDeployment) (*
 		return nil, err
 	}
 	mqlDep.cacheSystemData = sysData
+	mqlDep.cacheUserAssignedIdentityIds = depUserAssignedIdentityIds
 	return mqlDep, nil
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeploymentInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) id() (string, error) {

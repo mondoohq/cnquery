@@ -108,25 +108,31 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.signalRService.signalR",
-		map[string]*llx.RawData{
-			"id":                       llx.StringDataPtr(sr.ID),
-			"name":                     llx.StringDataPtr(sr.Name),
-			"location":                 llx.StringDataPtr(sr.Location),
-			"tags":                     llx.MapData(convert.PtrMapStrToInterface(sr.Tags), types.String),
-			"kind":                     llx.StringData(string(convert.ToValue(sr.Kind))),
-			"sku":                      llx.DictData(sku),
-			"identity":                 llx.DictData(identity),
-			"hostName":                 llx.StringData(hostName),
-			"externalIp":               llx.StringData(externalIP),
-			"version":                  llx.StringData(version),
-			"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
-			"disableLocalAuth":         llx.BoolData(disableLocalAuth),
-			"disableAadAuth":           llx.BoolData(disableAadAuth),
-			"clientCertEnabled":        llx.BoolData(clientCertEnabled),
-			"networkAclsDefaultAction": llx.StringData(networkAclsDefaultAction),
-			"provisioningState":        llx.StringData(provisioningState),
-		})
+	args := map[string]*llx.RawData{
+		"id":                       llx.StringDataPtr(sr.ID),
+		"name":                     llx.StringDataPtr(sr.Name),
+		"location":                 llx.StringDataPtr(sr.Location),
+		"tags":                     llx.MapData(convert.PtrMapStrToInterface(sr.Tags), types.String),
+		"kind":                     llx.StringData(string(convert.ToValue(sr.Kind))),
+		"sku":                      llx.DictData(sku),
+		"identity":                 llx.DictData(identity),
+		"hostName":                 llx.StringData(hostName),
+		"externalIp":               llx.StringData(externalIP),
+		"version":                  llx.StringData(version),
+		"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
+		"disableLocalAuth":         llx.BoolData(disableLocalAuth),
+		"disableAadAuth":           llx.BoolData(disableAadAuth),
+		"clientCertEnabled":        llx.BoolData(clientCertEnabled),
+		"networkAclsDefaultAction": llx.StringData(networkAclsDefaultAction),
+		"provisioningState":        llx.StringData(provisioningState),
+	}
+	srSku := orZero(sr.SKU)
+	addSkuFields(args, skuName(srSku.Name), skuTier(srSku.Tier), skuCapacity(srSku.Capacity))
+
+	srIdentity := orZero(sr.Identity)
+	userAssignedIdentityIds := addIdentity(args, srIdentity.Type, srIdentity.PrincipalID, srIdentity.TenantID, srIdentity.UserAssignedIdentities)
+
+	res, err := CreateResource(runtime, "azure.subscription.signalRService.signalR", args)
 	if err != nil {
 		return nil, err
 	}
@@ -136,6 +142,7 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 	}
 	mqlSr := res.(*mqlAzureSubscriptionSignalRServiceSignalR)
 	mqlSr.cacheSystemData = sysData
+	mqlSr.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	if sr.Properties != nil {
 		mqlSr.cachePrivateEndpointConnections = sr.Properties.PrivateEndpointConnections
 	}
@@ -145,6 +152,11 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 type mqlAzureSubscriptionSignalRServiceSignalRInternal struct {
 	cacheSystemData                 any
 	cachePrivateEndpointConnections []*armsignalr.PrivateEndpointConnection
+	cacheUserAssignedIdentityIds    []string
+}
+
+func (a *mqlAzureSubscriptionSignalRServiceSignalR) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionSignalRServiceSignalR) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -242,25 +254,31 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.webPubSubService.webPubSub",
-		map[string]*llx.RawData{
-			"id":                       llx.StringDataPtr(wps.ID),
-			"name":                     llx.StringDataPtr(wps.Name),
-			"location":                 llx.StringDataPtr(wps.Location),
-			"tags":                     llx.MapData(convert.PtrMapStrToInterface(wps.Tags), types.String),
-			"kind":                     llx.StringData(string(convert.ToValue(wps.Kind))),
-			"sku":                      llx.DictData(sku),
-			"identity":                 llx.DictData(identity),
-			"hostName":                 llx.StringData(hostName),
-			"externalIp":               llx.StringData(externalIP),
-			"version":                  llx.StringData(version),
-			"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
-			"disableLocalAuth":         llx.BoolData(disableLocalAuth),
-			"disableAadAuth":           llx.BoolData(disableAadAuth),
-			"clientCertEnabled":        llx.BoolData(clientCertEnabled),
-			"networkAclsDefaultAction": llx.StringData(networkAclsDefaultAction),
-			"provisioningState":        llx.StringData(provisioningState),
-		})
+	args := map[string]*llx.RawData{
+		"id":                       llx.StringDataPtr(wps.ID),
+		"name":                     llx.StringDataPtr(wps.Name),
+		"location":                 llx.StringDataPtr(wps.Location),
+		"tags":                     llx.MapData(convert.PtrMapStrToInterface(wps.Tags), types.String),
+		"kind":                     llx.StringData(string(convert.ToValue(wps.Kind))),
+		"sku":                      llx.DictData(sku),
+		"identity":                 llx.DictData(identity),
+		"hostName":                 llx.StringData(hostName),
+		"externalIp":               llx.StringData(externalIP),
+		"version":                  llx.StringData(version),
+		"publicNetworkAccess":      llx.StringData(publicNetworkAccess),
+		"disableLocalAuth":         llx.BoolData(disableLocalAuth),
+		"disableAadAuth":           llx.BoolData(disableAadAuth),
+		"clientCertEnabled":        llx.BoolData(clientCertEnabled),
+		"networkAclsDefaultAction": llx.StringData(networkAclsDefaultAction),
+		"provisioningState":        llx.StringData(provisioningState),
+	}
+	wpsSku := orZero(wps.SKU)
+	addSkuFields(args, skuName(wpsSku.Name), skuTier(wpsSku.Tier), skuCapacity(wpsSku.Capacity))
+
+	wpsIdentity := orZero(wps.Identity)
+	wpsUserAssignedIdentityIds := addIdentity(args, wpsIdentity.Type, wpsIdentity.PrincipalID, wpsIdentity.TenantID, wpsIdentity.UserAssignedIdentities)
+
+	res, err := CreateResource(runtime, "azure.subscription.webPubSubService.webPubSub", args)
 	if err != nil {
 		return nil, err
 	}
@@ -270,6 +288,7 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 	}
 	mqlWps := res.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub)
 	mqlWps.cacheSystemData = sysData
+	mqlWps.cacheUserAssignedIdentityIds = wpsUserAssignedIdentityIds
 	if wps.Properties != nil {
 		mqlWps.cachePrivateEndpointConnections = wps.Properties.PrivateEndpointConnections
 	}
@@ -279,6 +298,11 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 type mqlAzureSubscriptionWebPubSubServiceWebPubSubInternal struct {
 	cacheSystemData                 any
 	cachePrivateEndpointConnections []*armwebpubsub.PrivateEndpointConnection
+	cacheUserAssignedIdentityIds    []string
+}
+
+func (a *mqlAzureSubscriptionWebPubSubServiceWebPubSub) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionWebPubSubServiceWebPubSub) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

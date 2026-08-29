@@ -213,7 +213,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				}
 			}
 
-			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.serviceBusService.namespace", map[string]*llx.RawData{
+			args := map[string]*llx.RawData{
 				"id":                              llx.StringDataPtr(ns.ID),
 				"name":                            llx.StringDataPtr(ns.Name),
 				"location":                        llx.StringDataPtr(ns.Location),
@@ -231,7 +231,11 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				"alternateName":                   llx.StringDataPtr(alternateName),
 				"metricId":                        llx.StringDataPtr(metricId),
 				"updatedAt":                       llx.TimeDataPtr(updatedAt),
-			})
+			}
+			nsSku := orZero(ns.SKU)
+			addSkuFields(args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity))
+
+			mqlNs, err := CreateResource(a.MqlRuntime, "azure.subscription.serviceBusService.namespace", args)
 			if err != nil {
 				return nil, err
 			}

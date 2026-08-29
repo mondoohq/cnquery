@@ -89,10 +89,8 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 				return nil, err
 			}
 
-			var userAssignedIdentityIds []string
-			if factory.Identity != nil {
-				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(factory.Identity.UserAssignedIdentities)
-			}
+			factoryIdentity := orZero(factory.Identity)
+			userAssignedIdentityIds := sortedUserAssignedIdentityIDs(factoryIdentity.UserAssignedIdentities)
 
 			var publicNetworkAccess string
 			var provisioningState string
@@ -148,6 +146,9 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 					"properties":          llx.DictData(properties),
 					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 					"identity":            llx.DictData(identity),
+					"identityType":        llx.StringDataPtr(stringEnumPtr(factoryIdentity.Type)),
+					"principalId":         llx.StringDataPtr(factoryIdentity.PrincipalID),
+					"tenantId":            llx.StringDataPtr(factoryIdentity.TenantID),
 					"provisioningState":   llx.StringData(provisioningState),
 					"version":             llx.StringData(version),
 					"repoConfiguration":   llx.DictData(repoConfig),

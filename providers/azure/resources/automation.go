@@ -94,11 +94,11 @@ func (a *mqlAzureSubscriptionAutomationService) accounts() ([]any, error) {
 func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account) (*mqlAzureSubscriptionAutomationServiceAccount, error) {
 	// Properties is a nullable pointer; guard before reading SKU (the nil guard
 	// for the remaining property reads is already below).
-	var skuRaw any
+	var acctSKU *armautomation.SKU
 	if acct.Properties != nil {
-		skuRaw = acct.Properties.SKU
+		acctSKU = acct.Properties.SKU
 	}
-	sku, err := convert.JsonToDict(skuRaw)
+	sku, err := convert.JsonToDict(acctSKU)
 	if err != nil {
 		return nil, err
 	}
@@ -131,27 +131,34 @@ func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account
 		lastModifiedTime = llx.NilData
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.automationService.account",
-		map[string]*llx.RawData{
-			"id":                  llx.StringDataPtr(acct.ID),
-			"name":                llx.StringDataPtr(acct.Name),
-			"location":            llx.StringDataPtr(acct.Location),
-			"tags":                llx.MapData(convert.PtrMapStrToInterface(acct.Tags), types.String),
-			"sku":                 llx.DictData(sku),
-			"identity":            llx.DictData(identity),
-			"state":               llx.StringData(state),
-			"publicNetworkAccess": llx.BoolData(publicNetworkAccess),
-			"disableLocalAuth":    llx.BoolData(disableLocalAuth),
-			"cmkKeySource":        llx.StringData(cmkKeySource),
-			"cmkKeyName":          llx.StringData(cmkKeyName),
-			"cmkKeyVaultUri":      llx.StringData(cmkKeyVaultURI),
-			"creationTime":        creationTime,
-			"lastModifiedTime":    lastModifiedTime,
-		})
+	accountArgs := map[string]*llx.RawData{
+		"id":                  llx.StringDataPtr(acct.ID),
+		"name":                llx.StringDataPtr(acct.Name),
+		"location":            llx.StringDataPtr(acct.Location),
+		"tags":                llx.MapData(convert.PtrMapStrToInterface(acct.Tags), types.String),
+		"sku":                 llx.DictData(sku),
+		"identity":            llx.DictData(identity),
+		"state":               llx.StringData(state),
+		"publicNetworkAccess": llx.BoolData(publicNetworkAccess),
+		"disableLocalAuth":    llx.BoolData(disableLocalAuth),
+		"cmkKeySource":        llx.StringData(cmkKeySource),
+		"cmkKeyName":          llx.StringData(cmkKeyName),
+		"cmkKeyVaultUri":      llx.StringData(cmkKeyVaultURI),
+		"creationTime":        creationTime,
+		"lastModifiedTime":    lastModifiedTime,
+	}
+	skuVal := orZero(acctSKU)
+	addSkuFields(accountArgs, skuName(skuVal.Name), skuFamily(skuVal.Family), skuCapacity(skuVal.Capacity))
+
+	acctIdentity := orZero(acct.Identity)
+	userAssignedIdentityIds := addIdentity(accountArgs, acctIdentity.Type, acctIdentity.PrincipalID, acctIdentity.TenantID, acctIdentity.UserAssignedIdentities)
+
+	res, err := CreateResource(runtime, "azure.subscription.automationService.account", accountArgs)
 	if err != nil {
 		return nil, err
 	}
 	mqlAccount := res.(*mqlAzureSubscriptionAutomationServiceAccount)
+	mqlAccount.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(acct.SystemData)
 	if err != nil {
 		return nil, err
@@ -161,7 +168,12 @@ func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account
 }
 
 type mqlAzureSubscriptionAutomationServiceAccountInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionAutomationServiceAccount) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 type mqlAzureSubscriptionAutomationServiceAccountVariableInternal struct {

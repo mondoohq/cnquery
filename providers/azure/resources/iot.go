@@ -197,7 +197,7 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(hub.Identity.UserAssignedIdentities)
 			}
 
-			mqlHub, err := CreateResource(a.MqlRuntime, "azure.subscription.iotService.iotHub", map[string]*llx.RawData{
+			args := map[string]*llx.RawData{
 				"id":                            llx.StringDataPtr(hub.ID),
 				"name":                          llx.StringDataPtr(hub.Name),
 				"type":                          llx.StringDataPtr(hub.Type),
@@ -219,7 +219,11 @@ func (a *mqlAzureSubscriptionIotService) iotHubs() ([]any, error) {
 				"identityType":                  llx.StringDataPtr(identityType),
 				"principalId":                   llx.StringDataPtr(identityPrincipalId),
 				"tenantId":                      llx.StringDataPtr(identityTenantId),
-			})
+			}
+			hubSku := orZero(hub.SKU)
+			addSkuFields(args, skuName(hubSku.Name), skuTier(hubSku.Tier), skuCapacity(hubSku.Capacity))
+
+			mqlHub, err := CreateResource(a.MqlRuntime, "azure.subscription.iotService.iotHub", args)
 			if err != nil {
 				return nil, err
 			}

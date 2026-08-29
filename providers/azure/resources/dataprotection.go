@@ -124,10 +124,8 @@ func createBackupVaultResource(runtime *plugin.Runtime, vault *armdataprotection
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if vault.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(vault.Identity.UserAssignedIdentities)
-	}
+	vaultIdentity := orZero(vault.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(vaultIdentity.UserAssignedIdentities)
 
 	var softDeleteState, immutabilityState string
 	var softDeleteRetentionDays float64
@@ -179,6 +177,9 @@ func createBackupVaultResource(runtime *plugin.Runtime, vault *armdataprotection
 			"etag":                            llx.StringDataPtr(vault.ETag),
 			"provisioningState":               llx.StringData(enumString(props.ProvisioningState)),
 			"identity":                        llx.DictData(identity),
+			"identityType":                    llx.StringDataPtr(stringEnumPtr(vaultIdentity.Type)),
+			"principalId":                     llx.StringDataPtr(vaultIdentity.PrincipalID),
+			"tenantId":                        llx.StringDataPtr(vaultIdentity.TenantID),
 			"softDeleteState":                 llx.StringData(softDeleteState),
 			"softDeleteRetentionPeriodInDays": llx.FloatData(softDeleteRetentionDays),
 			"immutabilityState":               llx.StringData(immutabilityState),

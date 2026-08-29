@@ -167,10 +167,8 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 				}
 			}
 
-			var userAssignedIdentityIds []string
-			if ws.Identity != nil {
-				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(ws.Identity.UserAssignedIdentities)
-			}
+			wsIdentity := orZero(ws.Identity)
+			userAssignedIdentityIds := sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities)
 
 			mqlWorkspace, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionSynapseServiceWorkspace,
 				map[string]*llx.RawData{
@@ -182,6 +180,9 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 					"type":                        llx.StringDataPtr(ws.Type),
 					"properties":                  llx.DictData(properties),
 					"identity":                    llx.DictData(identity),
+					"identityType":                llx.StringDataPtr(stringEnumPtr(wsIdentity.Type)),
+					"principalId":                 llx.StringDataPtr(wsIdentity.PrincipalID),
+					"tenantId":                    llx.StringDataPtr(wsIdentity.TenantID),
 					"managedVirtualNetwork":       llx.StringData(managedVirtualNetwork),
 					"publicNetworkAccess":         llx.StringData(publicNetworkAccess),
 					"encryption":                  llx.DictData(encryption),

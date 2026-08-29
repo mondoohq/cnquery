@@ -124,10 +124,8 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if fs.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(fs.Identity.UserAssignedIdentities)
-	}
+	fsIdentity := orZero(fs.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(fsIdentity.UserAssignedIdentities)
 
 	var skuName string
 	if fs.SKU != nil {
@@ -190,6 +188,9 @@ func createAmlFilesystemResource(runtime *plugin.Runtime, fs *armstoragecache.Am
 			"skuName":                       llx.StringData(skuName),
 			"provisioningState":             llx.StringData(enumString(props.ProvisioningState)),
 			"identity":                      llx.DictData(identity),
+			"identityType":                  llx.StringDataPtr(stringEnumPtr(fsIdentity.Type)),
+			"principalId":                   llx.StringDataPtr(fsIdentity.PrincipalID),
+			"tenantId":                      llx.StringDataPtr(fsIdentity.TenantID),
 			"storageCapacityTiB":            llx.FloatDataPtr(props.StorageCapacityTiB),
 			"currentStorageCapacityTiB":     llx.FloatDataPtr(props.CurrentStorageCapacityTiB),
 			"throughputProvisionedMbps":     llx.IntDataPtr(props.ThroughputProvisionedMBps),

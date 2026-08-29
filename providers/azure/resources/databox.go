@@ -106,10 +106,8 @@ func createDataBoxJobResource(runtime *plugin.Runtime, job *armdatabox.JobResour
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if job.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(job.Identity.UserAssignedIdentities)
-	}
+	jobIdentity := orZero(job.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(jobIdentity.UserAssignedIdentities)
 
 	var skuName, skuDisplayName, skuFamily, skuModel string
 	if job.SKU != nil {
@@ -139,6 +137,9 @@ func createDataBoxJobResource(runtime *plugin.Runtime, job *armdatabox.JobResour
 			"skuFamily":          llx.StringData(skuFamily),
 			"skuModel":           llx.StringData(skuModel),
 			"identity":           llx.DictData(identity),
+			"identityType":       llx.StringDataPtr(stringEnumPtr(jobIdentity.Type)),
+			"principalId":        llx.StringDataPtr(jobIdentity.PrincipalID),
+			"tenantId":           llx.StringDataPtr(jobIdentity.TenantID),
 		})
 	if err != nil {
 		return nil, err

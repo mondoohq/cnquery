@@ -1058,83 +1058,81 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		enableExtendedGroups = account.Properties.EnableExtendedGroups
 	}
 
-	var accountPrincipalId, accountTenantId *string
-	var userAssignedIdentityIds []string
-	if account.Identity != nil {
-		accountPrincipalId = account.Identity.PrincipalID
-		accountTenantId = account.Identity.TenantID
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(account.Identity.UserAssignedIdentities)
-	}
+	accountIdentity := orZero(account.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities)
 
 	sku, err := convert.JsonToDict(account.SKU)
 	if err != nil {
 		return nil, err
 	}
+	accountSku := orZero(account.SKU)
 
 	kind := ""
 	if account.Kind != nil {
 		kind = string(*account.Kind)
 	}
-	res, err := CreateResource(runtime, "azure.subscription.storageService.account",
-		map[string]*llx.RawData{
-			"id":                                 llx.StringDataPtr(account.ID),
-			"name":                               llx.StringDataPtr(account.Name),
-			"location":                           llx.StringDataPtr(account.Location),
-			"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-			"type":                               llx.StringDataPtr(account.Type),
-			"properties":                         llx.DictData(properties),
-			"principalId":                        llx.StringDataPtr(accountPrincipalId),
-			"tenantId":                           llx.StringDataPtr(accountTenantId),
-			"sku":                                llx.DictData(sku),
-			"kind":                               llx.StringData(kind),
-			"minimumTlsVersion":                  llx.StringDataPtr(minimumTlsVersion),
-			"allowBlobPublicAccess":              llx.BoolDataPtr(allowBlobPublicAccess),
-			"enableHttpsTrafficOnly":             llx.BoolDataPtr(enableHttpsTrafficOnly),
-			"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
-			"allowSharedKeyAccess":               llx.BoolDataPtr(allowSharedKeyAccess),
-			"allowCrossTenantReplication":        llx.BoolDataPtr(allowCrossTenantReplication),
-			"isLocalUserEnabled":                 llx.BoolDataPtr(isLocalUserEnabled),
-			"isSftpEnabled":                      llx.BoolDataPtr(isSftpEnabled),
-			"isHnsEnabled":                       llx.BoolDataPtr(isHnsEnabled),
-			"networkRuleDefaultAction":           llx.StringData(networkRuleDefaultAction),
-			"networkRuleBypass":                  llx.StringData(networkRuleBypass),
-			"networkRuleIpRanges":                llx.ArrayData(networkRuleIpRanges, types.String),
-			"networkRuleVirtualNetworkSubnetIds": llx.ArrayData(networkRuleVirtualNetworkSubnetIds, types.String),
-			"provisioningState":                  llx.StringDataPtr(provisioningState),
-			"creationTime":                       llx.TimeDataPtr(creationTime),
-			"accessTier":                         llx.StringDataPtr(accessTier),
-			"primaryLocation":                    llx.StringDataPtr(primaryLocation),
-			"statusOfPrimary":                    llx.StringDataPtr(statusOfPrimary),
-			"secondaryLocation":                  llx.StringDataPtr(secondaryLocation),
-			"statusOfSecondary":                  llx.StringDataPtr(statusOfSecondary),
-			"defaultToOAuthAuthentication":       llx.BoolDataPtr(defaultToOAuthAuthentication),
-			"enableNfsV3":                        llx.BoolDataPtr(enableNfsV3),
-			"largeFileSharesState":               llx.StringDataPtr(largeFileSharesState),
-			"lastGeoFailoverTime":                llx.TimeDataPtr(lastGeoFailoverTime),
-			"allowedCopyScope":                   llx.StringData(allowedCopyScope),
-			"requireInfrastructureEncryption":    llx.BoolData(requireInfraEnc),
-			"serviceKeyTypes":                    llx.MapData(serviceKeyTypes, types.String),
-			"sasExpirationPeriod":                llx.StringData(sasExpirationPeriod),
-			"sasExpirationAction":                llx.StringData(sasExpirationAction),
-			"keyExpirationPeriodInDays":          llx.IntData(keyExpirationPeriodInDays),
-			"sharedKeyAccessByService":           llx.MapData(sharedKeyAccessByService, types.String),
-			"key1CreationTime":                   llx.TimeDataPtr(key1CreationTime),
-			"key2CreationTime":                   llx.TimeDataPtr(key2CreationTime),
-			"filesDirectoryServiceOptions":       llx.StringDataPtr(filesDirectoryServiceOptions),
-			"filesDefaultSharePermission":        llx.StringDataPtr(filesDefaultSharePermission),
-			"filesActiveDirectoryDomainName":     llx.StringDataPtr(filesADDomainName),
-			"filesActiveDirectoryForestName":     llx.StringDataPtr(filesADForestName),
-			"filesActiveDirectoryAccountType":    llx.StringDataPtr(filesADAccountType),
-			"enableExtendedGroups":               llx.BoolDataPtr(enableExtendedGroups),
-			"dnsEndpointType":                    llx.StringDataPtr(dnsEndpointType),
-			"immutableStorageEnabled":            llx.BoolData(immutableEnabled),
-			"immutableStoragePolicyPeriodDays":   llx.IntData(immutablePeriodDays),
-			"immutableStoragePolicyAllowProtectedAppendWrites": llx.BoolData(immutableAllowAppend),
-			"immutableStoragePolicyState":                      llx.StringData(immutableState),
-			"routingChoice":                                    llx.StringData(routingChoice),
-			"publishInternetEndpoints":                         llx.BoolData(publishInternetEndpoints),
-			"publishMicrosoftEndpoints":                        llx.BoolData(publishMicrosoftEndpoints),
-		})
+	args := map[string]*llx.RawData{
+		"id":                                 llx.StringDataPtr(account.ID),
+		"name":                               llx.StringDataPtr(account.Name),
+		"location":                           llx.StringDataPtr(account.Location),
+		"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+		"type":                               llx.StringDataPtr(account.Type),
+		"properties":                         llx.DictData(properties),
+		"identityType":                       llx.StringDataPtr(stringEnumPtr(accountIdentity.Type)),
+		"principalId":                        llx.StringDataPtr(accountIdentity.PrincipalID),
+		"tenantId":                           llx.StringDataPtr(accountIdentity.TenantID),
+		"sku":                                llx.DictData(sku),
+		"kind":                               llx.StringData(kind),
+		"minimumTlsVersion":                  llx.StringDataPtr(minimumTlsVersion),
+		"allowBlobPublicAccess":              llx.BoolDataPtr(allowBlobPublicAccess),
+		"enableHttpsTrafficOnly":             llx.BoolDataPtr(enableHttpsTrafficOnly),
+		"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
+		"allowSharedKeyAccess":               llx.BoolDataPtr(allowSharedKeyAccess),
+		"allowCrossTenantReplication":        llx.BoolDataPtr(allowCrossTenantReplication),
+		"isLocalUserEnabled":                 llx.BoolDataPtr(isLocalUserEnabled),
+		"isSftpEnabled":                      llx.BoolDataPtr(isSftpEnabled),
+		"isHnsEnabled":                       llx.BoolDataPtr(isHnsEnabled),
+		"networkRuleDefaultAction":           llx.StringData(networkRuleDefaultAction),
+		"networkRuleBypass":                  llx.StringData(networkRuleBypass),
+		"networkRuleIpRanges":                llx.ArrayData(networkRuleIpRanges, types.String),
+		"networkRuleVirtualNetworkSubnetIds": llx.ArrayData(networkRuleVirtualNetworkSubnetIds, types.String),
+		"provisioningState":                  llx.StringDataPtr(provisioningState),
+		"creationTime":                       llx.TimeDataPtr(creationTime),
+		"accessTier":                         llx.StringDataPtr(accessTier),
+		"primaryLocation":                    llx.StringDataPtr(primaryLocation),
+		"statusOfPrimary":                    llx.StringDataPtr(statusOfPrimary),
+		"secondaryLocation":                  llx.StringDataPtr(secondaryLocation),
+		"statusOfSecondary":                  llx.StringDataPtr(statusOfSecondary),
+		"defaultToOAuthAuthentication":       llx.BoolDataPtr(defaultToOAuthAuthentication),
+		"enableNfsV3":                        llx.BoolDataPtr(enableNfsV3),
+		"largeFileSharesState":               llx.StringDataPtr(largeFileSharesState),
+		"lastGeoFailoverTime":                llx.TimeDataPtr(lastGeoFailoverTime),
+		"allowedCopyScope":                   llx.StringData(allowedCopyScope),
+		"requireInfrastructureEncryption":    llx.BoolData(requireInfraEnc),
+		"serviceKeyTypes":                    llx.MapData(serviceKeyTypes, types.String),
+		"sasExpirationPeriod":                llx.StringData(sasExpirationPeriod),
+		"sasExpirationAction":                llx.StringData(sasExpirationAction),
+		"keyExpirationPeriodInDays":          llx.IntData(keyExpirationPeriodInDays),
+		"sharedKeyAccessByService":           llx.MapData(sharedKeyAccessByService, types.String),
+		"key1CreationTime":                   llx.TimeDataPtr(key1CreationTime),
+		"key2CreationTime":                   llx.TimeDataPtr(key2CreationTime),
+		"filesDirectoryServiceOptions":       llx.StringDataPtr(filesDirectoryServiceOptions),
+		"filesDefaultSharePermission":        llx.StringDataPtr(filesDefaultSharePermission),
+		"filesActiveDirectoryDomainName":     llx.StringDataPtr(filesADDomainName),
+		"filesActiveDirectoryForestName":     llx.StringDataPtr(filesADForestName),
+		"filesActiveDirectoryAccountType":    llx.StringDataPtr(filesADAccountType),
+		"enableExtendedGroups":               llx.BoolDataPtr(enableExtendedGroups),
+		"dnsEndpointType":                    llx.StringDataPtr(dnsEndpointType),
+		"immutableStorageEnabled":            llx.BoolData(immutableEnabled),
+		"immutableStoragePolicyPeriodDays":   llx.IntData(immutablePeriodDays),
+		"immutableStoragePolicyAllowProtectedAppendWrites": llx.BoolData(immutableAllowAppend),
+		"immutableStoragePolicyState":                      llx.StringData(immutableState),
+		"routingChoice":                                    llx.StringData(routingChoice),
+		"publishInternetEndpoints":                         llx.BoolData(publishInternetEndpoints),
+		"publishMicrosoftEndpoints":                        llx.BoolData(publishMicrosoftEndpoints),
+	}
+	addSkuFields(args, skuName(accountSku.Name), skuTier(accountSku.Tier))
+	res, err := CreateResource(runtime, "azure.subscription.storageService.account", args)
 	if err != nil {
 		return nil, err
 	}

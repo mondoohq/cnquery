@@ -29,6 +29,11 @@ type mqlAzureSubscriptionMonitorServiceWorkspaceInternal struct {
 	cacheReplication                *armoperationalinsights.WorkspaceReplicationProperties
 	cacheFailover                   *armoperationalinsights.WorkspaceFailoverProperties
 	cacheSystemData                 any
+	cacheUserAssignedIdentityIds    []string
+}
+
+func (a *mqlAzureSubscriptionMonitorServiceWorkspace) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionMonitorServiceWorkspace) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -135,31 +140,35 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 		return nil, err
 	}
 
-	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMonitorServiceWorkspace,
-		map[string]*llx.RawData{
-			"id":                                  llx.StringDataPtr(ws.ID),
-			"name":                                llx.StringDataPtr(ws.Name),
-			"location":                            llx.StringDataPtr(ws.Location),
-			"type":                                llx.StringDataPtr(ws.Type),
-			"tags":                                llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
-			"skuName":                             llx.StringData(skuName),
-			"skuCapacityReservationLevel":         llx.IntData(skuCapacityReservationLevel),
-			"retentionInDays":                     llx.IntData(retentionInDays),
-			"publicNetworkAccessForIngestion":     llx.StringData(publicNetworkAccessForIngestion),
-			"publicNetworkAccessForQuery":         llx.StringData(publicNetworkAccessForQuery),
-			"forceCmkForQuery":                    llx.BoolDataPtr(props.ForceCmkForQuery),
-			"createdDate":                         llx.TimeDataPtr(props.CreatedDate),
-			"modifiedDate":                        llx.TimeDataPtr(props.ModifiedDate),
-			"provisioningState":                   llx.StringData(provisioningState),
-			"customerId":                          llx.StringDataPtr(props.CustomerID),
-			"identity":                            llx.DictData(identity),
-			"defaultDataCollectionRuleResourceId": llx.StringDataPtr(props.DefaultDataCollectionRuleResourceID),
-		})
+	wsArgs := map[string]*llx.RawData{
+		"id":                                  llx.StringDataPtr(ws.ID),
+		"name":                                llx.StringDataPtr(ws.Name),
+		"location":                            llx.StringDataPtr(ws.Location),
+		"type":                                llx.StringDataPtr(ws.Type),
+		"tags":                                llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
+		"skuName":                             llx.StringData(skuName),
+		"skuCapacityReservationLevel":         llx.IntData(skuCapacityReservationLevel),
+		"retentionInDays":                     llx.IntData(retentionInDays),
+		"publicNetworkAccessForIngestion":     llx.StringData(publicNetworkAccessForIngestion),
+		"publicNetworkAccessForQuery":         llx.StringData(publicNetworkAccessForQuery),
+		"forceCmkForQuery":                    llx.BoolDataPtr(props.ForceCmkForQuery),
+		"createdDate":                         llx.TimeDataPtr(props.CreatedDate),
+		"modifiedDate":                        llx.TimeDataPtr(props.ModifiedDate),
+		"provisioningState":                   llx.StringData(provisioningState),
+		"customerId":                          llx.StringDataPtr(props.CustomerID),
+		"identity":                            llx.DictData(identity),
+		"defaultDataCollectionRuleResourceId": llx.StringDataPtr(props.DefaultDataCollectionRuleResourceID),
+	}
+	wsIdentity := orZero(ws.Identity)
+	userAssignedIdentityIds := addIdentity(wsArgs, wsIdentity.Type, wsIdentity.PrincipalID, wsIdentity.TenantID, wsIdentity.UserAssignedIdentities)
+
+	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMonitorServiceWorkspace, wsArgs)
 	if err != nil {
 		return nil, err
 	}
 
 	mqlWs := resource.(*mqlAzureSubscriptionMonitorServiceWorkspace)
+	mqlWs.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	mqlWs.cacheCapping = props.WorkspaceCapping
 	mqlWs.cacheFeatures = props.Features
 	mqlWs.cachePrivateLinkScopedResources = props.PrivateLinkScopedResources

@@ -287,7 +287,7 @@ func createEventHubNamespaceRawData(ns *armeventhub.EHNamespace) (map[string]*ll
 		}
 	}
 
-	return map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                              llx.StringDataPtr(ns.ID),
 		"name":                            llx.StringDataPtr(ns.Name),
 		"location":                        llx.StringDataPtr(ns.Location),
@@ -310,7 +310,11 @@ func createEventHubNamespaceRawData(ns *armeventhub.EHNamespace) (map[string]*ll
 		"clusterArmId":                    llx.StringDataPtr(clusterArmId),
 		"serviceBusEndpoint":              llx.StringDataPtr(serviceBusEndpoint),
 		"updatedAt":                       llx.TimeDataPtr(updatedAt),
-	}, nil
+	}
+	nsSku := orZero(ns.SKU)
+	addSkuFields(args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity))
+
+	return args, nil
 }
 
 func (a *mqlAzureSubscriptionEventHubServiceNamespace) eventHubs() ([]any, error) {

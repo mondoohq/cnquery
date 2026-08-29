@@ -236,10 +236,8 @@ func createElasticSanVolumeGroupResource(runtime *plugin.Runtime, group *armelas
 		return nil, err
 	}
 
-	var userAssignedIdentityIds []string
-	if group.Identity != nil {
-		userAssignedIdentityIds = sortedUserAssignedIdentityIDs(group.Identity.UserAssignedIdentities)
-	}
+	groupIdentity := orZero(group.Identity)
+	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(groupIdentity.UserAssignedIdentities)
 
 	var keyName, keyVaultUri, keyVersion, currentVersionedKeyIdentifier string
 	var currentVersionedKeyExpiration, lastKeyRotation *time.Time
@@ -273,6 +271,9 @@ func createElasticSanVolumeGroupResource(runtime *plugin.Runtime, group *armelas
 			"protocolType":                           llx.StringData(enumString(props.ProtocolType)),
 			"enforceDataIntegrityCheckForIscsi":      llx.BoolDataPtr(props.EnforceDataIntegrityCheckForIscsi),
 			"identity":                               llx.DictData(identity),
+			"identityType":                           llx.StringDataPtr(stringEnumPtr(groupIdentity.Type)),
+			"principalId":                            llx.StringDataPtr(groupIdentity.PrincipalID),
+			"tenantId":                               llx.StringDataPtr(groupIdentity.TenantID),
 			"keyName":                                llx.StringData(keyName),
 			"keyVaultUri":                            llx.StringData(keyVaultUri),
 			"keyVersion":                             llx.StringData(keyVersion),

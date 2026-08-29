@@ -360,12 +360,8 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			var principalId *string
-			var userAssignedIdentityIds []string
-			if entry.Identity != nil {
-				principalId = entry.Identity.PrincipalID
-				userAssignedIdentityIds = sortedUserAssignedIdentityIDs(entry.Identity.UserAssignedIdentities)
-			}
+			clusterIdentity := orZero(entry.Identity)
+			userAssignedIdentityIds := sortedUserAssignedIdentityIDs(clusterIdentity.UserAssignedIdentities)
 
 			diskEncryptionSetId := ""
 			if entry.Properties != nil && entry.Properties.DiskEncryptionSetID != nil {
@@ -436,7 +432,9 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
 					"controlPlaneMetricsEnabled":        llx.BoolData(convert.ToValue(controlPlaneMetricsEnabled)),
 					"identity":                          llx.DictData(identityDict),
-					"principalId":                       llx.StringDataPtr(principalId),
+					"identityType":                      llx.StringDataPtr(stringEnumPtr(clusterIdentity.Type)),
+					"principalId":                       llx.StringDataPtr(clusterIdentity.PrincipalID),
+					"tenantId":                          llx.StringDataPtr(clusterIdentity.TenantID),
 					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
 					"linuxAdminUsername":                llx.StringData(linuxAdminUsername),
 					"linuxSshPublicKeys":                llx.ArrayData(linuxSshPublicKeys, types.String),

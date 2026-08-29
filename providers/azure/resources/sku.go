@@ -119,3 +119,16 @@ func identityTenantId(v *string) identityOption {
 		args["tenantId"] = llx.StringDataPtr(v)
 	}
 }
+
+// addIdentity publishes the flattened managed-identity fields for the ARM
+// shape shared across services and returns the ARM resource IDs of the
+// attached user-assigned identities in stable order, for the caller to store
+// on its Internal struct.
+func addIdentity[E ~string, V any](args map[string]*llx.RawData, typ *E, principalID, tenantID *string, userAssigned map[string]V) []string {
+	addIdentityFields(args,
+		identityType(typ),
+		identityPrincipalId(principalID),
+		identityTenantId(tenantID),
+	)
+	return sortedUserAssignedIdentityIDs(userAssigned)
+}

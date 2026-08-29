@@ -218,40 +218,44 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 		}
 	}
 
-	mqlGroup, err := CreateResource(runtime, "azure.subscription.containerInstanceService.containerGroup",
-		map[string]*llx.RawData{
-			"id":                       llx.StringDataPtr(entry.ID),
-			"name":                     llx.StringDataPtr(entry.Name),
-			"location":                 llx.StringDataPtr(entry.Location),
-			"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-			"provisioningState":        llx.StringData(provisioningState),
-			"osType":                   llx.StringData(osType),
-			"restartPolicy":            llx.StringData(restartPolicy),
-			"sku":                      llx.StringData(sku),
-			"confidential":             llx.BoolData(confidential),
-			"ccePolicyHash":            llx.StringData(ccePolicyHash),
-			"identity":                 llx.DictData(identity),
-			"ipAddressType":            llx.StringData(ipAddressType),
-			"publicIp":                 llx.StringData(publicIp),
-			"fqdn":                     llx.StringData(fqdn),
-			"dnsNameLabelReusePolicy":  llx.StringData(dnsLabelScope),
-			"exposedPorts":             llx.ArrayData(exposedPorts, types.Dict),
-			"subnetIds":                llx.ArrayData(subnetIds, types.String),
-			"dnsConfig":                llx.DictData(dnsConfig),
-			"imageRegistryCredentials": llx.ArrayData(imageRegistry, types.Dict),
-			"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
-			"volumes":                  llx.ArrayData(volumes, types.Dict),
-			"hasSecretVolume":          llx.BoolData(hasSecretVolume),
-			"logAnalyticsWorkspaceId":  llx.StringData(logAnalyticsWorkspaceId),
-			"encryption":               llx.DictData(encryption),
-			"priority":                 llx.StringData(priority),
-			"zones":                    llx.ArrayData(zones, types.String),
-		})
+	groupArgs := map[string]*llx.RawData{
+		"id":                       llx.StringDataPtr(entry.ID),
+		"name":                     llx.StringDataPtr(entry.Name),
+		"location":                 llx.StringDataPtr(entry.Location),
+		"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+		"provisioningState":        llx.StringData(provisioningState),
+		"osType":                   llx.StringData(osType),
+		"restartPolicy":            llx.StringData(restartPolicy),
+		"sku":                      llx.StringData(sku),
+		"confidential":             llx.BoolData(confidential),
+		"ccePolicyHash":            llx.StringData(ccePolicyHash),
+		"identity":                 llx.DictData(identity),
+		"ipAddressType":            llx.StringData(ipAddressType),
+		"publicIp":                 llx.StringData(publicIp),
+		"fqdn":                     llx.StringData(fqdn),
+		"dnsNameLabelReusePolicy":  llx.StringData(dnsLabelScope),
+		"exposedPorts":             llx.ArrayData(exposedPorts, types.Dict),
+		"subnetIds":                llx.ArrayData(subnetIds, types.String),
+		"dnsConfig":                llx.DictData(dnsConfig),
+		"imageRegistryCredentials": llx.ArrayData(imageRegistry, types.Dict),
+		"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
+		"volumes":                  llx.ArrayData(volumes, types.Dict),
+		"hasSecretVolume":          llx.BoolData(hasSecretVolume),
+		"logAnalyticsWorkspaceId":  llx.StringData(logAnalyticsWorkspaceId),
+		"encryption":               llx.DictData(encryption),
+		"priority":                 llx.StringData(priority),
+		"zones":                    llx.ArrayData(zones, types.String),
+	}
+	groupIdentity := orZero(entry.Identity)
+	userAssignedIdentityIds := addIdentity(groupArgs, groupIdentity.Type, groupIdentity.PrincipalID, groupIdentity.TenantID, groupIdentity.UserAssignedIdentities)
+
+	mqlGroup, err := CreateResource(runtime, "azure.subscription.containerInstanceService.containerGroup", groupArgs)
 	if err != nil {
 		return nil, err
 	}
 
 	groupRes := mqlGroup.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup)
+	groupRes.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 
 	containers, err := aciContainersToMQL(runtime, groupRes.Id.Data, containerSpecs, "containers")
 	if err != nil {
@@ -265,6 +269,14 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 	groupRes.InitContainers = plugin.TValue[[]any]{Data: initContainers, State: plugin.StateIsSet}
 
 	return groupRes, nil
+}
+
+type mqlAzureSubscriptionContainerInstanceServiceContainerGroupInternal struct {
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionContainerInstanceServiceContainerGroup) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func aciContainersToMQL(runtime *plugin.Runtime, parentId string, specs []*aci.Container, segment string) ([]any, error) {

@@ -63,7 +63,12 @@ type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentInternal struct {
 }
 
 type mqlAzureSubscriptionContainerAppServiceJobInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionContainerAppServiceJob) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 type mqlAzureSubscriptionContainerAppServiceManagedEnvironmentDaprComponentInternal struct {
@@ -1365,28 +1370,30 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 				identity = d
 			}
 
-			mqlJob, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.job",
-				map[string]*llx.RawData{
-					"id":                       llx.StringDataPtr(entry.ID),
-					"name":                     llx.StringDataPtr(entry.Name),
-					"location":                 llx.StringDataPtr(entry.Location),
-					"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-					"managedEnvironmentId":     llx.StringData(managedEnvId),
-					"provisioningState":        llx.StringData(provisioningState),
-					"eventStreamEndpoint":      llx.StringData(eventStreamEndpoint),
-					"triggerType":              llx.StringData(triggerType),
-					"cronExpression":           llx.StringData(cron),
-					"eventTriggerConfig":       llx.DictData(eventTrigger),
-					"replicaTimeoutSeconds":    llx.IntDataDefault(replicaTimeout, 0),
-					"replicaRetryLimit":        llx.IntDataDefault(replicaRetry, 0),
-					"identity":                 llx.DictData(identity),
-					"containers":               llx.ArrayData(containers, types.Dict),
-					"workloadProfileName":      llx.StringData(workloadProfile),
-					"registries":               llx.ArrayData(registries, types.Dict),
-					"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
-					"secretNames":              llx.ArrayData(secretNames, types.String),
-					"outboundIpAddresses":      llx.ArrayData(outboundIpAddresses, types.String),
-				})
+			jobArgs := map[string]*llx.RawData{
+				"id":                       llx.StringDataPtr(entry.ID),
+				"name":                     llx.StringDataPtr(entry.Name),
+				"location":                 llx.StringDataPtr(entry.Location),
+				"tags":                     llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+				"managedEnvironmentId":     llx.StringData(managedEnvId),
+				"provisioningState":        llx.StringData(provisioningState),
+				"eventStreamEndpoint":      llx.StringData(eventStreamEndpoint),
+				"triggerType":              llx.StringData(triggerType),
+				"cronExpression":           llx.StringData(cron),
+				"eventTriggerConfig":       llx.DictData(eventTrigger),
+				"replicaTimeoutSeconds":    llx.IntDataDefault(replicaTimeout, 0),
+				"replicaRetryLimit":        llx.IntDataDefault(replicaRetry, 0),
+				"identity":                 llx.DictData(identity),
+				"containers":               llx.ArrayData(containers, types.Dict),
+				"workloadProfileName":      llx.StringData(workloadProfile),
+				"registries":               llx.ArrayData(registries, types.Dict),
+				"registryAuthUsesIdentity": llx.BoolData(registryUsesIdentity),
+				"secretNames":              llx.ArrayData(secretNames, types.String),
+				"outboundIpAddresses":      llx.ArrayData(outboundIpAddresses, types.String),
+			}
+			jobIdentity := orZero(entry.Identity)
+			jobUserAssignedIdentityIds := addIdentity(jobArgs, jobIdentity.Type, jobIdentity.PrincipalID, jobIdentity.TenantID, jobIdentity.UserAssignedIdentities)
+			mqlJob, err := CreateResource(a.MqlRuntime, "azure.subscription.containerAppService.job", jobArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -1394,7 +1401,9 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 			if err != nil {
 				return nil, err
 			}
-			mqlJob.(*mqlAzureSubscriptionContainerAppServiceJob).cacheSystemData = sysData
+			mqlJobRes := mqlJob.(*mqlAzureSubscriptionContainerAppServiceJob)
+			mqlJobRes.cacheSystemData = sysData
+			mqlJobRes.cacheUserAssignedIdentityIds = jobUserAssignedIdentityIds
 			res = append(res, mqlJob)
 		}
 	}

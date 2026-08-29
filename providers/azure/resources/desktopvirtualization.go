@@ -146,38 +146,48 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.desktopVirtualizationService.hostPool",
-		map[string]*llx.RawData{
-			"id":                             llx.StringDataPtr(hp.ID),
-			"name":                           llx.StringDataPtr(hp.Name),
-			"location":                       llx.StringDataPtr(hp.Location),
-			"tags":                           llx.MapData(convert.PtrMapStrToInterface(hp.Tags), types.String),
-			"identity":                       llx.DictData(identity),
-			"hostPoolType":                   llx.StringData(hostPoolType),
-			"loadBalancerType":               llx.StringData(loadBalancerType),
-			"preferredAppGroupType":          llx.StringData(preferredAppGroupType),
-			"customRdpProperty":              llx.StringData(customRdpProperty),
-			"maxSessionLimit":                llx.IntDataPtr(maxSessionLimit),
-			"personalDesktopAssignmentType":  llx.StringData(personalDesktopAssignmentType),
-			"startVMOnConnect":               llx.BoolData(startVMOnConnect),
-			"validationEnvironment":          llx.BoolData(validationEnvironment),
-			"ssoadfsAuthority":               llx.StringData(ssoadfsAuthority),
-			"ring":                           llx.IntDataPtr(ring),
-			"publicNetworkAccess":            llx.StringData(publicNetworkAccess),
-			"ssoSecretType":                  llx.StringData(ssoSecretType),
-			"privateEndpointConnectionCount": llx.IntData(privateEndpointConnectionCount),
+	hpArgs := map[string]*llx.RawData{
+		"id":                             llx.StringDataPtr(hp.ID),
+		"name":                           llx.StringDataPtr(hp.Name),
+		"location":                       llx.StringDataPtr(hp.Location),
+		"tags":                           llx.MapData(convert.PtrMapStrToInterface(hp.Tags), types.String),
+		"identity":                       llx.DictData(identity),
+		"hostPoolType":                   llx.StringData(hostPoolType),
+		"loadBalancerType":               llx.StringData(loadBalancerType),
+		"preferredAppGroupType":          llx.StringData(preferredAppGroupType),
+		"customRdpProperty":              llx.StringData(customRdpProperty),
+		"maxSessionLimit":                llx.IntDataPtr(maxSessionLimit),
+		"personalDesktopAssignmentType":  llx.StringData(personalDesktopAssignmentType),
+		"startVMOnConnect":               llx.BoolData(startVMOnConnect),
+		"validationEnvironment":          llx.BoolData(validationEnvironment),
+		"ssoadfsAuthority":               llx.StringData(ssoadfsAuthority),
+		"ring":                           llx.IntDataPtr(ring),
+		"publicNetworkAccess":            llx.StringData(publicNetworkAccess),
+		"ssoSecretType":                  llx.StringData(ssoSecretType),
+		"privateEndpointConnectionCount": llx.IntData(privateEndpointConnectionCount),
 
-			"registrationTokenActive":              llx.BoolDataPtr(registrationTokenActive),
-			"registrationTokenExpirationTime":      llx.TimeDataPtr(registrationTokenExpirationTime),
-			"registrationTokenOperation":           llx.StringDataPtr(registrationTokenOperation),
-			"agentUpdateType":                      llx.StringDataPtr(agentUpdateType),
-			"agentUpdateUseSessionHostLocalTime":   llx.BoolDataPtr(agentUpdateUseSessionHostLocalTime),
-			"agentUpdateMaintenanceWindowTimeZone": llx.StringDataPtr(agentUpdateMaintenanceWindowTimeZone),
-			"agentUpdateMaintenanceWindows":        llx.ArrayData(agentUpdateMaintenanceWindows, types.Dict),
-			"description":                          llx.StringDataPtr(description),
-			"friendlyName":                         llx.StringDataPtr(friendlyName),
-			"vmTemplate":                           llx.StringDataPtr(vmTemplate),
-		})
+		"registrationTokenActive":              llx.BoolDataPtr(registrationTokenActive),
+		"registrationTokenExpirationTime":      llx.TimeDataPtr(registrationTokenExpirationTime),
+		"registrationTokenOperation":           llx.StringDataPtr(registrationTokenOperation),
+		"agentUpdateType":                      llx.StringDataPtr(agentUpdateType),
+		"agentUpdateUseSessionHostLocalTime":   llx.BoolDataPtr(agentUpdateUseSessionHostLocalTime),
+		"agentUpdateMaintenanceWindowTimeZone": llx.StringDataPtr(agentUpdateMaintenanceWindowTimeZone),
+		"agentUpdateMaintenanceWindows":        llx.ArrayData(agentUpdateMaintenanceWindows, types.Dict),
+		"description":                          llx.StringDataPtr(description),
+		"friendlyName":                         llx.StringDataPtr(friendlyName),
+		"vmTemplate":                           llx.StringDataPtr(vmTemplate),
+	}
+	// armdesktopvirtualization models a host pool identity without
+	// UserAssignedIdentities, so the host pool publishes only the three
+	// members the SDK reports.
+	hpIdentity := orZero(hp.Identity)
+	addIdentityFields(hpArgs,
+		identityType(hpIdentity.Type),
+		identityPrincipalId(hpIdentity.PrincipalID),
+		identityTenantId(hpIdentity.TenantID),
+	)
+
+	res, err := CreateResource(runtime, "azure.subscription.desktopVirtualizationService.hostPool", hpArgs)
 	if err != nil {
 		return nil, err
 	}

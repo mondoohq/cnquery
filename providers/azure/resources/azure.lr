@@ -435,9 +435,21 @@ private azure.subscription.resource @defaults("id name location") {
   managedBy string
   // Resource SKU
   //
-  // Billing and capacity tier of the resource, with keys name, tier, size,
-  // family, model, and capacity.
-  sku dict
+  // Deprecated in favor of skuName, skuTier, skuSize, skuFamily, skuModel,
+  // and skuCapacity.
+  sku @maturity("deprecated") dict
+  // SKU name of the resource
+  skuName string
+  // SKU tier of the resource
+  skuTier string
+  // SKU size of the resource
+  skuSize string
+  // SKU family of the resource
+  skuFamily string
+  // SKU model of the resource
+  skuModel string
+  // Number of provisioned units of the SKU
+  skuCapacity int
   // Resource plan
   //
   // Azure Marketplace purchase plan for resources deployed from a Marketplace
@@ -446,10 +458,24 @@ private azure.subscription.resource @defaults("id name location") {
   plan dict
   // Resource identity
   //
-  // Managed identity assigned to the resource, with keys type, principalId,
-  // tenantId, and userAssignedIdentities. The type is one of None,
-  // SystemAssigned, UserAssigned, or "SystemAssigned, UserAssigned".
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the resource's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the resource.
+  principalId string
+  // Microsoft Entra tenant of the resource's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the resource
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Resource provisioning state
   provisioningState string
   // When the resource was created
@@ -757,7 +783,17 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   // Virtual Machine Scale Set that manages this VM, if any (resolved from managedBy)
   vmScaleSet() azure.subscription.computeService.vmScaleSet
   // Managed identity configuration (type, system- and user-assigned identities)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Microsoft Entra tenant of the virtual machine's system-assigned managed identity
+  tenantId string
   // Principal ID of the VM's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the VM; null when no system-assigned identity is enabled
@@ -972,8 +1008,17 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   managedByExtended []string
   // The logical zone list for disk
   zones []string
-  // The disk SKU name and tier
-  sku dict
+  // Disk SKU
+  //
+  // Deprecated in favor of skuName and skuTier.
+  sku @maturity("deprecated") dict
+  // Disk SKU name
+  //
+  // One of "Standard_LRS", "Premium_LRS", "StandardSSD_LRS",
+  // "UltraSSD_LRS", "Premium_ZRS", "StandardSSD_ZRS", or "PremiumV2_LRS".
+  skuName string
+  // Disk SKU tier
+  skuTier string
   // Disk resource properties
   properties dict
   // Disk network access policy (AllowAll, AllowPrivate, DenyAll)
@@ -1106,7 +1151,25 @@ azure.subscription.computeService.diskEncryptionSet @defaults("name location enc
   // Provisioning state
   provisioningState string
   // Identity configuration
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the disk encryption set's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the disk encryption set.
+  principalId string
+  // Microsoft Entra tenant of the disk encryption set's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the disk encryption set
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1163,8 +1226,14 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   tags map[string]string
   // Snapshot type
   type string
-  // The snapshot SKU name and tier
-  sku dict
+  // Snapshot SKU
+  //
+  // Deprecated in favor of skuName and skuTier.
+  sku @maturity("deprecated") dict
+  // Snapshot SKU name ("Standard_LRS", "Premium_LRS", or "Standard_ZRS")
+  skuName string
+  // Snapshot SKU tier
+  skuTier string
   // Snapshot resource properties
   properties dict
   // Disk creation source information (createOption, sourceResourceId, sourceUri, etc.)
@@ -1284,8 +1353,16 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   type string
   // Availability zones for the VMSS
   zones []string
-  // VMSS SKU (name, tier, capacity)
-  sku dict
+  // Scale set SKU
+  //
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // VM size the scale set runs, for example "Standard_D2s_v3"
+  skuName string
+  // Scale set SKU tier ("Standard" or "Basic")
+  skuTier string
+  // Number of VM instances the scale set is provisioned for
+  skuCapacity int
   // VMSS resource properties
   properties dict
   // Orchestration mode ("Uniform" or "Flexible")
@@ -1335,7 +1412,17 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   // Extensions installed on the scale set (each dict describes one extension)
   extensions() []dict
   // Managed identity configuration (type, system- and user-assigned identities)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Microsoft Entra tenant of the scale set's system-assigned managed identity
+  tenantId string
   // Principal ID of the scale set's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the scale set; null when no system-assigned identity is enabled
@@ -1384,8 +1471,16 @@ azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId
   timeCreated time
   // Instance properties
   properties dict
-  // Instance SKU (name, tier, capacity)
-  sku dict
+  // Instance SKU
+  //
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // VM size of the instance, for example "Standard_D2s_v3"
+  skuName string
+  // Instance SKU tier ("Standard" or "Basic")
+  skuTier string
+  // Number of units the SKU is provisioned for
+  skuCapacity int
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1444,8 +1539,16 @@ azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisi
   tags map[string]string
   // Dedicated host resource type
   type string
-  // Dedicated host SKU (name, tier, family)
-  sku dict
+  // Dedicated host SKU
+  //
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Dedicated host SKU name, which fixes the hardware family and size, for example "DSv3-Type1"
+  skuName string
+  // Dedicated host SKU tier
+  skuTier string
+  // Number of units the SKU is provisioned for
+  skuCapacity int
   // Unmodeled resource properties returned by the Azure API
   properties dict
   // The fault domain of the host within its group
@@ -1785,9 +1888,15 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   etag string
   // Managed identity configuration
   //
-  // Keys: `type` (None or UserAssigned) and `userAssignedIdentities`
-  // (a map of identity resource id to {clientId, principalId}).
-  identity dict
+  // Deprecated in favor of identityType, and userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // User-assigned managed identities attached to the pool
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Pool configuration settings including scale, network, and task scheduling options
   properties dict
   // Pool provisioning state
@@ -1877,9 +1986,12 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   properties dict
   // Workspace pricing SKU
   //
-  // SKU object with keys `name` (Standard, Premium, or Trial) and `tier`,
-  // identifying the Databricks plan the workspace runs under.
-  sku dict
+  // Deprecated in favor of skuName and skuTier.
+  sku @maturity("deprecated") dict
+  // Databricks plan the workspace runs under ("standard", "premium", or "trial")
+  skuName string
+  // Workspace SKU tier
+  skuTier string
   // Public network access setting ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether public IPs are disabled on cluster nodes (Secure Cluster Connectivity / VNet injection)
@@ -3892,7 +4004,10 @@ private azure.subscription.networkService.bastionHost @defaults("id name locatio
   // Bastion host properties
   properties dict
   // Bastion host SKU
-  sku dict
+  //
+  // Deprecated in favor of skuName, which carries the only member the ARM
+  // bastion SKU holds.
+  sku @maturity("deprecated") dict
   // Bastion SKU name ("Basic", "Standard", "Developer", "Premium")
   skuName string
   // Whether copy/paste between the local machine and the remote session is disabled
@@ -6100,6 +6215,11 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // fields, the encryption fields, and so on); prefer those over reading
   // raw keys here.
   properties dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
   // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // Tenant ID of the account's managed identity; empty when no managed identity is configured
@@ -6110,9 +6230,16 @@ private azure.subscription.storageService.account @defaults("id name location") 
   encryptionIdentity() azure.subscription.managedIdentity
   // Storage account SKU
   //
-  // Dict with keys `name` (e.g. "Standard_LRS", "Standard_GRS",
-  // "Premium_LRS") and `tier` ("Standard" or "Premium").
-  sku dict
+  // Deprecated in favor of skuName and skuTier.
+  sku @maturity("deprecated") dict
+  // Storage account SKU name
+  //
+  // Fixes the replication mode: "Standard_LRS", "Standard_GRS",
+  // "Standard_RAGRS", "Standard_ZRS", "Premium_LRS", "Premium_ZRS",
+  // "Standard_GZRS", or "Standard_RAGZRS".
+  skuName string
+  // Storage account SKU tier ("Standard" or "Premium")
+  skuTier string
   // Storage account kind
   kind string
   // Minimum TLS version enforced on the storage account
@@ -7153,7 +7280,25 @@ private azure.subscription.webService.appslot @defaults("id name location") {
   // App slot properties
   properties dict
   // App slot identity
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the deployment slot's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the deployment slot.
+  principalId string
+  // Microsoft Entra tenant of the deployment slot's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the deployment slot
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Parent web app site for this slot
   parent() azure.subscription.webService.appsite
   // App slot configuration
@@ -7456,8 +7601,30 @@ private azure.subscription.webService.appServicePlan @defaults("id name location
   tags map[string]string
   // App Service plan properties
   properties dict
-  // SKU description (name, tier, size, family, capacity)
-  sku dict
+  // App Service plan SKU
+  //
+  // Deprecated in favor of skuName, skuTier, skuSize, skuFamily,
+  // skuCapacity, skuLocations, skuCapabilities, and skuCapacityLimits.
+  sku @maturity("deprecated") dict
+  // Plan SKU name, for example "P1v3", "S1", or "Y1"
+  skuName string
+  // Plan SKU tier
+  //
+  // One of "Free", "Shared", "Basic", "Standard", "Premium", "PremiumV2",
+  // "PremiumV3", "Isolated", "IsolatedV2", "Dynamic", or "ElasticPremium".
+  skuTier string
+  // Plan SKU size, the instance size within the tier
+  skuSize string
+  // Plan SKU family
+  skuFamily string
+  // Number of worker instances the plan is provisioned for
+  skuCapacity int
+  // Regions the SKU is offered in
+  skuLocations []string
+  // Feature flags Azure reports for the plan's SKU
+  skuCapabilities() []azure.subscription.webService.appServicePlan.skuCapability
+  // Scaling limits of the plan's SKU; null when Azure does not report them
+  skuCapacityLimits() azure.subscription.webService.appServicePlan.skuCapacityLimits
   // Whether the plan is zone-redundant
   zoneRedundant bool
   // Number of web apps assigned to this plan
@@ -7476,6 +7643,39 @@ private azure.subscription.webService.appServicePlan @defaults("id name location
   elasticScaleEnabled bool
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Feature flag on an App Service plan SKU
+//
+// One capability Azure reports for the plan's SKU, such as whether the SKU
+// supports VNet integration or always-on. The `value` is the reported
+// setting and `reason` carries any qualifier Azure attaches to it.
+private azure.subscription.webService.appServicePlan.skuCapability @defaults("name value") {
+  // Capability name
+  name string
+  // Capability value
+  value string
+  // Qualifier Azure attaches to the capability; empty when none is reported
+  reason string
+}
+
+// Scaling limits of an App Service plan SKU
+//
+// The worker-instance range the plan's SKU allows, together with the
+// scaling model `scaleType` uses to move within it. `elasticMaximum` is
+// the ceiling for elastic (pre-warmed) scale-out on the SKUs that support
+// it.
+private azure.subscription.webService.appServicePlan.skuCapacityLimits @defaults("defaultCapacity minimumCapacity maximumCapacity scaleType") {
+  // Default number of worker instances
+  defaultCapacity int
+  // Minimum number of worker instances
+  minimumCapacity int
+  // Maximum number of worker instances
+  maximumCapacity int
+  // Maximum number of elastic worker instances; null on SKUs without elastic scale-out
+  elasticMaximumCapacity int
+  // Scaling model of the SKU ("None", "Manual", or "Automatic")
+  scaleType string
 }
 
 // Azure App Service Certificate
@@ -11854,7 +12054,19 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   // Workload identity bindings attached to the cluster
   identityBindings() []azure.subscription.aksService.cluster.identityBinding
   // Control-plane managed identity configuration (type, system- and user-assigned identities)
+  //
+  // Carries delegatedResources, the delegated managed-identity block that
+  // has no flattened equivalent. Every other member is also published as its
+  // own field: identityType, principalId, tenantId, and
+  // userAssignedIdentities.
   identity dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Microsoft Entra tenant of the cluster's system-assigned managed identity
+  tenantId string
   // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
   principalId string
   // System-assigned control-plane managed identity of the cluster; null when a user-assigned identity is used
@@ -12564,12 +12776,16 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   location string
   // Tags applied to the IoT hub
   tags map[string]string
-  // SKU details
+  // IoT Hub SKU
   //
-  // Pricing and scale keyed by `name` (edition, one of F1, B1, B2, B3, S1, S2,
-  // or S3), `tier` (Free, Basic, or Standard), and `capacity` (number of
-  // provisioned units).
-  sku dict
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // IoT Hub edition ("F1", "B1", "B2", "B3", "S1", "S2", or "S3")
+  skuName string
+  // IoT Hub SKU tier ("Free", "Basic", or "Standard")
+  skuTier string
+  // Number of provisioned IoT Hub units
+  skuCapacity int
   // Provisioning state
   provisioningState string
   // Hub state
@@ -12699,10 +12915,14 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   linkedServers() []azure.subscription.cacheService.redisInstance
   // Cache SKU
   //
-  // Pricing tier and size, keyed by `name` (Basic, Standard, or
-  // Premium), `family` (C for Basic/Standard, P for Premium), and
-  // `capacity` (the size number within the family).
-  sku dict
+  // Deprecated in favor of skuName, skuFamily, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Cache SKU name ("Basic", "Standard", or "Premium")
+  skuName string
+  // Cache SKU family ("C" for Basic and Standard, "P" for Premium)
+  skuFamily string
+  // Size number within the SKU family
+  skuCapacity int
   // Tags of redis cache
   tags map[string]string
   // Redis configuration settings
@@ -12728,13 +12948,16 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   zones []string
   // Managed identity assignment
   //
-  // Managed identity block keyed by `type` (None, SystemAssigned,
-  // UserAssigned, or "SystemAssigned, UserAssigned"), `principalId` and
-  // `tenantId` of the system-assigned identity, and
-  // `userAssignedIdentities`. The system-assigned principal is also
-  // available as principalId, and the attached user-assigned identities
-  // as userAssignedIdentities.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Microsoft Entra tenant of the cache's system-assigned managed identity
+  tenantId string
   // Principal ID of the cache's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // User-assigned managed identities attached to the cache
@@ -12834,11 +13057,22 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   publicNetworkAccess string
   // Managed identity assigned to the factory
   //
-  // Keys: type ("SystemAssigned", "UserAssigned", or
-  // "SystemAssigned,UserAssigned"), principalId, tenantId, and
-  // userAssignedIdentities (map keyed by identity resource ID). Null
-  // when no identity is configured.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the factory's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the factory.
+  principalId string
+  // Microsoft Entra tenant of the factory's system-assigned managed identity
+  tenantId string
   // Provisioning state
   provisioningState string
   // Version of the factory
@@ -13033,13 +13267,22 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   properties dict
   // Managed identity configuration
   //
-  // Identity block for the workspace. Keys include `type` (None,
-  // SystemAssigned, or "SystemAssigned,UserAssigned"), `principalId`
-  // and `tenantId` of the system-assigned identity, and
-  // `userAssignedIdentities` keyed by identity resource ID. The
-  // user-assigned identities are also available through
+  // Deprecated in favor of identityType, principalId, tenantId, and
   // userAssignedIdentities.
-  identity dict
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the workspace's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the workspace.
+  principalId string
+  // Microsoft Entra tenant of the workspace's system-assigned managed identity
+  tenantId string
   // Managed virtual network setting, set to "default" when enabled and empty when disabled
   managedVirtualNetwork string
   // Public network access setting ("Enabled" or "Disabled")
@@ -13471,11 +13714,24 @@ private azure.subscription.containerRegistryService.registry.credentialSet @defa
   loginServer string
   // Managed identity used to read the Key Vault secrets
   //
-  // Carries `type` ("SystemAssigned", "UserAssigned", "SystemAssigned,
-  // UserAssigned", or "None"), `principalId`, `tenantId`, and
-  // `userAssignedIdentities` (map keyed by user-assigned identity
-  // resource ID).
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the credential set's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the credential set.
+  principalId string
+  // Microsoft Entra tenant of the credential set's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the credential set
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Upstream authentication credentials
   //
   // Each entry carries `name` ("Credential1"), the Key Vault secret URIs
@@ -13585,7 +13841,25 @@ azure.subscription.monitorService.workspace @defaults("id name location skuName"
   // Workspace GUID
   customerId string
   // Managed identity configuration (type, principalId, tenantId, userAssignedIdentities)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the workspace's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the workspace.
+  principalId string
+  // Microsoft Entra tenant of the workspace's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the workspace
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // ARM resource ID of the default Data Collection Rule for this workspace
   defaultDataCollectionRuleResourceId string
   // Daily data volume capping
@@ -13882,13 +14156,22 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   tags map[string]string
   // Managed identity configuration
   //
-  // Managed identity block of the vault, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned", or
-  // "None"), `principalId` and `tenantId` for the system-assigned identity,
-  // and `userAssignedIdentities` mapping each assigned identity resource ID
-  // to its client and principal IDs. See userAssignedIdentities for the
-  // resolved user-assigned identity resources.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the vault's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the vault.
+  principalId string
+  // Microsoft Entra tenant of the vault's system-assigned managed identity
+  tenantId string
   // User-assigned managed identities associated with the vault
   userAssignedIdentities() []azure.subscription.managedIdentity
   // SKU name ("Standard" or "RS0")
@@ -14274,11 +14557,16 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   location string
   // Namespace tags
   tags map[string]string
-  // SKU details
+  // Namespace SKU
   //
-  // Keys: `name` and `tier` (Basic, Standard, or Premium) plus
-  // `capacity` (messaging unit count, Premium only).
-  sku dict
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Namespace SKU name ("Basic", "Standard", or "Premium")
+  skuName string
+  // Namespace SKU tier ("Basic", "Standard", or "Premium")
+  skuTier string
+  // Provisioned messaging unit count, set on Premium namespaces only
+  skuCapacity int
   // Namespace status
   status string
   // Service Bus endpoint
@@ -14516,11 +14804,16 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   location string
   // Namespace tags
   tags map[string]string
-  // SKU tier and capacity
+  // Namespace SKU
   //
-  // Keys: `name` and `tier` (one of Basic, Standard, or Premium), and
-  // `capacity` (the provisioned throughput or premium units).
-  sku dict
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Namespace SKU name ("Basic", "Standard", or "Premium")
+  skuName string
+  // Namespace SKU tier ("Basic", "Standard", or "Premium")
+  skuTier string
+  // Provisioned throughput units, or premium units on a Premium namespace
+  skuCapacity int
   // Namespace status
   status string
   // Whether auto-inflate is enabled
@@ -14989,12 +15282,48 @@ private azure.subscription.dnsService.zone.recordSet @defaults("id name type") {
   fqdn string
   // Record set properties
   //
-  // Raw record-set properties keyed by record type. The type-specific
-  // record array present depends on the record type: aRecords,
-  // aaaaRecords, cnameRecord, mxRecords, nsRecords, ptrRecords,
-  // srvRecords, txtRecords, caaRecords, and soaRecord. Also carries
-  // fqdn, TTL, metadata, provisioningState, and targetResource.
-  properties dict
+  // Deprecated in favor of the per-record-type fields on this resource:
+  // aRecords, aaaaRecords, nsRecords, ptrRecords, txtRecords, mxRecords,
+  // caaRecords, srvRecords, soaRecord, cnameTarget, targetResourceId,
+  // metadata, and provisioningState.
+  properties @maturity("deprecated") dict
+  // IPv4 addresses of an A record set; empty for every other record type
+  aRecords []string
+  // IPv6 addresses of an AAAA record set; empty for every other record type
+  aaaaRecords []string
+  // Name servers of an NS record set; empty for every other record type
+  //
+  // On a zone's apex NS record set these are the servers the parent zone
+  // must delegate to. A record set here that does not match the
+  // delegation in the parent zone leaves the subdomain unresolvable or,
+  // if the parent still points at a name server that no longer serves the
+  // zone, resolvable by whoever now controls it.
+  nsRecords []string
+  // Target hostnames of a PTR record set; empty for every other record type
+  ptrRecords []string
+  // Text values of a TXT record set; empty for every other record type
+  //
+  // DNS splits a text value into 255-byte chunks on the wire; each entry
+  // here is one record's chunks joined back into the single value the
+  // record carries. SPF, DKIM, DMARC, and domain-ownership verification
+  // tokens all live in TXT records, so this is where an overly broad SPF
+  // policy or a stale verification token shows up.
+  txtRecords []string
+  // Mail exchangers of an MX record set; empty for every other record type
+  mxRecords []azure.subscription.dnsService.zone.recordSet.mxRecord
+  // Certificate authority authorizations of a CAA record set; empty for every other record type
+  //
+  // CAA records name which certificate authorities may issue for the
+  // domain. A zone with no CAA record set lets any public CA issue for it.
+  caaRecords []azure.subscription.dnsService.zone.recordSet.caaRecord
+  // Service locations of an SRV record set; empty for every other record type
+  srvRecords []azure.subscription.dnsService.zone.recordSet.srvRecord
+  // Start-of-authority record of an SOA record set; null for every other record type
+  soaRecord azure.subscription.dnsService.zone.recordSet.soaRecord
+  // User-defined metadata attached to the record set
+  metadata map[string]string
+  // Record set provisioning state
+  provisioningState string
   // Hostname a CNAME record points at
   //
   // Empty for every record type other than CNAME. Normalized to lower
@@ -15025,6 +15354,75 @@ private azure.subscription.dnsService.zone.recordSet @defaults("id name type") {
   // away. Empty for an ordinary record set. A non-empty value means this
   // record cannot be left dangling.
   targetResourceId string
+}
+
+// Mail exchanger in a DNS MX record set
+//
+// One mail server the domain accepts mail through. `preference` orders
+// the servers, lowest first, and `exchange` is the server's hostname.
+private azure.subscription.dnsService.zone.recordSet.mxRecord @defaults("preference exchange") {
+  // Preference value ordering this exchanger against the others; lower is tried first
+  preference int
+  // Hostname of the mail server
+  exchange string
+}
+
+// Certificate authority authorization in a DNS CAA record set
+//
+// One rule about which certificate authority may issue certificates for
+// the domain. `tag` is "issue" (regular certificates), "issuewild"
+// (wildcards), or "iodef" (a reporting address), and `value` is the CA's
+// domain or the reporting URL. `flags` set to 128 marks the property
+// critical, meaning a CA that does not understand the tag must refuse to
+// issue.
+private azure.subscription.dnsService.zone.recordSet.caaRecord @defaults("tag value flags") {
+  // Flags byte; 128 marks the property critical
+  flags int
+  // Property tag ("issue", "issuewild", or "iodef")
+  tag string
+  // Property value: the authorized CA's domain, or the reporting URL for an "iodef" tag
+  value string
+}
+
+// Service location in a DNS SRV record set
+//
+// One host that serves the record set's service. `priority` and `weight`
+// order and load-balance the candidates, and `target` with `port` is
+// where clients connect.
+private azure.subscription.dnsService.zone.recordSet.srvRecord @defaults("priority weight port target") {
+  // Priority of this target; lower is preferred
+  priority int
+  // Relative weight used to distribute load among targets of equal priority
+  weight int
+  // Port the service listens on
+  port int
+  // Hostname of the target
+  target string
+}
+
+// Start-of-authority record of a DNS zone
+//
+// The zone's authoritative parameters: the primary name server in `host`,
+// the zone administrator's address in `email`, the `serialNumber`
+// secondaries compare to detect a change, and the timers that decide how
+// long a stale answer can survive. `minimumTtl` is the negative-caching
+// TTL, so it sets how long a resolver remembers that a name does not
+// exist.
+private azure.subscription.dnsService.zone.recordSet.soaRecord @defaults("host email serialNumber") {
+  // Primary name server for the zone
+  host string
+  // Email address of the zone administrator, in DNS dotted form
+  email string
+  // Serial number secondaries compare to detect that the zone changed
+  serialNumber int
+  // Seconds a secondary waits before checking for a zone update
+  refreshTime int
+  // Seconds a secondary waits before retrying a failed zone update check
+  retryTime int
+  // Seconds a secondary keeps serving the zone when it cannot reach the primary
+  expireTime int
+  // Seconds a resolver caches a negative answer for a name in the zone
+  minimumTtl int
 }
 
 // Azure Private DNS zone
@@ -15345,10 +15743,14 @@ azure.subscription.frontDoorService.profile @defaults("id name location") {
   tags map[string]string
   // Pricing tier
   //
-  // Object with a single `name` key holding the pricing tier:
-  // Standard_AzureFrontDoor, Premium_AzureFrontDoor, Standard_Microsoft,
-  // Standard_Verizon, Premium_Verizon, Standard_Akamai, or Standard_ChinaCdn.
-  sku dict
+  // Deprecated in favor of skuName.
+  sku @maturity("deprecated") dict
+  // Pricing tier
+  //
+  // One of "Standard_AzureFrontDoor", "Premium_AzureFrontDoor",
+  // "Standard_Microsoft", "Standard_Verizon", "Premium_Verizon",
+  // "Standard_Akamai", or "Standard_ChinaCdn".
+  skuName string
   // Profile kind (frontdoor, cdn)
   kind string
   // Provisioning state
@@ -15954,11 +16356,24 @@ azure.subscription.containerAppService.job @defaults("name location triggerType 
   replicaRetryLimit int
   // Managed identity
   //
-  // Keys: `type` ("SystemAssigned", "UserAssigned", "SystemAssigned,
-  // UserAssigned", or "None"), `principalId` and `tenantId` of the
-  // system-assigned identity, and `userAssignedIdentities` keyed by
-  // resource ID.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the job's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the job.
+  principalId string
+  // Microsoft Entra tenant of the job's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the job
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Container definitions (image, env, resources, probes); flattened
   containers []dict
   // Workload profile name in the parent environment
@@ -16024,11 +16439,24 @@ azure.subscription.containerInstanceService.containerGroup @defaults("name locat
   ccePolicyHash string
   // Managed identity assigned to the group
   //
-  // Keys: type ("None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), principalId and tenantId of the
-  // system-assigned identity, and userAssignedIdentities keyed by identity
-  // resource ID.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the container group's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the container group.
+  principalId string
+  // Microsoft Entra tenant of the container group's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the container group
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // IP address type ("Public", "Private", or null)
   ipAddressType string
   // Public IP address, if any
@@ -16163,10 +16591,24 @@ azure.subscription.logicService.workflow @defaults("name location state provisio
   accessEndpoint string
   // Managed identity
   //
-  // Has `type` ("SystemAssigned", "UserAssigned", or "None"), `principalId`,
-  // `tenantId`, and `userAssignedIdentities` (map keyed by the identity's ARM
-  // resource id).
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the workflow's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the workflow.
+  principalId string
+  // Microsoft Entra tenant of the workflow's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the workflow
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // ARM id of the linked integration account, if any
   integrationAccountId string
   // ARM id of the linked integration service environment (ISE), if any
@@ -16577,10 +17019,34 @@ private azure.subscription.purviewService.account @defaults("name location publi
   type string
   // Tags on the account
   tags map[string]string
-  // Account SKU (name, capacity)
-  sku dict
+  // Account SKU
+  //
+  // Deprecated in favor of skuName and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Account SKU name ("Free" or "Standard")
+  skuName string
+  // Number of provisioned capacity units
+  skuCapacity int
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the account's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the account.
+  principalId string
+  // Microsoft Entra tenant of the account's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the account
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Friendly display name for the account
   friendlyName string
   // Provisioning state: Succeeded, Failed, Canceled, Creating, Deleting, Moving, SoftDeleting, SoftDeleted, or Unknown
@@ -16647,15 +17113,35 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   location string
   // Search service tags
   tags map[string]string
-  // SKU details (name: free, basic, standard, standard2, standard3, storage_optimized_l1, storage_optimized_l2)
-  sku dict
+  // Search service SKU
+  //
+  // Deprecated in favor of skuName.
+  sku @maturity("deprecated") dict
+  // Search service SKU name
+  //
+  // One of "free", "basic", "standard", "standard2", "standard3",
+  // "storage_optimized_l1", or "storage_optimized_l2".
+  skuName string
   // Managed identity configuration
   //
-  // Keys: `type` ("None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities` (map of
-  // user-assigned identity resource IDs), and the read-only `principalId`
-  // and `tenantId` of the system-assigned identity.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the search service's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the search service.
+  principalId string
+  // Microsoft Entra tenant of the search service's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the search service
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether the service is reachable from the public internet ("enabled" or "disabled")
   publicNetworkAccess string
   // Whether API-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -16874,10 +17360,41 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   tags map[string]string
   // Workspace kind (e.g., Default, Hub, Project, FeatureStore)
   kind string
-  // SKU details (name and tier)
-  sku dict
+  // Workspace SKU
+  //
+  // Deprecated in favor of skuName, skuTier, skuSize, skuFamily, and
+  // skuCapacity.
+  sku @maturity("deprecated") dict
+  // Workspace SKU name
+  skuName string
+  // Workspace SKU tier ("Free", "Basic", "Standard", or "Premium")
+  skuTier string
+  // Workspace SKU size
+  skuSize string
+  // Workspace SKU family
+  skuFamily string
+  // Number of provisioned units of the SKU
+  skuCapacity int
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the workspace's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the workspace.
+  principalId string
+  // Microsoft Entra tenant of the workspace's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the workspace
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Immutable workspace identifier assigned by Azure
   workspaceId string
   // Friendly (display) name of the workspace
@@ -17052,7 +17569,25 @@ azure.subscription.machineLearningService.workspace.onlineEndpoint @defaults("na
   // Resource kind metadata used by tooling
   kind string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the endpoint's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the endpoint.
+  principalId string
+  // Microsoft Entra tenant of the endpoint's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the endpoint
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Description of the endpoint
   description string
   // Authentication mode: "Key" (non-expiring keys) or "AMLToken" (expiring Azure Machine Learning tokens)
@@ -17138,7 +17673,25 @@ azure.subscription.machineLearningService.workspace.serverlessEndpoint @defaults
   // Endpoint tags
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the endpoint's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the endpoint.
+  principalId string
+  // Microsoft Entra tenant of the endpoint's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the endpoint
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Authentication mode for the endpoint (e.g., "Key")
   authMode string
   // Lifecycle state of the endpoint (e.g., "Creating", "Online", "Deleting", "Failed")
@@ -17176,7 +17729,25 @@ azure.subscription.machineLearningService.workspace.compute @defaults("name comp
   // Compute tags
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the compute target's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the compute target.
+  principalId string
+  // Microsoft Entra tenant of the compute target's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the compute target
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Kind of compute
   //
   // Examples include "AmlCompute", "ComputeInstance", "Kubernetes", "AKS", "VirtualMachine", "DataFactory", "Databricks", "HDInsight", and "SynapseSpark".
@@ -17362,10 +17933,24 @@ azure.subscription.machineLearningService.workspace.batchEndpoint @defaults("nam
   defaultDeploymentName string
   // Managed identity configuration
   //
-  // Keys: `type` ("None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities`, and the
-  // read-only `principalId` and `tenantId` of the system-assigned identity.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the endpoint's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the endpoint.
+  principalId string
+  // Microsoft Entra tenant of the endpoint's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the endpoint
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Endpoint-specific settings
   properties map[string]string
   // Model deployments behind the endpoint
@@ -17430,7 +18015,25 @@ azure.subscription.machineLearningService.workspace.batchEndpoint.deployment @de
   // Keys: `instanceCount`, `instanceType`, and `properties`.
   resources dict
   // Managed identity configuration
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the deployment's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the deployment.
+  principalId string
+  // Microsoft Entra tenant of the deployment's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the deployment
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Deployment-specific settings
   properties map[string]string
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -17470,14 +18073,32 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   location string
   // Configuration store tags
   tags map[string]string
-  // SKU details (name: free or standard)
-  sku dict
+  // Configuration store SKU
+  //
+  // Deprecated in favor of skuName.
+  sku @maturity("deprecated") dict
+  // Configuration store SKU name ("free" or "standard")
+  skuName string
   // Managed identity configuration
   //
-  // Keys: `type` (None, SystemAssigned, UserAssigned, or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities`,
-  // `principalId`, and `tenantId`.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the configuration store's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the configuration store.
+  principalId string
+  // Microsoft Entra tenant of the configuration store's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the configuration store
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether the store is reachable from the public internet ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether access-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -17560,10 +18181,41 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   kind string
   // Account tags
   tags map[string]string
-  // SKU details (e.g., name "S0", "F0")
-  sku dict
+  // Account SKU
+  //
+  // Deprecated in favor of skuName, skuTier, skuSize, skuFamily, and
+  // skuCapacity.
+  sku @maturity("deprecated") dict
+  // Account SKU name, for example "S0" or "F0"
+  skuName string
+  // Account SKU tier ("Free", "Basic", "Standard", "Premium", or "Enterprise")
+  skuTier string
+  // Account SKU size
+  skuSize string
+  // Account SKU family
+  skuFamily string
+  // Number of provisioned units of the SKU
+  skuCapacity int
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the account's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the account.
+  principalId string
+  // Microsoft Entra tenant of the account's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the account
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Whether the account is reachable from the public internet ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether API-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -17807,7 +18459,25 @@ azure.subscription.cognitiveServicesService.account.project @defaults("name disp
   // Project tags
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the project's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the project.
+  principalId string
+  // Microsoft Entra tenant of the project's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the project
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Human-facing display name of the project
   displayName string
   // Project description
@@ -18480,18 +19150,36 @@ azure.subscription.signalRService.signalR @defaults("id name location publicNetw
   tags map[string]string
   // Service mode kind ("SignalR" or "RawWebSockets")
   kind string
-  // SKU details
+  // Instance SKU
   //
-  // Pricing tier of the instance with keys `name` (e.g. Standard_S1,
-  // Free_F1), `tier` (Free, Basic, Standard, or Premium), `capacity`
-  // (unit count), `family`, and `size`.
-  sku dict
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Instance SKU name, for example "Standard_S1" or "Free_F1"
+  skuName string
+  // Instance SKU tier ("Free", "Basic", "Standard", or "Premium")
+  skuTier string
+  // Provisioned unit count
+  skuCapacity int
   // Identity configuration
   //
-  // Managed identity assigned to the instance with keys `type` (None,
-  // SystemAssigned, or UserAssigned), `userAssignedIdentities`,
-  // `principalId`, and `tenantId`.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the instance's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the instance.
+  principalId string
+  // Microsoft Entra tenant of the instance's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the instance
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Public hostname clients connect to
   hostName string
   // External IP of the instance
@@ -18551,10 +19239,36 @@ azure.subscription.webPubSubService.webPubSub @defaults("id name location public
   tags map[string]string
   // Service kind ("WebPubSub" or "SocketIO")
   kind string
-  // SKU details (name, tier, capacity)
-  sku dict
+  // Instance SKU
+  //
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Instance SKU name, for example "Standard_S1" or "Free_F1"
+  skuName string
+  // Instance SKU tier ("Free", "Basic", "Standard", or "Premium")
+  skuTier string
+  // Provisioned unit count
+  skuCapacity int
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the instance's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the instance.
+  principalId string
+  // Microsoft Entra tenant of the instance's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the instance
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Public hostname clients connect to
   hostName string
   // External IP of the instance
@@ -18613,10 +19327,36 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   location string
   // Cluster tags
   tags map[string]string
-  // SKU details (name, tier, capacity)
-  sku dict
+  // Instance SKU
+  //
+  // Deprecated in favor of skuName, skuTier, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Cluster SKU name, which fixes the VM size backing the cluster nodes
+  skuName string
+  // Cluster SKU tier ("Basic" or "Standard")
+  skuTier string
+  // Number of cluster instances
+  skuCapacity int
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
-  identity dict
+  //
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the cluster's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the cluster.
+  principalId string
+  // Microsoft Entra tenant of the cluster's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the cluster
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Cluster query endpoint URI
   uri string
   // Cluster data ingestion URI
@@ -18920,16 +19660,34 @@ azure.subscription.automationService.account @defaults("id name location publicN
   tags map[string]string
   // SKU
   //
-  // Pricing tier of the account. Keys: `name` (either "Free" or
-  // "Basic"), `capacity`, and `family`.
-  sku dict
+  // Deprecated in favor of skuName, skuFamily, and skuCapacity.
+  sku @maturity("deprecated") dict
+  // Account pricing tier ("Free" or "Basic")
+  skuName string
+  // Account SKU family
+  skuFamily string
+  // Number of provisioned units of the SKU
+  skuCapacity int
   // Managed identity configuration
   //
-  // Keys: `type` (one of "None", "SystemAssigned", "UserAssigned", or
-  // "SystemAssigned, UserAssigned"), `userAssignedIdentities` (map keyed
-  // by user-assigned identity resource ID), `principalId`, and
-  // `tenantId`.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the account's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the account.
+  principalId string
+  // Microsoft Entra tenant of the account's system-assigned managed identity
+  tenantId string
+  // User-assigned managed identities attached to the account
+  userAssignedIdentities() []azure.subscription.managedIdentity
   // Account lifecycle state ("Ok", "Unavailable", "Suspended")
   state string
   // Whether the account is reachable from the public internet
@@ -19047,10 +19805,21 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   tags map[string]string
   // Managed identity assigned to the host pool
   //
-  // Keys: `type` (the identity model, currently always "SystemAssigned"),
-  // `principalId` (the object ID of the system-assigned identity), and
-  // `tenantId` (the Entra tenant that owns the identity).
-  identity dict
+  // Deprecated in favor of identityType, principalId, and tenantId.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None" or "SystemAssigned". Azure Virtual Desktop models a host
+  // pool identity without user-assigned identities.
+  identityType string
+  // Principal ID of the host pool's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the host pool.
+  principalId string
+  // Microsoft Entra tenant of the host pool's system-assigned managed identity
+  tenantId string
   // Host pool type ("Personal", "Pooled", or "BYODesktop")
   hostPoolType string
   // Load-balancing algorithm ("BreadthFirst", "DepthFirst", or "Persistent")
@@ -19160,13 +19929,22 @@ azure.subscription.dataProtectionService.backupVault @defaults("id name location
   provisioningState string
   // Managed identity configuration
   //
-  // Managed identity block of the vault, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
-  // `tenantId` for the system-assigned identity, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. See userAssignedIdentities for the resolved
-  // identity resources.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the vault's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the vault.
+  principalId string
+  // Microsoft Entra tenant of the vault's system-assigned managed identity
+  tenantId string
   // User-assigned managed identities associated with the vault
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Soft delete state ("AlwaysOn", "On", or "Off")
@@ -19280,13 +20058,22 @@ azure.subscription.netAppService.account @defaults("id name location provisionin
   provisioningState string
   // Managed identity configuration
   //
-  // Managed identity block of the account, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned", or
-  // "None"), `principalId` and `tenantId` for the system-assigned identity,
-  // and `userAssignedIdentities` mapping each assigned identity resource ID
-  // to its client and principal IDs. See userAssignedIdentities for the
-  // resolved user-assigned identity resources.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the account's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the account.
+  principalId string
+  // Microsoft Entra tenant of the account's system-assigned managed identity
+  tenantId string
   // User-assigned managed identities associated with the account
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Domain used for NFSv4 user ID mapping
@@ -19554,14 +20341,22 @@ azure.subscription.dataBoxService.job @defaults("id name status transferType") {
   skuModel string
   // Managed identity configuration
   //
-  // Managed identity block of the job, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
-  // `tenantId` for the system-assigned identity, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. A user-assigned identity is what reaches a
-  // customer-managed passkey. See userAssignedIdentities for the resolved
-  // identity resources.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the job's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the job.
+  principalId string
+  // Microsoft Entra tenant of the job's system-assigned managed identity
+  tenantId string
   // User-assigned managed identities associated with the job
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Kind of job details Azure returned ("DataBox", "DataBoxDisk", "DataBoxHeavy", or "DataBoxCustomerDisk")
@@ -19757,13 +20552,22 @@ azure.subscription.elasticSanService.elasticSan.volumeGroup @defaults("id name e
   enforceDataIntegrityCheckForIscsi bool
   // Managed identity configuration
   //
-  // Managed identity block of the volume group, with keys `type` (one of
-  // "SystemAssigned", "UserAssigned", or "None"), `principalId` and
-  // `tenantId` for the system-assigned identity, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. See userAssignedIdentities for the
-  // resolved identity resources.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the volume group's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the volume group.
+  principalId string
+  // Microsoft Entra tenant of the volume group's system-assigned managed identity
+  tenantId string
   // User-assigned managed identities associated with the volume group
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Name of the Key Vault key encrypting the group
@@ -20013,13 +20817,22 @@ azure.subscription.storageCacheService.amlFilesystem @defaults("id name location
   provisioningState string
   // Managed identity configuration
   //
-  // Managed identity block of the file system, with keys `type` (one of
-  // "UserAssigned" or "None"), `principalId` and `tenantId`, and
-  // `userAssignedIdentities` mapping each assigned identity resource ID to
-  // its client and principal IDs. A user-assigned identity is what reaches
-  // the customer-managed key. See userAssignedIdentities for the resolved
-  // identity resources.
-  identity dict
+  // Deprecated in favor of identityType, principalId, tenantId, and
+  // userAssignedIdentities.
+  identity @maturity("deprecated") dict
+  // Managed identity type
+  //
+  // One of "None", "SystemAssigned", "UserAssigned", or
+  // "SystemAssigned, UserAssigned".
+  identityType string
+  // Principal ID of the file system's system-assigned managed identity
+  //
+  // Object ID the identity is known by in Microsoft Entra ID, and the value
+  // its role assignments reference. Empty when no system-assigned identity
+  // is enabled on the file system.
+  principalId string
+  // Microsoft Entra tenant of the file system's system-assigned managed identity
+  tenantId string
   // User-assigned managed identities associated with the file system
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Provisioned storage capacity in TiB

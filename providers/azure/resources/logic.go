@@ -160,38 +160,50 @@ func logicWorkflowToMQL(runtime *plugin.Runtime, entry *logic.Workflow) (plugin.
 		triggers, actions, connectionNames = workflowDefinitionToMQL(props.Definition)
 	}
 
-	mqlWf, err := CreateResource(runtime, "azure.subscription.logicService.workflow",
-		map[string]*llx.RawData{
-			"id":                              llx.StringDataPtr(entry.ID),
-			"name":                            llx.StringDataPtr(entry.Name),
-			"location":                        llx.StringDataPtr(entry.Location),
-			"tags":                            llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
-			"state":                           llx.StringData(state),
-			"provisioningState":               llx.StringData(provisioningState),
-			"skuName":                         llx.StringData(skuName),
-			"version":                         llx.StringData(version),
-			"accessEndpoint":                  llx.StringData(accessEndpoint),
-			"identity":                        llx.DictData(identity),
-			"integrationAccountId":            llx.StringData(integrationAccountId),
-			"integrationServiceEnvironmentId": llx.StringData(integrationServiceEnvironmentId),
-			"createdTime":                     llx.TimeDataPtr(workflowCreatedTime(props)),
-			"changedTime":                     llx.TimeDataPtr(workflowChangedTime(props)),
-			"endpointsConfiguration":          llx.DictData(endpointsConfig),
-			"accessControlTriggers":           llx.DictData(acTriggers),
-			"accessControlContents":           llx.DictData(acContents),
-			"accessControlActions":            llx.DictData(acActions),
-			"accessControlWorkflowManagement": llx.DictData(acManagement),
-			"hasIpRestrictions":               llx.BoolData(hasIpRestrictions),
-			"parameters":                      llx.ArrayData(parameters, types.Dict),
-			"secureParameterNames":            llx.ArrayData(secureNames, types.String),
-			"triggers":                        llx.ArrayData(triggers, types.Dict),
-			"actions":                         llx.ArrayData(actions, types.Dict),
-			"connectionNames":                 llx.ArrayData(connectionNames, types.String),
-		})
+	wfArgs := map[string]*llx.RawData{
+		"id":                              llx.StringDataPtr(entry.ID),
+		"name":                            llx.StringDataPtr(entry.Name),
+		"location":                        llx.StringDataPtr(entry.Location),
+		"tags":                            llx.MapData(convert.PtrMapStrToInterface(entry.Tags), types.String),
+		"state":                           llx.StringData(state),
+		"provisioningState":               llx.StringData(provisioningState),
+		"skuName":                         llx.StringData(skuName),
+		"version":                         llx.StringData(version),
+		"accessEndpoint":                  llx.StringData(accessEndpoint),
+		"identity":                        llx.DictData(identity),
+		"integrationAccountId":            llx.StringData(integrationAccountId),
+		"integrationServiceEnvironmentId": llx.StringData(integrationServiceEnvironmentId),
+		"createdTime":                     llx.TimeDataPtr(workflowCreatedTime(props)),
+		"changedTime":                     llx.TimeDataPtr(workflowChangedTime(props)),
+		"endpointsConfiguration":          llx.DictData(endpointsConfig),
+		"accessControlTriggers":           llx.DictData(acTriggers),
+		"accessControlContents":           llx.DictData(acContents),
+		"accessControlActions":            llx.DictData(acActions),
+		"accessControlWorkflowManagement": llx.DictData(acManagement),
+		"hasIpRestrictions":               llx.BoolData(hasIpRestrictions),
+		"parameters":                      llx.ArrayData(parameters, types.Dict),
+		"secureParameterNames":            llx.ArrayData(secureNames, types.String),
+		"triggers":                        llx.ArrayData(triggers, types.Dict),
+		"actions":                         llx.ArrayData(actions, types.Dict),
+		"connectionNames":                 llx.ArrayData(connectionNames, types.String),
+	}
+	wfIdentity := orZero(entry.Identity)
+	userAssignedIdentityIds := addIdentity(wfArgs, wfIdentity.Type, wfIdentity.PrincipalID, wfIdentity.TenantID, wfIdentity.UserAssignedIdentities)
+
+	mqlWf, err := CreateResource(runtime, "azure.subscription.logicService.workflow", wfArgs)
 	if err != nil {
 		return nil, err
 	}
+	mqlWf.(*mqlAzureSubscriptionLogicServiceWorkflow).cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	return mqlWf, nil
+}
+
+type mqlAzureSubscriptionLogicServiceWorkflowInternal struct {
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionLogicServiceWorkflow) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func workflowCreatedTime(p *logic.WorkflowProperties) *time.Time {

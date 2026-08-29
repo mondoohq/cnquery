@@ -87,6 +87,7 @@ func (a *mqlAzureSubscriptionSearchService) services() ([]any, error) {
 
 func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAzureSubscriptionSearchServiceService, error) {
 	sku, err := convert.JsonToDict(svc.SKU)
+	svcSku := orZero(svc.SKU)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +167,7 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.searchService.service", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                            llx.StringDataPtr(svc.ID),
 		"name":                          llx.StringDataPtr(svc.Name),
 		"location":                      llx.StringDataPtr(svc.Location),
@@ -192,11 +193,16 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		"semanticSearch":              llx.StringDataPtr(semanticSearch),
 		"upgradeAvailable":            llx.StringDataPtr(upgradeAvailable),
 		"serviceUpgradedAt":           llx.TimeDataPtr(serviceUpgradedAt),
-	})
+	}
+	addSkuFields(args, skuName(svcSku.Name))
+	svcIdentity := orZero(svc.Identity)
+	userAssignedIdentityIds := addIdentity(args, svcIdentity.Type, svcIdentity.PrincipalID, svcIdentity.TenantID, svcIdentity.UserAssignedIdentities)
+	res, err := CreateResource(runtime, "azure.subscription.searchService.service", args)
 	if err != nil {
 		return nil, err
 	}
 	mqlService := res.(*mqlAzureSubscriptionSearchServiceService)
+	mqlService.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(svc.SystemData)
 	if err != nil {
 		return nil, err
@@ -206,7 +212,12 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 }
 
 type mqlAzureSubscriptionSearchServiceServiceInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionSearchServiceService) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionSearchServiceService) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

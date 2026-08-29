@@ -51,7 +51,8 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistryCacheRuleInternal struc
 }
 
 type mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSetInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
 }
 
 type mqlAzureSubscriptionContainerRegistryServiceRegistryConnectedRegistryInternal struct {
@@ -374,13 +375,13 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) policies() (*mqlA
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies,
 		map[string]*llx.RawData{
-			"id":                                      llx.StringData(a.Id.Data + "/policies"),
-			"trustPolicyEnabled":                      llx.BoolData(trustEnabled),
-			"trustPolicyType":                         llx.StringData(trustType),
-			"retentionPolicyEnabled":                  llx.BoolData(retentionEnabled),
-			"retentionPolicyDays":                     llx.IntData(retentionDays),
-			"quarantinePolicyEnabled":                 llx.BoolData(quarantineEnabled),
-			"exportPolicyEnabled":                     llx.BoolData(exportEnabled),
+			"id":                      llx.StringData(a.Id.Data + "/policies"),
+			"trustPolicyEnabled":      llx.BoolData(trustEnabled),
+			"trustPolicyType":         llx.StringData(trustType),
+			"retentionPolicyEnabled":  llx.BoolData(retentionEnabled),
+			"retentionPolicyDays":     llx.IntData(retentionDays),
+			"quarantinePolicyEnabled": llx.BoolData(quarantineEnabled),
+			"exportPolicyEnabled":     llx.BoolData(exportEnabled),
 			"azureADAuthenticationAsArmPolicyEnabled": llx.BoolData(aadAsArmEnabled),
 		})
 	if err != nil {
@@ -1190,17 +1191,20 @@ func createCredentialSetResource(runtime *plugin.Runtime, cs *armcontainerregist
 		creationDate = llx.NilData
 	}
 
-	res, err := CreateResource(runtime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet,
-		map[string]*llx.RawData{
-			"id":                llx.StringDataPtr(cs.ID),
-			"name":              llx.StringDataPtr(cs.Name),
-			"type":              llx.StringDataPtr(cs.Type),
-			"loginServer":       llx.StringData(loginServer),
-			"identity":          llx.DictData(identity),
-			"authCredentials":   llx.ArrayData(authCredentials, types.Dict),
-			"creationDate":      creationDate,
-			"provisioningState": llx.StringData(provisioningState),
-		})
+	csArgs := map[string]*llx.RawData{
+		"id":                llx.StringDataPtr(cs.ID),
+		"name":              llx.StringDataPtr(cs.Name),
+		"type":              llx.StringDataPtr(cs.Type),
+		"loginServer":       llx.StringData(loginServer),
+		"identity":          llx.DictData(identity),
+		"authCredentials":   llx.ArrayData(authCredentials, types.Dict),
+		"creationDate":      creationDate,
+		"provisioningState": llx.StringData(provisioningState),
+	}
+	csIdentity := orZero(cs.Identity)
+	userAssignedIdentityIds := addIdentity(csArgs, csIdentity.Type, csIdentity.PrincipalID, csIdentity.TenantID, csIdentity.UserAssignedIdentities)
+
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionContainerRegistryServiceRegistryCredentialSet, csArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -1210,7 +1214,12 @@ func createCredentialSetResource(runtime *plugin.Runtime, cs *armcontainerregist
 		return nil, err
 	}
 	mqlCs.cacheSystemData = sysData
+	mqlCs.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	return mqlCs, nil
+}
+
+func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) id() (string, error) {

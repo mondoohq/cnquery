@@ -234,7 +234,7 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		}
 	}
 
-	res, err := CreateResource(runtime, ResourceAzureSubscriptionDatabricksServiceWorkspace, map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                              llx.StringDataPtr(workspace.ID),
 		"name":                            llx.StringDataPtr(workspace.Name),
 		"location":                        llx.StringDataPtr(workspace.Location),
@@ -273,7 +273,11 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		"managedServicesKeyName":          llx.StringData(managedServicesKeyName),
 		"managedServicesKeyVersion":       llx.StringData(managedServicesKeyVersion),
 		"creationTime":                    llx.TimeDataPtr(creationTime),
-	})
+	}
+	workspaceSku := orZero(workspace.SKU)
+	addSkuFields(args, skuName(workspaceSku.Name), skuTier(workspaceSku.Tier))
+
+	res, err := CreateResource(runtime, ResourceAzureSubscriptionDatabricksServiceWorkspace, args)
 	if err != nil {
 		return nil, err
 	}

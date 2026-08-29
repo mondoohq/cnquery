@@ -109,6 +109,7 @@ func purviewAccountToMql(runtime *plugin.Runtime, account *armpurview.Account) (
 	}
 
 	skuDict, _ := convert.JsonToDict(account.SKU)
+	accountSku := orZero(account.SKU)
 	identityDict, _ := convert.JsonToDict(account.Identity)
 	propertiesDict, _ := convert.JsonToDict(account.Properties)
 
@@ -191,12 +192,16 @@ func purviewAccountToMql(runtime *plugin.Runtime, account *armpurview.Account) (
 		"createdBy":                  llx.StringData(createdBy),
 		"properties":                 llx.DictData(propertiesDict),
 	}
+	addSkuFields(args, skuName(accountSku.Name), skuCapacity(accountSku.Capacity))
+	accountIdentity := orZero(account.Identity)
+	userAssignedIdentityIds := addIdentity(args, accountIdentity.Type, accountIdentity.PrincipalID, accountIdentity.TenantID, accountIdentity.UserAssignedIdentities)
 
 	res, err := CreateResource(runtime, "azure.subscription.purviewService.account", args)
 	if err != nil {
 		return nil, err
 	}
 	mqlAccount := res.(*mqlAzureSubscriptionPurviewServiceAccount)
+	mqlAccount.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(account.SystemData)
 	if err != nil {
 		return nil, err
@@ -206,7 +211,12 @@ func purviewAccountToMql(runtime *plugin.Runtime, account *armpurview.Account) (
 }
 
 type mqlAzureSubscriptionPurviewServiceAccountInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionPurviewServiceAccount) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionPurviewServiceAccount) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {

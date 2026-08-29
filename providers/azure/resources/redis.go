@@ -233,10 +233,7 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		return nil, err
 	}
 
-	var principalId *string
-	if cache.Identity != nil {
-		principalId = cache.Identity.PrincipalID
-	}
+	cacheIdentity := orZero(cache.Identity)
 
 	zones := []any{}
 	for _, z := range cache.Zones {
@@ -245,7 +242,7 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		}
 	}
 
-	return map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                  llx.StringDataPtr(cache.ID),
 		"name":                llx.StringDataPtr(cache.Name),
 		"type":                llx.StringDataPtr(cache.Type),
@@ -269,13 +266,19 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		"subnetId":            llx.StringDataPtr(cache.Properties.SubnetID),
 		"zones":               llx.ArrayData(zones, types.String),
 		"identity":            llx.DictData(identity),
-		"principalId":         llx.StringDataPtr(principalId),
+		"identityType":        llx.StringDataPtr(stringEnumPtr(cacheIdentity.Type)),
+		"principalId":         llx.StringDataPtr(cacheIdentity.PrincipalID),
+		"tenantId":            llx.StringDataPtr(cacheIdentity.TenantID),
 
 		"disableAccessKeyAuthentication": llx.BoolDataPtr(cache.Properties.DisableAccessKeyAuthentication),
 		"updateChannel":                  llx.StringDataPtr(stringEnumPtr(cache.Properties.UpdateChannel)),
 		"zonalAllocationPolicy":          llx.StringDataPtr(stringEnumPtr(cache.Properties.ZonalAllocationPolicy)),
 		"tenantSettings":                 llx.MapData(convert.PtrMapStrToInterface(cache.Properties.TenantSettings), types.String),
-	}, nil
+	}
+	redisSku := orZero(cache.Properties.SKU)
+	addSkuFields(args, skuName(redisSku.Name), skuFamily(redisSku.Family), skuCapacity(redisSku.Capacity))
+
+	return args, nil
 }
 
 // linkedServers resolves the caches this one is geo-replicated with, so a

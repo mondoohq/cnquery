@@ -85,6 +85,7 @@ func (a *mqlAzureSubscriptionAppConfigurationService) configurationStores() ([]a
 
 func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration.ConfigurationStore) (*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore, error) {
 	sku, err := convert.JsonToDict(store.SKU)
+	storeSku := orZero(store.SKU)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		}
 	}
 
-	res, err := CreateResource(runtime, "azure.subscription.appConfigurationService.configurationStore", map[string]*llx.RawData{
+	args := map[string]*llx.RawData{
 		"id":                                  llx.StringDataPtr(store.ID),
 		"name":                                llx.StringDataPtr(store.Name),
 		"location":                            llx.StringDataPtr(store.Location),
@@ -160,11 +161,16 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		"createMode":                          llx.StringData(createMode),
 		"defaultKeyValueRevisionRetentionPeriodInSeconds": llx.IntData(defaultKeyValueRevisionRetentionPeriodInSeconds),
 		"creationTime": llx.TimeDataPtr(creationTime),
-	})
+	}
+	addSkuFields(args, skuName(storeSku.Name))
+	storeIdentity := orZero(store.Identity)
+	userAssignedIdentityIds := addIdentity(args, storeIdentity.Type, storeIdentity.PrincipalID, storeIdentity.TenantID, storeIdentity.UserAssignedIdentities)
+	res, err := CreateResource(runtime, "azure.subscription.appConfigurationService.configurationStore", args)
 	if err != nil {
 		return nil, err
 	}
 	mqlStore := res.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore)
+	mqlStore.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(store.SystemData)
 	if err != nil {
 		return nil, err
@@ -179,6 +185,11 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 type mqlAzureSubscriptionAppConfigurationServiceConfigurationStoreInternal struct {
 	cacheSystemData                 any
 	cachePrivateEndpointConnections []*armappconfiguration.PrivateEndpointConnectionReference
+	cacheUserAssignedIdentityIds    []string
+}
+
+func (a *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) privateEndpointConnections() ([]any, error) {

@@ -30,6 +30,11 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceInternal struct {
 	cacheOutboundRules                 map[string]ml.OutboundRuleClassification
 	cacheServerlessComputeSubnetId     *string
 	cachePrimaryUserAssignedIdentityId *string
+	cacheUserAssignedIdentityIds       []string
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 // serverlessComputeSubnet resolves the subnet serverless jobs attach to. Null
@@ -192,6 +197,7 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 	if err != nil {
 		return nil, err
 	}
+	wsSku := orZero(ws.SKU)
 	identity, err := convert.JsonToDict(ws.Identity)
 	if err != nil {
 		return nil, err
@@ -242,43 +248,46 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 		serverlessComputeSubnetId = scs.ServerlessComputeCustomSubnet
 	}
 
-	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMachineLearningServiceWorkspace,
-		map[string]*llx.RawData{
-			"id":                              llx.StringDataPtr(ws.ID),
-			"name":                            llx.StringDataPtr(ws.Name),
-			"location":                        llx.StringDataPtr(ws.Location),
-			"tags":                            llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
-			"kind":                            llx.StringDataPtr(ws.Kind),
-			"sku":                             llx.DictData(sku),
-			"identity":                        llx.DictData(identity),
-			"workspaceId":                     llx.StringDataPtr(props.WorkspaceID),
-			"friendlyName":                    llx.StringDataPtr(props.FriendlyName),
-			"description":                     llx.StringDataPtr(props.Description),
-			"provisioningState":               llx.StringData(provisioningState),
-			"publicNetworkAccess":             llx.StringData(publicNetworkAccess),
-			"managedNetworkIsolationMode":     llx.StringData(managedNetworkIsolationMode),
-			"hbiWorkspace":                    llx.BoolDataPtr(props.HbiWorkspace),
-			"allowPublicAccessWhenBehindVnet": llx.BoolDataPtr(props.AllowPublicAccessWhenBehindVnet),
-			"v1LegacyMode":                    llx.BoolDataPtr(props.V1LegacyMode),
-			"discoveryUrl":                    llx.StringDataPtr(props.DiscoveryURL),
-			"mlFlowTrackingUri":               llx.StringDataPtr(props.MlFlowTrackingURI),
-			"imageBuildCompute":               llx.StringDataPtr(props.ImageBuildCompute),
-			"encryptionStatus":                llx.StringData(encryptionStatus),
-			"privateEndpointConnections":      llx.ArrayData(peConns, types.Dict),
-			"keyVaultId":                      llx.StringDataPtr(props.KeyVault),
-			"storageAccountId":                llx.StringDataPtr(props.StorageAccount),
-			"applicationInsightsId":           llx.StringDataPtr(props.ApplicationInsights),
-			"containerRegistryId":             llx.StringDataPtr(props.ContainerRegistry),
+	args := map[string]*llx.RawData{
+		"id":                              llx.StringDataPtr(ws.ID),
+		"name":                            llx.StringDataPtr(ws.Name),
+		"location":                        llx.StringDataPtr(ws.Location),
+		"tags":                            llx.MapData(convert.PtrMapStrToInterface(ws.Tags), types.String),
+		"kind":                            llx.StringDataPtr(ws.Kind),
+		"sku":                             llx.DictData(sku),
+		"identity":                        llx.DictData(identity),
+		"workspaceId":                     llx.StringDataPtr(props.WorkspaceID),
+		"friendlyName":                    llx.StringDataPtr(props.FriendlyName),
+		"description":                     llx.StringDataPtr(props.Description),
+		"provisioningState":               llx.StringData(provisioningState),
+		"publicNetworkAccess":             llx.StringData(publicNetworkAccess),
+		"managedNetworkIsolationMode":     llx.StringData(managedNetworkIsolationMode),
+		"hbiWorkspace":                    llx.BoolDataPtr(props.HbiWorkspace),
+		"allowPublicAccessWhenBehindVnet": llx.BoolDataPtr(props.AllowPublicAccessWhenBehindVnet),
+		"v1LegacyMode":                    llx.BoolDataPtr(props.V1LegacyMode),
+		"discoveryUrl":                    llx.StringDataPtr(props.DiscoveryURL),
+		"mlFlowTrackingUri":               llx.StringDataPtr(props.MlFlowTrackingURI),
+		"imageBuildCompute":               llx.StringDataPtr(props.ImageBuildCompute),
+		"encryptionStatus":                llx.StringData(encryptionStatus),
+		"privateEndpointConnections":      llx.ArrayData(peConns, types.Dict),
+		"keyVaultId":                      llx.StringDataPtr(props.KeyVault),
+		"storageAccountId":                llx.StringDataPtr(props.StorageAccount),
+		"applicationInsightsId":           llx.StringDataPtr(props.ApplicationInsights),
+		"containerRegistryId":             llx.StringDataPtr(props.ContainerRegistry),
 
-			"enableDataIsolation": llx.BoolDataPtr(props.EnableDataIsolation),
-			"hubResourceId":       llx.StringDataPtr(props.HubResourceID),
-			"associatedWorkspaces": llx.ArrayData(
-				strPtrsToAny(props.AssociatedWorkspaces), types.String),
-			"privateLinkCount":            llx.IntDataPtr(props.PrivateLinkCount),
-			"storageHnsEnabled":           llx.BoolDataPtr(props.StorageHnsEnabled),
-			"workspaceTenantId":           llx.StringDataPtr(props.TenantID),
-			"serverlessComputeNoPublicIp": llx.BoolDataPtr(serverlessComputeNoPublicIp),
-		})
+		"enableDataIsolation": llx.BoolDataPtr(props.EnableDataIsolation),
+		"hubResourceId":       llx.StringDataPtr(props.HubResourceID),
+		"associatedWorkspaces": llx.ArrayData(
+			strPtrsToAny(props.AssociatedWorkspaces), types.String),
+		"privateLinkCount":            llx.IntDataPtr(props.PrivateLinkCount),
+		"storageHnsEnabled":           llx.BoolDataPtr(props.StorageHnsEnabled),
+		"workspaceTenantId":           llx.StringDataPtr(props.TenantID),
+		"serverlessComputeNoPublicIp": llx.BoolDataPtr(serverlessComputeNoPublicIp),
+	}
+	addSkuFields(args, skuName(wsSku.Name), skuTier(wsSku.Tier), skuSize(wsSku.Size), skuFamily(wsSku.Family), skuCapacity(wsSku.Capacity))
+	wsIdentity := orZero(ws.Identity)
+	userAssignedIdentityIds := addIdentity(args, wsIdentity.Type, wsIdentity.PrincipalID, wsIdentity.TenantID, wsIdentity.UserAssignedIdentities)
+	resource, err := CreateResource(runtime, ResourceAzureSubscriptionMachineLearningServiceWorkspace, args)
 	if err != nil {
 		return nil, err
 	}
@@ -288,6 +297,7 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 	mqlWs.cacheOutboundRules = outboundRules
 	mqlWs.cacheServerlessComputeSubnetId = serverlessComputeSubnetId
 	mqlWs.cachePrimaryUserAssignedIdentityId = props.PrimaryUserAssignedIdentity
+	mqlWs.cacheUserAssignedIdentityIds = userAssignedIdentityIds
 	sysData, err := convert.JsonToDict(ws.SystemData)
 	if err != nil {
 		return nil, err
@@ -452,7 +462,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 				traffic = intMapToMql(p.Traffic)
 				mirrorTraffic = intMapToMql(p.MirrorTraffic)
 			}
-			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.onlineEndpoint", map[string]*llx.RawData{
+			epArgs := map[string]*llx.RawData{
 				"id":                  llx.StringDataPtr(ep.ID),
 				"name":                llx.StringDataPtr(ep.Name),
 				"location":            llx.StringDataPtr(ep.Location),
@@ -467,12 +477,16 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 				"traffic":             llx.MapData(traffic, types.Int),
 				"mirrorTraffic":       llx.MapData(mirrorTraffic, types.Int),
 				"provisioningState":   llx.StringData(provisioningState),
-			})
+			}
+			epIdentity := orZero(ep.Identity)
+			epUserAssignedIdentityIds := addIdentity(epArgs, epIdentity.Type, epIdentity.PrincipalID, epIdentity.TenantID, epIdentity.UserAssignedIdentities)
+			mqlRes, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.onlineEndpoint", epArgs)
 			if err != nil {
 				return nil, err
 			}
 			mqlEp := mqlRes.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint)
 			mqlEp.cacheComputeId = computeId
+			mqlEp.cacheUserAssignedIdentityIds = epUserAssignedIdentityIds
 			sysData, err := convert.JsonToDict(ep.SystemData)
 			if err != nil {
 				return nil, err
@@ -485,8 +499,13 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointInternal struct {
-	cacheComputeId  string
-	cacheSystemData any
+	cacheComputeId               string
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -701,7 +720,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoint
 					provisioningState = string(*p.ProvisioningState)
 				}
 			}
-			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.serverlessEndpoint", map[string]*llx.RawData{
+			slArgs := map[string]*llx.RawData{
 				"id":                        llx.StringDataPtr(ep.ID),
 				"name":                      llx.StringDataPtr(ep.Name),
 				"location":                  llx.StringDataPtr(ep.Location),
@@ -714,7 +733,10 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoint
 				"marketplaceSubscriptionId": llx.StringData(marketplaceSubscriptionId),
 				"contentSafetyStatus":       llx.StringData(contentSafetyStatus),
 				"provisioningState":         llx.StringData(provisioningState),
-			})
+			}
+			slIdentity := orZero(ep.Identity)
+			slUserAssignedIdentityIds := addIdentity(slArgs, slIdentity.Type, slIdentity.PrincipalID, slIdentity.TenantID, slIdentity.UserAssignedIdentities)
+			mqlEp, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.serverlessEndpoint", slArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -722,7 +744,9 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoint
 			if err != nil {
 				return nil, err
 			}
-			mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).cacheSystemData = sysData
+			mqlServerless := mqlEp.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint)
+			mqlServerless.cacheSystemData = sysData
+			mqlServerless.cacheUserAssignedIdentityIds = slUserAssignedIdentityIds
 			res = append(res, mqlEp)
 		}
 	}
@@ -798,7 +822,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any,
 					modifiedOn = p.ModifiedOn
 				}
 			}
-			mqlCompute, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.compute", map[string]*llx.RawData{
+			computeArgs := map[string]*llx.RawData{
 				"id":                llx.StringDataPtr(c.ID),
 				"name":              llx.StringDataPtr(c.Name),
 				"location":          llx.StringDataPtr(c.Location),
@@ -813,7 +837,10 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any,
 				"provisioningState": llx.StringData(provisioningState),
 				"createdOn":         llx.TimeDataPtr(createdOn),
 				"modifiedOn":        llx.TimeDataPtr(modifiedOn),
-			})
+			}
+			computeIdentity := orZero(c.Identity)
+			computeUserAssignedIdentityIds := addIdentity(computeArgs, computeIdentity.Type, computeIdentity.PrincipalID, computeIdentity.TenantID, computeIdentity.UserAssignedIdentities)
+			mqlCompute, err := CreateResource(a.MqlRuntime, "azure.subscription.machineLearningService.workspace.compute", computeArgs)
 			if err != nil {
 				return nil, err
 			}
@@ -821,7 +848,9 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any,
 			if err != nil {
 				return nil, err
 			}
-			mqlCompute.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).cacheSystemData = sysData
+			mqlComputeRes := mqlCompute.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute)
+			mqlComputeRes.cacheSystemData = sysData
+			mqlComputeRes.cacheUserAssignedIdentityIds = computeUserAssignedIdentityIds
 			res = append(res, mqlCompute)
 		}
 	}
@@ -913,11 +942,21 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpointDeployment
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpointInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceComputeInternal struct {
-	cacheSystemData any
+	cacheSystemData              any
+	cacheUserAssignedIdentityIds []string
+}
+
+func (a *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) userAssignedIdentities() ([]any, error) {
+	return resolveUserAssignedIdentities(a.MqlRuntime, a.cacheUserAssignedIdentityIds)
 }
 
 type mqlAzureSubscriptionMachineLearningServiceWorkspaceModelInternal struct {
