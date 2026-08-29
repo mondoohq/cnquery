@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1067,6 +1068,73 @@ func diagnosticMetricSettings(props *monitor.DiagnosticSettings) ([]any, []any) 
 	return entries, enabled
 }
 
+// diagnosticSettingStreams builds the typed per-category log and metric
+// settings for one diagnostic setting.
+//
+// A category carries no identifier of its own, so the cache key is the
+// setting plus the category (or category group) name, falling back to the
+// position for an entry that names neither.
+func diagnosticSettingStreams(runtime *plugin.Runtime, settingID string, props *monitor.DiagnosticSettings) (logSettings []any, metricSettings []any, err error) {
+	logSettings = []any{}
+	metricSettings = []any{}
+	if props == nil {
+		return logSettings, metricSettings, nil
+	}
+
+	for i, l := range props.Logs {
+		if l == nil {
+			continue
+		}
+		key := convert.ToValue(l.Category)
+		if key == "" {
+			key = convert.ToValue(l.CategoryGroup)
+		}
+		if key == "" {
+			key = strconv.Itoa(i)
+		}
+		retention := orZero(l.RetentionPolicy)
+		mqlLog, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting.logSetting",
+			map[string]*llx.RawData{
+				"__id":             llx.StringData(subResourceCacheID(nil, settingID, "logSettings", key)),
+				"enabled":          llx.BoolDataPtr(l.Enabled),
+				"category":         llx.StringDataPtr(l.Category),
+				"categoryGroup":    llx.StringDataPtr(l.CategoryGroup),
+				"retentionEnabled": llx.BoolDataPtr(retention.Enabled),
+				"retentionDays":    llx.IntDataPtr(retention.Days),
+			})
+		if err != nil {
+			return nil, nil, err
+		}
+		logSettings = append(logSettings, mqlLog)
+	}
+
+	for i, m := range props.Metrics {
+		if m == nil {
+			continue
+		}
+		key := convert.ToValue(m.Category)
+		if key == "" {
+			key = strconv.Itoa(i)
+		}
+		retention := orZero(m.RetentionPolicy)
+		mqlMetric, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting.metricSetting",
+			map[string]*llx.RawData{
+				"__id":             llx.StringData(subResourceCacheID(nil, settingID, "metricSettings", key)),
+				"enabled":          llx.BoolDataPtr(m.Enabled),
+				"category":         llx.StringDataPtr(m.Category),
+				"timeGrain":        llx.StringDataPtr(m.TimeGrain),
+				"retentionEnabled": llx.BoolDataPtr(retention.Enabled),
+				"retentionDays":    llx.IntDataPtr(retention.Days),
+			})
+		if err != nil {
+			return nil, nil, err
+		}
+		metricSettings = append(metricSettings, mqlMetric)
+	}
+
+	return logSettings, metricSettings, nil
+}
+
 // getDiagnosticSettingsCategories lists the log and metric categories a resource
 // is capable of emitting, independent of which are actively collected. Comparing
 // this against a resource's enabled diagnostic-setting categories reveals
@@ -1164,6 +1232,10 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 			// is what most logging-coverage audits actually check.
 			logs, enabledLogCategories := diagnosticLogSettings(entry.Properties)
 			metrics, enabledMetricCategories := diagnosticMetricSettings(entry.Properties)
+			logSettings, metricSettings, err := diagnosticSettingStreams(runtime, convert.ToValue(entry.ID), entry.Properties)
+			if err != nil {
+				return nil, err
+			}
 
 			mqlAzure, err := CreateResource(runtime, "azure.subscription.monitorService.diagnosticsetting",
 				map[string]*llx.RawData{
@@ -1180,6 +1252,8 @@ func getDiagnosticSettings(id string, runtime *plugin.Runtime, conn *connection.
 					"enabledMetricCategories":     llx.ArrayData(enabledMetricCategories, types.String),
 					"logs":                        llx.ArrayData(logs, types.Dict),
 					"metrics":                     llx.ArrayData(metrics, types.Dict),
+					"logSettings":                 llx.ArrayData(logSettings, types.Resource("azure.subscription.monitorService.diagnosticsetting.logSetting")),
+					"metricSettings":              llx.ArrayData(metricSettings, types.Resource("azure.subscription.monitorService.diagnosticsetting.metricSetting")),
 				})
 			if err != nil {
 				return nil, err

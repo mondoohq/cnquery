@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -2097,15 +2098,55 @@ func (a *mqlAzureSubscriptionNetworkServiceApplicationGateway) wafConfiguration(
 	if err != nil {
 		return nil, err
 	}
+	cfg := a.cacheWafConfiguration
+	// The WAF configuration is an inline block with no ARM identity of its
+	// own; key it and its rule groups off the parent gateway.
+	configID := a.Id.Data + "/webApplicationFirewallConfiguration"
+
+	disabledRuleGroups := []any{}
+	for i, g := range cfg.DisabledRuleGroups {
+		if g == nil {
+			continue
+		}
+		rules := []any{}
+		for _, r := range g.Rules {
+			if r != nil {
+				rules = append(rules, int64(*r))
+			}
+		}
+		key := convert.ToValue(g.RuleGroupName)
+		if key == "" {
+			key = strconv.Itoa(i)
+		}
+		mqlGroup, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.wafConfig.disabledRuleGroup",
+			map[string]*llx.RawData{
+				"__id":          llx.StringData(subResourceCacheID(nil, configID, "disabledRuleGroups", key)),
+				"ruleGroupName": llx.StringDataPtr(g.RuleGroupName),
+				"rules":         llx.ArrayData(rules, types.Int),
+			})
+		if err != nil {
+			return nil, err
+		}
+		disabledRuleGroups = append(disabledRuleGroups, mqlGroup)
+	}
+
 	mqlAzure, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionNetworkServiceWafConfig,
 		map[string]*llx.RawData{
-			// The WAF configuration is an inline block with no ARM identity of
-			// its own; key it off the parent gateway.
-			"id":         llx.StringData(a.Id.Data + "/webApplicationFirewallConfiguration"),
+			"id":         llx.StringData(configID),
 			"name":       llx.NilData,
 			"type":       llx.NilData,
 			"kind":       llx.NilData,
 			"properties": llx.DictData(props),
+			// MaxRequestBodySize is the deprecated byte-valued sibling of
+			// MaxRequestBodySizeInKb and is deliberately not modeled.
+			"enabled":                llx.BoolDataPtr(cfg.Enabled),
+			"firewallMode":           llx.StringDataPtr(stringEnumPtr(cfg.FirewallMode)),
+			"ruleSetType":            llx.StringDataPtr(cfg.RuleSetType),
+			"ruleSetVersion":         llx.StringDataPtr(cfg.RuleSetVersion),
+			"requestBodyCheck":       llx.BoolDataPtr(cfg.RequestBodyCheck),
+			"maxRequestBodySizeInKb": llx.IntDataPtr(cfg.MaxRequestBodySizeInKb),
+			"fileUploadLimitInMb":    llx.IntDataPtr(cfg.FileUploadLimitInMb),
+			"disabledRuleGroups":     llx.ArrayData(disabledRuleGroups, types.Resource("azure.subscription.networkService.wafConfig.disabledRuleGroup")),
 		})
 	if err != nil {
 		return nil, err

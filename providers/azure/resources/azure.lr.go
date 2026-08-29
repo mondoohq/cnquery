@@ -117,6 +117,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedRootCertificate                     string = "azure.subscription.networkService.applicationGateway.trustedRootCertificate"
 	ResourceAzureSubscriptionNetworkServiceApplicationGatewayTrustedClientCertificate                   string = "azure.subscription.networkService.applicationGateway.trustedClientCertificate"
 	ResourceAzureSubscriptionNetworkServiceWafConfig                                                    string = "azure.subscription.networkService.wafConfig"
+	ResourceAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup                                   string = "azure.subscription.networkService.wafConfig.disabledRuleGroup"
 	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicy                                    string = "azure.subscription.networkService.applicationFirewallPolicy"
 	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSet                      string = "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet"
 	ResourceAzureSubscriptionNetworkServiceApplicationFirewallPolicyManagedRuleSetRuleGroupOverride     string = "azure.subscription.networkService.applicationFirewallPolicy.managedRuleSet.ruleGroupOverride"
@@ -269,6 +270,7 @@ const (
 	ResourceAzureSubscriptionKeyVaultServiceVault                                                       string = "azure.subscription.keyVaultService.vault"
 	ResourceAzureSubscriptionKeyVaultServiceVaultAccessPolicy                                           string = "azure.subscription.keyVaultService.vault.accessPolicy"
 	ResourceAzureSubscriptionKeyVaultServiceVaultNetworkAcls                                            string = "azure.subscription.keyVaultService.vault.networkAcls"
+	ResourceAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet                                    string = "azure.subscription.keyVaultService.managedHsm.networkRuleSet"
 	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                                             string = "azure.subscription.keyVaultService.key.autorotation"
 	ResourceAzureSubscriptionKeyVaultServiceKey                                                         string = "azure.subscription.keyVaultService.key"
 	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                                     string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
@@ -288,6 +290,8 @@ const (
 	ResourceAzureSubscriptionMonitorServiceActivityLogEntry                                             string = "azure.subscription.monitorService.activityLog.entry"
 	ResourceAzureSubscriptionMonitorServiceLogprofile                                                   string = "azure.subscription.monitorService.logprofile"
 	ResourceAzureSubscriptionMonitorServiceDiagnosticsetting                                            string = "azure.subscription.monitorService.diagnosticsetting"
+	ResourceAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting                                  string = "azure.subscription.monitorService.diagnosticsetting.logSetting"
+	ResourceAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting                               string = "azure.subscription.monitorService.diagnosticsetting.metricSetting"
 	ResourceAzureSubscriptionMonitorServiceDiagnosticSettingsCategory                                   string = "azure.subscription.monitorService.diagnosticSettingsCategory"
 	ResourceAzureSubscriptionCloudDefenderService                                                       string = "azure.subscription.cloudDefenderService"
 	ResourceAzureSubscriptionCloudDefenderServiceApiCollection                                          string = "azure.subscription.cloudDefenderService.apiCollection"
@@ -969,6 +973,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceWafConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceWafConfig,
 		},
+		"azure.subscription.networkService.wafConfig.disabledRuleGroup": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup,
+		},
 		"azure.subscription.networkService.applicationFirewallPolicy": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceApplicationFirewallPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceApplicationFirewallPolicy,
@@ -1577,6 +1585,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceVaultNetworkAcls(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionKeyVaultServiceVaultNetworkAcls,
 		},
+		"azure.subscription.keyVaultService.managedHsm.networkRuleSet": {
+			// to override args, implement: initAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet,
+		},
 		"azure.subscription.keyVaultService.key.autorotation": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceKeyAutorotation(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionKeyVaultServiceKeyAutorotation,
@@ -1652,6 +1664,14 @@ func init() {
 		"azure.subscription.monitorService.diagnosticsetting": {
 			// to override args, implement: initAzureSubscriptionMonitorServiceDiagnosticsetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionMonitorServiceDiagnosticsetting,
+		},
+		"azure.subscription.monitorService.diagnosticsetting.logSetting": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting,
+		},
+		"azure.subscription.monitorService.diagnosticsetting.metricSetting": {
+			// to override args, implement: initAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting,
 		},
 		"azure.subscription.monitorService.diagnosticSettingsCategory": {
 			// to override args, implement: initAzureSubscriptionMonitorServiceDiagnosticSettingsCategory(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7377,6 +7397,36 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.wafConfig.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetProperties()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.wafConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.wafConfig.firewallMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetFirewallMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.ruleSetType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetRuleSetType()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.ruleSetVersion": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetRuleSetVersion()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.requestBodyCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetRequestBodyCheck()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.wafConfig.maxRequestBodySizeInKb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetMaxRequestBodySizeInKb()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.wafConfig.fileUploadLimitInMb": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetFileUploadLimitInMb()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.wafConfig.disabledRuleGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfig).GetDisabledRuleGroups()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.wafConfig.disabledRuleGroup")))
+	},
+	"azure.subscription.networkService.wafConfig.disabledRuleGroup.ruleGroupName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup).GetRuleGroupName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.wafConfig.disabledRuleGroup.rules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup).GetRules()).ToDataRes(types.Array(types.Int))
+	},
 	"azure.subscription.networkService.applicationFirewallPolicy.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).GetId()).ToDataRes(types.String)
 	},
@@ -12744,6 +12794,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.managedHsm.networkAcls": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetNetworkAcls()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetNetworkRuleSet()).ToDataRes(types.Resource("azure.subscription.keyVaultService.managedHsm.networkRuleSet"))
+	},
 	"azure.subscription.keyVaultService.managedHsm.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).GetProvisioningState()).ToDataRes(types.String)
 	},
@@ -12884,6 +12937,21 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.keyVaultService.vault.networkAcls.virtualNetworkSubnetIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls).GetVirtualNetworkSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.bypass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).GetBypass()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.defaultAction": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).GetDefaultAction()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.ipRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).GetIpRules()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.virtualNetworkSubnetIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).GetVirtualNetworkSubnetIds()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.serviceTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).GetServiceTags()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.keyVaultService.key.autorotation.kid": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyAutorotation).GetKid()).ToDataRes(types.String)
@@ -13475,6 +13543,42 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.monitorService.diagnosticsetting.metrics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).GetMetrics()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).GetLogSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting.logSetting")))
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).GetMetricSettings()).ToDataRes(types.Array(types.Resource("azure.subscription.monitorService.diagnosticsetting.metricSetting")))
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).GetCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.categoryGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).GetCategoryGroup()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.retentionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).GetRetentionEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.retentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).GetRetentionDays()).ToDataRes(types.Int)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.category": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).GetCategory()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.timeGrain": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).GetTimeGrain()).ToDataRes(types.String)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.retentionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).GetRetentionEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.retentionDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).GetRetentionDays()).ToDataRes(types.Int)
 	},
 	"azure.subscription.monitorService.diagnosticSettingsCategory.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory).GetName()).ToDataRes(types.String)
@@ -29740,6 +29844,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.wafConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.firewallMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).FirewallMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.ruleSetType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).RuleSetType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.ruleSetVersion": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).RuleSetVersion, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.requestBodyCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).RequestBodyCheck, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.maxRequestBodySizeInKb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).MaxRequestBodySizeInKb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.fileUploadLimitInMb": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).FileUploadLimitInMb, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.disabledRuleGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfig).DisabledRuleGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.disabledRuleGroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.disabledRuleGroup.ruleGroupName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup).RuleGroupName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.wafConfig.disabledRuleGroup.rules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup).Rules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.applicationFirewallPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy).__id, ok = v.Value.(string)
 		return
@@ -37492,6 +37640,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).NetworkAcls, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).NetworkRuleSet, ok = plugin.RawToTValue[*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.managedHsm.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -37690,6 +37842,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.keyVaultService.vault.networkAcls.virtualNetworkSubnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls).VirtualNetworkSubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.bypass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).Bypass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.defaultAction": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).DefaultAction, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.ipRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).IpRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.virtualNetworkSubnetIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).VirtualNetworkSubnetIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.managedHsm.networkRuleSet.serviceTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet).ServiceTags, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.key.autorotation.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38554,6 +38730,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.monitorService.diagnosticsetting.metrics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).Metrics, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).LogSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsetting).MetricSettings, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.categoryGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).CategoryGroup, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.retentionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).RetentionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.logSetting.retentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting).RetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.category": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).Category, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.timeGrain": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).TimeGrain, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.retentionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).RetentionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.monitorService.diagnosticsetting.metricSetting.retentionDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting).RetentionDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.diagnosticSettingsCategory.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68124,11 +68356,19 @@ type mqlAzureSubscriptionNetworkServiceWafConfig struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionNetworkServiceWafConfigInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Kind       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Kind                   plugin.TValue[string]
+	Properties             plugin.TValue[any]
+	Enabled                plugin.TValue[bool]
+	FirewallMode           plugin.TValue[string]
+	RuleSetType            plugin.TValue[string]
+	RuleSetVersion         plugin.TValue[string]
+	RequestBodyCheck       plugin.TValue[bool]
+	MaxRequestBodySizeInKb plugin.TValue[int64]
+	FileUploadLimitInMb    plugin.TValue[int64]
+	DisabledRuleGroups     plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceWafConfig creates a new instance of this resource
@@ -68186,6 +68426,87 @@ func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetKind() *plugin.TValue[s
 
 func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetFirewallMode() *plugin.TValue[string] {
+	return &c.FirewallMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetRuleSetType() *plugin.TValue[string] {
+	return &c.RuleSetType
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetRuleSetVersion() *plugin.TValue[string] {
+	return &c.RuleSetVersion
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetRequestBodyCheck() *plugin.TValue[bool] {
+	return &c.RequestBodyCheck
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetMaxRequestBodySizeInKb() *plugin.TValue[int64] {
+	return &c.MaxRequestBodySizeInKb
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetFileUploadLimitInMb() *plugin.TValue[int64] {
+	return &c.FileUploadLimitInMb
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfig) GetDisabledRuleGroups() *plugin.TValue[[]any] {
+	return &c.DisabledRuleGroups
+}
+
+// mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup for the azure.subscription.networkService.wafConfig.disabledRuleGroup resource
+type mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroupInternal it will be used here
+	RuleGroupName plugin.TValue[string]
+	Rules         plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.wafConfig.disabledRuleGroup", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup) MqlName() string {
+	return "azure.subscription.networkService.wafConfig.disabledRuleGroup"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup) GetRuleGroupName() *plugin.TValue[string] {
+	return &c.RuleGroupName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceWafConfigDisabledRuleGroup) GetRules() *plugin.TValue[[]any] {
+	return &c.Rules
 }
 
 // mqlAzureSubscriptionNetworkServiceApplicationFirewallPolicy for the azure.subscription.networkService.applicationFirewallPolicy resource
@@ -86330,6 +86651,7 @@ type mqlAzureSubscriptionKeyVaultServiceManagedHsm struct {
 	SoftDeleteRetentionInDays  plugin.TValue[int64]
 	PublicNetworkAccess        plugin.TValue[string]
 	NetworkAcls                plugin.TValue[any]
+	NetworkRuleSet             plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet]
 	ProvisioningState          plugin.TValue[string]
 	ScheduledPurgeDate         plugin.TValue[*time.Time]
 	Regions                    plugin.TValue[[]any]
@@ -86430,6 +86752,22 @@ func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetPublicNetworkAccess()
 
 func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetNetworkAcls() *plugin.TValue[any] {
 	return &c.NetworkAcls
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetNetworkRuleSet() *plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet](&c.NetworkRuleSet, func() (*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.keyVaultService.managedHsm", c.__id, "networkRuleSet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet), nil
+			}
+		}
+
+		return c.networkRuleSet()
+	})
 }
 
 func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsm) GetProvisioningState() *plugin.TValue[string] {
@@ -86982,6 +87320,70 @@ func (c *mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls) GetIpRules() *plug
 
 func (c *mqlAzureSubscriptionKeyVaultServiceVaultNetworkAcls) GetVirtualNetworkSubnetIds() *plugin.TValue[[]any] {
 	return &c.VirtualNetworkSubnetIds
+}
+
+// mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet for the azure.subscription.keyVaultService.managedHsm.networkRuleSet resource
+type mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSetInternal it will be used here
+	Bypass                  plugin.TValue[string]
+	DefaultAction           plugin.TValue[string]
+	IpRules                 plugin.TValue[[]any]
+	VirtualNetworkSubnetIds plugin.TValue[[]any]
+	ServiceTags             plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet creates a new instance of this resource
+func createAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.keyVaultService.managedHsm.networkRuleSet", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet) MqlName() string {
+	return "azure.subscription.keyVaultService.managedHsm.networkRuleSet"
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet) GetBypass() *plugin.TValue[string] {
+	return &c.Bypass
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet) GetDefaultAction() *plugin.TValue[string] {
+	return &c.DefaultAction
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet) GetIpRules() *plugin.TValue[[]any] {
+	return &c.IpRules
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet) GetVirtualNetworkSubnetIds() *plugin.TValue[[]any] {
+	return &c.VirtualNetworkSubnetIds
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet) GetServiceTags() *plugin.TValue[[]any] {
+	return &c.ServiceTags
 }
 
 // mqlAzureSubscriptionKeyVaultServiceKeyAutorotation for the azure.subscription.keyVaultService.key.autorotation resource
@@ -89074,6 +89476,8 @@ type mqlAzureSubscriptionMonitorServiceDiagnosticsetting struct {
 	EnabledMetricCategories     plugin.TValue[[]any]
 	Logs                        plugin.TValue[[]any]
 	Metrics                     plugin.TValue[[]any]
+	LogSettings                 plugin.TValue[[]any]
+	MetricSettings              plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionMonitorServiceDiagnosticsetting creates a new instance of this resource
@@ -89195,6 +89599,142 @@ func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetLogs() *plugin.
 
 func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetMetrics() *plugin.TValue[[]any] {
 	return &c.Metrics
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetLogSettings() *plugin.TValue[[]any] {
+	return &c.LogSettings
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsetting) GetMetricSettings() *plugin.TValue[[]any] {
+	return &c.MetricSettings
+}
+
+// mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting for the azure.subscription.monitorService.diagnosticsetting.logSetting resource
+type mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSettingInternal it will be used here
+	Enabled          plugin.TValue[bool]
+	Category         plugin.TValue[string]
+	CategoryGroup    plugin.TValue[string]
+	RetentionEnabled plugin.TValue[bool]
+	RetentionDays    plugin.TValue[int64]
+}
+
+// createAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.diagnosticsetting.logSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting) MqlName() string {
+	return "azure.subscription.monitorService.diagnosticsetting.logSetting"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting) GetCategoryGroup() *plugin.TValue[string] {
+	return &c.CategoryGroup
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting) GetRetentionEnabled() *plugin.TValue[bool] {
+	return &c.RetentionEnabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingLogSetting) GetRetentionDays() *plugin.TValue[int64] {
+	return &c.RetentionDays
+}
+
+// mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting for the azure.subscription.monitorService.diagnosticsetting.metricSetting resource
+type mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSettingInternal it will be used here
+	Enabled          plugin.TValue[bool]
+	Category         plugin.TValue[string]
+	TimeGrain        plugin.TValue[string]
+	RetentionEnabled plugin.TValue[bool]
+	RetentionDays    plugin.TValue[int64]
+}
+
+// createAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting creates a new instance of this resource
+func createAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.monitorService.diagnosticsetting.metricSetting", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting) MqlName() string {
+	return "azure.subscription.monitorService.diagnosticsetting.metricSetting"
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting) GetCategory() *plugin.TValue[string] {
+	return &c.Category
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting) GetTimeGrain() *plugin.TValue[string] {
+	return &c.TimeGrain
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting) GetRetentionEnabled() *plugin.TValue[bool] {
+	return &c.RetentionEnabled
+}
+
+func (c *mqlAzureSubscriptionMonitorServiceDiagnosticsettingMetricSetting) GetRetentionDays() *plugin.TValue[int64] {
+	return &c.RetentionDays
 }
 
 // mqlAzureSubscriptionMonitorServiceDiagnosticSettingsCategory for the azure.subscription.monitorService.diagnosticSettingsCategory resource

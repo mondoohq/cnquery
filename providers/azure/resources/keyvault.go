@@ -1869,6 +1869,52 @@ func initAzureSubscriptionKeyVaultServiceManagedHsm(runtime *plugin.Runtime, arg
 type mqlAzureSubscriptionKeyVaultServiceManagedHsmInternal struct {
 	cachePrivateEndpointConnections []*keyvault.MHSMPrivateEndpointConnectionItem
 	cacheSystemData                 any
+	cacheNetworkRuleSet             *keyvault.MHSMNetworkRuleSet
+}
+
+// networkRuleSet reports the pool's inbound network rules, or null when the
+// pool sets none. An absent rule set is not an empty one: with no rules the
+// pool answers every caller its publicNetworkAccess admits, so reporting an
+// empty rule list here would read as "locked down with nothing allowed".
+func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) networkRuleSet() (*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet, error) {
+	if a.cacheNetworkRuleSet == nil {
+		a.NetworkRuleSet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	acls := a.cacheNetworkRuleSet
+
+	ipRules := []any{}
+	for _, rule := range acls.IPRules {
+		if rule != nil && rule.Value != nil {
+			ipRules = append(ipRules, *rule.Value)
+		}
+	}
+	vnetSubnetIds := []any{}
+	for _, rule := range acls.VirtualNetworkRules {
+		if rule != nil && rule.ID != nil {
+			vnetSubnetIds = append(vnetSubnetIds, *rule.ID)
+		}
+	}
+	serviceTags := []any{}
+	for _, rule := range acls.ServiceTags {
+		if rule != nil && rule.Tag != nil {
+			serviceTags = append(serviceTags, *rule.Tag)
+		}
+	}
+
+	res, err := CreateResource(a.MqlRuntime, "azure.subscription.keyVaultService.managedHsm.networkRuleSet",
+		map[string]*llx.RawData{
+			"__id":                    llx.StringData(a.Id.Data + "/networkRuleSet"),
+			"bypass":                  llx.StringDataPtr(stringEnumPtr(acls.Bypass)),
+			"defaultAction":           llx.StringDataPtr(stringEnumPtr(acls.DefaultAction)),
+			"ipRules":                 llx.ArrayData(ipRules, types.String),
+			"virtualNetworkSubnetIds": llx.ArrayData(vnetSubnetIds, types.String),
+			"serviceTags":             llx.ArrayData(serviceTags, types.String),
+		})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionKeyVaultServiceManagedHsmNetworkRuleSet), nil
 }
 
 func (a *mqlAzureSubscriptionKeyVaultServiceManagedHsm) systemMetadata() (*mqlAzureSubscriptionSystemData, error) {
@@ -2055,6 +2101,9 @@ func (a *mqlAzureSubscriptionKeyVaultService) managedHsms() ([]any, error) {
 			// Cache private endpoint connections for lazy loading
 			mqlHsmTyped := mqlHsm.(*mqlAzureSubscriptionKeyVaultServiceManagedHsm)
 			mqlHsmTyped.cachePrivateEndpointConnections = privateEndpointConns
+			if hsm.Properties != nil {
+				mqlHsmTyped.cacheNetworkRuleSet = hsm.Properties.NetworkACLs
+			}
 
 			sysData, err := convert.JsonToDict(hsm.SystemData)
 			if err != nil {

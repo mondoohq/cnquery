@@ -4686,7 +4686,52 @@ azure.subscription.networkService.wafConfig @defaults("id name type") {
   // Kind of WAF configuration
   kind string
   // Properties for the WAF configuration
-  properties dict
+  //
+  // Deprecated in favor of enabled, firewallMode, ruleSetType,
+  // ruleSetVersion, requestBodyCheck, maxRequestBodySizeInKb,
+  // fileUploadLimitInMb, and disabledRuleGroups.
+  properties @maturity("deprecated") dict
+  // Whether the web application firewall is turned on
+  //
+  // A gateway carrying a WAF configuration that is disabled passes every
+  // request through unfiltered while still reporting a firewall.
+  enabled bool
+  // Whether matching requests are blocked or only logged ("Prevention" or "Detection")
+  //
+  // Detection logs an attack and serves the request anyway, so a gateway
+  // left in Detection is monitored rather than protected.
+  firewallMode string
+  // Rule set family the firewall enforces, for example "OWASP"
+  ruleSetType string
+  // Version of the rule set the firewall enforces
+  ruleSetVersion string
+  // Whether the firewall inspects the request body
+  //
+  // False leaves every body-carried payload uninspected, whatever the
+  // rule set says.
+  requestBodyCheck bool
+  // Maximum request body size the firewall inspects, in kilobytes
+  maxRequestBodySizeInKb int
+  // Maximum file upload size the firewall inspects, in megabytes
+  fileUploadLimitInMb int
+  // Rule groups turned off on this configuration
+  //
+  // Each entry names a group and, when the configuration disables only
+  // part of it, the individual rule IDs. An empty list means the full
+  // rule set is in force.
+  disabledRuleGroups []azure.subscription.networkService.wafConfig.disabledRuleGroup
+}
+
+// Disabled rule group of an Application Gateway WAF configuration
+//
+// One managed rule group turned off on a legacy WAF configuration, and the
+// individual rules within it that are turned off. A group listed here with no
+// rule IDs is disabled in full.
+private azure.subscription.networkService.wafConfig.disabledRuleGroup @defaults("ruleGroupName") {
+  // Name of the rule group that is turned off
+  ruleGroupName string
+  // Rule IDs turned off within the group; empty when the whole group is turned off
+  rules []int
 }
 
 // Azure Web Application Firewall (WAF) policy
@@ -9951,11 +9996,15 @@ azure.subscription.keyVaultService.managedHsm @defaults("name location") {
   publicNetworkAccess string
   // Inbound network rule set
   //
-  // Keys: `bypass` ("AzureServices" or "None"), `defaultAction`
-  // ("Allow" or "Deny", applied when no rule matches), `ipRules` (a
-  // list of `{value}` allowed CIDR ranges), `virtualNetworkRules` (a
-  // list of `{id}` allowed subnet resource IDs), and `serviceTags`.
-  networkAcls dict
+  // Deprecated in favor of networkRuleSet.
+  networkAcls @maturity("deprecated") dict
+  // Inbound network rule set
+  //
+  // The IP, virtual-network and service-tag rules that decide which
+  // callers reach the pool, and the default action applied when none of
+  // them matches. Null when the pool sets no rules, which leaves it
+  // reachable from anywhere its publicNetworkAccess allows.
+  networkRuleSet() azure.subscription.keyVaultService.managedHsm.networkRuleSet
   // Provisioning state
   provisioningState string
   // Scheduled purge date (if soft-deleted)
@@ -10108,6 +10157,28 @@ private azure.subscription.keyVaultService.vault.networkAcls @defaults("defaultA
   ipRules []string
   // List of virtual network subnet resource IDs
   virtualNetworkSubnetIds []string
+}
+
+// Inbound network rule set of a managed HSM pool
+//
+// The rules that decide which callers reach the pool over the network, and
+// the default action applied when none of them matches. A pool whose default
+// action is Allow is reachable from every address its publicNetworkAccess
+// permits, whatever the rules say.
+private azure.subscription.keyVaultService.managedHsm.networkRuleSet @defaults("defaultAction bypass") {
+  // Whether trusted Azure services can bypass the network rules ("AzureServices" or "None")
+  bypass string
+  // Action applied when no IP, virtual-network, or service-tag rule matches ("Allow" or "Deny")
+  //
+  // Evaluated after bypass. Allow leaves the pool open to every caller
+  // publicNetworkAccess admits, which makes the rule list decorative.
+  defaultAction string
+  // Allowed IPv4 address ranges, in CIDR notation
+  ipRules []string
+  // Resource IDs of the virtual network subnets allowed to reach the pool
+  virtualNetworkSubnetIds []string
+  // Names of the Azure service tags allowed to reach the pool
+  serviceTags []string
 }
 
 // Azure Key Vault key auto-rotation
@@ -10665,15 +10736,72 @@ private azure.subscription.monitorService.diagnosticsetting @defaults("id name")
   enabledMetricCategories []string
   // Per-category log settings
   //
-  // Each entry describes one log stream with its `category` (or
-  // `categoryGroup`), whether it is `enabled`, and the legacy
-  // `retentionPolicy` (retention is now managed at the destination).
-  logs []dict
+  // Deprecated in favor of logSettings.
+  logs @maturity("deprecated") []dict
   // Per-category metric settings
   //
-  // Each entry describes one metric stream with its `category`, whether
-  // it is `enabled`, and the legacy `retentionPolicy`.
-  metrics []dict
+  // Deprecated in favor of metricSettings.
+  metrics @maturity("deprecated") []dict
+  // Per-category log settings
+  //
+  // One entry per log stream the setting can forward, whether or not it
+  // is turned on. A category that is present and disabled is a category
+  // the resource could emit and does not, which is what separates an
+  // incomplete diagnostic setting from one the resource type cannot
+  // support.
+  logSettings []azure.subscription.monitorService.diagnosticsetting.logSetting
+  // Per-category metric settings
+  //
+  // One entry per metric stream the setting can forward, whether or not
+  // it is turned on.
+  metricSettings []azure.subscription.monitorService.diagnosticsetting.metricSetting
+}
+
+// Log category of a diagnostic setting
+//
+// One log stream a diagnostic setting can forward, named either by category
+// or by category group, together with whether it is turned on and the legacy
+// per-setting retention that Azure now manages at the destination instead.
+private azure.subscription.monitorService.diagnosticsetting.logSetting @defaults("category categoryGroup enabled") {
+  // Whether this log category is forwarded
+  enabled bool
+  // Diagnostic log category name, empty when the setting names a category group instead
+  category string
+  // Diagnostic log category group name ("allLogs" or "audit"), empty when the setting names a single category
+  //
+  // A setting written against a group forwards every category in it,
+  // including categories added to the group later, so a group and a
+  // hand-listed set of categories are not interchangeable.
+  categoryGroup string
+  // Whether the legacy per-setting retention policy is enabled
+  //
+  // Retention is now set on the destination (the storage account or Log
+  // Analytics workspace), so this is false on a setting created since
+  // that change.
+  retentionEnabled bool
+  // Days the legacy per-setting retention policy keeps events; 0 keeps them indefinitely
+  retentionDays int
+}
+
+// Metric category of a diagnostic setting
+//
+// One metric stream a diagnostic setting can forward, together with whether
+// it is turned on, its aggregation interval, and the legacy per-setting
+// retention that Azure now manages at the destination instead.
+private azure.subscription.monitorService.diagnosticsetting.metricSetting @defaults("category enabled timeGrain") {
+  // Whether this metric category is forwarded
+  enabled bool
+  // Diagnostic metric category name
+  category string
+  // Aggregation interval of the metric, in ISO 8601 duration form (for example "PT1M")
+  timeGrain string
+  // Whether the legacy per-setting retention policy is enabled
+  //
+  // Retention is now set on the destination, so this is false on a
+  // setting created since that change.
+  retentionEnabled bool
+  // Days the legacy per-setting retention policy keeps metrics; 0 keeps them indefinitely
+  retentionDays int
 }
 
 // Azure Monitor diagnostic settings category
