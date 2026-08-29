@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1636,6 +1637,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) localUsers() ([]any, error) 
 			var homeDirectory string
 			var userId, groupId int64
 			var permissionScopes []any
+			permissions := []any{}
 			if p := lu.Properties; p != nil {
 				if p.AllowACLAuthorization != nil {
 					allowAcl = *p.AllowACLAuthorization
@@ -1661,13 +1663,27 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) localUsers() ([]any, error) 
 				if p.GroupID != nil {
 					groupId = int64(*p.GroupID)
 				}
-				for _, ps := range p.PermissionScopes {
+				for i, ps := range p.PermissionScopes {
 					if ps == nil {
 						continue
 					}
 					if d, err := convert.JsonToDict(ps); err == nil {
 						permissionScopes = append(permissionScopes, d)
 					}
+					// A permission scope carries no ARM identifier, so the
+					// position within the user's list is what distinguishes
+					// one row from the next.
+					mqlScope, err := CreateResource(a.MqlRuntime, "azure.subscription.storageService.account.localUser.permissionScope",
+						map[string]*llx.RawData{
+							"__id":         llx.StringData(subResourceCacheID(nil, convert.ToValue(lu.ID), "permissionScopes", strconv.Itoa(i))),
+							"permissions":  llx.StringDataPtr(ps.Permissions),
+							"service":      llx.StringDataPtr(ps.Service),
+							"resourceName": llx.StringDataPtr(ps.ResourceName),
+						})
+					if err != nil {
+						return nil, err
+					}
+					permissions = append(permissions, mqlScope)
 				}
 			}
 
@@ -1683,6 +1699,7 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) localUsers() ([]any, error) 
 					"isNFSv3Enabled":        llx.BoolData(isNFSv3),
 					"homeDirectory":         llx.StringData(homeDirectory),
 					"permissionScopes":      llx.ArrayData(permissionScopes, types.Dict),
+					"permissions":           llx.ArrayData(permissions, types.Resource("azure.subscription.storageService.account.localUser.permissionScope")),
 					"userId":                llx.IntData(userId),
 					"groupId":               llx.IntData(groupId),
 				})

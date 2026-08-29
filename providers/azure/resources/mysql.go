@@ -241,6 +241,8 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 			var replicationRole *string
 			var delegatedSubnetId, privateDnsZoneId, sourceServerId *string
 			var maintenanceWindow any
+			var maintenanceCustomWindow *string
+			var maintenanceDayOfWeek, maintenanceStartHour, maintenanceStartMinute *int32
 			if p := dbServer.Properties; p != nil {
 				administratorLogin = p.AdministratorLogin
 				state = stringEnumPtr(p.State)
@@ -258,6 +260,11 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
+				mw := orZero(p.MaintenanceWindow)
+				maintenanceCustomWindow = mw.CustomWindow
+				maintenanceDayOfWeek = mw.DayOfWeek
+				maintenanceStartHour = mw.StartHour
+				maintenanceStartMinute = mw.StartMinute
 			}
 
 			mqlAzureDbServer, err := CreateResource(a.MqlRuntime, "azure.subscription.mySqlService.flexibleServer",
@@ -292,6 +299,10 @@ func (a *mqlAzureSubscriptionMySqlService) flexibleServers() ([]any, error) {
 					"standbyAvailabilityZone": llx.StringDataPtr(standbyAvailabilityZone),
 					"replicationRole":         llx.StringDataPtr(replicationRole),
 					"maintenanceWindow":       llx.DictData(maintenanceWindow),
+					"maintenanceCustomWindow": llx.StringDataPtr(maintenanceCustomWindow),
+					"maintenanceDayOfWeek":    llx.IntDataPtr(maintenanceDayOfWeek),
+					"maintenanceStartHour":    llx.IntDataPtr(maintenanceStartHour),
+					"maintenanceStartMinute":  llx.IntDataPtr(maintenanceStartMinute),
 				})
 			if err != nil {
 				return nil, err

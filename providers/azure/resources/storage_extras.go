@@ -664,6 +664,8 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 		malwareScanningResultsEventGridTopicId string
 	)
 	var sensitiveDataDiscoveryStatus, malwareScanningStatus map[string]any
+	var sensitiveDataDiscoveryStatusCode, sensitiveDataDiscoveryStatusMessage *string
+	var malwareScanningStatusCode, malwareScanningStatusMessage *string
 
 	malwareScanningCapGBPerMonth = -1
 
@@ -681,6 +683,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 			if d, _ := convert.JsonToDict(p.SensitiveDataDiscovery.OperationStatus); d != nil {
 				sensitiveDataDiscoveryStatus = d
 			}
+			status := orZero(p.SensitiveDataDiscovery.OperationStatus)
+			sensitiveDataDiscoveryStatusCode = status.Code
+			sensitiveDataDiscoveryStatusMessage = status.Message
 		}
 		if p.MalwareScanning != nil {
 			if p.MalwareScanning.OnUpload != nil {
@@ -697,6 +702,9 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 			if d, _ := convert.JsonToDict(p.MalwareScanning.OperationStatus); d != nil {
 				malwareScanningStatus = d
 			}
+			status := orZero(p.MalwareScanning.OperationStatus)
+			malwareScanningStatusCode = status.Code
+			malwareScanningStatusMessage = status.Message
 		}
 	}
 
@@ -715,10 +723,14 @@ func (a *mqlAzureSubscriptionStorageServiceAccount) defenderForStorage() (*mqlAz
 			"overrideSubscriptionLevelSettings":      llx.BoolData(overrideSubscriptionLevelSettings),
 			"sensitiveDataDiscoveryEnabled":          llx.BoolData(sensitiveDataDiscoveryEnabled),
 			"sensitiveDataDiscoveryStatus":           llx.DictData(sensitiveDataDiscoveryStatus),
+			"sensitiveDataDiscoveryStatusCode":       llx.StringDataPtr(sensitiveDataDiscoveryStatusCode),
+			"sensitiveDataDiscoveryStatusMessage":    llx.StringDataPtr(sensitiveDataDiscoveryStatusMessage),
 			"malwareScanningOnUploadEnabled":         llx.BoolData(malwareScanningOnUploadEnabled),
 			"malwareScanningCapGBPerMonth":           llx.IntData(malwareScanningCapGBPerMonth),
 			"malwareScanningResultsEventGridTopicId": llx.StringData(malwareScanningResultsEventGridTopicId),
 			"malwareScanningStatus":                  llx.DictData(malwareScanningStatus),
+			"malwareScanningStatusCode":              llx.StringDataPtr(malwareScanningStatusCode),
+			"malwareScanningStatusMessage":           llx.StringDataPtr(malwareScanningStatusMessage),
 		})
 	if err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"go.mondoo.com/mql/llx"
 	"go.mondoo.com/mql/providers-sdk/v1/plugin"
@@ -180,6 +181,8 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 	capabilities := []any{}
 	networkAclBypassResourceIds := []any{}
 	var keysMetadata any
+	var primaryMasterKeyGeneratedAt, secondaryMasterKeyGeneratedAt *time.Time
+	var primaryReadonlyMasterKeyGeneratedAt, secondaryReadonlyMasterKeyGeneratedAt *time.Time
 	if p := account.Properties; p != nil {
 		customerManagedKeyStatus = p.CustomerManagedKeyStatus
 		encryptionKeyVersion = p.KeyVaultKeyURIVersion
@@ -201,6 +204,11 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 		if err != nil {
 			return nil, err
 		}
+		km := orZero(p.KeysMetadata)
+		primaryMasterKeyGeneratedAt = orZero(km.PrimaryMasterKey).GenerationTime
+		secondaryMasterKeyGeneratedAt = orZero(km.SecondaryMasterKey).GenerationTime
+		primaryReadonlyMasterKeyGeneratedAt = orZero(km.PrimaryReadonlyMasterKey).GenerationTime
+		secondaryReadonlyMasterKeyGeneratedAt = orZero(km.SecondaryReadonlyMasterKey).GenerationTime
 	}
 
 	virtualNetworkRules := []any{}
@@ -237,46 +245,50 @@ func cosmosAccountToMql(runtime *plugin.Runtime, account *cosmosdb.DatabaseAccou
 
 	mqlCosmosDbAccount, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account",
 		map[string]*llx.RawData{
-			"__id":                               llx.StringDataPtr(account.ID),
-			"id":                                 llx.StringDataPtr(account.ID),
-			"name":                               llx.StringDataPtr(account.Name),
-			"tags":                               llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
-			"location":                           llx.StringDataPtr(account.Location),
-			"kind":                               llx.StringDataPtr((*string)(account.Kind)),
-			"type":                               llx.StringDataPtr(account.Type),
-			"properties":                         llx.DictData(properties),
-			"publicNetworkAccess":                llx.StringDataPtr(publicNetworkAccess),
-			"disableLocalAuth":                   llx.BoolDataPtr(disableLocalAuth),
-			"isVirtualNetworkFilterEnabled":      llx.BoolDataPtr(isVirtualNetworkFilterEnabled),
-			"disableKeyBasedMetadataWriteAccess": llx.BoolDataPtr(disableKeyBasedMetadataWriteAccess),
-			"enableAutomaticFailover":            llx.BoolDataPtr(enableAutomaticFailover),
-			"enableMultipleWriteLocations":       llx.BoolDataPtr(enableMultipleWriteLocations),
-			"ipRangeFilter":                      llx.ArrayData(ipRangeFilter, types.String),
-			"minimalTlsVersion":                  llx.StringDataPtr(minimalTlsVersion),
-			"defaultIdentity":                    llx.StringDataPtr(defaultIdentity),
-			"backupType":                         llx.StringData(backupType),
-			"backupIntervalInMinutes":            llx.IntData(backupIntervalMinutes),
-			"backupRetentionIntervalInHours":     llx.IntData(backupRetentionHours),
-			"backupStorageRedundancy":            llx.StringData(backupRedundancy),
-			"defaultConsistencyLevel":            llx.StringDataPtr(defaultConsistencyLevel),
-			"networkAclBypass":                   llx.StringDataPtr(networkAclBypass),
-			"customerManagedKeyStatus":           llx.StringDataPtr(customerManagedKeyStatus),
-			"encryptionKeyVersion":               llx.StringDataPtr(encryptionKeyVersion),
-			"keysMetadata":                       llx.DictData(keysMetadata),
-			"capabilities":                       llx.ArrayData(capabilities, types.String),
-			"enableAnalyticalStorage":            llx.BoolDataPtr(enableAnalyticalStorage),
-			"analyticalStorageSchemaType":        llx.StringDataPtr(analyticalStorageSchemaType),
-			"enableFreeTier":                     llx.BoolDataPtr(enableFreeTier),
-			"enableBurstCapacity":                llx.BoolDataPtr(enableBurstCapacity),
-			"enablePartitionMerge":               llx.BoolDataPtr(enablePartitionMerge),
-			"networkAclBypassResourceIds":        llx.ArrayData(networkAclBypassResourceIds, types.String),
-			"documentEndpoint":                   llx.StringDataPtr(documentEndpoint),
-			"corsAllowedOrigins":                 llx.ArrayData(corsAllowedOrigins, types.String),
-			"locations":                          llx.ArrayData(locations, types.String),
-			"virtualNetworkRules":                llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
-			"identityType":                       llx.StringDataPtr(identityType),
-			"principalId":                        llx.StringDataPtr(identityPrincipalId),
-			"tenantId":                           llx.StringDataPtr(identityTenantId),
+			"__id":                                  llx.StringDataPtr(account.ID),
+			"id":                                    llx.StringDataPtr(account.ID),
+			"name":                                  llx.StringDataPtr(account.Name),
+			"tags":                                  llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
+			"location":                              llx.StringDataPtr(account.Location),
+			"kind":                                  llx.StringDataPtr((*string)(account.Kind)),
+			"type":                                  llx.StringDataPtr(account.Type),
+			"properties":                            llx.DictData(properties),
+			"publicNetworkAccess":                   llx.StringDataPtr(publicNetworkAccess),
+			"disableLocalAuth":                      llx.BoolDataPtr(disableLocalAuth),
+			"isVirtualNetworkFilterEnabled":         llx.BoolDataPtr(isVirtualNetworkFilterEnabled),
+			"disableKeyBasedMetadataWriteAccess":    llx.BoolDataPtr(disableKeyBasedMetadataWriteAccess),
+			"enableAutomaticFailover":               llx.BoolDataPtr(enableAutomaticFailover),
+			"enableMultipleWriteLocations":          llx.BoolDataPtr(enableMultipleWriteLocations),
+			"ipRangeFilter":                         llx.ArrayData(ipRangeFilter, types.String),
+			"minimalTlsVersion":                     llx.StringDataPtr(minimalTlsVersion),
+			"defaultIdentity":                       llx.StringDataPtr(defaultIdentity),
+			"backupType":                            llx.StringData(backupType),
+			"backupIntervalInMinutes":               llx.IntData(backupIntervalMinutes),
+			"backupRetentionIntervalInHours":        llx.IntData(backupRetentionHours),
+			"backupStorageRedundancy":               llx.StringData(backupRedundancy),
+			"defaultConsistencyLevel":               llx.StringDataPtr(defaultConsistencyLevel),
+			"networkAclBypass":                      llx.StringDataPtr(networkAclBypass),
+			"customerManagedKeyStatus":              llx.StringDataPtr(customerManagedKeyStatus),
+			"encryptionKeyVersion":                  llx.StringDataPtr(encryptionKeyVersion),
+			"keysMetadata":                          llx.DictData(keysMetadata),
+			"primaryMasterKeyGeneratedAt":           llx.TimeDataPtr(primaryMasterKeyGeneratedAt),
+			"secondaryMasterKeyGeneratedAt":         llx.TimeDataPtr(secondaryMasterKeyGeneratedAt),
+			"primaryReadonlyMasterKeyGeneratedAt":   llx.TimeDataPtr(primaryReadonlyMasterKeyGeneratedAt),
+			"secondaryReadonlyMasterKeyGeneratedAt": llx.TimeDataPtr(secondaryReadonlyMasterKeyGeneratedAt),
+			"capabilities":                          llx.ArrayData(capabilities, types.String),
+			"enableAnalyticalStorage":               llx.BoolDataPtr(enableAnalyticalStorage),
+			"analyticalStorageSchemaType":           llx.StringDataPtr(analyticalStorageSchemaType),
+			"enableFreeTier":                        llx.BoolDataPtr(enableFreeTier),
+			"enableBurstCapacity":                   llx.BoolDataPtr(enableBurstCapacity),
+			"enablePartitionMerge":                  llx.BoolDataPtr(enablePartitionMerge),
+			"networkAclBypassResourceIds":           llx.ArrayData(networkAclBypassResourceIds, types.String),
+			"documentEndpoint":                      llx.StringDataPtr(documentEndpoint),
+			"corsAllowedOrigins":                    llx.ArrayData(corsAllowedOrigins, types.String),
+			"locations":                             llx.ArrayData(locations, types.String),
+			"virtualNetworkRules":                   llx.ArrayData(virtualNetworkRules, types.Resource("azure.subscription.cosmosDbService.account.virtualNetworkRule")),
+			"identityType":                          llx.StringDataPtr(identityType),
+			"principalId":                           llx.StringDataPtr(identityPrincipalId),
+			"tenantId":                              llx.StringDataPtr(identityTenantId),
 		})
 	if err != nil {
 		return nil, err
@@ -539,6 +551,10 @@ func newPostgresClusterResource(runtime *plugin.Runtime, cluster *armcosmosforpo
 		"sourceResourceId":                llx.NilData,
 		"readReplicas":                    llx.NilData,
 		"maintenanceWindow":               llx.NilData,
+		"maintenanceCustomWindow":         llx.NilData,
+		"maintenanceDayOfWeek":            llx.NilData,
+		"maintenanceStartHour":            llx.NilData,
+		"maintenanceStartMinute":          llx.NilData,
 		"serverNames":                     llx.NilData,
 	}
 
@@ -579,6 +595,10 @@ func newPostgresClusterResource(runtime *plugin.Runtime, cluster *armcosmosforpo
 				return nil, err
 			}
 			args["maintenanceWindow"] = llx.DictData(mw)
+			args["maintenanceCustomWindow"] = llx.StringDataPtr(p.MaintenanceWindow.CustomWindow)
+			args["maintenanceDayOfWeek"] = llx.IntDataPtr(p.MaintenanceWindow.DayOfWeek)
+			args["maintenanceStartHour"] = llx.IntDataPtr(p.MaintenanceWindow.StartHour)
+			args["maintenanceStartMinute"] = llx.IntDataPtr(p.MaintenanceWindow.StartMinute)
 		}
 		if p.ServerNames != nil {
 			names := []any{}

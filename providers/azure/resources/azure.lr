@@ -6482,14 +6482,40 @@ private azure.subscription.storageService.account.localUser @defaults("id name h
   isNFSv3Enabled bool
   // Optional home directory (constrains the file system path the user sees)
   homeDirectory string
-  // Permission scopes (each: { permissions, service, resourceName })
-  permissionScopes []dict
+  // Permission scopes granted to the local user
+  //
+  // Deprecated in favor of permissions.
+  permissionScopes @maturity("deprecated") []dict
+  // Permission scopes granted to the local user
+  //
+  // One entry per container or file share the user can reach, with the
+  // permission letters that apply there. A local user with no scopes can
+  // authenticate but reach nothing.
+  permissions []azure.subscription.storageService.account.localUser.permissionScope
   // Numeric POSIX user ID
   userId int
   // Numeric POSIX group ID
   groupId int
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Permission scope of a storage account local user
+//
+// One container or file share the local user can reach through SFTP or
+// NFSv3, and the permission letters that apply to it.
+private azure.subscription.storageService.account.localUser.permissionScope @defaults("service resourceName permissions") {
+  // Permission letters granted on the resource
+  //
+  // Any of "r" (read), "w" (write), "d" (delete), "l" (list), "c"
+  // (create), "o" (modify ownership), and "p" (modify permissions),
+  // concatenated. A scope carrying "w", "d", or "p" lets the user change
+  // data or its access control, not just read it.
+  permissions string
+  // Storage service the scope applies to ("blob" or "file")
+  service string
+  // Container or file share name the scope applies to
+  resourceName string
 }
 
 // Azure Storage account data protection
@@ -7021,16 +7047,34 @@ private azure.subscription.storageService.account.defenderForStorageSetting @def
   sensitiveDataDiscoveryEnabled bool
   // Status of the most recent Sensitive Data Discovery enable/disable operation
   //
-  // Dict with keys `code` and `message` (populated only on failure or partial success).
-  sensitiveDataDiscoveryStatus dict
+  // Deprecated in favor of sensitiveDataDiscoveryStatusCode and
+  // sensitiveDataDiscoveryStatusMessage.
+  sensitiveDataDiscoveryStatus @maturity("deprecated") dict
+  // Result code of the most recent Sensitive Data Discovery enable/disable operation
+  //
+  // Azure reports this only on a failed or partially successful operation,
+  // so an empty code means the last change went through.
+  sensitiveDataDiscoveryStatusCode string
+  // Human-readable detail for the most recent Sensitive Data Discovery operation, populated only alongside a failure code
+  sensitiveDataDiscoveryStatusMessage string
   // Whether on-upload malware scanning is enabled — every new blob is scanned for malware before becoming readable
   malwareScanningOnUploadEnabled bool
   // Monthly per-storage-account cap on the GB scanned for on-upload malware scanning. Negative values mean no cap
   malwareScanningCapGBPerMonth int
   // Resource ID of the Event Grid Topic that receives malware scan results, empty when no topic is configured
   malwareScanningResultsEventGridTopicId string
-  // Status of the most recent Malware Scanning enable/disable operation, with keys `code` and `message` (populated only on failure or partial success)
-  malwareScanningStatus dict
+  // Status of the most recent Malware Scanning enable/disable operation
+  //
+  // Deprecated in favor of malwareScanningStatusCode and
+  // malwareScanningStatusMessage.
+  malwareScanningStatus @maturity("deprecated") dict
+  // Result code of the most recent Malware Scanning enable/disable operation
+  //
+  // Azure reports this only on a failed or partially successful operation,
+  // so an empty code means the last change went through.
+  malwareScanningStatusCode string
+  // Human-readable detail for the most recent Malware Scanning operation, populated only alongside a failure code
+  malwareScanningStatusMessage string
 }
 
 // Azure Web
@@ -8625,10 +8669,20 @@ private azure.subscription.postgreSqlService.flexibleServer @defaults("name loca
   privateDnsZone() azure.subscription.dnsService.privateZone
   // Weekly maintenance window
   //
-  // Keyed by `customWindow` ("Enabled" or "Disabled"), `dayOfWeek`,
-  // `startHour`, and `startMinute`. A custom window pins patching to a
-  // chosen time instead of letting Azure select one.
-  maintenanceWindow dict
+  // Deprecated in favor of maintenanceCustomWindow, maintenanceDayOfWeek,
+  // maintenanceStartHour, and maintenanceStartMinute.
+  maintenanceWindow @maturity("deprecated") dict
+  // Whether a custom maintenance window is set ("Enabled" or "Disabled")
+  //
+  // A custom window pins patching to a chosen time instead of letting
+  // Azure select one.
+  maintenanceCustomWindow string
+  // Day of the week the maintenance window opens, 0 (Sunday) through 6
+  maintenanceDayOfWeek int
+  // Hour of the day, UTC, the maintenance window opens
+  maintenanceStartHour int
+  // Minute within the start hour the maintenance window opens
+  maintenanceStartMinute int
   // PostgreSQL server configuration
   configuration() []azure.subscription.sqlService.configuration
   // PostgreSQL server databases
@@ -9097,10 +9151,20 @@ private azure.subscription.mySqlService.flexibleServer @defaults("name location 
   privateDnsZone() azure.subscription.dnsService.privateZone
   // Weekly maintenance window
   //
-  // Keyed by `customWindow` ("Enabled" or "Disabled"), `dayOfWeek`,
-  // `startHour`, and `startMinute`. A custom window pins patching to a
-  // chosen time instead of letting Azure select one.
-  maintenanceWindow dict
+  // Deprecated in favor of maintenanceCustomWindow, maintenanceDayOfWeek,
+  // maintenanceStartHour, and maintenanceStartMinute.
+  maintenanceWindow @maturity("deprecated") dict
+  // Whether a custom maintenance window is set ("Enabled" or "Disabled")
+  //
+  // A custom window pins patching to a chosen time instead of letting
+  // Azure select one.
+  maintenanceCustomWindow string
+  // Day of the week the maintenance window opens, 0 (Sunday) through 6
+  maintenanceDayOfWeek int
+  // Hour of the day, UTC, the maintenance window opens
+  maintenanceStartHour int
+  // Minute within the start hour the maintenance window opens
+  maintenanceStartMinute int
   // Whether the MySQL flexible server is reachable from the public internet
   //
   // True when `publicNetworkAccess` is enabled AND at least one firewall rule
@@ -9249,12 +9313,28 @@ azure.subscription.cosmosDbService.account @defaults("name kind location") {
   encryptionKeyVersion string
   // Generation timestamps for the account's data-plane keys
   //
-  // Keyed by `primaryMasterKey`, `secondaryMasterKey`,
-  // `primaryReadonlyMasterKey`, and `secondaryReadonlyMasterKey`, each
-  // holding a `generationTime`. These are the only record of how old
-  // an account key is, which is what a rotation policy is measured
-  // against.
-  keysMetadata dict
+  // Deprecated in favor of primaryMasterKeyGeneratedAt,
+  // secondaryMasterKeyGeneratedAt, primaryReadonlyMasterKeyGeneratedAt, and
+  // secondaryReadonlyMasterKeyGeneratedAt.
+  keysMetadata @maturity("deprecated") dict
+  // When the primary read-write key was last generated
+  //
+  // The only record of how old an account key is, which is what a rotation
+  // policy is measured against. Null when the last regeneration predates
+  // 2022-06-18, which Azure did not record.
+  primaryMasterKeyGeneratedAt time
+  // When the secondary read-write key was last generated
+  //
+  // Null when the last regeneration predates 2022-06-18.
+  secondaryMasterKeyGeneratedAt time
+  // When the primary read-only key was last generated
+  //
+  // Null when the last regeneration predates 2022-06-18.
+  primaryReadonlyMasterKeyGeneratedAt time
+  // When the secondary read-only key was last generated
+  //
+  // Null when the last regeneration predates 2022-06-18.
+  secondaryReadonlyMasterKeyGeneratedAt time
   // Optional capabilities turned on for the account
   //
   // Capability names such as EnableServerless,
@@ -9482,10 +9562,17 @@ private azure.subscription.cosmosDbService.postgresqlCluster @defaults("postgres
   readReplicas []string
   // Maintenance window of the cluster
   //
-  // Keys: `customWindow` (whether a custom maintenance window is enabled),
-  // `dayOfWeek` (preferred day of the week, 0 to 6), `startHour`, and
-  // `startMinute`.
-  maintenanceWindow dict
+  // Deprecated in favor of maintenanceCustomWindow, maintenanceDayOfWeek,
+  // maintenanceStartHour, and maintenanceStartMinute.
+  maintenanceWindow @maturity("deprecated") dict
+  // Whether a custom maintenance window is set ("Enabled" or "Disabled")
+  maintenanceCustomWindow string
+  // Preferred day of the week for the maintenance window, 0 (Sunday) through 6
+  maintenanceDayOfWeek int
+  // Start hour within the preferred day for the maintenance window
+  maintenanceStartHour int
+  // Start minute within the start hour for the maintenance window
+  maintenanceStartMinute int
   // Server names in the cluster
   //
   // Each entry has keys `name` (the server name) and
@@ -12927,15 +13014,38 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   tags map[string]string
   // Redis configuration settings
   //
-  // Server-side settings keyed by their ARM configuration names. Security
-  // and durability relevant keys include `authnotrequired` (when set,
-  // password auth is disabled), `aad-enabled` (Entra ID authentication),
-  // `maxmemory-policy` (eviction strategy), `rdb-backup-enabled` and
-  // `aof-backup-enabled` with their `rdb-storage-connection-string` /
-  // `aof-storage-connection-string-0` / `aof-storage-connection-string-1`
-  // persistence targets, and `preferred-data-persistence-auth-method`
-  // (SAS or ManagedIdentity).
-  redisConfiguration dict
+  // Server-side settings keyed by their ARM configuration names.
+  //
+  // Deprecated in favor of authNotRequired, aadEnabled, maxmemoryPolicy,
+  // rdbBackupEnabled, rdbBackupFrequency, aofBackupEnabled, and
+  // preferredDataPersistenceAuthMethod.
+  redisConfiguration @maturity("deprecated") dict
+  // Whether password authentication is turned off
+  //
+  // Azure reports this as a string, and any value at all means
+  // authentication is disabled. A cache with this set accepts every
+  // connection that reaches it, so the network path is the only control
+  // left.
+  authNotRequired string
+  // Whether Microsoft Entra ID authentication is enabled on the cache
+  aadEnabled string
+  // Eviction strategy applied when the data no longer fits the memory limit
+  //
+  // For example "volatile-lru", "allkeys-lru", or "noeviction".
+  maxmemoryPolicy string
+  // Whether RDB (point-in-time snapshot) persistence is enabled
+  rdbBackupEnabled string
+  // Minutes between RDB snapshots
+  //
+  // One of 15, 30, 60, 360, 720, or 1440, reported as a string.
+  rdbBackupFrequency string
+  // Whether AOF (append-only file) persistence is enabled
+  aofBackupEnabled string
+  // How the cache authenticates to the storage account holding its persisted data
+  //
+  // Either "SAS" or "ManagedIdentity". A cache persisting through a SAS
+  // token keeps a long-lived storage credential in its configuration.
+  preferredDataPersistenceAuthMethod string
   // Number of shards (Premium Cluster Cache only)
   shardCount int
   // Static IP address (when deployed in a VNet)

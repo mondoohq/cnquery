@@ -282,6 +282,8 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 			var replicationRole, entraTenantId *string
 			var delegatedSubnetId, privateDnsZoneId, sourceServerId *string
 			var maintenanceWindow any
+			var maintenanceCustomWindow *string
+			var maintenanceDayOfWeek, maintenanceStartHour, maintenanceStartMinute *int32
 			if p := dbServer.Properties; p != nil {
 				// Azure splits the engine version across two properties: version
 				// carries the major ("16") and minorVersion only the minor ("14").
@@ -316,6 +318,11 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 				if err != nil {
 					return nil, err
 				}
+				mw := orZero(p.MaintenanceWindow)
+				maintenanceCustomWindow = mw.CustomWindow
+				maintenanceDayOfWeek = mw.DayOfWeek
+				maintenanceStartHour = mw.StartHour
+				maintenanceStartMinute = mw.StartMinute
 			}
 
 			var backupRetentionDays int64
@@ -373,6 +380,10 @@ func (a *mqlAzureSubscriptionPostgreSqlService) flexibleServers() ([]any, error)
 					"replicationRole":         llx.StringDataPtr(replicationRole),
 					"entraTenantId":           llx.StringDataPtr(entraTenantId),
 					"maintenanceWindow":       llx.DictData(maintenanceWindow),
+					"maintenanceCustomWindow": llx.StringDataPtr(maintenanceCustomWindow),
+					"maintenanceDayOfWeek":    llx.IntDataPtr(maintenanceDayOfWeek),
+					"maintenanceStartHour":    llx.IntDataPtr(maintenanceStartHour),
+					"maintenanceStartMinute":  llx.IntDataPtr(maintenanceStartMinute),
 				})
 			if err != nil {
 				return nil, err

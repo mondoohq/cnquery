@@ -223,6 +223,7 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		minimumTlsVersion = &val
 	}
 
+	redisConfig := orZero(cache.Properties.RedisConfiguration)
 	redisConfiguration, err := convert.JsonToDict(redactedRedisConfiguration(cache.Properties.RedisConfiguration))
 	if err != nil {
 		return nil, err
@@ -261,14 +262,24 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		"tags":                llx.MapData(convert.PtrMapStrToInterface(cache.Tags), types.String),
 		"minimumTlsVersion":   llx.StringDataPtr(minimumTlsVersion),
 		"redisConfiguration":  llx.DictData(redisConfiguration),
-		"shardCount":          llx.IntDataPtr(cache.Properties.ShardCount),
-		"staticIp":            llx.StringDataPtr(cache.Properties.StaticIP),
-		"subnetId":            llx.StringDataPtr(cache.Properties.SubnetID),
-		"zones":               llx.ArrayData(zones, types.String),
-		"identity":            llx.DictData(identity),
-		"identityType":        llx.StringDataPtr(stringEnumPtr(cacheIdentity.Type)),
-		"principalId":         llx.StringDataPtr(cacheIdentity.PrincipalID),
-		"tenantId":            llx.StringDataPtr(cacheIdentity.TenantID),
+		// The storage connection strings on this block are credentials and are
+		// deliberately not modeled; the auth method that selects between them
+		// is what an audit needs.
+		"authNotRequired":                    llx.StringDataPtr(redisConfig.Authnotrequired),
+		"aadEnabled":                         llx.StringDataPtr(redisConfig.AADEnabled),
+		"maxmemoryPolicy":                    llx.StringDataPtr(redisConfig.MaxmemoryPolicy),
+		"rdbBackupEnabled":                   llx.StringDataPtr(redisConfig.RdbBackupEnabled),
+		"rdbBackupFrequency":                 llx.StringDataPtr(redisConfig.RdbBackupFrequency),
+		"aofBackupEnabled":                   llx.StringDataPtr(redisConfig.AofBackupEnabled),
+		"preferredDataPersistenceAuthMethod": llx.StringDataPtr(redisConfig.PreferredDataPersistenceAuthMethod),
+		"shardCount":                         llx.IntDataPtr(cache.Properties.ShardCount),
+		"staticIp":                           llx.StringDataPtr(cache.Properties.StaticIP),
+		"subnetId":                           llx.StringDataPtr(cache.Properties.SubnetID),
+		"zones":                              llx.ArrayData(zones, types.String),
+		"identity":                           llx.DictData(identity),
+		"identityType":                       llx.StringDataPtr(stringEnumPtr(cacheIdentity.Type)),
+		"principalId":                        llx.StringDataPtr(cacheIdentity.PrincipalID),
+		"tenantId":                           llx.StringDataPtr(cacheIdentity.TenantID),
 
 		"disableAccessKeyAuthentication": llx.BoolDataPtr(cache.Properties.DisableAccessKeyAuthentication),
 		"updateChannel":                  llx.StringDataPtr(stringEnumPtr(cache.Properties.UpdateChannel)),

@@ -162,6 +162,7 @@ const (
 	ResourceAzureSubscriptionStorageServiceAccountQueue                                                 string = "azure.subscription.storageService.account.queue"
 	ResourceAzureSubscriptionStorageServiceAccountTable                                                 string = "azure.subscription.storageService.account.table"
 	ResourceAzureSubscriptionStorageServiceAccountLocalUser                                             string = "azure.subscription.storageService.account.localUser"
+	ResourceAzureSubscriptionStorageServiceAccountLocalUserPermissionScope                              string = "azure.subscription.storageService.account.localUser.permissionScope"
 	ResourceAzureSubscriptionStorageServiceAccountDataProtection                                        string = "azure.subscription.storageService.account.dataProtection"
 	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesConfig                                  string = "azure.subscription.storageService.account.filePropertiesConfig"
 	ResourceAzureSubscriptionStorageServiceAccountFilePropertiesShareDeleteRetentionPolicyConfig        string = "azure.subscription.storageService.account.fileProperties.shareDeleteRetentionPolicyConfig"
@@ -1146,6 +1147,10 @@ func init() {
 		"azure.subscription.storageService.account.localUser": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountLocalUser(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionStorageServiceAccountLocalUser,
+		},
+		"azure.subscription.storageService.account.localUser.permissionScope": {
+			// to override args, implement: initAzureSubscriptionStorageServiceAccountLocalUserPermissionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionStorageServiceAccountLocalUserPermissionScope,
 		},
 		"azure.subscription.storageService.account.dataProtection": {
 			// to override args, implement: initAzureSubscriptionStorageServiceAccountDataProtection(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -9134,6 +9139,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.localUser.permissionScopes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).GetPermissionScopes()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.storageService.account.localUser.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).GetPermissions()).ToDataRes(types.Array(types.Resource("azure.subscription.storageService.account.localUser.permissionScope")))
+	},
 	"azure.subscription.storageService.account.localUser.userId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).GetUserId()).ToDataRes(types.Int)
 	},
@@ -9142,6 +9150,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.localUser.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.storageService.account.localUser.permissionScope.permissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope).GetPermissions()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.localUser.permissionScope.service": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope).GetService()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.localUser.permissionScope.resourceName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope).GetResourceName()).ToDataRes(types.String)
 	},
 	"azure.subscription.storageService.account.dataProtection.storageAccountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountDataProtection).GetStorageAccountId()).ToDataRes(types.String)
@@ -9656,6 +9673,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetSensitiveDataDiscoveryStatus()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetSensitiveDataDiscoveryStatusCode()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetSensitiveDataDiscoveryStatusMessage()).ToDataRes(types.String)
+	},
 	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningOnUploadEnabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningOnUploadEnabled()).ToDataRes(types.Bool)
 	},
@@ -9667,6 +9690,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatus": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningStatus()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatusCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningStatusCode()).ToDataRes(types.String)
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatusMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).GetMalwareScanningStatusMessage()).ToDataRes(types.String)
 	},
 	"azure.subscription.webService.subscriptionId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebService).GetSubscriptionId()).ToDataRes(types.String)
@@ -11369,6 +11398,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.postgreSqlService.flexibleServer.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetMaintenanceWindow()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceCustomWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetMaintenanceCustomWindow()).ToDataRes(types.String)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetMaintenanceDayOfWeek()).ToDataRes(types.Int)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceStartHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetMaintenanceStartHour()).ToDataRes(types.Int)
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceStartMinute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetMaintenanceStartMinute()).ToDataRes(types.Int)
+	},
 	"azure.subscription.postgreSqlService.flexibleServer.configuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).GetConfiguration()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.configuration")))
 	},
@@ -11858,6 +11899,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.mySqlService.flexibleServer.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetMaintenanceWindow()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceCustomWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetMaintenanceCustomWindow()).ToDataRes(types.String)
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetMaintenanceDayOfWeek()).ToDataRes(types.Int)
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceStartHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetMaintenanceStartHour()).ToDataRes(types.Int)
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceStartMinute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetMaintenanceStartMinute()).ToDataRes(types.Int)
+	},
 	"azure.subscription.mySqlService.flexibleServer.internetReachable": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).GetInternetReachable()).ToDataRes(types.Bool)
 	},
@@ -12001,6 +12054,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.keysMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetKeysMetadata()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cosmosDbService.account.primaryMasterKeyGeneratedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetPrimaryMasterKeyGeneratedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cosmosDbService.account.secondaryMasterKeyGeneratedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSecondaryMasterKeyGeneratedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cosmosDbService.account.primaryReadonlyMasterKeyGeneratedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetPrimaryReadonlyMasterKeyGeneratedAt()).ToDataRes(types.Time)
+	},
+	"azure.subscription.cosmosDbService.account.secondaryReadonlyMasterKeyGeneratedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetSecondaryReadonlyMasterKeyGeneratedAt()).ToDataRes(types.Time)
 	},
 	"azure.subscription.cosmosDbService.account.capabilities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccount).GetCapabilities()).ToDataRes(types.Array(types.String))
@@ -12268,6 +12333,18 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceWindow": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetMaintenanceWindow()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceCustomWindow": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetMaintenanceCustomWindow()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceDayOfWeek": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetMaintenanceDayOfWeek()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceStartHour": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetMaintenanceStartHour()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceStartMinute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetMaintenanceStartMinute()).ToDataRes(types.Int)
 	},
 	"azure.subscription.cosmosDbService.postgresqlCluster.serverNames": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).GetServerNames()).ToDataRes(types.Array(types.Dict))
@@ -15694,6 +15771,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cacheService.redisInstance.redisConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetRedisConfiguration()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.cacheService.redisInstance.authNotRequired": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetAuthNotRequired()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.aadEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetAadEnabled()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.maxmemoryPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetMaxmemoryPolicy()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.rdbBackupEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetRdbBackupEnabled()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.rdbBackupFrequency": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetRdbBackupFrequency()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.aofBackupEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetAofBackupEnabled()).ToDataRes(types.String)
+	},
+	"azure.subscription.cacheService.redisInstance.preferredDataPersistenceAuthMethod": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetPreferredDataPersistenceAuthMethod()).ToDataRes(types.String)
 	},
 	"azure.subscription.cacheService.redisInstance.shardCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetShardCount()).ToDataRes(types.Int)
@@ -32158,6 +32256,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).PermissionScopes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.localUser.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.localUser.userId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).UserId, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -32168,6 +32270,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.localUser.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUser).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.localUser.permissionScope.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.storageService.account.localUser.permissionScope.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope).Permissions, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.localUser.permissionScope.service": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope).Service, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.localUser.permissionScope.resourceName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope).ResourceName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.dataProtection.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -32938,6 +33056,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).SensitiveDataDiscoveryStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).SensitiveDataDiscoveryStatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.sensitiveDataDiscoveryStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).SensitiveDataDiscoveryStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningOnUploadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningOnUploadEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -32952,6 +33078,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningStatus, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatusCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningStatusCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.storageService.account.defenderForStorageSetting.malwareScanningStatusMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting).MalwareScanningStatusMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -35418,6 +35552,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).MaintenanceWindow, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceCustomWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).MaintenanceCustomWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).MaintenanceDayOfWeek, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceStartHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).MaintenanceStartHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.postgreSqlService.flexibleServer.maintenanceStartMinute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).MaintenanceStartMinute, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.postgreSqlService.flexibleServer.configuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPostgreSqlServiceFlexibleServer).Configuration, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -36118,6 +36268,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).MaintenanceWindow, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceCustomWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).MaintenanceCustomWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).MaintenanceDayOfWeek, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceStartHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).MaintenanceStartHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.mySqlService.flexibleServer.maintenanceStartMinute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).MaintenanceStartMinute, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.mySqlService.flexibleServer.internetReachable": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMySqlServiceFlexibleServer).InternetReachable, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
@@ -36320,6 +36486,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.keysMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).KeysMetadata, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.primaryMasterKeyGeneratedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).PrimaryMasterKeyGeneratedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.secondaryMasterKeyGeneratedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SecondaryMasterKeyGeneratedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.primaryReadonlyMasterKeyGeneratedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).PrimaryReadonlyMasterKeyGeneratedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.secondaryReadonlyMasterKeyGeneratedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccount).SecondaryReadonlyMasterKeyGeneratedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.capabilities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -36688,6 +36870,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).MaintenanceWindow, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceCustomWindow": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).MaintenanceCustomWindow, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceDayOfWeek": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).MaintenanceDayOfWeek, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceStartHour": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).MaintenanceStartHour, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.postgresqlCluster.maintenanceStartMinute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServicePostgresqlCluster).MaintenanceStartMinute, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.postgresqlCluster.serverNames": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41668,6 +41866,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cacheService.redisInstance.redisConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).RedisConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.authNotRequired": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).AuthNotRequired, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.aadEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).AadEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.maxmemoryPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).MaxmemoryPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.rdbBackupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).RdbBackupEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.rdbBackupFrequency": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).RdbBackupFrequency, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.aofBackupEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).AofBackupEnabled, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cacheService.redisInstance.preferredDataPersistenceAuthMethod": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).PreferredDataPersistenceAuthMethod, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cacheService.redisInstance.shardCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -73509,6 +73735,7 @@ type mqlAzureSubscriptionStorageServiceAccountLocalUser struct {
 	IsNFSv3Enabled        plugin.TValue[bool]
 	HomeDirectory         plugin.TValue[string]
 	PermissionScopes      plugin.TValue[[]any]
+	Permissions           plugin.TValue[[]any]
 	UserId                plugin.TValue[int64]
 	GroupId               plugin.TValue[int64]
 	SystemMetadata        plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -73591,6 +73818,10 @@ func (c *mqlAzureSubscriptionStorageServiceAccountLocalUser) GetPermissionScopes
 	return &c.PermissionScopes
 }
 
+func (c *mqlAzureSubscriptionStorageServiceAccountLocalUser) GetPermissions() *plugin.TValue[[]any] {
+	return &c.Permissions
+}
+
 func (c *mqlAzureSubscriptionStorageServiceAccountLocalUser) GetUserId() *plugin.TValue[int64] {
 	return &c.UserId
 }
@@ -73613,6 +73844,60 @@ func (c *mqlAzureSubscriptionStorageServiceAccountLocalUser) GetSystemMetadata()
 
 		return c.systemMetadata()
 	})
+}
+
+// mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope for the azure.subscription.storageService.account.localUser.permissionScope resource
+type mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScopeInternal it will be used here
+	Permissions  plugin.TValue[string]
+	Service      plugin.TValue[string]
+	ResourceName plugin.TValue[string]
+}
+
+// createAzureSubscriptionStorageServiceAccountLocalUserPermissionScope creates a new instance of this resource
+func createAzureSubscriptionStorageServiceAccountLocalUserPermissionScope(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.storageService.account.localUser.permissionScope", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope) MqlName() string {
+	return "azure.subscription.storageService.account.localUser.permissionScope"
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope) GetPermissions() *plugin.TValue[string] {
+	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope) GetService() *plugin.TValue[string] {
+	return &c.Service
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountLocalUserPermissionScope) GetResourceName() *plugin.TValue[string] {
+	return &c.ResourceName
 }
 
 // mqlAzureSubscriptionStorageServiceAccountDataProtection for the azure.subscription.storageService.account.dataProtection resource
@@ -75420,10 +75705,14 @@ type mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting struct {
 	OverrideSubscriptionLevelSettings      plugin.TValue[bool]
 	SensitiveDataDiscoveryEnabled          plugin.TValue[bool]
 	SensitiveDataDiscoveryStatus           plugin.TValue[any]
+	SensitiveDataDiscoveryStatusCode       plugin.TValue[string]
+	SensitiveDataDiscoveryStatusMessage    plugin.TValue[string]
 	MalwareScanningOnUploadEnabled         plugin.TValue[bool]
 	MalwareScanningCapGBPerMonth           plugin.TValue[int64]
 	MalwareScanningResultsEventGridTopicId plugin.TValue[string]
 	MalwareScanningStatus                  plugin.TValue[any]
+	MalwareScanningStatusCode              plugin.TValue[string]
+	MalwareScanningStatusMessage           plugin.TValue[string]
 }
 
 // createAzureSubscriptionStorageServiceAccountDefenderForStorageSetting creates a new instance of this resource
@@ -75483,6 +75772,14 @@ func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) Get
 	return &c.SensitiveDataDiscoveryStatus
 }
 
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetSensitiveDataDiscoveryStatusCode() *plugin.TValue[string] {
+	return &c.SensitiveDataDiscoveryStatusCode
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetSensitiveDataDiscoveryStatusMessage() *plugin.TValue[string] {
+	return &c.SensitiveDataDiscoveryStatusMessage
+}
+
 func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningOnUploadEnabled() *plugin.TValue[bool] {
 	return &c.MalwareScanningOnUploadEnabled
 }
@@ -75497,6 +75794,14 @@ func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) Get
 
 func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningStatus() *plugin.TValue[any] {
 	return &c.MalwareScanningStatus
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningStatusCode() *plugin.TValue[string] {
+	return &c.MalwareScanningStatusCode
+}
+
+func (c *mqlAzureSubscriptionStorageServiceAccountDefenderForStorageSetting) GetMalwareScanningStatusMessage() *plugin.TValue[string] {
+	return &c.MalwareScanningStatusMessage
 }
 
 // mqlAzureSubscriptionWebService for the azure.subscription.webService resource
@@ -81401,6 +81706,10 @@ type mqlAzureSubscriptionPostgreSqlServiceFlexibleServer struct {
 	DelegatedSubnet              plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 	PrivateDnsZone               plugin.TValue[*mqlAzureSubscriptionDnsServicePrivateZone]
 	MaintenanceWindow            plugin.TValue[any]
+	MaintenanceCustomWindow      plugin.TValue[string]
+	MaintenanceDayOfWeek         plugin.TValue[int64]
+	MaintenanceStartHour         plugin.TValue[int64]
+	MaintenanceStartMinute       plugin.TValue[int64]
 	Configuration                plugin.TValue[[]any]
 	Databases                    plugin.TValue[[]any]
 	FirewallRules                plugin.TValue[[]any]
@@ -81591,6 +81900,22 @@ func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetPrivateDnsZone(
 
 func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetMaintenanceWindow() *plugin.TValue[any] {
 	return &c.MaintenanceWindow
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetMaintenanceCustomWindow() *plugin.TValue[string] {
+	return &c.MaintenanceCustomWindow
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetMaintenanceDayOfWeek() *plugin.TValue[int64] {
+	return &c.MaintenanceDayOfWeek
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetMaintenanceStartHour() *plugin.TValue[int64] {
+	return &c.MaintenanceStartHour
+}
+
+func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetMaintenanceStartMinute() *plugin.TValue[int64] {
+	return &c.MaintenanceStartMinute
 }
 
 func (c *mqlAzureSubscriptionPostgreSqlServiceFlexibleServer) GetConfiguration() *plugin.TValue[[]any] {
@@ -83002,6 +83327,10 @@ type mqlAzureSubscriptionMySqlServiceFlexibleServer struct {
 	DelegatedSubnet            plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 	PrivateDnsZone             plugin.TValue[*mqlAzureSubscriptionDnsServicePrivateZone]
 	MaintenanceWindow          plugin.TValue[any]
+	MaintenanceCustomWindow    plugin.TValue[string]
+	MaintenanceDayOfWeek       plugin.TValue[int64]
+	MaintenanceStartHour       plugin.TValue[int64]
+	MaintenanceStartMinute     plugin.TValue[int64]
 	InternetReachable          plugin.TValue[bool]
 	IdentityType               plugin.TValue[string]
 	PrincipalId                plugin.TValue[string]
@@ -83265,6 +83594,22 @@ func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetPrivateDnsZone() *pl
 
 func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetMaintenanceWindow() *plugin.TValue[any] {
 	return &c.MaintenanceWindow
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetMaintenanceCustomWindow() *plugin.TValue[string] {
+	return &c.MaintenanceCustomWindow
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetMaintenanceDayOfWeek() *plugin.TValue[int64] {
+	return &c.MaintenanceDayOfWeek
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetMaintenanceStartHour() *plugin.TValue[int64] {
+	return &c.MaintenanceStartHour
+}
+
+func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetMaintenanceStartMinute() *plugin.TValue[int64] {
+	return &c.MaintenanceStartMinute
 }
 
 func (c *mqlAzureSubscriptionMySqlServiceFlexibleServer) GetInternetReachable() *plugin.TValue[bool] {
@@ -83584,62 +83929,66 @@ type mqlAzureSubscriptionCosmosDbServiceAccount struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionCosmosDbServiceAccountInternal
-	Id                                 plugin.TValue[string]
-	Name                               plugin.TValue[string]
-	Properties                         plugin.TValue[any]
-	Location                           plugin.TValue[string]
-	Tags                               plugin.TValue[map[string]any]
-	Type                               plugin.TValue[string]
-	Kind                               plugin.TValue[string]
-	PublicNetworkAccess                plugin.TValue[string]
-	DisableLocalAuth                   plugin.TValue[bool]
-	IsVirtualNetworkFilterEnabled      plugin.TValue[bool]
-	DisableKeyBasedMetadataWriteAccess plugin.TValue[bool]
-	EnableAutomaticFailover            plugin.TValue[bool]
-	EnableMultipleWriteLocations       plugin.TValue[bool]
-	IpRangeFilter                      plugin.TValue[[]any]
-	MinimalTlsVersion                  plugin.TValue[string]
-	EncryptionKey                      plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
-	DefaultIdentity                    plugin.TValue[string]
-	CustomerManagedKeyStatus           plugin.TValue[string]
-	EncryptionKeyVersion               plugin.TValue[string]
-	KeysMetadata                       plugin.TValue[any]
-	Capabilities                       plugin.TValue[[]any]
-	EnableAnalyticalStorage            plugin.TValue[bool]
-	AnalyticalStorageSchemaType        plugin.TValue[string]
-	EnableFreeTier                     plugin.TValue[bool]
-	EnableBurstCapacity                plugin.TValue[bool]
-	EnablePartitionMerge               plugin.TValue[bool]
-	NetworkAclBypassResourceIds        plugin.TValue[[]any]
-	DocumentEndpoint                   plugin.TValue[string]
-	BackupType                         plugin.TValue[string]
-	BackupIntervalInMinutes            plugin.TValue[int64]
-	BackupRetentionIntervalInHours     plugin.TValue[int64]
-	BackupStorageRedundancy            plugin.TValue[string]
-	DefaultConsistencyLevel            plugin.TValue[string]
-	NetworkAclBypass                   plugin.TValue[string]
-	CorsAllowedOrigins                 plugin.TValue[[]any]
-	Locations                          plugin.TValue[[]any]
-	VirtualNetworkRules                plugin.TValue[[]any]
-	PrivateEndpointConnections         plugin.TValue[[]any]
-	SqlRoleDefinitions                 plugin.TValue[[]any]
-	SqlRoleAssignments                 plugin.TValue[[]any]
-	CassandraRoleDefinitions           plugin.TValue[[]any]
-	CassandraRoleAssignments           plugin.TValue[[]any]
-	GremlinRoleDefinitions             plugin.TValue[[]any]
-	GremlinRoleAssignments             plugin.TValue[[]any]
-	TableRoleDefinitions               plugin.TValue[[]any]
-	TableRoleAssignments               plugin.TValue[[]any]
-	MongoMIRoleDefinitions             plugin.TValue[[]any]
-	MongoMIRoleAssignments             plugin.TValue[[]any]
-	DiagnosticSettings                 plugin.TValue[[]any]
-	DiagnosticSettingsCategories       plugin.TValue[[]any]
-	SqlDatabases                       plugin.TValue[[]any]
-	IdentityType                       plugin.TValue[string]
-	PrincipalId                        plugin.TValue[string]
-	TenantId                           plugin.TValue[string]
-	UserAssignedIdentities             plugin.TValue[[]any]
-	SystemMetadata                     plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                                    plugin.TValue[string]
+	Name                                  plugin.TValue[string]
+	Properties                            plugin.TValue[any]
+	Location                              plugin.TValue[string]
+	Tags                                  plugin.TValue[map[string]any]
+	Type                                  plugin.TValue[string]
+	Kind                                  plugin.TValue[string]
+	PublicNetworkAccess                   plugin.TValue[string]
+	DisableLocalAuth                      plugin.TValue[bool]
+	IsVirtualNetworkFilterEnabled         plugin.TValue[bool]
+	DisableKeyBasedMetadataWriteAccess    plugin.TValue[bool]
+	EnableAutomaticFailover               plugin.TValue[bool]
+	EnableMultipleWriteLocations          plugin.TValue[bool]
+	IpRangeFilter                         plugin.TValue[[]any]
+	MinimalTlsVersion                     plugin.TValue[string]
+	EncryptionKey                         plugin.TValue[*mqlAzureSubscriptionKeyVaultServiceKey]
+	DefaultIdentity                       plugin.TValue[string]
+	CustomerManagedKeyStatus              plugin.TValue[string]
+	EncryptionKeyVersion                  plugin.TValue[string]
+	KeysMetadata                          plugin.TValue[any]
+	PrimaryMasterKeyGeneratedAt           plugin.TValue[*time.Time]
+	SecondaryMasterKeyGeneratedAt         plugin.TValue[*time.Time]
+	PrimaryReadonlyMasterKeyGeneratedAt   plugin.TValue[*time.Time]
+	SecondaryReadonlyMasterKeyGeneratedAt plugin.TValue[*time.Time]
+	Capabilities                          plugin.TValue[[]any]
+	EnableAnalyticalStorage               plugin.TValue[bool]
+	AnalyticalStorageSchemaType           plugin.TValue[string]
+	EnableFreeTier                        plugin.TValue[bool]
+	EnableBurstCapacity                   plugin.TValue[bool]
+	EnablePartitionMerge                  plugin.TValue[bool]
+	NetworkAclBypassResourceIds           plugin.TValue[[]any]
+	DocumentEndpoint                      plugin.TValue[string]
+	BackupType                            plugin.TValue[string]
+	BackupIntervalInMinutes               plugin.TValue[int64]
+	BackupRetentionIntervalInHours        plugin.TValue[int64]
+	BackupStorageRedundancy               plugin.TValue[string]
+	DefaultConsistencyLevel               plugin.TValue[string]
+	NetworkAclBypass                      plugin.TValue[string]
+	CorsAllowedOrigins                    plugin.TValue[[]any]
+	Locations                             plugin.TValue[[]any]
+	VirtualNetworkRules                   plugin.TValue[[]any]
+	PrivateEndpointConnections            plugin.TValue[[]any]
+	SqlRoleDefinitions                    plugin.TValue[[]any]
+	SqlRoleAssignments                    plugin.TValue[[]any]
+	CassandraRoleDefinitions              plugin.TValue[[]any]
+	CassandraRoleAssignments              plugin.TValue[[]any]
+	GremlinRoleDefinitions                plugin.TValue[[]any]
+	GremlinRoleAssignments                plugin.TValue[[]any]
+	TableRoleDefinitions                  plugin.TValue[[]any]
+	TableRoleAssignments                  plugin.TValue[[]any]
+	MongoMIRoleDefinitions                plugin.TValue[[]any]
+	MongoMIRoleAssignments                plugin.TValue[[]any]
+	DiagnosticSettings                    plugin.TValue[[]any]
+	DiagnosticSettingsCategories          plugin.TValue[[]any]
+	SqlDatabases                          plugin.TValue[[]any]
+	IdentityType                          plugin.TValue[string]
+	PrincipalId                           plugin.TValue[string]
+	TenantId                              plugin.TValue[string]
+	UserAssignedIdentities                plugin.TValue[[]any]
+	SystemMetadata                        plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCosmosDbServiceAccount creates a new instance of this resource
@@ -83764,6 +84113,22 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetEncryptionKeyVersion() *
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetKeysMetadata() *plugin.TValue[any] {
 	return &c.KeysMetadata
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetPrimaryMasterKeyGeneratedAt() *plugin.TValue[*time.Time] {
+	return &c.PrimaryMasterKeyGeneratedAt
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSecondaryMasterKeyGeneratedAt() *plugin.TValue[*time.Time] {
+	return &c.SecondaryMasterKeyGeneratedAt
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetPrimaryReadonlyMasterKeyGeneratedAt() *plugin.TValue[*time.Time] {
+	return &c.PrimaryReadonlyMasterKeyGeneratedAt
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetSecondaryReadonlyMasterKeyGeneratedAt() *plugin.TValue[*time.Time] {
+	return &c.SecondaryReadonlyMasterKeyGeneratedAt
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccount) GetCapabilities() *plugin.TValue[[]any] {
@@ -84370,6 +84735,10 @@ type mqlAzureSubscriptionCosmosDbServicePostgresqlCluster struct {
 	SourceResourceId                plugin.TValue[string]
 	ReadReplicas                    plugin.TValue[[]any]
 	MaintenanceWindow               plugin.TValue[any]
+	MaintenanceCustomWindow         plugin.TValue[string]
+	MaintenanceDayOfWeek            plugin.TValue[int64]
+	MaintenanceStartHour            plugin.TValue[int64]
+	MaintenanceStartMinute          plugin.TValue[int64]
 	ServerNames                     plugin.TValue[[]any]
 	SystemMetadata                  plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -84508,6 +84877,22 @@ func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetReadReplicas()
 
 func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetMaintenanceWindow() *plugin.TValue[any] {
 	return &c.MaintenanceWindow
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetMaintenanceCustomWindow() *plugin.TValue[string] {
+	return &c.MaintenanceCustomWindow
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetMaintenanceDayOfWeek() *plugin.TValue[int64] {
+	return &c.MaintenanceDayOfWeek
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetMaintenanceStartHour() *plugin.TValue[int64] {
+	return &c.MaintenanceStartHour
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetMaintenanceStartMinute() *plugin.TValue[int64] {
+	return &c.MaintenanceStartMinute
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServicePostgresqlCluster) GetServerNames() *plugin.TValue[[]any] {
@@ -96472,46 +96857,53 @@ type mqlAzureSubscriptionCacheServiceRedisInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionCacheServiceRedisInstanceInternal
-	Id                             plugin.TValue[string]
-	Name                           plugin.TValue[string]
-	Location                       plugin.TValue[string]
-	Type                           plugin.TValue[string]
-	Properties                     plugin.TValue[any]
-	EnableNonSslPort               plugin.TValue[bool]
-	HostName                       plugin.TValue[string]
-	PublicNetworkAccess            plugin.TValue[string]
-	Port                           plugin.TValue[int64]
-	SslPort                        plugin.TValue[int64]
-	ProvisioningState              plugin.TValue[string]
-	RedisVersion                   plugin.TValue[string]
-	ReplicasPerMaster              plugin.TValue[int64]
-	ReplicasPerPrimary             plugin.TValue[int64]
-	MinimumTlsVersion              plugin.TValue[string]
-	DisableAccessKeyAuthentication plugin.TValue[bool]
-	UpdateChannel                  plugin.TValue[string]
-	ZonalAllocationPolicy          plugin.TValue[string]
-	TenantSettings                 plugin.TValue[map[string]any]
-	LinkedServers                  plugin.TValue[[]any]
-	Sku                            plugin.TValue[any]
-	SkuName                        plugin.TValue[string]
-	SkuFamily                      plugin.TValue[string]
-	SkuCapacity                    plugin.TValue[int64]
-	Tags                           plugin.TValue[map[string]any]
-	RedisConfiguration             plugin.TValue[any]
-	ShardCount                     plugin.TValue[int64]
-	StaticIp                       plugin.TValue[string]
-	SubnetId                       plugin.TValue[string]
-	Subnet                         plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
-	Zones                          plugin.TValue[[]any]
-	Identity                       plugin.TValue[any]
-	IdentityType                   plugin.TValue[string]
-	TenantId                       plugin.TValue[string]
-	PrincipalId                    plugin.TValue[string]
-	UserAssignedIdentities         plugin.TValue[[]any]
-	PrivateEndpointConnections     plugin.TValue[[]any]
-	FirewallRules                  plugin.TValue[[]any]
-	PatchSchedules                 plugin.TValue[[]any]
-	SystemMetadata                 plugin.TValue[*mqlAzureSubscriptionSystemData]
+	Id                                 plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	Location                           plugin.TValue[string]
+	Type                               plugin.TValue[string]
+	Properties                         plugin.TValue[any]
+	EnableNonSslPort                   plugin.TValue[bool]
+	HostName                           plugin.TValue[string]
+	PublicNetworkAccess                plugin.TValue[string]
+	Port                               plugin.TValue[int64]
+	SslPort                            plugin.TValue[int64]
+	ProvisioningState                  plugin.TValue[string]
+	RedisVersion                       plugin.TValue[string]
+	ReplicasPerMaster                  plugin.TValue[int64]
+	ReplicasPerPrimary                 plugin.TValue[int64]
+	MinimumTlsVersion                  plugin.TValue[string]
+	DisableAccessKeyAuthentication     plugin.TValue[bool]
+	UpdateChannel                      plugin.TValue[string]
+	ZonalAllocationPolicy              plugin.TValue[string]
+	TenantSettings                     plugin.TValue[map[string]any]
+	LinkedServers                      plugin.TValue[[]any]
+	Sku                                plugin.TValue[any]
+	SkuName                            plugin.TValue[string]
+	SkuFamily                          plugin.TValue[string]
+	SkuCapacity                        plugin.TValue[int64]
+	Tags                               plugin.TValue[map[string]any]
+	RedisConfiguration                 plugin.TValue[any]
+	AuthNotRequired                    plugin.TValue[string]
+	AadEnabled                         plugin.TValue[string]
+	MaxmemoryPolicy                    plugin.TValue[string]
+	RdbBackupEnabled                   plugin.TValue[string]
+	RdbBackupFrequency                 plugin.TValue[string]
+	AofBackupEnabled                   plugin.TValue[string]
+	PreferredDataPersistenceAuthMethod plugin.TValue[string]
+	ShardCount                         plugin.TValue[int64]
+	StaticIp                           plugin.TValue[string]
+	SubnetId                           plugin.TValue[string]
+	Subnet                             plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	Zones                              plugin.TValue[[]any]
+	Identity                           plugin.TValue[any]
+	IdentityType                       plugin.TValue[string]
+	TenantId                           plugin.TValue[string]
+	PrincipalId                        plugin.TValue[string]
+	UserAssignedIdentities             plugin.TValue[[]any]
+	PrivateEndpointConnections         plugin.TValue[[]any]
+	FirewallRules                      plugin.TValue[[]any]
+	PatchSchedules                     plugin.TValue[[]any]
+	SystemMetadata                     plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
 // createAzureSubscriptionCacheServiceRedisInstance creates a new instance of this resource
@@ -96665,6 +97057,34 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetTags() *plugin.TValue
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetRedisConfiguration() *plugin.TValue[any] {
 	return &c.RedisConfiguration
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetAuthNotRequired() *plugin.TValue[string] {
+	return &c.AuthNotRequired
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetAadEnabled() *plugin.TValue[string] {
+	return &c.AadEnabled
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetMaxmemoryPolicy() *plugin.TValue[string] {
+	return &c.MaxmemoryPolicy
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetRdbBackupEnabled() *plugin.TValue[string] {
+	return &c.RdbBackupEnabled
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetRdbBackupFrequency() *plugin.TValue[string] {
+	return &c.RdbBackupFrequency
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetAofBackupEnabled() *plugin.TValue[string] {
+	return &c.AofBackupEnabled
+}
+
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPreferredDataPersistenceAuthMethod() *plugin.TValue[string] {
+	return &c.PreferredDataPersistenceAuthMethod
 }
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetShardCount() *plugin.TValue[int64] {
