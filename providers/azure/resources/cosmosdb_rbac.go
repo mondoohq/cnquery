@@ -5,6 +5,7 @@ package resources
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	azruntime "github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
@@ -52,6 +53,48 @@ type cosmosRoleAssignment struct {
 	roleDefinitionID  *string
 	scope             *string
 	provisioningState *string
+}
+
+// cosmosRolePermissionsToMql builds the typed permission blocks of a Cosmos
+// data-plane role definition.
+//
+// A permission block usually carries no id of its own, so the cache key falls
+// back to its position within the definition.
+func cosmosRolePermissionsToMql(runtime *plugin.Runtime, definitionID string, permissions []*cosmos.Permission) ([]any, error) {
+	res := []any{}
+	for i, p := range permissions {
+		if p == nil {
+			continue
+		}
+		key := convert.ToValue(p.ID)
+		if key == "" {
+			key = strconv.Itoa(i)
+		}
+		dataActions := []any{}
+		for _, a := range p.DataActions {
+			if a != nil {
+				dataActions = append(dataActions, *a)
+			}
+		}
+		notDataActions := []any{}
+		for _, a := range p.NotDataActions {
+			if a != nil {
+				notDataActions = append(notDataActions, *a)
+			}
+		}
+		mqlPerm, err := CreateResource(runtime, "azure.subscription.cosmosDbService.account.roleDefinitionPermission",
+			map[string]*llx.RawData{
+				"__id":           llx.StringData(subResourceCacheID(nil, definitionID, "dataPermissions", key)),
+				"id":             llx.StringDataPtr(p.ID),
+				"dataActions":    llx.ArrayData(dataActions, types.String),
+				"notDataActions": llx.ArrayData(notDataActions, types.String),
+			})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlPerm)
+	}
+	return res, nil
 }
 
 // cosmosRoleDefinitionArgs maps a normalized role definition to MQL resource
@@ -153,6 +196,11 @@ func collectCosmosRoleDefinitions[P, T any](
 			if err != nil {
 				return nil, err
 			}
+			dataPermissions, err := cosmosRolePermissionsToMql(runtime, convert.ToValue(d.id), d.permissions)
+			if err != nil {
+				return nil, err
+			}
+			args["dataPermissions"] = llx.ArrayData(dataPermissions, types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission"))
 			mqlDef, err := CreateResource(runtime, resource, args)
 			if err != nil {
 				return nil, err

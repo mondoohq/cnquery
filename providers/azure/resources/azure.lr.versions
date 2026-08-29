@@ -2110,6 +2110,7 @@ azure.subscription.cosmosDbService.account.cassandraRoleAssignment.type 13.31.1
 azure.subscription.cosmosDbService.account.cassandraRoleAssignments 13.31.1
 azure.subscription.cosmosDbService.account.cassandraRoleDefinition 13.31.1
 azure.subscription.cosmosDbService.account.cassandraRoleDefinition.assignableScopes 13.31.1
+azure.subscription.cosmosDbService.account.cassandraRoleDefinition.dataPermissions 13.36.1
 azure.subscription.cosmosDbService.account.cassandraRoleDefinition.id 13.31.1
 azure.subscription.cosmosDbService.account.cassandraRoleDefinition.name 13.31.1
 azure.subscription.cosmosDbService.account.cassandraRoleDefinition.permissions 13.31.1
@@ -2147,6 +2148,7 @@ azure.subscription.cosmosDbService.account.gremlinRoleAssignment.type 13.31.1
 azure.subscription.cosmosDbService.account.gremlinRoleAssignments 13.31.1
 azure.subscription.cosmosDbService.account.gremlinRoleDefinition 13.31.1
 azure.subscription.cosmosDbService.account.gremlinRoleDefinition.assignableScopes 13.31.1
+azure.subscription.cosmosDbService.account.gremlinRoleDefinition.dataPermissions 13.36.1
 azure.subscription.cosmosDbService.account.gremlinRoleDefinition.id 13.31.1
 azure.subscription.cosmosDbService.account.gremlinRoleDefinition.name 13.31.1
 azure.subscription.cosmosDbService.account.gremlinRoleDefinition.permissions 13.31.1
@@ -2176,6 +2178,7 @@ azure.subscription.cosmosDbService.account.mongoMIRoleAssignment.type 13.31.1
 azure.subscription.cosmosDbService.account.mongoMIRoleAssignments 13.31.1
 azure.subscription.cosmosDbService.account.mongoMIRoleDefinition 13.31.1
 azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.assignableScopes 13.31.1
+azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.dataPermissions 13.36.1
 azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.id 13.31.1
 azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.name 13.31.1
 azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.permissions 13.31.1
@@ -2193,6 +2196,10 @@ azure.subscription.cosmosDbService.account.principalId 13.23.1
 azure.subscription.cosmosDbService.account.privateEndpointConnections 13.8.2
 azure.subscription.cosmosDbService.account.properties 9.0.1
 azure.subscription.cosmosDbService.account.publicNetworkAccess 11.4.28
+azure.subscription.cosmosDbService.account.roleDefinitionPermission 13.36.1
+azure.subscription.cosmosDbService.account.roleDefinitionPermission.dataActions 13.36.1
+azure.subscription.cosmosDbService.account.roleDefinitionPermission.id 13.36.1
+azure.subscription.cosmosDbService.account.roleDefinitionPermission.notDataActions 13.36.1
 azure.subscription.cosmosDbService.account.secondaryMasterKeyGeneratedAt 13.36.1
 azure.subscription.cosmosDbService.account.secondaryReadonlyMasterKeyGeneratedAt 13.36.1
 azure.subscription.cosmosDbService.account.sqlDatabase 13.10.2
@@ -2237,6 +2244,7 @@ azure.subscription.cosmosDbService.account.sqlRoleAssignment.type 13.8.2
 azure.subscription.cosmosDbService.account.sqlRoleAssignments 13.8.2
 azure.subscription.cosmosDbService.account.sqlRoleDefinition 13.8.2
 azure.subscription.cosmosDbService.account.sqlRoleDefinition.assignableScopes 13.8.2
+azure.subscription.cosmosDbService.account.sqlRoleDefinition.dataPermissions 13.36.1
 azure.subscription.cosmosDbService.account.sqlRoleDefinition.id 13.8.2
 azure.subscription.cosmosDbService.account.sqlRoleDefinition.name 13.8.2
 azure.subscription.cosmosDbService.account.sqlRoleDefinition.permissions 13.8.2
@@ -2258,6 +2266,7 @@ azure.subscription.cosmosDbService.account.tableRoleAssignment.type 13.31.1
 azure.subscription.cosmosDbService.account.tableRoleAssignments 13.31.1
 azure.subscription.cosmosDbService.account.tableRoleDefinition 13.31.1
 azure.subscription.cosmosDbService.account.tableRoleDefinition.assignableScopes 13.31.1
+azure.subscription.cosmosDbService.account.tableRoleDefinition.dataPermissions 13.36.1
 azure.subscription.cosmosDbService.account.tableRoleDefinition.id 13.31.1
 azure.subscription.cosmosDbService.account.tableRoleDefinition.name 13.31.1
 azure.subscription.cosmosDbService.account.tableRoleDefinition.permissions 13.31.1
@@ -5254,6 +5263,9 @@ azure.subscription.networkService.subscriptionId 9.0.1
 azure.subscription.networkService.trafficManagerProfile 13.12.2
 azure.subscription.networkService.trafficManagerProfile.allowedEndpointRecordTypes 13.12.2
 azure.subscription.networkService.trafficManagerProfile.dnsConfig 13.12.2
+azure.subscription.networkService.trafficManagerProfile.dnsFqdn 13.36.1
+azure.subscription.networkService.trafficManagerProfile.dnsRelativeName 13.36.1
+azure.subscription.networkService.trafficManagerProfile.dnsTtl 13.36.1
 azure.subscription.networkService.trafficManagerProfile.endpoint 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.alwaysServe 13.12.2
 azure.subscription.networkService.trafficManagerProfile.endpoint.customHeaders 13.12.2
@@ -5278,6 +5290,16 @@ azure.subscription.networkService.trafficManagerProfile.id 13.12.2
 azure.subscription.networkService.trafficManagerProfile.location 13.12.2
 azure.subscription.networkService.trafficManagerProfile.maxReturn 13.12.2
 azure.subscription.networkService.trafficManagerProfile.monitorConfig 13.12.2
+azure.subscription.networkService.trafficManagerProfile.monitorSettings 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.customHeaders 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.expectedStatusCodeRanges 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.intervalInSeconds 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.path 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.port 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.profileMonitorStatus 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.protocol 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.timeoutInSeconds 13.36.1
+azure.subscription.networkService.trafficManagerProfile.monitorSettings.toleratedNumberOfFailures 13.36.1
 azure.subscription.networkService.trafficManagerProfile.name 13.12.2
 azure.subscription.networkService.trafficManagerProfile.properties 13.12.2
 azure.subscription.networkService.trafficManagerProfile.status 13.25.1

@@ -5163,12 +5163,66 @@ azure.subscription.networkService.trafficManagerProfile @defaults("id name locat
   maxReturn int
   // Allowed endpoint record types (e.g., "DomainName", "IPv4Address", "IPv6Address")
   allowedEndpointRecordTypes []string
-  // DNS settings: relativeName, ttl, fqdn
-  dnsConfig dict
-  // Endpoint health monitoring settings: protocol, port, path, intervals, expected status codes, custom headers
-  monitorConfig dict
+  // DNS settings
+  //
+  // Deprecated in favor of dnsRelativeName, dnsTtl, and dnsFqdn.
+  dnsConfig @maturity("deprecated") dict
+  // Relative DNS name the profile answers on
+  //
+  // Combined with the Traffic Manager DNS domain to form dnsFqdn.
+  dnsRelativeName string
+  // Seconds resolvers and clients are told to cache the profile's answers
+  //
+  // A long TTL keeps clients pointed at an endpoint the profile has
+  // already stopped returning, so a failover takes effect this many
+  // seconds late at worst.
+  dnsTtl int
+  // Fully qualified domain name the profile answers on
+  dnsFqdn string
+  // Endpoint health monitoring settings
+  //
+  // Deprecated in favor of monitorSettings.
+  monitorConfig @maturity("deprecated") dict
+  // Endpoint health monitoring settings
+  //
+  // How the profile probes its endpoints and what it accepts as healthy.
+  // Null when the profile carries no monitoring configuration.
+  monitorSettings azure.subscription.networkService.trafficManagerProfile.monitorSettings
   // Endpoints configured on the profile
   endpoints []azure.subscription.networkService.trafficManagerProfile.endpoint
+}
+
+// Endpoint health monitoring settings of a Traffic Manager profile
+//
+// How the profile probes the endpoints behind it and what it accepts as a
+// healthy answer. A profile probing over HTTP sends its health check in the
+// clear, and a long interval combined with a high failure tolerance leaves a
+// failed endpoint in rotation for minutes.
+private azure.subscription.networkService.trafficManagerProfile.monitorSettings @defaults("protocol port path profileMonitorStatus") {
+  // Protocol the health probe uses ("HTTP", "HTTPS", or "TCP")
+  protocol string
+  // TCP port the health probe connects to
+  port int
+  // Path, relative to the endpoint domain name, the health probe requests
+  path string
+  // Seconds between health checks
+  intervalInSeconds int
+  // Seconds the profile waits for an endpoint to answer a health check
+  timeoutInSeconds int
+  // Consecutive failed checks tolerated before an endpoint is marked degraded
+  //
+  // Multiplied by intervalInSeconds, this is how long a failed endpoint
+  // keeps receiving traffic.
+  toleratedNumberOfFailures int
+  // Aggregate monitoring status of the profile, for example "Online", "Degraded", "Inactive", or "CheckingEndpoints"
+  profileMonitorStatus string
+  // Custom headers sent with each health check, keyed by header name
+  customHeaders map[string]string
+  // HTTP status code ranges the probe accepts as healthy
+  //
+  // Each entry has `min` and `max`. An empty list means the profile
+  // accepts the default 200 range only.
+  expectedStatusCodeRanges []dict
 }
 
 // Traffic Manager endpoint
@@ -9687,10 +9741,39 @@ private azure.subscription.cosmosDbService.account.sqlRoleDefinition @defaults("
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
+}
+
+// Permission set of a Cosmos DB data-plane role definition
+//
+// One block of data actions a role definition allows, together with the
+// actions it withholds from that block. Cosmos evaluates the allowed actions
+// first and then removes the withheld ones, so a role with a wildcard in
+// dataActions is only as narrow as its notDataActions make it.
+private azure.subscription.cosmosDbService.account.roleDefinitionPermission @defaults("dataActions") {
+  // Identifier of the permission block, empty when Cosmos returns none
+  id string
+  // Data actions the role allows, for example "Microsoft.DocumentDB/databaseAccounts/readMetadata"
+  //
+  // The wildcard "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/*"
+  // grants every data-plane operation on the databases the scope covers.
+  dataActions []string
+  // Data actions withheld from the allowed set
+  //
+  // Subtracted from dataActions after it is evaluated, so this is what
+  // narrows a wildcard grant.
+  notDataActions []string
 }
 
 // Azure Cosmos DB SQL data-plane role assignment
@@ -9725,8 +9808,16 @@ private azure.subscription.cosmosDbService.account.cassandraRoleDefinition @defa
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9765,8 +9856,16 @@ private azure.subscription.cosmosDbService.account.gremlinRoleDefinition @defaul
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9805,8 +9904,16 @@ private azure.subscription.cosmosDbService.account.tableRoleDefinition @defaults
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -9845,8 +9952,16 @@ private azure.subscription.cosmosDbService.account.mongoMIRoleDefinition @defaul
   roleType string
   // Scopes at or below which assignments using this definition may be created
   assignableScopes []string
-  // Permission set granted by this role (Cosmos permission JSON: dataActions, notDataActions)
-  permissions []dict
+  // Permission set granted by this role
+  //
+  // Deprecated in favor of dataPermissions.
+  permissions @maturity("deprecated") []dict
+  // Permission sets granted by this role
+  //
+  // Each entry lists the data actions the role allows and the ones it
+  // withholds. A role granting the wildcard action carries full data-plane
+  // access to everything its assignable scopes cover.
+  dataPermissions []azure.subscription.cosmosDbService.account.roleDefinitionPermission
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }

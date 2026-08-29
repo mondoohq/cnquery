@@ -131,6 +131,7 @@ const (
 	ResourceAzureSubscriptionNetworkServiceRouteTable                                                   string = "azure.subscription.networkService.routeTable"
 	ResourceAzureSubscriptionNetworkServiceRoute                                                        string = "azure.subscription.networkService.route"
 	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfile                                        string = "azure.subscription.networkService.trafficManagerProfile"
+	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings                         string = "azure.subscription.networkService.trafficManagerProfile.monitorSettings"
 	ResourceAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint                                string = "azure.subscription.networkService.trafficManagerProfile.endpoint"
 	ResourceAzureSubscriptionNetworkServiceVirtualWan                                                   string = "azure.subscription.networkService.virtualWan"
 	ResourceAzureSubscriptionNetworkServiceVirtualHub                                                   string = "azure.subscription.networkService.virtualHub"
@@ -254,6 +255,7 @@ const (
 	ResourceAzureSubscriptionCosmosDbServiceMongoCluster                                                string = "azure.subscription.cosmosDbService.mongoCluster"
 	ResourceAzureSubscriptionCosmosDbServicePostgresqlCluster                                           string = "azure.subscription.cosmosDbService.postgresqlCluster"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition                                    string = "azure.subscription.cosmosDbService.account.sqlRoleDefinition"
+	ResourceAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission                             string = "azure.subscription.cosmosDbService.account.roleDefinitionPermission"
 	ResourceAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment                                    string = "azure.subscription.cosmosDbService.account.sqlRoleAssignment"
 	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition                              string = "azure.subscription.cosmosDbService.account.cassandraRoleDefinition"
 	ResourceAzureSubscriptionCosmosDbServiceAccountCassandraRoleAssignment                              string = "azure.subscription.cosmosDbService.account.cassandraRoleAssignment"
@@ -1031,6 +1033,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionNetworkServiceTrafficManagerProfile(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceTrafficManagerProfile,
 		},
+		"azure.subscription.networkService.trafficManagerProfile.monitorSettings": {
+			// to override args, implement: initAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings,
+		},
 		"azure.subscription.networkService.trafficManagerProfile.endpoint": {
 			// to override args, implement: initAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint,
@@ -1522,6 +1528,10 @@ func init() {
 		"azure.subscription.cosmosDbService.account.sqlRoleDefinition": {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition,
+		},
+		"azure.subscription.cosmosDbService.account.roleDefinitionPermission": {
+			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission,
 		},
 		"azure.subscription.cosmosDbService.account.sqlRoleAssignment": {
 			// to override args, implement: initAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7803,11 +7813,50 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.trafficManagerProfile.dnsConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetDnsConfig()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsRelativeName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetDnsRelativeName()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsTtl": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetDnsTtl()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsFqdn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetDnsFqdn()).ToDataRes(types.String)
+	},
 	"azure.subscription.networkService.trafficManagerProfile.monitorConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetMonitorConfig()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetMonitorSettings()).ToDataRes(types.Resource("azure.subscription.networkService.trafficManagerProfile.monitorSettings"))
+	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoints": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).GetEndpoints()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.trafficManagerProfile.endpoint")))
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetPath()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.intervalInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetIntervalInSeconds()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.timeoutInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetTimeoutInSeconds()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.toleratedNumberOfFailures": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetToleratedNumberOfFailures()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.profileMonitorStatus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetProfileMonitorStatus()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.customHeaders": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetCustomHeaders()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.expectedStatusCodeRanges": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).GetExpectedStatusCodeRanges()).ToDataRes(types.Array(types.Dict))
 	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoint.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint).GetId()).ToDataRes(types.String)
@@ -12462,8 +12511,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.dataPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetDataPermissions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission")))
+	},
 	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
+	},
+	"azure.subscription.cosmosDbService.account.roleDefinitionPermission.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission).GetId()).ToDataRes(types.String)
+	},
+	"azure.subscription.cosmosDbService.account.roleDefinitionPermission.dataActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission).GetDataActions()).ToDataRes(types.Array(types.String))
+	},
+	"azure.subscription.cosmosDbService.account.roleDefinitionPermission.notDataActions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission).GetNotDataActions()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment).GetId()).ToDataRes(types.String)
@@ -12506,6 +12567,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.dataPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetDataPermissions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission")))
 	},
 	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -12555,6 +12619,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.dataPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetDataPermissions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission")))
+	},
 	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -12603,6 +12670,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cosmosDbService.account.tableRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.dataPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetDataPermissions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission")))
+	},
 	"azure.subscription.cosmosDbService.account.tableRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
 	},
@@ -12650,6 +12720,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.permissions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetPermissions()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.dataPermissions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetDataPermissions()).ToDataRes(types.Array(types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission")))
 	},
 	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -30495,12 +30568,68 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).DnsConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsRelativeName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).DnsRelativeName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsTtl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).DnsTtl, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.dnsFqdn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).DnsFqdn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.trafficManagerProfile.monitorConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).MonitorConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).MonitorSettings, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoints": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfile).Endpoints, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.intervalInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).IntervalInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.timeoutInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).TimeoutInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.toleratedNumberOfFailures": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).ToleratedNumberOfFailures, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.profileMonitorStatus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).ProfileMonitorStatus, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.customHeaders": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).CustomHeaders, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.trafficManagerProfile.monitorSettings.expectedStatusCodeRanges": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings).ExpectedStatusCodeRanges, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.trafficManagerProfile.endpoint.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37199,8 +37328,28 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.dataPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).DataPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.sqlRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.roleDefinitionPermission.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.roleDefinitionPermission.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.roleDefinitionPermission.dataActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission).DataActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.roleDefinitionPermission.notDataActions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission).NotDataActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.sqlRoleAssignment.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37265,6 +37414,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.dataPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition).DataPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.cassandraRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -37339,6 +37492,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.dataPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).DataPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.gremlinRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -37411,6 +37568,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.cosmosDbService.account.tableRoleDefinition.dataPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).DataPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.cosmosDbService.account.tableRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition).SystemMetadata, ok = plugin.RawToTValue[*mqlAzureSubscriptionSystemData](v.Value, v.Error)
 		return
@@ -37481,6 +37642,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.permissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).Permissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.dataPermissions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition).DataPermissions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cosmosDbService.account.mongoMIRoleDefinition.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69844,7 +70009,11 @@ type mqlAzureSubscriptionNetworkServiceTrafficManagerProfile struct {
 	MaxReturn                   plugin.TValue[int64]
 	AllowedEndpointRecordTypes  plugin.TValue[[]any]
 	DnsConfig                   plugin.TValue[any]
+	DnsRelativeName             plugin.TValue[string]
+	DnsTtl                      plugin.TValue[int64]
+	DnsFqdn                     plugin.TValue[string]
 	MonitorConfig               plugin.TValue[any]
+	MonitorSettings             plugin.TValue[*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings]
 	Endpoints                   plugin.TValue[[]any]
 }
 
@@ -69933,12 +70102,112 @@ func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetDnsConfig()
 	return &c.DnsConfig
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetDnsRelativeName() *plugin.TValue[string] {
+	return &c.DnsRelativeName
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetDnsTtl() *plugin.TValue[int64] {
+	return &c.DnsTtl
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetDnsFqdn() *plugin.TValue[string] {
+	return &c.DnsFqdn
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetMonitorConfig() *plugin.TValue[any] {
 	return &c.MonitorConfig
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetMonitorSettings() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings] {
+	return &c.MonitorSettings
+}
+
 func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfile) GetEndpoints() *plugin.TValue[[]any] {
 	return &c.Endpoints
+}
+
+// mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings for the azure.subscription.networkService.trafficManagerProfile.monitorSettings resource
+type mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettingsInternal it will be used here
+	Protocol                  plugin.TValue[string]
+	Port                      plugin.TValue[int64]
+	Path                      plugin.TValue[string]
+	IntervalInSeconds         plugin.TValue[int64]
+	TimeoutInSeconds          plugin.TValue[int64]
+	ToleratedNumberOfFailures plugin.TValue[int64]
+	ProfileMonitorStatus      plugin.TValue[string]
+	CustomHeaders             plugin.TValue[map[string]any]
+	ExpectedStatusCodeRanges  plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings creates a new instance of this resource
+func createAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.networkService.trafficManagerProfile.monitorSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) MqlName() string {
+	return "azure.subscription.networkService.trafficManagerProfile.monitorSettings"
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetIntervalInSeconds() *plugin.TValue[int64] {
+	return &c.IntervalInSeconds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetTimeoutInSeconds() *plugin.TValue[int64] {
+	return &c.TimeoutInSeconds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetToleratedNumberOfFailures() *plugin.TValue[int64] {
+	return &c.ToleratedNumberOfFailures
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetProfileMonitorStatus() *plugin.TValue[string] {
+	return &c.ProfileMonitorStatus
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetCustomHeaders() *plugin.TValue[map[string]any] {
+	return &c.CustomHeaders
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceTrafficManagerProfileMonitorSettings) GetExpectedStatusCodeRanges() *plugin.TValue[[]any] {
+	return &c.ExpectedStatusCodeRanges
 }
 
 // mqlAzureSubscriptionNetworkServiceTrafficManagerProfileEndpoint for the azure.subscription.networkService.trafficManagerProfile.endpoint resource
@@ -85554,6 +85823,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition struct {
 	RoleType         plugin.TValue[string]
 	AssignableScopes plugin.TValue[[]any]
 	Permissions      plugin.TValue[[]any]
+	DataPermissions  plugin.TValue[[]any]
 	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -85617,6 +85887,10 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetPermiss
 	return &c.Permissions
 }
 
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetDataPermissions() *plugin.TValue[[]any] {
+	return &c.DataPermissions
+}
+
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
 	return plugin.GetOrCompute[*mqlAzureSubscriptionSystemData](&c.SystemMetadata, func() (*mqlAzureSubscriptionSystemData, error) {
 		if c.MqlRuntime.HasRecording {
@@ -85631,6 +85905,60 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleDefinition) GetSystemM
 
 		return c.systemMetadata()
 	})
+}
+
+// mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission for the azure.subscription.cosmosDbService.account.roleDefinitionPermission resource
+type mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermissionInternal it will be used here
+	Id             plugin.TValue[string]
+	DataActions    plugin.TValue[[]any]
+	NotDataActions plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission creates a new instance of this resource
+func createAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cosmosDbService.account.roleDefinitionPermission", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission) MqlName() string {
+	return "azure.subscription.cosmosDbService.account.roleDefinitionPermission"
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission) GetDataActions() *plugin.TValue[[]any] {
+	return &c.DataActions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountRoleDefinitionPermission) GetNotDataActions() *plugin.TValue[[]any] {
+	return &c.NotDataActions
 }
 
 // mqlAzureSubscriptionCosmosDbServiceAccountSqlRoleAssignment for the azure.subscription.cosmosDbService.account.sqlRoleAssignment resource
@@ -85731,6 +86059,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition struct {
 	RoleType         plugin.TValue[string]
 	AssignableScopes plugin.TValue[[]any]
 	Permissions      plugin.TValue[[]any]
+	DataPermissions  plugin.TValue[[]any]
 	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -85792,6 +86121,10 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetA
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetDataPermissions() *plugin.TValue[[]any] {
+	return &c.DataPermissions
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountCassandraRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -85913,6 +86246,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition struct {
 	RoleType         plugin.TValue[string]
 	AssignableScopes plugin.TValue[[]any]
 	Permissions      plugin.TValue[[]any]
+	DataPermissions  plugin.TValue[[]any]
 	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -85974,6 +86308,10 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetAss
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetDataPermissions() *plugin.TValue[[]any] {
+	return &c.DataPermissions
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountGremlinRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -86095,6 +86433,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition struct {
 	RoleType         plugin.TValue[string]
 	AssignableScopes plugin.TValue[[]any]
 	Permissions      plugin.TValue[[]any]
+	DataPermissions  plugin.TValue[[]any]
 	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -86156,6 +86495,10 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetAssig
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetDataPermissions() *plugin.TValue[[]any] {
+	return &c.DataPermissions
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountTableRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -86277,6 +86620,7 @@ type mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition struct {
 	RoleType         plugin.TValue[string]
 	AssignableScopes plugin.TValue[[]any]
 	Permissions      plugin.TValue[[]any]
+	DataPermissions  plugin.TValue[[]any]
 	SystemMetadata   plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -86338,6 +86682,10 @@ func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetAss
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetPermissions() *plugin.TValue[[]any] {
 	return &c.Permissions
+}
+
+func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetDataPermissions() *plugin.TValue[[]any] {
+	return &c.DataPermissions
 }
 
 func (c *mqlAzureSubscriptionCosmosDbServiceAccountMongoMIRoleDefinition) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {

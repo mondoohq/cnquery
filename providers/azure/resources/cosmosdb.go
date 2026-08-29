@@ -802,6 +802,11 @@ func (a *mqlAzureSubscriptionCosmosDbServiceAccount) sqlRoleDefinitions() ([]any
 				}
 				args["permissions"] = llx.ArrayData(perms, types.Dict)
 			}
+			dataPermissions, err := cosmosRolePermissionsToMql(a.MqlRuntime, convert.ToValue(def.ID), orZero(def.Properties).Permissions)
+			if err != nil {
+				return nil, err
+			}
+			args["dataPermissions"] = llx.ArrayData(dataPermissions, types.Resource("azure.subscription.cosmosDbService.account.roleDefinitionPermission"))
 			mqlDef, err := CreateResource(a.MqlRuntime, "azure.subscription.cosmosDbService.account.sqlRoleDefinition", args)
 			if err != nil {
 				return nil, err
