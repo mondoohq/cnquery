@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1790,17 +1791,48 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 				databaseIds = convert.ToListFromPtrs(fg.Properties.Databases)
 			}
 
+			partners := []any{}
+			for i, partner := range orZero(fg.Properties).PartnerServers {
+				if partner == nil {
+					continue
+				}
+				// A partner entry carries no id of its own beyond the server
+				// it names, which is what distinguishes it within the group.
+				key := convert.ToValue(partner.ID)
+				if key == "" {
+					key = strconv.Itoa(i)
+				}
+				mqlPartner, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.failoverGroup.partner",
+					map[string]*llx.RawData{
+						"__id":            llx.StringData(subResourceCacheID(nil, convert.ToValue(fg.ID), "partners", key)),
+						"location":        llx.StringDataPtr(partner.Location),
+						"replicationRole": llx.StringDataPtr(stringEnumPtr(partner.ReplicationRole)),
+					})
+				if err != nil {
+					return nil, err
+				}
+				mqlPartner.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).cacheServerId = convert.ToValue(partner.ID)
+				partners = append(partners, mqlPartner)
+			}
+
+			rwEndpoint := orZero(orZero(fg.Properties).ReadWriteEndpoint)
+			roEndpoint := orZero(orZero(fg.Properties).ReadOnlyEndpoint)
+
 			mqlFG, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.server.failoverGroup",
 				map[string]*llx.RawData{
-					"id":                llx.StringDataPtr(fg.ID),
-					"name":              llx.StringDataPtr(fg.Name),
-					"location":          llx.StringDataPtr(fg.Location),
-					"tags":              llx.MapData(convert.PtrMapStrToInterface(fg.Tags), types.String),
-					"replicationRole":   llx.StringData(replicationRole),
-					"replicationState":  llx.StringData(replicationState),
-					"partnerServers":    llx.ArrayData(partnerServers, types.Dict),
-					"readWriteEndpoint": llx.DictData(readWriteEndpoint),
-					"readOnlyEndpoint":  llx.DictData(readOnlyEndpoint),
+					"id":                                  llx.StringDataPtr(fg.ID),
+					"name":                                llx.StringDataPtr(fg.Name),
+					"location":                            llx.StringDataPtr(fg.Location),
+					"tags":                                llx.MapData(convert.PtrMapStrToInterface(fg.Tags), types.String),
+					"replicationRole":                     llx.StringData(replicationRole),
+					"replicationState":                    llx.StringData(replicationState),
+					"partnerServers":                      llx.ArrayData(partnerServers, types.Dict),
+					"partners":                            llx.ArrayData(partners, types.Resource("azure.subscription.sqlService.server.failoverGroup.partner")),
+					"readWriteEndpoint":                   llx.DictData(readWriteEndpoint),
+					"readWriteFailoverPolicy":             llx.StringDataPtr(stringEnumPtr(rwEndpoint.FailoverPolicy)),
+					"readWriteFailoverGracePeriodMinutes": llx.IntDataPtr(rwEndpoint.FailoverWithDataLossGracePeriodMinutes),
+					"readOnlyEndpoint":                    llx.DictData(readOnlyEndpoint),
+					"readOnlyFailoverPolicy":              llx.StringDataPtr(stringEnumPtr(roEndpoint.FailoverPolicy)),
 				})
 			if err != nil {
 				return nil, err
@@ -1810,6 +1842,26 @@ func (a *mqlAzureSubscriptionSqlServiceServer) failoverGroups() ([]any, error) {
 		}
 	}
 	return res, nil
+}
+
+type mqlAzureSubscriptionSqlServiceServerFailoverGroupPartnerInternal struct {
+	cacheServerId string
+}
+
+// server resolves the partner server. Null when the group reports a partner
+// without a resource id, which ARM should not produce but a group mid-creation
+// can.
+func (a *mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner) server() (*mqlAzureSubscriptionSqlServiceServer, error) {
+	if a.cacheServerId == "" {
+		a.Server.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.sqlService.server",
+		map[string]*llx.RawData{"id": llx.StringData(a.cacheServerId)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionSqlServiceServer), nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServerFailoverGroup) databases() ([]any, error) {

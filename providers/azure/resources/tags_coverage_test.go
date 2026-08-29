@@ -33,6 +33,7 @@ var untaggableWithLocation = map[string]string{
 	"azure.subscription.policy.assignment":                            "armpolicy.Assignment has Location but no Tags; the location is only set when the assignment carries a managed identity",
 	"azure.subscription.recoveryServicesService.deletedVault":         "armrecoveryservices.DeletedVault has neither Location nor Tags; location is derived from the per-region listing",
 	"azure.subscription.sqlService.database.dataMaskingPolicy":        "armsql.DataMaskingPolicy is a proxy child of the database",
+	"azure.subscription.sqlService.server.failoverGroup.partner":      "armsql.PartnerInfo is a descriptor of another server, not a tracked resource; its Location is that server's region and the server itself carries the tags",
 }
 
 // TestTrackedResourcesDeclareTags fails when a resource models `location`

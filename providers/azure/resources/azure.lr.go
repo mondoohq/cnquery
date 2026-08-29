@@ -225,6 +225,7 @@ const (
 	ResourceAzureSubscriptionSqlServiceServerKey                                                        string = "azure.subscription.sqlService.server.key"
 	ResourceAzureSubscriptionSqlServiceServerOutboundFirewallRule                                       string = "azure.subscription.sqlService.server.outboundFirewallRule"
 	ResourceAzureSubscriptionSqlServiceServerFailoverGroup                                              string = "azure.subscription.sqlService.server.failoverGroup"
+	ResourceAzureSubscriptionSqlServiceServerFailoverGroupPartner                                       string = "azure.subscription.sqlService.server.failoverGroup.partner"
 	ResourceAzureSubscriptionSqlServiceServerReplicationLink                                            string = "azure.subscription.sqlService.server.replicationLink"
 	ResourceAzureSubscriptionSqlServiceVulnerabilityAssessmentScan                                      string = "azure.subscription.sqlService.vulnerabilityAssessmentScan"
 	ResourceAzureSubscriptionSqlServiceDatabaseBlobAuditingPolicy                                       string = "azure.subscription.sqlService.database.blobAuditingPolicy"
@@ -276,6 +277,7 @@ const (
 	ResourceAzureSubscriptionKeyVaultServiceKeyAutorotation                                             string = "azure.subscription.keyVaultService.key.autorotation"
 	ResourceAzureSubscriptionKeyVaultServiceKey                                                         string = "azure.subscription.keyVaultService.key"
 	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject                                     string = "azure.subscription.keyVaultService.key.rotationPolicyObject"
+	ResourceAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction                               string = "azure.subscription.keyVaultService.key.rotationPolicyObject.action"
 	ResourceAzureSubscriptionKeyVaultServiceCertificate                                                 string = "azure.subscription.keyVaultService.certificate"
 	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicy                                           string = "azure.subscription.keyVaultService.certificate.policy"
 	ResourceAzureSubscriptionKeyVaultServiceCertificatePolicyKeyProperties                              string = "azure.subscription.keyVaultService.certificate.policy.keyProperties"
@@ -1409,6 +1411,10 @@ func init() {
 			// to override args, implement: initAzureSubscriptionSqlServiceServerFailoverGroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSqlServiceServerFailoverGroup,
 		},
+		"azure.subscription.sqlService.server.failoverGroup.partner": {
+			// to override args, implement: initAzureSubscriptionSqlServiceServerFailoverGroupPartner(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionSqlServiceServerFailoverGroupPartner,
+		},
 		"azure.subscription.sqlService.server.replicationLink": {
 			// to override args, implement: initAzureSubscriptionSqlServiceServerReplicationLink(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionSqlServiceServerReplicationLink,
@@ -1612,6 +1618,10 @@ func init() {
 		"azure.subscription.keyVaultService.key.rotationPolicyObject": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject,
+		},
+		"azure.subscription.keyVaultService.key.rotationPolicyObject.action": {
+			// to override args, implement: initAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction,
 		},
 		"azure.subscription.keyVaultService.certificate": {
 			// to override args, implement: initAzureSubscriptionKeyVaultServiceCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11191,14 +11201,35 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.server.failoverGroup.partnerServers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetPartnerServers()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.sqlService.server.failoverGroup.partners": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetPartners()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.server.failoverGroup.partner")))
+	},
 	"azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadWriteEndpoint()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.sqlService.server.failoverGroup.readWriteFailoverPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadWriteFailoverPolicy()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.failoverGroup.readWriteFailoverGracePeriodMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadWriteFailoverGracePeriodMinutes()).ToDataRes(types.Int)
 	},
 	"azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadOnlyEndpoint()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.sqlService.server.failoverGroup.readOnlyFailoverPolicy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetReadOnlyFailoverPolicy()).ToDataRes(types.String)
+	},
 	"azure.subscription.sqlService.server.failoverGroup.databases": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).GetDatabases()).ToDataRes(types.Array(types.Resource("azure.subscription.sqlService.database")))
+	},
+	"azure.subscription.sqlService.server.failoverGroup.partner.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).GetServer()).ToDataRes(types.Resource("azure.subscription.sqlService.server"))
+	},
+	"azure.subscription.sqlService.server.failoverGroup.partner.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.server.failoverGroup.partner.replicationRole": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).GetReplicationRole()).ToDataRes(types.String)
 	},
 	"azure.subscription.sqlService.server.replicationLink.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceServerReplicationLink).GetId()).ToDataRes(types.String)
@@ -13105,11 +13136,32 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.keyVaultService.key.rotationPolicyObject.lifetimeActions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetLifetimeActions()).ToDataRes(types.Array(types.Dict))
 	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.actions": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetActions()).ToDataRes(types.Array(types.Resource("azure.subscription.keyVaultService.key.rotationPolicyObject.action")))
+	},
 	"azure.subscription.keyVaultService.key.rotationPolicyObject.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetAttributes()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.newVersionLifetime": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetNewVersionLifetime()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.created": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetCreated()).ToDataRes(types.Time)
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.updated": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetUpdated()).ToDataRes(types.Time)
+	},
 	"azure.subscription.keyVaultService.key.rotationPolicyObject.enabled": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).GetEnabled()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.action.actionType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction).GetActionType()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.action.timeAfterCreate": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction).GetTimeAfterCreate()).ToDataRes(types.String)
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.action.timeBeforeExpiry": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction).GetTimeBeforeExpiry()).ToDataRes(types.String)
 	},
 	"azure.subscription.keyVaultService.certificate.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKeyVaultServiceCertificate).GetId()).ToDataRes(types.String)
@@ -35448,16 +35500,48 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).PartnerServers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.server.failoverGroup.partners": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).Partners, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.server.failoverGroup.readWriteEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadWriteEndpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.failoverGroup.readWriteFailoverPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadWriteFailoverPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.failoverGroup.readWriteFailoverGracePeriodMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadWriteFailoverGracePeriodMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.server.failoverGroup.readOnlyEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadOnlyEndpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.server.failoverGroup.readOnlyFailoverPolicy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).ReadOnlyFailoverPolicy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.server.failoverGroup.databases": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroup).Databases, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.failoverGroup.partner.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.sqlService.server.failoverGroup.partner.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).Server, ok = plugin.RawToTValue[*mqlAzureSubscriptionSqlServiceServer](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.failoverGroup.partner.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.server.failoverGroup.partner.replicationRole": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner).ReplicationRole, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.sqlService.server.replicationLink.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38204,12 +38288,44 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).LifetimeActions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.actions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).Actions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.key.rotationPolicyObject.attributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).Attributes, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.newVersionLifetime": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).NewVersionLifetime, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.created": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).Created, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.updated": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).Updated, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.keyVaultService.key.rotationPolicyObject.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.action.actionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction).ActionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.action.timeAfterCreate": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction).TimeAfterCreate, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.keyVaultService.key.rotationPolicyObject.action.timeBeforeExpiry": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction).TimeBeforeExpiry, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.keyVaultService.certificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -81520,16 +81636,20 @@ type mqlAzureSubscriptionSqlServiceServerFailoverGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAzureSubscriptionSqlServiceServerFailoverGroupInternal
-	Id                plugin.TValue[string]
-	Name              plugin.TValue[string]
-	Location          plugin.TValue[string]
-	Tags              plugin.TValue[map[string]any]
-	ReplicationRole   plugin.TValue[string]
-	ReplicationState  plugin.TValue[string]
-	PartnerServers    plugin.TValue[[]any]
-	ReadWriteEndpoint plugin.TValue[any]
-	ReadOnlyEndpoint  plugin.TValue[any]
-	Databases         plugin.TValue[[]any]
+	Id                                  plugin.TValue[string]
+	Name                                plugin.TValue[string]
+	Location                            plugin.TValue[string]
+	Tags                                plugin.TValue[map[string]any]
+	ReplicationRole                     plugin.TValue[string]
+	ReplicationState                    plugin.TValue[string]
+	PartnerServers                      plugin.TValue[[]any]
+	Partners                            plugin.TValue[[]any]
+	ReadWriteEndpoint                   plugin.TValue[any]
+	ReadWriteFailoverPolicy             plugin.TValue[string]
+	ReadWriteFailoverGracePeriodMinutes plugin.TValue[int64]
+	ReadOnlyEndpoint                    plugin.TValue[any]
+	ReadOnlyFailoverPolicy              plugin.TValue[string]
+	Databases                           plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionSqlServiceServerFailoverGroup creates a new instance of this resource
@@ -81597,12 +81717,28 @@ func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetPartnerServers() 
 	return &c.PartnerServers
 }
 
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetPartners() *plugin.TValue[[]any] {
+	return &c.Partners
+}
+
 func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadWriteEndpoint() *plugin.TValue[any] {
 	return &c.ReadWriteEndpoint
 }
 
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadWriteFailoverPolicy() *plugin.TValue[string] {
+	return &c.ReadWriteFailoverPolicy
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadWriteFailoverGracePeriodMinutes() *plugin.TValue[int64] {
+	return &c.ReadWriteFailoverGracePeriodMinutes
+}
+
 func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadOnlyEndpoint() *plugin.TValue[any] {
 	return &c.ReadOnlyEndpoint
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetReadOnlyFailoverPolicy() *plugin.TValue[string] {
+	return &c.ReadOnlyFailoverPolicy
 }
 
 func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetDatabases() *plugin.TValue[[]any] {
@@ -81619,6 +81755,72 @@ func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroup) GetDatabases() *plug
 
 		return c.databases()
 	})
+}
+
+// mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner for the azure.subscription.sqlService.server.failoverGroup.partner resource
+type mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAzureSubscriptionSqlServiceServerFailoverGroupPartnerInternal
+	Server          plugin.TValue[*mqlAzureSubscriptionSqlServiceServer]
+	Location        plugin.TValue[string]
+	ReplicationRole plugin.TValue[string]
+}
+
+// createAzureSubscriptionSqlServiceServerFailoverGroupPartner creates a new instance of this resource
+func createAzureSubscriptionSqlServiceServerFailoverGroupPartner(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.sqlService.server.failoverGroup.partner", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner) MqlName() string {
+	return "azure.subscription.sqlService.server.failoverGroup.partner"
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner) GetServer() *plugin.TValue[*mqlAzureSubscriptionSqlServiceServer] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionSqlServiceServer](&c.Server, func() (*mqlAzureSubscriptionSqlServiceServer, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.server.failoverGroup.partner", c.__id, "server")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionSqlServiceServer), nil
+			}
+		}
+
+		return c.server()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionSqlServiceServerFailoverGroupPartner) GetReplicationRole() *plugin.TValue[string] {
+	return &c.ReplicationRole
 }
 
 // mqlAzureSubscriptionSqlServiceServerReplicationLink for the azure.subscription.sqlService.server.replicationLink resource
@@ -88136,9 +88338,13 @@ type mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectInternal it will be used here
-	LifetimeActions plugin.TValue[[]any]
-	Attributes      plugin.TValue[any]
-	Enabled         plugin.TValue[bool]
+	LifetimeActions    plugin.TValue[[]any]
+	Actions            plugin.TValue[[]any]
+	Attributes         plugin.TValue[any]
+	NewVersionLifetime plugin.TValue[string]
+	Created            plugin.TValue[*time.Time]
+	Updated            plugin.TValue[*time.Time]
+	Enabled            plugin.TValue[bool]
 }
 
 // createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject creates a new instance of this resource
@@ -88182,12 +88388,82 @@ func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetLifetime
 	return &c.LifetimeActions
 }
 
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetActions() *plugin.TValue[[]any] {
+	return &c.Actions
+}
+
 func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetAttributes() *plugin.TValue[any] {
 	return &c.Attributes
 }
 
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetNewVersionLifetime() *plugin.TValue[string] {
+	return &c.NewVersionLifetime
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetCreated() *plugin.TValue[*time.Time] {
+	return &c.Created
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetUpdated() *plugin.TValue[*time.Time] {
+	return &c.Updated
+}
+
 func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObject) GetEnabled() *plugin.TValue[bool] {
 	return &c.Enabled
+}
+
+// mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction for the azure.subscription.keyVaultService.key.rotationPolicyObject.action resource
+type mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectActionInternal it will be used here
+	ActionType       plugin.TValue[string]
+	TimeAfterCreate  plugin.TValue[string]
+	TimeBeforeExpiry plugin.TValue[string]
+}
+
+// createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction creates a new instance of this resource
+func createAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.keyVaultService.key.rotationPolicyObject.action", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction) MqlName() string {
+	return "azure.subscription.keyVaultService.key.rotationPolicyObject.action"
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction) GetActionType() *plugin.TValue[string] {
+	return &c.ActionType
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction) GetTimeAfterCreate() *plugin.TValue[string] {
+	return &c.TimeAfterCreate
+}
+
+func (c *mqlAzureSubscriptionKeyVaultServiceKeyRotationPolicyObjectAction) GetTimeBeforeExpiry() *plugin.TValue[string] {
+	return &c.TimeBeforeExpiry
 }
 
 // mqlAzureSubscriptionKeyVaultServiceCertificate for the azure.subscription.keyVaultService.certificate resource

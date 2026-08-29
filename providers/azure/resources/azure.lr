@@ -4981,7 +4981,11 @@ private azure.subscription.networkService.privateEndpoint @defaults("id name loc
   privateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
   // Manually approved private link service connections
   manualPrivateLinkServiceConnections []azure.subscription.networkService.privateEndpoint.serviceconnection
-  // Private DNS zone groups attached to this PE (each entry: { name, privateDnsZoneIds, recordSets })
+  // Private DNS zone groups attached to the endpoint
+  //
+  // Each entry has `id`, `name`, `provisioningState`, the
+  // `privateDnsZoneIds` the group registers records into, and `configs`,
+  // one `{name, privateDnsZoneId}` per zone configuration in the group.
   privateDnsZoneGroups() []dict
 }
 
@@ -8457,14 +8461,56 @@ private azure.subscription.sqlService.server.failoverGroup @defaults("name repli
   replicationRole string
   // Replication state of the failover group
   replicationState string
-  // Partner server descriptors ({id, location, replicationRole})
-  partnerServers []dict
-  // Read/write endpoint configuration ({failoverPolicy, failoverWithDataLossGracePeriodMinutes})
-  readWriteEndpoint dict
-  // Read-only endpoint configuration ({failoverPolicy, targetServer})
-  readOnlyEndpoint dict
+  // Partner server descriptors
+  //
+  // Deprecated in favor of partners.
+  partnerServers @maturity("deprecated") []dict
+  // Servers this failover group pairs with
+  //
+  // The secondary a primary fails over to, resolved to the server
+  // resource so its own configuration is reachable from here.
+  partners []azure.subscription.sqlService.server.failoverGroup.partner
+  // Read/write endpoint configuration
+  //
+  // Deprecated in favor of readWriteFailoverPolicy and
+  // readWriteFailoverGracePeriodMinutes.
+  readWriteEndpoint @maturity("deprecated") dict
+  // How the read-write endpoint fails over ("Automatic" or "Manual")
+  //
+  // Manual means the group never fails over on its own, so an outage of
+  // the primary lasts until someone triggers the failover.
+  readWriteFailoverPolicy string
+  // Minutes Azure waits before failing the read-write endpoint over with data loss
+  //
+  // Required when readWriteFailoverPolicy is Automatic. Null when the
+  // policy is Manual.
+  readWriteFailoverGracePeriodMinutes int
+  // Read-only endpoint configuration
+  //
+  // Deprecated in favor of readOnlyFailoverPolicy.
+  readOnlyEndpoint @maturity("deprecated") dict
+  // Whether the read-only endpoint follows the primary on failover ("Enabled" or "Disabled")
+  //
+  // Disabled leaves read-only traffic pointed at the old secondary after a
+  // failover.
+  readOnlyFailoverPolicy string
   // Databases included in the failover group
   databases() []azure.subscription.sqlService.database
+}
+
+// Partner server of a SQL failover group
+//
+// One server paired into a failover group, with the role it plays and the
+// region it sits in. The server itself is reachable through `server`, so its
+// firewall rules, auditing, and administrators can be checked from the
+// failover group.
+private azure.subscription.sqlService.server.failoverGroup.partner @defaults("location replicationRole") {
+  // Partner server
+  server() azure.subscription.sqlService.server
+  // Region the partner server sits in
+  location string
+  // Role the partner plays in the group ("Primary" or "Secondary")
+  replicationRole string
 }
 
 // Azure SQL Database geo-replication link
@@ -10361,19 +10407,48 @@ private azure.subscription.keyVaultService.key @defaults("kid keyName") {
 private azure.subscription.keyVaultService.key.rotationPolicyObject @defaults("enabled") {
   // Lifetime actions for the rotation policy
   //
-  // Each entry has `action` (`{type}`, where type is "Rotate" or
-  // "Notify") and `trigger` (`{timeAfterCreate, timeBeforeExpiry}`,
-  // ISO 8601 durations such as "P90D" that schedule the action relative
-  // to key creation or expiry).
-  lifetimeActions []dict
+  // Deprecated in favor of actions.
+  lifetimeActions @maturity("deprecated") []dict
+  // Lifetime actions for the rotation policy
+  //
+  // One entry per scheduled action. A policy carrying only a Notify
+  // action warns before a key expires and never rotates it.
+  actions []azure.subscription.keyVaultService.key.rotationPolicyObject.action
   // Attributes of the rotation policy
   //
-  // Keys: `expiryTime` (ISO 8601 duration giving the lifetime of newly
-  // rotated key versions, such as "P90D"), `created`, and `updated`
-  // (timestamps for the policy itself).
-  attributes dict
+  // Deprecated in favor of newVersionLifetime, created, and updated.
+  attributes @maturity("deprecated") dict
+  // Lifetime given to each newly rotated key version, in ISO 8601 duration form
+  //
+  // For example "P90D". At least 28 days. Empty when the policy sets no
+  // expiry, which leaves rotated versions valid indefinitely.
+  newVersionLifetime string
+  // When the rotation policy was created
+  created time
+  // When the rotation policy was last updated
+  updated time
   // Whether automatic key rotation is enabled (true if rotationPolicy exists with Rotate action)
   enabled bool
+}
+
+// Lifetime action of a Key Vault key rotation policy
+//
+// One action Key Vault performs over a key's lifetime, and the trigger that
+// schedules it. Only a Rotate action creates a new key version; a Notify
+// action sends an Event Grid message and leaves the key as it is.
+private azure.subscription.keyVaultService.key.rotationPolicyObject.action @defaults("actionType timeAfterCreate timeBeforeExpiry") {
+  // Action Key Vault performs ("Rotate" or "Notify")
+  actionType string
+  // Time after key creation the action fires, in ISO 8601 duration form
+  //
+  // For example "P90D". Applies to Rotate only. Empty when the action is
+  // scheduled against expiry instead.
+  timeAfterCreate string
+  // Time before key expiry the action fires, in ISO 8601 duration form
+  //
+  // For example "P30D". Empty when the action is scheduled against
+  // creation instead.
+  timeBeforeExpiry string
 }
 
 // Azure Key Vault certificate
