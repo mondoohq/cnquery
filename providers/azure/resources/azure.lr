@@ -3298,7 +3298,15 @@ azure.subscription.networkService.loadBalancer @defaults("id name location") {
 }
 
 // Azure network probe
-private azure.subscription.networkService.probe @defaults("id name"){
+//
+// Health probe a load balancer uses to decide whether a backend instance
+// still receives traffic. The probe's transport is `protocol` (Tcp, Http,
+// or Https) with `port` and, for the HTTP protocols, `requestPath`.
+// `intervalInSeconds`, `numberOfProbes` and `probeThreshold` set how fast
+// an unhealthy instance is taken out of rotation, and
+// `noHealthyBackendsBehavior` decides whether traffic is dropped or still
+// forwarded once every instance fails.
+private azure.subscription.networkService.probe @defaults("name protocol port"){
   // Probe ID
   id string
   // Probe name
@@ -3307,12 +3315,44 @@ private azure.subscription.networkService.probe @defaults("id name"){
   type string
   // Probe etag
   etag string
-  // Probe properties
-  properties dict
+  // Raw probe properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM probe properties hold.
+  properties @maturity("deprecated") dict
+  // Port the probe connects to on the backend instance
+  port int
+  // Probe protocol ("Http", "Tcp", or "Https")
+  protocol string
+  // Seconds between two consecutive probes
+  intervalInSeconds int
+  // Number of consecutive probe failures that take an instance out of rotation
+  numberOfProbes int
+  // Number of consecutive successes or failures required to change the instance's health state
+  probeThreshold int
+  // URI the HTTP or HTTPS probe requests, for example "/healthz"
+  requestPath string
+  // How the load balancer routes traffic once every backend instance fails its probe
+  //
+  // "AllProbedDown" keeps forwarding to all instances and "AllProbedUp"
+  // drops the traffic. Null when the load balancer does not report the
+  // setting.
+  noHealthyBackendsBehavior string
+  // Probe provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Load balancing rules that use this probe for their health checks
+  loadBalancerRules() []azure.subscription.networkService.loadBalancerRule
 }
 
 // Azure network backend address pool
-private azure.subscription.networkService.backendAddressPool @defaults("id name") {
+//
+// Set of backend instances a load balancer distributes traffic to. The
+// pool's membership is reported through the raw properties, while
+// `drainPeriodInSeconds` (how long existing connections survive after an
+// instance is removed) and `syncMode` are queryable directly. The rules
+// that send traffic to this pool are reachable as loadBalancerRules,
+// inboundNatRules and outboundRules.
+private azure.subscription.networkService.backendAddressPool @defaults("name") {
   // Backend Address Pool ID
   id string
   // Backend Address Pool name
@@ -3321,12 +3361,38 @@ private azure.subscription.networkService.backendAddressPool @defaults("id name"
   type string
   // Backend Address Pool etag
   etag string
-  // Backend Address Pool properties
+  // Raw backend address pool properties
+  //
+  // Carries the pool membership that has no flattened equivalent:
+  // `loadBalancerBackendAddresses`, `backendIPConfigurations`, and
+  // `tunnelInterfaces`.
   properties dict
+  // Seconds a connection to a removed backend instance is allowed to drain before it is cut
+  drainPeriodInSeconds int
+  // Region of the backend address pool, set for a global load balancer's regional pools
+  location string
+  // How backend addresses are kept in step with the pool ("Automatic" or "Manual")
+  syncMode string
+  // Backend address pool provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Load balancing rules that distribute traffic to this pool
+  loadBalancerRules() []azure.subscription.networkService.loadBalancerRule
+  // Inbound NAT rules that forward to this pool
+  inboundNatRules() []azure.subscription.networkService.inboundNatRule
+  // Outbound rules that use this pool as their source of outbound connections
+  outboundRules() []azure.subscription.networkService.outboundRule
 }
 
 // Azure network inbound NAT pool
-private azure.subscription.networkService.inboundNatPool @defaults("id name") {
+//
+// Range of frontend ports a load balancer maps onto one backend port
+// across every instance of a scale set. `protocol`,
+// `frontendPortRangeStart`, `frontendPortRangeEnd` and `backendPort`
+// describe the mapping, and the frontend it listens on is reachable as
+// frontendIpConfig. A pool that publishes an administrative backend port
+// such as 22 or 3389 from a public frontend exposes every instance in
+// the set at once.
+private azure.subscription.networkService.inboundNatPool @defaults("name protocol backendPort") {
   // Inbound NAT Pool ID
   id string
   // Inbound NAT Pool name
@@ -3335,12 +3401,39 @@ private azure.subscription.networkService.inboundNatPool @defaults("id name") {
   type string
   // Inbound NAT Pool etag
   etag string
-  // Inbound NAT Pool properties
-  properties dict
+  // Raw inbound NAT pool properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM inbound NAT pool properties hold.
+  properties @maturity("deprecated") dict
+  // Backend port every frontend port in the range is translated to
+  backendPort int
+  // First frontend port in the range
+  frontendPortRangeStart int
+  // Last frontend port in the range
+  frontendPortRangeEnd int
+  // Transport protocol ("Udp", "Tcp", or "All")
+  protocol string
+  // Whether floating IP (direct server return) is enabled
+  enableFloatingIp bool
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle TCP connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Inbound NAT pool provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Frontend the NAT pool listens on; null when the load balancer does not report one
+  frontendIpConfig() azure.subscription.networkService.frontendIpConfig
 }
 
 // Azure network inbound NAT rule
-private azure.subscription.networkService.inboundNatRule @defaults("id name") {
+//
+// Port-forwarding rule that maps one frontend port onto a backend port on
+// a single instance. `protocol`, `frontendPort` and `backendPort` describe
+// the mapping, and the frontend it listens on is reachable as
+// frontendIpConfig. A rule forwarding a public frontend to 22 or 3389 puts
+// an administrative port on the internet.
+private azure.subscription.networkService.inboundNatRule @defaults("name protocol frontendPort backendPort") {
   // Inbound NAT Rule ID
   id string
   // Inbound NAT Rule name
@@ -3349,8 +3442,33 @@ private azure.subscription.networkService.inboundNatRule @defaults("id name") {
   type string
   // Inbound NAT Rule etag
   etag string
-  // Inbound NAT Rule properties
+  // Raw inbound NAT rule properties
+  //
+  // Carries the resolved `backendIPConfiguration` of the instance the rule
+  // forwards to, which has no flattened equivalent.
   properties dict
+  // Frontend port the rule listens on
+  frontendPort int
+  // First frontend port in the range, set when the rule maps a range onto a backend pool
+  frontendPortRangeStart int
+  // Last frontend port in the range, set when the rule maps a range onto a backend pool
+  frontendPortRangeEnd int
+  // Backend port the frontend port is translated to
+  backendPort int
+  // Transport protocol ("Udp", "Tcp", or "All")
+  protocol string
+  // Whether floating IP (direct server return) is enabled
+  enableFloatingIp bool
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle TCP connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Inbound NAT rule provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Frontend the rule listens on; null when the load balancer does not report one
+  frontendIpConfig() azure.subscription.networkService.frontendIpConfig
+  // Backend pool the rule forwards to; null when the rule targets a single instance instead of a pool
+  backendAddressPool() azure.subscription.networkService.backendAddressPool
 }
 
 // Azure network frontend IP configuration
@@ -3386,7 +3504,14 @@ private azure.subscription.networkService.frontendIpConfig @defaults("id name") 
 }
 
 // Azure Load Balancer rule
-private azure.subscription.networkService.loadBalancerRule @defaults("id name") {
+//
+// Rule that distributes inbound traffic from a frontend to a backend pool.
+// `protocol`, `frontendPort` and `backendPort` describe what is published,
+// `loadDistribution` sets the session affinity, and `disableOutboundSnat`
+// decides whether the rule also provides outbound connectivity for the
+// pool. The frontend, backend pool and health probe it binds together are
+// reachable as frontendIpConfig, backendAddressPool and probe.
+private azure.subscription.networkService.loadBalancerRule @defaults("name protocol frontendPort backendPort") {
   // Load Balancer rule ID
   id string
   // Load Balancer rule name
@@ -3395,12 +3520,53 @@ private azure.subscription.networkService.loadBalancerRule @defaults("id name") 
   type string
   // Load Balancer rule etag
   etag string
-  // Load Balancer rule properties
-  properties dict
+  // Raw load balancing rule properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM load balancing rule properties hold.
+  properties @maturity("deprecated") dict
+  // Frontend port the rule listens on; 0 means all ports (a high-availability ports rule)
+  frontendPort int
+  // Backend port traffic is delivered to on the pool members
+  backendPort int
+  // Transport protocol ("Udp", "Tcp", or "All")
+  protocol string
+  // Whether the rule stops providing outbound SNAT for its backend pool
+  //
+  // True leaves the pool without outbound connectivity unless an outbound
+  // rule or NAT gateway supplies it, which is the recommended shape
+  // because implicit SNAT shares a small port budget across the pool.
+  disableOutboundSnat bool
+  // Whether connection tracking is enabled for the rule
+  enableConnectionTracking bool
+  // Whether floating IP (direct server return) is enabled
+  enableFloatingIp bool
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle TCP connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Session affinity applied to the rule ("Default", "SourceIP", or "SourceIPProtocol")
+  loadDistribution string
+  // Load balancing rule provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Frontend the rule listens on; null when the load balancer does not report one
+  frontendIpConfig() azure.subscription.networkService.frontendIpConfig
+  // Backend pool the rule distributes to; null when the rule reports several pools instead
+  backendAddressPool() azure.subscription.networkService.backendAddressPool
+  // Backend pools the rule distributes to, for a gateway load balancer that reports more than one
+  backendAddressPools() []azure.subscription.networkService.backendAddressPool
+  // Health probe that decides which pool members the rule sends traffic to; null when the rule has no probe
+  probe() azure.subscription.networkService.probe
 }
 
 // Azure network outbound rule
-private azure.subscription.networkService.outboundRule @defaults("id name") {
+//
+// Rule that gives a backend pool outbound connectivity through a set of
+// frontends. `allocatedOutboundPorts` is the SNAT port budget each backend
+// instance receives; leaving it at 0 lets Azure derive it from the pool
+// size, and an undersized budget shows up as intermittent outbound
+// connection failures rather than as an error.
+private azure.subscription.networkService.outboundRule @defaults("name protocol") {
   // Outbound rule ID
   id string
   // Outbound rule name
@@ -3409,8 +3575,25 @@ private azure.subscription.networkService.outboundRule @defaults("id name") {
   type string
   // Outbound rule etag
   etag string
-  // Outbound rule properties
-  properties dict
+  // Raw outbound rule properties
+  //
+  // Deprecated in favor of the flattened fields on this resource, which
+  // carry every value the ARM outbound rule properties hold.
+  properties @maturity("deprecated") dict
+  // Transport protocol ("Tcp", "Udp", or "All")
+  protocol string
+  // SNAT ports allocated per backend instance; 0 lets Azure size the allocation automatically
+  allocatedOutboundPorts int
+  // Whether a TCP reset is sent on idle timeout instead of silently dropping the flow
+  enableTcpReset bool
+  // Minutes an idle outbound connection is kept before it times out
+  idleTimeoutInMinutes int
+  // Outbound rule provisioning state ("Succeeded", "Updating", "Deleting", or "Failed")
+  provisioningState string
+  // Backend pool this rule gives outbound connectivity to; null when the load balancer does not report one
+  backendAddressPool() azure.subscription.networkService.backendAddressPool
+  // Frontends the rule sources its outbound connections from
+  frontendIpConfigs() []azure.subscription.networkService.frontendIpConfig
 }
 
 // Azure network interface

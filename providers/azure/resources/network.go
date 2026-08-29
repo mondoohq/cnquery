@@ -732,18 +732,30 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) probes() ([]any, error)
 		if err != nil {
 			return nil, err
 		}
+		pp := orZero(p.Properties)
 		mqlProbe, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.probe",
 			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(p.ID),
-				"type":       llx.StringDataPtr(p.Type),
-				"name":       llx.StringDataPtr(p.Name),
-				"etag":       llx.StringDataPtr(p.Etag),
-				"properties": llx.DictData(props),
+				"id":                        llx.StringDataPtr(p.ID),
+				"type":                      llx.StringDataPtr(p.Type),
+				"name":                      llx.StringDataPtr(p.Name),
+				"etag":                      llx.StringDataPtr(p.Etag),
+				"properties":                llx.DictData(props),
+				"port":                      llx.IntDataPtr(pp.Port),
+				"protocol":                  llx.StringDataPtr(stringEnumPtr(pp.Protocol)),
+				"intervalInSeconds":         llx.IntDataPtr(pp.IntervalInSeconds),
+				"numberOfProbes":            llx.IntDataPtr(pp.NumberOfProbes),
+				"probeThreshold":            llx.IntDataPtr(pp.ProbeThreshold),
+				"requestPath":               llx.StringDataPtr(pp.RequestPath),
+				"noHealthyBackendsBehavior": llx.StringDataPtr(stringEnumPtr(pp.NoHealthyBackendsBehavior)),
+				"provisioningState":         llx.StringDataPtr(stringEnumPtr(pp.ProvisioningState)),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlProbe)
+		probe := mqlProbe.(*mqlAzureSubscriptionNetworkServiceProbe)
+		probe.cacheLoadBalancer = a
+		probe.cacheLoadBalancerRules = subResourceIDs(pp.LoadBalancingRules)
+		res = append(res, probe)
 	}
 	return res, nil
 }
@@ -761,18 +773,28 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) backendPools() ([]any, 
 		if err != nil {
 			return nil, err
 		}
+		bp := orZero(bap.Properties)
 		mqlBap, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.backendAddressPool",
 			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(bap.ID),
-				"type":       llx.StringDataPtr(bap.Type),
-				"name":       llx.StringDataPtr(bap.Name),
-				"etag":       llx.StringDataPtr(bap.Etag),
-				"properties": llx.DictData(props),
+				"id":                   llx.StringDataPtr(bap.ID),
+				"type":                 llx.StringDataPtr(bap.Type),
+				"name":                 llx.StringDataPtr(bap.Name),
+				"etag":                 llx.StringDataPtr(bap.Etag),
+				"properties":           llx.DictData(props),
+				"drainPeriodInSeconds": llx.IntDataPtr(bp.DrainPeriodInSeconds),
+				"location":             llx.StringDataPtr(bp.Location),
+				"syncMode":             llx.StringDataPtr(stringEnumPtr(bp.SyncMode)),
+				"provisioningState":    llx.StringDataPtr(stringEnumPtr(bp.ProvisioningState)),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlBap)
+		pool := mqlBap.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool)
+		pool.cacheLoadBalancer = a
+		pool.cacheLoadBalancerRules = subResourceIDs(bp.LoadBalancingRules)
+		pool.cacheInboundNatRules = subResourceIDs(bp.InboundNatRules)
+		pool.cacheOutboundRules = subResourceIDs(bp.OutboundRules)
+		res = append(res, pool)
 	}
 	return res, nil
 }
@@ -850,18 +872,30 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) inboundNatPools() ([]an
 		if err != nil {
 			return nil, err
 		}
+		np := orZero(natPool.Properties)
 		mqlNatPool, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.inboundNatPool",
 			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(natPool.ID),
-				"type":       llx.StringDataPtr(natPool.Type),
-				"name":       llx.StringDataPtr(natPool.Name),
-				"etag":       llx.StringDataPtr(natPool.Etag),
-				"properties": llx.DictData(props),
+				"id":                     llx.StringDataPtr(natPool.ID),
+				"type":                   llx.StringDataPtr(natPool.Type),
+				"name":                   llx.StringDataPtr(natPool.Name),
+				"etag":                   llx.StringDataPtr(natPool.Etag),
+				"properties":             llx.DictData(props),
+				"backendPort":            llx.IntDataPtr(np.BackendPort),
+				"frontendPortRangeStart": llx.IntDataPtr(np.FrontendPortRangeStart),
+				"frontendPortRangeEnd":   llx.IntDataPtr(np.FrontendPortRangeEnd),
+				"protocol":               llx.StringDataPtr(stringEnumPtr(np.Protocol)),
+				"enableFloatingIp":       llx.BoolDataPtr(np.EnableFloatingIP),
+				"enableTcpReset":         llx.BoolDataPtr(np.EnableTCPReset),
+				"idleTimeoutInMinutes":   llx.IntDataPtr(np.IdleTimeoutInMinutes),
+				"provisioningState":      llx.StringDataPtr(stringEnumPtr(np.ProvisioningState)),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlNatPool)
+		pool := mqlNatPool.(*mqlAzureSubscriptionNetworkServiceInboundNatPool)
+		pool.cacheLoadBalancer = a
+		pool.cacheFrontendIpConfg = subResourceID(np.FrontendIPConfiguration)
+		res = append(res, pool)
 	}
 	return res, nil
 }
@@ -879,18 +913,32 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) inboundNatRules() ([]an
 		if err != nil {
 			return nil, err
 		}
+		nr := orZero(natRule.Properties)
 		mqlNatRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.inboundNatRule",
 			map[string]*llx.RawData{
-				"id":         llx.StringDataPtr(natRule.ID),
-				"type":       llx.StringDataPtr(natRule.Type),
-				"name":       llx.StringDataPtr(natRule.Name),
-				"etag":       llx.StringDataPtr(natRule.Etag),
-				"properties": llx.DictData(props),
+				"id":                     llx.StringDataPtr(natRule.ID),
+				"type":                   llx.StringDataPtr(natRule.Type),
+				"name":                   llx.StringDataPtr(natRule.Name),
+				"etag":                   llx.StringDataPtr(natRule.Etag),
+				"properties":             llx.DictData(props),
+				"frontendPort":           llx.IntDataPtr(nr.FrontendPort),
+				"frontendPortRangeStart": llx.IntDataPtr(nr.FrontendPortRangeStart),
+				"frontendPortRangeEnd":   llx.IntDataPtr(nr.FrontendPortRangeEnd),
+				"backendPort":            llx.IntDataPtr(nr.BackendPort),
+				"protocol":               llx.StringDataPtr(stringEnumPtr(nr.Protocol)),
+				"enableFloatingIp":       llx.BoolDataPtr(nr.EnableFloatingIP),
+				"enableTcpReset":         llx.BoolDataPtr(nr.EnableTCPReset),
+				"idleTimeoutInMinutes":   llx.IntDataPtr(nr.IdleTimeoutInMinutes),
+				"provisioningState":      llx.StringDataPtr(stringEnumPtr(nr.ProvisioningState)),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlNatRule)
+		rule := mqlNatRule.(*mqlAzureSubscriptionNetworkServiceInboundNatRule)
+		rule.cacheLoadBalancer = a
+		rule.cacheFrontendIpConfg = subResourceID(nr.FrontendIPConfiguration)
+		rule.cacheBackendAddressPol = subResourceID(nr.BackendAddressPool)
+		res = append(res, rule)
 	}
 	return res, nil
 }
@@ -908,19 +956,29 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) outboundRules() ([]any,
 		if err != nil {
 			return nil, err
 		}
+		or := orZero(outboundRule.Properties)
 		mqlOutbound, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.outboundRule",
 			map[string]*llx.RawData{
-				"__id":       llx.StringData(subResourceCacheID(outboundRule.ID, a.Id.Data, "outboundRules", convert.ToValue(outboundRule.Name))),
-				"id":         llx.StringDataPtr(outboundRule.ID),
-				"type":       llx.StringDataPtr(outboundRule.Type),
-				"name":       llx.StringDataPtr(outboundRule.Name),
-				"etag":       llx.StringDataPtr(outboundRule.Etag),
-				"properties": llx.DictData(props),
+				"__id":                   llx.StringData(subResourceCacheID(outboundRule.ID, a.Id.Data, "outboundRules", convert.ToValue(outboundRule.Name))),
+				"id":                     llx.StringDataPtr(outboundRule.ID),
+				"type":                   llx.StringDataPtr(outboundRule.Type),
+				"name":                   llx.StringDataPtr(outboundRule.Name),
+				"etag":                   llx.StringDataPtr(outboundRule.Etag),
+				"properties":             llx.DictData(props),
+				"protocol":               llx.StringDataPtr(stringEnumPtr(or.Protocol)),
+				"allocatedOutboundPorts": llx.IntDataPtr(or.AllocatedOutboundPorts),
+				"enableTcpReset":         llx.BoolDataPtr(or.EnableTCPReset),
+				"idleTimeoutInMinutes":   llx.IntDataPtr(or.IdleTimeoutInMinutes),
+				"provisioningState":      llx.StringDataPtr(stringEnumPtr(or.ProvisioningState)),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlOutbound)
+		rule := mqlOutbound.(*mqlAzureSubscriptionNetworkServiceOutboundRule)
+		rule.cacheLoadBalancer = a
+		rule.cacheBackendAddressPol = subResourceID(or.BackendAddressPool)
+		rule.cacheFrontendIpConfgs = subResourceIDs(or.FrontendIPConfigurations)
+		res = append(res, rule)
 	}
 	return res, nil
 }
@@ -938,19 +996,36 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) loadBalancerRules() ([]
 		if err != nil {
 			return nil, err
 		}
+		lr := orZero(lbRule.Properties)
 		mqlLbRule, err := CreateResource(a.MqlRuntime, "azure.subscription.networkService.loadBalancerRule",
 			map[string]*llx.RawData{
-				"__id":       llx.StringData(subResourceCacheID(lbRule.ID, a.Id.Data, "loadBalancingRules", convert.ToValue(lbRule.Name))),
-				"id":         llx.StringDataPtr(lbRule.ID),
-				"type":       llx.StringDataPtr(lbRule.Type),
-				"name":       llx.StringDataPtr(lbRule.Name),
-				"etag":       llx.StringDataPtr(lbRule.Etag),
-				"properties": llx.DictData(props),
+				"__id":                     llx.StringData(subResourceCacheID(lbRule.ID, a.Id.Data, "loadBalancingRules", convert.ToValue(lbRule.Name))),
+				"id":                       llx.StringDataPtr(lbRule.ID),
+				"type":                     llx.StringDataPtr(lbRule.Type),
+				"name":                     llx.StringDataPtr(lbRule.Name),
+				"etag":                     llx.StringDataPtr(lbRule.Etag),
+				"properties":               llx.DictData(props),
+				"frontendPort":             llx.IntDataPtr(lr.FrontendPort),
+				"backendPort":              llx.IntDataPtr(lr.BackendPort),
+				"protocol":                 llx.StringDataPtr(stringEnumPtr(lr.Protocol)),
+				"disableOutboundSnat":      llx.BoolDataPtr(lr.DisableOutboundSnat),
+				"enableConnectionTracking": llx.BoolDataPtr(lr.EnableConnectionTracking),
+				"enableFloatingIp":         llx.BoolDataPtr(lr.EnableFloatingIP),
+				"enableTcpReset":           llx.BoolDataPtr(lr.EnableTCPReset),
+				"idleTimeoutInMinutes":     llx.IntDataPtr(lr.IdleTimeoutInMinutes),
+				"loadDistribution":         llx.StringDataPtr(stringEnumPtr(lr.LoadDistribution)),
+				"provisioningState":        llx.StringDataPtr(stringEnumPtr(lr.ProvisioningState)),
 			})
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, mqlLbRule)
+		rule := mqlLbRule.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule)
+		rule.cacheLoadBalancer = a
+		rule.cacheFrontendIpConfg = subResourceID(lr.FrontendIPConfiguration)
+		rule.cacheBackendAddressPol = subResourceID(lr.BackendAddressPool)
+		rule.cacheBackendAddressPols = subResourceIDs(lr.BackendAddressPools)
+		rule.cacheProbe = subResourceID(lr.Probe)
+		res = append(res, rule)
 	}
 	return res, nil
 }
@@ -5830,7 +5905,7 @@ func azureSecurityRuleToMql(runtime *plugin.Runtime, secRule network.SecurityRul
 			"etag":                       llx.StringDataPtr(secRule.Etag),
 			"direction":                  direction,
 			"properties":                 llx.DictData(properties),
-			"destinationPortRange":       llx.ArrayData(destinationPortRange, types.String),
+			"destinationPortRange":       llx.ArrayData(destinationPortRange, types.Dict),
 			"protocol":                   protocol,
 			"access":                     access,
 			"priority":                   priority,

@@ -326,8 +326,8 @@ func (a *mqlAzureSubscriptionMonitorServiceActivityLog) alerts() ([]any, error) 
 				map[string]*llx.RawData{
 					"id":          llx.StringDataPtr(entry.ID),
 					"name":        llx.StringDataPtr(entry.Name),
-					"actions":     llx.DictData(actionsDict),
-					"conditions":  llx.DictData(conditionsDict),
+					"actions":     llx.ArrayData(actionsDict, types.Dict),
+					"conditions":  llx.ArrayData(conditionsDict, types.Dict),
 					"description": llx.StringDataPtr(entry.Properties.Description),
 					"scopes":      llx.ArrayData(strPtrsToAny(entry.Properties.Scopes), types.String),
 					"type":        llx.StringDataPtr(entry.Type),

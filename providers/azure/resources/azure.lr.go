@@ -6020,6 +6020,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.probe.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetProperties()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.probe.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.probe.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.probe.intervalInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetIntervalInSeconds()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.probe.numberOfProbes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetNumberOfProbes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.probe.probeThreshold": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetProbeThreshold()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.probe.requestPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetRequestPath()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.probe.noHealthyBackendsBehavior": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetNoHealthyBackendsBehavior()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.probe.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.probe.loadBalancerRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceProbe).GetLoadBalancerRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.loadBalancerRule")))
+	},
 	"azure.subscription.networkService.backendAddressPool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetId()).ToDataRes(types.String)
 	},
@@ -6034,6 +6061,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.backendAddressPool.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.backendAddressPool.drainPeriodInSeconds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetDrainPeriodInSeconds()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.backendAddressPool.location": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetLocation()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.backendAddressPool.syncMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetSyncMode()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.backendAddressPool.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.backendAddressPool.loadBalancerRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetLoadBalancerRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.loadBalancerRule")))
+	},
+	"azure.subscription.networkService.backendAddressPool.inboundNatRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetInboundNatRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.inboundNatRule")))
+	},
+	"azure.subscription.networkService.backendAddressPool.outboundRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).GetOutboundRules()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.outboundRule")))
 	},
 	"azure.subscription.networkService.inboundNatPool.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetId()).ToDataRes(types.String)
@@ -6050,6 +6098,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.inboundNatPool.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetProperties()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.inboundNatPool.backendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetBackendPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatPool.frontendPortRangeStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetFrontendPortRangeStart()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatPool.frontendPortRangeEnd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetFrontendPortRangeEnd()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatPool.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.inboundNatPool.enableFloatingIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetEnableFloatingIp()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.inboundNatPool.enableTcpReset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetEnableTcpReset()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.inboundNatPool.idleTimeoutInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetIdleTimeoutInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatPool.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.inboundNatPool.frontendIpConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).GetFrontendIpConfig()).ToDataRes(types.Resource("azure.subscription.networkService.frontendIpConfig"))
+	},
 	"azure.subscription.networkService.inboundNatRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetId()).ToDataRes(types.String)
 	},
@@ -6064,6 +6139,39 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.inboundNatRule.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetFrontendPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendPortRangeStart": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetFrontendPortRangeStart()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendPortRangeEnd": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetFrontendPortRangeEnd()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatRule.backendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetBackendPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.inboundNatRule.enableFloatingIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetEnableFloatingIp()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.inboundNatRule.enableTcpReset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetEnableTcpReset()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.inboundNatRule.idleTimeoutInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetIdleTimeoutInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.inboundNatRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendIpConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetFrontendIpConfig()).ToDataRes(types.Resource("azure.subscription.networkService.frontendIpConfig"))
+	},
+	"azure.subscription.networkService.inboundNatRule.backendAddressPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).GetBackendAddressPool()).ToDataRes(types.Resource("azure.subscription.networkService.backendAddressPool"))
 	},
 	"azure.subscription.networkService.frontendIpConfig.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig).GetId()).ToDataRes(types.String)
@@ -6116,6 +6224,48 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.loadBalancerRule.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetProperties()).ToDataRes(types.Dict)
 	},
+	"azure.subscription.networkService.loadBalancerRule.frontendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetFrontendPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.loadBalancerRule.backendPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetBackendPort()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.loadBalancerRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.loadBalancerRule.disableOutboundSnat": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetDisableOutboundSnat()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.loadBalancerRule.enableConnectionTracking": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetEnableConnectionTracking()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.loadBalancerRule.enableFloatingIp": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetEnableFloatingIp()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.loadBalancerRule.enableTcpReset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetEnableTcpReset()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.loadBalancerRule.idleTimeoutInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetIdleTimeoutInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.loadBalancerRule.loadDistribution": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetLoadDistribution()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.loadBalancerRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.loadBalancerRule.frontendIpConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetFrontendIpConfig()).ToDataRes(types.Resource("azure.subscription.networkService.frontendIpConfig"))
+	},
+	"azure.subscription.networkService.loadBalancerRule.backendAddressPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetBackendAddressPool()).ToDataRes(types.Resource("azure.subscription.networkService.backendAddressPool"))
+	},
+	"azure.subscription.networkService.loadBalancerRule.backendAddressPools": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetBackendAddressPools()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.backendAddressPool")))
+	},
+	"azure.subscription.networkService.loadBalancerRule.probe": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).GetProbe()).ToDataRes(types.Resource("azure.subscription.networkService.probe"))
+	},
 	"azure.subscription.networkService.outboundRule.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetId()).ToDataRes(types.String)
 	},
@@ -6130,6 +6280,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.networkService.outboundRule.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetProperties()).ToDataRes(types.Dict)
+	},
+	"azure.subscription.networkService.outboundRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.outboundRule.allocatedOutboundPorts": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetAllocatedOutboundPorts()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.outboundRule.enableTcpReset": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetEnableTcpReset()).ToDataRes(types.Bool)
+	},
+	"azure.subscription.networkService.outboundRule.idleTimeoutInMinutes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetIdleTimeoutInMinutes()).ToDataRes(types.Int)
+	},
+	"azure.subscription.networkService.outboundRule.provisioningState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetProvisioningState()).ToDataRes(types.String)
+	},
+	"azure.subscription.networkService.outboundRule.backendAddressPool": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetBackendAddressPool()).ToDataRes(types.Resource("azure.subscription.networkService.backendAddressPool"))
+	},
+	"azure.subscription.networkService.outboundRule.frontendIpConfigs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).GetFrontendIpConfigs()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.frontendIpConfig")))
 	},
 	"azure.subscription.networkService.interface.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceInterface).GetId()).ToDataRes(types.String)
@@ -26840,6 +27011,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceProbe).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.probe.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.intervalInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).IntervalInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.numberOfProbes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).NumberOfProbes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.probeThreshold": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).ProbeThreshold, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.requestPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).RequestPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.noHealthyBackendsBehavior": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).NoHealthyBackendsBehavior, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.probe.loadBalancerRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceProbe).LoadBalancerRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.backendAddressPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).__id, ok = v.Value.(string)
 		return
@@ -26862,6 +27069,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.backendAddressPool.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.backendAddressPool.drainPeriodInSeconds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).DrainPeriodInSeconds, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.backendAddressPool.location": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).Location, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.backendAddressPool.syncMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).SyncMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.backendAddressPool.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.backendAddressPool.loadBalancerRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).LoadBalancerRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.backendAddressPool.inboundNatRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).InboundNatRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.backendAddressPool.outboundRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool).OutboundRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.inboundNatPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26888,6 +27123,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.inboundNatPool.backendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).BackendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.frontendPortRangeStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).FrontendPortRangeStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.frontendPortRangeEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).FrontendPortRangeEnd, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.enableFloatingIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).EnableFloatingIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.enableTcpReset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).EnableTcpReset, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.idleTimeoutInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).IdleTimeoutInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatPool.frontendIpConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatPool).FrontendIpConfig, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.inboundNatRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).__id, ok = v.Value.(string)
 		return
@@ -26910,6 +27181,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.inboundNatRule.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).FrontendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendPortRangeStart": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).FrontendPortRangeStart, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendPortRangeEnd": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).FrontendPortRangeEnd, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.backendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).BackendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.enableFloatingIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).EnableFloatingIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.enableTcpReset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).EnableTcpReset, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.idleTimeoutInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).IdleTimeoutInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.frontendIpConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).FrontendIpConfig, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.inboundNatRule.backendAddressPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceInboundNatRule).BackendAddressPool, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.frontendIpConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -26988,6 +27303,62 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.networkService.loadBalancerRule.frontendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).FrontendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.backendPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).BackendPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.disableOutboundSnat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).DisableOutboundSnat, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.enableConnectionTracking": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).EnableConnectionTracking, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.enableFloatingIp": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).EnableFloatingIp, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.enableTcpReset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).EnableTcpReset, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.idleTimeoutInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).IdleTimeoutInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.loadDistribution": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).LoadDistribution, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.frontendIpConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).FrontendIpConfig, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.backendAddressPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).BackendAddressPool, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.backendAddressPools": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).BackendAddressPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.loadBalancerRule.probe": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule).Probe, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceProbe](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.networkService.outboundRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).__id, ok = v.Value.(string)
 		return
@@ -27010,6 +27381,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.networkService.outboundRule.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.outboundRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.outboundRule.allocatedOutboundPorts": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).AllocatedOutboundPorts, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.outboundRule.enableTcpReset": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).EnableTcpReset, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.outboundRule.idleTimeoutInMinutes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).IdleTimeoutInMinutes, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.outboundRule.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).ProvisioningState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.outboundRule.backendAddressPool": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).BackendAddressPool, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.networkService.outboundRule.frontendIpConfigs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceOutboundRule).FrontendIpConfigs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.interface.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -61601,12 +62000,21 @@ func (c *mqlAzureSubscriptionNetworkServiceLoadBalancer) GetLoadBalancerRules() 
 type mqlAzureSubscriptionNetworkServiceProbe struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceProbeInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Etag       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	mqlAzureSubscriptionNetworkServiceProbeInternal
+	Id                        plugin.TValue[string]
+	Name                      plugin.TValue[string]
+	Type                      plugin.TValue[string]
+	Etag                      plugin.TValue[string]
+	Properties                plugin.TValue[any]
+	Port                      plugin.TValue[int64]
+	Protocol                  plugin.TValue[string]
+	IntervalInSeconds         plugin.TValue[int64]
+	NumberOfProbes            plugin.TValue[int64]
+	ProbeThreshold            plugin.TValue[int64]
+	RequestPath               plugin.TValue[string]
+	NoHealthyBackendsBehavior plugin.TValue[string]
+	ProvisioningState         plugin.TValue[string]
+	LoadBalancerRules         plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceProbe creates a new instance of this resource
@@ -61666,16 +62074,71 @@ func (c *mqlAzureSubscriptionNetworkServiceProbe) GetProperties() *plugin.TValue
 	return &c.Properties
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetIntervalInSeconds() *plugin.TValue[int64] {
+	return &c.IntervalInSeconds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetNumberOfProbes() *plugin.TValue[int64] {
+	return &c.NumberOfProbes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetProbeThreshold() *plugin.TValue[int64] {
+	return &c.ProbeThreshold
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetRequestPath() *plugin.TValue[string] {
+	return &c.RequestPath
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetNoHealthyBackendsBehavior() *plugin.TValue[string] {
+	return &c.NoHealthyBackendsBehavior
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceProbe) GetLoadBalancerRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancerRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.probe", c.__id, "loadBalancerRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancerRules()
+	})
+}
+
 // mqlAzureSubscriptionNetworkServiceBackendAddressPool for the azure.subscription.networkService.backendAddressPool resource
 type mqlAzureSubscriptionNetworkServiceBackendAddressPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceBackendAddressPoolInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Etag       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	mqlAzureSubscriptionNetworkServiceBackendAddressPoolInternal
+	Id                   plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	Type                 plugin.TValue[string]
+	Etag                 plugin.TValue[string]
+	Properties           plugin.TValue[any]
+	DrainPeriodInSeconds plugin.TValue[int64]
+	Location             plugin.TValue[string]
+	SyncMode             plugin.TValue[string]
+	ProvisioningState    plugin.TValue[string]
+	LoadBalancerRules    plugin.TValue[[]any]
+	InboundNatRules      plugin.TValue[[]any]
+	OutboundRules        plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceBackendAddressPool creates a new instance of this resource
@@ -61735,16 +62198,89 @@ func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetProperties() *
 	return &c.Properties
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetDrainPeriodInSeconds() *plugin.TValue[int64] {
+	return &c.DrainPeriodInSeconds
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetLocation() *plugin.TValue[string] {
+	return &c.Location
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetSyncMode() *plugin.TValue[string] {
+	return &c.SyncMode
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetLoadBalancerRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LoadBalancerRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.backendAddressPool", c.__id, "loadBalancerRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.loadBalancerRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetInboundNatRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.InboundNatRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.backendAddressPool", c.__id, "inboundNatRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.inboundNatRules()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceBackendAddressPool) GetOutboundRules() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.OutboundRules, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.backendAddressPool", c.__id, "outboundRules")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.outboundRules()
+	})
+}
+
 // mqlAzureSubscriptionNetworkServiceInboundNatPool for the azure.subscription.networkService.inboundNatPool resource
 type mqlAzureSubscriptionNetworkServiceInboundNatPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceInboundNatPoolInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Etag       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	mqlAzureSubscriptionNetworkServiceInboundNatPoolInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	Properties             plugin.TValue[any]
+	BackendPort            plugin.TValue[int64]
+	FrontendPortRangeStart plugin.TValue[int64]
+	FrontendPortRangeEnd   plugin.TValue[int64]
+	Protocol               plugin.TValue[string]
+	EnableFloatingIp       plugin.TValue[bool]
+	EnableTcpReset         plugin.TValue[bool]
+	IdleTimeoutInMinutes   plugin.TValue[int64]
+	ProvisioningState      plugin.TValue[string]
+	FrontendIpConfig       plugin.TValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig]
 }
 
 // createAzureSubscriptionNetworkServiceInboundNatPool creates a new instance of this resource
@@ -61804,16 +62340,75 @@ func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetProperties() *plug
 	return &c.Properties
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetBackendPort() *plugin.TValue[int64] {
+	return &c.BackendPort
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetFrontendPortRangeStart() *plugin.TValue[int64] {
+	return &c.FrontendPortRangeStart
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetFrontendPortRangeEnd() *plugin.TValue[int64] {
+	return &c.FrontendPortRangeEnd
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetEnableFloatingIp() *plugin.TValue[bool] {
+	return &c.EnableFloatingIp
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetEnableTcpReset() *plugin.TValue[bool] {
+	return &c.EnableTcpReset
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetIdleTimeoutInMinutes() *plugin.TValue[int64] {
+	return &c.IdleTimeoutInMinutes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatPool) GetFrontendIpConfig() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](&c.FrontendIpConfig, func() (*mqlAzureSubscriptionNetworkServiceFrontendIpConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.inboundNatPool", c.__id, "frontendIpConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig), nil
+			}
+		}
+
+		return c.frontendIpConfig()
+	})
+}
+
 // mqlAzureSubscriptionNetworkServiceInboundNatRule for the azure.subscription.networkService.inboundNatRule resource
 type mqlAzureSubscriptionNetworkServiceInboundNatRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceInboundNatRuleInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Etag       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	mqlAzureSubscriptionNetworkServiceInboundNatRuleInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	Properties             plugin.TValue[any]
+	FrontendPort           plugin.TValue[int64]
+	FrontendPortRangeStart plugin.TValue[int64]
+	FrontendPortRangeEnd   plugin.TValue[int64]
+	BackendPort            plugin.TValue[int64]
+	Protocol               plugin.TValue[string]
+	EnableFloatingIp       plugin.TValue[bool]
+	EnableTcpReset         plugin.TValue[bool]
+	IdleTimeoutInMinutes   plugin.TValue[int64]
+	ProvisioningState      plugin.TValue[string]
+	FrontendIpConfig       plugin.TValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig]
+	BackendAddressPool     plugin.TValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool]
 }
 
 // createAzureSubscriptionNetworkServiceInboundNatRule creates a new instance of this resource
@@ -61871,6 +62466,74 @@ func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetEtag() *plugin.TVa
 
 func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetFrontendPort() *plugin.TValue[int64] {
+	return &c.FrontendPort
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetFrontendPortRangeStart() *plugin.TValue[int64] {
+	return &c.FrontendPortRangeStart
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetFrontendPortRangeEnd() *plugin.TValue[int64] {
+	return &c.FrontendPortRangeEnd
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetBackendPort() *plugin.TValue[int64] {
+	return &c.BackendPort
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetEnableFloatingIp() *plugin.TValue[bool] {
+	return &c.EnableFloatingIp
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetEnableTcpReset() *plugin.TValue[bool] {
+	return &c.EnableTcpReset
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetIdleTimeoutInMinutes() *plugin.TValue[int64] {
+	return &c.IdleTimeoutInMinutes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetFrontendIpConfig() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](&c.FrontendIpConfig, func() (*mqlAzureSubscriptionNetworkServiceFrontendIpConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.inboundNatRule", c.__id, "frontendIpConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig), nil
+			}
+		}
+
+		return c.frontendIpConfig()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceInboundNatRule) GetBackendAddressPool() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceBackendAddressPool](&c.BackendAddressPool, func() (*mqlAzureSubscriptionNetworkServiceBackendAddressPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.inboundNatRule", c.__id, "backendAddressPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool), nil
+			}
+		}
+
+		return c.backendAddressPool()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceFrontendIpConfig for the azure.subscription.networkService.frontendIpConfig resource
@@ -62005,12 +62668,26 @@ func (c *mqlAzureSubscriptionNetworkServiceFrontendIpConfig) GetEnableConnection
 type mqlAzureSubscriptionNetworkServiceLoadBalancerRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceLoadBalancerRuleInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Etag       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	mqlAzureSubscriptionNetworkServiceLoadBalancerRuleInternal
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Type                     plugin.TValue[string]
+	Etag                     plugin.TValue[string]
+	Properties               plugin.TValue[any]
+	FrontendPort             plugin.TValue[int64]
+	BackendPort              plugin.TValue[int64]
+	Protocol                 plugin.TValue[string]
+	DisableOutboundSnat      plugin.TValue[bool]
+	EnableConnectionTracking plugin.TValue[bool]
+	EnableFloatingIp         plugin.TValue[bool]
+	EnableTcpReset           plugin.TValue[bool]
+	IdleTimeoutInMinutes     plugin.TValue[int64]
+	LoadDistribution         plugin.TValue[string]
+	ProvisioningState        plugin.TValue[string]
+	FrontendIpConfig         plugin.TValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig]
+	BackendAddressPool       plugin.TValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool]
+	BackendAddressPools      plugin.TValue[[]any]
+	Probe                    plugin.TValue[*mqlAzureSubscriptionNetworkServiceProbe]
 }
 
 // createAzureSubscriptionNetworkServiceLoadBalancerRule creates a new instance of this resource
@@ -62065,16 +62742,127 @@ func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetProperties() *pl
 	return &c.Properties
 }
 
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetFrontendPort() *plugin.TValue[int64] {
+	return &c.FrontendPort
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetBackendPort() *plugin.TValue[int64] {
+	return &c.BackendPort
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetDisableOutboundSnat() *plugin.TValue[bool] {
+	return &c.DisableOutboundSnat
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetEnableConnectionTracking() *plugin.TValue[bool] {
+	return &c.EnableConnectionTracking
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetEnableFloatingIp() *plugin.TValue[bool] {
+	return &c.EnableFloatingIp
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetEnableTcpReset() *plugin.TValue[bool] {
+	return &c.EnableTcpReset
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetIdleTimeoutInMinutes() *plugin.TValue[int64] {
+	return &c.IdleTimeoutInMinutes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetLoadDistribution() *plugin.TValue[string] {
+	return &c.LoadDistribution
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetFrontendIpConfig() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](&c.FrontendIpConfig, func() (*mqlAzureSubscriptionNetworkServiceFrontendIpConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancerRule", c.__id, "frontendIpConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceFrontendIpConfig), nil
+			}
+		}
+
+		return c.frontendIpConfig()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetBackendAddressPool() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceBackendAddressPool](&c.BackendAddressPool, func() (*mqlAzureSubscriptionNetworkServiceBackendAddressPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancerRule", c.__id, "backendAddressPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool), nil
+			}
+		}
+
+		return c.backendAddressPool()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetBackendAddressPools() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.BackendAddressPools, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancerRule", c.__id, "backendAddressPools")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.backendAddressPools()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) GetProbe() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceProbe] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceProbe](&c.Probe, func() (*mqlAzureSubscriptionNetworkServiceProbe, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.loadBalancerRule", c.__id, "probe")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceProbe), nil
+			}
+		}
+
+		return c.probe()
+	})
+}
+
 // mqlAzureSubscriptionNetworkServiceOutboundRule for the azure.subscription.networkService.outboundRule resource
 type mqlAzureSubscriptionNetworkServiceOutboundRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAzureSubscriptionNetworkServiceOutboundRuleInternal it will be used here
-	Id         plugin.TValue[string]
-	Name       plugin.TValue[string]
-	Type       plugin.TValue[string]
-	Etag       plugin.TValue[string]
-	Properties plugin.TValue[any]
+	mqlAzureSubscriptionNetworkServiceOutboundRuleInternal
+	Id                     plugin.TValue[string]
+	Name                   plugin.TValue[string]
+	Type                   plugin.TValue[string]
+	Etag                   plugin.TValue[string]
+	Properties             plugin.TValue[any]
+	Protocol               plugin.TValue[string]
+	AllocatedOutboundPorts plugin.TValue[int64]
+	EnableTcpReset         plugin.TValue[bool]
+	IdleTimeoutInMinutes   plugin.TValue[int64]
+	ProvisioningState      plugin.TValue[string]
+	BackendAddressPool     plugin.TValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool]
+	FrontendIpConfigs      plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionNetworkServiceOutboundRule creates a new instance of this resource
@@ -62127,6 +62915,58 @@ func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetEtag() *plugin.TValu
 
 func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetProperties() *plugin.TValue[any] {
 	return &c.Properties
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetAllocatedOutboundPorts() *plugin.TValue[int64] {
+	return &c.AllocatedOutboundPorts
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetEnableTcpReset() *plugin.TValue[bool] {
+	return &c.EnableTcpReset
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetIdleTimeoutInMinutes() *plugin.TValue[int64] {
+	return &c.IdleTimeoutInMinutes
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetProvisioningState() *plugin.TValue[string] {
+	return &c.ProvisioningState
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetBackendAddressPool() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceBackendAddressPool] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceBackendAddressPool](&c.BackendAddressPool, func() (*mqlAzureSubscriptionNetworkServiceBackendAddressPool, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.outboundRule", c.__id, "backendAddressPool")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceBackendAddressPool), nil
+			}
+		}
+
+		return c.backendAddressPool()
+	})
+}
+
+func (c *mqlAzureSubscriptionNetworkServiceOutboundRule) GetFrontendIpConfigs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.FrontendIpConfigs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.networkService.outboundRule", c.__id, "frontendIpConfigs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.frontendIpConfigs()
+	})
 }
 
 // mqlAzureSubscriptionNetworkServiceInterface for the azure.subscription.networkService.interface resource

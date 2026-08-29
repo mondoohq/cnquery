@@ -404,7 +404,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"fqdn":                              llx.StringDataPtr(entry.Properties.Fqdn),
 					"fqdnSubdomain":                     llx.StringDataPtr(entry.Properties.FqdnSubdomain),
 					"privateFqdn":                       llx.StringDataPtr(entry.Properties.PrivateFQDN),
-					"addonProfiles":                     llx.DictData(addonProfiles),
+					"addonProfiles":                     llx.ArrayData(addonProfiles, types.Dict),
 					"httpProxyConfig":                   llx.DictData(httpProxyConfig),
 					"networkProfile":                    llx.DictData(networkProfile),
 					"podIdentityProfile":                llx.DictData(podIdentityProfile),
