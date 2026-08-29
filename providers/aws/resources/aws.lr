@@ -2249,8 +2249,12 @@ private aws.kms.key @defaults("id region aliases metadata.Description") {
   keyRotationEnabled() bool
   // Raw key metadata as returned by the KMS DescribeKey API
   //
-  // JSON form of the KeyMetadata structure, with keys such as `KeyId`, `Arn`, `Description`, `KeyState`, `KeyUsage`, `KeySpec`, `Origin`, `KeyManager`, `CreationDate`, `Enabled`, `MultiRegion`, and `CustomKeyStoreId`. Most values are also exposed as dedicated fields (`keyState`, `keyUsage`, `keySpec`, `origin`, `keyManager`, `description`); prefer those for audits and use this dict for values without a dedicated accessor.
-  metadata() dict
+  // Deprecated in favor of keyState, keyUsage, keySpec, origin, keyManager,
+  // description, and the other dedicated fields on this resource. JSON form
+  // of the KeyMetadata structure, with keys such as `KeyId`, `Arn`,
+  // `Description`, `KeyState`, `KeyUsage`, `KeySpec`, `Origin`, `KeyManager`,
+  // `CreationDate`, `Enabled`, `MultiRegion`, and `CustomKeyStoreId`.
+  metadata() @maturity("deprecated") dict
   // Tags for the KMS key
   tags() map[string]string
   // CloudFormation stack that manages this key, if any
@@ -5879,13 +5883,12 @@ private aws.sns.topic @defaults("arn") {
   subscriptions() []aws.sns.subscription
   // Raw topic attribute map
   //
-  // The complete set of topic attributes as returned by SNS, including
-  // Policy, Owner, DisplayName, KmsMasterKeyId, FifoTopic,
-  // ContentBasedDeduplication, SignatureVersion, TracingConfig,
-  // EffectiveDeliveryPolicy, and the SubscriptionsConfirmed,
-  // SubscriptionsPending, and SubscriptionsDeleted counts. Most values are
-  // also surfaced as dedicated fields on this resource.
-  attributes() dict
+  // Deprecated in favor of policy, owner, displayName, kmsMasterKey,
+  // fifoTopic, contentBasedDeduplication, signatureVersion, tracingConfig,
+  // and deliveryPolicy. The complete set of topic attributes as returned by
+  // SNS, including the SubscriptionsConfirmed, SubscriptionsPending, and
+  // SubscriptionsDeleted counts, which have no dedicated field.
+  attributes() @maturity("deprecated") dict
   // Tags for the topic
   tags() map[string]string
   // Signature version used for Amazon SNS message signing (1 or 2)
@@ -5960,12 +5963,11 @@ private aws.sns.subscription @defaults("arn") {
   region string
   // Raw subscription attribute map
   //
-  // The complete set of subscription attributes as returned by SNS,
-  // including SubscriptionArn, TopicArn, Protocol, Endpoint, Owner,
-  // ConfirmationWasAuthenticated, PendingConfirmation, RawMessageDelivery,
-  // FilterPolicy, FilterPolicyScope, RedrivePolicy, and DeliveryPolicy.
-  // Most values are also surfaced as dedicated fields on this resource.
-  attributes() dict
+  // Deprecated in favor of arn, topic, protocol, endpoint, owner,
+  // confirmationWasAuthenticated, pendingConfirmation, rawMessageDelivery,
+  // filterPolicy, filterPolicyScope, redrivePolicy, and deliveryPolicy. The
+  // complete set of subscription attributes as returned by SNS.
+  attributes() @maturity("deprecated") dict
   // Whether raw message delivery is enabled (no SNS metadata wrapper)
   rawMessageDelivery() bool
   // Message filter policy
@@ -7129,22 +7131,23 @@ private aws.codebuild.project @defaults("arn name") {
   name string
   // Raw build environment configuration
   //
-  // Keys are `Type`, `Image`, `ComputeType`, `Certificate`,
+  // Deprecated in favor of environmentType, environmentImage,
+  // environmentComputeType, environmentCertificate,
+  // environmentImagePullCredentialsType, environmentVariables, and
+  // privilegedMode. Keys are `Type`, `Image`, `ComputeType`, `Certificate`,
   // `ComputeConfiguration`, `DockerServer`, `EnvironmentVariables`, `Fleet`,
   // `ImagePullCredentialsType`, `PrivilegedMode`, and `RegistryCredential`.
-  // The same values are also exposed flattened as environmentType,
-  // environmentImage, environmentComputeType, and environmentVariables.
-  environment dict
+  environment @maturity("deprecated") dict
   // Region where the project exists
   region string
   // Raw primary source configuration
   //
-  // Keys are `Type`, `Location`, `GitCloneDepth`, `Buildspec`, `Auth`,
-  // `BuildStatusConfig`, `GitSubmodulesConfig`, `InsecureSsl`,
-  // `ReportBuildStatus`, and `SourceIdentifier`. The same values are also
-  // exposed flattened as sourceType, sourceLocation, sourceBuildspec, and the
-  // related source fields.
-  source dict
+  // Deprecated in favor of sourceType, sourceLocation, sourceGitCloneDepth,
+  // sourceBuildspec, sourceInsecureSsl, sourceReportBuildStatus, and
+  // sourceIdentifier. Keys are `Type`, `Location`, `GitCloneDepth`,
+  // `Buildspec`, `Auth`, `BuildStatusConfig`, `GitSubmodulesConfig`,
+  // `InsecureSsl`, `ReportBuildStatus`, and `SourceIdentifier`.
+  source @maturity("deprecated") dict
   // Tags for the project
   tags map[string]string
   // Date the project was created
@@ -12427,11 +12430,11 @@ private aws.s3.bucket @defaults("name location public") {
   replicationRules() []aws.s3.bucket.replicationRule
   // Block Public Access configuration of the bucket
   //
-  // Keys `BlockPublicAcls`, `BlockPublicPolicy`, `IgnorePublicAcls`, and
-  // `RestrictPublicBuckets`, each a boolean. The same four settings are also
-  // exposed as the top-level `blockPublicAcls`, `blockPublicPolicy`,
-  // `ignorePublicAcls`, and `restrictPublicBuckets` fields.
-  publicAccessBlock() dict
+  // Deprecated in favor of blockPublicAcls, blockPublicPolicy,
+  // ignorePublicAcls, and restrictPublicBuckets, which carry the same four
+  // settings as booleans. Keys `BlockPublicAcls`, `BlockPublicPolicy`,
+  // `IgnorePublicAcls`, and `RestrictPublicBuckets`, each a boolean.
+  publicAccessBlock() @maturity("deprecated") dict
   // Whether new public ACLs on the bucket and its objects are blocked
   blockPublicAcls() bool
   // Whether new public bucket policies are blocked
@@ -12901,13 +12904,14 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   agentVersion string
   // Data replication status and progress
   //
-  // Keys: DataReplicationError, DataReplicationInitiation, DataReplicationState,
-  // EtaDateTime, LagDuration, ReplicatedDisks (per-disk backlog and replicated
-  // byte counts), StagingAvailabilityZone, and StagingOutpostArn. The commonly
-  // queried values are also flattened onto this resource as dataReplicationState,
-  // dataReplicationLagDuration, dataReplicationEtaAt, and
-  // dataReplicationStagingAvailabilityZone.
-  dataReplicationInfo dict
+  // Deprecated in favor of dataReplicationState, dataReplicationLagDuration,
+  // dataReplicationEtaAt, and dataReplicationStagingAvailabilityZone. Keys:
+  // DataReplicationError, DataReplicationInitiation, DataReplicationState,
+  // EtaDateTime, LagDuration, ReplicatedDisks (per-disk backlog and
+  // replicated byte counts), StagingAvailabilityZone, and StagingOutpostArn.
+  // EtaDateTime is a JSON string here, where dataReplicationEtaAt is a proper
+  // time value that compares against other times.
+  dataReplicationInfo @maturity("deprecated") dict
   // State of the data replication (e.g. INITIATING, INITIAL_SYNC, BACKLOG, CONTINUOUS, STALLED, DISCONNECTED)
   dataReplicationState string
   // Data replication lag duration (ISO 8601 duration)
@@ -12920,13 +12924,14 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   lastLaunchResult string
   // Lifecycle state information
   //
-  // Keys: AddedToServiceDateTime, FirstByteDateTime, LastSeenByServiceDateTime,
-  // ElapsedReplicationDuration, and LastLaunch (result and status of the most
-  // recent launch). The individual timestamps are also flattened onto this
-  // resource as lifeCycleAddedToServiceAt, lifeCycleFirstByteAt,
+  // Deprecated in favor of lifeCycleAddedToServiceAt, lifeCycleFirstByteAt,
   // lifeCycleLastSeenAt, lifeCycleElapsedReplicationDuration, and
-  // lifeCycleLastLaunchStatus.
-  lifeCycle dict
+  // lifeCycleLastLaunchStatus. Keys: AddedToServiceDateTime,
+  // FirstByteDateTime, LastSeenByServiceDateTime,
+  // ElapsedReplicationDuration, and LastLaunch (result and status of the most
+  // recent launch). Timestamps are JSON strings here, where the dedicated
+  // fields are proper time values that compare against other times.
+  lifeCycle @maturity("deprecated") dict
   // Date the source server was added to the service
   lifeCycleAddedToServiceAt time
   // Date of the first byte that was replicated from the source server
@@ -12939,12 +12944,12 @@ private aws.drs.sourceServer @defaults("sourceServerID arn") {
   lifeCycleLastLaunchStatus string
   // Source server properties (OS, disks, network)
   //
-  // Keys: Cpus, Disks, NetworkInterfaces, Os, RamBytes, RecommendedInstanceType,
-  // SupportsNitroInstances, IdentificationHints, and LastUpdatedDateTime. The
-  // scalar summaries are also flattened onto this resource as sourceCpuCount,
-  // sourceDiskCount, sourceRamBytes, sourceRecommendedInstanceType, and
-  // sourceSupportsNitroInstances.
-  sourceProperties dict
+  // Deprecated in favor of sourceCpuCount, sourceDiskCount, sourceRamBytes,
+  // sourceRecommendedInstanceType, sourceSupportsNitroInstances,
+  // sourceIdentificationFqdn, and sourceIdentificationHostname. Keys: Cpus,
+  // Disks, NetworkInterfaces, Os, RamBytes, RecommendedInstanceType,
+  // SupportsNitroInstances, IdentificationHints, and LastUpdatedDateTime.
+  sourceProperties @maturity("deprecated") dict
   // Number of CPUs reported by the source server
   sourceCpuCount int
   // Number of disks reported by the source server
@@ -13028,11 +13033,12 @@ private aws.drs.recoveryInstance @defaults("recoveryInstanceID arn ec2InstanceSt
   pointInTimeSnapshotAt time
   // Data replication info for failback (state, lag, replicated disks)
   //
-  // Keys: DataReplicationError, DataReplicationInitiation, DataReplicationState,
-  // EtaDateTime, LagDuration, ReplicatedDisks, StagingAvailabilityZone, and
-  // StagingOutpostArn. The state and lag are also flattened onto this resource
-  // as dataReplicationState and dataReplicationLagDuration.
-  dataReplicationInfo dict
+  // Deprecated in favor of dataReplicationState and
+  // dataReplicationLagDuration. Keys: DataReplicationError,
+  // DataReplicationInitiation, DataReplicationState, EtaDateTime,
+  // LagDuration, ReplicatedDisks, StagingAvailabilityZone, and
+  // StagingOutpostArn.
+  dataReplicationInfo @maturity("deprecated") dict
   // State of failback data replication
   //
   // One of STOPPED, INITIATING, INITIAL_SYNC, BACKLOG, CREATING_SNAPSHOT,
@@ -13716,11 +13722,10 @@ private aws.dynamodb.table @defaults("name region") {
   backups() []dict
   // Server-side encryption settings for the table
   //
-  // Carries Status (ENABLING, ENABLED, DISABLING, DISABLED, or UPDATING),
-  // SSEType (AES256 or KMS), KMSMasterKeyArn, and
-  // InaccessibleEncryptionDateTime. See sseType and sseKmsKey for the
-  // resolved values.
-  sseDescription() dict
+  // Deprecated in favor of sseType, kmsMasterKeyId, and sseKmsKey. Carries
+  // Status (ENABLING, ENABLED, DISABLING, DISABLED, or UPDATING), SSEType
+  // (AES256 or KMS), KMSMasterKeyArn, and InaccessibleEncryptionDateTime.
+  sseDescription() @maturity("deprecated") dict
   // Type of server-side encryption: "AES256" (AWS-owned) or "KMS" (customer-managed or AWS-managed KMS key)
   sseType() string
   // ARN of the KMS key used for server-side encryption at rest
@@ -13735,13 +13740,12 @@ private aws.dynamodb.table @defaults("name region") {
   provisionedThroughput() dict
   // Continuous backups and point-in-time recovery settings for the table
   //
-  // Carries ContinuousBackupsStatus (ENABLED or DISABLED) and a nested
-  // PointInTimeRecoveryDescription with PointInTimeRecoveryStatus,
-  // EarliestRestorableDateTime, LatestRestorableDateTime, and
-  // RecoveryPeriodInDays. See continuousBackupsEnabled,
-  // pointInTimeRecoveryEnabled, and pitrRecoveryPeriodInDays for the resolved
-  // values.
-  continuousBackups() dict
+  // Deprecated in favor of continuousBackupsEnabled,
+  // pointInTimeRecoveryEnabled, pitrRecoveryPeriodInDays,
+  // earliestRestorableDateTime, and latestRestorableDateTime. Timestamps
+  // inside this dict are JSON strings, where the dedicated fields are proper
+  // time values that compare against other times.
+  continuousBackups() @maturity("deprecated") dict
   // Whether point-in-time recovery (PITR) is enabled
   pointInTimeRecoveryEnabled() bool
   // Whether continuous backups are enabled
