@@ -1906,14 +1906,10 @@ func (a *mqlAwsRdsSnapshot) restoreAttributes() (map[string]any, error) {
 		if out == nil || out.DBClusterSnapshotAttributesResult == nil {
 			return map[string]any{}, nil
 		}
-		res := map[string]any{}
-		for _, attr := range out.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes {
-			if attr.AttributeName == nil {
-				continue
-			}
-			res[*attr.AttributeName] = stringsToAnyArray(attr.AttributeValues)
-		}
-		return res, nil
+		return rdsSnapshotAttributeMap(out.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes,
+			func(a rds_types.DBClusterSnapshotAttribute) (*string, []string) {
+				return a.AttributeName, a.AttributeValues
+			}), nil
 	}
 	out, err := svc.DescribeDBSnapshotAttributes(ctx, &rds.DescribeDBSnapshotAttributesInput{DBSnapshotIdentifier: &snapshotId})
 	if err != nil {
@@ -1922,14 +1918,23 @@ func (a *mqlAwsRdsSnapshot) restoreAttributes() (map[string]any, error) {
 	if out == nil || out.DBSnapshotAttributesResult == nil {
 		return map[string]any{}, nil
 	}
+	return rdsSnapshotAttributeMap(out.DBSnapshotAttributesResult.DBSnapshotAttributes,
+		func(a rds_types.DBSnapshotAttribute) (*string, []string) { return a.AttributeName, a.AttributeValues }), nil
+}
+
+// rdsSnapshotAttributeMap re-keys a snapshot attribute pair list into a map of
+// attribute name to its values. An attribute with no name is dropped: it can
+// key nothing, and an empty-string key would read as a real attribute named "".
+func rdsSnapshotAttributeMap[T any](attrs []T, split func(T) (*string, []string)) map[string]any {
 	res := map[string]any{}
-	for _, attr := range out.DBSnapshotAttributesResult.DBSnapshotAttributes {
-		if attr.AttributeName == nil {
+	for _, attr := range attrs {
+		name, values := split(attr)
+		if name == nil {
 			continue
 		}
-		res[*attr.AttributeName] = stringsToAnyArray(attr.AttributeValues)
+		res[*name] = stringsToAnyArray(values)
 	}
-	return res, nil
+	return res
 }
 
 // isPublic reports whether the snapshot is shared with all AWS accounts, which
