@@ -299,6 +299,7 @@ const (
 	ResourceAzureSubscriptionCloudDefenderServiceWorkspaceSetting                                       string = "azure.subscription.cloudDefenderService.workspaceSetting"
 	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy                                 string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy"
 	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine                   string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine"
+	ResourceAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule           string = "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule"
 	ResourceAzureSubscriptionCloudDefenderServiceSecureScore                                            string = "azure.subscription.cloudDefenderService.secureScore"
 	ResourceAzureSubscriptionCloudDefenderServiceSecureScoreControl                                     string = "azure.subscription.cloudDefenderService.secureScoreControl"
 	ResourceAzureSubscriptionCloudDefenderServiceRegulatoryComplianceStandard                           string = "azure.subscription.cloudDefenderService.regulatoryComplianceStandard"
@@ -1700,6 +1701,10 @@ func init() {
 		"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine,
+		},
+		"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule": {
+			// to override args, implement: initAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule,
 		},
 		"azure.subscription.cloudDefenderService.secureScore": {
 			// to override args, implement: initAzureSubscriptionCloudDefenderServiceSecureScore(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -11681,6 +11686,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.sqlService.virtualNetworkRule.virtualNetworkSubnetId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).GetVirtualNetworkSubnetId()).ToDataRes(types.String)
 	},
+	"azure.subscription.sqlService.virtualNetworkRule.subnet": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).GetSubnet()).ToDataRes(types.Resource("azure.subscription.networkService.subnet"))
+	},
+	"azure.subscription.sqlService.virtualNetworkRule.state": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).GetState()).ToDataRes(types.String)
+	},
+	"azure.subscription.sqlService.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).GetIgnoreMissingVnetServiceEndpoint()).ToDataRes(types.Bool)
+	},
 	"azure.subscription.sqlService.managedInstance.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSqlServiceManagedInstance).GetId()).ToDataRes(types.String)
 	},
@@ -13780,6 +13794,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.ports": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).GetPorts()).ToDataRes(types.Array(types.Dict))
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRules": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).GetPortRules()).ToDataRes(types.Array(types.Resource("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule")))
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.number": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).GetNumber()).ToDataRes(types.Int)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).GetProtocol()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.maxRequestAccessDuration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).GetMaxRequestAccessDuration()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.allowedSourceAddressPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).GetAllowedSourceAddressPrefix()).ToDataRes(types.String)
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.allowedSourceAddressPrefixes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).GetAllowedSourceAddressPrefixes()).ToDataRes(types.Array(types.String))
 	},
 	"azure.subscription.cloudDefenderService.secureScore.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCloudDefenderServiceSecureScore).GetId()).ToDataRes(types.String)
@@ -36052,6 +36084,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).VirtualNetworkSubnetId, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"azure.subscription.sqlService.virtualNetworkRule.subnet": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).Subnet, ok = plugin.RawToTValue[*mqlAzureSubscriptionNetworkServiceSubnet](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.virtualNetworkRule.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).State, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.sqlService.virtualNetworkRule.ignoreMissingVnetServiceEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSqlServiceVirtualNetworkRule).IgnoreMissingVnetServiceEndpoint, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"azure.subscription.sqlService.managedInstance.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSqlServiceManagedInstance).__id, ok = v.Value.(string)
 		return
@@ -39082,6 +39126,34 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.ports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).Ports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRules": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine).PortRules, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).__id, ok = v.Value.(string)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.number": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).Number, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.maxRequestAccessDuration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).MaxRequestAccessDuration, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.allowedSourceAddressPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).AllowedSourceAddressPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.allowedSourceAddressPrefixes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule).AllowedSourceAddressPrefixes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cloudDefenderService.secureScore.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -83014,11 +83086,14 @@ type mqlAzureSubscriptionSqlServiceVirtualNetworkRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAzureSubscriptionSqlServiceVirtualNetworkRuleInternal it will be used here
-	Id                     plugin.TValue[string]
-	Name                   plugin.TValue[string]
-	Type                   plugin.TValue[string]
-	Properties             plugin.TValue[any]
-	VirtualNetworkSubnetId plugin.TValue[string]
+	Id                               plugin.TValue[string]
+	Name                             plugin.TValue[string]
+	Type                             plugin.TValue[string]
+	Properties                       plugin.TValue[any]
+	VirtualNetworkSubnetId           plugin.TValue[string]
+	Subnet                           plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
+	State                            plugin.TValue[string]
+	IgnoreMissingVnetServiceEndpoint plugin.TValue[bool]
 }
 
 // createAzureSubscriptionSqlServiceVirtualNetworkRule creates a new instance of this resource
@@ -83071,6 +83146,30 @@ func (c *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) GetProperties() *plug
 
 func (c *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) GetVirtualNetworkSubnetId() *plugin.TValue[string] {
 	return &c.VirtualNetworkSubnetId
+}
+
+func (c *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) GetSubnet() *plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet] {
+	return plugin.GetOrCompute[*mqlAzureSubscriptionNetworkServiceSubnet](&c.Subnet, func() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("azure.subscription.sqlService.virtualNetworkRule", c.__id, "subnet")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
+			}
+		}
+
+		return c.subnet()
+	})
+}
+
+func (c *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) GetState() *plugin.TValue[string] {
+	return &c.State
+}
+
+func (c *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) GetIgnoreMissingVnetServiceEndpoint() *plugin.TValue[bool] {
+	return &c.IgnoreMissingVnetServiceEndpoint
 }
 
 // mqlAzureSubscriptionSqlServiceManagedInstance for the azure.subscription.sqlService.managedInstance resource
@@ -90698,6 +90797,7 @@ type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachin
 	Vm              plugin.TValue[*mqlAzureSubscriptionComputeServiceVm]
 	PublicIpAddress plugin.TValue[string]
 	Ports           plugin.TValue[[]any]
+	PortRules       plugin.TValue[[]any]
 }
 
 // createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine creates a new instance of this resource
@@ -90754,6 +90854,74 @@ func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMa
 
 func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) GetPorts() *plugin.TValue[[]any] {
 	return &c.Ports
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachine) GetPortRules() *plugin.TValue[[]any] {
+	return &c.PortRules
+}
+
+// mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule for the azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule resource
+type mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRuleInternal it will be used here
+	Number                       plugin.TValue[int64]
+	Protocol                     plugin.TValue[string]
+	MaxRequestAccessDuration     plugin.TValue[string]
+	AllowedSourceAddressPrefix   plugin.TValue[string]
+	AllowedSourceAddressPrefixes plugin.TValue[[]any]
+}
+
+// createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule creates a new instance of this resource
+func createAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule) MqlName() string {
+	return "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule"
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule) GetNumber() *plugin.TValue[int64] {
+	return &c.Number
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule) GetMaxRequestAccessDuration() *plugin.TValue[string] {
+	return &c.MaxRequestAccessDuration
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule) GetAllowedSourceAddressPrefix() *plugin.TValue[string] {
+	return &c.AllowedSourceAddressPrefix
+}
+
+func (c *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicyVirtualMachinePortRule) GetAllowedSourceAddressPrefixes() *plugin.TValue[[]any] {
+	return &c.AllowedSourceAddressPrefixes
 }
 
 // mqlAzureSubscriptionCloudDefenderServiceSecureScore for the azure.subscription.cloudDefenderService.secureScore resource

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1982,13 +1983,47 @@ func (a *mqlAzureSubscriptionCloudDefenderServiceJitNetworkAccessPolicy) virtual
 		if err != nil {
 			return nil, err
 		}
+		// synthetic cache key: a VM can appear in only one policy, but key by
+		// policy+VM so it stays unique across policies.
+		vmKey := a.Id.Data + "/" + vmId
+		portRules := []any{}
+		for i, port := range vm.Ports {
+			if port == nil {
+				continue
+			}
+			prefixes := []any{}
+			for _, p := range port.AllowedSourceAddressPrefixes {
+				if p != nil {
+					prefixes = append(prefixes, *p)
+				}
+			}
+			// A port rule carries no identifier, so the port number keys it
+			// within the VM; the position covers a rule that omits one.
+			key := strconv.Itoa(i)
+			if port.Number != nil {
+				key = strconv.Itoa(int(*port.Number))
+			}
+			mqlRule, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule",
+				map[string]*llx.RawData{
+					"__id":                         llx.StringData(subResourceCacheID(nil, vmKey, "portRules", key)),
+					"number":                       llx.IntDataPtr(port.Number),
+					"protocol":                     llx.StringDataPtr(stringEnumPtr(port.Protocol)),
+					"maxRequestAccessDuration":     llx.StringDataPtr(port.MaxRequestAccessDuration),
+					"allowedSourceAddressPrefix":   llx.StringDataPtr(port.AllowedSourceAddressPrefix),
+					"allowedSourceAddressPrefixes": llx.ArrayData(prefixes, types.String),
+				})
+			if err != nil {
+				return nil, err
+			}
+			portRules = append(portRules, mqlRule)
+		}
+
 		mqlVM, err := CreateResource(a.MqlRuntime, "azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine",
 			map[string]*llx.RawData{
-				// synthetic cache key: a VM can appear in only one policy, but
-				// key by policy+VM so it stays unique across policies.
-				"__id":            llx.StringData(a.Id.Data + "/" + vmId),
+				"__id":            llx.StringData(vmKey),
 				"publicIpAddress": llx.StringData(convert.ToValue(vm.PublicIPAddress)),
 				"ports":           llx.ArrayData(ports, types.Dict),
+				"portRules":       llx.ArrayData(portRules, types.Resource("azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule")),
 			})
 		if err != nil {
 			return nil, err

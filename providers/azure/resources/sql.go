@@ -497,12 +497,14 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, err
 
 			mqlAzure, err := CreateResource(a.MqlRuntime, "azure.subscription.sqlService.virtualNetworkRule",
 				map[string]*llx.RawData{
-					"__id":                   llx.StringData(subResourceCacheID(entry.ID, a.Id.Data, "virtualNetworkRules", convert.ToValue(entry.Name))),
-					"id":                     llx.StringDataPtr(entry.ID),
-					"name":                   llx.StringDataPtr(entry.Name),
-					"type":                   llx.StringDataPtr(entry.Type),
-					"properties":             llx.DictData(properties),
-					"virtualNetworkSubnetId": llx.StringDataPtr(orZero(entry.Properties).VirtualNetworkSubnetID),
+					"__id":                             llx.StringData(subResourceCacheID(entry.ID, a.Id.Data, "virtualNetworkRules", convert.ToValue(entry.Name))),
+					"id":                               llx.StringDataPtr(entry.ID),
+					"name":                             llx.StringDataPtr(entry.Name),
+					"type":                             llx.StringDataPtr(entry.Type),
+					"properties":                       llx.DictData(properties),
+					"virtualNetworkSubnetId":           llx.StringDataPtr(orZero(entry.Properties).VirtualNetworkSubnetID),
+					"state":                            llx.StringDataPtr(stringEnumPtr(orZero(entry.Properties).State)),
+					"ignoreMissingVnetServiceEndpoint": llx.BoolDataPtr(orZero(entry.Properties).IgnoreMissingVnetServiceEndpoint),
 				})
 			if err != nil {
 				return nil, err
@@ -511,6 +513,25 @@ func (a *mqlAzureSubscriptionSqlServiceServer) virtualNetworkRules() ([]any, err
 		}
 	}
 	return res, nil
+}
+
+// subnet resolves the virtual network subnet the rule admits. Null when the
+// rule names none, which ARM should not produce but a partially created rule
+// can.
+func (a *mqlAzureSubscriptionSqlServiceVirtualNetworkRule) subnet() (*mqlAzureSubscriptionNetworkServiceSubnet, error) {
+	if a.VirtualNetworkSubnetId.Error != nil {
+		return nil, a.VirtualNetworkSubnetId.Error
+	}
+	if a.VirtualNetworkSubnetId.IsNull() || a.VirtualNetworkSubnetId.Data == "" {
+		a.Subnet.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := NewResource(a.MqlRuntime, "azure.subscription.networkService.subnet",
+		map[string]*llx.RawData{"id": llx.StringData(a.VirtualNetworkSubnetId.Data)})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAzureSubscriptionNetworkServiceSubnet), nil
 }
 
 func (a *mqlAzureSubscriptionSqlServiceServer) azureAdAdministrators() ([]any, error) {

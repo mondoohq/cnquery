@@ -935,6 +935,13 @@ azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.provisioningState
 azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.systemMetadata 13.28.1
 azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.type 13.25.1
 azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine 13.25.1
+azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule 13.36.1
+azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.allowedSourceAddressPrefix 13.36.1
+azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.allowedSourceAddressPrefixes 13.36.1
+azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.maxRequestAccessDuration 13.36.1
+azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.number 13.36.1
+azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule.protocol 13.36.1
+azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRules 13.36.1
 azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.ports 13.25.1
 azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.publicIpAddress 13.25.1
 azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.vm 13.25.1
@@ -6563,8 +6570,11 @@ azure.subscription.sqlService.servers 9.0.1
 azure.subscription.sqlService.subscriptionId 9.0.1
 azure.subscription.sqlService.virtualNetworkRule 9.0.1
 azure.subscription.sqlService.virtualNetworkRule.id 9.0.1
+azure.subscription.sqlService.virtualNetworkRule.ignoreMissingVnetServiceEndpoint 13.36.1
 azure.subscription.sqlService.virtualNetworkRule.name 9.0.1
 azure.subscription.sqlService.virtualNetworkRule.properties 9.0.1
+azure.subscription.sqlService.virtualNetworkRule.state 13.36.1
+azure.subscription.sqlService.virtualNetworkRule.subnet 13.36.1
 azure.subscription.sqlService.virtualNetworkRule.type 9.0.1
 azure.subscription.sqlService.virtualNetworkRule.virtualNetworkSubnetId 9.0.1
 azure.subscription.sqlService.vulnerabilityAssessmentScan 13.8.2

@@ -8954,9 +8954,24 @@ private azure.subscription.sqlService.virtualNetworkRule @defaults("id name") {
   // Virtual network rule type
   type string
   // Virtual network rule properties
-  properties dict
+  //
+  // Deprecated in favor of state and ignoreMissingVnetServiceEndpoint.
+  properties @maturity("deprecated") dict
   // Virtual network rule Subnet ID
   virtualNetworkSubnetId string
+  // Subnet the rule admits; null when the subnet cannot be read
+  subnet() azure.subscription.networkService.subnet
+  // Rule state, for example "Ready", "InProgress", "Initializing", "Unknown", or "Failed"
+  //
+  // A rule that never left InProgress or Failed is not admitting the
+  // subnet it names, so a server relying on it is either unreachable from
+  // that subnet or open by some other path.
+  state string
+  // Whether the rule was created before the subnet had the SQL service endpoint enabled
+  //
+  // True means the rule was accepted without the subnet being ready for
+  // it, so it may name a subnet that still cannot reach the server.
+  ignoreMissingVnetServiceEndpoint bool
 }
 
 // Azure SQL Managed Instance
@@ -11016,9 +11031,41 @@ private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMa
   publicIpAddress string
   // Per-port just-in-time rules
   //
-  // Each entry carries number, protocol, maxRequestAccessDuration, and either
-  // allowedSourceAddressPrefix or allowedSourceAddressPrefixes.
-  ports []dict
+  // Deprecated in favor of portRules.
+  ports @maturity("deprecated") []dict
+  // Per-port just-in-time rules
+  //
+  // One rule per port the policy can open on demand, with the sources it
+  // may be opened to and how long a grant lasts.
+  portRules []azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule
+}
+
+// Just-in-time port rule
+//
+// One port a just-in-time policy can open on a virtual machine, the sources
+// it may be opened to, and the longest a single grant can last. A rule
+// allowing "*" opens the port to the whole internet for the duration of every
+// approved request, which makes just-in-time access a delay rather than a
+// restriction.
+private azure.subscription.cloudDefenderService.jitNetworkAccessPolicy.virtualMachine.portRule @defaults("number protocol maxRequestAccessDuration") {
+  // Port number the rule governs
+  number int
+  // Transport protocol the rule governs ("TCP", "UDP", or "*")
+  protocol string
+  // Longest a single access grant lasts, in ISO 8601 duration form
+  //
+  // At least 5 minutes and at most 1 day, for example "PT3H".
+  maxRequestAccessDuration string
+  // Single source address or CIDR range access may be granted to
+  //
+  // Mutually exclusive with allowedSourceAddressPrefixes; empty when the
+  // rule uses the list form instead.
+  allowedSourceAddressPrefix string
+  // Source addresses or CIDR ranges access may be granted to
+  //
+  // Mutually exclusive with allowedSourceAddressPrefix; empty when the
+  // rule uses the single-value form instead.
+  allowedSourceAddressPrefixes []string
 }
 
 // Microsoft Defender secure score
