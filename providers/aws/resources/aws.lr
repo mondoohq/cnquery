@@ -539,10 +539,51 @@ aws.vpc @defaults("id isDefault cidrBlock region") {
   defaultNetworkAcl() aws.ec2.networkacl
   // Account- and region-level VPC Block Public Access options that apply to the VPC
   //
-  // A dict with `internetGatewayBlockMode`, `state`, `exclusionsAllowed`,
-  // `managedBy`, `reason`, and `lastUpdateTimestamp`. Empty when VPC Block
+  // Deprecated in favor of blockPublicAccessInternetGatewayBlockMode,
+  // blockPublicAccessState, blockPublicAccessExclusionsAllowed,
+  // blockPublicAccessManagedBy, blockPublicAccessReason, and
+  // blockPublicAccessLastUpdatedAt. A dict with `internetGatewayBlockMode`,
+  // `state`, `exclusionsAllowed`, `managedBy`, `reason`, and
+  // `lastUpdateTimestamp`. Empty when VPC Block Public Access has never been
+  // configured in the region.
+  blockPublicAccessOptions() @maturity("deprecated") dict
+  // Region-wide VPC Block Public Access mode
+  //
+  // One of off, block-bidirectional, or block-ingress. This is the setting
+  // configured for the whole region, which the VPC's own
+  // internetGatewayBlockMode reports the effect of after any exclusion is
+  // applied, so the two disagree on a VPC that has been excluded. Empty when
+  // VPC Block Public Access has never been configured in the region.
+  blockPublicAccessInternetGatewayBlockMode() string
+  // Rollout state of the region-wide VPC Block Public Access mode
+  //
+  // One of default-state, update-in-progress, or update-complete. A mode that
+  // reads as blocking while the state is update-in-progress is not yet in
+  // force. Empty when VPC Block Public Access has never been configured in
+  // the region.
+  blockPublicAccessState() string
+  // Whether VPC Block Public Access exclusions are allowed in the region
+  //
+  // One of allowed or not-allowed. Reads not-allowed when the setting is
+  // enforced by an organization-level declarative policy, which is what stops
+  // an account excluding its own VPC from the block. Empty when VPC Block
   // Public Access has never been configured in the region.
-  blockPublicAccessOptions() dict
+  blockPublicAccessExclusionsAllowed() string
+  // Entity that manages the region-wide VPC Block Public Access state
+  //
+  // One of account or declarative-policy. A declarative-policy value means
+  // the account cannot change the setting. Empty when VPC Block Public Access
+  // has never been configured in the region.
+  blockPublicAccessManagedBy() string
+  // Reason for the current region-wide VPC Block Public Access state
+  //
+  // Empty when the service reports no reason.
+  blockPublicAccessReason() string
+  // Time the region-wide VPC Block Public Access mode was last updated
+  //
+  // Null when VPC Block Public Access has never been configured in the
+  // region.
+  blockPublicAccessLastUpdatedAt() time
   // Virtual private gateways attached to the VPC
   vpnGateways() []aws.vpc.vpnGateway
   // DHCP options set associated with the VPC

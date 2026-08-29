@@ -10864,7 +10864,13 @@ aws.verifiedaccess.trustProvider.verifiedAccessTrustProviderId 13.10.0
 aws.verifiedaccess.trustProviders 13.10.0
 aws.vpc 11.15.2
 aws.vpc.arn 11.15.2
+aws.vpc.blockPublicAccessExclusionsAllowed 13.53.4
+aws.vpc.blockPublicAccessInternetGatewayBlockMode 13.53.4
+aws.vpc.blockPublicAccessLastUpdatedAt 13.53.4
+aws.vpc.blockPublicAccessManagedBy 13.53.4
 aws.vpc.blockPublicAccessOptions 13.29.1
+aws.vpc.blockPublicAccessReason 13.53.4
+aws.vpc.blockPublicAccessState 13.53.4
 aws.vpc.cidrBlock 11.15.2
 aws.vpc.cidrBlockAssociations 13.6.3
 aws.vpc.cloudformationStack 13.37.1

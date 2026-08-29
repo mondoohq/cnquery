@@ -5422,6 +5422,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.vpc.blockPublicAccessOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetBlockPublicAccessOptions()).ToDataRes(types.Dict)
 	},
+	"aws.vpc.blockPublicAccessInternetGatewayBlockMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccessInternetGatewayBlockMode()).ToDataRes(types.String)
+	},
+	"aws.vpc.blockPublicAccessState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccessState()).ToDataRes(types.String)
+	},
+	"aws.vpc.blockPublicAccessExclusionsAllowed": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccessExclusionsAllowed()).ToDataRes(types.String)
+	},
+	"aws.vpc.blockPublicAccessManagedBy": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccessManagedBy()).ToDataRes(types.String)
+	},
+	"aws.vpc.blockPublicAccessReason": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccessReason()).ToDataRes(types.String)
+	},
+	"aws.vpc.blockPublicAccessLastUpdatedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVpc).GetBlockPublicAccessLastUpdatedAt()).ToDataRes(types.Time)
+	},
 	"aws.vpc.vpnGateways": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVpc).GetVpnGateways()).ToDataRes(types.Array(types.Resource("aws.vpc.vpnGateway")))
 	},
@@ -37665,6 +37683,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.vpc.blockPublicAccessOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVpc).BlockPublicAccessOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.blockPublicAccessInternetGatewayBlockMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccessInternetGatewayBlockMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.blockPublicAccessState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccessState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.blockPublicAccessExclusionsAllowed": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccessExclusionsAllowed, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.blockPublicAccessManagedBy": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccessManagedBy, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.blockPublicAccessReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccessReason, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.vpc.blockPublicAccessLastUpdatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVpc).BlockPublicAccessLastUpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.vpc.vpnGateways": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -85185,40 +85227,46 @@ type mqlAwsVpc struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsVpcInternal
-	Arn                       plugin.TValue[string]
-	Id                        plugin.TValue[string]
-	Name                      plugin.TValue[string]
-	CidrBlock                 plugin.TValue[string]
-	State                     plugin.TValue[string]
-	IsDefault                 plugin.TValue[bool]
-	InstanceTenancy           plugin.TValue[string]
-	OwnerId                   plugin.TValue[string]
-	Region                    plugin.TValue[string]
-	Endpoints                 plugin.TValue[[]any]
-	FlowLogs                  plugin.TValue[[]any]
-	RouteTables               plugin.TValue[[]any]
-	Subnets                   plugin.TValue[[]any]
-	Tags                      plugin.TValue[map[string]any]
-	NatGateways               plugin.TValue[[]any]
-	ServiceEndpoints          plugin.TValue[[]any]
-	PeeringConnections        plugin.TValue[[]any]
-	InternetGatewayBlockMode  plugin.TValue[string]
-	DhcpOptionsId             plugin.TValue[string]
-	InternetGateways          plugin.TValue[[]any]
-	SecurityGroups            plugin.TValue[[]any]
-	DefaultSecurityGroup      plugin.TValue[*mqlAwsEc2Securitygroup]
-	NetworkAcls               plugin.TValue[[]any]
-	DefaultNetworkAcl         plugin.TValue[*mqlAwsEc2Networkacl]
-	BlockPublicAccessOptions  plugin.TValue[any]
-	VpnGateways               plugin.TValue[[]any]
-	DhcpOptions               plugin.TValue[*mqlAwsEc2DhcpOptions]
-	EnableDnsSupport          plugin.TValue[bool]
-	EnableDnsHostnames        plugin.TValue[bool]
-	CidrBlockAssociations     plugin.TValue[[]any]
-	Ipv6CidrBlockAssociations plugin.TValue[[]any]
-	CloudformationStack       plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy                 plugin.TValue[string]
-	EncryptionControl         plugin.TValue[*mqlAwsVpcEncryptionControl]
+	Arn                                       plugin.TValue[string]
+	Id                                        plugin.TValue[string]
+	Name                                      plugin.TValue[string]
+	CidrBlock                                 plugin.TValue[string]
+	State                                     plugin.TValue[string]
+	IsDefault                                 plugin.TValue[bool]
+	InstanceTenancy                           plugin.TValue[string]
+	OwnerId                                   plugin.TValue[string]
+	Region                                    plugin.TValue[string]
+	Endpoints                                 plugin.TValue[[]any]
+	FlowLogs                                  plugin.TValue[[]any]
+	RouteTables                               plugin.TValue[[]any]
+	Subnets                                   plugin.TValue[[]any]
+	Tags                                      plugin.TValue[map[string]any]
+	NatGateways                               plugin.TValue[[]any]
+	ServiceEndpoints                          plugin.TValue[[]any]
+	PeeringConnections                        plugin.TValue[[]any]
+	InternetGatewayBlockMode                  plugin.TValue[string]
+	DhcpOptionsId                             plugin.TValue[string]
+	InternetGateways                          plugin.TValue[[]any]
+	SecurityGroups                            plugin.TValue[[]any]
+	DefaultSecurityGroup                      plugin.TValue[*mqlAwsEc2Securitygroup]
+	NetworkAcls                               plugin.TValue[[]any]
+	DefaultNetworkAcl                         plugin.TValue[*mqlAwsEc2Networkacl]
+	BlockPublicAccessOptions                  plugin.TValue[any]
+	BlockPublicAccessInternetGatewayBlockMode plugin.TValue[string]
+	BlockPublicAccessState                    plugin.TValue[string]
+	BlockPublicAccessExclusionsAllowed        plugin.TValue[string]
+	BlockPublicAccessManagedBy                plugin.TValue[string]
+	BlockPublicAccessReason                   plugin.TValue[string]
+	BlockPublicAccessLastUpdatedAt            plugin.TValue[*time.Time]
+	VpnGateways                               plugin.TValue[[]any]
+	DhcpOptions                               plugin.TValue[*mqlAwsEc2DhcpOptions]
+	EnableDnsSupport                          plugin.TValue[bool]
+	EnableDnsHostnames                        plugin.TValue[bool]
+	CidrBlockAssociations                     plugin.TValue[[]any]
+	Ipv6CidrBlockAssociations                 plugin.TValue[[]any]
+	CloudformationStack                       plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                                 plugin.TValue[string]
+	EncryptionControl                         plugin.TValue[*mqlAwsVpcEncryptionControl]
 }
 
 // createAwsVpc creates a new instance of this resource
@@ -85501,6 +85549,42 @@ func (c *mqlAwsVpc) GetDefaultNetworkAcl() *plugin.TValue[*mqlAwsEc2Networkacl] 
 func (c *mqlAwsVpc) GetBlockPublicAccessOptions() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.BlockPublicAccessOptions, func() (any, error) {
 		return c.blockPublicAccessOptions()
+	})
+}
+
+func (c *mqlAwsVpc) GetBlockPublicAccessInternetGatewayBlockMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BlockPublicAccessInternetGatewayBlockMode, func() (string, error) {
+		return c.blockPublicAccessInternetGatewayBlockMode()
+	})
+}
+
+func (c *mqlAwsVpc) GetBlockPublicAccessState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BlockPublicAccessState, func() (string, error) {
+		return c.blockPublicAccessState()
+	})
+}
+
+func (c *mqlAwsVpc) GetBlockPublicAccessExclusionsAllowed() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BlockPublicAccessExclusionsAllowed, func() (string, error) {
+		return c.blockPublicAccessExclusionsAllowed()
+	})
+}
+
+func (c *mqlAwsVpc) GetBlockPublicAccessManagedBy() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BlockPublicAccessManagedBy, func() (string, error) {
+		return c.blockPublicAccessManagedBy()
+	})
+}
+
+func (c *mqlAwsVpc) GetBlockPublicAccessReason() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.BlockPublicAccessReason, func() (string, error) {
+		return c.blockPublicAccessReason()
+	})
+}
+
+func (c *mqlAwsVpc) GetBlockPublicAccessLastUpdatedAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.BlockPublicAccessLastUpdatedAt, func() (*time.Time, error) {
+		return c.blockPublicAccessLastUpdatedAt()
 	})
 }
 
