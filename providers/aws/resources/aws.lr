@@ -15271,14 +15271,55 @@ private aws.redshift.cluster @defaults("dbName clusterVersion clusterStatus regi
   enhancedVpcRouting bool
   // Audit-logging delivery status for the cluster
   //
-  // Dict with the keys `LoggingEnabled` (bool, true when audit logging is
-  // on), `BucketName` and `S3KeyPrefix` (the S3 destination for delivered
-  // logs), `LogDestinationType` (`s3`, `cloudwatch`, or `s3table`),
-  // `LogExports` (the
-  // exported log types: `connectionlog`, `useractivitylog`, `userlog`), and
-  // the delivery timestamps `LastSuccessfulDeliveryTime`, `LastFailureTime`,
-  // and `LastFailureMessage`.
-  logging() dict
+  // Deprecated in favor of loggingEnabled, logDestinationType, logExports,
+  // logBucket, logS3KeyPrefix, lastSuccessfulLogDeliveryAt,
+  // lastLogFailureMessage, and lastLogFailureAt. Dict with the keys
+  // `LoggingEnabled`, `BucketName`, `S3KeyPrefix`, `LogDestinationType`,
+  // `LogExports`, `LastSuccessfulDeliveryTime`, `LastFailureTime`, and
+  // `LastFailureMessage`, alongside the SDK response metadata.
+  logging() @maturity("deprecated") dict
+  // Whether audit logging is enabled for the cluster
+  //
+  // Audit logs record connections, user activity and user changes. Without
+  // them there is no record of who queried the cluster or what they ran.
+  loggingEnabled() bool
+  // Destination audit logs are delivered to
+  //
+  // One of s3, cloudwatch, or s3table. Empty when audit logging is off.
+  logDestinationType() string
+  // Log types exported for the cluster
+  //
+  // When the destination is s3 or cloudwatch, the values are connectionlog,
+  // useractivitylog, and userlog. When the destination is s3table, the values
+  // are the names of the system tables being published. Empty when audit
+  // logging is off.
+  logExports() []string
+  // S3 bucket receiving delivered audit logs
+  //
+  // Null when audit logging is off or the destination is not an S3 bucket.
+  // Log delivery writes into a bucket the account owns, so the bucket's own
+  // encryption, versioning and public-access settings decide how well the
+  // audit trail is protected.
+  logBucket() aws.s3.bucket
+  // Prefix applied to delivered audit log file names in the bucket
+  //
+  // Empty when audit logging is off or no prefix is configured.
+  logS3KeyPrefix() string
+  // Time audit logs were last delivered successfully
+  //
+  // Null when audit logging is off or no delivery has succeeded yet. A
+  // timestamp far in the past on a cluster that reports logging as enabled
+  // means delivery is broken.
+  lastSuccessfulLogDeliveryAt() time
+  // Message describing the most recent audit log delivery failure
+  //
+  // Empty when no delivery has failed. A bucket policy that no longer grants
+  // the Redshift service write access shows up here.
+  lastLogFailureMessage() string
+  // Time audit log delivery last failed
+  //
+  // Null when no delivery has failed.
+  lastLogFailureAt() time
   // Master user name for the cluster.
   masterUsername string
   // Name of the initial database created when cluster was created

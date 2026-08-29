@@ -20218,6 +20218,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.redshift.cluster.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetLogging()).ToDataRes(types.Dict)
 	},
+	"aws.redshift.cluster.loggingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLoggingEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.redshift.cluster.logDestinationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLogDestinationType()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.logExports": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLogExports()).ToDataRes(types.Array(types.String))
+	},
+	"aws.redshift.cluster.logBucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLogBucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.redshift.cluster.logS3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLogS3KeyPrefix()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.lastSuccessfulLogDeliveryAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLastSuccessfulLogDeliveryAt()).ToDataRes(types.Time)
+	},
+	"aws.redshift.cluster.lastLogFailureMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLastLogFailureMessage()).ToDataRes(types.String)
+	},
+	"aws.redshift.cluster.lastLogFailureAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRedshiftCluster).GetLastLogFailureAt()).ToDataRes(types.Time)
+	},
 	"aws.redshift.cluster.masterUsername": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRedshiftCluster).GetMasterUsername()).ToDataRes(types.String)
 	},
@@ -59273,6 +59297,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.redshift.cluster.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRedshiftCluster).Logging, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.loggingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LoggingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.logDestinationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LogDestinationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.logExports": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LogExports, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.logBucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LogBucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.logS3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LogS3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.lastSuccessfulLogDeliveryAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LastSuccessfulLogDeliveryAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.lastLogFailureMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LastLogFailureMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.redshift.cluster.lastLogFailureAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRedshiftCluster).LastLogFailureAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.redshift.cluster.masterUsername": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -142746,6 +142802,14 @@ type mqlAwsRedshiftCluster struct {
 	KmsKey                                  plugin.TValue[*mqlAwsKmsKey]
 	EnhancedVpcRouting                      plugin.TValue[bool]
 	Logging                                 plugin.TValue[any]
+	LoggingEnabled                          plugin.TValue[bool]
+	LogDestinationType                      plugin.TValue[string]
+	LogExports                              plugin.TValue[[]any]
+	LogBucket                               plugin.TValue[*mqlAwsS3Bucket]
+	LogS3KeyPrefix                          plugin.TValue[string]
+	LastSuccessfulLogDeliveryAt             plugin.TValue[*time.Time]
+	LastLogFailureMessage                   plugin.TValue[string]
+	LastLogFailureAt                        plugin.TValue[*time.Time]
 	MasterUsername                          plugin.TValue[string]
 	Name                                    plugin.TValue[string]
 	NextMaintenanceWindowStartTime          plugin.TValue[*time.Time]
@@ -142910,6 +142974,64 @@ func (c *mqlAwsRedshiftCluster) GetEnhancedVpcRouting() *plugin.TValue[bool] {
 func (c *mqlAwsRedshiftCluster) GetLogging() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.Logging, func() (any, error) {
 		return c.logging()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLoggingEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.LoggingEnabled, func() (bool, error) {
+		return c.loggingEnabled()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLogDestinationType() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogDestinationType, func() (string, error) {
+		return c.logDestinationType()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLogExports() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.LogExports, func() ([]any, error) {
+		return c.logExports()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLogBucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.LogBucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.redshift.cluster", c.__id, "logBucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.logBucket()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLogS3KeyPrefix() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LogS3KeyPrefix, func() (string, error) {
+		return c.logS3KeyPrefix()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLastSuccessfulLogDeliveryAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastSuccessfulLogDeliveryAt, func() (*time.Time, error) {
+		return c.lastSuccessfulLogDeliveryAt()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLastLogFailureMessage() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.LastLogFailureMessage, func() (string, error) {
+		return c.lastLogFailureMessage()
+	})
+}
+
+func (c *mqlAwsRedshiftCluster) GetLastLogFailureAt() *plugin.TValue[*time.Time] {
+	return plugin.GetOrCompute[*time.Time](&c.LastLogFailureAt, func() (*time.Time, error) {
+		return c.lastLogFailureAt()
 	})
 }
 

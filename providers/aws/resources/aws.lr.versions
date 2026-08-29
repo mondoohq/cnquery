@@ -8483,7 +8483,15 @@ aws.redshift.cluster.hsmStatus 11.16.1
 aws.redshift.cluster.iamRoles 13.39.2
 aws.redshift.cluster.ipAddressType 11.15.2
 aws.redshift.cluster.kmsKey 11.16.1
+aws.redshift.cluster.lastLogFailureAt 13.53.4
+aws.redshift.cluster.lastLogFailureMessage 13.53.4
+aws.redshift.cluster.lastSuccessfulLogDeliveryAt 13.53.4
+aws.redshift.cluster.logBucket 13.53.4
+aws.redshift.cluster.logDestinationType 13.53.4
+aws.redshift.cluster.logExports 13.53.4
+aws.redshift.cluster.logS3KeyPrefix 13.53.4
 aws.redshift.cluster.logging 11.15.2
+aws.redshift.cluster.loggingEnabled 13.53.4
 aws.redshift.cluster.maintenanceTrackName 11.16.1
 aws.redshift.cluster.managedBy 13.39.2
 aws.redshift.cluster.manualSnapshotRetentionPeriod 11.15.2
