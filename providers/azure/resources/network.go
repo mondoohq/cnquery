@@ -895,7 +895,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) inboundNatPools() ([]an
 		}
 		pool := mqlNatPool.(*mqlAzureSubscriptionNetworkServiceInboundNatPool)
 		pool.cacheLoadBalancer = a
-		pool.cacheFrontendIpConfg = subResourceID(np.FrontendIPConfiguration)
+		pool.cacheFrontendIpConfig = subResourceID(np.FrontendIPConfiguration)
 		res = append(res, pool)
 	}
 	return res, nil
@@ -937,7 +937,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) inboundNatRules() ([]an
 		}
 		rule := mqlNatRule.(*mqlAzureSubscriptionNetworkServiceInboundNatRule)
 		rule.cacheLoadBalancer = a
-		rule.cacheFrontendIpConfg = subResourceID(nr.FrontendIPConfiguration)
+		rule.cacheFrontendIpConfig = subResourceID(nr.FrontendIPConfiguration)
 		rule.cacheBackendAddressPol = subResourceID(nr.BackendAddressPool)
 		res = append(res, rule)
 	}
@@ -978,7 +978,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) outboundRules() ([]any,
 		rule := mqlOutbound.(*mqlAzureSubscriptionNetworkServiceOutboundRule)
 		rule.cacheLoadBalancer = a
 		rule.cacheBackendAddressPol = subResourceID(or.BackendAddressPool)
-		rule.cacheFrontendIpConfgs = subResourceIDs(or.FrontendIPConfigurations)
+		rule.cacheFrontendIpConfigs = subResourceIDs(or.FrontendIPConfigurations)
 		res = append(res, rule)
 	}
 	return res, nil
@@ -1022,7 +1022,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancer) loadBalancerRules() ([]
 		}
 		rule := mqlLbRule.(*mqlAzureSubscriptionNetworkServiceLoadBalancerRule)
 		rule.cacheLoadBalancer = a
-		rule.cacheFrontendIpConfg = subResourceID(lr.FrontendIPConfiguration)
+		rule.cacheFrontendIpConfig = subResourceID(lr.FrontendIPConfiguration)
 		rule.cacheBackendAddressPol = subResourceID(lr.BackendAddressPool)
 		rule.cacheBackendAddressPols = subResourceIDs(lr.BackendAddressPools)
 		rule.cacheProbe = subResourceID(lr.Probe)

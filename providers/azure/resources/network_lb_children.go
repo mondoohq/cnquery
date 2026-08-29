@@ -130,8 +130,8 @@ func (a *mqlAzureSubscriptionNetworkServiceBackendAddressPool) outboundRules() (
 }
 
 type mqlAzureSubscriptionNetworkServiceInboundNatPoolInternal struct {
-	cacheLoadBalancer    *mqlAzureSubscriptionNetworkServiceLoadBalancer
-	cacheFrontendIpConfg string
+	cacheLoadBalancer     *mqlAzureSubscriptionNetworkServiceLoadBalancer
+	cacheFrontendIpConfig string
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInboundNatPool) frontendIpConfig() (*mqlAzureSubscriptionNetworkServiceFrontendIpConfig, error) {
@@ -141,12 +141,12 @@ func (a *mqlAzureSubscriptionNetworkServiceInboundNatPool) frontendIpConfig() (*
 		return nil, nil
 	}
 	return lbChildByID[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](
-		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfg, markNull)
+		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfig, markNull)
 }
 
 type mqlAzureSubscriptionNetworkServiceInboundNatRuleInternal struct {
 	cacheLoadBalancer      *mqlAzureSubscriptionNetworkServiceLoadBalancer
-	cacheFrontendIpConfg   string
+	cacheFrontendIpConfig  string
 	cacheBackendAddressPol string
 }
 
@@ -157,7 +157,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInboundNatRule) frontendIpConfig() (*
 		return nil, nil
 	}
 	return lbChildByID[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](
-		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfg, markNull)
+		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfig, markNull)
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceInboundNatRule) backendAddressPool() (*mqlAzureSubscriptionNetworkServiceBackendAddressPool, error) {
@@ -172,7 +172,7 @@ func (a *mqlAzureSubscriptionNetworkServiceInboundNatRule) backendAddressPool() 
 
 type mqlAzureSubscriptionNetworkServiceLoadBalancerRuleInternal struct {
 	cacheLoadBalancer       *mqlAzureSubscriptionNetworkServiceLoadBalancer
-	cacheFrontendIpConfg    string
+	cacheFrontendIpConfig   string
 	cacheBackendAddressPol  string
 	cacheBackendAddressPols []string
 	cacheProbe              string
@@ -185,7 +185,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) frontendIpConfig() 
 		return nil, nil
 	}
 	return lbChildByID[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](
-		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfg, markNull)
+		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfig, markNull)
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) backendAddressPool() (*mqlAzureSubscriptionNetworkServiceBackendAddressPool, error) {
@@ -219,7 +219,7 @@ func (a *mqlAzureSubscriptionNetworkServiceLoadBalancerRule) probe() (*mqlAzureS
 type mqlAzureSubscriptionNetworkServiceOutboundRuleInternal struct {
 	cacheLoadBalancer      *mqlAzureSubscriptionNetworkServiceLoadBalancer
 	cacheBackendAddressPol string
-	cacheFrontendIpConfgs  []string
+	cacheFrontendIpConfigs []string
 }
 
 func (a *mqlAzureSubscriptionNetworkServiceOutboundRule) backendAddressPool() (*mqlAzureSubscriptionNetworkServiceBackendAddressPool, error) {
@@ -237,7 +237,7 @@ func (a *mqlAzureSubscriptionNetworkServiceOutboundRule) frontendIpConfigs() ([]
 		return []any{}, nil
 	}
 	return lbChildrenByID[*mqlAzureSubscriptionNetworkServiceFrontendIpConfig](
-		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfgs)
+		a.cacheLoadBalancer.GetFrontendIpConfigs(), a.cacheFrontendIpConfigs)
 }
 
 // subResourceIDs returns the ARM IDs a []*SubResource points at, skipping
