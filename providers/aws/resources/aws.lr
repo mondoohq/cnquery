@@ -993,10 +993,22 @@ private aws.waf.acl @defaults("name") {
   defaultAction() string
   // CloudWatch metrics and request-sampling settings for the ACL
   //
-  // Has `cloudWatchMetricsEnabled` (whether metrics are emitted),
-  // `sampledRequestsEnabled` (whether a sample of inspected requests is stored),
+  // Deprecated in favor of cloudWatchMetricsEnabled, sampledRequestsEnabled,
+  // and metricName. Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`,
   // and `metricName`.
-  visibilityConfig() dict
+  visibilityConfig() @maturity("deprecated") dict
+  // Whether the ACL emits CloudWatch metrics
+  //
+  // Without metrics there is nothing to alert on when the ACL starts blocking
+  // or stops blocking traffic.
+  cloudWatchMetricsEnabled() bool
+  // Whether the ACL stores a sample of the requests it inspects
+  //
+  // Sampled requests are what an investigation reads to see what a rule
+  // actually matched.
+  sampledRequestsEnabled() bool
+  // CloudWatch metric name for the ACL
+  metricName() string
   // Web ACL capacity units (WCU) consumed by the ACL
   capacity() int
   // Domains WAF accepts in host headers when generating and validating challenge and CAPTCHA tokens
@@ -1077,8 +1089,19 @@ private aws.waf.rule @defaults("name") {
   overrideAction string
   // CloudWatch metrics and request-sampling settings for the rule
   //
-  // Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`, and `metricName`.
-  visibilityConfig dict
+  // Deprecated in favor of cloudWatchMetricsEnabled, sampledRequestsEnabled,
+  // and metricName. Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`,
+  // and `metricName`.
+  visibilityConfig @maturity("deprecated") dict
+  // Whether the rule emits CloudWatch metrics
+  //
+  // A rule with metrics off is invisible in the ACL's own dashboards even
+  // when the ACL itself has metrics on.
+  cloudWatchMetricsEnabled bool
+  // Whether the rule stores a sample of the requests it inspects
+  sampledRequestsEnabled bool
+  // CloudWatch metric name for the rule
+  metricName string
   // Labels WAF adds to matching requests, consumed by later label-match rules
   ruleLabels []string
   // ARN of either rule ACL or the RuleGroup that this rule belongs to
@@ -17921,10 +17944,23 @@ private aws.lambda.function @defaults("arn") {
   eventInvokeConfig() dict
   // Runtime management configuration
   //
-  // Dict with `updateRuntimeOn` (the runtime update mode: Auto, Manual, or
-  // FunctionUpdate) and, when the runtime is pinned, `runtimeVersionArn`
-  // identifying the specific managed runtime version.
-  runtimeManagementConfig() dict
+  // Deprecated in favor of runtimeUpdateMode and pinnedRuntimeVersionArn.
+  // Dict with `updateRuntimeOn` and, when the runtime is pinned,
+  // `runtimeVersionArn`.
+  runtimeManagementConfig() @maturity("deprecated") dict
+  // How the function picks up managed runtime updates
+  //
+  // One of Auto, Manual, or FunctionUpdate. Manual pins the function to one
+  // runtime build, so it stops receiving the security patches AWS ships to
+  // the managed runtime until someone moves the pin. Empty when the mode is
+  // not reported.
+  runtimeUpdateMode() string
+  // Managed runtime version the function is pinned to
+  //
+  // Set only when runtimeUpdateMode is Manual. Distinct from
+  // runtimeVersionArn, which reports the build the function is running right
+  // now whether or not it is pinned.
+  pinnedRuntimeVersionArn() string
   // Published versions of this function
   versions() []aws.lambda.function.version
   // Container image URI for Image package type functions (empty for Zip package type functions)
@@ -20037,9 +20073,20 @@ private aws.ec2.instance @defaults("instanceId region state instanceType archite
   instanceStatus() dict
   // Reason for the most recent state transition
   //
-  // Carries Code (for example Client.UserInitiatedShutdown or
-  // Server.SpotInstanceTermination) and a human-readable Message.
-  stateReason dict
+  // Deprecated in favor of stateReasonCode and stateReasonMessage. Carries
+  // Code and Message.
+  stateReason @maturity("deprecated") dict
+  // Machine-readable code for the most recent state transition
+  //
+  // For example Client.UserInitiatedShutdown or
+  // Server.SpotInstanceTermination. Empty when the instance reports no
+  // reason, which is the usual case for an instance that has always been
+  // running.
+  stateReasonCode string
+  // Human-readable message for the most recent state transition
+  //
+  // Empty when the instance reports no reason.
+  stateReasonMessage string
   // Reason for the most recent state transition
   stateTransitionReason string
   // Whether the instance has EBS optimization turned on
@@ -24223,9 +24270,14 @@ private aws.kinesis.stream @defaults("name status region") {
   consumerCount() int
   // Capacity mode of the stream
   //
-  // Dict with a single `StreamMode` key whose value is `ON_DEMAND` or
-  // `PROVISIONED`.
-  streamModeDetails dict
+  // Deprecated in favor of streamMode. Dict with a single `StreamMode` key.
+  streamModeDetails @maturity("deprecated") dict
+  // Capacity mode of the stream
+  //
+  // One of ON_DEMAND or PROVISIONED. Empty when the mode is not reported,
+  // which is what a stream reached by ARN before its description is read
+  // returns.
+  streamMode string
   // Enhanced (shard-level) monitoring settings
   //
   // Each entry has a `ShardLevelMetrics` key listing the enabled CloudWatch

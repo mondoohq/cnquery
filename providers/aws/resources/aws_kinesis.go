@@ -138,6 +138,7 @@ func initAwsKinesisStream(runtime *plugin.Runtime, args map[string]*llx.RawData)
 	args["name"] = llx.StringDataPtr(desc.StreamName)
 	args["status"] = llx.StringData(string(desc.StreamStatus))
 	args["streamModeDetails"] = llx.NilData
+	args["streamMode"] = llx.StringData("")
 	args["createdAt"] = llx.TimeDataPtr(desc.StreamCreationTimestamp)
 	args["region"] = llx.StringData(parsed.Region)
 	return args, nil, nil
@@ -149,6 +150,10 @@ func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, summary *kin
 	if err != nil {
 		return nil, err
 	}
+	streamMode := ""
+	if summary.StreamModeDetails != nil {
+		streamMode = string(summary.StreamModeDetails.StreamMode)
+	}
 
 	resource, err := CreateResource(runtime, "aws.kinesis.stream",
 		map[string]*llx.RawData{
@@ -157,6 +162,7 @@ func newMqlAwsKinesisStream(runtime *plugin.Runtime, region string, summary *kin
 			"name":              llx.StringDataPtr(summary.StreamName),
 			"status":            llx.StringData(string(summary.StreamStatus)),
 			"streamModeDetails": llx.DictData(streamModeDetails),
+			"streamMode":        llx.StringData(streamMode),
 			"createdAt":         llx.TimeDataPtr(summary.StreamCreationTimestamp),
 			"region":            llx.StringData(region),
 		})

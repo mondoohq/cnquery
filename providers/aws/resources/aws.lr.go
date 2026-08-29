@@ -5827,6 +5827,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.acl.visibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetVisibilityConfig()).ToDataRes(types.Dict)
 	},
+	"aws.waf.acl.cloudWatchMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetCloudWatchMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.waf.acl.sampledRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetSampledRequestsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.waf.acl.metricName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetMetricName()).ToDataRes(types.String)
+	},
 	"aws.waf.acl.capacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetCapacity()).ToDataRes(types.Int)
 	},
@@ -5901,6 +5910,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.waf.rule.visibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetVisibilityConfig()).ToDataRes(types.Dict)
+	},
+	"aws.waf.rule.cloudWatchMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetCloudWatchMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.sampledRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetSampledRequestsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.waf.rule.metricName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetMetricName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.ruleLabels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetRuleLabels()).ToDataRes(types.Array(types.String))
@@ -22741,6 +22759,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.lambda.function.runtimeManagementConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetRuntimeManagementConfig()).ToDataRes(types.Dict)
 	},
+	"aws.lambda.function.runtimeUpdateMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetRuntimeUpdateMode()).ToDataRes(types.String)
+	},
+	"aws.lambda.function.pinnedRuntimeVersionArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsLambdaFunction).GetPinnedRuntimeVersionArn()).ToDataRes(types.String)
+	},
 	"aws.lambda.function.versions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsLambdaFunction).GetVersions()).ToDataRes(types.Array(types.Resource("aws.lambda.function.version")))
 	},
@@ -24981,6 +25005,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateReason()).ToDataRes(types.Dict)
+	},
+	"aws.ec2.instance.stateReasonCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetStateReasonCode()).ToDataRes(types.String)
+	},
+	"aws.ec2.instance.stateReasonMessage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Instance).GetStateReasonMessage()).ToDataRes(types.String)
 	},
 	"aws.ec2.instance.stateTransitionReason": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Instance).GetStateTransitionReason()).ToDataRes(types.String)
@@ -29256,6 +29286,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.kinesis.stream.streamModeDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStream).GetStreamModeDetails()).ToDataRes(types.Dict)
+	},
+	"aws.kinesis.stream.streamMode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsKinesisStream).GetStreamMode()).ToDataRes(types.String)
 	},
 	"aws.kinesis.stream.enhancedMonitoring": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsKinesisStream).GetEnhancedMonitoring()).ToDataRes(types.Array(types.Dict))
@@ -38313,6 +38346,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafAcl).VisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.waf.acl.cloudWatchMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).CloudWatchMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.sampledRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).SampledRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.acl.metricName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).MetricName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.waf.acl.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafAcl).Capacity, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
@@ -38419,6 +38464,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.rule.visibilityConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRule).VisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.cloudWatchMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).CloudWatchMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.sampledRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).SampledRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.rule.metricName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).MetricName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.ruleLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62997,6 +63054,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsLambdaFunction).RuntimeManagementConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.lambda.function.runtimeUpdateMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).RuntimeUpdateMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.lambda.function.pinnedRuntimeVersionArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsLambdaFunction).PinnedRuntimeVersionArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.lambda.function.versions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsLambdaFunction).Versions, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -66259,6 +66324,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.instance.stateReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Instance).StateReason, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.stateReasonCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).StateReasonCode, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.instance.stateReasonMessage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Instance).StateReasonMessage, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.instance.stateTransitionReason": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72419,6 +72492,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.kinesis.stream.streamModeDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsKinesisStream).StreamModeDetails, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.kinesis.stream.streamMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsKinesisStream).StreamMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.kinesis.stream.enhancedMonitoring": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -87144,6 +87221,9 @@ type mqlAwsWafAcl struct {
 	ManagedByFirewallManager plugin.TValue[bool]
 	DefaultAction            plugin.TValue[string]
 	VisibilityConfig         plugin.TValue[any]
+	CloudWatchMetricsEnabled plugin.TValue[bool]
+	SampledRequestsEnabled   plugin.TValue[bool]
+	MetricName               plugin.TValue[string]
 	Capacity                 plugin.TValue[int64]
 	TokenDomains             plugin.TValue[[]any]
 	LabelNamespace           plugin.TValue[string]
@@ -87224,6 +87304,24 @@ func (c *mqlAwsWafAcl) GetDefaultAction() *plugin.TValue[string] {
 func (c *mqlAwsWafAcl) GetVisibilityConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.VisibilityConfig, func() (any, error) {
 		return c.visibilityConfig()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetCloudWatchMetricsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.CloudWatchMetricsEnabled, func() (bool, error) {
+		return c.cloudWatchMetricsEnabled()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetSampledRequestsEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.SampledRequestsEnabled, func() (bool, error) {
+		return c.sampledRequestsEnabled()
+	})
+}
+
+func (c *mqlAwsWafAcl) GetMetricName() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MetricName, func() (string, error) {
+		return c.metricName()
 	})
 }
 
@@ -87416,15 +87514,18 @@ type mqlAwsWafRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWafRuleInternal it will be used here
-	Id               plugin.TValue[string]
-	Name             plugin.TValue[string]
-	Priority         plugin.TValue[int64]
-	Statement        plugin.TValue[*mqlAwsWafRuleStatement]
-	Action           plugin.TValue[*mqlAwsWafRuleAction]
-	OverrideAction   plugin.TValue[string]
-	VisibilityConfig plugin.TValue[any]
-	RuleLabels       plugin.TValue[[]any]
-	BelongsTo        plugin.TValue[string]
+	Id                       plugin.TValue[string]
+	Name                     plugin.TValue[string]
+	Priority                 plugin.TValue[int64]
+	Statement                plugin.TValue[*mqlAwsWafRuleStatement]
+	Action                   plugin.TValue[*mqlAwsWafRuleAction]
+	OverrideAction           plugin.TValue[string]
+	VisibilityConfig         plugin.TValue[any]
+	CloudWatchMetricsEnabled plugin.TValue[bool]
+	SampledRequestsEnabled   plugin.TValue[bool]
+	MetricName               plugin.TValue[string]
+	RuleLabels               plugin.TValue[[]any]
+	BelongsTo                plugin.TValue[string]
 }
 
 // createAwsWafRule creates a new instance of this resource
@@ -87490,6 +87591,18 @@ func (c *mqlAwsWafRule) GetOverrideAction() *plugin.TValue[string] {
 
 func (c *mqlAwsWafRule) GetVisibilityConfig() *plugin.TValue[any] {
 	return &c.VisibilityConfig
+}
+
+func (c *mqlAwsWafRule) GetCloudWatchMetricsEnabled() *plugin.TValue[bool] {
+	return &c.CloudWatchMetricsEnabled
+}
+
+func (c *mqlAwsWafRule) GetSampledRequestsEnabled() *plugin.TValue[bool] {
+	return &c.SampledRequestsEnabled
+}
+
+func (c *mqlAwsWafRule) GetMetricName() *plugin.TValue[string] {
+	return &c.MetricName
 }
 
 func (c *mqlAwsWafRule) GetRuleLabels() *plugin.TValue[[]any] {
@@ -151319,6 +151432,8 @@ type mqlAwsLambdaFunction struct {
 	CodeSigningConfig             plugin.TValue[*mqlAwsLambdaCodeSigningConfig]
 	EventInvokeConfig             plugin.TValue[any]
 	RuntimeManagementConfig       plugin.TValue[any]
+	RuntimeUpdateMode             plugin.TValue[string]
+	PinnedRuntimeVersionArn       plugin.TValue[string]
 	Versions                      plugin.TValue[[]any]
 	ImageUri                      plugin.TValue[string]
 	ResolvedImageUri              plugin.TValue[string]
@@ -151744,6 +151859,18 @@ func (c *mqlAwsLambdaFunction) GetEventInvokeConfig() *plugin.TValue[any] {
 func (c *mqlAwsLambdaFunction) GetRuntimeManagementConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.RuntimeManagementConfig, func() (any, error) {
 		return c.runtimeManagementConfig()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetRuntimeUpdateMode() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.RuntimeUpdateMode, func() (string, error) {
+		return c.runtimeUpdateMode()
+	})
+}
+
+func (c *mqlAwsLambdaFunction) GetPinnedRuntimeVersionArn() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.PinnedRuntimeVersionArn, func() (string, error) {
+		return c.pinnedRuntimeVersionArn()
 	})
 }
 
@@ -159722,6 +159849,8 @@ type mqlAwsEc2Instance struct {
 	PublicDnsName           plugin.TValue[string]
 	InstanceStatus          plugin.TValue[any]
 	StateReason             plugin.TValue[any]
+	StateReasonCode         plugin.TValue[string]
+	StateReasonMessage      plugin.TValue[string]
 	StateTransitionReason   plugin.TValue[string]
 	EbsOptimized            plugin.TValue[bool]
 	EnaSupported            plugin.TValue[bool]
@@ -159922,6 +160051,14 @@ func (c *mqlAwsEc2Instance) GetInstanceStatus() *plugin.TValue[any] {
 
 func (c *mqlAwsEc2Instance) GetStateReason() *plugin.TValue[any] {
 	return &c.StateReason
+}
+
+func (c *mqlAwsEc2Instance) GetStateReasonCode() *plugin.TValue[string] {
+	return &c.StateReasonCode
+}
+
+func (c *mqlAwsEc2Instance) GetStateReasonMessage() *plugin.TValue[string] {
+	return &c.StateReasonMessage
 }
 
 func (c *mqlAwsEc2Instance) GetStateTransitionReason() *plugin.TValue[string] {
@@ -175302,6 +175439,7 @@ type mqlAwsKinesisStream struct {
 	OpenShardCount       plugin.TValue[int64]
 	ConsumerCount        plugin.TValue[int64]
 	StreamModeDetails    plugin.TValue[any]
+	StreamMode           plugin.TValue[string]
 	EnhancedMonitoring   plugin.TValue[[]any]
 	CreatedAt            plugin.TValue[*time.Time]
 	Region               plugin.TValue[string]
@@ -175395,6 +175533,10 @@ func (c *mqlAwsKinesisStream) GetConsumerCount() *plugin.TValue[int64] {
 
 func (c *mqlAwsKinesisStream) GetStreamModeDetails() *plugin.TValue[any] {
 	return &c.StreamModeDetails
+}
+
+func (c *mqlAwsKinesisStream) GetStreamMode() *plugin.TValue[string] {
+	return &c.StreamMode
 }
 
 func (c *mqlAwsKinesisStream) GetEnhancedMonitoring() *plugin.TValue[[]any] {

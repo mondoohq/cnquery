@@ -3584,6 +3584,8 @@ aws.ec2.instance.spotInstanceRequestId 11.15.3
 aws.ec2.instance.ssm 11.15.2
 aws.ec2.instance.state 11.15.2
 aws.ec2.instance.stateReason 11.15.2
+aws.ec2.instance.stateReasonCode 13.53.4
+aws.ec2.instance.stateReasonMessage 13.53.4
 aws.ec2.instance.stateTransitionReason 11.15.2
 aws.ec2.instance.stateTransitionTime 11.15.2
 aws.ec2.instance.subnet 13.37.1
@@ -6636,6 +6638,7 @@ aws.kinesis.stream.openShardCount 11.16.1
 aws.kinesis.stream.region 11.16.1
 aws.kinesis.stream.retentionPeriodHours 11.16.1
 aws.kinesis.stream.status 11.16.1
+aws.kinesis.stream.streamMode 13.53.4
 aws.kinesis.stream.streamModeDetails 11.16.1
 aws.kinesis.stream.tags 11.16.1
 aws.kinesis.streamConsumer 11.16.1
@@ -6848,6 +6851,7 @@ aws.lambda.function.masterFunction 13.38.2
 aws.lambda.function.memorySize 11.15.2
 aws.lambda.function.name 11.15.2
 aws.lambda.function.packageType 11.15.2
+aws.lambda.function.pinnedRuntimeVersionArn 13.53.4
 aws.lambda.function.policy 11.15.2
 aws.lambda.function.policyStatements 13.32.2
 aws.lambda.function.provisionedConcurrencyConfig 11.15.2
@@ -6866,6 +6870,7 @@ aws.lambda.function.revisionId 13.39.2
 aws.lambda.function.role 11.15.2
 aws.lambda.function.runtime 11.15.2
 aws.lambda.function.runtimeManagementConfig 13.6.3
+aws.lambda.function.runtimeUpdateMode 13.53.4
 aws.lambda.function.runtimeVersionArn 13.39.2
 aws.lambda.function.securityGroups 13.2.7
 aws.lambda.function.signingJobArn 11.15.2
@@ -11156,6 +11161,7 @@ aws.waf.acl.arn 11.15.2
 aws.waf.acl.associatedLoadBalancers 13.43.1
 aws.waf.acl.associatedResources 11.16.1
 aws.waf.acl.capacity 13.49.1
+aws.waf.acl.cloudWatchMetricsEnabled 13.53.4
 aws.waf.acl.defaultAction 13.49.1
 aws.waf.acl.description 11.15.2
 aws.waf.acl.id 11.15.2
@@ -11169,9 +11175,11 @@ aws.waf.acl.loggingConfiguration.loggingFilter 13.49.1
 aws.waf.acl.loggingConfiguration.managedByFirewallManager 11.16.1
 aws.waf.acl.loggingConfiguration.redactedFields 11.16.1
 aws.waf.acl.managedByFirewallManager 11.15.2
+aws.waf.acl.metricName 13.53.4
 aws.waf.acl.name 11.15.2
 aws.waf.acl.region 13.53.4
 aws.waf.acl.rules 11.15.2
+aws.waf.acl.sampledRequestsEnabled 13.53.4
 aws.waf.acl.scope 11.15.2
 aws.waf.acl.tags 13.49.1
 aws.waf.acl.tokenDomains 13.49.1
@@ -11204,6 +11212,7 @@ aws.waf.rule.action.action 11.15.2
 aws.waf.rule.action.responseCode 11.15.2
 aws.waf.rule.action.ruleName 11.15.2
 aws.waf.rule.belongsTo 11.15.2
+aws.waf.rule.cloudWatchMetricsEnabled 13.53.4
 aws.waf.rule.fieldtomatch 11.15.2
 aws.waf.rule.fieldtomatch.allQueryArguments 11.15.2
 aws.waf.rule.fieldtomatch.body 11.15.2
@@ -11266,10 +11275,12 @@ aws.waf.rule.fieldtomatch.statementID 11.15.2
 aws.waf.rule.fieldtomatch.target 11.15.2
 aws.waf.rule.fieldtomatch.uriPath 11.15.2
 aws.waf.rule.id 11.15.2
+aws.waf.rule.metricName 13.53.4
 aws.waf.rule.name 11.15.2
 aws.waf.rule.overrideAction 13.49.1
 aws.waf.rule.priority 11.15.2
 aws.waf.rule.ruleLabels 13.49.1
+aws.waf.rule.sampledRequestsEnabled 13.53.4
 aws.waf.rule.statement 11.15.2
 aws.waf.rule.statement.andStatement 11.15.2
 aws.waf.rule.statement.andstatement 11.15.2

@@ -1397,6 +1397,11 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 		if err != nil {
 			return nil, err
 		}
+		stateReasonCode, stateReasonMessage := "", ""
+		if instance.StateReason != nil {
+			stateReasonCode = convert.ToValue(instance.StateReason.Code)
+			stateReasonMessage = convert.ToValue(instance.StateReason.Message)
+		}
 
 		stateTransitionTime := parseStateTransitionTime(convert.ToValue(instance.StateTransitionReason))
 		var detailedMonitoring string
@@ -1430,6 +1435,8 @@ func (a *mqlAwsEc2) gatherInstanceInfo(instances []ec2types.Instance, regionVal 
 			"rootDeviceType":     llx.StringData(string(instance.RootDeviceType)),
 			"state":              llx.StringData(stateName),
 			"stateReason":        llx.MapData(stateReason, types.Any),
+			"stateReasonCode":    llx.StringData(stateReasonCode),
+			"stateReasonMessage": llx.StringData(stateReasonMessage),
 			// "iamInstanceProfile":    llx.MapData(iamInstanceProfile, types.Any),
 			"stateTransitionReason": llx.StringDataPtr(instance.StateTransitionReason),
 			"stateTransitionTime":   llx.TimeDataPtr(stateTransitionTime),
