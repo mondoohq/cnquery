@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mondoo.com/mql/providers-sdk/v1/plugin"
 )
 
 func TestOciIpIsPublic(t *testing.T) {
@@ -40,8 +41,26 @@ func TestOciIpIsPublic(t *testing.T) {
 }
 
 func TestOciLoadBalancerHasPublicIp(t *testing.T) {
-	ip := func(addr string, isPublic any) map[string]any {
-		return map[string]any{"ipAddress": addr, "isPublic": isPublic}
+	// A classic load balancer address whose isPublic the service reported.
+	ip := func(addr string, isPublic bool) any {
+		return &mqlOciLoadBalancerIpAddress{
+			IpAddress: plugin.TValue[string]{Data: addr, State: plugin.StateIsSet},
+			IsPublic:  plugin.TValue[bool]{Data: isPublic, State: plugin.StateIsSet},
+		}
+	}
+	// An address the service returned with no isPublic at all.
+	nullIp := func(addr string) any {
+		return &mqlOciLoadBalancerIpAddress{
+			IpAddress: plugin.TValue[string]{Data: addr, State: plugin.StateIsSet},
+			IsPublic:  plugin.TValue[bool]{State: plugin.StateIsSet | plugin.StateIsNull},
+		}
+	}
+	// A network load balancer address, the other resource sharing the shape.
+	nlbIp := func(addr string, isPublic bool) any {
+		return &mqlOciNetworkLoadBalancerIpAddress{
+			IpAddress: plugin.TValue[string]{Data: addr, State: plugin.StateIsSet},
+			IsPublic:  plugin.TValue[bool]{Data: isPublic, State: plugin.StateIsSet},
+		}
 	}
 
 	tests := []struct {
@@ -57,6 +76,11 @@ func TestOciLoadBalancerHasPublicIp(t *testing.T) {
 			ip("10.0.0.5", false), ip("203.0.113.10", true),
 		}, false, true},
 
+		// Both load balancer address resources have to be read, since the
+		// exposure resource collects addresses from either kind.
+		{"network load balancer address", []any{nlbIp("203.0.113.10", true)}, false, true},
+		{"private network load balancer address", []any{nlbIp("10.0.0.5", false)}, false, false},
+
 		// A private balancer's addresses are internal whatever the individual
 		// flags say, so the balancer flag short-circuits.
 		{"private balancer with a public-looking address", []any{
@@ -66,15 +90,13 @@ func TestOciLoadBalancerHasPublicIp(t *testing.T) {
 		// The regression: the network load balancer marshalled the SDK slice
 		// straight to JSON, so an optional isPublic arrived as null. Reading
 		// that back as "not public" cleared the balancer entirely.
-		{"missing isPublic on a public balancer", []any{
-			map[string]any{"ipAddress": "203.0.113.10"},
-		}, false, true},
-		{"null isPublic on a public balancer", []any{ip("203.0.113.10", nil)}, false, true},
-		{"null isPublic on a private balancer", []any{ip("10.0.0.5", nil)}, true, false},
+		{"null isPublic on a public balancer", []any{nullIp("203.0.113.10")}, false, true},
+		{"null isPublic on a private balancer", []any{nullIp("10.0.0.5")}, true, false},
 
-		// Malformed entries must not panic or be mistaken for a verdict.
-		{"non-map entry is skipped", []any{"203.0.113.10"}, false, false},
-		{"non-map entry alongside a public one", []any{
+		// An entry of some other type must not panic or be mistaken for a
+		// verdict.
+		{"foreign entry is skipped", []any{"203.0.113.10"}, false, false},
+		{"foreign entry alongside a public one", []any{
 			"garbage", ip("203.0.113.10", true),
 		}, false, true},
 	}

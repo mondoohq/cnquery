@@ -98,15 +98,18 @@ func TestOciSecurityListRuleOpensIngress(t *testing.T) {
 func TestOciCollectOpenSecurityListRulesEmptyIsOpen(t *testing.T) {
 	// No security list resolvable falls back to OCI's default open posture,
 	// mirroring the network security group "no firewall == open" convention.
-	openRules, allows, err := ociCollectOpenSecurityListRules(nil)
+	typedOpen, dictOpen, allows, err := ociCollectOpenSecurityListRules(nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !allows {
 		t.Errorf("empty security list set should admit ingress (absent == open)")
 	}
-	if len(openRules) != 0 {
-		t.Errorf("empty security list set should surface no open rules, got %d", len(openRules))
+	if len(typedOpen) != 0 {
+		t.Errorf("empty security list set should surface no open rules, got %d", len(typedOpen))
+	}
+	if len(dictOpen) != 0 {
+		t.Errorf("empty security list set should surface no open rule dicts, got %d", len(dictOpen))
 	}
 }
 
