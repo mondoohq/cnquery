@@ -1887,6 +1887,51 @@ func (a *mqlAwsRdsSnapshot) attributes() ([]any, error) {
 	return convert.JsonToDictSlice(snapshotAttributes.DBSnapshotAttributesResult.DBSnapshotAttributes)
 }
 
+// restoreAttributes re-keys the name/value pair list RDS returns into a map of
+// attribute name to its values. Cluster and instance snapshots come back from
+// two different API calls with two different result shapes, so both branches
+// have to be walked to answer "who may restore this".
+func (a *mqlAwsRdsSnapshot) restoreAttributes() (map[string]any, error) {
+	snapshotId := a.Id.Data
+	region := a.Region.Data
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Rds(region)
+	ctx := context.Background()
+	if a.IsClusterSnapshot.Data {
+		out, err := svc.DescribeDBClusterSnapshotAttributes(ctx, &rds.DescribeDBClusterSnapshotAttributesInput{DBClusterSnapshotIdentifier: &snapshotId})
+		if err != nil {
+			return nil, err
+		}
+		if out == nil || out.DBClusterSnapshotAttributesResult == nil {
+			return map[string]any{}, nil
+		}
+		res := map[string]any{}
+		for _, attr := range out.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes {
+			if attr.AttributeName == nil {
+				continue
+			}
+			res[*attr.AttributeName] = stringsToAnyArray(attr.AttributeValues)
+		}
+		return res, nil
+	}
+	out, err := svc.DescribeDBSnapshotAttributes(ctx, &rds.DescribeDBSnapshotAttributesInput{DBSnapshotIdentifier: &snapshotId})
+	if err != nil {
+		return nil, err
+	}
+	if out == nil || out.DBSnapshotAttributesResult == nil {
+		return map[string]any{}, nil
+	}
+	res := map[string]any{}
+	for _, attr := range out.DBSnapshotAttributesResult.DBSnapshotAttributes {
+		if attr.AttributeName == nil {
+			continue
+		}
+		res[*attr.AttributeName] = stringsToAnyArray(attr.AttributeValues)
+	}
+	return res, nil
+}
+
 // isPublic reports whether the snapshot is shared with all AWS accounts, which
 // makes it restorable by anyone. RDS exposes this through the "restore" attribute
 // carrying the special value "all" in its list of authorized accounts.

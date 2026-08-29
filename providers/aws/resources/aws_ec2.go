@@ -3082,6 +3082,38 @@ func (a *mqlAwsEc2) getSnapshots(conn *connection.AwsConnection) []*jobpool.Job 
 
 type mqlAwsEc2SnapshotInternal struct {
 	cacheKmsKeyId *string
+
+	cvpOnce   sync.Once
+	cvp       []ec2types.CreateVolumePermission
+	cvpErr    error
+	cvpDenied bool
+}
+
+// fetchCreateVolumePermissions reads the snapshot's createVolumePermission
+// attribute once. Four fields answer from it (the deprecated dict, the two
+// typed lists, and isPublic), and without memoizing, a query touching more
+// than one of them repeats DescribeSnapshotAttribute per field per snapshot.
+func (a *mqlAwsEc2Snapshot) fetchCreateVolumePermissions() ([]ec2types.CreateVolumePermission, bool, error) {
+	a.cvpOnce.Do(func() {
+		id := a.Id.Data
+		conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+		svc := conn.Ec2(a.Region.Data)
+		attribute, err := svc.DescribeSnapshotAttribute(context.Background(), &ec2.DescribeSnapshotAttributeInput{
+			SnapshotId: &id,
+			Attribute:  ec2types.SnapshotAttributeNameCreateVolumePermission,
+		})
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				log.Debug().Str("snapshot", id).Msg("access denied when retrieving snapshot volume permissions")
+				a.cvpDenied = true
+				return
+			}
+			a.cvpErr = err
+			return
+		}
+		a.cvp = attribute.CreateVolumePermissions
+	})
+	return a.cvp, a.cvpDenied, a.cvpErr
 }
 
 // sourceVolume resolves the volume the snapshot was created from when it is
@@ -3121,40 +3153,65 @@ func (a *mqlAwsEc2Snapshot) kmsKey() (*mqlAwsKmsKey, error) {
 }
 
 func (a *mqlAwsEc2Snapshot) isPublic() (bool, error) {
-	perms, err := a.createVolumePermission()
+	perms, _, err := a.fetchCreateVolumePermissions()
 	if err != nil {
 		return false, err
 	}
 	for _, p := range perms {
-		permMap, ok := p.(map[string]any)
-		if !ok {
-			continue
-		}
-		if group, ok := permMap["Group"].(string); ok && group == "all" {
+		if p.Group == ec2types.PermissionGroupAll {
 			return true, nil
 		}
 	}
 	return false, nil
 }
 
-func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
-	id := a.Id.Data
-	region := a.Region.Data
-	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
-
-	svc := conn.Ec2(region)
-	ctx := context.Background()
-
-	attribute, err := svc.DescribeSnapshotAttribute(ctx, &ec2.DescribeSnapshotAttributeInput{SnapshotId: &id, Attribute: ec2types.SnapshotAttributeNameCreateVolumePermission})
+func (a *mqlAwsEc2Snapshot) createVolumePermissionUserIds() ([]any, error) {
+	perms, denied, err := a.fetchCreateVolumePermissions()
 	if err != nil {
-		if Is400AccessDeniedError(err) {
-			log.Debug().Str("snapshot", id).Msg("access denied when retrieving snapshot volume permissions")
-			return nil, nil
-		}
 		return nil, err
 	}
+	if denied {
+		// Reading "no accounts" out of a denied call would report the snapshot
+		// as unshared when it may not be.
+		a.CreateVolumePermissionUserIds.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res := []any{}
+	for _, p := range perms {
+		if p.UserId != nil && *p.UserId != "" {
+			res = append(res, *p.UserId)
+		}
+	}
+	return res, nil
+}
 
-	return convert.JsonToDictSlice(attribute.CreateVolumePermissions)
+func (a *mqlAwsEc2Snapshot) createVolumePermissionGroups() ([]any, error) {
+	perms, denied, err := a.fetchCreateVolumePermissions()
+	if err != nil {
+		return nil, err
+	}
+	if denied {
+		a.CreateVolumePermissionGroups.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res := []any{}
+	for _, p := range perms {
+		if p.Group != "" {
+			res = append(res, string(p.Group))
+		}
+	}
+	return res, nil
+}
+
+func (a *mqlAwsEc2Snapshot) createVolumePermission() ([]any, error) {
+	perms, denied, err := a.fetchCreateVolumePermissions()
+	if err != nil {
+		return nil, err
+	}
+	if denied {
+		return nil, nil
+	}
+	return convert.JsonToDictSlice(perms)
 }
 
 func (a *mqlAwsEc2) internetGateways() ([]any, error) {

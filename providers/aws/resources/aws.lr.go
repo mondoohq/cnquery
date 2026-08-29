@@ -112,6 +112,8 @@ const (
 	ResourceAwsIamServiceLastAccessed                                           string = "aws.iam.serviceLastAccessed"
 	ResourceAwsIamRole                                                          string = "aws.iam.role"
 	ResourceAwsIamGroup                                                         string = "aws.iam.group"
+	ResourceAwsIamServerCertificate                                             string = "aws.iam.serverCertificate"
+	ResourceAwsIamUserMfaDevice                                                 string = "aws.iam.user.mfaDevice"
 	ResourceAwsIamVirtualmfadevice                                              string = "aws.iam.virtualmfadevice"
 	ResourceAwsIamSamlProvider                                                  string = "aws.iam.samlProvider"
 	ResourceAwsIamOidcProvider                                                  string = "aws.iam.oidcProvider"
@@ -312,6 +314,7 @@ const (
 	ResourceAwsEcsCapacityProvider                                              string = "aws.ecs.capacityProvider"
 	ResourceAwsEcsAccountSetting                                                string = "aws.ecs.accountSetting"
 	ResourceAwsEcsCluster                                                       string = "aws.ecs.cluster"
+	ResourceAwsEcsClusterExecuteCommandConfiguration                            string = "aws.ecs.cluster.executeCommandConfiguration"
 	ResourceAwsEcsClusterCapacityProviderStrategyItem                           string = "aws.ecs.cluster.capacityProviderStrategyItem"
 	ResourceAwsEcsInstance                                                      string = "aws.ecs.instance"
 	ResourceAwsEcsTask                                                          string = "aws.ecs.task"
@@ -1392,6 +1395,14 @@ func init() {
 			Init:   initAwsIamGroup,
 			Create: createAwsIamGroup,
 		},
+		"aws.iam.serverCertificate": {
+			// to override args, implement: initAwsIamServerCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamServerCertificate,
+		},
+		"aws.iam.user.mfaDevice": {
+			// to override args, implement: initAwsIamUserMfaDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsIamUserMfaDevice,
+		},
 		"aws.iam.virtualmfadevice": {
 			// to override args, implement: initAwsIamVirtualmfadevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsIamVirtualmfadevice,
@@ -2191,6 +2202,10 @@ func init() {
 		"aws.ecs.cluster": {
 			Init:   initAwsEcsCluster,
 			Create: createAwsEcsCluster,
+		},
+		"aws.ecs.cluster.executeCommandConfiguration": {
+			// to override args, implement: initAwsEcsClusterExecuteCommandConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsClusterExecuteCommandConfiguration,
 		},
 		"aws.ecs.cluster.capacityProviderStrategyItem": {
 			// to override args, implement: initAwsEcsClusterCapacityProviderStrategyItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -7246,6 +7261,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.iam.serverCertificates": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetServerCertificates()).ToDataRes(types.Array(types.Dict))
 	},
+	"aws.iam.serverCertificateRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIam).GetServerCertificateRefs()).ToDataRes(types.Array(types.Resource("aws.iam.serverCertificate")))
+	},
 	"aws.iam.instanceProfiles": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIam).GetInstanceProfiles()).ToDataRes(types.Array(types.Resource("aws.iam.instanceProfile")))
 	},
@@ -7422,6 +7440,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.user.mfaDevices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetMfaDevices()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.iam.user.mfaDeviceRefs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUser).GetMfaDeviceRefs()).ToDataRes(types.Array(types.Resource("aws.iam.user.mfaDevice")))
 	},
 	"aws.iam.user.permissionsBoundary": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamUser).GetPermissionsBoundary()).ToDataRes(types.Resource("aws.iam.policy"))
@@ -7749,6 +7770,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.iam.group.lastAccessedServices": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamGroup).GetLastAccessedServices()).ToDataRes(types.Array(types.Resource("aws.iam.serviceLastAccessed")))
+	},
+	"aws.iam.serverCertificate.arn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServerCertificate).GetArn()).ToDataRes(types.String)
+	},
+	"aws.iam.serverCertificate.name": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServerCertificate).GetName()).ToDataRes(types.String)
+	},
+	"aws.iam.serverCertificate.id": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServerCertificate).GetId()).ToDataRes(types.String)
+	},
+	"aws.iam.serverCertificate.path": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServerCertificate).GetPath()).ToDataRes(types.String)
+	},
+	"aws.iam.serverCertificate.expiration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServerCertificate).GetExpiration()).ToDataRes(types.Time)
+	},
+	"aws.iam.serverCertificate.uploadedAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamServerCertificate).GetUploadedAt()).ToDataRes(types.Time)
+	},
+	"aws.iam.user.mfaDevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserMfaDevice).GetSerialNumber()).ToDataRes(types.String)
+	},
+	"aws.iam.user.mfaDevice.userName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserMfaDevice).GetUserName()).ToDataRes(types.String)
+	},
+	"aws.iam.user.mfaDevice.enabledAt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsIamUserMfaDevice).GetEnabledAt()).ToDataRes(types.Time)
 	},
 	"aws.iam.virtualmfadevice.serialNumber": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsIamVirtualmfadevice).GetSerialNumber()).ToDataRes(types.String)
@@ -14047,6 +14095,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.cluster.configuration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.ecs.cluster.executeCommandConfiguration": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetExecuteCommandConfiguration()).ToDataRes(types.Resource("aws.ecs.cluster.executeCommandConfiguration"))
+	},
+	"aws.ecs.cluster.managedStorageKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetManagedStorageKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.ecs.cluster.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetSettings()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -14082,6 +14136,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.cluster.statistics": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetStatistics()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.logging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetLogging()).ToDataRes(types.String)
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.cloudWatchLogGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetCloudWatchLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.cloudWatchEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetCloudWatchEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.s3Bucket": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetS3Bucket()).ToDataRes(types.Resource("aws.s3.bucket"))
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.s3EncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetS3EncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.s3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetS3KeyPrefix()).ToDataRes(types.String)
 	},
 	"aws.ecs.cluster.capacityProviderStrategyItem.capacityProvider": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).GetCapacityProvider()).ToDataRes(types.String)
@@ -19119,6 +19194,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.rds.snapshot.attributes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetAttributes()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.rds.snapshot.restoreAttributes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsRdsSnapshot).GetRestoreAttributes()).ToDataRes(types.Map(types.String, types.Array(types.String)))
 	},
 	"aws.rds.snapshot.type": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsRdsSnapshot).GetType()).ToDataRes(types.String)
@@ -24168,6 +24246,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ec2.snapshot.createVolumePermission": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetCreateVolumePermission()).ToDataRes(types.Array(types.Dict))
+	},
+	"aws.ec2.snapshot.createVolumePermissionUserIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetCreateVolumePermissionUserIds()).ToDataRes(types.Array(types.String))
+	},
+	"aws.ec2.snapshot.createVolumePermissionGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Snapshot).GetCreateVolumePermissionGroups()).ToDataRes(types.Array(types.String))
 	},
 	"aws.ec2.snapshot.volumeId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Snapshot).GetVolumeId()).ToDataRes(types.String)
@@ -40180,6 +40264,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsIam).ServerCertificates, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.iam.serverCertificateRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIam).ServerCertificateRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"aws.iam.instanceProfiles": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIam).InstanceProfiles, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -40426,6 +40514,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.user.mfaDevices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamUser).MfaDevices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.mfaDeviceRefs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUser).MfaDeviceRefs, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.iam.user.permissionsBoundary": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -40910,6 +41002,50 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.iam.group.lastAccessedServices": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsIamGroup).LastAccessedServices, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serverCertificate.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServerCertificate).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.serverCertificate.arn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServerCertificate).Arn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serverCertificate.name": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServerCertificate).Name, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serverCertificate.id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServerCertificate).Id, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serverCertificate.path": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServerCertificate).Path, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serverCertificate.expiration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServerCertificate).Expiration, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.serverCertificate.uploadedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamServerCertificate).UploadedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.mfaDevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserMfaDevice).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.iam.user.mfaDevice.serialNumber": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserMfaDevice).SerialNumber, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.mfaDevice.userName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserMfaDevice).UserName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.iam.user.mfaDevice.enabledAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsIamUserMfaDevice).EnabledAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
 	"aws.iam.virtualmfadevice.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50108,6 +50244,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsCluster).Configuration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.ecs.cluster.executeCommandConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).ExecuteCommandConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsClusterExecuteCommandConfiguration](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.managedStorageKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).ManagedStorageKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.ecs.cluster.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).Settings, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -50154,6 +50298,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.cluster.statistics": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsCluster).Statistics, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.logging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).Logging, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.cloudWatchLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).CloudWatchLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.cloudWatchEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).CloudWatchEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.s3Bucket": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).S3Bucket, ok = plugin.RawToTValue[*mqlAwsS3Bucket](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.s3EncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).S3EncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.executeCommandConfiguration.s3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).S3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.capacityProviderStrategyItem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -57584,6 +57760,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsRdsSnapshot).Attributes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.rds.snapshot.restoreAttributes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsRdsSnapshot).RestoreAttributes, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.rds.snapshot.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsRdsSnapshot).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -64838,6 +65018,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ec2.snapshot.createVolumePermission": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Snapshot).CreateVolumePermission, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.createVolumePermissionUserIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).CreateVolumePermissionUserIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.snapshot.createVolumePermissionGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Snapshot).CreateVolumePermissionGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.ec2.snapshot.volumeId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -92208,20 +92396,21 @@ type mqlAwsIam struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsIamInternal it will be used here
-	Users              plugin.TValue[[]any]
-	Roles              plugin.TValue[[]any]
-	Groups             plugin.TValue[[]any]
-	Policies           plugin.TValue[[]any]
-	AttachedPolicies   plugin.TValue[[]any]
-	CredentialReport   plugin.TValue[[]any]
-	PasswordPolicy     plugin.TValue[*mqlAwsIamPasswordPolicy]
-	AccountSummary     plugin.TValue[map[string]any]
-	VirtualMfaDevices  plugin.TValue[[]any]
-	ServerCertificates plugin.TValue[[]any]
-	InstanceProfiles   plugin.TValue[[]any]
-	SamlProviders      plugin.TValue[[]any]
-	OidcProviders      plugin.TValue[[]any]
-	AccountAlias       plugin.TValue[string]
+	Users                 plugin.TValue[[]any]
+	Roles                 plugin.TValue[[]any]
+	Groups                plugin.TValue[[]any]
+	Policies              plugin.TValue[[]any]
+	AttachedPolicies      plugin.TValue[[]any]
+	CredentialReport      plugin.TValue[[]any]
+	PasswordPolicy        plugin.TValue[*mqlAwsIamPasswordPolicy]
+	AccountSummary        plugin.TValue[map[string]any]
+	VirtualMfaDevices     plugin.TValue[[]any]
+	ServerCertificates    plugin.TValue[[]any]
+	ServerCertificateRefs plugin.TValue[[]any]
+	InstanceProfiles      plugin.TValue[[]any]
+	SamlProviders         plugin.TValue[[]any]
+	OidcProviders         plugin.TValue[[]any]
+	AccountAlias          plugin.TValue[string]
 }
 
 // createAwsIam creates a new instance of this resource
@@ -92398,6 +92587,22 @@ func (c *mqlAwsIam) GetVirtualMfaDevices() *plugin.TValue[[]any] {
 func (c *mqlAwsIam) GetServerCertificates() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.ServerCertificates, func() ([]any, error) {
 		return c.serverCertificates()
+	})
+}
+
+func (c *mqlAwsIam) GetServerCertificateRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.ServerCertificateRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam", c.__id, "serverCertificateRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.serverCertificateRefs()
 	})
 }
 
@@ -92812,6 +93017,7 @@ type mqlAwsIamUser struct {
 	LoginProfile               plugin.TValue[*mqlAwsIamLoginProfile]
 	Path                       plugin.TValue[string]
 	MfaDevices                 plugin.TValue[[]any]
+	MfaDeviceRefs              plugin.TValue[[]any]
 	PermissionsBoundary        plugin.TValue[*mqlAwsIamPolicy]
 	LastAccessedServices       plugin.TValue[[]any]
 }
@@ -93000,6 +93206,22 @@ func (c *mqlAwsIamUser) GetPath() *plugin.TValue[string] {
 func (c *mqlAwsIamUser) GetMfaDevices() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.MfaDevices, func() ([]any, error) {
 		return c.mfaDevices()
+	})
+}
+
+func (c *mqlAwsIamUser) GetMfaDeviceRefs() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.MfaDeviceRefs, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.iam.user", c.__id, "mfaDeviceRefs")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.mfaDeviceRefs()
 	})
 }
 
@@ -94364,6 +94586,129 @@ func (c *mqlAwsIamGroup) GetLastAccessedServices() *plugin.TValue[[]any] {
 
 		return c.lastAccessedServices()
 	})
+}
+
+// mqlAwsIamServerCertificate for the aws.iam.serverCertificate resource
+type mqlAwsIamServerCertificate struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamServerCertificateInternal it will be used here
+	Arn        plugin.TValue[string]
+	Name       plugin.TValue[string]
+	Id         plugin.TValue[string]
+	Path       plugin.TValue[string]
+	Expiration plugin.TValue[*time.Time]
+	UploadedAt plugin.TValue[*time.Time]
+}
+
+// createAwsIamServerCertificate creates a new instance of this resource
+func createAwsIamServerCertificate(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamServerCertificate{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.serverCertificate", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamServerCertificate) MqlName() string {
+	return "aws.iam.serverCertificate"
+}
+
+func (c *mqlAwsIamServerCertificate) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamServerCertificate) GetArn() *plugin.TValue[string] {
+	return &c.Arn
+}
+
+func (c *mqlAwsIamServerCertificate) GetName() *plugin.TValue[string] {
+	return &c.Name
+}
+
+func (c *mqlAwsIamServerCertificate) GetId() *plugin.TValue[string] {
+	return &c.Id
+}
+
+func (c *mqlAwsIamServerCertificate) GetPath() *plugin.TValue[string] {
+	return &c.Path
+}
+
+func (c *mqlAwsIamServerCertificate) GetExpiration() *plugin.TValue[*time.Time] {
+	return &c.Expiration
+}
+
+func (c *mqlAwsIamServerCertificate) GetUploadedAt() *plugin.TValue[*time.Time] {
+	return &c.UploadedAt
+}
+
+// mqlAwsIamUserMfaDevice for the aws.iam.user.mfaDevice resource
+type mqlAwsIamUserMfaDevice struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsIamUserMfaDeviceInternal it will be used here
+	SerialNumber plugin.TValue[string]
+	UserName     plugin.TValue[string]
+	EnabledAt    plugin.TValue[*time.Time]
+}
+
+// createAwsIamUserMfaDevice creates a new instance of this resource
+func createAwsIamUserMfaDevice(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsIamUserMfaDevice{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.iam.user.mfaDevice", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsIamUserMfaDevice) MqlName() string {
+	return "aws.iam.user.mfaDevice"
+}
+
+func (c *mqlAwsIamUserMfaDevice) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsIamUserMfaDevice) GetSerialNumber() *plugin.TValue[string] {
+	return &c.SerialNumber
+}
+
+func (c *mqlAwsIamUserMfaDevice) GetUserName() *plugin.TValue[string] {
+	return &c.UserName
+}
+
+func (c *mqlAwsIamUserMfaDevice) GetEnabledAt() *plugin.TValue[*time.Time] {
+	return &c.EnabledAt
 }
 
 // mqlAwsIamVirtualmfadevice for the aws.iam.virtualmfadevice resource
@@ -118722,6 +119067,8 @@ type mqlAwsEcsCluster struct {
 	PendingTasksCount                 plugin.TValue[int64]
 	RegisteredContainerInstancesCount plugin.TValue[int64]
 	Configuration                     plugin.TValue[any]
+	ExecuteCommandConfiguration       plugin.TValue[*mqlAwsEcsClusterExecuteCommandConfiguration]
+	ManagedStorageKmsKey              plugin.TValue[*mqlAwsKmsKey]
 	Settings                          plugin.TValue[map[string]any]
 	Status                            plugin.TValue[string]
 	Tasks                             plugin.TValue[[]any]
@@ -118799,6 +119146,38 @@ func (c *mqlAwsEcsCluster) GetRegisteredContainerInstancesCount() *plugin.TValue
 
 func (c *mqlAwsEcsCluster) GetConfiguration() *plugin.TValue[any] {
 	return &c.Configuration
+}
+
+func (c *mqlAwsEcsCluster) GetExecuteCommandConfiguration() *plugin.TValue[*mqlAwsEcsClusterExecuteCommandConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsClusterExecuteCommandConfiguration](&c.ExecuteCommandConfiguration, func() (*mqlAwsEcsClusterExecuteCommandConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "executeCommandConfiguration")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEcsClusterExecuteCommandConfiguration), nil
+			}
+		}
+
+		return c.executeCommandConfiguration()
+	})
+}
+
+func (c *mqlAwsEcsCluster) GetManagedStorageKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.ManagedStorageKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "managedStorageKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.managedStorageKmsKey()
+	})
 }
 
 func (c *mqlAwsEcsCluster) GetSettings() *plugin.TValue[map[string]any] {
@@ -118907,6 +119286,116 @@ func (c *mqlAwsEcsCluster) GetServiceConnectNamespace() *plugin.TValue[string] {
 
 func (c *mqlAwsEcsCluster) GetStatistics() *plugin.TValue[map[string]any] {
 	return &c.Statistics
+}
+
+// mqlAwsEcsClusterExecuteCommandConfiguration for the aws.ecs.cluster.executeCommandConfiguration resource
+type mqlAwsEcsClusterExecuteCommandConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEcsClusterExecuteCommandConfigurationInternal
+	Logging                     plugin.TValue[string]
+	KmsKey                      plugin.TValue[*mqlAwsKmsKey]
+	CloudWatchLogGroup          plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	CloudWatchEncryptionEnabled plugin.TValue[bool]
+	S3Bucket                    plugin.TValue[*mqlAwsS3Bucket]
+	S3EncryptionEnabled         plugin.TValue[bool]
+	S3KeyPrefix                 plugin.TValue[string]
+}
+
+// createAwsEcsClusterExecuteCommandConfiguration creates a new instance of this resource
+func createAwsEcsClusterExecuteCommandConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsClusterExecuteCommandConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.cluster.executeCommandConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) MqlName() string {
+	return "aws.ecs.cluster.executeCommandConfiguration"
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetLogging() *plugin.TValue[string] {
+	return &c.Logging
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster.executeCommandConfiguration", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetCloudWatchLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.CloudWatchLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster.executeCommandConfiguration", c.__id, "cloudWatchLogGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.cloudWatchLogGroup()
+	})
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetCloudWatchEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.CloudWatchEncryptionEnabled
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetS3Bucket() *plugin.TValue[*mqlAwsS3Bucket] {
+	return plugin.GetOrCompute[*mqlAwsS3Bucket](&c.S3Bucket, func() (*mqlAwsS3Bucket, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster.executeCommandConfiguration", c.__id, "s3Bucket")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsS3Bucket), nil
+			}
+		}
+
+		return c.s3Bucket()
+	})
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetS3EncryptionEnabled() *plugin.TValue[bool] {
+	return &c.S3EncryptionEnabled
+}
+
+func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetS3KeyPrefix() *plugin.TValue[string] {
+	return &c.S3KeyPrefix
 }
 
 // mqlAwsEcsClusterCapacityProviderStrategyItem for the aws.ecs.cluster.capacityProviderStrategyItem resource
@@ -138958,6 +139447,7 @@ type mqlAwsRdsSnapshot struct {
 	Arn                   plugin.TValue[string]
 	Id                    plugin.TValue[string]
 	Attributes            plugin.TValue[[]any]
+	RestoreAttributes     plugin.TValue[map[string]any]
 	Type                  plugin.TValue[string]
 	Encrypted             plugin.TValue[bool]
 	StorageEncryptionType plugin.TValue[string]
@@ -139031,6 +139521,12 @@ func (c *mqlAwsRdsSnapshot) GetId() *plugin.TValue[string] {
 func (c *mqlAwsRdsSnapshot) GetAttributes() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.Attributes, func() ([]any, error) {
 		return c.attributes()
+	})
+}
+
+func (c *mqlAwsRdsSnapshot) GetRestoreAttributes() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.RestoreAttributes, func() (map[string]any, error) {
+		return c.restoreAttributes()
 	})
 }
 
@@ -156468,32 +156964,34 @@ type mqlAwsEc2Snapshot struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEc2SnapshotInternal
-	Arn                    plugin.TValue[string]
-	Id                     plugin.TValue[string]
-	Region                 plugin.TValue[string]
-	CreateVolumePermission plugin.TValue[[]any]
-	VolumeId               plugin.TValue[string]
-	StartTime              plugin.TValue[*time.Time]
-	CompletionTime         plugin.TValue[*time.Time]
-	Tags                   plugin.TValue[map[string]any]
-	CloudformationStack    plugin.TValue[*mqlAwsCloudformationStack]
-	ManagedBy              plugin.TValue[string]
-	State                  plugin.TValue[string]
-	VolumeSize             plugin.TValue[int64]
-	Description            plugin.TValue[string]
-	Encrypted              plugin.TValue[bool]
-	StorageTier            plugin.TValue[string]
-	TransferType           plugin.TValue[string]
-	RestoreExpiryTime      plugin.TValue[*time.Time]
-	KmsKey                 plugin.TValue[*mqlAwsKmsKey]
-	SourceVolume           plugin.TValue[*mqlAwsEc2Volume]
-	DataEncryptionKeyId    plugin.TValue[string]
-	OwnerAlias             plugin.TValue[string]
-	OwnerId                plugin.TValue[string]
-	OutpostArn             plugin.TValue[string]
-	IsPublic               plugin.TValue[bool]
-	SharedWithAccounts     plugin.TValue[[]any]
-	SharedExternally       plugin.TValue[bool]
+	Arn                           plugin.TValue[string]
+	Id                            plugin.TValue[string]
+	Region                        plugin.TValue[string]
+	CreateVolumePermission        plugin.TValue[[]any]
+	CreateVolumePermissionUserIds plugin.TValue[[]any]
+	CreateVolumePermissionGroups  plugin.TValue[[]any]
+	VolumeId                      plugin.TValue[string]
+	StartTime                     plugin.TValue[*time.Time]
+	CompletionTime                plugin.TValue[*time.Time]
+	Tags                          plugin.TValue[map[string]any]
+	CloudformationStack           plugin.TValue[*mqlAwsCloudformationStack]
+	ManagedBy                     plugin.TValue[string]
+	State                         plugin.TValue[string]
+	VolumeSize                    plugin.TValue[int64]
+	Description                   plugin.TValue[string]
+	Encrypted                     plugin.TValue[bool]
+	StorageTier                   plugin.TValue[string]
+	TransferType                  plugin.TValue[string]
+	RestoreExpiryTime             plugin.TValue[*time.Time]
+	KmsKey                        plugin.TValue[*mqlAwsKmsKey]
+	SourceVolume                  plugin.TValue[*mqlAwsEc2Volume]
+	DataEncryptionKeyId           plugin.TValue[string]
+	OwnerAlias                    plugin.TValue[string]
+	OwnerId                       plugin.TValue[string]
+	OutpostArn                    plugin.TValue[string]
+	IsPublic                      plugin.TValue[bool]
+	SharedWithAccounts            plugin.TValue[[]any]
+	SharedExternally              plugin.TValue[bool]
 }
 
 // createAwsEc2Snapshot creates a new instance of this resource
@@ -156548,6 +157046,18 @@ func (c *mqlAwsEc2Snapshot) GetRegion() *plugin.TValue[string] {
 func (c *mqlAwsEc2Snapshot) GetCreateVolumePermission() *plugin.TValue[[]any] {
 	return plugin.GetOrCompute[[]any](&c.CreateVolumePermission, func() ([]any, error) {
 		return c.createVolumePermission()
+	})
+}
+
+func (c *mqlAwsEc2Snapshot) GetCreateVolumePermissionUserIds() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CreateVolumePermissionUserIds, func() ([]any, error) {
+		return c.createVolumePermissionUserIds()
+	})
+}
+
+func (c *mqlAwsEc2Snapshot) GetCreateVolumePermissionGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.CreateVolumePermissionGroups, func() ([]any, error) {
+		return c.createVolumePermissionGroups()
 	})
 }
 

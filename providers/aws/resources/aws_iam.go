@@ -71,6 +71,38 @@ func (a *mqlAwsIam) serverCertificates() ([]any, error) {
 	return res, nil
 }
 
+func (a *mqlAwsIam) serverCertificateRefs() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+
+	svc := conn.Iam("")
+	ctx := context.Background()
+	res := []any{}
+	paginator := iam.NewListServerCertificatesPaginator(svc, &iam.ListServerCertificatesInput{})
+	for paginator.HasMorePages() {
+		certsResp, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for i := range certsResp.ServerCertificateMetadataList {
+			cert := certsResp.ServerCertificateMetadataList[i]
+			mqlCert, err := CreateResource(a.MqlRuntime, "aws.iam.serverCertificate", map[string]*llx.RawData{
+				"__id":       llx.StringDataPtr(cert.Arn),
+				"arn":        llx.StringDataPtr(cert.Arn),
+				"name":       llx.StringDataPtr(cert.ServerCertificateName),
+				"id":         llx.StringDataPtr(cert.ServerCertificateId),
+				"path":       llx.StringDataPtr(cert.Path),
+				"expiration": llx.TimeDataPtr(cert.Expiration),
+				"uploadedAt": llx.TimeDataPtr(cert.UploadDate),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlCert)
+		}
+	}
+	return res, nil
+}
+
 func (a *mqlAwsIam) credentialReport() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 
@@ -626,6 +658,39 @@ func (a *mqlAwsIamUser) mfaDevices() ([]any, error) {
 			return nil, err
 		}
 		res = append(res, dicts...)
+	}
+	return res, nil
+}
+
+func (a *mqlAwsIamUser) mfaDeviceRefs() ([]any, error) {
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	svc := conn.Iam("")
+	ctx := context.Background()
+
+	userName := a.Name.Data
+	res := []any{}
+	paginator := iam.NewListMFADevicesPaginator(svc, &iam.ListMFADevicesInput{UserName: &userName})
+	for paginator.HasMorePages() {
+		devices, err := paginator.NextPage(ctx)
+		if err != nil {
+			if Is400AccessDeniedError(err) {
+				return res, nil
+			}
+			return nil, err
+		}
+		for i := range devices.MFADevices {
+			device := devices.MFADevices[i]
+			mqlDevice, err := CreateResource(a.MqlRuntime, "aws.iam.user.mfaDevice", map[string]*llx.RawData{
+				"__id":         llx.StringDataPtr(device.SerialNumber),
+				"serialNumber": llx.StringDataPtr(device.SerialNumber),
+				"userName":     llx.StringDataPtr(device.UserName),
+				"enabledAt":    llx.TimeDataPtr(device.EnableDate),
+			})
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, mqlDevice)
+		}
 	}
 	return res, nil
 }

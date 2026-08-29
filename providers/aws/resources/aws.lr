@@ -2465,10 +2465,18 @@ aws.iam {
   virtualMfaDevices() []aws.iam.virtualmfadevice
   // Server certificates stored in IAM
   //
-  // Each entry has the shape `{Arn, Path, ServerCertificateId,
-  // ServerCertificateName, Expiration, UploadDate}`. Expiration is the
-  // certificate expiry date and UploadDate is when it was uploaded to IAM.
-  serverCertificates() []dict
+  // Deprecated in favor of serverCertificateRefs, which carries the same
+  // entries as resources with proper time values for the expiry and upload
+  // dates rather than JSON strings. Each entry has the shape `{Arn, Path,
+  // ServerCertificateId, ServerCertificateName, Expiration, UploadDate}`.
+  serverCertificates() @maturity("deprecated") []dict
+  // Server certificates stored in IAM
+  //
+  // IAM is the legacy store for TLS certificates, predating ACM. A
+  // certificate that has passed its expiration is still served by whatever
+  // load balancer references it, so this is where an expired-certificate
+  // check reads from.
+  serverCertificateRefs() []aws.iam.serverCertificate
   // List of IAM instance profiles in the account
   instanceProfiles() []aws.iam.instanceProfile
   // List of SAML 2.0 identity providers configured in IAM
@@ -2647,9 +2655,16 @@ private aws.iam.user @defaults("arn name createdAt") {
   path string
   // MFA devices (virtual and hardware) assigned to the user
   //
-  // Each entry has the shape `{SerialNumber, EnableDate, UserName}`. For a
-  // virtual MFA device the SerialNumber is the device ARN.
-  mfaDevices() []dict
+  // Deprecated in favor of mfaDeviceRefs, which carries the same entries as
+  // resources with a proper time value for the enablement date rather than a
+  // JSON string. Each entry has the shape `{SerialNumber, EnableDate,
+  // UserName}`. For a virtual MFA device the SerialNumber is the device ARN.
+  mfaDevices() @maturity("deprecated") []dict
+  // MFA devices (virtual and hardware) assigned to the user
+  //
+  // Empty when the user has no second factor, which is the reading a
+  // console-user MFA check is looking for.
+  mfaDeviceRefs() []aws.iam.user.mfaDevice
   // Managed policy that sets the permissions boundary for the user, if one is set
   permissionsBoundary() aws.iam.policy
   // Services the user is permitted to use, with when each was last accessed
@@ -3056,6 +3071,48 @@ private aws.iam.group @defaults("arn name") {
   // lastAuthenticatedAt are the services the group grants but no member has
   // used.
   lastAccessedServices() []aws.iam.serviceLastAccessed
+}
+
+// Server certificate stored in IAM
+//
+// TLS certificate held in the IAM certificate store, which predates ACM and
+// is still where certificates for some load balancers and CloudFront
+// distributions live. The `expiration` field is what an expiry audit reads;
+// IAM keeps serving an expired certificate to anything that references it.
+private aws.iam.serverCertificate @defaults("name expiration") {
+  // ARN of the server certificate
+  arn string
+  // Name of the server certificate
+  name string
+  // Identifier IAM assigned the server certificate
+  id string
+  // Path under which the server certificate is stored
+  path string
+  // Date the certificate expires
+  //
+  // Null when IAM reports no expiration for the certificate.
+  expiration time
+  // Date the certificate was uploaded to IAM
+  //
+  // Null when IAM reports no upload date for the certificate.
+  uploadedAt time
+}
+
+// MFA device assigned to an IAM user
+//
+// Virtual or hardware second factor registered against a user. The
+// `serialNumber` field identifies the device, and is the device ARN for a
+// virtual MFA device and the hardware serial for a physical one.
+private aws.iam.user.mfaDevice @defaults("serialNumber enabledAt") {
+  // Serial number identifying the device
+  //
+  // The device ARN for a virtual MFA device, the hardware serial for a
+  // physical one.
+  serialNumber string
+  // Name of the user the device is assigned to
+  userName string
+  // Date the device was enabled for the user
+  enabledAt time
 }
 
 // AWS IAM virtual MFA device
@@ -9052,11 +9109,21 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   registeredContainerInstancesCount int
   // Cluster configuration
   //
-  // Keyed by ExecuteCommandConfiguration (ECS Exec logging and KMS key:
-  // KmsKeyId, Logging, LogConfiguration) and ManagedStorageConfiguration
-  // (KmsKeyId and FargateEphemeralStorageKmsKeyId for encrypting managed and
-  // Fargate ephemeral storage).
-  configuration dict
+  // Deprecated in favor of executeCommandConfiguration,
+  // managedStorageKmsKey, and fargateEphemeralStorageKmsKey. Keyed by
+  // ExecuteCommandConfiguration (ECS Exec logging and KMS key: KmsKeyId,
+  // Logging, LogConfiguration) and ManagedStorageConfiguration (KmsKeyId and
+  // FargateEphemeralStorageKmsKeyId for encrypting managed and Fargate
+  // ephemeral storage).
+  configuration @maturity("deprecated") dict
+  // ECS Exec session logging and encryption settings for the cluster
+  //
+  // Null when the cluster leaves ECS Exec at its defaults, in which case
+  // session output is logged to the container's own log configuration and is
+  // not encrypted with a customer key.
+  executeCommandConfiguration() aws.ecs.cluster.executeCommandConfiguration
+  // KMS key used to encrypt the managed storage of tasks in the cluster
+  managedStorageKmsKey() aws.kms.key
   // Cluster settings
   //
   // Keyed by setting name; the containerInsights key reports the CloudWatch
@@ -9084,6 +9151,41 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   serviceConnectNamespace string
   // Statistics for the cluster, broken down by launch type (e.g., runningEC2TasksCount, runningFargateTasksCount)
   statistics map[string]string
+}
+
+// ECS Exec configuration of an Amazon ECS cluster
+//
+// Where the output of an ECS Exec session is logged and whether that log is
+// encrypted. An interactive session into a running container is a privileged
+// path into the workload, so this is what makes the session auditable: the
+// destination log group or S3 bucket, whether the delivery is encrypted, and
+// the KMS key that protects the session channel itself.
+private aws.ecs.cluster.executeCommandConfiguration @defaults("logging cloudWatchEncryptionEnabled s3EncryptionEnabled") {
+  // Where ECS Exec session output is logged
+  //
+  // One of NONE (session output is not logged), DEFAULT (logged to the
+  // container's configured log driver), or OVERRIDE (logged to the CloudWatch
+  // log group or S3 bucket named on this resource).
+  logging string
+  // KMS key used to encrypt the data between the local client and the container
+  //
+  // Null when the session channel uses the AWS-managed default rather than a
+  // customer-managed key.
+  kmsKey() aws.kms.key
+  // CloudWatch log group receiving ECS Exec session output
+  //
+  // Null when logging is not OVERRIDE or no log group is named.
+  cloudWatchLogGroup() aws.cloudwatch.loggroup
+  // Whether session output sent to CloudWatch Logs is encrypted
+  cloudWatchEncryptionEnabled bool
+  // S3 bucket receiving ECS Exec session output
+  //
+  // Null when logging is not OVERRIDE or no bucket is named.
+  s3Bucket() aws.s3.bucket
+  // Whether session output sent to S3 is encrypted
+  s3EncryptionEnabled bool
+  // Optional folder in the S3 bucket that session output is written under
+  s3KeyPrefix string
 }
 
 // Capacity provider strategy item for an ECS cluster
@@ -14226,11 +14328,19 @@ private aws.rds.snapshot @defaults("id region type encrypted createdAt") {
   id string
   // Attribute values that describe permissions to restore the snapshot
   //
-  // Each entry contains AttributeName and AttributeValues. For the "restore"
-  // attribute, AttributeValues lists the AWS account IDs allowed to restore
-  // the snapshot; the value "all" means the snapshot is public. The isPublic
+  // Deprecated in favor of restoreAttributes, which reports the same
+  // name/value pairs keyed by attribute name. Each entry contains
+  // AttributeName and AttributeValues. For the "restore" attribute,
+  // AttributeValues lists the AWS account IDs allowed to restore the
+  // snapshot; the value "all" means the snapshot is public. The isPublic
   // field derives its result from this.
-  attributes() []dict
+  attributes() @maturity("deprecated") []dict
+  // Permissions to restore the snapshot, keyed by attribute name
+  //
+  // The "restore" key lists the AWS account IDs allowed to restore the
+  // snapshot, and the value "all" in that list means anyone can restore it.
+  // An attribute RDS does not report is absent from the map.
+  restoreAttributes() map[string][]string
   // Type of snapshot: manual or automated
   type string
   // Whether the snapshot is encrypted
@@ -19037,9 +19147,22 @@ private aws.ec2.snapshot @defaults("id region volumeSize state") {
   region string
   // Accounts and groups permitted to create volumes from the snapshot
   //
-  // Each entry carries either UserId (an AWS account ID granted permission)
-  // or Group (set to all when the snapshot is shared publicly).
-  createVolumePermission() []dict
+  // Deprecated in favor of createVolumePermissionUserIds and
+  // createVolumePermissionGroups. Each entry carries either UserId (an AWS
+  // account ID granted permission) or Group (set to all when the snapshot is
+  // shared publicly).
+  createVolumePermission() @maturity("deprecated") []dict
+  // AWS account IDs permitted to create volumes from the snapshot
+  //
+  // Every account outside the owner listed here can restore the snapshot's
+  // contents into a volume of its own. Empty when the snapshot is not shared
+  // with any individual account.
+  createVolumePermissionUserIds() []string
+  // Groups permitted to create volumes from the snapshot
+  //
+  // The single group EC2 supports is all, which makes the snapshot public.
+  // Empty when the snapshot is not shared publicly.
+  createVolumePermissionGroups() []string
   // ID of the volume used to create the snapshot
   volumeId string
   // Time when the snapshot began
