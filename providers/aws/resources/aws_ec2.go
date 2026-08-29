@@ -4283,6 +4283,65 @@ func (a *mqlAwsEc2Launchtemplate) metadataOptions() (any, error) {
 	return convert.JsonToDict(data.MetadataOptions)
 }
 
+func (a *mqlAwsEc2Launchtemplate) httpTokens() (string, error) {
+	opts, err := a.launchTemplateMetadataOptions()
+	if err != nil || opts == nil {
+		return "", err
+	}
+	return string(opts.HttpTokens), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) httpEndpoint() (string, error) {
+	opts, err := a.launchTemplateMetadataOptions()
+	if err != nil || opts == nil {
+		return "", err
+	}
+	return string(opts.HttpEndpoint), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) httpPutResponseHopLimit() (int64, error) {
+	opts, err := a.launchTemplateMetadataOptions()
+	if err != nil || opts == nil || opts.HttpPutResponseHopLimit == nil {
+		return 0, err
+	}
+	return int64(*opts.HttpPutResponseHopLimit), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) httpProtocolIpv6() (string, error) {
+	opts, err := a.launchTemplateMetadataOptions()
+	if err != nil || opts == nil {
+		return "", err
+	}
+	return string(opts.HttpProtocolIpv6), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) instanceMetadataTags() (string, error) {
+	opts, err := a.launchTemplateMetadataOptions()
+	if err != nil || opts == nil {
+		return "", err
+	}
+	return string(opts.InstanceMetadataTags), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) metadataOptionsState() (string, error) {
+	opts, err := a.launchTemplateMetadataOptions()
+	if err != nil || opts == nil {
+		return "", err
+	}
+	return string(opts.State), nil
+}
+
+func (a *mqlAwsEc2Launchtemplate) launchTemplateMetadataOptions() (*ec2types.LaunchTemplateInstanceMetadataOptions, error) {
+	data, err := a.fetchLaunchTemplateData()
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, nil
+	}
+	return data.MetadataOptions, nil
+}
+
 func (a *mqlAwsEc2Launchtemplate) securityGroupIds() ([]any, error) {
 	data, err := a.fetchLaunchTemplateData()
 	if err != nil {

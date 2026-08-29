@@ -18899,8 +18899,48 @@ private aws.ec2.launchtemplate @defaults("name region") {
   userData() string
   // Whether the launch template has user data set (a launch script that may embed secrets)
   userDataPresent() bool
-  // Metadata options from the default version (httpTokens, httpEndpoint, httpPutResponseHopLimit)
-  metadataOptions() dict
+  // Metadata options from the default version
+  //
+  // Deprecated in favor of httpTokens, httpEndpoint,
+  // httpPutResponseHopLimit, httpProtocolIpv6, instanceMetadataTags, and
+  // metadataOptionsState. Keys are `HttpEndpoint`, `HttpProtocolIpv6`,
+  // `HttpPutResponseHopLimit`, `HttpTokens`, `InstanceMetadataTags`, and
+  // `State`.
+  metadataOptions() @maturity("deprecated") dict
+  // Whether IMDSv2 is required on instances launched from the default version
+  //
+  // Either optional (IMDSv1 credentials are still available without a session
+  // token) or required (every metadata request must carry a session token).
+  // Empty when the default version sets no metadata options, in which case
+  // instances launch with the account-level default.
+  httpTokens() string
+  // Whether the HTTP metadata endpoint is enabled on instances launched from the default version
+  //
+  // Either enabled or disabled. A disabled endpoint makes instance metadata,
+  // including any IAM role credentials, unreachable from the instance.
+  httpEndpoint() string
+  // Maximum number of network hops the instance metadata PUT response may travel
+  //
+  // Integers from 1 to 64. A limit above 1 lets a containerized or proxied
+  // workload reach the metadata service, which widens the blast radius of an
+  // SSRF. 0 when the default version sets no metadata options.
+  httpPutResponseHopLimit() int
+  // Whether the IPv6 endpoint of the instance metadata service is enabled
+  //
+  // Either enabled or disabled. Empty when the default version sets no
+  // metadata options.
+  httpProtocolIpv6() string
+  // Whether instance tags are readable through the instance metadata service
+  //
+  // Either enabled or disabled. Enabling it exposes every tag on the
+  // instance, including any that carry sensitive values, to every process on
+  // the host.
+  instanceMetadataTags() string
+  // State of the metadata option changes
+  //
+  // Either pending (the options are being updated and the instance is not yet
+  // serving metadata under the new selection) or applied.
+  metadataOptionsState() string
   // Security group IDs from the default version
   securityGroupIds() []string
   // IAM instance profile ARN or name from the default version
@@ -20332,7 +20372,7 @@ aws.eks {
 }
 
 // Amazon EKS managed node group
-private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize status") {
+private aws.eks.nodegroup @defaults("name scalingDesiredSize diskSize status") {
   // Name for the EKS node group
   name string
   // ARN for the EKS node group
@@ -20349,9 +20389,16 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   capacityType() string
   // Scaling configuration for the EKS node group
   //
-  // Keys: `MinSize`, `MaxSize`, and `DesiredSize` (node counts the managed
-  // node group maintains).
-  scalingConfig() dict
+  // Deprecated in favor of scalingMinSize, scalingMaxSize, and
+  // scalingDesiredSize. Keys: `MinSize`, `MaxSize`, and `DesiredSize` (node
+  // counts the managed node group maintains).
+  scalingConfig() @maturity("deprecated") dict
+  // Minimum number of nodes the managed node group maintains
+  scalingMinSize() int
+  // Maximum number of nodes the managed node group maintains
+  scalingMaxSize() int
+  // Number of nodes the managed node group currently aims to run
+  scalingDesiredSize() int
   // Instance types for the EKS node group
   instanceTypes() []string
   // AMI type for the EKS node group
@@ -20385,11 +20432,22 @@ private aws.eks.nodegroup @defaults("name scalingConfig.DesiredSize diskSize sta
   releaseVersion() string
   // Remote access configuration for the node group
   //
-  // Keys: `Ec2SshKey` (EC2 key pair granting SSH access to the nodes) and
-  // `SourceSecurityGroups` (security group IDs allowed SSH access). When a
-  // key is set with no source security groups, the SSH port is open to the
-  // internet.
-  remoteAccess() dict
+  // Deprecated in favor of remoteAccessKeyPair and
+  // remoteAccessSecurityGroups. Keys: `Ec2SshKey` (EC2 key pair granting SSH
+  // access to the nodes) and `SourceSecurityGroups` (security group IDs
+  // allowed SSH access). When a key is set with no source security groups,
+  // the SSH port is open to the internet.
+  remoteAccess() @maturity("deprecated") dict
+  // EC2 key pair granting SSH access to the nodes in the group
+  //
+  // Null when no key pair is configured, which means SSH access to the nodes
+  // is not provisioned through the node group.
+  remoteAccessKeyPair() aws.ec2.keypair
+  // Security groups allowed SSH access to the nodes in the group
+  //
+  // Empty when a key pair is set with no source security groups, in which
+  // case SSH reaches the nodes from anywhere the node subnets allow.
+  remoteAccessSecurityGroups() []aws.ec2.securitygroup
   // Update configuration for the node group
   //
   // Keys: `MaxUnavailable`, `MaxUnavailablePercentage`, and `UpdateStrategy`
@@ -20479,10 +20537,18 @@ aws.eks.cluster @defaults("arn version status") {
   encryptionResources() []string
   // Cluster logging configuration
   //
-  // Contains a `ClusterLogging` list, where each entry has `Enabled` and a
-  // `Types` list of control-plane log types (api, audit, authenticator,
-  // controllerManager, scheduler) exported to CloudWatch Logs.
-  logging() dict
+  // Deprecated in favor of controlPlaneLogging, which reports the same
+  // setting keyed by log type. Contains a `ClusterLogging` list, where each
+  // entry has `Enabled` and a `Types` list of control-plane log types (api,
+  // audit, authenticator, controllerManager, scheduler) exported to
+  // CloudWatch Logs.
+  logging() @maturity("deprecated") dict
+  // Whether each control-plane log type is exported to CloudWatch Logs
+  //
+  // Keyed by log type: api, audit, authenticator, controllerManager, and
+  // scheduler. A log type EKS does not report is absent from the map, so
+  // check for the key rather than reading a missing type as disabled.
+  controlPlaneLogging() map[string]bool
   // Kubernetes network configuration
   //
   // Keys: `ServiceIpv4Cidr` and `ServiceIpv6Cidr` (CIDR blocks pods and
@@ -20508,6 +20574,11 @@ aws.eks.cluster @defaults("arn version status") {
   //
   // `STANDARD` support automatically upgrades at the end of standard support. `EXTENDED` automatically enters extended support at the end of standard support.
   supportType() string
+  // Whether ARC zonal shift is enabled on the cluster
+  //
+  // When enabled, Amazon Application Recovery Controller can shift traffic
+  // away from an impaired availability zone.
+  zonalShiftEnabled() bool
   // Cluster authentication mode
   //
   // One of API, API_AND_CONFIG_MAP, or CONFIG_MAP, controlling whether access
@@ -20574,15 +20645,16 @@ aws.eks.cluster @defaults("arn version status") {
   availableAddonVersions() []aws.eks.addonVersion
   // Upgrade policy for the cluster
   //
-  // Contains `SupportType`, one of STANDARD (auto-upgrade at the end of
-  // standard support) or EXTENDED (enter extended support at the end of
-  // standard support).
-  upgradePolicy() dict
+  // Deprecated in favor of supportType. Contains `SupportType`, one of
+  // STANDARD (auto-upgrade at the end of standard support) or EXTENDED
+  // (enter extended support at the end of standard support).
+  upgradePolicy() @maturity("deprecated") dict
   // Zonal shift configuration for the cluster
   //
-  // Contains `Enabled`, indicating whether ARC zonal shift is enabled to
-  // shift traffic away from an impaired Availability Zone.
-  zonalShiftConfig() dict
+  // Deprecated in favor of zonalShiftEnabled. Contains `Enabled`, indicating
+  // whether ARC zonal shift is enabled to shift traffic away from an
+  // impaired Availability Zone.
+  zonalShiftConfig() @maturity("deprecated") dict
   // Compute configuration for Auto Mode clusters
   //
   // Keys: `Enabled` (whether EKS Auto Mode manages EC2 compute), `NodePools`
@@ -21053,11 +21125,15 @@ private aws.cognito.userPool @defaults("arn name") {
   mfaConfiguration() string
   // Password policy
   //
-  // Password-strength requirements enforced on user-pool sign-up and
-  // reset. Keys: MinimumLength, RequireUppercase, RequireLowercase,
+  // Deprecated in favor of passwordPolicyRef, which carries the same values
+  // as a resource. Keys: MinimumLength, RequireUppercase, RequireLowercase,
   // RequireNumbers, RequireSymbols, TemporaryPasswordValidityDays, and
   // PasswordHistorySize (how many previous passwords are blocked from reuse).
-  passwordPolicy() dict
+  passwordPolicy() @maturity("deprecated") dict
+  // Password-strength requirements enforced on the user pool
+  //
+  // Null when the user pool reports no password policy.
+  passwordPolicyRef() aws.cognito.userPool.passwordPolicy
   // Advanced security mode: OFF, AUDIT, ENFORCED
   advancedSecurityMode() string
   // User pool tags
@@ -21081,14 +21157,35 @@ private aws.cognito.userPool @defaults("arn name") {
   accountRecoverySetting() dict
   // Device-remembering configuration
   //
-  // A null value means device remembering is deactivated. When set, exposes
-  // ChallengeRequiredOnNewDevice and DeviceOnlyRememberedOnUserPrompt.
-  deviceConfiguration() dict
+  // Deprecated in favor of deviceChallengeRequiredOnNewDevice and
+  // deviceOnlyRememberedOnUserPrompt. A null value means device remembering
+  // is deactivated. When set, exposes ChallengeRequiredOnNewDevice and
+  // DeviceOnlyRememberedOnUserPrompt.
+  deviceConfiguration() @maturity("deprecated") dict
+  // Whether a remembered device can stand in for the second authentication factor
+  //
+  // When true, a remembered device signs in with device authentication
+  // instead of SMS or a time-based one-time password. False when device
+  // remembering is deactivated on the user pool.
+  deviceChallengeRequiredOnNewDevice() bool
+  // Whether a device is remembered only after the user is prompted
+  //
+  // When true, Cognito does not remember a device on ConfirmDevice unless the
+  // app reports the user's own choice. False when device remembering is
+  // deactivated on the user pool.
+  deviceOnlyRememberedOnUserPrompt() bool
   // Username case-sensitivity configuration
   //
-  // Exposes CaseSensitive: when false, users can sign in with any
-  // capitalization variation of their username or email alias.
-  usernameConfiguration() dict
+  // Deprecated in favor of usernameCaseSensitive. Exposes CaseSensitive:
+  // when false, users can sign in with any capitalization variation of their
+  // username or email alias.
+  usernameConfiguration() @maturity("deprecated") dict
+  // Whether username case sensitivity applies to every user in the pool
+  //
+  // When false, a user signs in with any capitalization variation of their
+  // username or email alias. False when the user pool reports no username
+  // configuration.
+  usernameCaseSensitive() bool
   // Attribute schema of the user pool
   //
   // Each entry describes a standard or custom attribute (custom: prefix).
@@ -21137,6 +21234,35 @@ private aws.cognito.userPool @defaults("arn name") {
   updatedAt time
 }
 
+// Password policy of an Amazon Cognito user pool
+//
+// Password-strength requirements Cognito enforces when a user signs up,
+// changes their password, or completes a reset. Covers the minimum length,
+// which character classes are mandatory, how many previous passwords are
+// blocked from reuse, and how long an administrator-issued temporary
+// password stays usable.
+private aws.cognito.userPool.passwordPolicy @defaults("minimumLength requireUppercase requireLowercase requireNumbers requireSymbols") {
+  // Minimum length of a password, which cannot be less than 6
+  minimumLength int
+  // Number of previous passwords a user is blocked from reusing
+  //
+  // 0 when the user pool does not restrict password reuse.
+  passwordHistorySize int
+  // Whether a password must include at least one lowercase letter
+  requireLowercase bool
+  // Whether a password must include at least one number
+  requireNumbers bool
+  // Whether a password must include at least one symbol
+  requireSymbols bool
+  // Whether a password must include at least one uppercase letter
+  requireUppercase bool
+  // Number of days an administrator-issued temporary password stays valid
+  //
+  // Defaults to 7. If the user does not sign in within this window, an
+  // administrator has to reset the password again.
+  temporaryPasswordValidityDays int
+}
+
 // Cognito user pool app client
 private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   // Client ID
@@ -21159,8 +21285,16 @@ private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   idTokenValidity int
   // Time units applied to the *Validity numeric fields, keyed by token type
   //
-  // Keys: accessToken, idToken, refreshToken. Values are seconds, minutes, hours, or days.
-  tokenValidityUnits dict
+  // Deprecated in favor of accessTokenValidityUnit, idTokenValidityUnit, and
+  // refreshTokenValidityUnit. Keys: accessToken, idToken, refreshToken.
+  // Values are seconds, minutes, hours, or days.
+  tokenValidityUnits @maturity("deprecated") dict
+  // Time unit applied to accessTokenValidity: seconds, minutes, hours, or days
+  accessTokenValidityUnit string
+  // Time unit applied to idTokenValidity: seconds, minutes, hours, or days
+  idTokenValidityUnit string
+  // Time unit applied to refreshTokenValidity: seconds, minutes, hours, or days
+  refreshTokenValidityUnit string
   // Permitted sign-in flows, e.g. ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH
   explicitAuthFlows []string
   // Identity providers the client can use, e.g. COGNITO, Google, SAML provider names

@@ -680,6 +680,7 @@ const (
 	ResourceAwsNeptuneSnapshot                                                  string = "aws.neptune.snapshot"
 	ResourceAwsCognito                                                          string = "aws.cognito"
 	ResourceAwsCognitoUserPool                                                  string = "aws.cognito.userPool"
+	ResourceAwsCognitoUserPoolPasswordPolicy                                    string = "aws.cognito.userPool.passwordPolicy"
 	ResourceAwsCognitoUserPoolClient                                            string = "aws.cognito.userPoolClient"
 	ResourceAwsCognitoUserPoolDomain                                            string = "aws.cognito.userPoolDomain"
 	ResourceAwsCognitoUserPoolIdentityProvider                                  string = "aws.cognito.userPoolIdentityProvider"
@@ -3662,6 +3663,10 @@ func init() {
 		"aws.cognito.userPool": {
 			Init:   initAwsCognitoUserPool,
 			Create: createAwsCognitoUserPool,
+		},
+		"aws.cognito.userPool.passwordPolicy": {
+			// to override args, implement: initAwsCognitoUserPoolPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoUserPoolPasswordPolicy,
 		},
 		"aws.cognito.userPoolClient": {
 			// to override args, implement: initAwsCognitoUserPoolClient(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -24032,6 +24037,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ec2.launchtemplate.metadataOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetMetadataOptions()).ToDataRes(types.Dict)
 	},
+	"aws.ec2.launchtemplate.httpTokens": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetHttpTokens()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.httpEndpoint": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetHttpEndpoint()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.httpPutResponseHopLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetHttpPutResponseHopLimit()).ToDataRes(types.Int)
+	},
+	"aws.ec2.launchtemplate.httpProtocolIpv6": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetHttpProtocolIpv6()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.instanceMetadataTags": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetInstanceMetadataTags()).ToDataRes(types.String)
+	},
+	"aws.ec2.launchtemplate.metadataOptionsState": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEc2Launchtemplate).GetMetadataOptionsState()).ToDataRes(types.String)
+	},
 	"aws.ec2.launchtemplate.securityGroupIds": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEc2Launchtemplate).GetSecurityGroupIds()).ToDataRes(types.Array(types.String))
 	},
@@ -25544,6 +25567,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.scalingConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetScalingConfig()).ToDataRes(types.Dict)
 	},
+	"aws.eks.nodegroup.scalingMinSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetScalingMinSize()).ToDataRes(types.Int)
+	},
+	"aws.eks.nodegroup.scalingMaxSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetScalingMaxSize()).ToDataRes(types.Int)
+	},
+	"aws.eks.nodegroup.scalingDesiredSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetScalingDesiredSize()).ToDataRes(types.Int)
+	},
 	"aws.eks.nodegroup.instanceTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetInstanceTypes()).ToDataRes(types.Array(types.String))
 	},
@@ -25579,6 +25611,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.nodegroup.remoteAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetRemoteAccess()).ToDataRes(types.Dict)
+	},
+	"aws.eks.nodegroup.remoteAccessKeyPair": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetRemoteAccessKeyPair()).ToDataRes(types.Resource("aws.ec2.keypair"))
+	},
+	"aws.eks.nodegroup.remoteAccessSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetRemoteAccessSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
 	},
 	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetUpdateConfig()).ToDataRes(types.Dict)
@@ -25673,6 +25711,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.logging": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetLogging()).ToDataRes(types.Dict)
 	},
+	"aws.eks.cluster.controlPlaneLogging": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetControlPlaneLogging()).ToDataRes(types.Map(types.String, types.Bool))
+	},
 	"aws.eks.cluster.networkConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetNetworkConfig()).ToDataRes(types.Dict)
 	},
@@ -25693,6 +25734,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.cluster.supportType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetSupportType()).ToDataRes(types.String)
+	},
+	"aws.eks.cluster.zonalShiftEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetZonalShiftEnabled()).ToDataRes(types.Bool)
 	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetAuthenticationMode()).ToDataRes(types.String)
@@ -26291,6 +26335,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPool.passwordPolicy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetPasswordPolicy()).ToDataRes(types.Dict)
 	},
+	"aws.cognito.userPool.passwordPolicyRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetPasswordPolicyRef()).ToDataRes(types.Resource("aws.cognito.userPool.passwordPolicy"))
+	},
 	"aws.cognito.userPool.advancedSecurityMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetAdvancedSecurityMode()).ToDataRes(types.String)
 	},
@@ -26315,8 +26362,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPool.deviceConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetDeviceConfiguration()).ToDataRes(types.Dict)
 	},
+	"aws.cognito.userPool.deviceChallengeRequiredOnNewDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetDeviceChallengeRequiredOnNewDevice()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPool.deviceOnlyRememberedOnUserPrompt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetDeviceOnlyRememberedOnUserPrompt()).ToDataRes(types.Bool)
+	},
 	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetUsernameConfiguration()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPool.usernameCaseSensitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetUsernameCaseSensitive()).ToDataRes(types.Bool)
 	},
 	"aws.cognito.userPool.schema": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetSchema()).ToDataRes(types.Array(types.Dict))
@@ -26341,6 +26397,27 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cognito.userPool.updatedAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetUpdatedAt()).ToDataRes(types.Time)
+	},
+	"aws.cognito.userPool.passwordPolicy.minimumLength": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolPasswordPolicy).GetMinimumLength()).ToDataRes(types.Int)
+	},
+	"aws.cognito.userPool.passwordPolicy.passwordHistorySize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolPasswordPolicy).GetPasswordHistorySize()).ToDataRes(types.Int)
+	},
+	"aws.cognito.userPool.passwordPolicy.requireLowercase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolPasswordPolicy).GetRequireLowercase()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPool.passwordPolicy.requireNumbers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolPasswordPolicy).GetRequireNumbers()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPool.passwordPolicy.requireSymbols": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolPasswordPolicy).GetRequireSymbols()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPool.passwordPolicy.requireUppercase": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolPasswordPolicy).GetRequireUppercase()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.userPool.passwordPolicy.temporaryPasswordValidityDays": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolPasswordPolicy).GetTemporaryPasswordValidityDays()).ToDataRes(types.Int)
 	},
 	"aws.cognito.userPoolClient.clientId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolClient).GetClientId()).ToDataRes(types.String)
@@ -26371,6 +26448,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.cognito.userPoolClient.tokenValidityUnits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolClient).GetTokenValidityUnits()).ToDataRes(types.Dict)
+	},
+	"aws.cognito.userPoolClient.accessTokenValidityUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetAccessTokenValidityUnit()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.idTokenValidityUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetIdTokenValidityUnit()).ToDataRes(types.String)
+	},
+	"aws.cognito.userPoolClient.refreshTokenValidityUnit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetRefreshTokenValidityUnit()).ToDataRes(types.String)
 	},
 	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolClient).GetExplicitAuthFlows()).ToDataRes(types.Array(types.String))
@@ -64558,6 +64644,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEc2Launchtemplate).MetadataOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.ec2.launchtemplate.httpTokens": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).HttpTokens, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.httpEndpoint": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).HttpEndpoint, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.httpPutResponseHopLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).HttpPutResponseHopLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.httpProtocolIpv6": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).HttpProtocolIpv6, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.instanceMetadataTags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).InstanceMetadataTags, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ec2.launchtemplate.metadataOptionsState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEc2Launchtemplate).MetadataOptionsState, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.ec2.launchtemplate.securityGroupIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEc2Launchtemplate).SecurityGroupIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -66770,6 +66880,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksNodegroup).ScalingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.nodegroup.scalingMinSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).ScalingMinSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.scalingMaxSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).ScalingMaxSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.scalingDesiredSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).ScalingDesiredSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.eks.nodegroup.instanceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksNodegroup).InstanceTypes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
@@ -66816,6 +66938,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eks.nodegroup.remoteAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksNodegroup).RemoteAccess, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.remoteAccessKeyPair": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).RemoteAccessKeyPair, ok = plugin.RawToTValue[*mqlAwsEc2Keypair](v.Value, v.Error)
+		return
+	},
+	"aws.eks.nodegroup.remoteAccessSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).RemoteAccessSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -66950,6 +67080,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksCluster).Logging, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.cluster.controlPlaneLogging": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ControlPlaneLogging, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
 	"aws.eks.cluster.networkConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).NetworkConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
@@ -66976,6 +67110,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eks.cluster.supportType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).SupportType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.zonalShiftEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ZonalShiftEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -67826,6 +67964,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPool).PasswordPolicy, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.cognito.userPool.passwordPolicyRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).PasswordPolicyRef, ok = plugin.RawToTValue[*mqlAwsCognitoUserPoolPasswordPolicy](v.Value, v.Error)
+		return
+	},
 	"aws.cognito.userPool.advancedSecurityMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).AdvancedSecurityMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -67858,8 +68000,20 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPool).DeviceConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.cognito.userPool.deviceChallengeRequiredOnNewDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).DeviceChallengeRequiredOnNewDevice, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.deviceOnlyRememberedOnUserPrompt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).DeviceOnlyRememberedOnUserPrompt, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).UsernameConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.usernameCaseSensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).UsernameCaseSensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPool.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -67892,6 +68046,38 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cognito.userPool.updatedAt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).UpdatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.minimumLength": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).MinimumLength, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.passwordHistorySize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).PasswordHistorySize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.requireLowercase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).RequireLowercase, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.requireNumbers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).RequireNumbers, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.requireSymbols": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).RequireSymbols, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.requireUppercase": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).RequireUppercase, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPool.passwordPolicy.temporaryPasswordValidityDays": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolPasswordPolicy).TemporaryPasswordValidityDays, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPoolClient.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -67936,6 +68122,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.cognito.userPoolClient.tokenValidityUnits": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPoolClient).TokenValidityUnits, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.accessTokenValidityUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).AccessTokenValidityUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.idTokenValidityUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).IdTokenValidityUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.userPoolClient.refreshTokenValidityUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).RefreshTokenValidityUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -155728,22 +155926,28 @@ type mqlAwsEc2Launchtemplate struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEc2LaunchtemplateInternal
-	Id                 plugin.TValue[string]
-	Arn                plugin.TValue[string]
-	Name               plugin.TValue[string]
-	Region             plugin.TValue[string]
-	CreatedAt          plugin.TValue[*time.Time]
-	CreatedBy          plugin.TValue[string]
-	DefaultVersion     plugin.TValue[int64]
-	LatestVersion      plugin.TValue[int64]
-	Tags               plugin.TValue[map[string]any]
-	UserData           plugin.TValue[string]
-	UserDataPresent    plugin.TValue[bool]
-	MetadataOptions    plugin.TValue[any]
-	SecurityGroupIds   plugin.TValue[[]any]
-	IamInstanceProfile plugin.TValue[string]
-	InstanceType       plugin.TValue[string]
-	ImageId            plugin.TValue[string]
+	Id                      plugin.TValue[string]
+	Arn                     plugin.TValue[string]
+	Name                    plugin.TValue[string]
+	Region                  plugin.TValue[string]
+	CreatedAt               plugin.TValue[*time.Time]
+	CreatedBy               plugin.TValue[string]
+	DefaultVersion          plugin.TValue[int64]
+	LatestVersion           plugin.TValue[int64]
+	Tags                    plugin.TValue[map[string]any]
+	UserData                plugin.TValue[string]
+	UserDataPresent         plugin.TValue[bool]
+	MetadataOptions         plugin.TValue[any]
+	HttpTokens              plugin.TValue[string]
+	HttpEndpoint            plugin.TValue[string]
+	HttpPutResponseHopLimit plugin.TValue[int64]
+	HttpProtocolIpv6        plugin.TValue[string]
+	InstanceMetadataTags    plugin.TValue[string]
+	MetadataOptionsState    plugin.TValue[string]
+	SecurityGroupIds        plugin.TValue[[]any]
+	IamInstanceProfile      plugin.TValue[string]
+	InstanceType            plugin.TValue[string]
+	ImageId                 plugin.TValue[string]
 }
 
 // createAwsEc2Launchtemplate creates a new instance of this resource
@@ -155834,6 +156038,42 @@ func (c *mqlAwsEc2Launchtemplate) GetUserDataPresent() *plugin.TValue[bool] {
 func (c *mqlAwsEc2Launchtemplate) GetMetadataOptions() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.MetadataOptions, func() (any, error) {
 		return c.metadataOptions()
+	})
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetHttpTokens() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HttpTokens, func() (string, error) {
+		return c.httpTokens()
+	})
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetHttpEndpoint() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HttpEndpoint, func() (string, error) {
+		return c.httpEndpoint()
+	})
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetHttpPutResponseHopLimit() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.HttpPutResponseHopLimit, func() (int64, error) {
+		return c.httpPutResponseHopLimit()
+	})
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetHttpProtocolIpv6() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.HttpProtocolIpv6, func() (string, error) {
+		return c.httpProtocolIpv6()
+	})
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetInstanceMetadataTags() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.InstanceMetadataTags, func() (string, error) {
+		return c.instanceMetadataTags()
+	})
+}
+
+func (c *mqlAwsEc2Launchtemplate) GetMetadataOptionsState() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.MetadataOptionsState, func() (string, error) {
+		return c.metadataOptionsState()
 	})
 }
 
@@ -161298,32 +161538,37 @@ type mqlAwsEksNodegroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEksNodegroupInternal
-	Name                  plugin.TValue[string]
-	Arn                   plugin.TValue[string]
-	Region                plugin.TValue[string]
-	CreatedAt             plugin.TValue[*time.Time]
-	ModifiedAt            plugin.TValue[*time.Time]
-	Status                plugin.TValue[string]
-	CapacityType          plugin.TValue[string]
-	ScalingConfig         plugin.TValue[any]
-	InstanceTypes         plugin.TValue[[]any]
-	AmiType               plugin.TValue[string]
-	NodeRole              plugin.TValue[*mqlAwsIamRole]
-	DiskSize              plugin.TValue[int64]
-	Labels                plugin.TValue[map[string]any]
-	Tags                  plugin.TValue[map[string]any]
-	AutoscalingGroups     plugin.TValue[[]any]
-	WarmPoolConfig        plugin.TValue[any]
-	Health                plugin.TValue[any]
-	Taints                plugin.TValue[[]any]
-	ReleaseVersion        plugin.TValue[string]
-	RemoteAccess          plugin.TValue[any]
-	UpdateConfig          plugin.TValue[any]
-	NodeVersion           plugin.TValue[string]
-	NodeRepairEnabled     plugin.TValue[bool]
-	NodegroupSubnets      plugin.TValue[[]any]
-	LaunchTemplate        plugin.TValue[*mqlAwsEc2Launchtemplate]
-	LaunchTemplateVersion plugin.TValue[string]
+	Name                       plugin.TValue[string]
+	Arn                        plugin.TValue[string]
+	Region                     plugin.TValue[string]
+	CreatedAt                  plugin.TValue[*time.Time]
+	ModifiedAt                 plugin.TValue[*time.Time]
+	Status                     plugin.TValue[string]
+	CapacityType               plugin.TValue[string]
+	ScalingConfig              plugin.TValue[any]
+	ScalingMinSize             plugin.TValue[int64]
+	ScalingMaxSize             plugin.TValue[int64]
+	ScalingDesiredSize         plugin.TValue[int64]
+	InstanceTypes              plugin.TValue[[]any]
+	AmiType                    plugin.TValue[string]
+	NodeRole                   plugin.TValue[*mqlAwsIamRole]
+	DiskSize                   plugin.TValue[int64]
+	Labels                     plugin.TValue[map[string]any]
+	Tags                       plugin.TValue[map[string]any]
+	AutoscalingGroups          plugin.TValue[[]any]
+	WarmPoolConfig             plugin.TValue[any]
+	Health                     plugin.TValue[any]
+	Taints                     plugin.TValue[[]any]
+	ReleaseVersion             plugin.TValue[string]
+	RemoteAccess               plugin.TValue[any]
+	RemoteAccessKeyPair        plugin.TValue[*mqlAwsEc2Keypair]
+	RemoteAccessSecurityGroups plugin.TValue[[]any]
+	UpdateConfig               plugin.TValue[any]
+	NodeVersion                plugin.TValue[string]
+	NodeRepairEnabled          plugin.TValue[bool]
+	NodegroupSubnets           plugin.TValue[[]any]
+	LaunchTemplate             plugin.TValue[*mqlAwsEc2Launchtemplate]
+	LaunchTemplateVersion      plugin.TValue[string]
 }
 
 // createAwsEksNodegroup creates a new instance of this resource
@@ -161404,6 +161649,24 @@ func (c *mqlAwsEksNodegroup) GetCapacityType() *plugin.TValue[string] {
 func (c *mqlAwsEksNodegroup) GetScalingConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.ScalingConfig, func() (any, error) {
 		return c.scalingConfig()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetScalingMinSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ScalingMinSize, func() (int64, error) {
+		return c.scalingMinSize()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetScalingMaxSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ScalingMaxSize, func() (int64, error) {
+		return c.scalingMaxSize()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetScalingDesiredSize() *plugin.TValue[int64] {
+	return plugin.GetOrCompute[int64](&c.ScalingDesiredSize, func() (int64, error) {
+		return c.scalingDesiredSize()
 	})
 }
 
@@ -161496,6 +161759,38 @@ func (c *mqlAwsEksNodegroup) GetReleaseVersion() *plugin.TValue[string] {
 func (c *mqlAwsEksNodegroup) GetRemoteAccess() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.RemoteAccess, func() (any, error) {
 		return c.remoteAccess()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetRemoteAccessKeyPair() *plugin.TValue[*mqlAwsEc2Keypair] {
+	return plugin.GetOrCompute[*mqlAwsEc2Keypair](&c.RemoteAccessKeyPair, func() (*mqlAwsEc2Keypair, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "remoteAccessKeyPair")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Keypair), nil
+			}
+		}
+
+		return c.remoteAccessKeyPair()
+	})
+}
+
+func (c *mqlAwsEksNodegroup) GetRemoteAccessSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.RemoteAccessSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "remoteAccessSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.remoteAccessSecurityGroups()
 	})
 }
 
@@ -161692,6 +161987,7 @@ type mqlAwsEksCluster struct {
 	EncryptionKmsKey                        plugin.TValue[*mqlAwsKmsKey]
 	EncryptionResources                     plugin.TValue[[]any]
 	Logging                                 plugin.TValue[any]
+	ControlPlaneLogging                     plugin.TValue[map[string]any]
 	NetworkConfig                           plugin.TValue[any]
 	ControlPlaneEgressMode                  plugin.TValue[string]
 	CreatedAt                               plugin.TValue[*time.Time]
@@ -161699,6 +161995,7 @@ type mqlAwsEksCluster struct {
 	Addons                                  plugin.TValue[[]any]
 	IamRole                                 plugin.TValue[*mqlAwsIamRole]
 	SupportType                             plugin.TValue[string]
+	ZonalShiftEnabled                       plugin.TValue[bool]
 	AuthenticationMode                      plugin.TValue[string]
 	BootstrapClusterCreatorAdminPermissions plugin.TValue[bool]
 	DeletionProtection                      plugin.TValue[bool]
@@ -161856,6 +162153,12 @@ func (c *mqlAwsEksCluster) GetLogging() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsEksCluster) GetControlPlaneLogging() *plugin.TValue[map[string]any] {
+	return plugin.GetOrCompute[map[string]any](&c.ControlPlaneLogging, func() (map[string]any, error) {
+		return c.controlPlaneLogging()
+	})
+}
+
 func (c *mqlAwsEksCluster) GetNetworkConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.NetworkConfig, func() (any, error) {
 		return c.networkConfig()
@@ -161925,6 +162228,12 @@ func (c *mqlAwsEksCluster) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
 func (c *mqlAwsEksCluster) GetSupportType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.SupportType, func() (string, error) {
 		return c.supportType()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetZonalShiftEnabled() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.ZonalShiftEnabled, func() (bool, error) {
+		return c.zonalShiftEnabled()
 	})
 }
 
@@ -163834,31 +164143,35 @@ type mqlAwsCognitoUserPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsCognitoUserPoolInternal
-	Arn                         plugin.TValue[string]
-	Id                          plugin.TValue[string]
-	Name                        plugin.TValue[string]
-	Region                      plugin.TValue[string]
-	Status                      plugin.TValue[string]
-	DeletionProtection          plugin.TValue[bool]
-	MfaConfiguration            plugin.TValue[string]
-	PasswordPolicy              plugin.TValue[any]
-	AdvancedSecurityMode        plugin.TValue[string]
-	Tags                        plugin.TValue[map[string]any]
-	Clients                     plugin.TValue[[]any]
-	Domain                      plugin.TValue[*mqlAwsCognitoUserPoolDomain]
-	IdentityProviders           plugin.TValue[[]any]
-	UserPoolTier                plugin.TValue[string]
-	AccountRecoverySetting      plugin.TValue[any]
-	DeviceConfiguration         plugin.TValue[any]
-	UsernameConfiguration       plugin.TValue[any]
-	Schema                      plugin.TValue[[]any]
-	VerificationMessageTemplate plugin.TValue[any]
-	EmailConfiguration          plugin.TValue[any]
-	SmsConfiguration            plugin.TValue[any]
-	LambdaConfig                plugin.TValue[any]
-	RiskConfiguration           plugin.TValue[any]
-	CreatedAt                   plugin.TValue[*time.Time]
-	UpdatedAt                   plugin.TValue[*time.Time]
+	Arn                                plugin.TValue[string]
+	Id                                 plugin.TValue[string]
+	Name                               plugin.TValue[string]
+	Region                             plugin.TValue[string]
+	Status                             plugin.TValue[string]
+	DeletionProtection                 plugin.TValue[bool]
+	MfaConfiguration                   plugin.TValue[string]
+	PasswordPolicy                     plugin.TValue[any]
+	PasswordPolicyRef                  plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy]
+	AdvancedSecurityMode               plugin.TValue[string]
+	Tags                               plugin.TValue[map[string]any]
+	Clients                            plugin.TValue[[]any]
+	Domain                             plugin.TValue[*mqlAwsCognitoUserPoolDomain]
+	IdentityProviders                  plugin.TValue[[]any]
+	UserPoolTier                       plugin.TValue[string]
+	AccountRecoverySetting             plugin.TValue[any]
+	DeviceConfiguration                plugin.TValue[any]
+	DeviceChallengeRequiredOnNewDevice plugin.TValue[bool]
+	DeviceOnlyRememberedOnUserPrompt   plugin.TValue[bool]
+	UsernameConfiguration              plugin.TValue[any]
+	UsernameCaseSensitive              plugin.TValue[bool]
+	Schema                             plugin.TValue[[]any]
+	VerificationMessageTemplate        plugin.TValue[any]
+	EmailConfiguration                 plugin.TValue[any]
+	SmsConfiguration                   plugin.TValue[any]
+	LambdaConfig                       plugin.TValue[any]
+	RiskConfiguration                  plugin.TValue[any]
+	CreatedAt                          plugin.TValue[*time.Time]
+	UpdatedAt                          plugin.TValue[*time.Time]
 }
 
 // createAwsCognitoUserPool creates a new instance of this resource
@@ -163928,6 +164241,22 @@ func (c *mqlAwsCognitoUserPool) GetMfaConfiguration() *plugin.TValue[string] {
 func (c *mqlAwsCognitoUserPool) GetPasswordPolicy() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.PasswordPolicy, func() (any, error) {
 		return c.passwordPolicy()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetPasswordPolicyRef() *plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUserPoolPasswordPolicy](&c.PasswordPolicyRef, func() (*mqlAwsCognitoUserPoolPasswordPolicy, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "passwordPolicyRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCognitoUserPoolPasswordPolicy), nil
+			}
+		}
+
+		return c.passwordPolicyRef()
 	})
 }
 
@@ -164009,9 +164338,27 @@ func (c *mqlAwsCognitoUserPool) GetDeviceConfiguration() *plugin.TValue[any] {
 	})
 }
 
+func (c *mqlAwsCognitoUserPool) GetDeviceChallengeRequiredOnNewDevice() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DeviceChallengeRequiredOnNewDevice, func() (bool, error) {
+		return c.deviceChallengeRequiredOnNewDevice()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetDeviceOnlyRememberedOnUserPrompt() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.DeviceOnlyRememberedOnUserPrompt, func() (bool, error) {
+		return c.deviceOnlyRememberedOnUserPrompt()
+	})
+}
+
 func (c *mqlAwsCognitoUserPool) GetUsernameConfiguration() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.UsernameConfiguration, func() (any, error) {
 		return c.usernameConfiguration()
+	})
+}
+
+func (c *mqlAwsCognitoUserPool) GetUsernameCaseSensitive() *plugin.TValue[bool] {
+	return plugin.GetOrCompute[bool](&c.UsernameCaseSensitive, func() (bool, error) {
+		return c.usernameCaseSensitive()
 	})
 }
 
@@ -164059,6 +164406,80 @@ func (c *mqlAwsCognitoUserPool) GetUpdatedAt() *plugin.TValue[*time.Time] {
 	return &c.UpdatedAt
 }
 
+// mqlAwsCognitoUserPoolPasswordPolicy for the aws.cognito.userPool.passwordPolicy resource
+type mqlAwsCognitoUserPoolPasswordPolicy struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCognitoUserPoolPasswordPolicyInternal it will be used here
+	MinimumLength                 plugin.TValue[int64]
+	PasswordHistorySize           plugin.TValue[int64]
+	RequireLowercase              plugin.TValue[bool]
+	RequireNumbers                plugin.TValue[bool]
+	RequireSymbols                plugin.TValue[bool]
+	RequireUppercase              plugin.TValue[bool]
+	TemporaryPasswordValidityDays plugin.TValue[int64]
+}
+
+// createAwsCognitoUserPoolPasswordPolicy creates a new instance of this resource
+func createAwsCognitoUserPoolPasswordPolicy(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoUserPoolPasswordPolicy{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.userPool.passwordPolicy", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) MqlName() string {
+	return "aws.cognito.userPool.passwordPolicy"
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) GetMinimumLength() *plugin.TValue[int64] {
+	return &c.MinimumLength
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) GetPasswordHistorySize() *plugin.TValue[int64] {
+	return &c.PasswordHistorySize
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) GetRequireLowercase() *plugin.TValue[bool] {
+	return &c.RequireLowercase
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) GetRequireNumbers() *plugin.TValue[bool] {
+	return &c.RequireNumbers
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) GetRequireSymbols() *plugin.TValue[bool] {
+	return &c.RequireSymbols
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) GetRequireUppercase() *plugin.TValue[bool] {
+	return &c.RequireUppercase
+}
+
+func (c *mqlAwsCognitoUserPoolPasswordPolicy) GetTemporaryPasswordValidityDays() *plugin.TValue[int64] {
+	return &c.TemporaryPasswordValidityDays
+}
+
 // mqlAwsCognitoUserPoolClient for the aws.cognito.userPoolClient resource
 type mqlAwsCognitoUserPoolClient struct {
 	MqlRuntime *plugin.Runtime
@@ -164074,6 +164495,9 @@ type mqlAwsCognitoUserPoolClient struct {
 	AccessTokenValidity             plugin.TValue[int64]
 	IdTokenValidity                 plugin.TValue[int64]
 	TokenValidityUnits              plugin.TValue[any]
+	AccessTokenValidityUnit         plugin.TValue[string]
+	IdTokenValidityUnit             plugin.TValue[string]
+	RefreshTokenValidityUnit        plugin.TValue[string]
 	ExplicitAuthFlows               plugin.TValue[[]any]
 	SupportedIdentityProviders      plugin.TValue[[]any]
 	CallbackURLs                    plugin.TValue[[]any]
@@ -164176,6 +164600,18 @@ func (c *mqlAwsCognitoUserPoolClient) GetIdTokenValidity() *plugin.TValue[int64]
 
 func (c *mqlAwsCognitoUserPoolClient) GetTokenValidityUnits() *plugin.TValue[any] {
 	return &c.TokenValidityUnits
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetAccessTokenValidityUnit() *plugin.TValue[string] {
+	return &c.AccessTokenValidityUnit
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetIdTokenValidityUnit() *plugin.TValue[string] {
+	return &c.IdTokenValidityUnit
+}
+
+func (c *mqlAwsCognitoUserPoolClient) GetRefreshTokenValidityUnit() *plugin.TValue[string] {
+	return &c.RefreshTokenValidityUnit
 }
 
 func (c *mqlAwsCognitoUserPoolClient) GetExplicitAuthFlows() *plugin.TValue[[]any] {

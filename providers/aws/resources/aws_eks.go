@@ -188,6 +188,10 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	logging, _ := convert.JsonToDict(cluster.Logging)
 	a.Logging = plugin.TValue[any]{Data: logging, State: plugin.StateIsSet}
 
+	a.ControlPlaneLogging = plugin.TValue[map[string]any]{
+		Data: eksControlPlaneLogging(cluster.Logging), State: plugin.StateIsSet,
+	}
+
 	kubernetesNetworkConfig, _ := convert.JsonToDict(cluster.KubernetesNetworkConfig)
 	a.NetworkConfig = plugin.TValue[any]{Data: kubernetesNetworkConfig, State: plugin.StateIsSet}
 
@@ -308,6 +312,12 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	zonalShiftConfig, _ := convert.JsonToDict(cluster.ZonalShiftConfig)
 	a.ZonalShiftConfig = plugin.TValue[any]{Data: zonalShiftConfig, State: plugin.StateIsSet}
 
+	var zonalShiftEnabled bool
+	if cluster.ZonalShiftConfig != nil {
+		zonalShiftEnabled = convert.ToValue(cluster.ZonalShiftConfig.Enabled)
+	}
+	a.ZonalShiftEnabled = plugin.TValue[bool]{Data: zonalShiftEnabled, State: plugin.StateIsSet}
+
 	computeConfig, _ := convert.JsonToDict(cluster.ComputeConfig)
 	a.ComputeConfig = plugin.TValue[any]{Data: computeConfig, State: plugin.StateIsSet}
 
@@ -374,6 +384,39 @@ func (a *mqlAwsEksCluster) remoteNetworkConfig() (map[string]any, error) {
 
 func (a *mqlAwsEksCluster) logging() (map[string]any, error) {
 	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) controlPlaneLogging() (map[string]any, error) {
+	return nil, a.fetchDetail()
+}
+
+func (a *mqlAwsEksCluster) zonalShiftEnabled() (bool, error) {
+	return false, a.fetchDetail()
+}
+
+// eksControlPlaneLogging re-keys the LogSetup pair list EKS returns into a map
+// of log type to whether that type is exported to CloudWatch Logs. EKS reports
+// one LogSetup per enablement state, each listing the types that share it, so
+// a caller reading the raw list has to walk both levels to answer "is audit
+// logging on".
+func eksControlPlaneLogging(logging *ekstypes.Logging) map[string]any {
+	res := map[string]any{}
+	if logging == nil {
+		return res
+	}
+	for _, setup := range logging.ClusterLogging {
+		enabled := convert.ToValue(setup.Enabled)
+		for _, t := range setup.Types {
+			// A type listed twice with conflicting states is not something EKS
+			// returns, but if it ever did, an enabled entry is the safer read:
+			// it says the logs exist, which a check can then verify.
+			if prev, ok := res[string(t)]; ok && prev == true {
+				continue
+			}
+			res[string(t)] = enabled
+		}
+	}
+	return res
 }
 
 func (a *mqlAwsEksCluster) networkConfig() (map[string]any, error) {
@@ -744,6 +787,83 @@ func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]any, error) {
 		return nil, err
 	}
 	return convert.JsonToDict(ng.ScalingConfig)
+}
+
+func (a *mqlAwsEksNodegroup) scalingMinSize() (int64, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return 0, err
+	}
+	if ng.ScalingConfig == nil || ng.ScalingConfig.MinSize == nil {
+		a.ScalingMinSize.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return int64(*ng.ScalingConfig.MinSize), nil
+}
+
+func (a *mqlAwsEksNodegroup) scalingMaxSize() (int64, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return 0, err
+	}
+	if ng.ScalingConfig == nil || ng.ScalingConfig.MaxSize == nil {
+		a.ScalingMaxSize.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return int64(*ng.ScalingConfig.MaxSize), nil
+}
+
+func (a *mqlAwsEksNodegroup) scalingDesiredSize() (int64, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return 0, err
+	}
+	if ng.ScalingConfig == nil || ng.ScalingConfig.DesiredSize == nil {
+		a.ScalingDesiredSize.State = plugin.StateIsSet | plugin.StateIsNull
+		return 0, nil
+	}
+	return int64(*ng.ScalingConfig.DesiredSize), nil
+}
+
+func (a *mqlAwsEksNodegroup) remoteAccessKeyPair() (*mqlAwsEc2Keypair, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.RemoteAccess == nil || ng.RemoteAccess.Ec2SshKey == nil || *ng.RemoteAccess.Ec2SshKey == "" {
+		a.RemoteAccessKeyPair.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	mqlKp, err := NewResource(a.MqlRuntime, "aws.ec2.keypair", map[string]*llx.RawData{
+		"name":   llx.StringDataPtr(ng.RemoteAccess.Ec2SshKey),
+		"region": llx.StringData(a.region),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mqlKp.(*mqlAwsEc2Keypair), nil
+}
+
+func (a *mqlAwsEksNodegroup) remoteAccessSecurityGroups() ([]any, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.RemoteAccess == nil {
+		return []any{}, nil
+	}
+	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
+	res := []any{}
+	for _, sgId := range ng.RemoteAccess.SourceSecurityGroups {
+		mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup", map[string]*llx.RawData{
+			"arn": llx.StringData(NewSecurityGroupArn(a.region, conn.AccountId(), sgId)),
+		})
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, mqlSg)
+	}
+	return res, nil
 }
 
 func (a *mqlAwsEksNodegroup) warmPoolConfig() (map[string]any, error) {

@@ -255,6 +255,32 @@ func (a *mqlAwsCognitoUserPool) passwordPolicy() (any, error) {
 	return convert.JsonToDict(resp.UserPool.Policies.PasswordPolicy)
 }
 
+func (a *mqlAwsCognitoUserPool) passwordPolicyRef() (*mqlAwsCognitoUserPoolPasswordPolicy, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.UserPool == nil || resp.UserPool.Policies == nil || resp.UserPool.Policies.PasswordPolicy == nil {
+		a.PasswordPolicyRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	pp := resp.UserPool.Policies.PasswordPolicy
+	res, err := CreateResource(a.MqlRuntime, "aws.cognito.userPool.passwordPolicy", map[string]*llx.RawData{
+		"__id":                          llx.StringData(a.Arn.Data + "/passwordPolicy"),
+		"minimumLength":                 llx.IntDataDefault(pp.MinimumLength, 0),
+		"passwordHistorySize":           llx.IntDataDefault(pp.PasswordHistorySize, 0),
+		"requireLowercase":              llx.BoolData(pp.RequireLowercase),
+		"requireNumbers":                llx.BoolData(pp.RequireNumbers),
+		"requireSymbols":                llx.BoolData(pp.RequireSymbols),
+		"requireUppercase":              llx.BoolData(pp.RequireUppercase),
+		"temporaryPasswordValidityDays": llx.IntData(int64(pp.TemporaryPasswordValidityDays)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsCognitoUserPoolPasswordPolicy), nil
+}
+
 func (a *mqlAwsCognitoUserPool) advancedSecurityMode() (string, error) {
 	resp, err := a.fetchDescribeUserPool()
 	if err != nil || resp == nil || resp.UserPool == nil || resp.UserPool.UserPoolAddOns == nil {
@@ -301,6 +327,30 @@ func (a *mqlAwsCognitoUserPool) usernameConfiguration() (any, error) {
 		return nil, err
 	}
 	return convert.JsonToDict(resp.UserPool.UsernameConfiguration)
+}
+
+func (a *mqlAwsCognitoUserPool) deviceChallengeRequiredOnNewDevice() (bool, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil || resp == nil || resp.UserPool == nil || resp.UserPool.DeviceConfiguration == nil {
+		return false, err
+	}
+	return resp.UserPool.DeviceConfiguration.ChallengeRequiredOnNewDevice, nil
+}
+
+func (a *mqlAwsCognitoUserPool) deviceOnlyRememberedOnUserPrompt() (bool, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil || resp == nil || resp.UserPool == nil || resp.UserPool.DeviceConfiguration == nil {
+		return false, err
+	}
+	return resp.UserPool.DeviceConfiguration.DeviceOnlyRememberedOnUserPrompt, nil
+}
+
+func (a *mqlAwsCognitoUserPool) usernameCaseSensitive() (bool, error) {
+	resp, err := a.fetchDescribeUserPool()
+	if err != nil || resp == nil || resp.UserPool == nil || resp.UserPool.UsernameConfiguration == nil {
+		return false, err
+	}
+	return aws.ToBool(resp.UserPool.UsernameConfiguration.CaseSensitive), nil
 }
 
 func (a *mqlAwsCognitoUserPool) schema() ([]any, error) {
@@ -689,10 +739,14 @@ func (a *mqlAwsCognitoUserPool) clients() ([]any, error) {
 
 func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *cognitoidentityprovidertypes.UserPoolClientType) (plugin.Resource, error) {
 	tokenUnits := map[string]any{}
+	var accessTokenUnit, idTokenUnit, refreshTokenUnit string
 	if c.TokenValidityUnits != nil {
-		tokenUnits["accessToken"] = string(c.TokenValidityUnits.AccessToken)
-		tokenUnits["idToken"] = string(c.TokenValidityUnits.IdToken)
-		tokenUnits["refreshToken"] = string(c.TokenValidityUnits.RefreshToken)
+		accessTokenUnit = string(c.TokenValidityUnits.AccessToken)
+		idTokenUnit = string(c.TokenValidityUnits.IdToken)
+		refreshTokenUnit = string(c.TokenValidityUnits.RefreshToken)
+		tokenUnits["accessToken"] = accessTokenUnit
+		tokenUnits["idToken"] = idTokenUnit
+		tokenUnits["refreshToken"] = refreshTokenUnit
 	}
 
 	authFlows := make([]any, 0, len(c.ExplicitAuthFlows))
@@ -718,6 +772,9 @@ func newMqlAwsCognitoUserPoolClient(runtime *plugin.Runtime, region string, c *c
 		"accessTokenValidity":             llx.IntData(int64(aws.ToInt32(c.AccessTokenValidity))),
 		"idTokenValidity":                 llx.IntData(int64(aws.ToInt32(c.IdTokenValidity))),
 		"tokenValidityUnits":              llx.DictData(tokenUnits),
+		"accessTokenValidityUnit":         llx.StringData(accessTokenUnit),
+		"idTokenValidityUnit":             llx.StringData(idTokenUnit),
+		"refreshTokenValidityUnit":        llx.StringData(refreshTokenUnit),
 		"explicitAuthFlows":               llx.ArrayData(authFlows, types.String),
 		"supportedIdentityProviders":      llx.ArrayData(stringsToAnyArray(c.SupportedIdentityProviders), types.String),
 		"callbackURLs":                    llx.ArrayData(stringsToAnyArray(c.CallbackURLs), types.String),
