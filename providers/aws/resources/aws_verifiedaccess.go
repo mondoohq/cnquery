@@ -17,6 +17,17 @@ import (
 	"go.mondoo.com/mql/types"
 )
 
+// verifiedAccessSse reads the two KMS settings off a Verified Access
+// server-side encryption specification. A nil specification means the resource
+// reports no encryption settings, which reads the same way as AWS owning the
+// key: no customer managed key is in use.
+func verifiedAccessSse(sse *ec2types.VerifiedAccessSseSpecificationResponse) (bool, *string) {
+	if sse == nil {
+		return false, nil
+	}
+	return convert.ToValue(sse.CustomerManagedKeyEnabled), sse.KmsKeyArn
+}
+
 func (a *mqlAwsVerifiedaccess) id() (string, error) {
 	return "aws.verifiedaccess", nil
 }
@@ -217,6 +228,7 @@ func (a *mqlAwsVerifiedaccess) getTrustProviders(conn *connection.AwsConnection)
 				for _, tp := range page.VerifiedAccessTrustProviders {
 					oidcOpts, _ := convert.JsonToDict(tp.OidcOptions)
 					sseSpec, _ := convert.JsonToDict(tp.SseSpecification)
+					sseCmkEnabled, sseKmsKeyArn := verifiedAccessSse(tp.SseSpecification)
 
 					mqlTP, err := CreateResource(a.MqlRuntime, "aws.verifiedaccess.trustProvider",
 						map[string]*llx.RawData{
@@ -229,11 +241,13 @@ func (a *mqlAwsVerifiedaccess) getTrustProviders(conn *connection.AwsConnection)
 							"policyReferenceName":           llx.StringDataPtr(tp.PolicyReferenceName),
 							"oidcOptions":                   llx.DictData(oidcOpts),
 							"sseSpecification":              llx.DictData(sseSpec),
+							"sseCustomerManagedKeyEnabled":  llx.BoolData(sseCmkEnabled),
 							"tags":                          llx.MapData(toInterfaceMap(ec2TagsToMap(tp.Tags)), types.String),
 						})
 					if err != nil {
 						return nil, err
 					}
+					mqlTP.(*mqlAwsVerifiedaccessTrustProvider).cacheSseKmsKeyArn = sseKmsKeyArn
 					res = append(res, mqlTP)
 				}
 			}
@@ -297,21 +311,24 @@ func (a *mqlAwsVerifiedaccess) getGroups(conn *connection.AwsConnection) []*jobp
 
 				for _, grp := range page.VerifiedAccessGroups {
 					sseSpec, _ := convert.JsonToDict(grp.SseSpecification)
+					sseCmkEnabled, sseKmsKeyArn := verifiedAccessSse(grp.SseSpecification)
 
 					mqlGrp, err := CreateResource(a.MqlRuntime, "aws.verifiedaccess.group",
 						map[string]*llx.RawData{
-							"__id":                     llx.StringData("aws.verifiedaccess.group/" + region + "/" + convert.ToValue(grp.VerifiedAccessGroupId)),
-							"verifiedAccessGroupId":    llx.StringDataPtr(grp.VerifiedAccessGroupId),
-							"verifiedAccessGroupArn":   llx.StringDataPtr(grp.VerifiedAccessGroupArn),
-							"region":                   llx.StringData(region),
-							"verifiedAccessInstanceId": llx.StringDataPtr(grp.VerifiedAccessInstanceId),
-							"sseSpecification":         llx.DictData(sseSpec),
-							"owner":                    llx.StringDataPtr(grp.Owner),
-							"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(grp.Tags)), types.String),
+							"__id":                         llx.StringData("aws.verifiedaccess.group/" + region + "/" + convert.ToValue(grp.VerifiedAccessGroupId)),
+							"verifiedAccessGroupId":        llx.StringDataPtr(grp.VerifiedAccessGroupId),
+							"verifiedAccessGroupArn":       llx.StringDataPtr(grp.VerifiedAccessGroupArn),
+							"region":                       llx.StringData(region),
+							"verifiedAccessInstanceId":     llx.StringDataPtr(grp.VerifiedAccessInstanceId),
+							"sseSpecification":             llx.DictData(sseSpec),
+							"sseCustomerManagedKeyEnabled": llx.BoolData(sseCmkEnabled),
+							"owner":                        llx.StringDataPtr(grp.Owner),
+							"tags":                         llx.MapData(toInterfaceMap(ec2TagsToMap(grp.Tags)), types.String),
 						})
 					if err != nil {
 						return nil, err
 					}
+					mqlGrp.(*mqlAwsVerifiedaccessGroup).cacheSseKmsKeyArn = sseKmsKeyArn
 					res = append(res, mqlGrp)
 				}
 			}
@@ -391,27 +408,30 @@ func (a *mqlAwsVerifiedaccess) getEndpoints(conn *connection.AwsConnection) []*j
 func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedAccessEndpoint, region string) (*mqlAwsVerifiedaccessEndpoint, error) {
 	conn := runtime.Connection.(*connection.AwsConnection)
 	sseSpec, _ := convert.JsonToDict(ep.SseSpecification)
+	sseCmkEnabled, sseKmsKeyArn := verifiedAccessSse(ep.SseSpecification)
 	statusDict, _ := convert.JsonToDict(ep.Status)
 
 	res, err := CreateResource(runtime, "aws.verifiedaccess.endpoint",
 		map[string]*llx.RawData{
-			"__id":                     llx.StringData("aws.verifiedaccess.endpoint/" + region + "/" + convert.ToValue(ep.VerifiedAccessEndpointId)),
-			"verifiedAccessEndpointId": llx.StringDataPtr(ep.VerifiedAccessEndpointId),
-			"region":                   llx.StringData(region),
-			"verifiedAccessGroupId":    llx.StringDataPtr(ep.VerifiedAccessGroupId),
-			"verifiedAccessInstanceId": llx.StringDataPtr(ep.VerifiedAccessInstanceId),
-			"applicationDomain":        llx.StringDataPtr(ep.ApplicationDomain),
-			"endpointDomain":           llx.StringDataPtr(ep.EndpointDomain),
-			"endpointType":             llx.StringData(string(ep.EndpointType)),
-			"attachmentType":           llx.StringData(string(ep.AttachmentType)),
-			"status":                   llx.DictData(statusDict),
-			"sseSpecification":         llx.DictData(sseSpec),
-			"tags":                     llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
+			"__id":                         llx.StringData("aws.verifiedaccess.endpoint/" + region + "/" + convert.ToValue(ep.VerifiedAccessEndpointId)),
+			"verifiedAccessEndpointId":     llx.StringDataPtr(ep.VerifiedAccessEndpointId),
+			"region":                       llx.StringData(region),
+			"verifiedAccessGroupId":        llx.StringDataPtr(ep.VerifiedAccessGroupId),
+			"verifiedAccessInstanceId":     llx.StringDataPtr(ep.VerifiedAccessInstanceId),
+			"applicationDomain":            llx.StringDataPtr(ep.ApplicationDomain),
+			"endpointDomain":               llx.StringDataPtr(ep.EndpointDomain),
+			"endpointType":                 llx.StringData(string(ep.EndpointType)),
+			"attachmentType":               llx.StringData(string(ep.AttachmentType)),
+			"status":                       llx.DictData(statusDict),
+			"sseSpecification":             llx.DictData(sseSpec),
+			"sseCustomerManagedKeyEnabled": llx.BoolData(sseCmkEnabled),
+			"tags":                         llx.MapData(toInterfaceMap(ec2TagsToMap(ep.Tags)), types.String),
 		})
 	if err != nil {
 		return nil, err
 	}
 	res.(*mqlAwsVerifiedaccessEndpoint).cacheDomainCertificateArn = convert.ToValue(ep.DomainCertificateArn)
+	res.(*mqlAwsVerifiedaccessEndpoint).cacheSseKmsKeyArn = sseKmsKeyArn
 	mqlEP := res.(*mqlAwsVerifiedaccessEndpoint)
 	sgArns := make([]string, len(ep.SecurityGroupIds))
 	for i, sgId := range ep.SecurityGroupIds {
@@ -424,6 +444,27 @@ func newMqlVerifiedAccessEndpoint(runtime *plugin.Runtime, ep ec2types.VerifiedA
 type mqlAwsVerifiedaccessEndpointInternal struct {
 	cacheDomainCertificateArn string
 	securityGroupIdHandler
+	cacheSseKmsKeyArn *string
+}
+
+type mqlAwsVerifiedaccessGroupInternal struct {
+	cacheSseKmsKeyArn *string
+}
+
+type mqlAwsVerifiedaccessTrustProviderInternal struct {
+	cacheSseKmsKeyArn *string
+}
+
+func (a *mqlAwsVerifiedaccessEndpoint) sseKmsKey() (*mqlAwsKmsKey, error) {
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheSseKmsKeyArn, a.Region.Data, &a.SseKmsKey.State)
+}
+
+func (a *mqlAwsVerifiedaccessGroup) sseKmsKey() (*mqlAwsKmsKey, error) {
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheSseKmsKeyArn, a.Region.Data, &a.SseKmsKey.State)
+}
+
+func (a *mqlAwsVerifiedaccessTrustProvider) sseKmsKey() (*mqlAwsKmsKey, error) {
+	return resolveKmsKeyRef(a.MqlRuntime, a.cacheSseKmsKeyArn, a.Region.Data, &a.SseKmsKey.State)
 }
 
 func (a *mqlAwsVerifiedaccessEndpoint) id() (string, error) {

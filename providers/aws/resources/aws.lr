@@ -15321,9 +15321,20 @@ private aws.elasticache.user @defaults("userName status engine") {
   userGroupIds []string
   // Authentication mode for the user
   //
-  // Dict with `Type` (the authentication mode, one of password, no-password,
-  // or iam) and `PasswordCount` (number of configured passwords, up to two).
-  authentication dict
+  // Deprecated in favor of authenticationType and
+  // authenticationPasswordCount. Dict with `Type` and `PasswordCount`.
+  authentication @maturity("deprecated") dict
+  // Authentication mode for the user
+  //
+  // One of password, no-password, or iam. A user set to no-password can be
+  // authenticated as without presenting a credential, so whatever the access
+  // string grants is open to anyone who can reach the cache. Empty when the service reports no authentication settings.
+  authenticationType string
+  // Number of passwords configured for the user
+  //
+  // Up to two, so a password can be rotated without an outage. 0 when the
+  // user authenticates by IAM or not at all.
+  authenticationPasswordCount int
 
   // Tags for the user
   tags() map[string]string
@@ -15925,8 +15936,9 @@ private aws.route53.hostedZone @defaults("id name type isPrivate") {
   type string
   // Hosted zone configuration
   //
-  // Has `comment` (string) and `privateZone` (bool).
-  config dict
+  // Deprecated in favor of comment and isPrivate, which carry the same two
+  // values. Has `comment` and `privateZone`.
+  config @maturity("deprecated") dict
   // Whether this is a private hosted zone
   isPrivate bool
   // Comment associated with the hosted zone
@@ -16005,10 +16017,10 @@ private aws.route53.record @defaults("name type") {
   resourceRecords() []string
   // Alias target configuration for AWS resource aliases
   //
-  // Has `dnsName` (string), `hostedZoneId` (string), and
-  // `evaluateTargetHealth` (bool). The `aliasTargetDnsName` and
-  // `aliasTargetHostedZoneId` fields expose the first two directly.
-  aliasTarget() dict
+  // Deprecated in favor of aliasTargetDnsName, aliasTargetHostedZoneId, and
+  // aliasEvaluateTargetHealth, which carry the same three values. Has
+  // `dnsName`, `hostedZoneId`, and `evaluateTargetHealth`.
+  aliasTarget() @maturity("deprecated") dict
   // Whether this is an alias record
   isAlias bool
   // DNS name of the alias target (if alias record)
@@ -21480,9 +21492,21 @@ private aws.neptune.instance @defaults("arn name status"){
   enabledCloudwatchLogsExports []string
   // Connection endpoint
   //
-  // Dict with the instance's DNS `Address`, the `Port` the database
-  // engine listens on, and the Route 53 `HostedZoneId` for the address.
-  endpoint dict
+  // Deprecated in favor of endpointAddress, endpointPort, and
+  // endpointHostedZoneId. Dict with `Address`, `Port`, and `HostedZoneId`.
+  endpoint @maturity("deprecated") dict
+  // DNS address clients connect to
+  //
+  // Empty while the instance is still being created and has no endpoint yet.
+  endpointAddress string
+  // Port the database engine listens on
+  //
+  // 0 while the instance is still being created and has no endpoint yet.
+  endpointPort int
+  // Route 53 hosted zone ID for the endpoint address
+  //
+  // Empty while the instance is still being created and has no endpoint yet.
+  endpointHostedZoneId string
   // Name of the database engine
   engine string
   // Database engine version
@@ -24694,10 +24718,22 @@ private aws.memorydb.user @defaults("name status") {
   minimumEngineVersion string
   // Authentication configuration
   //
-  // Password and IAM authentication state for the user. The `Type` key is one
-  // of password, no-password, or iam, and `PasswordCount` gives the number of
-  // passwords assigned to the user (maximum two).
-  authentication dict
+  // Deprecated in favor of authenticationType and
+  // authenticationPasswordCount. Password and IAM authentication state for
+  // the user, with the keys `Type` and `PasswordCount`.
+  authentication @maturity("deprecated") dict
+  // Authentication mode for the user
+  //
+  // One of password, no-password, or iam. A user set to no-password can be
+  // authenticated as without presenting a credential, so whatever the access
+  // string grants is open to anyone who can reach the cluster. Empty when the
+  // service reports no authentication settings.
+  authenticationType string
+  // Number of passwords assigned to the user
+  //
+  // Up to two, so a password can be rotated without an outage. 0 when the
+  // user authenticates by IAM or not at all.
+  authenticationPasswordCount int
   // Region where the user exists
   region string
   // Tags for the user
@@ -29418,10 +29454,19 @@ private aws.verifiedaccess.trustProvider @defaults("verifiedAccessTrustProviderI
   oidcOptions dict
   // Server-side encryption specification
   //
-  // KMS encryption settings for the trust provider, with keys
-  // `CustomerManagedKeyEnabled` (true when a customer managed key is in
-  // use) and `KmsKeyArn`.
-  sseSpecification dict
+  // Deprecated in favor of sseCustomerManagedKeyEnabled and sseKmsKey. KMS
+  // encryption settings for the trust provider, with keys `CustomerManagedKeyEnabled`
+  // and `KmsKeyArn`.
+  sseSpecification @maturity("deprecated") dict
+  // Whether a customer managed KMS key encrypts the trust provider
+  //
+  // False means AWS encrypts with an AWS owned key, which you cannot audit,
+  // rotate, or revoke.
+  sseCustomerManagedKeyEnabled bool
+  // KMS key encrypting the trust provider
+  //
+  // Null when no customer managed key is in use.
+  sseKmsKey() aws.kms.key
   // Tags for the trust provider
   tags map[string]string
 }
@@ -29438,10 +29483,19 @@ private aws.verifiedaccess.group @defaults("verifiedAccessGroupId verifiedAccess
   verifiedAccessInstanceId string
   // Server-side encryption specification
   //
-  // KMS encryption settings for the group, with keys
-  // `CustomerManagedKeyEnabled` (true when a customer managed key is in
-  // use) and `KmsKeyArn`.
-  sseSpecification dict
+  // Deprecated in favor of sseCustomerManagedKeyEnabled and sseKmsKey. KMS
+  // encryption settings for the group, with keys `CustomerManagedKeyEnabled`
+  // and `KmsKeyArn`.
+  sseSpecification @maturity("deprecated") dict
+  // Whether a customer managed KMS key encrypts the group
+  //
+  // False means AWS encrypts with an AWS owned key, which you cannot audit,
+  // rotate, or revoke.
+  sseCustomerManagedKeyEnabled bool
+  // KMS key encrypting the group
+  //
+  // Null when no customer managed key is in use.
+  sseKmsKey() aws.kms.key
   // Owner of the group
   owner string
   // Tags for the group
@@ -29477,10 +29531,19 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   securityGroups() []aws.ec2.securitygroup
   // Server-side encryption specification
   //
-  // KMS encryption settings for the endpoint, with keys
-  // `CustomerManagedKeyEnabled` (true when a customer managed key is in
-  // use) and `KmsKeyArn`.
-  sseSpecification dict
+  // Deprecated in favor of sseCustomerManagedKeyEnabled and sseKmsKey. KMS
+  // encryption settings for the endpoint, with keys `CustomerManagedKeyEnabled`
+  // and `KmsKeyArn`.
+  sseSpecification @maturity("deprecated") dict
+  // Whether a customer managed KMS key encrypts the endpoint
+  //
+  // False means AWS encrypts with an AWS owned key, which you cannot audit,
+  // rotate, or revoke.
+  sseCustomerManagedKeyEnabled bool
+  // KMS key encrypting the endpoint
+  //
+  // Null when no customer managed key is in use.
+  sseKmsKey() aws.kms.key
   // Tags for the endpoint
   tags map[string]string
 }

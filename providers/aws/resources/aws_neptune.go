@@ -304,6 +304,13 @@ func (a *mqlAwsNeptune) getDbInstances(conn *connection.AwsConnection) []*jobpoo
 
 func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance neptune_types.DBInstance) (*mqlAwsNeptuneInstance, error) {
 	endpoint, _ := convert.JsonToDict(instance.Endpoint)
+	endpointAddress, endpointHostedZoneId := "", ""
+	var endpointPort int64
+	if instance.Endpoint != nil {
+		endpointAddress = convert.ToValue(instance.Endpoint.Address)
+		endpointHostedZoneId = convert.ToValue(instance.Endpoint.HostedZoneId)
+		endpointPort = int64(convert.ToValue(instance.Endpoint.Port))
+	}
 
 	resource, err := CreateResource(runtime, "aws.neptune.instance",
 		map[string]*llx.RawData{
@@ -325,6 +332,9 @@ func newMqlAwsNeptuneInstance(runtime *plugin.Runtime, region string, instance n
 			"enabledCloudwatchLogsExports":     llx.ArrayData(convert.SliceAnyToInterface(instance.EnabledCloudwatchLogsExports), types.String),
 			"enhancedMonitoringResourceArn":    llx.StringDataPtr(instance.EnhancedMonitoringResourceArn),
 			"endpoint":                         llx.DictData(endpoint),
+			"endpointAddress":                  llx.StringData(endpointAddress),
+			"endpointPort":                     llx.IntData(endpointPort),
+			"endpointHostedZoneId":             llx.StringData(endpointHostedZoneId),
 			"iamDatabaseAuthenticationEnabled": llx.BoolDataPtr(instance.IAMDatabaseAuthenticationEnabled),
 			"masterUsername":                   llx.StringDataPtr(instance.MasterUsername),
 			"multiAZ":                          llx.BoolDataPtr(instance.MultiAZ),

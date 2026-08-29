@@ -4858,6 +4858,8 @@ aws.elasticache.user 13.12.1
 aws.elasticache.user.accessString 13.12.1
 aws.elasticache.user.arn 13.12.1
 aws.elasticache.user.authentication 13.12.1
+aws.elasticache.user.authenticationPasswordCount 13.53.4
+aws.elasticache.user.authenticationType 13.53.4
 aws.elasticache.user.engine 13.12.1
 aws.elasticache.user.minimumEngineVersion 13.12.1
 aws.elasticache.user.region 13.12.1
@@ -7301,6 +7303,8 @@ aws.memorydb.user.accessString 11.16.1
 aws.memorydb.user.aclNames 11.16.1
 aws.memorydb.user.arn 11.16.1
 aws.memorydb.user.authentication 11.16.1
+aws.memorydb.user.authenticationPasswordCount 13.53.4
+aws.memorydb.user.authenticationType 13.53.4
 aws.memorydb.user.minimumEngineVersion 11.16.1
 aws.memorydb.user.name 11.16.1
 aws.memorydb.user.region 11.16.1
@@ -7650,6 +7654,9 @@ aws.neptune.instance.createdAt 11.15.2
 aws.neptune.instance.deletionProtection 11.15.2
 aws.neptune.instance.enabledCloudwatchLogsExports 11.15.2
 aws.neptune.instance.endpoint 11.15.2
+aws.neptune.instance.endpointAddress 13.53.4
+aws.neptune.instance.endpointHostedZoneId 13.53.4
+aws.neptune.instance.endpointPort 13.53.4
 aws.neptune.instance.engine 11.15.2
 aws.neptune.instance.engineVersion 11.15.2
 aws.neptune.instance.enhancedMonitoringResourceArn 11.15.2
@@ -10837,6 +10844,8 @@ aws.verifiedaccess.endpoint.endpointDomain 13.10.0
 aws.verifiedaccess.endpoint.endpointType 13.10.0
 aws.verifiedaccess.endpoint.region 13.10.0
 aws.verifiedaccess.endpoint.securityGroups 13.10.0
+aws.verifiedaccess.endpoint.sseCustomerManagedKeyEnabled 13.53.4
+aws.verifiedaccess.endpoint.sseKmsKey 13.53.4
 aws.verifiedaccess.endpoint.sseSpecification 13.10.0
 aws.verifiedaccess.endpoint.status 13.10.0
 aws.verifiedaccess.endpoint.tags 13.10.0
@@ -10847,6 +10856,8 @@ aws.verifiedaccess.endpoints 13.10.0
 aws.verifiedaccess.group 13.10.0
 aws.verifiedaccess.group.owner 13.10.0
 aws.verifiedaccess.group.region 13.10.0
+aws.verifiedaccess.group.sseCustomerManagedKeyEnabled 13.53.4
+aws.verifiedaccess.group.sseKmsKey 13.53.4
 aws.verifiedaccess.group.sseSpecification 13.10.0
 aws.verifiedaccess.group.tags 13.10.0
 aws.verifiedaccess.group.verifiedAccessGroupArn 13.10.0
@@ -10877,6 +10888,8 @@ aws.verifiedaccess.trustProvider.deviceTrustProviderType 13.10.0
 aws.verifiedaccess.trustProvider.oidcOptions 13.10.0
 aws.verifiedaccess.trustProvider.policyReferenceName 13.10.0
 aws.verifiedaccess.trustProvider.region 13.10.0
+aws.verifiedaccess.trustProvider.sseCustomerManagedKeyEnabled 13.53.4
+aws.verifiedaccess.trustProvider.sseKmsKey 13.53.4
 aws.verifiedaccess.trustProvider.sseSpecification 13.10.0
 aws.verifiedaccess.trustProvider.tags 13.10.0
 aws.verifiedaccess.trustProvider.trustProviderType 13.10.0

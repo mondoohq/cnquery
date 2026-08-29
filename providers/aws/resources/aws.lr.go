@@ -20173,6 +20173,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.elasticache.user.authentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheUser).GetAuthentication()).ToDataRes(types.Dict)
 	},
+	"aws.elasticache.user.authenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheUser).GetAuthenticationType()).ToDataRes(types.String)
+	},
+	"aws.elasticache.user.authenticationPasswordCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsElasticacheUser).GetAuthenticationPasswordCount()).ToDataRes(types.Int)
+	},
 	"aws.elasticache.user.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsElasticacheUser).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -26464,6 +26470,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.neptune.instance.endpoint": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetEndpoint()).ToDataRes(types.Dict)
 	},
+	"aws.neptune.instance.endpointAddress": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEndpointAddress()).ToDataRes(types.String)
+	},
+	"aws.neptune.instance.endpointPort": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEndpointPort()).ToDataRes(types.Int)
+	},
+	"aws.neptune.instance.endpointHostedZoneId": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsNeptuneInstance).GetEndpointHostedZoneId()).ToDataRes(types.String)
+	},
 	"aws.neptune.instance.engine": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsNeptuneInstance).GetEngine()).ToDataRes(types.String)
 	},
@@ -29772,6 +29787,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.memorydb.user.authentication": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMemorydbUser).GetAuthentication()).ToDataRes(types.Dict)
+	},
+	"aws.memorydb.user.authenticationType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbUser).GetAuthenticationType()).ToDataRes(types.String)
+	},
+	"aws.memorydb.user.authenticationPasswordCount": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMemorydbUser).GetAuthenticationPasswordCount()).ToDataRes(types.Int)
 	},
 	"aws.memorydb.user.region": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMemorydbUser).GetRegion()).ToDataRes(types.String)
@@ -34615,6 +34636,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.trustProvider.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseSpecification()).ToDataRes(types.Dict)
 	},
+	"aws.verifiedaccess.trustProvider.sseCustomerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.verifiedaccess.trustProvider.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
 	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
 	},
@@ -34632,6 +34659,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.verifiedaccess.group.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessGroup).GetSseSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.group.sseCustomerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetSseCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.verifiedaccess.group.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.verifiedaccess.group.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessGroup).GetOwner()).ToDataRes(types.String)
@@ -34674,6 +34707,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseSpecification()).ToDataRes(types.Dict)
+	},
+	"aws.verifiedaccess.endpoint.sseCustomerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.verifiedaccess.endpoint.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -59346,6 +59385,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsElasticacheUser).Authentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.elasticache.user.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheUser).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.elasticache.user.authenticationPasswordCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsElasticacheUser).AuthenticationPasswordCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
 	"aws.elasticache.user.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsElasticacheUser).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -68422,6 +68469,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsNeptuneInstance).Endpoint, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.neptune.instance.endpointAddress": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).EndpointAddress, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.endpointPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).EndpointPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.neptune.instance.endpointHostedZoneId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsNeptuneInstance).EndpointHostedZoneId, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.neptune.instance.engine": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsNeptuneInstance).Engine, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -73204,6 +73263,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.memorydb.user.authentication": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMemorydbUser).Authentication, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.user.authenticationType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbUser).AuthenticationType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.memorydb.user.authenticationPasswordCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMemorydbUser).AuthenticationPasswordCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
 		return
 	},
 	"aws.memorydb.user.region": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80246,6 +80313,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessTrustProvider).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
+	"aws.verifiedaccess.trustProvider.sseCustomerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).SseCustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.trustProvider.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).SseKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
 	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVerifiedaccessTrustProvider).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
 		return
@@ -80272,6 +80347,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.verifiedaccess.group.sseSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVerifiedaccessGroup).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.sseCustomerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).SseCustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.group.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).SseKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.group.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80332,6 +80415,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVerifiedaccessEndpoint).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.sseCustomerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).SseCustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.endpoint.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).SseKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -142810,17 +142901,19 @@ type mqlAwsElasticacheUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsElasticacheUserInternal
-	Arn                  plugin.TValue[string]
-	UserId               plugin.TValue[string]
-	UserName             plugin.TValue[string]
-	Region               plugin.TValue[string]
-	AccessString         plugin.TValue[string]
-	Engine               plugin.TValue[string]
-	MinimumEngineVersion plugin.TValue[string]
-	Status               plugin.TValue[string]
-	UserGroupIds         plugin.TValue[[]any]
-	Authentication       plugin.TValue[any]
-	Tags                 plugin.TValue[map[string]any]
+	Arn                         plugin.TValue[string]
+	UserId                      plugin.TValue[string]
+	UserName                    plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	AccessString                plugin.TValue[string]
+	Engine                      plugin.TValue[string]
+	MinimumEngineVersion        plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	UserGroupIds                plugin.TValue[[]any]
+	Authentication              plugin.TValue[any]
+	AuthenticationType          plugin.TValue[string]
+	AuthenticationPasswordCount plugin.TValue[int64]
+	Tags                        plugin.TValue[map[string]any]
 }
 
 // createAwsElasticacheUser creates a new instance of this resource
@@ -142898,6 +142991,14 @@ func (c *mqlAwsElasticacheUser) GetUserGroupIds() *plugin.TValue[[]any] {
 
 func (c *mqlAwsElasticacheUser) GetAuthentication() *plugin.TValue[any] {
 	return &c.Authentication
+}
+
+func (c *mqlAwsElasticacheUser) GetAuthenticationType() *plugin.TValue[string] {
+	return &c.AuthenticationType
+}
+
+func (c *mqlAwsElasticacheUser) GetAuthenticationPasswordCount() *plugin.TValue[int64] {
+	return &c.AuthenticationPasswordCount
 }
 
 func (c *mqlAwsElasticacheUser) GetTags() *plugin.TValue[map[string]any] {
@@ -165167,6 +165268,9 @@ type mqlAwsNeptuneInstance struct {
 	DeletionProtection               plugin.TValue[bool]
 	EnabledCloudwatchLogsExports     plugin.TValue[[]any]
 	Endpoint                         plugin.TValue[any]
+	EndpointAddress                  plugin.TValue[string]
+	EndpointPort                     plugin.TValue[int64]
+	EndpointHostedZoneId             plugin.TValue[string]
 	Engine                           plugin.TValue[string]
 	EngineVersion                    plugin.TValue[string]
 	EnhancedMonitoringResourceArn    plugin.TValue[string]
@@ -165269,6 +165373,18 @@ func (c *mqlAwsNeptuneInstance) GetEnabledCloudwatchLogsExports() *plugin.TValue
 
 func (c *mqlAwsNeptuneInstance) GetEndpoint() *plugin.TValue[any] {
 	return &c.Endpoint
+}
+
+func (c *mqlAwsNeptuneInstance) GetEndpointAddress() *plugin.TValue[string] {
+	return &c.EndpointAddress
+}
+
+func (c *mqlAwsNeptuneInstance) GetEndpointPort() *plugin.TValue[int64] {
+	return &c.EndpointPort
+}
+
+func (c *mqlAwsNeptuneInstance) GetEndpointHostedZoneId() *plugin.TValue[string] {
+	return &c.EndpointHostedZoneId
 }
 
 func (c *mqlAwsNeptuneInstance) GetEngine() *plugin.TValue[string] {
@@ -177280,15 +177396,17 @@ type mqlAwsMemorydbUser struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsMemorydbUserInternal it will be used here
-	Arn                  plugin.TValue[string]
-	Name                 plugin.TValue[string]
-	Status               plugin.TValue[string]
-	AccessString         plugin.TValue[string]
-	AclNames             plugin.TValue[[]any]
-	MinimumEngineVersion plugin.TValue[string]
-	Authentication       plugin.TValue[any]
-	Region               plugin.TValue[string]
-	Tags                 plugin.TValue[map[string]any]
+	Arn                         plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	AccessString                plugin.TValue[string]
+	AclNames                    plugin.TValue[[]any]
+	MinimumEngineVersion        plugin.TValue[string]
+	Authentication              plugin.TValue[any]
+	AuthenticationType          plugin.TValue[string]
+	AuthenticationPasswordCount plugin.TValue[int64]
+	Region                      plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
 }
 
 // createAwsMemorydbUser creates a new instance of this resource
@@ -177349,6 +177467,14 @@ func (c *mqlAwsMemorydbUser) GetMinimumEngineVersion() *plugin.TValue[string] {
 
 func (c *mqlAwsMemorydbUser) GetAuthentication() *plugin.TValue[any] {
 	return &c.Authentication
+}
+
+func (c *mqlAwsMemorydbUser) GetAuthenticationType() *plugin.TValue[string] {
+	return &c.AuthenticationType
+}
+
+func (c *mqlAwsMemorydbUser) GetAuthenticationPasswordCount() *plugin.TValue[int64] {
+	return &c.AuthenticationPasswordCount
 }
 
 func (c *mqlAwsMemorydbUser) GetRegion() *plugin.TValue[string] {
@@ -194965,7 +195091,7 @@ func (c *mqlAwsVerifiedaccessInstance) GetLoggingConfiguration() *plugin.TValue[
 type mqlAwsVerifiedaccessTrustProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsVerifiedaccessTrustProviderInternal it will be used here
+	mqlAwsVerifiedaccessTrustProviderInternal
 	VerifiedAccessTrustProviderId plugin.TValue[string]
 	Region                        plugin.TValue[string]
 	TrustProviderType             plugin.TValue[string]
@@ -194974,6 +195100,8 @@ type mqlAwsVerifiedaccessTrustProvider struct {
 	PolicyReferenceName           plugin.TValue[string]
 	OidcOptions                   plugin.TValue[any]
 	SseSpecification              plugin.TValue[any]
+	SseCustomerManagedKeyEnabled  plugin.TValue[bool]
+	SseKmsKey                     plugin.TValue[*mqlAwsKmsKey]
 	Tags                          plugin.TValue[map[string]any]
 }
 
@@ -195046,6 +195174,26 @@ func (c *mqlAwsVerifiedaccessTrustProvider) GetSseSpecification() *plugin.TValue
 	return &c.SseSpecification
 }
 
+func (c *mqlAwsVerifiedaccessTrustProvider) GetSseCustomerManagedKeyEnabled() *plugin.TValue[bool] {
+	return &c.SseCustomerManagedKeyEnabled
+}
+
+func (c *mqlAwsVerifiedaccessTrustProvider) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.SseKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.trustProvider", c.__id, "sseKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.sseKmsKey()
+	})
+}
+
 func (c *mqlAwsVerifiedaccessTrustProvider) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
 }
@@ -195054,14 +195202,16 @@ func (c *mqlAwsVerifiedaccessTrustProvider) GetTags() *plugin.TValue[map[string]
 type mqlAwsVerifiedaccessGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlAwsVerifiedaccessGroupInternal it will be used here
-	VerifiedAccessGroupId    plugin.TValue[string]
-	VerifiedAccessGroupArn   plugin.TValue[string]
-	Region                   plugin.TValue[string]
-	VerifiedAccessInstanceId plugin.TValue[string]
-	SseSpecification         plugin.TValue[any]
-	Owner                    plugin.TValue[string]
-	Tags                     plugin.TValue[map[string]any]
+	mqlAwsVerifiedaccessGroupInternal
+	VerifiedAccessGroupId        plugin.TValue[string]
+	VerifiedAccessGroupArn       plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	VerifiedAccessInstanceId     plugin.TValue[string]
+	SseSpecification             plugin.TValue[any]
+	SseCustomerManagedKeyEnabled plugin.TValue[bool]
+	SseKmsKey                    plugin.TValue[*mqlAwsKmsKey]
+	Owner                        plugin.TValue[string]
+	Tags                         plugin.TValue[map[string]any]
 }
 
 // createAwsVerifiedaccessGroup creates a new instance of this resource
@@ -195121,6 +195271,26 @@ func (c *mqlAwsVerifiedaccessGroup) GetSseSpecification() *plugin.TValue[any] {
 	return &c.SseSpecification
 }
 
+func (c *mqlAwsVerifiedaccessGroup) GetSseCustomerManagedKeyEnabled() *plugin.TValue[bool] {
+	return &c.SseCustomerManagedKeyEnabled
+}
+
+func (c *mqlAwsVerifiedaccessGroup) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.SseKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.group", c.__id, "sseKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.sseKmsKey()
+	})
+}
+
 func (c *mqlAwsVerifiedaccessGroup) GetOwner() *plugin.TValue[string] {
 	return &c.Owner
 }
@@ -195134,19 +195304,21 @@ type mqlAwsVerifiedaccessEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsVerifiedaccessEndpointInternal
-	VerifiedAccessEndpointId plugin.TValue[string]
-	Region                   plugin.TValue[string]
-	VerifiedAccessGroupId    plugin.TValue[string]
-	VerifiedAccessInstanceId plugin.TValue[string]
-	ApplicationDomain        plugin.TValue[string]
-	EndpointDomain           plugin.TValue[string]
-	EndpointType             plugin.TValue[string]
-	AttachmentType           plugin.TValue[string]
-	DomainCertificate        plugin.TValue[*mqlAwsAcmCertificate]
-	Status                   plugin.TValue[any]
-	SecurityGroups           plugin.TValue[[]any]
-	SseSpecification         plugin.TValue[any]
-	Tags                     plugin.TValue[map[string]any]
+	VerifiedAccessEndpointId     plugin.TValue[string]
+	Region                       plugin.TValue[string]
+	VerifiedAccessGroupId        plugin.TValue[string]
+	VerifiedAccessInstanceId     plugin.TValue[string]
+	ApplicationDomain            plugin.TValue[string]
+	EndpointDomain               plugin.TValue[string]
+	EndpointType                 plugin.TValue[string]
+	AttachmentType               plugin.TValue[string]
+	DomainCertificate            plugin.TValue[*mqlAwsAcmCertificate]
+	Status                       plugin.TValue[any]
+	SecurityGroups               plugin.TValue[[]any]
+	SseSpecification             plugin.TValue[any]
+	SseCustomerManagedKeyEnabled plugin.TValue[bool]
+	SseKmsKey                    plugin.TValue[*mqlAwsKmsKey]
+	Tags                         plugin.TValue[map[string]any]
 }
 
 // createAwsVerifiedaccessEndpoint creates a new instance of this resource
@@ -195256,6 +195428,26 @@ func (c *mqlAwsVerifiedaccessEndpoint) GetSecurityGroups() *plugin.TValue[[]any]
 
 func (c *mqlAwsVerifiedaccessEndpoint) GetSseSpecification() *plugin.TValue[any] {
 	return &c.SseSpecification
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetSseCustomerManagedKeyEnabled() *plugin.TValue[bool] {
+	return &c.SseCustomerManagedKeyEnabled
+}
+
+func (c *mqlAwsVerifiedaccessEndpoint) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.SseKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.endpoint", c.__id, "sseKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.sseKmsKey()
+	})
 }
 
 func (c *mqlAwsVerifiedaccessEndpoint) GetTags() *plugin.TValue[map[string]any] {

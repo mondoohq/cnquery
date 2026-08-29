@@ -956,18 +956,26 @@ func (a *mqlAwsElasticache) getUsers(conn *connection.AwsConnection) []*jobpool.
 					if err != nil {
 						return nil, err
 					}
+					authType := ""
+					var authPasswordCount int64
+					if user.Authentication != nil {
+						authType = string(user.Authentication.Type)
+						authPasswordCount = int64(convert.ToValue(user.Authentication.PasswordCount))
+					}
 					mqlUser, err := CreateResource(a.MqlRuntime, ResourceAwsElasticacheUser,
 						map[string]*llx.RawData{
-							"arn":                  llx.StringDataPtr(user.ARN),
-							"userId":               llx.StringDataPtr(user.UserId),
-							"userName":             llx.StringDataPtr(user.UserName),
-							"region":               llx.StringData(region),
-							"accessString":         llx.StringDataPtr(user.AccessString),
-							"engine":               llx.StringDataPtr(user.Engine),
-							"minimumEngineVersion": llx.StringDataPtr(user.MinimumEngineVersion),
-							"status":               llx.StringDataPtr(user.Status),
-							"userGroupIds":         llx.ArrayData(groupIds, types.String),
-							"authentication":       llx.DictData(auth),
+							"arn":                         llx.StringDataPtr(user.ARN),
+							"userId":                      llx.StringDataPtr(user.UserId),
+							"userName":                    llx.StringDataPtr(user.UserName),
+							"region":                      llx.StringData(region),
+							"accessString":                llx.StringDataPtr(user.AccessString),
+							"engine":                      llx.StringDataPtr(user.Engine),
+							"minimumEngineVersion":        llx.StringDataPtr(user.MinimumEngineVersion),
+							"status":                      llx.StringDataPtr(user.Status),
+							"userGroupIds":                llx.ArrayData(groupIds, types.String),
+							"authentication":              llx.DictData(auth),
+							"authenticationType":          llx.StringData(authType),
+							"authenticationPasswordCount": llx.IntData(authPasswordCount),
 						})
 					if err != nil {
 						return nil, err
