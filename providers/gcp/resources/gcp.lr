@@ -6778,6 +6778,33 @@ private gcp.project.apiKey.restrictions.apiTarget @defaults("service methods") {
   methods []string
 }
 
+// Browser restriction on a Google Cloud API key
+//
+// The HTTP referrers a key may be used from. A pattern of `*` permits every
+// referrer, which is no restriction at all, and a key restricted this way is
+// still usable by anyone who can forge the Referer header.
+private gcp.project.apiKey.restrictions.browserRestriction @defaults("allowedReferrers") {
+  // HTTP referrer patterns permitted to use the key
+  allowedReferrers []string
+}
+
+// iOS restriction on a Google Cloud API key
+//
+// The iOS applications a key may be used from, named by bundle ID.
+private gcp.project.apiKey.restrictions.iosRestriction @defaults("allowedBundleIds") {
+  // iOS bundle IDs permitted to use the key
+  allowedBundleIds []string
+}
+
+// Server restriction on a Google Cloud API key
+//
+// The caller addresses a key may be used from. A range of 0.0.0.0/0 permits
+// every caller, which is no restriction at all.
+private gcp.project.apiKey.restrictions.serverRestriction @defaults("allowedIps") {
+  // IPv4 and IPv6 addresses and CIDR ranges permitted to use the key
+  allowedIps []string
+}
+
 // Google Cloud (GCP) project API key restrictions
 //
 // Access restrictions applied to a GCP API key: Android app restrictions,
@@ -6805,30 +6832,29 @@ private gcp.project.apiKey.restrictions {
   allowedApiTargets []gcp.project.apiKey.restrictions.apiTarget
   // Browser restriction dict
   //
-  // Deprecated in favor of allowedReferrers. Carries `allowedReferrers`.
+  // Deprecated in favor of browser. Carries `allowedReferrers`.
   browserKeyRestrictions @maturity("deprecated") dict
-  // HTTP referrer patterns permitted to use the key
+  // Restriction limiting the key to a set of HTTP referrers
   //
-  // A pattern of `*` permits every referrer, which is no restriction at all.
-  // Null when the key carries no browser restriction.
-  allowedReferrers []string
+  // Null when the key carries no browser restriction, which leaves it usable
+  // from any web page that has the key.
+  browser gcp.project.apiKey.restrictions.browserRestriction
   // iOS restriction dict
   //
-  // Deprecated in favor of allowedBundleIds. Carries `allowedBundleIds`.
+  // Deprecated in favor of ios. Carries `allowedBundleIds`.
   iosKeyRestrictions @maturity("deprecated") dict
-  // iOS bundle IDs permitted to use the key
+  // Restriction limiting the key to a set of iOS apps
   //
   // Null when the key carries no iOS restriction.
-  allowedBundleIds []string
+  ios gcp.project.apiKey.restrictions.iosRestriction
   // Server restriction dict
   //
-  // Deprecated in favor of allowedIps. Carries `allowedIps`.
+  // Deprecated in favor of server. Carries `allowedIps`.
   serverKeyRestrictions @maturity("deprecated") dict
-  // IPv4 and IPv6 addresses and CIDR ranges permitted to use the key
+  // Restriction limiting the key to a set of caller IP addresses
   //
-  // A range of 0.0.0.0/0 permits every caller, which is no restriction at
-  // all. Null when the key carries no server restriction.
-  allowedIps []string
+  // Null when the key carries no server restriction.
+  server gcp.project.apiKey.restrictions.serverRestriction
   // Whether the API key has no restrictions configured (no app/IP/referrer/API target restriction). Unrestricted keys are higher risk.
   unrestricted() bool
   // Names of the restriction categories actually set on the key

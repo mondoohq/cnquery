@@ -74,9 +74,9 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 		// Null, not empty: a key with no browser restriction has no referrer
 		// allowlist at all, which is a different claim from an allowlist that
 		// permits nothing.
-		allowedReferrers := llx.NilData
-		allowedBundleIds := llx.NilData
-		allowedIps := llx.NilData
+		browserRestriction := llx.NilData
+		iosRestriction := llx.NilData
+		serverRestriction := llx.NilData
 		allowedApiTargets := []any{}
 		if k.Restrictions != nil {
 			if k.Restrictions.AndroidKeyRestrictions != nil {
@@ -143,7 +143,12 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				allowedReferrers = llx.ArrayData(convert.SliceAnyToInterface(k.Restrictions.BrowserKeyRestrictions.AllowedReferrers), types.String)
+				browserRestriction, err = newMqlApiKeyRestriction(g.MqlRuntime,
+					"gcp.project.apiKey.restrictions.browserRestriction", k.Name+"/browserRestriction",
+					"allowedReferrers", k.Restrictions.BrowserKeyRestrictions.AllowedReferrers)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			if k.Restrictions.IosKeyRestrictions != nil {
@@ -157,7 +162,12 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				allowedBundleIds = llx.ArrayData(convert.SliceAnyToInterface(k.Restrictions.IosKeyRestrictions.AllowedBundleIds), types.String)
+				iosRestriction, err = newMqlApiKeyRestriction(g.MqlRuntime,
+					"gcp.project.apiKey.restrictions.iosRestriction", k.Name+"/iosRestriction",
+					"allowedBundleIds", k.Restrictions.IosKeyRestrictions.AllowedBundleIds)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			if k.Restrictions.ServerKeyRestrictions != nil {
@@ -171,7 +181,12 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 				if err != nil {
 					return nil, err
 				}
-				allowedIps = llx.ArrayData(convert.SliceAnyToInterface(k.Restrictions.ServerKeyRestrictions.AllowedIps), types.String)
+				serverRestriction, err = newMqlApiKeyRestriction(g.MqlRuntime,
+					"gcp.project.apiKey.restrictions.serverRestriction", k.Name+"/serverRestriction",
+					"allowedIps", k.Restrictions.ServerKeyRestrictions.AllowedIps)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 		}
@@ -183,9 +198,9 @@ func (g *mqlGcpProject) apiKeys() ([]any, error) {
 			"iosKeyRestrictions":     llx.DictData(mqlIosRestr),
 			"serverKeyRestrictions":  llx.DictData(mqlServerKeyRestr),
 			"apiTargets":             llx.ArrayData(mqlApiTargets, types.Dict),
-			"allowedReferrers":       allowedReferrers,
-			"allowedBundleIds":       allowedBundleIds,
-			"allowedIps":             allowedIps,
+			"browser":                browserRestriction,
+			"ios":                    iosRestriction,
+			"server":                 serverRestriction,
 			"allowedApiTargets":      llx.ArrayData(allowedApiTargets, types.Resource("gcp.project.apiKey.restrictions.apiTarget")),
 		})
 		if err != nil {
@@ -404,11 +419,30 @@ func initGcpProjectApiKeyRestrictions(runtime *plugin.Runtime, args map[string]*
 		args["browserKeyRestrictions"] = llx.NilData
 		args["iosKeyRestrictions"] = llx.NilData
 		args["serverKeyRestrictions"] = llx.NilData
-		args["allowedReferrers"] = llx.NilData
-		args["allowedBundleIds"] = llx.NilData
-		args["allowedIps"] = llx.NilData
+		args["browser"] = llx.NilData
+		args["ios"] = llx.NilData
+		args["server"] = llx.NilData
 		args["allowedApiTargets"] = llx.NilData
 		return args, nil, nil
 	}
 	return args, restrictions.Data, nil
+}
+
+// newMqlApiKeyRestriction builds one of the three single-list restrictions an
+// API key can carry.
+//
+// Restrictions, IosKeyRestrictions and ServerKeyRestrictions each wrap exactly
+// one allowlist, so they share a builder rather than three near-identical
+// copies. The allowlist is reported as empty rather than null when the
+// restriction exists but names nothing, which is a real state: it locks the key
+// out of every caller.
+func newMqlApiKeyRestriction(runtime *plugin.Runtime, resource, id, field string, allowed []string) (*llx.RawData, error) {
+	res, err := CreateResource(runtime, resource, map[string]*llx.RawData{
+		"__id": llx.StringData(id),
+		field:  llx.ArrayData(convert.SliceAnyToInterface(allowed), types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, resource), nil
 }

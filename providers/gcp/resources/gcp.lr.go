@@ -186,6 +186,9 @@ const (
 	ResourceGcpEssentialContact                                                        string = "gcp.essentialContact"
 	ResourceGcpProjectApiKey                                                           string = "gcp.project.apiKey"
 	ResourceGcpProjectApiKeyRestrictionsApiTarget                                      string = "gcp.project.apiKey.restrictions.apiTarget"
+	ResourceGcpProjectApiKeyRestrictionsBrowserRestriction                             string = "gcp.project.apiKey.restrictions.browserRestriction"
+	ResourceGcpProjectApiKeyRestrictionsIosRestriction                                 string = "gcp.project.apiKey.restrictions.iosRestriction"
+	ResourceGcpProjectApiKeyRestrictionsServerRestriction                              string = "gcp.project.apiKey.restrictions.serverRestriction"
 	ResourceGcpProjectApiKeyRestrictions                                               string = "gcp.project.apiKey.restrictions"
 	ResourceGcpProjectLoggingservice                                                   string = "gcp.project.loggingservice"
 	ResourceGcpLoggingSettings                                                         string = "gcp.loggingSettings"
@@ -1222,6 +1225,18 @@ func init() {
 		"gcp.project.apiKey.restrictions.apiTarget": {
 			// to override args, implement: initGcpProjectApiKeyRestrictionsApiTarget(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createGcpProjectApiKeyRestrictionsApiTarget,
+		},
+		"gcp.project.apiKey.restrictions.browserRestriction": {
+			// to override args, implement: initGcpProjectApiKeyRestrictionsBrowserRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectApiKeyRestrictionsBrowserRestriction,
+		},
+		"gcp.project.apiKey.restrictions.iosRestriction": {
+			// to override args, implement: initGcpProjectApiKeyRestrictionsIosRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectApiKeyRestrictionsIosRestriction,
+		},
+		"gcp.project.apiKey.restrictions.serverRestriction": {
+			// to override args, implement: initGcpProjectApiKeyRestrictionsServerRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createGcpProjectApiKeyRestrictionsServerRestriction,
 		},
 		"gcp.project.apiKey.restrictions": {
 			Init:   initGcpProjectApiKeyRestrictions,
@@ -8662,6 +8677,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.apiKey.restrictions.apiTarget.methods": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictionsApiTarget).GetMethods()).ToDataRes(types.Array(types.String))
 	},
+	"gcp.project.apiKey.restrictions.browserRestriction.allowedReferrers": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictionsBrowserRestriction).GetAllowedReferrers()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.apiKey.restrictions.iosRestriction.allowedBundleIds": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictionsIosRestriction).GetAllowedBundleIds()).ToDataRes(types.Array(types.String))
+	},
+	"gcp.project.apiKey.restrictions.serverRestriction.allowedIps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictionsServerRestriction).GetAllowedIps()).ToDataRes(types.Array(types.String))
+	},
 	"gcp.project.apiKey.restrictions.parentResourcePath": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetParentResourcePath()).ToDataRes(types.String)
 	},
@@ -8677,20 +8701,20 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"gcp.project.apiKey.restrictions.browserKeyRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetBrowserKeyRestrictions()).ToDataRes(types.Dict)
 	},
-	"gcp.project.apiKey.restrictions.allowedReferrers": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAllowedReferrers()).ToDataRes(types.Array(types.String))
+	"gcp.project.apiKey.restrictions.browser": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetBrowser()).ToDataRes(types.Resource("gcp.project.apiKey.restrictions.browserRestriction"))
 	},
 	"gcp.project.apiKey.restrictions.iosKeyRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetIosKeyRestrictions()).ToDataRes(types.Dict)
 	},
-	"gcp.project.apiKey.restrictions.allowedBundleIds": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAllowedBundleIds()).ToDataRes(types.Array(types.String))
+	"gcp.project.apiKey.restrictions.ios": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetIos()).ToDataRes(types.Resource("gcp.project.apiKey.restrictions.iosRestriction"))
 	},
 	"gcp.project.apiKey.restrictions.serverKeyRestrictions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetServerKeyRestrictions()).ToDataRes(types.Dict)
 	},
-	"gcp.project.apiKey.restrictions.allowedIps": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlGcpProjectApiKeyRestrictions).GetAllowedIps()).ToDataRes(types.Array(types.String))
+	"gcp.project.apiKey.restrictions.server": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlGcpProjectApiKeyRestrictions).GetServer()).ToDataRes(types.Resource("gcp.project.apiKey.restrictions.serverRestriction"))
 	},
 	"gcp.project.apiKey.restrictions.unrestricted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlGcpProjectApiKeyRestrictions).GetUnrestricted()).ToDataRes(types.Bool)
@@ -28166,6 +28190,30 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectApiKeyRestrictionsApiTarget).Methods, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"gcp.project.apiKey.restrictions.browserRestriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsBrowserRestriction).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.apiKey.restrictions.browserRestriction.allowedReferrers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsBrowserRestriction).AllowedReferrers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.restrictions.iosRestriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsIosRestriction).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.apiKey.restrictions.iosRestriction.allowedBundleIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsIosRestriction).AllowedBundleIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"gcp.project.apiKey.restrictions.serverRestriction.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsServerRestriction).__id, ok = v.Value.(string)
+		return
+	},
+	"gcp.project.apiKey.restrictions.serverRestriction.allowedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictionsServerRestriction).AllowedIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
 	"gcp.project.apiKey.restrictions.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).__id, ok = v.Value.(string)
 		return
@@ -28190,24 +28238,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlGcpProjectApiKeyRestrictions).BrowserKeyRestrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.apiKey.restrictions.allowedReferrers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectApiKeyRestrictions).AllowedReferrers, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"gcp.project.apiKey.restrictions.browser": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).Browser, ok = plugin.RawToTValue[*mqlGcpProjectApiKeyRestrictionsBrowserRestriction](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiKey.restrictions.iosKeyRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).IosKeyRestrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.apiKey.restrictions.allowedBundleIds": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectApiKeyRestrictions).AllowedBundleIds, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"gcp.project.apiKey.restrictions.ios": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).Ios, ok = plugin.RawToTValue[*mqlGcpProjectApiKeyRestrictionsIosRestriction](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiKey.restrictions.serverKeyRestrictions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlGcpProjectApiKeyRestrictions).ServerKeyRestrictions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"gcp.project.apiKey.restrictions.allowedIps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlGcpProjectApiKeyRestrictions).AllowedIps, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"gcp.project.apiKey.restrictions.server": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlGcpProjectApiKeyRestrictions).Server, ok = plugin.RawToTValue[*mqlGcpProjectApiKeyRestrictionsServerRestriction](v.Value, v.Error)
 		return
 	},
 	"gcp.project.apiKey.restrictions.unrestricted": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -65358,6 +65406,138 @@ func (c *mqlGcpProjectApiKeyRestrictionsApiTarget) GetMethods() *plugin.TValue[[
 	return &c.Methods
 }
 
+// mqlGcpProjectApiKeyRestrictionsBrowserRestriction for the gcp.project.apiKey.restrictions.browserRestriction resource
+type mqlGcpProjectApiKeyRestrictionsBrowserRestriction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectApiKeyRestrictionsBrowserRestrictionInternal it will be used here
+	AllowedReferrers plugin.TValue[[]any]
+}
+
+// createGcpProjectApiKeyRestrictionsBrowserRestriction creates a new instance of this resource
+func createGcpProjectApiKeyRestrictionsBrowserRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectApiKeyRestrictionsBrowserRestriction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.apiKey.restrictions.browserRestriction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsBrowserRestriction) MqlName() string {
+	return "gcp.project.apiKey.restrictions.browserRestriction"
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsBrowserRestriction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsBrowserRestriction) GetAllowedReferrers() *plugin.TValue[[]any] {
+	return &c.AllowedReferrers
+}
+
+// mqlGcpProjectApiKeyRestrictionsIosRestriction for the gcp.project.apiKey.restrictions.iosRestriction resource
+type mqlGcpProjectApiKeyRestrictionsIosRestriction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectApiKeyRestrictionsIosRestrictionInternal it will be used here
+	AllowedBundleIds plugin.TValue[[]any]
+}
+
+// createGcpProjectApiKeyRestrictionsIosRestriction creates a new instance of this resource
+func createGcpProjectApiKeyRestrictionsIosRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectApiKeyRestrictionsIosRestriction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.apiKey.restrictions.iosRestriction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsIosRestriction) MqlName() string {
+	return "gcp.project.apiKey.restrictions.iosRestriction"
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsIosRestriction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsIosRestriction) GetAllowedBundleIds() *plugin.TValue[[]any] {
+	return &c.AllowedBundleIds
+}
+
+// mqlGcpProjectApiKeyRestrictionsServerRestriction for the gcp.project.apiKey.restrictions.serverRestriction resource
+type mqlGcpProjectApiKeyRestrictionsServerRestriction struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlGcpProjectApiKeyRestrictionsServerRestrictionInternal it will be used here
+	AllowedIps plugin.TValue[[]any]
+}
+
+// createGcpProjectApiKeyRestrictionsServerRestriction creates a new instance of this resource
+func createGcpProjectApiKeyRestrictionsServerRestriction(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlGcpProjectApiKeyRestrictionsServerRestriction{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("gcp.project.apiKey.restrictions.serverRestriction", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsServerRestriction) MqlName() string {
+	return "gcp.project.apiKey.restrictions.serverRestriction"
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsServerRestriction) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlGcpProjectApiKeyRestrictionsServerRestriction) GetAllowedIps() *plugin.TValue[[]any] {
+	return &c.AllowedIps
+}
+
 // mqlGcpProjectApiKeyRestrictions for the gcp.project.apiKey.restrictions resource
 type mqlGcpProjectApiKeyRestrictions struct {
 	MqlRuntime *plugin.Runtime
@@ -65368,11 +65548,11 @@ type mqlGcpProjectApiKeyRestrictions struct {
 	ApiTargets              plugin.TValue[[]any]
 	AllowedApiTargets       plugin.TValue[[]any]
 	BrowserKeyRestrictions  plugin.TValue[any]
-	AllowedReferrers        plugin.TValue[[]any]
+	Browser                 plugin.TValue[*mqlGcpProjectApiKeyRestrictionsBrowserRestriction]
 	IosKeyRestrictions      plugin.TValue[any]
-	AllowedBundleIds        plugin.TValue[[]any]
+	Ios                     plugin.TValue[*mqlGcpProjectApiKeyRestrictionsIosRestriction]
 	ServerKeyRestrictions   plugin.TValue[any]
-	AllowedIps              plugin.TValue[[]any]
+	Server                  plugin.TValue[*mqlGcpProjectApiKeyRestrictionsServerRestriction]
 	Unrestricted            plugin.TValue[bool]
 	AppliedRestrictionTypes plugin.TValue[[]any]
 }
@@ -65434,24 +65614,24 @@ func (c *mqlGcpProjectApiKeyRestrictions) GetBrowserKeyRestrictions() *plugin.TV
 	return &c.BrowserKeyRestrictions
 }
 
-func (c *mqlGcpProjectApiKeyRestrictions) GetAllowedReferrers() *plugin.TValue[[]any] {
-	return &c.AllowedReferrers
+func (c *mqlGcpProjectApiKeyRestrictions) GetBrowser() *plugin.TValue[*mqlGcpProjectApiKeyRestrictionsBrowserRestriction] {
+	return &c.Browser
 }
 
 func (c *mqlGcpProjectApiKeyRestrictions) GetIosKeyRestrictions() *plugin.TValue[any] {
 	return &c.IosKeyRestrictions
 }
 
-func (c *mqlGcpProjectApiKeyRestrictions) GetAllowedBundleIds() *plugin.TValue[[]any] {
-	return &c.AllowedBundleIds
+func (c *mqlGcpProjectApiKeyRestrictions) GetIos() *plugin.TValue[*mqlGcpProjectApiKeyRestrictionsIosRestriction] {
+	return &c.Ios
 }
 
 func (c *mqlGcpProjectApiKeyRestrictions) GetServerKeyRestrictions() *plugin.TValue[any] {
 	return &c.ServerKeyRestrictions
 }
 
-func (c *mqlGcpProjectApiKeyRestrictions) GetAllowedIps() *plugin.TValue[[]any] {
-	return &c.AllowedIps
+func (c *mqlGcpProjectApiKeyRestrictions) GetServer() *plugin.TValue[*mqlGcpProjectApiKeyRestrictionsServerRestriction] {
+	return &c.Server
 }
 
 func (c *mqlGcpProjectApiKeyRestrictions) GetUnrestricted() *plugin.TValue[bool] {
