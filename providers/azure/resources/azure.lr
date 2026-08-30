@@ -435,11 +435,11 @@ private azure.subscription.resource @defaults("id name location") {
   managedBy string
   // Resource SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Resource plan
   //
   // Azure Marketplace purchase plan for resources deployed from a Marketplace
@@ -448,11 +448,11 @@ private azure.subscription.resource @defaults("id name location") {
   plan dict
   // Resource identity
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Resource provisioning state
   provisioningState string
   // When the resource was created
@@ -761,11 +761,11 @@ azure.subscription.computeService.vm @defaults("name location properties.hardwar
   vmScaleSet() azure.subscription.computeService.vmScaleSet
   // Managed identity configuration (type, system- and user-assigned identities)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the VM's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the VM; null when no system-assigned identity is enabled
@@ -982,11 +982,11 @@ azure.subscription.computeService.disk @defaults("name location properties.osTyp
   zones []string
   // Disk SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Disk resource properties
   properties dict
   // Disk network access policy (AllowAll, AllowPrivate, DenyAll)
@@ -1120,11 +1120,11 @@ azure.subscription.computeService.diskEncryptionSet @defaults("name location enc
   provisioningState string
   // Identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1183,11 +1183,11 @@ azure.subscription.computeService.snapshot @defaults("name location diskSizeByte
   type string
   // Snapshot SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Snapshot resource properties
   properties dict
   // Disk creation source information (createOption, sourceResourceId, sourceUri, etc.)
@@ -1309,11 +1309,11 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   zones []string
   // Scale set SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // VMSS resource properties
   properties dict
   // Orchestration mode ("Uniform" or "Flexible")
@@ -1364,11 +1364,11 @@ azure.subscription.computeService.vmScaleSet @defaults("name location orchestrat
   extensions() []dict
   // Managed identity configuration (type, system- and user-assigned identities)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the scale set's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // System-assigned managed identity of the scale set; null when no system-assigned identity is enabled
@@ -1419,11 +1419,11 @@ azure.subscription.computeService.vmScaleSet.instance @defaults("name instanceId
   properties dict
   // Instance SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Creation and last-modification provenance recorded by Azure Resource Manager
   systemMetadata() azure.subscription.systemData
 }
@@ -1484,11 +1484,11 @@ azure.subscription.computeService.dedicatedHost @defaults("name sku.name provisi
   type string
   // Dedicated host SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Unmodeled resource properties returned by the Azure API
   properties dict
   // The fault domain of the host within its group
@@ -1828,11 +1828,11 @@ azure.subscription.batchService.account.pool @defaults("id name") {
   etag string
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Pool configuration settings including scale, network, and task scheduling options
   properties dict
   // Pool provisioning state
@@ -1922,11 +1922,11 @@ azure.subscription.databricksService.workspace @defaults("id name location publi
   properties dict
   // Workspace pricing SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Public network access setting ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether public IPs are disabled on cluster nodes (Secure Cluster Connectivity / VNet injection)
@@ -3940,7 +3940,7 @@ private azure.subscription.networkService.bastionHost @defaults("id name locatio
   properties dict
   // Bastion host SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Bastion SKU name ("Basic", "Standard", "Developer", "Premium")
@@ -3968,7 +3968,7 @@ private azure.subscription.networkService.bastionHost @defaults("id name locatio
   // IP configurations binding the Bastion host to its subnet and public IP
   ipConfigurations() []azure.subscription.networkService.bastionHost.ipConfiguration
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
 }
 
 // Azure Bastion host IP configuration
@@ -6247,7 +6247,7 @@ private azure.subscription.storageService.account @defaults("id name location") 
   // raw keys here.
   properties dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the account's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // Tenant ID of the account's managed identity; empty when no managed identity is configured
@@ -6258,11 +6258,11 @@ private azure.subscription.storageService.account @defaults("id name location") 
   encryptionIdentity() azure.subscription.managedIdentity
   // Storage account SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Storage account kind
   kind string
   // Minimum TLS version enforced on the storage account
@@ -7369,11 +7369,11 @@ private azure.subscription.webService.appslot @defaults("id name location") {
   properties dict
   // App slot identity
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Parent web app site for this slot
   parent() azure.subscription.webService.appsite
   // App slot configuration
@@ -7678,11 +7678,11 @@ private azure.subscription.webService.appServicePlan @defaults("id name location
   properties dict
   // App Service plan SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members, its
+  // Deprecated in favor of skuData, which carries the SKU members, its
   // capabilities and its scaling limits as typed fields.
   sku @maturity("deprecated") dict
   // SKU the plan is provisioned at, with its capabilities and scaling limits
-  skuRef azure.subscription.webService.appServicePlan.skuDescription
+  skuData azure.subscription.webService.appServicePlan.skuDescription
   // Whether the plan is zone-redundant
   zoneRedundant bool
   // Number of web apps assigned to this plan
@@ -12627,11 +12627,11 @@ azure.subscription.aksService.cluster @defaults("name location kubernetesVersion
   identityBindings() []azure.subscription.aksService.cluster.identityBinding
   // Control-plane managed identity configuration (type, system- and user-assigned identities)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the cluster's system-assigned control-plane managed identity; empty when a user-assigned identity is used
   principalId string
   // System-assigned control-plane managed identity of the cluster; null when a user-assigned identity is used
@@ -13343,11 +13343,11 @@ private azure.subscription.iotService.iotHub @defaults("id name location") {
   tags map[string]string
   // IoT Hub SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Provisioning state
   provisioningState string
   // Hub state
@@ -13477,11 +13477,11 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   linkedServers() []azure.subscription.cacheService.redisInstance
   // Cache SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Tags of redis cache
   tags map[string]string
   // Redis configuration settings
@@ -13503,11 +13503,11 @@ azure.subscription.cacheService.redisInstance @defaults("id hostName") {
   zones []string
   // Managed identity assignment
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Principal ID of the cache's system-assigned managed identity; empty when no system-assigned identity is enabled
   principalId string
   // User-assigned managed identities attached to the cache
@@ -13607,11 +13607,11 @@ azure.subscription.dataFactoryService.factory @defaults("name location") {
   publicNetworkAccess string
   // Managed identity assigned to the factory
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Provisioning state
   provisioningState string
   // Version of the factory
@@ -13806,11 +13806,11 @@ azure.subscription.synapseService.workspace @defaults("name location") {
   properties dict
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Managed virtual network setting, set to "default" when enabled and empty when disabled
   managedVirtualNetwork string
   // Public network access setting ("Enabled" or "Disabled")
@@ -14242,11 +14242,11 @@ private azure.subscription.containerRegistryService.registry.credentialSet @defa
   loginServer string
   // Managed identity used to read the Key Vault secrets
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Upstream authentication credentials
   //
   // Each entry carries `name` ("Credential1"), the Key Vault secret URIs
@@ -14357,11 +14357,11 @@ azure.subscription.monitorService.workspace @defaults("id name location skuName"
   customerId string
   // Managed identity configuration (type, principalId, tenantId, userAssignedIdentities)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // ARM resource ID of the default Data Collection Rule for this workspace
   defaultDataCollectionRuleResourceId string
   // Daily data volume capping
@@ -14658,11 +14658,11 @@ azure.subscription.recoveryServicesService.vault @defaults("id name location sku
   tags map[string]string
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the vault
   userAssignedIdentities() []azure.subscription.managedIdentity
   // SKU name ("Standard" or "RS0")
@@ -15050,11 +15050,11 @@ azure.subscription.serviceBusService.namespace @defaults("id name location") {
   tags map[string]string
   // Namespace SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Namespace status
   status string
   // Service Bus endpoint
@@ -15299,11 +15299,11 @@ azure.subscription.eventHubService.namespace @defaults("id name location") {
   tags map[string]string
   // Namespace SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Namespace status
   status string
   // Whether auto-inflate is enabled
@@ -16250,11 +16250,11 @@ azure.subscription.frontDoorService.profile @defaults("id name location") {
   tags map[string]string
   // Pricing tier
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Profile kind (frontdoor, cdn)
   kind string
   // Provisioning state
@@ -16880,11 +16880,11 @@ azure.subscription.containerAppService.job @defaults("name location triggerType 
   replicaRetryLimit int
   // Managed identity
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Container definitions (image, env, resources, probes); flattened
   containers []dict
   // Workload profile name in the parent environment
@@ -16950,11 +16950,11 @@ azure.subscription.containerInstanceService.containerGroup @defaults("name locat
   ccePolicyHash string
   // Managed identity assigned to the group
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // IP address type ("Public", "Private", or null)
   ipAddressType string
   // Public IP address, if any
@@ -17089,11 +17089,11 @@ azure.subscription.logicService.workflow @defaults("name location state provisio
   accessEndpoint string
   // Managed identity
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // ARM id of the linked integration account, if any
   integrationAccountId string
   // ARM id of the linked integration service environment (ISE), if any
@@ -17506,18 +17506,18 @@ private azure.subscription.purviewService.account @defaults("name location publi
   tags map[string]string
   // Account SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Friendly display name for the account
   friendlyName string
   // Provisioning state: Succeeded, Failed, Canceled, Creating, Deleting, Moving, SoftDeleting, SoftDeleted, or Unknown
@@ -17586,18 +17586,18 @@ azure.subscription.searchService.service @defaults("id name location publicNetwo
   tags map[string]string
   // Search service SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Whether the service is reachable from the public internet ("enabled" or "disabled")
   publicNetworkAccess string
   // Whether API-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -17818,18 +17818,18 @@ azure.subscription.machineLearningService.workspace @defaults("id name location 
   kind string
   // Workspace SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Immutable workspace identifier assigned by Azure
   workspaceId string
   // Friendly (display) name of the workspace
@@ -18005,11 +18005,11 @@ azure.subscription.machineLearningService.workspace.onlineEndpoint @defaults("na
   kind string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Description of the endpoint
   description string
   // Authentication mode: "Key" (non-expiring keys) or "AMLToken" (expiring Azure Machine Learning tokens)
@@ -18096,11 +18096,11 @@ azure.subscription.machineLearningService.workspace.serverlessEndpoint @defaults
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Authentication mode for the endpoint (e.g., "Key")
   authMode string
   // Lifecycle state of the endpoint (e.g., "Creating", "Online", "Deleting", "Failed")
@@ -18139,11 +18139,11 @@ azure.subscription.machineLearningService.workspace.compute @defaults("name comp
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Kind of compute
   //
   // Examples include "AmlCompute", "ComputeInstance", "Kubernetes", "AKS", "VirtualMachine", "DataFactory", "Databricks", "HDInsight", and "SynapseSpark".
@@ -18329,11 +18329,11 @@ azure.subscription.machineLearningService.workspace.batchEndpoint @defaults("nam
   defaultDeploymentName string
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Endpoint-specific settings
   properties map[string]string
   // Model deployments behind the endpoint
@@ -18399,11 +18399,11 @@ azure.subscription.machineLearningService.workspace.batchEndpoint.deployment @de
   resources dict
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Deployment-specific settings
   properties map[string]string
   // Creation and last-modification provenance recorded by Azure Resource Manager
@@ -18445,18 +18445,18 @@ azure.subscription.appConfigurationService.configurationStore @defaults("id name
   tags map[string]string
   // Configuration store SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Whether the store is reachable from the public internet ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether access-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -18541,18 +18541,18 @@ azure.subscription.cognitiveServicesService.account @defaults("id name location 
   tags map[string]string
   // Account SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Whether the account is reachable from the public internet ("Enabled" or "Disabled")
   publicNetworkAccess string
   // Whether API-key (local) authentication is disabled, leaving Microsoft Entra ID as the only method
@@ -18797,11 +18797,11 @@ azure.subscription.cognitiveServicesService.account.project @defaults("name disp
   tags map[string]string
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Human-facing display name of the project
   displayName string
   // Project description
@@ -19476,18 +19476,18 @@ azure.subscription.signalRService.signalR @defaults("id name location publicNetw
   kind string
   // Instance SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Public hostname clients connect to
   hostName string
   // External IP of the instance
@@ -19549,18 +19549,18 @@ azure.subscription.webPubSubService.webPubSub @defaults("id name location public
   kind string
   // Instance SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Public hostname clients connect to
   hostName string
   // External IP of the instance
@@ -19621,18 +19621,18 @@ azure.subscription.kustoService.cluster @defaults("id name location publicNetwor
   tags map[string]string
   // Instance SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Identity configuration (SystemAssigned, UserAssigned, principalId, tenantId)
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Cluster query endpoint URI
   uri string
   // Cluster data ingestion URI
@@ -19936,18 +19936,18 @@ azure.subscription.automationService.account @defaults("id name location publicN
   tags map[string]string
   // SKU
   //
-  // Deprecated in favor of skuRef, which carries the SKU members as
+  // Deprecated in favor of skuData, which carries the SKU members as
   // typed fields.
   sku @maturity("deprecated") dict
   // Billable SKU the resource is provisioned at
-  skuRef azure.subscription.resourceSku
+  skuData azure.subscription.resourceSku
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Account lifecycle state ("Ok", "Unavailable", "Suspended")
   state string
   // Whether the account is reachable from the public internet
@@ -20065,11 +20065,11 @@ azure.subscription.desktopVirtualizationService.hostPool @defaults("id name loca
   tags map[string]string
   // Managed identity assigned to the host pool
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // Host pool type ("Personal", "Pooled", or "BYODesktop")
   hostPoolType string
   // Load-balancing algorithm ("BreadthFirst", "DepthFirst", or "Persistent")
@@ -20179,11 +20179,11 @@ azure.subscription.dataProtectionService.backupVault @defaults("id name location
   provisioningState string
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the vault
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Soft delete state ("AlwaysOn", "On", or "Off")
@@ -20297,11 +20297,11 @@ azure.subscription.netAppService.account @defaults("id name location provisionin
   provisioningState string
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the account
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Domain used for NFSv4 user ID mapping
@@ -20569,11 +20569,11 @@ azure.subscription.dataBoxService.job @defaults("id name status transferType") {
   skuModel string
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the job
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Kind of job details Azure returned ("DataBox", "DataBoxDisk", "DataBoxHeavy", or "DataBoxCustomerDisk")
@@ -20769,11 +20769,11 @@ azure.subscription.elasticSanService.elasticSan.volumeGroup @defaults("id name e
   enforceDataIntegrityCheckForIscsi bool
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the volume group
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Name of the Key Vault key encrypting the group
@@ -21023,11 +21023,11 @@ azure.subscription.storageCacheService.amlFilesystem @defaults("id name location
   provisioningState string
   // Managed identity configuration
   //
-  // Deprecated in favor of identityRef, which carries the managed
+  // Deprecated in favor of resourceIdentity, which carries the managed
   // identity members as typed fields.
   identity @maturity("deprecated") dict
   // Managed identity attached to the resource
-  identityRef azure.subscription.resourceIdentity
+  resourceIdentity azure.subscription.resourceIdentity
   // User-assigned managed identities associated with the file system
   userAssignedIdentities() []azure.subscription.managedIdentity
   // Provisioned storage capacity in TiB

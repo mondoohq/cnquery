@@ -188,7 +188,7 @@ func logicWorkflowToMQL(runtime *plugin.Runtime, entry *logic.Workflow) (plugin.
 		"connectionNames":                 llx.ArrayData(connectionNames, types.String),
 	}
 	wfIdentity := orZero(entry.Identity)
-	if err := setIdentityRef(runtime, wfArgs, sortedUserAssignedIdentityIDs(wfIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, wfArgs, sortedUserAssignedIdentityIDs(wfIdentity.UserAssignedIdentities),
 		identityType(wfIdentity.Type), identityPrincipalId(wfIdentity.PrincipalID), identityTenantId(wfIdentity.TenantID)); err != nil {
 		return nil, err
 	}

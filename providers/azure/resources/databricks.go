@@ -275,7 +275,7 @@ func databricksWorkspaceToMql(runtime *plugin.Runtime, workspace *armdatabricks.
 		"creationTime":                    llx.TimeDataPtr(creationTime),
 	}
 	workspaceSku := orZero(workspace.SKU)
-	if err := setSkuRef(runtime, args, skuName(workspaceSku.Name), skuTier(workspaceSku.Tier)); err != nil {
+	if err := setSkuData(runtime, args, skuName(workspaceSku.Name), skuTier(workspaceSku.Tier)); err != nil {
 		return nil, err
 	}
 

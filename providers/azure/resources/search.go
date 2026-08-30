@@ -194,11 +194,11 @@ func searchServiceToMql(runtime *plugin.Runtime, svc *armsearch.Service) (*mqlAz
 		"upgradeAvailable":            llx.StringDataPtr(upgradeAvailable),
 		"serviceUpgradedAt":           llx.TimeDataPtr(serviceUpgradedAt),
 	}
-	if err := setSkuRef(runtime, args, skuName(svcSku.Name)); err != nil {
+	if err := setSkuData(runtime, args, skuName(svcSku.Name)); err != nil {
 		return nil, err
 	}
 	svcIdentity := orZero(svc.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(svcIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(svcIdentity.UserAssignedIdentities),
 		identityType(svcIdentity.Type), identityPrincipalId(svcIdentity.PrincipalID), identityTenantId(svcIdentity.TenantID)); err != nil {
 		return nil, err
 	}

@@ -87,13 +87,13 @@ func (a *mqlAzureSubscription) resources() ([]any, error) {
 				"changedTime":       llx.TimeDataPtr(resource.ChangedTime),
 			}
 			resourceSku := orZero(resource.SKU)
-			if err := setSkuRef(a.MqlRuntime, args, skuName(resourceSku.Name), skuTier(resourceSku.Tier), skuSize(resourceSku.Size),
+			if err := setSkuData(a.MqlRuntime, args, skuName(resourceSku.Name), skuTier(resourceSku.Tier), skuSize(resourceSku.Size),
 				skuFamily(resourceSku.Family), skuModel(resourceSku.Model), skuCapacity(resourceSku.Capacity)); err != nil {
 				return nil, err
 			}
 
 			resourceIdentity := orZero(resource.Identity)
-			if err := setIdentityRef(a.MqlRuntime, args, sortedUserAssignedIdentityIDs(resourceIdentity.UserAssignedIdentities),
+			if err := setResourceIdentity(a.MqlRuntime, args, sortedUserAssignedIdentityIDs(resourceIdentity.UserAssignedIdentities),
 				identityType(resourceIdentity.Type), identityPrincipalId(resourceIdentity.PrincipalID), identityTenantId(resourceIdentity.TenantID)); err != nil {
 				return nil, err
 			}

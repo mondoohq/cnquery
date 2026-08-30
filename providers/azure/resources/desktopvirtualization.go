@@ -181,7 +181,7 @@ func hostPoolToMql(runtime *plugin.Runtime, hp *armdesktopvirtualization.HostPoo
 	// UserAssignedIdentities, so the host pool publishes only the three
 	// members the SDK reports.
 	hpIdentity := orZero(hp.Identity)
-	if err := setIdentityRef(runtime, hpArgs, nil,
+	if err := setResourceIdentity(runtime, hpArgs, nil,
 		identityType(hpIdentity.Type), identityPrincipalId(hpIdentity.PrincipalID), identityTenantId(hpIdentity.TenantID)); err != nil {
 		return nil, err
 	}

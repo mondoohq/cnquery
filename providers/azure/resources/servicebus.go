@@ -234,7 +234,7 @@ func (a *mqlAzureSubscriptionServiceBusService) namespaces() ([]any, error) {
 				"updatedAt":                       llx.TimeDataPtr(updatedAt),
 			}
 			nsSku := orZero(ns.SKU)
-			if err := setSkuRef(a.MqlRuntime, args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity)); err != nil {
+			if err := setSkuData(a.MqlRuntime, args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity)); err != nil {
 				return nil, err
 			}
 

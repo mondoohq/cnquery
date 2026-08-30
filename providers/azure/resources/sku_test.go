@@ -75,17 +75,17 @@ func TestSkuFieldsPublishOnlyTheMembersPassed(t *testing.T) {
 	})
 }
 
-// setSkuRef hangs the SKU off the parent's cache key, so two resources of the
+// setSkuData hangs the SKU off the parent's cache key, so two resources of the
 // same kind do not share one SKU row, and a service that reported no SKU reads
 // null rather than a resource whose every member is null.
 func TestSetSkuRef(t *testing.T) {
 	t.Run("a reported SKU is keyed off the parent", func(t *testing.T) {
 		runtime := azureTestRuntime()
 		args := map[string]*llx.RawData{"id": llx.StringData("/subscriptions/s/rg/disks/one")}
-		require.NoError(t, setSkuRef(runtime, args, skuName(ptr("Premium_LRS")), skuTier(ptr("Premium"))))
+		require.NoError(t, setSkuData(runtime, args, skuName(ptr("Premium_LRS")), skuTier(ptr("Premium"))))
 
-		res, ok := args["skuRef"].Value.(*mqlAzureSubscriptionResourceSku)
-		require.True(t, ok, "skuRef should hold a resourceSku")
+		res, ok := args["skuData"].Value.(*mqlAzureSubscriptionResourceSku)
+		require.True(t, ok, "skuData should hold a resourceSku")
 		assert.Equal(t, "/subscriptions/s/rg/disks/one/sku", res.MqlID())
 		assert.Equal(t, "Premium_LRS", res.GetName().Data)
 		assert.Equal(t, "Premium", res.GetTier().Data)
@@ -97,9 +97,9 @@ func TestSetSkuRef(t *testing.T) {
 		runtime := azureTestRuntime()
 		var sku *compute.SKU
 		args := map[string]*llx.RawData{"id": llx.StringData("/subscriptions/s/rg/disks/two")}
-		require.NoError(t, setSkuRef(runtime, args, skuName(orZero(sku).Name), skuTier(orZero(sku).Tier)))
+		require.NoError(t, setSkuData(runtime, args, skuName(orZero(sku).Name), skuTier(orZero(sku).Tier)))
 
-		assert.Nil(t, args["skuRef"].Value)
+		assert.Nil(t, args["skuData"].Value)
 	})
 
 	// A parent with no key would give every SKU in the scan the same cache id,
@@ -107,7 +107,7 @@ func TestSetSkuRef(t *testing.T) {
 	t.Run("a parent with no key is an error, not a shared cache row", func(t *testing.T) {
 		runtime := azureTestRuntime()
 		args := map[string]*llx.RawData{}
-		assert.Error(t, setSkuRef(runtime, args, skuName(ptr("Standard"))))
+		assert.Error(t, setSkuData(runtime, args, skuName(ptr("Standard"))))
 	})
 }
 
@@ -174,12 +174,12 @@ func TestSetIdentityRef(t *testing.T) {
 			},
 		}
 		args := map[string]*llx.RawData{"__id": llx.StringData("/pools/one")}
-		require.NoError(t, setIdentityRef(runtime, args,
+		require.NoError(t, setResourceIdentity(runtime, args,
 			sortedUserAssignedIdentityIDs(identity.UserAssignedIdentities),
 			identityType(identity.Type)))
 
-		res, ok := args["identityRef"].Value.(*mqlAzureSubscriptionResourceIdentity)
-		require.True(t, ok, "identityRef should hold a resourceIdentity")
+		res, ok := args["resourceIdentity"].Value.(*mqlAzureSubscriptionResourceIdentity)
+		require.True(t, ok, "resourceIdentity should hold a resourceIdentity")
 		assert.Equal(t, "/pools/one/identity", res.MqlID())
 		assert.Equal(t, "UserAssigned", res.GetType().Data)
 		assert.Equal(t, "", res.PrincipalId.Data)
@@ -194,12 +194,12 @@ func TestSetIdentityRef(t *testing.T) {
 		runtime := azureTestRuntime()
 		var identity *compute.VirtualMachineIdentity
 		args := map[string]*llx.RawData{"id": llx.StringData("/vms/one")}
-		require.NoError(t, setIdentityRef(runtime, args, nil,
+		require.NoError(t, setResourceIdentity(runtime, args, nil,
 			identityType(orZero(identity).Type),
 			identityPrincipalId(orZero(identity).PrincipalID),
 			identityTenantId(orZero(identity).TenantID)))
 
-		assert.Nil(t, args["identityRef"].Value)
+		assert.Nil(t, args["resourceIdentity"].Value)
 	})
 
 	// A user-assigned-only identity reports no principal but does report the
@@ -207,9 +207,9 @@ func TestSetIdentityRef(t *testing.T) {
 	t.Run("attached identities alone still publish the resource", func(t *testing.T) {
 		runtime := azureTestRuntime()
 		args := map[string]*llx.RawData{"id": llx.StringData("/vms/two")}
-		require.NoError(t, setIdentityRef(runtime, args, []string{"/subscriptions/s/a"}))
+		require.NoError(t, setResourceIdentity(runtime, args, []string{"/subscriptions/s/a"}))
 
-		res, ok := args["identityRef"].Value.(*mqlAzureSubscriptionResourceIdentity)
+		res, ok := args["resourceIdentity"].Value.(*mqlAzureSubscriptionResourceIdentity)
 		require.True(t, ok)
 		assert.Equal(t, []string{"/subscriptions/s/a"}, res.cacheUserAssignedIdentityIds)
 	})

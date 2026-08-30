@@ -384,7 +384,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 				}
 			}
 
-			identityRef, err := identityRefData(a.MqlRuntime, convert.ToValue(entry.ID), userAssignedIdentityIds,
+			resourceIdentity, err := resourceIdentityData(a.MqlRuntime, convert.ToValue(entry.ID), userAssignedIdentityIds,
 				identityType(clusterIdentity.Type), identityPrincipalId(clusterIdentity.PrincipalID), identityTenantId(clusterIdentity.TenantID))
 			if err != nil {
 				return nil, err
@@ -438,7 +438,7 @@ func (a *mqlAzureSubscriptionAksService) clusters() ([]any, error) {
 					"supportPlan":                       llx.StringDataPtr((*string)(entry.Properties.SupportPlan)),
 					"controlPlaneMetricsEnabled":        llx.BoolData(convert.ToValue(controlPlaneMetricsEnabled)),
 					"identity":                          llx.DictData(identityDict),
-					"identityRef":                       identityRef,
+					"resourceIdentity":                  resourceIdentity,
 					"principalId":                       llx.StringDataPtr(clusterIdentity.PrincipalID),
 					"servicePrincipalClientId":          llx.StringData(servicePrincipalClientId),
 					"linuxAdminUsername":                llx.StringData(linuxAdminUsername),

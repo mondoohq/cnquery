@@ -552,7 +552,7 @@ func createBatchPoolRawData(runtime *plugin.Runtime, pool *armbatch.Pool) (map[s
 	// members of the shared identity resource stay null rather than reading as
 	// empty strings.
 	poolIdentity := orZero(pool.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(poolIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(poolIdentity.UserAssignedIdentities),
 		identityType(poolIdentity.Type)); err != nil {
 		return nil, err
 	}

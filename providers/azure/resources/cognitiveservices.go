@@ -346,11 +346,11 @@ func cognitiveServicesAccountToMql(runtime *plugin.Runtime, account *armcognitiv
 		"multiRegionRoutingMethod":        llx.StringData(multiRegionRoutingMethod),
 		"networkInjections":               llx.ArrayData(networkInjections, types.Resource("azure.subscription.cognitiveServicesService.account.networkInjection")),
 	}
-	if err := setSkuRef(runtime, args, skuName(accountSku.Name), skuTier(accountSku.Tier), skuSize(accountSku.Size), skuFamily(accountSku.Family), skuCapacity(accountSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(accountSku.Name), skuTier(accountSku.Tier), skuSize(accountSku.Size), skuFamily(accountSku.Family), skuCapacity(accountSku.Capacity)); err != nil {
 		return nil, err
 	}
 	accountIdentity := orZero(account.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities),
 		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID)); err != nil {
 		return nil, err
 	}
@@ -1145,7 +1145,7 @@ func cognitiveServicesProjectToMql(runtime *plugin.Runtime, proj *armcognitivese
 		"endpoints":         llx.MapData(endpoints, types.String),
 	}
 	projIdentity := orZero(proj.Identity)
-	if err := setIdentityRef(runtime, projArgs, sortedUserAssignedIdentityIDs(projIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, projArgs, sortedUserAssignedIdentityIDs(projIdentity.UserAssignedIdentities),
 		identityType(projIdentity.Type), identityPrincipalId(projIdentity.PrincipalID), identityTenantId(projIdentity.TenantID)); err != nil {
 		return nil, err
 	}

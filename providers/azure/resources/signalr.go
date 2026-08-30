@@ -127,12 +127,12 @@ func signalRToMql(runtime *plugin.Runtime, sr *armsignalr.ResourceInfo) (*mqlAzu
 		"provisioningState":        llx.StringData(provisioningState),
 	}
 	srSku := orZero(sr.SKU)
-	if err := setSkuRef(runtime, args, skuName(srSku.Name), skuTier(srSku.Tier), skuCapacity(srSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(srSku.Name), skuTier(srSku.Tier), skuCapacity(srSku.Capacity)); err != nil {
 		return nil, err
 	}
 
 	srIdentity := orZero(sr.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(srIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(srIdentity.UserAssignedIdentities),
 		identityType(srIdentity.Type), identityPrincipalId(srIdentity.PrincipalID), identityTenantId(srIdentity.TenantID)); err != nil {
 		return nil, err
 	}
@@ -272,12 +272,12 @@ func webPubSubToMql(runtime *plugin.Runtime, wps *armwebpubsub.ResourceInfo) (*m
 		"provisioningState":        llx.StringData(provisioningState),
 	}
 	wpsSku := orZero(wps.SKU)
-	if err := setSkuRef(runtime, args, skuName(wpsSku.Name), skuTier(wpsSku.Tier), skuCapacity(wpsSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(wpsSku.Name), skuTier(wpsSku.Tier), skuCapacity(wpsSku.Capacity)); err != nil {
 		return nil, err
 	}
 
 	wpsIdentity := orZero(wps.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(wpsIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(wpsIdentity.UserAssignedIdentities),
 		identityType(wpsIdentity.Type), identityPrincipalId(wpsIdentity.PrincipalID), identityTenantId(wpsIdentity.TenantID)); err != nil {
 		return nil, err
 	}

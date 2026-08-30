@@ -135,7 +135,7 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 				created = llx.TimeData(llx.NeverFutureTime)
 			}
 
-			identityRef, err := identityRefData(a.MqlRuntime, convert.ToValue(factory.ID), userAssignedIdentityIds,
+			resourceIdentity, err := resourceIdentityData(a.MqlRuntime, convert.ToValue(factory.ID), userAssignedIdentityIds,
 				identityType(factoryIdentity.Type), identityPrincipalId(factoryIdentity.PrincipalID), identityTenantId(factoryIdentity.TenantID))
 			if err != nil {
 				return nil, err
@@ -152,7 +152,7 @@ func (a *mqlAzureSubscriptionDataFactoryService) factories() ([]any, error) {
 					"properties":          llx.DictData(properties),
 					"publicNetworkAccess": llx.StringData(publicNetworkAccess),
 					"identity":            llx.DictData(identity),
-					"identityRef":         identityRef,
+					"resourceIdentity":    resourceIdentity,
 					"principalId":         llx.StringDataPtr(factoryIdentity.PrincipalID),
 					"tenantId":            llx.StringDataPtr(factoryIdentity.TenantID),
 					"provisioningState":   llx.StringData(provisioningState),

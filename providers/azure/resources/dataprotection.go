@@ -167,7 +167,7 @@ func createBackupVaultResource(runtime *plugin.Runtime, vault *armdataprotection
 		alertsForAllJobFailures = enumString(props.MonitoringSettings.AzureMonitorAlertSettings.AlertsForAllJobFailures)
 	}
 
-	identityRef, err := identityRefData(runtime, convert.ToValue(vault.ID), userAssignedIdentityIds,
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(vault.ID), userAssignedIdentityIds,
 		identityType(vaultIdentity.Type), identityPrincipalId(vaultIdentity.PrincipalID), identityTenantId(vaultIdentity.TenantID))
 	if err != nil {
 		return nil, err
@@ -183,7 +183,7 @@ func createBackupVaultResource(runtime *plugin.Runtime, vault *armdataprotection
 			"etag":                            llx.StringDataPtr(vault.ETag),
 			"provisioningState":               llx.StringData(enumString(props.ProvisioningState)),
 			"identity":                        llx.DictData(identity),
-			"identityRef":                     identityRef,
+			"resourceIdentity":                resourceIdentity,
 			"softDeleteState":                 llx.StringData(softDeleteState),
 			"softDeleteRetentionPeriodInDays": llx.FloatData(softDeleteRetentionDays),
 			"immutabilityState":               llx.StringData(immutabilityState),

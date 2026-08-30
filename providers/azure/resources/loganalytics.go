@@ -155,7 +155,7 @@ func createWorkspaceResource(runtime *plugin.Runtime, ws *armoperationalinsights
 		"defaultDataCollectionRuleResourceId": llx.StringDataPtr(props.DefaultDataCollectionRuleResourceID),
 	}
 	wsIdentity := orZero(ws.Identity)
-	if err := setIdentityRef(runtime, wsArgs, sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, wsArgs, sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities),
 		identityType(wsIdentity.Type), identityPrincipalId(wsIdentity.PrincipalID), identityTenantId(wsIdentity.TenantID)); err != nil {
 		return nil, err
 	}

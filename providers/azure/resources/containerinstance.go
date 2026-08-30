@@ -247,7 +247,7 @@ func aciContainerGroupToMQL(runtime *plugin.Runtime, entry *aci.ContainerGroup) 
 		"zones":                    llx.ArrayData(zones, types.String),
 	}
 	groupIdentity := orZero(entry.Identity)
-	if err := setIdentityRef(runtime, groupArgs, sortedUserAssignedIdentityIDs(groupIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, groupArgs, sortedUserAssignedIdentityIDs(groupIdentity.UserAssignedIdentities),
 		identityType(groupIdentity.Type), identityPrincipalId(groupIdentity.PrincipalID), identityTenantId(groupIdentity.TenantID)); err != nil {
 		return nil, err
 	}

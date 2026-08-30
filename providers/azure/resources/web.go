@@ -107,7 +107,7 @@ func createWebAppResourceFromSite(runtime *plugin.Runtime, resourceType string, 
 	// the tenant through systemAssignedIdentity, off cacheIdentityTenantId.
 	if resourceType == ResourceAzureSubscriptionWebServiceAppslot {
 		args["identity"] = llx.DictData(identity)
-		if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(siteIdentity.UserAssignedIdentities),
+		if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(siteIdentity.UserAssignedIdentities),
 			identityType(siteIdentity.Type), identityPrincipalId(siteIdentity.PrincipalID), identityTenantId(siteIdentity.TenantID)); err != nil {
 			return nil, err
 		}
@@ -2060,11 +2060,11 @@ func (a *mqlAzureSubscriptionWebService) appServicePlans() ([]any, error) {
 				"sku":        llx.DictData(skuDict),
 			}
 
-			skuRef, err := appServicePlanSkuToMql(a.MqlRuntime, convert.ToValue(plan.ID), plan.SKU)
+			skuData, err := appServicePlanSkuToMql(a.MqlRuntime, convert.ToValue(plan.ID), plan.SKU)
 			if err != nil {
 				return nil, err
 			}
-			args["skuRef"] = skuRef
+			args["skuData"] = skuData
 
 			if plan.Properties != nil {
 				args["zoneRedundant"] = llx.BoolDataPtr(plan.Properties.ZoneRedundant)

@@ -3284,8 +3284,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.resource.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResource).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.resource.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionResource).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.resource.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionResource).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.resource.plan": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResource).GetPlan()).ToDataRes(types.Dict)
@@ -3293,8 +3293,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.resource.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResource).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.resource.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionResource).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.resource.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionResource).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.resource.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionResource).GetProvisioningState()).ToDataRes(types.String)
@@ -3596,8 +3596,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vm.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.vm.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.computeService.vm.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.computeService.vm.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVm).GetPrincipalId()).ToDataRes(types.String)
@@ -3821,8 +3821,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.disk.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.disk.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.computeService.disk.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.computeService.disk.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDisk).GetProperties()).ToDataRes(types.Dict)
@@ -3956,8 +3956,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.diskEncryptionSet.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.diskEncryptionSet.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.computeService.diskEncryptionSet.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.computeService.diskEncryptionSet.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -4007,8 +4007,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.snapshot.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.snapshot.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.computeService.snapshot.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.computeService.snapshot.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceSnapshot).GetProperties()).ToDataRes(types.Dict)
@@ -4133,8 +4133,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vmScaleSet.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.vmScaleSet.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.computeService.vmScaleSet.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.computeService.vmScaleSet.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetProperties()).ToDataRes(types.Dict)
@@ -4211,8 +4211,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vmScaleSet.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.vmScaleSet.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.computeService.vmScaleSet.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.computeService.vmScaleSet.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).GetPrincipalId()).ToDataRes(types.String)
@@ -4262,8 +4262,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.vmScaleSet.instance.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.vmScaleSet.instance.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.computeService.vmScaleSet.instance.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.computeService.vmScaleSet.instance.systemMetadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).GetSystemMetadata()).ToDataRes(types.Resource("azure.subscription.systemData"))
@@ -4325,8 +4325,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.computeService.dedicatedHost.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.computeService.dedicatedHost.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.computeService.dedicatedHost.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.computeService.dedicatedHost.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).GetProperties()).ToDataRes(types.Dict)
@@ -4691,8 +4691,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.batchService.account.pool.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.batchService.account.pool.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.batchService.account.pool.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.batchService.account.pool.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionBatchServiceAccountPool).GetProperties()).ToDataRes(types.Dict)
@@ -4763,8 +4763,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.databricksService.workspace.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.databricksService.workspace.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.databricksService.workspace.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.databricksService.workspace.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).GetPublicNetworkAccess()).ToDataRes(types.String)
@@ -6806,8 +6806,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.networkService.bastionHost.ipConfigurations": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHost).GetIpConfigurations()).ToDataRes(types.Array(types.Resource("azure.subscription.networkService.bastionHost.ipConfiguration")))
 	},
-	"azure.subscription.networkService.bastionHost.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHost).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.networkService.bastionHost.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHost).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.networkService.bastionHost.ipConfiguration.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration).GetId()).ToDataRes(types.String)
@@ -8969,8 +8969,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetProperties()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.storageService.account.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.storageService.account.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.storageService.account.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetPrincipalId()).ToDataRes(types.String)
@@ -8987,8 +8987,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageService.account.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.storageService.account.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.storageService.account.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.storageService.account.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageServiceAccount).GetKind()).ToDataRes(types.String)
@@ -10088,8 +10088,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appslot.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.webService.appslot.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.webService.appslot.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.webService.appslot.parent": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppslot).GetParent()).ToDataRes(types.Resource("azure.subscription.webService.appsite"))
@@ -10409,8 +10409,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webService.appServicePlan.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.webService.appServicePlan.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.webService.appServicePlan.skuDescription"))
+	"azure.subscription.webService.appServicePlan.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetSkuData()).ToDataRes(types.Resource("azure.subscription.webService.appServicePlan.skuDescription"))
 	},
 	"azure.subscription.webService.appServicePlan.zoneRedundant": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebServiceAppServicePlan).GetZoneRedundant()).ToDataRes(types.Bool)
@@ -15335,8 +15335,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.aksService.cluster.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.aksService.cluster.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.aksService.cluster.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.aksService.cluster.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAksServiceCluster).GetPrincipalId()).ToDataRes(types.String)
@@ -15974,8 +15974,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.iotService.iotHub.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.iotService.iotHub.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.iotService.iotHub.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.iotService.iotHub.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionIotServiceIotHub).GetProvisioningState()).ToDataRes(types.String)
@@ -16106,8 +16106,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cacheService.redisInstance.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.cacheService.redisInstance.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.cacheService.redisInstance.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.cacheService.redisInstance.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -16136,8 +16136,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cacheService.redisInstance.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.cacheService.redisInstance.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.cacheService.redisInstance.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.cacheService.redisInstance.principalId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCacheServiceRedisInstance).GetPrincipalId()).ToDataRes(types.String)
@@ -16247,8 +16247,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.dataFactoryService.factory.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.dataFactoryService.factory.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.dataFactoryService.factory.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.dataFactoryService.factory.provisioningState": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataFactoryServiceFactory).GetProvisioningState()).ToDataRes(types.String)
@@ -16427,8 +16427,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.synapseService.workspace.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspace).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.synapseService.workspace.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspace).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.synapseService.workspace.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspace).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.synapseService.workspace.managedVirtualNetwork": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSynapseServiceWorkspace).GetManagedVirtualNetwork()).ToDataRes(types.String)
@@ -16880,8 +16880,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerRegistryService.registry.credentialSet.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.containerRegistryService.registry.credentialSet.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.containerRegistryService.registry.credentialSet.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.containerRegistryService.registry.credentialSet.authCredentials": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet).GetAuthCredentials()).ToDataRes(types.Array(types.Dict))
@@ -17015,8 +17015,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.monitorService.workspace.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.monitorService.workspace.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.monitorService.workspace.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.monitorService.workspace.defaultDataCollectionRuleResourceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMonitorServiceWorkspace).GetDefaultDataCollectionRuleResourceId()).ToDataRes(types.String)
@@ -17351,8 +17351,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.recoveryServicesService.vault.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.recoveryServicesService.vault.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.recoveryServicesService.vault.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.recoveryServicesService.vault.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
@@ -17684,8 +17684,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.serviceBusService.namespace.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.serviceBusService.namespace.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.serviceBusService.namespace.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.serviceBusService.namespace.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionServiceBusServiceNamespace).GetStatus()).ToDataRes(types.String)
@@ -17915,8 +17915,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.eventHubService.namespace.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.eventHubService.namespace.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.eventHubService.namespace.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.eventHubService.namespace.status": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionEventHubServiceNamespace).GetStatus()).ToDataRes(types.String)
@@ -18689,8 +18689,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.frontDoorService.profile.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfile).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.frontDoorService.profile.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfile).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.frontDoorService.profile.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfile).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.frontDoorService.profile.kind": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionFrontDoorServiceProfile).GetKind()).ToDataRes(types.String)
@@ -19376,8 +19376,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerAppService.job.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceJob).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.containerAppService.job.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionContainerAppServiceJob).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.containerAppService.job.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerAppServiceJob).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.containerAppService.job.containers": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerAppServiceJob).GetContainers()).ToDataRes(types.Array(types.Dict))
@@ -19439,8 +19439,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.containerInstanceService.containerGroup.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.containerInstanceService.containerGroup.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.containerInstanceService.containerGroup.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.containerInstanceService.containerGroup.ipAddressType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup).GetIpAddressType()).ToDataRes(types.String)
@@ -19598,8 +19598,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.logicService.workflow.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.logicService.workflow.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.logicService.workflow.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.logicService.workflow.integrationAccountId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionLogicServiceWorkflow).GetIntegrationAccountId()).ToDataRes(types.String)
@@ -19961,14 +19961,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.purviewService.account.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPurviewServiceAccount).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.purviewService.account.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionPurviewServiceAccount).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.purviewService.account.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPurviewServiceAccount).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.purviewService.account.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPurviewServiceAccount).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.purviewService.account.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionPurviewServiceAccount).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.purviewService.account.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionPurviewServiceAccount).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.purviewService.account.friendlyName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionPurviewServiceAccount).GetFriendlyName()).ToDataRes(types.String)
@@ -20030,14 +20030,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.searchService.service.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSearchServiceService).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.searchService.service.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSearchServiceService).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.searchService.service.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSearchServiceService).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.searchService.service.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSearchServiceService).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.searchService.service.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSearchServiceService).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.searchService.service.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSearchServiceService).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.searchService.service.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSearchServiceService).GetPublicNetworkAccess()).ToDataRes(types.String)
@@ -20198,14 +20198,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.machineLearningService.workspace.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.machineLearningService.workspace.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.machineLearningService.workspace.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.machineLearningService.workspace.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.machineLearningService.workspace.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.machineLearningService.workspace.workspaceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).GetWorkspaceId()).ToDataRes(types.String)
@@ -20381,8 +20381,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.onlineEndpoint.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.machineLearningService.workspace.onlineEndpoint.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.machineLearningService.workspace.onlineEndpoint.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.machineLearningService.workspace.onlineEndpoint.description": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).GetDescription()).ToDataRes(types.String)
@@ -20477,8 +20477,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.serverlessEndpoint.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.machineLearningService.workspace.serverlessEndpoint.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.machineLearningService.workspace.serverlessEndpoint.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.machineLearningService.workspace.serverlessEndpoint.authMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).GetAuthMode()).ToDataRes(types.String)
@@ -20519,8 +20519,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.compute.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.machineLearningService.workspace.compute.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.machineLearningService.workspace.compute.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.machineLearningService.workspace.compute.computeType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).GetComputeType()).ToDataRes(types.String)
@@ -20705,8 +20705,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.batchEndpoint.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.machineLearningService.workspace.batchEndpoint.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.machineLearningService.workspace.batchEndpoint.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).GetProperties()).ToDataRes(types.Map(types.String, types.String))
@@ -20774,8 +20774,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.properties": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).GetProperties()).ToDataRes(types.Map(types.String, types.String))
@@ -20804,14 +20804,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.appConfigurationService.configurationStore.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.appConfigurationService.configurationStore.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.appConfigurationService.configurationStore.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.appConfigurationService.configurationStore.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.appConfigurationService.configurationStore.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.appConfigurationService.configurationStore.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.appConfigurationService.configurationStore.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).GetPublicNetworkAccess()).ToDataRes(types.String)
@@ -20882,14 +20882,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.cognitiveServicesService.account.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.cognitiveServicesService.account.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.cognitiveServicesService.account.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.cognitiveServicesService.account.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.cognitiveServicesService.account.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.cognitiveServicesService.account.publicNetworkAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).GetPublicNetworkAccess()).ToDataRes(types.String)
@@ -21128,8 +21128,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.cognitiveServicesService.account.project.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.cognitiveServicesService.account.project.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.cognitiveServicesService.account.project.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.cognitiveServicesService.account.project.displayName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).GetDisplayName()).ToDataRes(types.String)
@@ -21746,14 +21746,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.signalRService.signalR.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSignalRServiceSignalR).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.signalRService.signalR.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSignalRServiceSignalR).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.signalRService.signalR.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSignalRServiceSignalR).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.signalRService.signalR.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSignalRServiceSignalR).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.signalRService.signalR.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionSignalRServiceSignalR).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.signalRService.signalR.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionSignalRServiceSignalR).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.signalRService.signalR.hostName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionSignalRServiceSignalR).GetHostName()).ToDataRes(types.String)
@@ -21812,14 +21812,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.webPubSubService.webPubSub.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.webPubSubService.webPubSub.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.webPubSubService.webPubSub.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.webPubSubService.webPubSub.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.webPubSubService.webPubSub.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.webPubSubService.webPubSub.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.webPubSubService.webPubSub.hostName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).GetHostName()).ToDataRes(types.String)
@@ -21875,14 +21875,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.kustoService.cluster.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.kustoService.cluster.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.kustoService.cluster.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.kustoService.cluster.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.kustoService.cluster.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.kustoService.cluster.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.kustoService.cluster.uri": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionKustoServiceCluster).GetUri()).ToDataRes(types.String)
@@ -22178,14 +22178,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.automationService.account.sku": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAutomationServiceAccount).GetSku()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.automationService.account.skuRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionAutomationServiceAccount).GetSkuRef()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
+	"azure.subscription.automationService.account.skuData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAutomationServiceAccount).GetSkuData()).ToDataRes(types.Resource("azure.subscription.resourceSku"))
 	},
 	"azure.subscription.automationService.account.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAutomationServiceAccount).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.automationService.account.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionAutomationServiceAccount).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.automationService.account.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionAutomationServiceAccount).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.automationService.account.state": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionAutomationServiceAccount).GetState()).ToDataRes(types.String)
@@ -22310,8 +22310,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.desktopVirtualizationService.hostPool.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.desktopVirtualizationService.hostPool.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.desktopVirtualizationService.hostPool.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.desktopVirtualizationService.hostPool.hostPoolType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).GetHostPoolType()).ToDataRes(types.String)
@@ -22415,8 +22415,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.dataProtectionService.backupVault.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.dataProtectionService.backupVault.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.dataProtectionService.backupVault.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.dataProtectionService.backupVault.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
@@ -22505,8 +22505,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.netAppService.account.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.netAppService.account.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.netAppService.account.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.netAppService.account.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionNetAppServiceAccount).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
@@ -22745,8 +22745,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.dataBoxService.job.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.dataBoxService.job.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.dataBoxService.job.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.dataBoxService.job.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionDataBoxServiceJob).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
@@ -22943,8 +22943,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.elasticSanService.elasticSan.volumeGroup.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.elasticSanService.elasticSan.volumeGroup.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.elasticSanService.elasticSan.volumeGroup.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
@@ -23183,8 +23183,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"azure.subscription.storageCacheService.amlFilesystem.identity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetIdentity()).ToDataRes(types.Dict)
 	},
-	"azure.subscription.storageCacheService.amlFilesystem.identityRef": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetIdentityRef()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
+	"azure.subscription.storageCacheService.amlFilesystem.resourceIdentity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetResourceIdentity()).ToDataRes(types.Resource("azure.subscription.resourceIdentity"))
 	},
 	"azure.subscription.storageCacheService.amlFilesystem.userAssignedIdentities": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).GetUserAssignedIdentities()).ToDataRes(types.Array(types.Resource("azure.subscription.managedIdentity")))
@@ -23779,8 +23779,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionResource).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.resource.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionResource).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.resource.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionResource).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.resource.plan": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -23791,8 +23791,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionResource).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.resource.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionResource).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.resource.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionResource).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.resource.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24211,8 +24211,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVm).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.vm.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceVm).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.computeService.vm.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVm).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vm.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24527,8 +24527,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceDisk).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.disk.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceDisk).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.computeService.disk.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDisk).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.disk.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24711,8 +24711,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.diskEncryptionSet.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.computeService.diskEncryptionSet.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDiskEncryptionSet).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.diskEncryptionSet.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24787,8 +24787,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceSnapshot).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.snapshot.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceSnapshot).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.computeService.snapshot.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceSnapshot).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.snapshot.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -24959,8 +24959,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.vmScaleSet.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.computeService.vmScaleSet.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vmScaleSet.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25063,8 +25063,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.vmScaleSet.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.computeService.vmScaleSet.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSet).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vmScaleSet.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25135,8 +25135,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.vmScaleSet.instance.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.computeService.vmScaleSet.instance.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceVmScaleSetInstance).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.vmScaleSet.instance.systemMetadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25227,8 +25227,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.computeService.dedicatedHost.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.computeService.dedicatedHost.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionComputeServiceDedicatedHost).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.computeService.dedicatedHost.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25747,8 +25747,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionBatchServiceAccountPool).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.batchService.account.pool.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionBatchServiceAccountPool).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.batchService.account.pool.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionBatchServiceAccountPool).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.batchService.account.pool.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -25851,8 +25851,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.databricksService.workspace.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.databricksService.workspace.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDatabricksServiceWorkspace).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.databricksService.workspace.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -28775,8 +28775,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetworkServiceBastionHost).IpConfigurations, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.networkService.bastionHost.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionNetworkServiceBastionHost).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.networkService.bastionHost.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetworkServiceBastionHost).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.networkService.bastionHost.ipConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31907,8 +31907,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).Properties, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.storageService.account.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionStorageServiceAccount).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.storageService.account.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -31931,8 +31931,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageServiceAccount).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.storageService.account.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionStorageServiceAccount).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.storageService.account.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageServiceAccount).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageService.account.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33531,8 +33531,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppslot).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.appslot.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceAppslot).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.webService.appslot.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppslot).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appslot.parent": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -33991,8 +33991,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webService.appServicePlan.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppServicePlanSkuDescription](v.Value, v.Error)
+	"azure.subscription.webService.appServicePlan.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebServiceAppServicePlan).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionWebServiceAppServicePlanSkuDescription](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webService.appServicePlan.zoneRedundant": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -41179,8 +41179,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAksServiceCluster).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.aksService.cluster.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionAksServiceCluster).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.aksService.cluster.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAksServiceCluster).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.aksService.cluster.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42111,8 +42111,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionIotServiceIotHub).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.iotService.iotHub.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionIotServiceIotHub).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.iotService.iotHub.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionIotServiceIotHub).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.iotService.iotHub.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42295,8 +42295,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redisInstance.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.cacheService.redisInstance.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cacheService.redisInstance.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42335,8 +42335,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cacheService.redisInstance.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.cacheService.redisInstance.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCacheServiceRedisInstance).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cacheService.redisInstance.principalId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42503,8 +42503,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDataFactoryServiceFactory).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.dataFactoryService.factory.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionDataFactoryServiceFactory).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.dataFactoryService.factory.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataFactoryServiceFactory).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.dataFactoryService.factory.provisioningState": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42767,8 +42767,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSynapseServiceWorkspace).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.synapseService.workspace.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSynapseServiceWorkspace).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.synapseService.workspace.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSynapseServiceWorkspace).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.synapseService.workspace.managedVirtualNetwork": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43427,8 +43427,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.containerRegistryService.registry.credentialSet.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.containerRegistryService.registry.credentialSet.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.containerRegistryService.registry.credentialSet.authCredentials": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -43615,8 +43615,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.monitorService.workspace.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.monitorService.workspace.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMonitorServiceWorkspace).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.monitorService.workspace.defaultDataCollectionRuleResourceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44111,8 +44111,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.recoveryServicesService.vault.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.recoveryServicesService.vault.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionRecoveryServicesServiceVault).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.recoveryServicesService.vault.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44611,8 +44611,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.serviceBusService.namespace.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.serviceBusService.namespace.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionServiceBusServiceNamespace).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.serviceBusService.namespace.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -44951,8 +44951,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionEventHubServiceNamespace).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.eventHubService.namespace.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionEventHubServiceNamespace).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.eventHubService.namespace.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionEventHubServiceNamespace).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.eventHubService.namespace.status": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -46095,8 +46095,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionFrontDoorServiceProfile).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.frontDoorService.profile.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionFrontDoorServiceProfile).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.frontDoorService.profile.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionFrontDoorServiceProfile).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.frontDoorService.profile.kind": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47087,8 +47087,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerAppServiceJob).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.containerAppService.job.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionContainerAppServiceJob).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.containerAppService.job.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerAppServiceJob).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.containerAppService.job.containers": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47179,8 +47179,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.containerInstanceService.containerGroup.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.containerInstanceService.containerGroup.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionContainerInstanceServiceContainerGroup).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.containerInstanceService.containerGroup.ipAddressType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47403,8 +47403,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionLogicServiceWorkflow).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.logicService.workflow.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionLogicServiceWorkflow).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.logicService.workflow.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionLogicServiceWorkflow).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.logicService.workflow.integrationAccountId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -47919,16 +47919,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionPurviewServiceAccount).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.purviewService.account.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionPurviewServiceAccount).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.purviewService.account.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPurviewServiceAccount).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.purviewService.account.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionPurviewServiceAccount).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.purviewService.account.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionPurviewServiceAccount).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.purviewService.account.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionPurviewServiceAccount).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.purviewService.account.friendlyName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48019,16 +48019,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSearchServiceService).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.searchService.service.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSearchServiceService).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.searchService.service.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSearchServiceService).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.searchService.service.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSearchServiceService).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.searchService.service.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSearchServiceService).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.searchService.service.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSearchServiceService).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.searchService.service.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48267,16 +48267,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.machineLearningService.workspace.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.machineLearningService.workspace.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.machineLearningService.workspace.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.machineLearningService.workspace.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspace).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.workspaceId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48519,8 +48519,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.machineLearningService.workspace.onlineEndpoint.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.machineLearningService.workspace.onlineEndpoint.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.onlineEndpoint.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48655,8 +48655,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.machineLearningService.workspace.serverlessEndpoint.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.machineLearningService.workspace.serverlessEndpoint.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.serverlessEndpoint.authMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48715,8 +48715,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.machineLearningService.workspace.compute.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.machineLearningService.workspace.compute.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.compute.computeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -48979,8 +48979,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.machineLearningService.workspace.batchEndpoint.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.batchEndpoint.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49075,8 +49075,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.machineLearningService.workspace.batchEndpoint.deployment.properties": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49123,16 +49123,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.appConfigurationService.configurationStore.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.appConfigurationService.configurationStore.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.appConfigurationService.configurationStore.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.appConfigurationService.configurationStore.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.appConfigurationService.configurationStore.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAppConfigurationServiceConfigurationStore).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.appConfigurationService.configurationStore.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49235,16 +49235,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cognitiveServicesService.account.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.cognitiveServicesService.account.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cognitiveServicesService.account.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.cognitiveServicesService.account.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccount).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.publicNetworkAccess": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49583,8 +49583,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.cognitiveServicesService.account.project.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.cognitiveServicesService.account.project.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionCognitiveServicesServiceAccountProject).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.cognitiveServicesService.account.project.displayName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50483,16 +50483,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionSignalRServiceSignalR).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.signalRService.signalR.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSignalRServiceSignalR).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.signalRService.signalR.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSignalRServiceSignalR).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.signalRService.signalR.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionSignalRServiceSignalR).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.signalRService.signalR.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionSignalRServiceSignalR).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.signalRService.signalR.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionSignalRServiceSignalR).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.signalRService.signalR.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50579,16 +50579,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webPubSubService.webPubSub.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.webPubSubService.webPubSub.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webPubSubService.webPubSub.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.webPubSubService.webPubSub.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.webPubSubService.webPubSub.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionWebPubSubServiceWebPubSub).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.webPubSubService.webPubSub.hostName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50671,16 +50671,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionKustoServiceCluster).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.kustoService.cluster.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionKustoServiceCluster).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.kustoService.cluster.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceCluster).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.kustoService.cluster.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionKustoServiceCluster).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.kustoService.cluster.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionKustoServiceCluster).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.kustoService.cluster.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionKustoServiceCluster).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.kustoService.cluster.uri": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51111,16 +51111,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionAutomationServiceAccount).Sku, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.automationService.account.skuRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionAutomationServiceAccount).SkuRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
+	"azure.subscription.automationService.account.skuData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAutomationServiceAccount).SkuData, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceSku](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.automationService.account.identity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAzureSubscriptionAutomationServiceAccount).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.automationService.account.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionAutomationServiceAccount).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.automationService.account.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionAutomationServiceAccount).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.automationService.account.state": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51307,8 +51307,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.desktopVirtualizationService.hostPool.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.desktopVirtualizationService.hostPool.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDesktopVirtualizationServiceHostPool).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.desktopVirtualizationService.hostPool.hostPoolType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51455,8 +51455,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.dataProtectionService.backupVault.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.dataProtectionService.backupVault.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataProtectionServiceBackupVault).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.dataProtectionService.backupVault.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51583,8 +51583,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionNetAppServiceAccount).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.netAppService.account.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionNetAppServiceAccount).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.netAppService.account.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionNetAppServiceAccount).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.netAppService.account.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -51927,8 +51927,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionDataBoxServiceJob).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.dataBoxService.job.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionDataBoxServiceJob).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.dataBoxService.job.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionDataBoxServiceJob).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.dataBoxService.job.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52207,8 +52207,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.elasticSanService.elasticSan.volumeGroup.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.elasticSanService.elasticSan.volumeGroup.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.elasticSanService.elasticSan.volumeGroup.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -52551,8 +52551,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).Identity, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"azure.subscription.storageCacheService.amlFilesystem.identityRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).IdentityRef, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
+	"azure.subscription.storageCacheService.amlFilesystem.resourceIdentity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAzureSubscriptionStorageCacheServiceAmlFilesystem).ResourceIdentity, ok = plugin.RawToTValue[*mqlAzureSubscriptionResourceIdentity](v.Value, v.Error)
 		return
 	},
 	"azure.subscription.storageCacheService.amlFilesystem.userAssignedIdentities": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -54297,10 +54297,10 @@ type mqlAzureSubscriptionResource struct {
 	Type               plugin.TValue[string]
 	ManagedBy          plugin.TValue[string]
 	Sku                plugin.TValue[any]
-	SkuRef             plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData            plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Plan               plugin.TValue[any]
 	Identity           plugin.TValue[any]
-	IdentityRef        plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity   plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	ProvisioningState  plugin.TValue[string]
 	CreatedTime        plugin.TValue[*time.Time]
 	ChangedTime        plugin.TValue[*time.Time]
@@ -54392,8 +54392,8 @@ func (c *mqlAzureSubscriptionResource) GetSku() *plugin.TValue[any] {
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionResource) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionResource) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionResource) GetPlan() *plugin.TValue[any] {
@@ -54404,8 +54404,8 @@ func (c *mqlAzureSubscriptionResource) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionResource) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionResource) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionResource) GetProvisioningState() *plugin.TValue[string] {
@@ -54972,7 +54972,7 @@ type mqlAzureSubscriptionComputeServiceVm struct {
 	EncryptionIdentity            plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	VmScaleSet                    plugin.TValue[*mqlAzureSubscriptionComputeServiceVmScaleSet]
 	Identity                      plugin.TValue[any]
-	IdentityRef                   plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PrincipalId                   plugin.TValue[string]
 	SystemAssignedIdentity        plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities        plugin.TValue[[]any]
@@ -55350,8 +55350,8 @@ func (c *mqlAzureSubscriptionComputeServiceVm) GetIdentity() *plugin.TValue[any]
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionComputeServiceVm) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionComputeServiceVm) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVm) GetPrincipalId() *plugin.TValue[string] {
@@ -55888,7 +55888,7 @@ type mqlAzureSubscriptionComputeServiceDisk struct {
 	ManagedByExtended          plugin.TValue[[]any]
 	Zones                      plugin.TValue[[]any]
 	Sku                        plugin.TValue[any]
-	SkuRef                     plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                    plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Properties                 plugin.TValue[any]
 	NetworkAccessPolicy        plugin.TValue[string]
 	PublicNetworkAccess        plugin.TValue[string]
@@ -55996,8 +55996,8 @@ func (c *mqlAzureSubscriptionComputeServiceDisk) GetSku() *plugin.TValue[any] {
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionComputeServiceDisk) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionComputeServiceDisk) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionComputeServiceDisk) GetProperties() *plugin.TValue[any] {
@@ -56181,7 +56181,7 @@ type mqlAzureSubscriptionComputeServiceDiskEncryptionSet struct {
 	LastKeyRotationTimestamp          plugin.TValue[*time.Time]
 	ProvisioningState                 plugin.TValue[string]
 	Identity                          plugin.TValue[any]
-	IdentityRef                       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                  plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	SystemMetadata                    plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -56270,8 +56270,8 @@ func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetIdentity() *plu
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionComputeServiceDiskEncryptionSet) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -56414,7 +56414,7 @@ type mqlAzureSubscriptionComputeServiceSnapshot struct {
 	Tags                             plugin.TValue[map[string]any]
 	Type                             plugin.TValue[string]
 	Sku                              plugin.TValue[any]
-	SkuRef                           plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Properties                       plugin.TValue[any]
 	CreationData                     plugin.TValue[any]
 	ProvisioningState                plugin.TValue[string]
@@ -56512,8 +56512,8 @@ func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSku() *plugin.TValue[any
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionComputeServiceSnapshot) GetProperties() *plugin.TValue[any] {
@@ -56712,7 +56712,7 @@ type mqlAzureSubscriptionComputeServiceVmScaleSet struct {
 	Type                              plugin.TValue[string]
 	Zones                             plugin.TValue[[]any]
 	Sku                               plugin.TValue[any]
-	SkuRef                            plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                           plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Properties                        plugin.TValue[any]
 	OrchestrationMode                 plugin.TValue[string]
 	ProvisioningState                 plugin.TValue[string]
@@ -56738,7 +56738,7 @@ type mqlAzureSubscriptionComputeServiceVmScaleSet struct {
 	Instances                         plugin.TValue[[]any]
 	Extensions                        plugin.TValue[[]any]
 	Identity                          plugin.TValue[any]
-	IdentityRef                       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                  plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PrincipalId                       plugin.TValue[string]
 	SystemAssignedIdentity            plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities            plugin.TValue[[]any]
@@ -56809,8 +56809,8 @@ func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSku() *plugin.TValue[a
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetProperties() *plugin.TValue[any] {
@@ -56939,8 +56939,8 @@ func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetIdentity() *plugin.TVa
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVmScaleSet) GetPrincipalId() *plugin.TValue[string] {
@@ -56997,7 +56997,7 @@ type mqlAzureSubscriptionComputeServiceVmScaleSetInstance struct {
 	TimeCreated            plugin.TValue[*time.Time]
 	Properties             plugin.TValue[any]
 	Sku                    plugin.TValue[any]
-	SkuRef                 plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	SystemMetadata         plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
 
@@ -57090,8 +57090,8 @@ func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetSku() *plugin.
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionComputeServiceVmScaleSetInstance) GetSystemMetadata() *plugin.TValue[*mqlAzureSubscriptionSystemData] {
@@ -57254,7 +57254,7 @@ type mqlAzureSubscriptionComputeServiceDedicatedHost struct {
 	Tags                 plugin.TValue[map[string]any]
 	Type                 plugin.TValue[string]
 	Sku                  plugin.TValue[any]
-	SkuRef               plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData              plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Properties           plugin.TValue[any]
 	PlatformFaultDomain  plugin.TValue[int64]
 	AutoReplaceOnFailure plugin.TValue[bool]
@@ -57328,8 +57328,8 @@ func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetSku() *plugin.TValu
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionComputeServiceDedicatedHost) GetProperties() *plugin.TValue[any] {
@@ -58436,7 +58436,7 @@ type mqlAzureSubscriptionBatchServiceAccountPool struct {
 	Type                          plugin.TValue[string]
 	Etag                          plugin.TValue[string]
 	Identity                      plugin.TValue[any]
-	IdentityRef                   plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	Properties                    plugin.TValue[any]
 	ProvisioningState             plugin.TValue[string]
 	VmSize                        plugin.TValue[string]
@@ -58509,8 +58509,8 @@ func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetIdentity() *plugin.TVal
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionBatchServiceAccountPool) GetProperties() *plugin.TValue[any] {
@@ -58656,7 +58656,7 @@ type mqlAzureSubscriptionDatabricksServiceWorkspace struct {
 	Type                            plugin.TValue[string]
 	Properties                      plugin.TValue[any]
 	Sku                             plugin.TValue[any]
-	SkuRef                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                         plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	PublicNetworkAccess             plugin.TValue[string]
 	EnableNoPublicIp                plugin.TValue[bool]
 	RequireInfrastructureEncryption plugin.TValue[bool]
@@ -58772,8 +58772,8 @@ func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetSku() *plugin.TValue
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionDatabricksServiceWorkspace) GetPublicNetworkAccess() *plugin.TValue[string] {
@@ -65829,7 +65829,7 @@ type mqlAzureSubscriptionNetworkServiceBastionHost struct {
 	ScaleUnits               plugin.TValue[int64]
 	AllowedIpRules           plugin.TValue[[]any]
 	IpConfigurations         plugin.TValue[[]any]
-	SkuRef                   plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                  plugin.TValue[*mqlAzureSubscriptionResourceSku]
 }
 
 // createAzureSubscriptionNetworkServiceBastionHost creates a new instance of this resource
@@ -65957,8 +65957,8 @@ func (c *mqlAzureSubscriptionNetworkServiceBastionHost) GetIpConfigurations() *p
 	})
 }
 
-func (c *mqlAzureSubscriptionNetworkServiceBastionHost) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionNetworkServiceBastionHost) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 // mqlAzureSubscriptionNetworkServiceBastionHostIpConfiguration for the azure.subscription.networkService.bastionHost.ipConfiguration resource
@@ -72912,13 +72912,13 @@ type mqlAzureSubscriptionStorageServiceAccount struct {
 	Tags                                             plugin.TValue[map[string]any]
 	Type                                             plugin.TValue[string]
 	Properties                                       plugin.TValue[any]
-	IdentityRef                                      plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                                 plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PrincipalId                                      plugin.TValue[string]
 	TenantId                                         plugin.TValue[string]
 	UserAssignedIdentities                           plugin.TValue[[]any]
 	EncryptionIdentity                               plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	Sku                                              plugin.TValue[any]
-	SkuRef                                           plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Kind                                             plugin.TValue[string]
 	MinimumTlsVersion                                plugin.TValue[string]
 	AllowBlobPublicAccess                            plugin.TValue[bool]
@@ -73053,8 +73053,8 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetProperties() *plugin.TVal
 	return &c.Properties
 }
 
-func (c *mqlAzureSubscriptionStorageServiceAccount) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetPrincipalId() *plugin.TValue[string] {
@@ -73101,8 +73101,8 @@ func (c *mqlAzureSubscriptionStorageServiceAccount) GetSku() *plugin.TValue[any]
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionStorageServiceAccount) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionStorageServiceAccount) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionStorageServiceAccount) GetKind() *plugin.TValue[string] {
@@ -76917,7 +76917,7 @@ type mqlAzureSubscriptionWebServiceAppslot struct {
 	Tags                         plugin.TValue[map[string]any]
 	Properties                   plugin.TValue[any]
 	Identity                     plugin.TValue[any]
-	IdentityRef                  plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity             plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	Parent                       plugin.TValue[*mqlAzureSubscriptionWebServiceAppsite]
 	Configuration                plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteconfig]
 	AuthenticationSettings       plugin.TValue[*mqlAzureSubscriptionWebServiceAppsiteauthsettings]
@@ -77002,8 +77002,8 @@ func (c *mqlAzureSubscriptionWebServiceAppslot) GetIdentity() *plugin.TValue[any
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionWebServiceAppslot) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionWebServiceAppslot) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppslot) GetParent() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppsite] {
@@ -77974,7 +77974,7 @@ type mqlAzureSubscriptionWebServiceAppServicePlan struct {
 	Tags                   plugin.TValue[map[string]any]
 	Properties             plugin.TValue[any]
 	Sku                    plugin.TValue[any]
-	SkuRef                 plugin.TValue[*mqlAzureSubscriptionWebServiceAppServicePlanSkuDescription]
+	SkuData                plugin.TValue[*mqlAzureSubscriptionWebServiceAppServicePlanSkuDescription]
 	ZoneRedundant          plugin.TValue[bool]
 	NumberOfSites          plugin.TValue[int64]
 	MaximumNumberOfWorkers plugin.TValue[int64]
@@ -78051,8 +78051,8 @@ func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetSku() *plugin.TValue[a
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppServicePlanSkuDescription] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionWebServiceAppServicePlanSkuDescription] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionWebServiceAppServicePlan) GetZoneRedundant() *plugin.TValue[bool] {
@@ -95408,7 +95408,7 @@ type mqlAzureSubscriptionAksServiceCluster struct {
 	ControlPlaneMetricsEnabled        plugin.TValue[bool]
 	IdentityBindings                  plugin.TValue[[]any]
 	Identity                          plugin.TValue[any]
-	IdentityRef                       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                  plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PrincipalId                       plugin.TValue[string]
 	SystemAssignedIdentity            plugin.TValue[*mqlAzureSubscriptionManagedIdentity]
 	UserAssignedIdentities            plugin.TValue[[]any]
@@ -95743,8 +95743,8 @@ func (c *mqlAzureSubscriptionAksServiceCluster) GetIdentity() *plugin.TValue[any
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionAksServiceCluster) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionAksServiceCluster) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionAksServiceCluster) GetPrincipalId() *plugin.TValue[string] {
@@ -97953,7 +97953,7 @@ type mqlAzureSubscriptionIotServiceIotHub struct {
 	Location                      plugin.TValue[string]
 	Tags                          plugin.TValue[map[string]any]
 	Sku                           plugin.TValue[any]
-	SkuRef                        plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                       plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	ProvisioningState             plugin.TValue[string]
 	State                         plugin.TValue[string]
 	HostName                      plugin.TValue[string]
@@ -98037,8 +98037,8 @@ func (c *mqlAzureSubscriptionIotServiceIotHub) GetSku() *plugin.TValue[any] {
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionIotServiceIotHub) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionIotServiceIotHub) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionIotServiceIotHub) GetProvisioningState() *plugin.TValue[string] {
@@ -98273,7 +98273,7 @@ type mqlAzureSubscriptionCacheServiceRedisInstance struct {
 	TenantSettings                 plugin.TValue[map[string]any]
 	LinkedServers                  plugin.TValue[[]any]
 	Sku                            plugin.TValue[any]
-	SkuRef                         plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                        plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Tags                           plugin.TValue[map[string]any]
 	RedisConfiguration             plugin.TValue[any]
 	Configuration                  plugin.TValue[*mqlAzureSubscriptionCacheServiceRedisInstanceRedisConfiguration]
@@ -98283,7 +98283,7 @@ type mqlAzureSubscriptionCacheServiceRedisInstance struct {
 	Subnet                         plugin.TValue[*mqlAzureSubscriptionNetworkServiceSubnet]
 	Zones                          plugin.TValue[[]any]
 	Identity                       plugin.TValue[any]
-	IdentityRef                    plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity               plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PrincipalId                    plugin.TValue[string]
 	UserAssignedIdentities         plugin.TValue[[]any]
 	PrivateEndpointConnections     plugin.TValue[[]any]
@@ -98425,8 +98425,8 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSku() *plugin.TValue[
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetTags() *plugin.TValue[map[string]any] {
@@ -98477,8 +98477,8 @@ func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetIdentity() *plugin.TV
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionCacheServiceRedisInstance) GetPrincipalId() *plugin.TValue[string] {
@@ -98924,7 +98924,7 @@ type mqlAzureSubscriptionDataFactoryServiceFactory struct {
 	Properties             plugin.TValue[any]
 	PublicNetworkAccess    plugin.TValue[string]
 	Identity               plugin.TValue[any]
-	IdentityRef            plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	ProvisioningState      plugin.TValue[string]
 	Version                plugin.TValue[string]
 	RepoConfiguration      plugin.TValue[any]
@@ -99007,8 +99007,8 @@ func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetIdentity() *plugin.TV
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionDataFactoryServiceFactory) GetProvisioningState() *plugin.TValue[string] {
@@ -99648,7 +99648,7 @@ type mqlAzureSubscriptionSynapseServiceWorkspace struct {
 	Type                          plugin.TValue[string]
 	Properties                    plugin.TValue[any]
 	Identity                      plugin.TValue[any]
-	IdentityRef                   plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	ManagedVirtualNetwork         plugin.TValue[string]
 	PublicNetworkAccess           plugin.TValue[string]
 	Encryption                    plugin.TValue[any]
@@ -99739,8 +99739,8 @@ func (c *mqlAzureSubscriptionSynapseServiceWorkspace) GetIdentity() *plugin.TVal
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionSynapseServiceWorkspace) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionSynapseServiceWorkspace) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionSynapseServiceWorkspace) GetManagedVirtualNetwork() *plugin.TValue[string] {
@@ -101383,7 +101383,7 @@ type mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet struct {
 	Type              plugin.TValue[string]
 	LoginServer       plugin.TValue[string]
 	Identity          plugin.TValue[any]
-	IdentityRef       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity  plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	AuthCredentials   plugin.TValue[[]any]
 	CreationDate      plugin.TValue[*time.Time]
 	ProvisioningState plugin.TValue[string]
@@ -101447,8 +101447,8 @@ func (c *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) GetI
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionContainerRegistryServiceRegistryCredentialSet) GetAuthCredentials() *plugin.TValue[[]any] {
@@ -101676,7 +101676,7 @@ type mqlAzureSubscriptionMonitorServiceWorkspace struct {
 	ProvisioningState                      plugin.TValue[string]
 	CustomerId                             plugin.TValue[string]
 	Identity                               plugin.TValue[any]
-	IdentityRef                            plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	DefaultDataCollectionRuleResourceId    plugin.TValue[string]
 	Capping                                plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspaceCapping]
 	Features                               plugin.TValue[*mqlAzureSubscriptionMonitorServiceWorkspaceFeatures]
@@ -101791,8 +101791,8 @@ func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetIdentity() *plugin.TVal
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionMonitorServiceWorkspace) GetDefaultDataCollectionRuleResourceId() *plugin.TValue[string] {
@@ -103022,7 +103022,7 @@ type mqlAzureSubscriptionRecoveryServicesServiceVault struct {
 	Type                                plugin.TValue[string]
 	Tags                                plugin.TValue[map[string]any]
 	Identity                            plugin.TValue[any]
-	IdentityRef                         plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                    plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	UserAssignedIdentities              plugin.TValue[[]any]
 	SkuName                             plugin.TValue[string]
 	ProvisioningState                   plugin.TValue[string]
@@ -103106,8 +103106,8 @@ func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetIdentity() *plugin
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionRecoveryServicesServiceVault) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -104463,7 +104463,7 @@ type mqlAzureSubscriptionServiceBusServiceNamespace struct {
 	Location                        plugin.TValue[string]
 	Tags                            plugin.TValue[map[string]any]
 	Sku                             plugin.TValue[any]
-	SkuRef                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                         plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Status                          plugin.TValue[string]
 	ServiceBusEndpoint              plugin.TValue[string]
 	DisableLocalAuth                plugin.TValue[bool]
@@ -104541,8 +104541,8 @@ func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetSku() *plugin.TValue
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionServiceBusServiceNamespace) GetStatus() *plugin.TValue[string] {
@@ -105370,7 +105370,7 @@ type mqlAzureSubscriptionEventHubServiceNamespace struct {
 	Location                        plugin.TValue[string]
 	Tags                            plugin.TValue[map[string]any]
 	Sku                             plugin.TValue[any]
-	SkuRef                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                         plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Status                          plugin.TValue[string]
 	IsAutoInflateEnabled            plugin.TValue[bool]
 	MaximumThroughputUnits          plugin.TValue[int64]
@@ -105452,8 +105452,8 @@ func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetSku() *plugin.TValue[a
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionEventHubServiceNamespace) GetStatus() *plugin.TValue[string] {
@@ -108242,7 +108242,7 @@ type mqlAzureSubscriptionFrontDoorServiceProfile struct {
 	Location          plugin.TValue[string]
 	Tags              plugin.TValue[map[string]any]
 	Sku               plugin.TValue[any]
-	SkuRef            plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData           plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Kind              plugin.TValue[string]
 	ProvisioningState plugin.TValue[string]
 	FrontDoorId       plugin.TValue[string]
@@ -108311,8 +108311,8 @@ func (c *mqlAzureSubscriptionFrontDoorServiceProfile) GetSku() *plugin.TValue[an
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionFrontDoorServiceProfile) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionFrontDoorServiceProfile) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionFrontDoorServiceProfile) GetKind() *plugin.TValue[string] {
@@ -110642,7 +110642,7 @@ type mqlAzureSubscriptionContainerAppServiceJob struct {
 	ReplicaTimeoutSeconds    plugin.TValue[int64]
 	ReplicaRetryLimit        plugin.TValue[int64]
 	Identity                 plugin.TValue[any]
-	IdentityRef              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity         plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	Containers               plugin.TValue[[]any]
 	WorkloadProfileName      plugin.TValue[string]
 	Registries               plugin.TValue[[]any]
@@ -110741,8 +110741,8 @@ func (c *mqlAzureSubscriptionContainerAppServiceJob) GetIdentity() *plugin.TValu
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionContainerAppServiceJob) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionContainerAppServiceJob) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionContainerAppServiceJob) GetContainers() *plugin.TValue[[]any] {
@@ -110867,7 +110867,7 @@ type mqlAzureSubscriptionContainerInstanceServiceContainerGroup struct {
 	Confidential             plugin.TValue[bool]
 	CcePolicyHash            plugin.TValue[string]
 	Identity                 plugin.TValue[any]
-	IdentityRef              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity         plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	IpAddressType            plugin.TValue[string]
 	PublicIp                 plugin.TValue[string]
 	Fqdn                     plugin.TValue[string]
@@ -110968,8 +110968,8 @@ func (c *mqlAzureSubscriptionContainerInstanceServiceContainerGroup) GetIdentity
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionContainerInstanceServiceContainerGroup) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionContainerInstanceServiceContainerGroup) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionContainerInstanceServiceContainerGroup) GetIpAddressType() *plugin.TValue[string] {
@@ -111304,7 +111304,7 @@ type mqlAzureSubscriptionLogicServiceWorkflow struct {
 	Version                         plugin.TValue[string]
 	AccessEndpoint                  plugin.TValue[string]
 	Identity                        plugin.TValue[any]
-	IdentityRef                     plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	IntegrationAccountId            plugin.TValue[string]
 	IntegrationServiceEnvironmentId plugin.TValue[string]
 	CreatedTime                     plugin.TValue[*time.Time]
@@ -111399,8 +111399,8 @@ func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetIdentity() *plugin.TValue[
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionLogicServiceWorkflow) GetIntegrationAccountId() *plugin.TValue[string] {
@@ -112395,9 +112395,9 @@ type mqlAzureSubscriptionPurviewServiceAccount struct {
 	Type                       plugin.TValue[string]
 	Tags                       plugin.TValue[map[string]any]
 	Sku                        plugin.TValue[any]
-	SkuRef                     plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                    plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                   plugin.TValue[any]
-	IdentityRef                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity           plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	FriendlyName               plugin.TValue[string]
 	ProvisioningState          plugin.TValue[string]
 	PublicNetworkAccess        plugin.TValue[string]
@@ -112474,16 +112474,16 @@ func (c *mqlAzureSubscriptionPurviewServiceAccount) GetSku() *plugin.TValue[any]
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionPurviewServiceAccount) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionPurviewServiceAccount) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionPurviewServiceAccount) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionPurviewServiceAccount) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionPurviewServiceAccount) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionPurviewServiceAccount) GetFriendlyName() *plugin.TValue[string] {
@@ -112626,9 +112626,9 @@ type mqlAzureSubscriptionSearchServiceService struct {
 	Location                      plugin.TValue[string]
 	Tags                          plugin.TValue[map[string]any]
 	Sku                           plugin.TValue[any]
-	SkuRef                        plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                       plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                      plugin.TValue[any]
-	IdentityRef                   plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PublicNetworkAccess           plugin.TValue[string]
 	DisableLocalAuth              plugin.TValue[bool]
 	AuthMode                      plugin.TValue[string]
@@ -112707,16 +112707,16 @@ func (c *mqlAzureSubscriptionSearchServiceService) GetSku() *plugin.TValue[any] 
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionSearchServiceService) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionSearchServiceService) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionSearchServiceService) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionSearchServiceService) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionSearchServiceService) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionSearchServiceService) GetPublicNetworkAccess() *plugin.TValue[string] {
@@ -113257,9 +113257,9 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspace struct {
 	Tags                            plugin.TValue[map[string]any]
 	Kind                            plugin.TValue[string]
 	Sku                             plugin.TValue[any]
-	SkuRef                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                         plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                        plugin.TValue[any]
-	IdentityRef                     plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	WorkspaceId                     plugin.TValue[string]
 	FriendlyName                    plugin.TValue[string]
 	Description                     plugin.TValue[string]
@@ -113364,16 +113364,16 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetSku() *plugin.T
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspace) GetWorkspaceId() *plugin.TValue[string] {
@@ -113837,7 +113837,7 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint struct {
 	Tags                plugin.TValue[map[string]any]
 	Kind                plugin.TValue[string]
 	Identity            plugin.TValue[any]
-	IdentityRef         plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity    plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	Description         plugin.TValue[string]
 	AuthMode            plugin.TValue[string]
 	PublicNetworkAccess plugin.TValue[string]
@@ -113912,8 +113912,8 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) GetI
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceOnlineEndpoint) GetDescription() *plugin.TValue[string] {
@@ -114137,7 +114137,7 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint struc
 	Location                  plugin.TValue[string]
 	Tags                      plugin.TValue[map[string]any]
 	Identity                  plugin.TValue[any]
-	IdentityRef               plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity          plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	AuthMode                  plugin.TValue[string]
 	EndpointState             plugin.TValue[string]
 	ModelId                   plugin.TValue[string]
@@ -114205,8 +114205,8 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) 
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceServerlessEndpoint) GetAuthMode() *plugin.TValue[string] {
@@ -114263,7 +114263,7 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute struct {
 	Location          plugin.TValue[string]
 	Tags              plugin.TValue[map[string]any]
 	Identity          plugin.TValue[any]
-	IdentityRef       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity  plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	ComputeType       plugin.TValue[string]
 	Description       plugin.TValue[string]
 	DisableLocalAuth  plugin.TValue[bool]
@@ -114333,8 +114333,8 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) GetIdentity
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceCompute) GetComputeType() *plugin.TValue[string] {
@@ -114781,7 +114781,7 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint struct {
 	ProvisioningState     plugin.TValue[string]
 	DefaultDeploymentName plugin.TValue[string]
 	Identity              plugin.TValue[any]
-	IdentityRef           plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity      plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	Properties            plugin.TValue[map[string]any]
 	Deployments           plugin.TValue[[]any]
 	SystemMetadata        plugin.TValue[*mqlAzureSubscriptionSystemData]
@@ -114872,8 +114872,8 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetId
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpoint) GetProperties() *plugin.TValue[map[string]any] {
@@ -114936,7 +114936,7 @@ type mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment 
 	RetrySettings             plugin.TValue[any]
 	Resources                 plugin.TValue[any]
 	Identity                  plugin.TValue[any]
-	IdentityRef               plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity          plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	Properties                plugin.TValue[map[string]any]
 	SystemMetadata            plugin.TValue[*mqlAzureSubscriptionSystemData]
 }
@@ -115054,8 +115054,8 @@ func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeploym
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionMachineLearningServiceWorkspaceBatchEndpointDeployment) GetProperties() *plugin.TValue[map[string]any] {
@@ -115154,9 +115154,9 @@ type mqlAzureSubscriptionAppConfigurationServiceConfigurationStore struct {
 	Location                                        plugin.TValue[string]
 	Tags                                            plugin.TValue[map[string]any]
 	Sku                                             plugin.TValue[any]
-	SkuRef                                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                                         plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                                        plugin.TValue[any]
-	IdentityRef                                     plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PublicNetworkAccess                             plugin.TValue[string]
 	DisableLocalAuth                                plugin.TValue[bool]
 	CmkKeyIdentifier                                plugin.TValue[string]
@@ -115231,16 +115231,16 @@ func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetSku()
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionAppConfigurationServiceConfigurationStore) GetPublicNetworkAccess() *plugin.TValue[string] {
@@ -115404,9 +115404,9 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccount struct {
 	Kind                            plugin.TValue[string]
 	Tags                            plugin.TValue[map[string]any]
 	Sku                             plugin.TValue[any]
-	SkuRef                          plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                         plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                        plugin.TValue[any]
-	IdentityRef                     plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	PublicNetworkAccess             plugin.TValue[string]
 	DisableLocalAuth                plugin.TValue[bool]
 	RestrictOutboundNetworkAccess   plugin.TValue[bool]
@@ -115514,16 +115514,16 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetSku() *plugin.T
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccount) GetPublicNetworkAccess() *plugin.TValue[string] {
@@ -116251,7 +116251,7 @@ type mqlAzureSubscriptionCognitiveServicesServiceAccountProject struct {
 	Location          plugin.TValue[string]
 	Tags              plugin.TValue[map[string]any]
 	Identity          plugin.TValue[any]
-	IdentityRef       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity  plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	DisplayName       plugin.TValue[string]
 	Description       plugin.TValue[string]
 	IsDefault         plugin.TValue[bool]
@@ -116319,8 +116319,8 @@ func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetIdentity
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionCognitiveServicesServiceAccountProject) GetDisplayName() *plugin.TValue[string] {
@@ -118412,9 +118412,9 @@ type mqlAzureSubscriptionSignalRServiceSignalR struct {
 	Tags                       plugin.TValue[map[string]any]
 	Kind                       plugin.TValue[string]
 	Sku                        plugin.TValue[any]
-	SkuRef                     plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                    plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                   plugin.TValue[any]
-	IdentityRef                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity           plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	HostName                   plugin.TValue[string]
 	ExternalIp                 plugin.TValue[string]
 	Version                    plugin.TValue[string]
@@ -118489,16 +118489,16 @@ func (c *mqlAzureSubscriptionSignalRServiceSignalR) GetSku() *plugin.TValue[any]
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionSignalRServiceSignalR) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionSignalRServiceSignalR) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionSignalRServiceSignalR) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionSignalRServiceSignalR) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionSignalRServiceSignalR) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionSignalRServiceSignalR) GetHostName() *plugin.TValue[string] {
@@ -118646,9 +118646,9 @@ type mqlAzureSubscriptionWebPubSubServiceWebPubSub struct {
 	Tags                       plugin.TValue[map[string]any]
 	Kind                       plugin.TValue[string]
 	Sku                        plugin.TValue[any]
-	SkuRef                     plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                    plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                   plugin.TValue[any]
-	IdentityRef                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity           plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	HostName                   plugin.TValue[string]
 	ExternalIp                 plugin.TValue[string]
 	Version                    plugin.TValue[string]
@@ -118723,16 +118723,16 @@ func (c *mqlAzureSubscriptionWebPubSubServiceWebPubSub) GetSku() *plugin.TValue[
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionWebPubSubServiceWebPubSub) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionWebPubSubServiceWebPubSub) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionWebPubSubServiceWebPubSub) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionWebPubSubServiceWebPubSub) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionWebPubSubServiceWebPubSub) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionWebPubSubServiceWebPubSub) GetHostName() *plugin.TValue[string] {
@@ -118879,9 +118879,9 @@ type mqlAzureSubscriptionKustoServiceCluster struct {
 	Location                      plugin.TValue[string]
 	Tags                          plugin.TValue[map[string]any]
 	Sku                           plugin.TValue[any]
-	SkuRef                        plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData                       plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity                      plugin.TValue[any]
-	IdentityRef                   plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	Uri                           plugin.TValue[string]
 	DataIngestionUri              plugin.TValue[string]
 	State                         plugin.TValue[string]
@@ -118965,16 +118965,16 @@ func (c *mqlAzureSubscriptionKustoServiceCluster) GetSku() *plugin.TValue[any] {
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionKustoServiceCluster) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionKustoServiceCluster) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionKustoServiceCluster) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionKustoServiceCluster) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionKustoServiceCluster) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionKustoServiceCluster) GetUri() *plugin.TValue[string] {
@@ -119991,9 +119991,9 @@ type mqlAzureSubscriptionAutomationServiceAccount struct {
 	Location            plugin.TValue[string]
 	Tags                plugin.TValue[map[string]any]
 	Sku                 plugin.TValue[any]
-	SkuRef              plugin.TValue[*mqlAzureSubscriptionResourceSku]
+	SkuData             plugin.TValue[*mqlAzureSubscriptionResourceSku]
 	Identity            plugin.TValue[any]
-	IdentityRef         plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity    plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	State               plugin.TValue[string]
 	PublicNetworkAccess plugin.TValue[bool]
 	DisableLocalAuth    plugin.TValue[bool]
@@ -120065,16 +120065,16 @@ func (c *mqlAzureSubscriptionAutomationServiceAccount) GetSku() *plugin.TValue[a
 	return &c.Sku
 }
 
-func (c *mqlAzureSubscriptionAutomationServiceAccount) GetSkuRef() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
-	return &c.SkuRef
+func (c *mqlAzureSubscriptionAutomationServiceAccount) GetSkuData() *plugin.TValue[*mqlAzureSubscriptionResourceSku] {
+	return &c.SkuData
 }
 
 func (c *mqlAzureSubscriptionAutomationServiceAccount) GetIdentity() *plugin.TValue[any] {
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionAutomationServiceAccount) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionAutomationServiceAccount) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionAutomationServiceAccount) GetState() *plugin.TValue[string] {
@@ -120527,7 +120527,7 @@ type mqlAzureSubscriptionDesktopVirtualizationServiceHostPool struct {
 	Location                             plugin.TValue[string]
 	Tags                                 plugin.TValue[map[string]any]
 	Identity                             plugin.TValue[any]
-	IdentityRef                          plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                     plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	HostPoolType                         plugin.TValue[string]
 	LoadBalancerType                     plugin.TValue[string]
 	PreferredAppGroupType                plugin.TValue[string]
@@ -120611,8 +120611,8 @@ func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetIdentity()
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionDesktopVirtualizationServiceHostPool) GetHostPoolType() *plugin.TValue[string] {
@@ -120802,7 +120802,7 @@ type mqlAzureSubscriptionDataProtectionServiceBackupVault struct {
 	Etag                            plugin.TValue[string]
 	ProvisioningState               plugin.TValue[string]
 	Identity                        plugin.TValue[any]
-	IdentityRef                     plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	UserAssignedIdentities          plugin.TValue[[]any]
 	SoftDeleteState                 plugin.TValue[string]
 	SoftDeleteRetentionPeriodInDays plugin.TValue[float64]
@@ -120894,8 +120894,8 @@ func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetIdentity() *pl
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionDataProtectionServiceBackupVault) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -121104,7 +121104,7 @@ type mqlAzureSubscriptionNetAppServiceAccount struct {
 	Tags                   plugin.TValue[map[string]any]
 	ProvisioningState      plugin.TValue[string]
 	Identity               plugin.TValue[any]
-	IdentityRef            plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	UserAssignedIdentities plugin.TValue[[]any]
 	NfsV4IdDomain          plugin.TValue[string]
 	DisableShowmount       plugin.TValue[bool]
@@ -121180,8 +121180,8 @@ func (c *mqlAzureSubscriptionNetAppServiceAccount) GetIdentity() *plugin.TValue[
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionNetAppServiceAccount) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionNetAppServiceAccount) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionNetAppServiceAccount) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -121904,7 +121904,7 @@ type mqlAzureSubscriptionDataBoxServiceJob struct {
 	SkuFamily                   plugin.TValue[string]
 	SkuModel                    plugin.TValue[string]
 	Identity                    plugin.TValue[any]
-	IdentityRef                 plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity            plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	UserAssignedIdentities      plugin.TValue[[]any]
 	JobDetailsType              plugin.TValue[string]
 	ExpectedDataSizeInTeraBytes plugin.TValue[int64]
@@ -122028,8 +122028,8 @@ func (c *mqlAzureSubscriptionDataBoxServiceJob) GetIdentity() *plugin.TValue[any
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionDataBoxServiceJob) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionDataBoxServiceJob) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionDataBoxServiceJob) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -122564,7 +122564,7 @@ type mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup struct {
 	ProtocolType                           plugin.TValue[string]
 	EnforceDataIntegrityCheckForIscsi      plugin.TValue[bool]
 	Identity                               plugin.TValue[any]
-	IdentityRef                            plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity                       plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	UserAssignedIdentities                 plugin.TValue[[]any]
 	KeyName                                plugin.TValue[string]
 	KeyVaultUri                            plugin.TValue[string]
@@ -122648,8 +122648,8 @@ func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetIdentity
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionElasticSanServiceElasticSanVolumeGroup) GetUserAssignedIdentities() *plugin.TValue[[]any] {
@@ -123358,7 +123358,7 @@ type mqlAzureSubscriptionStorageCacheServiceAmlFilesystem struct {
 	SkuName                       plugin.TValue[string]
 	ProvisioningState             plugin.TValue[string]
 	Identity                      plugin.TValue[any]
-	IdentityRef                   plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
+	ResourceIdentity              plugin.TValue[*mqlAzureSubscriptionResourceIdentity]
 	UserAssignedIdentities        plugin.TValue[[]any]
 	StorageCapacityTiB            plugin.TValue[float64]
 	CurrentStorageCapacityTiB     plugin.TValue[float64]
@@ -123461,8 +123461,8 @@ func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetIdentity() *pl
 	return &c.Identity
 }
 
-func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetIdentityRef() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
-	return &c.IdentityRef
+func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetResourceIdentity() *plugin.TValue[*mqlAzureSubscriptionResourceIdentity] {
+	return &c.ResourceIdentity
 }
 
 func (c *mqlAzureSubscriptionStorageCacheServiceAmlFilesystem) GetUserAssignedIdentities() *plugin.TValue[[]any] {

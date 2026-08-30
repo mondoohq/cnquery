@@ -148,12 +148,12 @@ func automationAccountToMql(runtime *plugin.Runtime, acct *armautomation.Account
 		"lastModifiedTime":    lastModifiedTime,
 	}
 	skuVal := orZero(acctSKU)
-	if err := setSkuRef(runtime, accountArgs, skuName(skuVal.Name), skuFamily(skuVal.Family), skuCapacity(skuVal.Capacity)); err != nil {
+	if err := setSkuData(runtime, accountArgs, skuName(skuVal.Name), skuFamily(skuVal.Family), skuCapacity(skuVal.Capacity)); err != nil {
 		return nil, err
 	}
 
 	acctIdentity := orZero(acct.Identity)
-	if err := setIdentityRef(runtime, accountArgs, sortedUserAssignedIdentityIDs(acctIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, accountArgs, sortedUserAssignedIdentityIDs(acctIdentity.UserAssignedIdentities),
 		identityType(acctIdentity.Type), identityPrincipalId(acctIdentity.PrincipalID), identityTenantId(acctIdentity.TenantID)); err != nil {
 		return nil, err
 	}

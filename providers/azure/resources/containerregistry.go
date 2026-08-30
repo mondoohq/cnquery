@@ -374,13 +374,13 @@ func (a *mqlAzureSubscriptionContainerRegistryServiceRegistry) policies() (*mqlA
 
 	res, err := CreateResource(a.MqlRuntime, ResourceAzureSubscriptionContainerRegistryServiceRegistryPolicies,
 		map[string]*llx.RawData{
-			"id":                                      llx.StringData(a.Id.Data + "/policies"),
-			"trustPolicyEnabled":                      llx.BoolData(trustEnabled),
-			"trustPolicyType":                         llx.StringData(trustType),
-			"retentionPolicyEnabled":                  llx.BoolData(retentionEnabled),
-			"retentionPolicyDays":                     llx.IntData(retentionDays),
-			"quarantinePolicyEnabled":                 llx.BoolData(quarantineEnabled),
-			"exportPolicyEnabled":                     llx.BoolData(exportEnabled),
+			"id":                      llx.StringData(a.Id.Data + "/policies"),
+			"trustPolicyEnabled":      llx.BoolData(trustEnabled),
+			"trustPolicyType":         llx.StringData(trustType),
+			"retentionPolicyEnabled":  llx.BoolData(retentionEnabled),
+			"retentionPolicyDays":     llx.IntData(retentionDays),
+			"quarantinePolicyEnabled": llx.BoolData(quarantineEnabled),
+			"exportPolicyEnabled":     llx.BoolData(exportEnabled),
 			"azureADAuthenticationAsArmPolicyEnabled": llx.BoolData(aadAsArmEnabled),
 		})
 	if err != nil {
@@ -1201,7 +1201,7 @@ func createCredentialSetResource(runtime *plugin.Runtime, cs *armcontainerregist
 		"provisioningState": llx.StringData(provisioningState),
 	}
 	csIdentity := orZero(cs.Identity)
-	if err := setIdentityRef(runtime, csArgs, sortedUserAssignedIdentityIDs(csIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, csArgs, sortedUserAssignedIdentityIDs(csIdentity.UserAssignedIdentities),
 		identityType(csIdentity.Type), identityPrincipalId(csIdentity.PrincipalID), identityTenantId(csIdentity.TenantID)); err != nil {
 		return nil, err
 	}

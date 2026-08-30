@@ -170,7 +170,7 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 			wsIdentity := orZero(ws.Identity)
 			userAssignedIdentityIds := sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities)
 
-			identityRef, err := identityRefData(a.MqlRuntime, convert.ToValue(ws.ID), userAssignedIdentityIds,
+			resourceIdentity, err := resourceIdentityData(a.MqlRuntime, convert.ToValue(ws.ID), userAssignedIdentityIds,
 				identityType(wsIdentity.Type), identityPrincipalId(wsIdentity.PrincipalID), identityTenantId(wsIdentity.TenantID))
 			if err != nil {
 				return nil, err
@@ -186,7 +186,7 @@ func (a *mqlAzureSubscriptionSynapseService) workspaces() ([]any, error) {
 					"type":                        llx.StringDataPtr(ws.Type),
 					"properties":                  llx.DictData(properties),
 					"identity":                    llx.DictData(identity),
-					"identityRef":                 identityRef,
+					"resourceIdentity":            resourceIdentity,
 					"principalId":                 llx.StringDataPtr(wsIdentity.PrincipalID),
 					"tenantId":                    llx.StringDataPtr(wsIdentity.TenantID),
 					"managedVirtualNetwork":       llx.StringData(managedVirtualNetwork),

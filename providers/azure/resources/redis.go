@@ -274,10 +274,10 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 		"tenantSettings":                 llx.MapData(convert.PtrMapStrToInterface(cache.Properties.TenantSettings), types.String),
 	}
 	redisSku := orZero(cache.Properties.SKU)
-	if err := setSkuRef(runtime, args, skuName(redisSku.Name), skuFamily(redisSku.Family), skuCapacity(redisSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(redisSku.Name), skuFamily(redisSku.Family), skuCapacity(redisSku.Capacity)); err != nil {
 		return nil, err
 	}
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(cacheIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(cacheIdentity.UserAssignedIdentities),
 		identityType(cacheIdentity.Type), identityPrincipalId(cacheIdentity.PrincipalID), identityTenantId(cacheIdentity.TenantID)); err != nil {
 		return nil, err
 	}

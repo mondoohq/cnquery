@@ -201,7 +201,7 @@ func (a *mqlAzureSubscriptionFrontDoorService) profiles() ([]any, error) {
 				"frontDoorId":       llx.StringData(frontDoorId),
 				"resourceState":     llx.StringData(resourceState),
 			}
-			if err := setSkuRef(a.MqlRuntime, profileArgs, skuName(orZero(profile.SKU).Name)); err != nil {
+			if err := setSkuData(a.MqlRuntime, profileArgs, skuName(orZero(profile.SKU).Name)); err != nil {
 				return nil, err
 			}
 

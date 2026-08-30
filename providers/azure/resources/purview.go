@@ -192,11 +192,11 @@ func purviewAccountToMql(runtime *plugin.Runtime, account *armpurview.Account) (
 		"createdBy":                  llx.StringData(createdBy),
 		"properties":                 llx.DictData(propertiesDict),
 	}
-	if err := setSkuRef(runtime, args, skuName(accountSku.Name), skuCapacity(accountSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(accountSku.Name), skuCapacity(accountSku.Capacity)); err != nil {
 		return nil, err
 	}
 	accountIdentity := orZero(account.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities),
 		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID)); err != nil {
 		return nil, err
 	}

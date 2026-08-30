@@ -1413,7 +1413,7 @@ func (a *mqlAzureSubscriptionContainerAppService) jobs() ([]any, error) {
 				"outboundIpAddresses":      llx.ArrayData(outboundIpAddresses, types.String),
 			}
 			jobIdentity := orZero(entry.Identity)
-			if err := setIdentityRef(a.MqlRuntime, jobArgs, sortedUserAssignedIdentityIDs(jobIdentity.UserAssignedIdentities),
+			if err := setResourceIdentity(a.MqlRuntime, jobArgs, sortedUserAssignedIdentityIDs(jobIdentity.UserAssignedIdentities),
 				identityType(jobIdentity.Type), identityPrincipalId(jobIdentity.PrincipalID), identityTenantId(jobIdentity.TenantID)); err != nil {
 				return nil, err
 			}

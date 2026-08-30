@@ -159,12 +159,12 @@ func kustoClusterToMql(runtime *plugin.Runtime, cluster *armkusto.Cluster) (*mql
 		"cmkFederatedIdentityClientId":  llx.StringData(cmkFederatedIdentityClientID),
 	}
 	clusterSku := orZero(cluster.SKU)
-	if err := setSkuRef(runtime, args, skuName(clusterSku.Name), skuTier(clusterSku.Tier), skuCapacity(clusterSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(clusterSku.Name), skuTier(clusterSku.Tier), skuCapacity(clusterSku.Capacity)); err != nil {
 		return nil, err
 	}
 
 	clusterIdentity := orZero(cluster.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(clusterIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(clusterIdentity.UserAssignedIdentities),
 		identityType(clusterIdentity.Type), identityPrincipalId(clusterIdentity.PrincipalID), identityTenantId(clusterIdentity.TenantID)); err != nil {
 		return nil, err
 	}

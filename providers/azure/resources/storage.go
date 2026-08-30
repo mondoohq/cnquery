@@ -1131,10 +1131,10 @@ func storageAccountToMql(runtime *plugin.Runtime, account *storage.Account) (*mq
 		"publishInternetEndpoints":                         llx.BoolData(publishInternetEndpoints),
 		"publishMicrosoftEndpoints":                        llx.BoolData(publishMicrosoftEndpoints),
 	}
-	if err := setSkuRef(runtime, args, skuName(accountSku.Name), skuTier(accountSku.Tier)); err != nil {
+	if err := setSkuData(runtime, args, skuName(accountSku.Name), skuTier(accountSku.Tier)); err != nil {
 		return nil, err
 	}
-	if err := setIdentityRef(runtime, args, userAssignedIdentityIds,
+	if err := setResourceIdentity(runtime, args, userAssignedIdentityIds,
 		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID)); err != nil {
 		return nil, err
 	}

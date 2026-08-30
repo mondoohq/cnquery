@@ -313,7 +313,7 @@ func createEventHubNamespaceRawData(runtime *plugin.Runtime, ns *armeventhub.EHN
 		"updatedAt":                       llx.TimeDataPtr(updatedAt),
 	}
 	nsSku := orZero(ns.SKU)
-	if err := setSkuRef(runtime, args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(nsSku.Name), skuTier(nsSku.Tier), skuCapacity(nsSku.Capacity)); err != nil {
 		return nil, err
 	}
 

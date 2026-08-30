@@ -45,7 +45,7 @@ func allMembersNull(args map[string]*llx.RawData) bool {
 // skuOption sets one member of the shared SKU resource.
 type skuOption func(map[string]*llx.RawData)
 
-// setSkuRef publishes an ARM SKU as an azure.subscription.resourceSku child of
+// setSkuData publishes an ARM SKU as an azure.subscription.resourceSku child of
 // the resource being built.
 //
 // ARM models a different subset of {Name, Tier, Size, Family, Model, Capacity}
@@ -54,20 +54,20 @@ type skuOption func(map[string]*llx.RawData)
 // bastion SKU carry Name alone. A member the caller does not pass is never
 // written, so it resolves to null rather than to an empty string that would
 // read as "the tier is blank". A service that reported no SKU at all leaves
-// every member null, and skuRef itself is then null rather than a resource
+// every member null, and skuData itself is then null rather than a resource
 // full of nulls.
-func setSkuRef(runtime *plugin.Runtime, args map[string]*llx.RawData, opts ...skuOption) error {
-	data, err := skuRefData(runtime, subResourceParentKey(args), opts...)
+func setSkuData(runtime *plugin.Runtime, args map[string]*llx.RawData, opts ...skuOption) error {
+	data, err := skuDataFor(runtime, subResourceParentKey(args), opts...)
 	if err != nil {
 		return err
 	}
-	args["skuRef"] = data
+	args["skuData"] = data
 	return nil
 }
 
-// skuRefData is setSkuRef for a caller that passes its argument map inline to
+// skuDataFor is setSkuData for a caller that passes its argument map inline to
 // CreateResource and so cannot have the map written to.
-func skuRefData(runtime *plugin.Runtime, parentID string, opts ...skuOption) (*llx.RawData, error) {
+func skuDataFor(runtime *plugin.Runtime, parentID string, opts ...skuOption) (*llx.RawData, error) {
 	skuArgs := skuFields(opts...)
 	if allMembersNull(skuArgs) {
 		return llx.NilData, nil
@@ -142,7 +142,7 @@ func skuCapacity[T int32 | int64 | int](v *T) skuOption {
 // identityOption sets one member of the shared managed-identity resource.
 type identityOption func(map[string]*llx.RawData)
 
-// setIdentityRef publishes an ARM managed-identity block as an
+// setResourceIdentity publishes an ARM managed-identity block as an
 // azure.subscription.resourceIdentity child of the resource being built.
 //
 // The ARM identity block is {Type, PrincipalID, TenantID,
@@ -158,20 +158,20 @@ type identityOption func(map[string]*llx.RawData)
 // resolved on demand, because resolving them eagerly would run one
 // managedIdentity init per attached identity per resource in the scan.
 //
-// A resource with no identity block at all reports identityRef as null rather
+// A resource with no identity block at all reports resourceIdentity as null rather
 // than as a resource whose every member is null.
-func setIdentityRef(runtime *plugin.Runtime, args map[string]*llx.RawData, userAssignedIDs []string, opts ...identityOption) error {
-	data, err := identityRefData(runtime, subResourceParentKey(args), userAssignedIDs, opts...)
+func setResourceIdentity(runtime *plugin.Runtime, args map[string]*llx.RawData, userAssignedIDs []string, opts ...identityOption) error {
+	data, err := resourceIdentityData(runtime, subResourceParentKey(args), userAssignedIDs, opts...)
 	if err != nil {
 		return err
 	}
-	args["identityRef"] = data
+	args["resourceIdentity"] = data
 	return nil
 }
 
-// identityRefData is setIdentityRef for a caller that passes its argument map
+// resourceIdentityData is setResourceIdentity for a caller that passes its argument map
 // inline to CreateResource and so cannot have the map written to.
-func identityRefData(runtime *plugin.Runtime, parentID string, userAssignedIDs []string, opts ...identityOption) (*llx.RawData, error) {
+func resourceIdentityData(runtime *plugin.Runtime, parentID string, userAssignedIDs []string, opts ...identityOption) (*llx.RawData, error) {
 	idArgs := identityFields(opts...)
 	if allMembersNull(idArgs) && len(userAssignedIDs) == 0 {
 		return llx.NilData, nil

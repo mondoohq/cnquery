@@ -153,10 +153,10 @@ func vmScaleSetToMql(runtime *plugin.Runtime, vmss compute.VirtualMachineScaleSe
 		"principalId": llx.StringDataPtr(vmssIdentity.PrincipalID),
 	}
 	vmssSku := orZero(vmss.SKU)
-	if err := setSkuRef(runtime, args, skuName(vmssSku.Name), skuTier(vmssSku.Tier), skuCapacity(vmssSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(vmssSku.Name), skuTier(vmssSku.Tier), skuCapacity(vmssSku.Capacity)); err != nil {
 		return nil, err
 	}
-	if err := setIdentityRef(runtime, args, userAssignedIdentityIds,
+	if err := setResourceIdentity(runtime, args, userAssignedIdentityIds,
 		identityType(vmssIdentity.Type), identityPrincipalId(vmssIdentity.PrincipalID), identityTenantId(vmssIdentity.TenantID)); err != nil {
 		return nil, err
 	}
@@ -323,7 +323,7 @@ func vmScaleSetInstanceToMql(runtime *plugin.Runtime, inst compute.VirtualMachin
 		"sku":        llx.DictData(sku),
 	}
 	instSku := orZero(inst.SKU)
-	if err := setSkuRef(runtime, args, skuName(instSku.Name), skuTier(instSku.Tier), skuCapacity(instSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(instSku.Name), skuTier(instSku.Tier), skuCapacity(instSku.Capacity)); err != nil {
 		return nil, err
 	}
 

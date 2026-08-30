@@ -117,7 +117,7 @@ func createDataBoxJobResource(runtime *plugin.Runtime, job *armdatabox.JobResour
 		skuModel = enumString(job.SKU.Model)
 	}
 
-	identityRef, err := identityRefData(runtime, convert.ToValue(job.ID), userAssignedIdentityIds,
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(job.ID), userAssignedIdentityIds,
 		identityType(jobIdentity.Type), identityPrincipalId(jobIdentity.PrincipalID), identityTenantId(jobIdentity.TenantID))
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func createDataBoxJobResource(runtime *plugin.Runtime, job *armdatabox.JobResour
 			"skuFamily":          llx.StringData(skuFamily),
 			"skuModel":           llx.StringData(skuModel),
 			"identity":           llx.DictData(identity),
-			"identityRef":        identityRef,
+			"resourceIdentity":   resourceIdentity,
 		})
 	if err != nil {
 		return nil, err

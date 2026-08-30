@@ -279,11 +279,11 @@ func machineLearningWorkspaceToMql(runtime *plugin.Runtime, ws *ml.Workspace) (*
 		"workspaceTenantId":           llx.StringDataPtr(props.TenantID),
 		"serverlessComputeNoPublicIp": llx.BoolDataPtr(serverlessComputeNoPublicIp),
 	}
-	if err := setSkuRef(runtime, args, skuName(wsSku.Name), skuTier(wsSku.Tier), skuSize(wsSku.Size), skuFamily(wsSku.Family), skuCapacity(wsSku.Capacity)); err != nil {
+	if err := setSkuData(runtime, args, skuName(wsSku.Name), skuTier(wsSku.Tier), skuSize(wsSku.Size), skuFamily(wsSku.Family), skuCapacity(wsSku.Capacity)); err != nil {
 		return nil, err
 	}
 	wsIdentity := orZero(ws.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(wsIdentity.UserAssignedIdentities),
 		identityType(wsIdentity.Type), identityPrincipalId(wsIdentity.PrincipalID), identityTenantId(wsIdentity.TenantID)); err != nil {
 		return nil, err
 	}
@@ -478,7 +478,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) onlineEndpoints() 
 				"provisioningState":   llx.StringData(provisioningState),
 			}
 			epIdentity := orZero(ep.Identity)
-			if err := setIdentityRef(a.MqlRuntime, epArgs, sortedUserAssignedIdentityIDs(epIdentity.UserAssignedIdentities),
+			if err := setResourceIdentity(a.MqlRuntime, epArgs, sortedUserAssignedIdentityIDs(epIdentity.UserAssignedIdentities),
 				identityType(epIdentity.Type), identityPrincipalId(epIdentity.PrincipalID), identityTenantId(epIdentity.TenantID)); err != nil {
 				return nil, err
 			}
@@ -731,7 +731,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) serverlessEndpoint
 				"provisioningState":         llx.StringData(provisioningState),
 			}
 			slIdentity := orZero(ep.Identity)
-			if err := setIdentityRef(a.MqlRuntime, slArgs, sortedUserAssignedIdentityIDs(slIdentity.UserAssignedIdentities),
+			if err := setResourceIdentity(a.MqlRuntime, slArgs, sortedUserAssignedIdentityIDs(slIdentity.UserAssignedIdentities),
 				identityType(slIdentity.Type), identityPrincipalId(slIdentity.PrincipalID), identityTenantId(slIdentity.TenantID)); err != nil {
 				return nil, err
 			}
@@ -837,7 +837,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) computes() ([]any,
 				"modifiedOn":        llx.TimeDataPtr(modifiedOn),
 			}
 			computeIdentity := orZero(c.Identity)
-			if err := setIdentityRef(a.MqlRuntime, computeArgs, sortedUserAssignedIdentityIDs(computeIdentity.UserAssignedIdentities),
+			if err := setResourceIdentity(a.MqlRuntime, computeArgs, sortedUserAssignedIdentityIDs(computeIdentity.UserAssignedIdentities),
 				identityType(computeIdentity.Type), identityPrincipalId(computeIdentity.PrincipalID), identityTenantId(computeIdentity.TenantID)); err != nil {
 				return nil, err
 			}

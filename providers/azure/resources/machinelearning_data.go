@@ -437,7 +437,7 @@ func (a *mqlAzureSubscriptionMachineLearningServiceWorkspace) batchEndpoints() (
 				"properties":            llx.MapData(convert.PtrMapStrToInterface(properties), types.String),
 			}
 			epIdentity := orZero(ep.Identity)
-			if err := setIdentityRef(a.MqlRuntime, epArgs, sortedUserAssignedIdentityIDs(epIdentity.UserAssignedIdentities),
+			if err := setResourceIdentity(a.MqlRuntime, epArgs, sortedUserAssignedIdentityIDs(epIdentity.UserAssignedIdentities),
 				identityType(epIdentity.Type), identityPrincipalId(epIdentity.PrincipalID), identityTenantId(epIdentity.TenantID)); err != nil {
 				return nil, err
 			}
@@ -593,7 +593,7 @@ func mlBatchDeploymentToMql(runtime *plugin.Runtime, dep *ml.BatchDeployment) (*
 		"properties":                llx.MapData(convert.PtrMapStrToInterface(properties), types.String),
 	}
 	depIdentity := orZero(dep.Identity)
-	if err := setIdentityRef(runtime, depArgs, sortedUserAssignedIdentityIDs(depIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, depArgs, sortedUserAssignedIdentityIDs(depIdentity.UserAssignedIdentities),
 		identityType(depIdentity.Type), identityPrincipalId(depIdentity.PrincipalID), identityTenantId(depIdentity.TenantID)); err != nil {
 		return nil, err
 	}

@@ -302,7 +302,7 @@ func vmToMql(runtime *plugin.Runtime, vm compute.VirtualMachine) (*mqlAzureSubsc
 		"winRmHttpsListenerEnabled":     llx.BoolDataPtr(guestAccess.winRmHTTPSListenerEnabled),
 	}
 	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(vmIdentity.UserAssignedIdentities)
-	if err := setIdentityRef(runtime, vmArgs, userAssignedIdentityIds,
+	if err := setResourceIdentity(runtime, vmArgs, userAssignedIdentityIds,
 		identityType(vmIdentity.Type), identityPrincipalId(vmIdentity.PrincipalID), identityTenantId(vmIdentity.TenantID)); err != nil {
 		return nil, err
 	}
@@ -584,7 +584,7 @@ func diskToMql(runtime *plugin.Runtime, disk compute.Disk) (*mqlAzureSubscriptio
 		"properties":        llx.DictData(properties),
 	}
 	diskSku := orZero(disk.SKU)
-	if err := setSkuRef(runtime, args, skuName(diskSku.Name), skuTier(diskSku.Tier)); err != nil {
+	if err := setSkuData(runtime, args, skuName(diskSku.Name), skuTier(diskSku.Tier)); err != nil {
 		return nil, err
 	}
 
@@ -1215,7 +1215,7 @@ func diskEncryptionSetToMql(runtime *plugin.Runtime, des compute.DiskEncryptionS
 		"provisioningState":                 llx.StringData(provisioningState),
 	}
 	desIdentity := orZero(des.Identity)
-	if err := setIdentityRef(runtime, desArgs, sortedUserAssignedIdentityIDs(desIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, desArgs, sortedUserAssignedIdentityIDs(desIdentity.UserAssignedIdentities),
 		identityType(desIdentity.Type), identityPrincipalId(desIdentity.PrincipalID), identityTenantId(desIdentity.TenantID)); err != nil {
 		return nil, err
 	}
@@ -1581,7 +1581,7 @@ func snapshotToMql(runtime *plugin.Runtime, snap compute.Snapshot) (*mqlAzureSub
 		"properties": llx.DictData(properties),
 	}
 	snapSku := orZero(snap.SKU)
-	if err := setSkuRef(runtime, args, skuName(snapSku.Name), skuTier(snapSku.Tier)); err != nil {
+	if err := setSkuData(runtime, args, skuName(snapSku.Name), skuTier(snapSku.Tier)); err != nil {
 		return nil, err
 	}
 

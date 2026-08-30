@@ -162,11 +162,11 @@ func configurationStoreToMql(runtime *plugin.Runtime, store *armappconfiguration
 		"defaultKeyValueRevisionRetentionPeriodInSeconds": llx.IntData(defaultKeyValueRevisionRetentionPeriodInSeconds),
 		"creationTime": llx.TimeDataPtr(creationTime),
 	}
-	if err := setSkuRef(runtime, args, skuName(storeSku.Name)); err != nil {
+	if err := setSkuData(runtime, args, skuName(storeSku.Name)); err != nil {
 		return nil, err
 	}
 	storeIdentity := orZero(store.Identity)
-	if err := setIdentityRef(runtime, args, sortedUserAssignedIdentityIDs(storeIdentity.UserAssignedIdentities),
+	if err := setResourceIdentity(runtime, args, sortedUserAssignedIdentityIDs(storeIdentity.UserAssignedIdentities),
 		identityType(storeIdentity.Type), identityPrincipalId(storeIdentity.PrincipalID), identityTenantId(storeIdentity.TenantID)); err != nil {
 		return nil, err
 	}

@@ -134,7 +134,7 @@ func createNetAppAccountResource(runtime *plugin.Runtime, account *armnetapp.Acc
 	accountIdentity := orZero(account.Identity)
 	userAssignedIdentityIds := sortedUserAssignedIdentityIDs(accountIdentity.UserAssignedIdentities)
 
-	identityRef, err := identityRefData(runtime, convert.ToValue(account.ID), userAssignedIdentityIds,
+	resourceIdentity, err := resourceIdentityData(runtime, convert.ToValue(account.ID), userAssignedIdentityIds,
 		identityType(accountIdentity.Type), identityPrincipalId(accountIdentity.PrincipalID), identityTenantId(accountIdentity.TenantID))
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func createNetAppAccountResource(runtime *plugin.Runtime, account *armnetapp.Acc
 			"tags":              llx.MapData(convert.PtrMapStrToInterface(account.Tags), types.String),
 			"provisioningState": llx.StringDataPtr(props.ProvisioningState),
 			"identity":          llx.DictData(identity),
-			"identityRef":       identityRef,
+			"resourceIdentity":  resourceIdentity,
 			"principalId":       llx.StringDataPtr(accountIdentity.PrincipalID),
 			"tenantId":          llx.StringDataPtr(accountIdentity.TenantID),
 			"nfsV4IdDomain":     llx.StringDataPtr(props.NfsV4IDDomain),
