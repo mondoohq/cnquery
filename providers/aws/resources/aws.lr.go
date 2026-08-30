@@ -564,6 +564,7 @@ const (
 	ResourceAwsDmsReplicationSubnetGroup                                        string = "aws.dms.replicationSubnetGroup"
 	ResourceAwsApigateway                                                       string = "aws.apigateway"
 	ResourceAwsApigatewayRestapi                                                string = "aws.apigateway.restapi"
+	ResourceAwsApigatewayStageAccessLogConfiguration                            string = "aws.apigateway.stage.accessLogConfiguration"
 	ResourceAwsApigatewayStage                                                  string = "aws.apigateway.stage"
 	ResourceAwsApigatewayAuthorizer                                             string = "aws.apigateway.authorizer"
 	ResourceAwsApigatewayRequestValidator                                       string = "aws.apigateway.requestValidator"
@@ -573,6 +574,8 @@ const (
 	ResourceAwsApigatewayVpcLink                                                string = "aws.apigateway.vpcLink"
 	ResourceAwsApigatewayv2                                                     string = "aws.apigatewayv2"
 	ResourceAwsApigatewayv2Api                                                  string = "aws.apigatewayv2.api"
+	ResourceAwsApigatewayv2StageAccessLogConfiguration                          string = "aws.apigatewayv2.stage.accessLogConfiguration"
+	ResourceAwsApigatewayv2RouteSettings                                        string = "aws.apigatewayv2.routeSettings"
 	ResourceAwsApigatewayv2Stage                                                string = "aws.apigatewayv2.stage"
 	ResourceAwsApigatewayv2Route                                                string = "aws.apigatewayv2.route"
 	ResourceAwsApigatewayv2Authorizer                                           string = "aws.apigatewayv2.authorizer"
@@ -701,6 +704,9 @@ const (
 	ResourceAwsNeptuneInstance                                                  string = "aws.neptune.instance"
 	ResourceAwsNeptuneSnapshot                                                  string = "aws.neptune.snapshot"
 	ResourceAwsCognito                                                          string = "aws.cognito"
+	ResourceAwsCognitoDeviceConfiguration                                       string = "aws.cognito.deviceConfiguration"
+	ResourceAwsCognitoUsernameConfiguration                                     string = "aws.cognito.usernameConfiguration"
+	ResourceAwsCognitoTokenValidityUnits                                        string = "aws.cognito.tokenValidityUnits"
 	ResourceAwsCognitoUserPool                                                  string = "aws.cognito.userPool"
 	ResourceAwsCognitoUserPoolPasswordPolicy                                    string = "aws.cognito.userPool.passwordPolicy"
 	ResourceAwsCognitoUserPoolClient                                            string = "aws.cognito.userPoolClient"
@@ -3224,6 +3230,10 @@ func init() {
 			Init:   initAwsApigatewayRestapi,
 			Create: createAwsApigatewayRestapi,
 		},
+		"aws.apigateway.stage.accessLogConfiguration": {
+			// to override args, implement: initAwsApigatewayStageAccessLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayStageAccessLogConfiguration,
+		},
 		"aws.apigateway.stage": {
 			// to override args, implement: initAwsApigatewayStage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsApigatewayStage,
@@ -3259,6 +3269,14 @@ func init() {
 		"aws.apigatewayv2.api": {
 			Init:   initAwsApigatewayv2Api,
 			Create: createAwsApigatewayv2Api,
+		},
+		"aws.apigatewayv2.stage.accessLogConfiguration": {
+			// to override args, implement: initAwsApigatewayv2StageAccessLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayv2StageAccessLogConfiguration,
+		},
+		"aws.apigatewayv2.routeSettings": {
+			// to override args, implement: initAwsApigatewayv2RouteSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsApigatewayv2RouteSettings,
 		},
 		"aws.apigatewayv2.stage": {
 			// to override args, implement: initAwsApigatewayv2Stage(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -3771,6 +3789,18 @@ func init() {
 		"aws.cognito": {
 			// to override args, implement: initAwsCognito(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsCognito,
+		},
+		"aws.cognito.deviceConfiguration": {
+			// to override args, implement: initAwsCognitoDeviceConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoDeviceConfiguration,
+		},
+		"aws.cognito.usernameConfiguration": {
+			// to override args, implement: initAwsCognitoUsernameConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoUsernameConfiguration,
+		},
+		"aws.cognito.tokenValidityUnits": {
+			// to override args, implement: initAwsCognitoTokenValidityUnits(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsCognitoTokenValidityUnits,
 		},
 		"aws.cognito.userPool": {
 			Init:   initAwsCognitoUserPool,
@@ -22132,6 +22162,15 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigateway.restapi.policy": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayRestapi).GetPolicy()).ToDataRes(types.String)
 	},
+	"aws.apigateway.stage.accessLogConfiguration.destinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStageAccessLogConfiguration).GetDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.apigateway.stage.accessLogConfiguration.logGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStageAccessLogConfiguration).GetLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.apigateway.stage.accessLogConfiguration.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStageAccessLogConfiguration).GetFormat()).ToDataRes(types.String)
+	},
 	"aws.apigateway.stage.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetArn()).ToDataRes(types.String)
 	},
@@ -22162,14 +22201,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigateway.stage.cacheDataEncrypted": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetCacheDataEncrypted()).ToDataRes(types.Bool)
 	},
-	"aws.apigateway.stage.accessLogGroup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayStage).GetAccessLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
-	},
-	"aws.apigateway.stage.accessLogDestinationArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayStage).GetAccessLogDestinationArn()).ToDataRes(types.String)
-	},
-	"aws.apigateway.stage.accessLogFormat": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayStage).GetAccessLogFormat()).ToDataRes(types.String)
+	"aws.apigateway.stage.accessLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayStage).GetAccessLog()).ToDataRes(types.Resource("aws.apigateway.stage.accessLogConfiguration"))
 	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayStage).GetClientCertificateId()).ToDataRes(types.String)
@@ -22447,6 +22480,30 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigatewayv2.api.createdAt": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Api).GetCreatedAt()).ToDataRes(types.Time)
 	},
+	"aws.apigatewayv2.stage.accessLogConfiguration.destinationArn": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2StageAccessLogConfiguration).GetDestinationArn()).ToDataRes(types.String)
+	},
+	"aws.apigatewayv2.stage.accessLogConfiguration.logGroup": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2StageAccessLogConfiguration).GetLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
+	},
+	"aws.apigatewayv2.stage.accessLogConfiguration.format": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2StageAccessLogConfiguration).GetFormat()).ToDataRes(types.String)
+	},
+	"aws.apigatewayv2.routeSettings.dataTraceEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2RouteSettings).GetDataTraceEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.apigatewayv2.routeSettings.detailedMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2RouteSettings).GetDetailedMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.apigatewayv2.routeSettings.loggingLevel": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2RouteSettings).GetLoggingLevel()).ToDataRes(types.String)
+	},
+	"aws.apigatewayv2.routeSettings.throttlingBurstLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2RouteSettings).GetThrottlingBurstLimit()).ToDataRes(types.Int)
+	},
+	"aws.apigatewayv2.routeSettings.throttlingRateLimit": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2RouteSettings).GetThrottlingRateLimit()).ToDataRes(types.Float)
+	},
 	"aws.apigatewayv2.stage.stageName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetStageName()).ToDataRes(types.String)
 	},
@@ -22477,20 +22534,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigatewayv2.stage.defaultRouteSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteSettings()).ToDataRes(types.Dict)
 	},
-	"aws.apigatewayv2.stage.defaultRouteDataTraceEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteDataTraceEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.apigatewayv2.stage.defaultRouteDetailedMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteDetailedMetricsEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.apigatewayv2.stage.defaultRouteLoggingLevel": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteLoggingLevel()).ToDataRes(types.String)
-	},
-	"aws.apigatewayv2.stage.defaultRouteThrottlingBurstLimit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteThrottlingBurstLimit()).ToDataRes(types.Int)
-	},
-	"aws.apigatewayv2.stage.defaultRouteThrottlingRateLimit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRouteThrottlingRateLimit()).ToDataRes(types.Float)
+	"aws.apigatewayv2.stage.defaultRoute": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetDefaultRoute()).ToDataRes(types.Resource("aws.apigatewayv2.routeSettings"))
 	},
 	"aws.apigatewayv2.stage.routeSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetRouteSettings()).ToDataRes(types.Dict)
@@ -22498,14 +22543,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.apigatewayv2.stage.accessLogSettings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogSettings()).ToDataRes(types.Dict)
 	},
-	"aws.apigatewayv2.stage.accessLogGroup": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogGroup()).ToDataRes(types.Resource("aws.cloudwatch.loggroup"))
-	},
-	"aws.apigatewayv2.stage.accessLogDestinationArn": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogDestinationArn()).ToDataRes(types.String)
-	},
-	"aws.apigatewayv2.stage.accessLogFormat": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLogFormat()).ToDataRes(types.String)
+	"aws.apigatewayv2.stage.accessLog": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsApigatewayv2Stage).GetAccessLog()).ToDataRes(types.Resource("aws.apigatewayv2.stage.accessLogConfiguration"))
 	},
 	"aws.apigatewayv2.stage.apiGatewayManaged": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsApigatewayv2Stage).GetApiGatewayManaged()).ToDataRes(types.Bool)
@@ -26764,6 +26803,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.identityPools": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognito).GetIdentityPools()).ToDataRes(types.Array(types.Resource("aws.cognito.identityPool")))
 	},
+	"aws.cognito.deviceConfiguration.challengeRequiredOnNewDevice": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoDeviceConfiguration).GetChallengeRequiredOnNewDevice()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.deviceConfiguration.deviceOnlyRememberedOnUserPrompt": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoDeviceConfiguration).GetDeviceOnlyRememberedOnUserPrompt()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.usernameConfiguration.caseSensitive": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUsernameConfiguration).GetCaseSensitive()).ToDataRes(types.Bool)
+	},
+	"aws.cognito.tokenValidityUnits.accessToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoTokenValidityUnits).GetAccessToken()).ToDataRes(types.String)
+	},
+	"aws.cognito.tokenValidityUnits.idToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoTokenValidityUnits).GetIdToken()).ToDataRes(types.String)
+	},
+	"aws.cognito.tokenValidityUnits.refreshToken": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoTokenValidityUnits).GetRefreshToken()).ToDataRes(types.String)
+	},
 	"aws.cognito.userPool.arn": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetArn()).ToDataRes(types.String)
 	},
@@ -26815,17 +26872,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPool.deviceConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetDeviceConfiguration()).ToDataRes(types.Dict)
 	},
-	"aws.cognito.userPool.deviceChallengeRequiredOnNewDevice": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPool).GetDeviceChallengeRequiredOnNewDevice()).ToDataRes(types.Bool)
-	},
-	"aws.cognito.userPool.deviceOnlyRememberedOnUserPrompt": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPool).GetDeviceOnlyRememberedOnUserPrompt()).ToDataRes(types.Bool)
+	"aws.cognito.userPool.deviceConfigurationRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetDeviceConfigurationRef()).ToDataRes(types.Resource("aws.cognito.deviceConfiguration"))
 	},
 	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetUsernameConfiguration()).ToDataRes(types.Dict)
 	},
-	"aws.cognito.userPool.usernameCaseSensitive": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPool).GetUsernameCaseSensitive()).ToDataRes(types.Bool)
+	"aws.cognito.userPool.usernameConfigurationRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPool).GetUsernameConfigurationRef()).ToDataRes(types.Resource("aws.cognito.usernameConfiguration"))
 	},
 	"aws.cognito.userPool.schema": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPool).GetSchema()).ToDataRes(types.Array(types.Dict))
@@ -26902,14 +26956,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.cognito.userPoolClient.tokenValidityUnits": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolClient).GetTokenValidityUnits()).ToDataRes(types.Dict)
 	},
-	"aws.cognito.userPoolClient.accessTokenValidityUnit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPoolClient).GetAccessTokenValidityUnit()).ToDataRes(types.String)
-	},
-	"aws.cognito.userPoolClient.idTokenValidityUnit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPoolClient).GetIdTokenValidityUnit()).ToDataRes(types.String)
-	},
-	"aws.cognito.userPoolClient.refreshTokenValidityUnit": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsCognitoUserPoolClient).GetRefreshTokenValidityUnit()).ToDataRes(types.String)
+	"aws.cognito.userPoolClient.tokenValidityUnitsRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsCognitoUserPoolClient).GetTokenValidityUnitsRef()).ToDataRes(types.Resource("aws.cognito.tokenValidityUnits"))
 	},
 	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsCognitoUserPoolClient).GetExplicitAuthFlows()).ToDataRes(types.Array(types.String))
@@ -62234,6 +62282,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayRestapi).Policy, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
+	"aws.apigateway.stage.accessLogConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStageAccessLogConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigateway.stage.accessLogConfiguration.destinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStageAccessLogConfiguration).DestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.stage.accessLogConfiguration.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStageAccessLogConfiguration).LogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.apigateway.stage.accessLogConfiguration.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStageAccessLogConfiguration).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.apigateway.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayStage).__id, ok = v.Value.(string)
 		return
@@ -62278,16 +62342,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayStage).CacheDataEncrypted, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
-	"aws.apigateway.stage.accessLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayStage).AccessLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
-		return
-	},
-	"aws.apigateway.stage.accessLogDestinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayStage).AccessLogDestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.apigateway.stage.accessLogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayStage).AccessLogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.apigateway.stage.accessLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayStage).AccessLog, ok = plugin.RawToTValue[*mqlAwsApigatewayStageAccessLogConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.apigateway.stage.clientCertificateId": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62690,6 +62746,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayv2Api).CreatedAt, ok = plugin.RawToTValue[*time.Time](v.Value, v.Error)
 		return
 	},
+	"aws.apigatewayv2.stage.accessLogConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2StageAccessLogConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigatewayv2.stage.accessLogConfiguration.destinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2StageAccessLogConfiguration).DestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.accessLogConfiguration.logGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2StageAccessLogConfiguration).LogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.stage.accessLogConfiguration.format": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2StageAccessLogConfiguration).Format, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.routeSettings.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2RouteSettings).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.apigatewayv2.routeSettings.dataTraceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2RouteSettings).DataTraceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.routeSettings.detailedMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2RouteSettings).DetailedMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.routeSettings.loggingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2RouteSettings).LoggingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.routeSettings.throttlingBurstLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2RouteSettings).ThrottlingBurstLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.apigatewayv2.routeSettings.throttlingRateLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2RouteSettings).ThrottlingRateLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
 	"aws.apigatewayv2.stage.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsApigatewayv2Stage).__id, ok = v.Value.(string)
 		return
@@ -62734,24 +62830,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayv2Stage).DefaultRouteSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.apigatewayv2.stage.defaultRouteDataTraceEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).DefaultRouteDataTraceEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.apigatewayv2.stage.defaultRouteDetailedMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).DefaultRouteDetailedMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.apigatewayv2.stage.defaultRouteLoggingLevel": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).DefaultRouteLoggingLevel, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.apigatewayv2.stage.defaultRouteThrottlingBurstLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).DefaultRouteThrottlingBurstLimit, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.apigatewayv2.stage.defaultRouteThrottlingRateLimit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).DefaultRouteThrottlingRateLimit, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+	"aws.apigatewayv2.stage.defaultRoute": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).DefaultRoute, ok = plugin.RawToTValue[*mqlAwsApigatewayv2RouteSettings](v.Value, v.Error)
 		return
 	},
 	"aws.apigatewayv2.stage.routeSettings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -62762,16 +62842,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsApigatewayv2Stage).AccessLogSettings, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.apigatewayv2.stage.accessLogGroup": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).AccessLogGroup, ok = plugin.RawToTValue[*mqlAwsCloudwatchLoggroup](v.Value, v.Error)
-		return
-	},
-	"aws.apigatewayv2.stage.accessLogDestinationArn": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).AccessLogDestinationArn, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.apigatewayv2.stage.accessLogFormat": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsApigatewayv2Stage).AccessLogFormat, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.apigatewayv2.stage.accessLog": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsApigatewayv2Stage).AccessLog, ok = plugin.RawToTValue[*mqlAwsApigatewayv2StageAccessLogConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.apigatewayv2.stage.apiGatewayManaged": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68958,6 +69030,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognito).IdentityPools, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.cognito.deviceConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoDeviceConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.deviceConfiguration.challengeRequiredOnNewDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoDeviceConfiguration).ChallengeRequiredOnNewDevice, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.deviceConfiguration.deviceOnlyRememberedOnUserPrompt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoDeviceConfiguration).DeviceOnlyRememberedOnUserPrompt, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.usernameConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUsernameConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.usernameConfiguration.caseSensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUsernameConfiguration).CaseSensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.tokenValidityUnits.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoTokenValidityUnits).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.cognito.tokenValidityUnits.accessToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoTokenValidityUnits).AccessToken, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.tokenValidityUnits.idToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoTokenValidityUnits).IdToken, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.cognito.tokenValidityUnits.refreshToken": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoTokenValidityUnits).RefreshToken, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
 	"aws.cognito.userPool.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).__id, ok = v.Value.(string)
 		return
@@ -69030,20 +69138,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPool).DeviceConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.cognito.userPool.deviceChallengeRequiredOnNewDevice": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPool).DeviceChallengeRequiredOnNewDevice, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.cognito.userPool.deviceOnlyRememberedOnUserPrompt": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPool).DeviceOnlyRememberedOnUserPrompt, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"aws.cognito.userPool.deviceConfigurationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).DeviceConfigurationRef, ok = plugin.RawToTValue[*mqlAwsCognitoDeviceConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPool.usernameConfiguration": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsCognitoUserPool).UsernameConfiguration, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.cognito.userPool.usernameCaseSensitive": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPool).UsernameCaseSensitive, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"aws.cognito.userPool.usernameConfigurationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPool).UsernameConfigurationRef, ok = plugin.RawToTValue[*mqlAwsCognitoUsernameConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPool.schema": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -69154,16 +69258,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsCognitoUserPoolClient).TokenValidityUnits, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.cognito.userPoolClient.accessTokenValidityUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPoolClient).AccessTokenValidityUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.cognito.userPoolClient.idTokenValidityUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPoolClient).IdTokenValidityUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.cognito.userPoolClient.refreshTokenValidityUnit": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsCognitoUserPoolClient).RefreshTokenValidityUnit, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.cognito.userPoolClient.tokenValidityUnitsRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsCognitoUserPoolClient).TokenValidityUnitsRef, ok = plugin.RawToTValue[*mqlAwsCognitoTokenValidityUnits](v.Value, v.Error)
 		return
 	},
 	"aws.cognito.userPoolClient.explicitAuthFlows": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -150243,31 +150339,95 @@ func (c *mqlAwsApigatewayRestapi) GetPolicy() *plugin.TValue[string] {
 	return &c.Policy
 }
 
+// mqlAwsApigatewayStageAccessLogConfiguration for the aws.apigateway.stage.accessLogConfiguration resource
+type mqlAwsApigatewayStageAccessLogConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayStageAccessLogConfigurationInternal it will be used here
+	DestinationArn plugin.TValue[string]
+	LogGroup       plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	Format         plugin.TValue[string]
+}
+
+// createAwsApigatewayStageAccessLogConfiguration creates a new instance of this resource
+func createAwsApigatewayStageAccessLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayStageAccessLogConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigateway.stage.accessLogConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayStageAccessLogConfiguration) MqlName() string {
+	return "aws.apigateway.stage.accessLogConfiguration"
+}
+
+func (c *mqlAwsApigatewayStageAccessLogConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayStageAccessLogConfiguration) GetDestinationArn() *plugin.TValue[string] {
+	return &c.DestinationArn
+}
+
+func (c *mqlAwsApigatewayStageAccessLogConfiguration) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.LogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.stage.accessLogConfiguration", c.__id, "logGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.logGroup()
+	})
+}
+
+func (c *mqlAwsApigatewayStageAccessLogConfiguration) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
 // mqlAwsApigatewayStage for the aws.apigateway.stage resource
 type mqlAwsApigatewayStage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsApigatewayStageInternal
-	Arn                     plugin.TValue[string]
-	Name                    plugin.TValue[string]
-	TracingEnabled          plugin.TValue[bool]
-	Description             plugin.TValue[string]
-	DeploymentId            plugin.TValue[string]
-	MethodSettings          plugin.TValue[any]
-	CacheClusterEnabled     plugin.TValue[bool]
-	CacheClusterSize        plugin.TValue[string]
-	CacheClusterStatus      plugin.TValue[string]
-	CacheDataEncrypted      plugin.TValue[bool]
-	AccessLogGroup          plugin.TValue[*mqlAwsCloudwatchLoggroup]
-	AccessLogDestinationArn plugin.TValue[string]
-	AccessLogFormat         plugin.TValue[string]
-	ClientCertificateId     plugin.TValue[string]
-	WebAcl                  plugin.TValue[*mqlAwsWafAcl]
-	CreatedAt               plugin.TValue[*time.Time]
-	LastUpdatedAt           plugin.TValue[*time.Time]
-	DocumentationVersion    plugin.TValue[string]
-	Variables               plugin.TValue[map[string]any]
-	Tags                    plugin.TValue[map[string]any]
+	Arn                  plugin.TValue[string]
+	Name                 plugin.TValue[string]
+	TracingEnabled       plugin.TValue[bool]
+	Description          plugin.TValue[string]
+	DeploymentId         plugin.TValue[string]
+	MethodSettings       plugin.TValue[any]
+	CacheClusterEnabled  plugin.TValue[bool]
+	CacheClusterSize     plugin.TValue[string]
+	CacheClusterStatus   plugin.TValue[string]
+	CacheDataEncrypted   plugin.TValue[bool]
+	AccessLog            plugin.TValue[*mqlAwsApigatewayStageAccessLogConfiguration]
+	ClientCertificateId  plugin.TValue[string]
+	WebAcl               plugin.TValue[*mqlAwsWafAcl]
+	CreatedAt            plugin.TValue[*time.Time]
+	LastUpdatedAt        plugin.TValue[*time.Time]
+	DocumentationVersion plugin.TValue[string]
+	Variables            plugin.TValue[map[string]any]
+	Tags                 plugin.TValue[map[string]any]
 }
 
 // createAwsApigatewayStage creates a new instance of this resource
@@ -150347,28 +150507,8 @@ func (c *mqlAwsApigatewayStage) GetCacheDataEncrypted() *plugin.TValue[bool] {
 	return &c.CacheDataEncrypted
 }
 
-func (c *mqlAwsApigatewayStage) GetAccessLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
-	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.AccessLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigateway.stage", c.__id, "accessLogGroup")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
-			}
-		}
-
-		return c.accessLogGroup()
-	})
-}
-
-func (c *mqlAwsApigatewayStage) GetAccessLogDestinationArn() *plugin.TValue[string] {
-	return &c.AccessLogDestinationArn
-}
-
-func (c *mqlAwsApigatewayStage) GetAccessLogFormat() *plugin.TValue[string] {
-	return &c.AccessLogFormat
+func (c *mqlAwsApigatewayStage) GetAccessLog() *plugin.TValue[*mqlAwsApigatewayStageAccessLogConfiguration] {
+	return &c.AccessLog
 }
 
 func (c *mqlAwsApigatewayStage) GetClientCertificateId() *plugin.TValue[string] {
@@ -151291,36 +151431,160 @@ func (c *mqlAwsApigatewayv2Api) GetCreatedAt() *plugin.TValue[*time.Time] {
 	return &c.CreatedAt
 }
 
+// mqlAwsApigatewayv2StageAccessLogConfiguration for the aws.apigatewayv2.stage.accessLogConfiguration resource
+type mqlAwsApigatewayv2StageAccessLogConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayv2StageAccessLogConfigurationInternal it will be used here
+	DestinationArn plugin.TValue[string]
+	LogGroup       plugin.TValue[*mqlAwsCloudwatchLoggroup]
+	Format         plugin.TValue[string]
+}
+
+// createAwsApigatewayv2StageAccessLogConfiguration creates a new instance of this resource
+func createAwsApigatewayv2StageAccessLogConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayv2StageAccessLogConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigatewayv2.stage.accessLogConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayv2StageAccessLogConfiguration) MqlName() string {
+	return "aws.apigatewayv2.stage.accessLogConfiguration"
+}
+
+func (c *mqlAwsApigatewayv2StageAccessLogConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayv2StageAccessLogConfiguration) GetDestinationArn() *plugin.TValue[string] {
+	return &c.DestinationArn
+}
+
+func (c *mqlAwsApigatewayv2StageAccessLogConfiguration) GetLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
+	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.LogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigatewayv2.stage.accessLogConfiguration", c.__id, "logGroup")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
+			}
+		}
+
+		return c.logGroup()
+	})
+}
+
+func (c *mqlAwsApigatewayv2StageAccessLogConfiguration) GetFormat() *plugin.TValue[string] {
+	return &c.Format
+}
+
+// mqlAwsApigatewayv2RouteSettings for the aws.apigatewayv2.routeSettings resource
+type mqlAwsApigatewayv2RouteSettings struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsApigatewayv2RouteSettingsInternal it will be used here
+	DataTraceEnabled       plugin.TValue[bool]
+	DetailedMetricsEnabled plugin.TValue[bool]
+	LoggingLevel           plugin.TValue[string]
+	ThrottlingBurstLimit   plugin.TValue[int64]
+	ThrottlingRateLimit    plugin.TValue[float64]
+}
+
+// createAwsApigatewayv2RouteSettings creates a new instance of this resource
+func createAwsApigatewayv2RouteSettings(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsApigatewayv2RouteSettings{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.apigatewayv2.routeSettings", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsApigatewayv2RouteSettings) MqlName() string {
+	return "aws.apigatewayv2.routeSettings"
+}
+
+func (c *mqlAwsApigatewayv2RouteSettings) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsApigatewayv2RouteSettings) GetDataTraceEnabled() *plugin.TValue[bool] {
+	return &c.DataTraceEnabled
+}
+
+func (c *mqlAwsApigatewayv2RouteSettings) GetDetailedMetricsEnabled() *plugin.TValue[bool] {
+	return &c.DetailedMetricsEnabled
+}
+
+func (c *mqlAwsApigatewayv2RouteSettings) GetLoggingLevel() *plugin.TValue[string] {
+	return &c.LoggingLevel
+}
+
+func (c *mqlAwsApigatewayv2RouteSettings) GetThrottlingBurstLimit() *plugin.TValue[int64] {
+	return &c.ThrottlingBurstLimit
+}
+
+func (c *mqlAwsApigatewayv2RouteSettings) GetThrottlingRateLimit() *plugin.TValue[float64] {
+	return &c.ThrottlingRateLimit
+}
+
 // mqlAwsApigatewayv2Stage for the aws.apigatewayv2.stage resource
 type mqlAwsApigatewayv2Stage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsApigatewayv2StageInternal it will be used here
-	StageName                          plugin.TValue[string]
-	ApiId                              plugin.TValue[string]
-	Region                             plugin.TValue[string]
-	Api                                plugin.TValue[*mqlAwsApigatewayv2Api]
-	Description                        plugin.TValue[string]
-	AutoDeploy                         plugin.TValue[bool]
-	DeploymentId                       plugin.TValue[string]
-	ClientCertificateId                plugin.TValue[string]
-	StageVariables                     plugin.TValue[map[string]any]
-	DefaultRouteSettings               plugin.TValue[any]
-	DefaultRouteDataTraceEnabled       plugin.TValue[bool]
-	DefaultRouteDetailedMetricsEnabled plugin.TValue[bool]
-	DefaultRouteLoggingLevel           plugin.TValue[string]
-	DefaultRouteThrottlingBurstLimit   plugin.TValue[int64]
-	DefaultRouteThrottlingRateLimit    plugin.TValue[float64]
-	RouteSettings                      plugin.TValue[any]
-	AccessLogSettings                  plugin.TValue[any]
-	AccessLogGroup                     plugin.TValue[*mqlAwsCloudwatchLoggroup]
-	AccessLogDestinationArn            plugin.TValue[string]
-	AccessLogFormat                    plugin.TValue[string]
-	ApiGatewayManaged                  plugin.TValue[bool]
-	LastDeploymentStatusMessage        plugin.TValue[string]
-	Tags                               plugin.TValue[map[string]any]
-	CreatedAt                          plugin.TValue[*time.Time]
-	UpdatedAt                          plugin.TValue[*time.Time]
+	StageName                   plugin.TValue[string]
+	ApiId                       plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Api                         plugin.TValue[*mqlAwsApigatewayv2Api]
+	Description                 plugin.TValue[string]
+	AutoDeploy                  plugin.TValue[bool]
+	DeploymentId                plugin.TValue[string]
+	ClientCertificateId         plugin.TValue[string]
+	StageVariables              plugin.TValue[map[string]any]
+	DefaultRouteSettings        plugin.TValue[any]
+	DefaultRoute                plugin.TValue[*mqlAwsApigatewayv2RouteSettings]
+	RouteSettings               plugin.TValue[any]
+	AccessLogSettings           plugin.TValue[any]
+	AccessLog                   plugin.TValue[*mqlAwsApigatewayv2StageAccessLogConfiguration]
+	ApiGatewayManaged           plugin.TValue[bool]
+	LastDeploymentStatusMessage plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	CreatedAt                   plugin.TValue[*time.Time]
+	UpdatedAt                   plugin.TValue[*time.Time]
 }
 
 // createAwsApigatewayv2Stage creates a new instance of this resource
@@ -151412,24 +151676,8 @@ func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteSettings() *plugin.TValue[any] 
 	return &c.DefaultRouteSettings
 }
 
-func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteDataTraceEnabled() *plugin.TValue[bool] {
-	return &c.DefaultRouteDataTraceEnabled
-}
-
-func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteDetailedMetricsEnabled() *plugin.TValue[bool] {
-	return &c.DefaultRouteDetailedMetricsEnabled
-}
-
-func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteLoggingLevel() *plugin.TValue[string] {
-	return &c.DefaultRouteLoggingLevel
-}
-
-func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteThrottlingBurstLimit() *plugin.TValue[int64] {
-	return &c.DefaultRouteThrottlingBurstLimit
-}
-
-func (c *mqlAwsApigatewayv2Stage) GetDefaultRouteThrottlingRateLimit() *plugin.TValue[float64] {
-	return &c.DefaultRouteThrottlingRateLimit
+func (c *mqlAwsApigatewayv2Stage) GetDefaultRoute() *plugin.TValue[*mqlAwsApigatewayv2RouteSettings] {
+	return &c.DefaultRoute
 }
 
 func (c *mqlAwsApigatewayv2Stage) GetRouteSettings() *plugin.TValue[any] {
@@ -151440,28 +151688,8 @@ func (c *mqlAwsApigatewayv2Stage) GetAccessLogSettings() *plugin.TValue[any] {
 	return &c.AccessLogSettings
 }
 
-func (c *mqlAwsApigatewayv2Stage) GetAccessLogGroup() *plugin.TValue[*mqlAwsCloudwatchLoggroup] {
-	return plugin.GetOrCompute[*mqlAwsCloudwatchLoggroup](&c.AccessLogGroup, func() (*mqlAwsCloudwatchLoggroup, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.apigatewayv2.stage", c.__id, "accessLogGroup")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsCloudwatchLoggroup), nil
-			}
-		}
-
-		return c.accessLogGroup()
-	})
-}
-
-func (c *mqlAwsApigatewayv2Stage) GetAccessLogDestinationArn() *plugin.TValue[string] {
-	return &c.AccessLogDestinationArn
-}
-
-func (c *mqlAwsApigatewayv2Stage) GetAccessLogFormat() *plugin.TValue[string] {
-	return &c.AccessLogFormat
+func (c *mqlAwsApigatewayv2Stage) GetAccessLog() *plugin.TValue[*mqlAwsApigatewayv2StageAccessLogConfiguration] {
+	return &c.AccessLog
 }
 
 func (c *mqlAwsApigatewayv2Stage) GetApiGatewayManaged() *plugin.TValue[bool] {
@@ -166975,40 +167203,186 @@ func (c *mqlAwsCognito) GetIdentityPools() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlAwsCognitoDeviceConfiguration for the aws.cognito.deviceConfiguration resource
+type mqlAwsCognitoDeviceConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCognitoDeviceConfigurationInternal it will be used here
+	ChallengeRequiredOnNewDevice     plugin.TValue[bool]
+	DeviceOnlyRememberedOnUserPrompt plugin.TValue[bool]
+}
+
+// createAwsCognitoDeviceConfiguration creates a new instance of this resource
+func createAwsCognitoDeviceConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoDeviceConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.deviceConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoDeviceConfiguration) MqlName() string {
+	return "aws.cognito.deviceConfiguration"
+}
+
+func (c *mqlAwsCognitoDeviceConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoDeviceConfiguration) GetChallengeRequiredOnNewDevice() *plugin.TValue[bool] {
+	return &c.ChallengeRequiredOnNewDevice
+}
+
+func (c *mqlAwsCognitoDeviceConfiguration) GetDeviceOnlyRememberedOnUserPrompt() *plugin.TValue[bool] {
+	return &c.DeviceOnlyRememberedOnUserPrompt
+}
+
+// mqlAwsCognitoUsernameConfiguration for the aws.cognito.usernameConfiguration resource
+type mqlAwsCognitoUsernameConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCognitoUsernameConfigurationInternal it will be used here
+	CaseSensitive plugin.TValue[bool]
+}
+
+// createAwsCognitoUsernameConfiguration creates a new instance of this resource
+func createAwsCognitoUsernameConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoUsernameConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.usernameConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoUsernameConfiguration) MqlName() string {
+	return "aws.cognito.usernameConfiguration"
+}
+
+func (c *mqlAwsCognitoUsernameConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoUsernameConfiguration) GetCaseSensitive() *plugin.TValue[bool] {
+	return &c.CaseSensitive
+}
+
+// mqlAwsCognitoTokenValidityUnits for the aws.cognito.tokenValidityUnits resource
+type mqlAwsCognitoTokenValidityUnits struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsCognitoTokenValidityUnitsInternal it will be used here
+	AccessToken  plugin.TValue[string]
+	IdToken      plugin.TValue[string]
+	RefreshToken plugin.TValue[string]
+}
+
+// createAwsCognitoTokenValidityUnits creates a new instance of this resource
+func createAwsCognitoTokenValidityUnits(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsCognitoTokenValidityUnits{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.cognito.tokenValidityUnits", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsCognitoTokenValidityUnits) MqlName() string {
+	return "aws.cognito.tokenValidityUnits"
+}
+
+func (c *mqlAwsCognitoTokenValidityUnits) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsCognitoTokenValidityUnits) GetAccessToken() *plugin.TValue[string] {
+	return &c.AccessToken
+}
+
+func (c *mqlAwsCognitoTokenValidityUnits) GetIdToken() *plugin.TValue[string] {
+	return &c.IdToken
+}
+
+func (c *mqlAwsCognitoTokenValidityUnits) GetRefreshToken() *plugin.TValue[string] {
+	return &c.RefreshToken
+}
+
 // mqlAwsCognitoUserPool for the aws.cognito.userPool resource
 type mqlAwsCognitoUserPool struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsCognitoUserPoolInternal
-	Arn                                plugin.TValue[string]
-	Id                                 plugin.TValue[string]
-	Name                               plugin.TValue[string]
-	Region                             plugin.TValue[string]
-	Status                             plugin.TValue[string]
-	DeletionProtection                 plugin.TValue[bool]
-	MfaConfiguration                   plugin.TValue[string]
-	PasswordPolicy                     plugin.TValue[any]
-	PasswordPolicyRef                  plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy]
-	AdvancedSecurityMode               plugin.TValue[string]
-	Tags                               plugin.TValue[map[string]any]
-	Clients                            plugin.TValue[[]any]
-	Domain                             plugin.TValue[*mqlAwsCognitoUserPoolDomain]
-	IdentityProviders                  plugin.TValue[[]any]
-	UserPoolTier                       plugin.TValue[string]
-	AccountRecoverySetting             plugin.TValue[any]
-	DeviceConfiguration                plugin.TValue[any]
-	DeviceChallengeRequiredOnNewDevice plugin.TValue[bool]
-	DeviceOnlyRememberedOnUserPrompt   plugin.TValue[bool]
-	UsernameConfiguration              plugin.TValue[any]
-	UsernameCaseSensitive              plugin.TValue[bool]
-	Schema                             plugin.TValue[[]any]
-	VerificationMessageTemplate        plugin.TValue[any]
-	EmailConfiguration                 plugin.TValue[any]
-	SmsConfiguration                   plugin.TValue[any]
-	LambdaConfig                       plugin.TValue[any]
-	RiskConfiguration                  plugin.TValue[any]
-	CreatedAt                          plugin.TValue[*time.Time]
-	UpdatedAt                          plugin.TValue[*time.Time]
+	Arn                         plugin.TValue[string]
+	Id                          plugin.TValue[string]
+	Name                        plugin.TValue[string]
+	Region                      plugin.TValue[string]
+	Status                      plugin.TValue[string]
+	DeletionProtection          plugin.TValue[bool]
+	MfaConfiguration            plugin.TValue[string]
+	PasswordPolicy              plugin.TValue[any]
+	PasswordPolicyRef           plugin.TValue[*mqlAwsCognitoUserPoolPasswordPolicy]
+	AdvancedSecurityMode        plugin.TValue[string]
+	Tags                        plugin.TValue[map[string]any]
+	Clients                     plugin.TValue[[]any]
+	Domain                      plugin.TValue[*mqlAwsCognitoUserPoolDomain]
+	IdentityProviders           plugin.TValue[[]any]
+	UserPoolTier                plugin.TValue[string]
+	AccountRecoverySetting      plugin.TValue[any]
+	DeviceConfiguration         plugin.TValue[any]
+	DeviceConfigurationRef      plugin.TValue[*mqlAwsCognitoDeviceConfiguration]
+	UsernameConfiguration       plugin.TValue[any]
+	UsernameConfigurationRef    plugin.TValue[*mqlAwsCognitoUsernameConfiguration]
+	Schema                      plugin.TValue[[]any]
+	VerificationMessageTemplate plugin.TValue[any]
+	EmailConfiguration          plugin.TValue[any]
+	SmsConfiguration            plugin.TValue[any]
+	LambdaConfig                plugin.TValue[any]
+	RiskConfiguration           plugin.TValue[any]
+	CreatedAt                   plugin.TValue[*time.Time]
+	UpdatedAt                   plugin.TValue[*time.Time]
 }
 
 // createAwsCognitoUserPool creates a new instance of this resource
@@ -167175,15 +167549,19 @@ func (c *mqlAwsCognitoUserPool) GetDeviceConfiguration() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsCognitoUserPool) GetDeviceChallengeRequiredOnNewDevice() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.DeviceChallengeRequiredOnNewDevice, func() (bool, error) {
-		return c.deviceChallengeRequiredOnNewDevice()
-	})
-}
+func (c *mqlAwsCognitoUserPool) GetDeviceConfigurationRef() *plugin.TValue[*mqlAwsCognitoDeviceConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsCognitoDeviceConfiguration](&c.DeviceConfigurationRef, func() (*mqlAwsCognitoDeviceConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "deviceConfigurationRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCognitoDeviceConfiguration), nil
+			}
+		}
 
-func (c *mqlAwsCognitoUserPool) GetDeviceOnlyRememberedOnUserPrompt() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.DeviceOnlyRememberedOnUserPrompt, func() (bool, error) {
-		return c.deviceOnlyRememberedOnUserPrompt()
+		return c.deviceConfigurationRef()
 	})
 }
 
@@ -167193,9 +167571,19 @@ func (c *mqlAwsCognitoUserPool) GetUsernameConfiguration() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsCognitoUserPool) GetUsernameCaseSensitive() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.UsernameCaseSensitive, func() (bool, error) {
-		return c.usernameCaseSensitive()
+func (c *mqlAwsCognitoUserPool) GetUsernameConfigurationRef() *plugin.TValue[*mqlAwsCognitoUsernameConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsCognitoUsernameConfiguration](&c.UsernameConfigurationRef, func() (*mqlAwsCognitoUsernameConfiguration, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.cognito.userPool", c.__id, "usernameConfigurationRef")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsCognitoUsernameConfiguration), nil
+			}
+		}
+
+		return c.usernameConfigurationRef()
 	})
 }
 
@@ -167332,9 +167720,7 @@ type mqlAwsCognitoUserPoolClient struct {
 	AccessTokenValidity             plugin.TValue[int64]
 	IdTokenValidity                 plugin.TValue[int64]
 	TokenValidityUnits              plugin.TValue[any]
-	AccessTokenValidityUnit         plugin.TValue[string]
-	IdTokenValidityUnit             plugin.TValue[string]
-	RefreshTokenValidityUnit        plugin.TValue[string]
+	TokenValidityUnitsRef           plugin.TValue[*mqlAwsCognitoTokenValidityUnits]
 	ExplicitAuthFlows               plugin.TValue[[]any]
 	SupportedIdentityProviders      plugin.TValue[[]any]
 	CallbackURLs                    plugin.TValue[[]any]
@@ -167439,16 +167825,8 @@ func (c *mqlAwsCognitoUserPoolClient) GetTokenValidityUnits() *plugin.TValue[any
 	return &c.TokenValidityUnits
 }
 
-func (c *mqlAwsCognitoUserPoolClient) GetAccessTokenValidityUnit() *plugin.TValue[string] {
-	return &c.AccessTokenValidityUnit
-}
-
-func (c *mqlAwsCognitoUserPoolClient) GetIdTokenValidityUnit() *plugin.TValue[string] {
-	return &c.IdTokenValidityUnit
-}
-
-func (c *mqlAwsCognitoUserPoolClient) GetRefreshTokenValidityUnit() *plugin.TValue[string] {
-	return &c.RefreshTokenValidityUnit
+func (c *mqlAwsCognitoUserPoolClient) GetTokenValidityUnitsRef() *plugin.TValue[*mqlAwsCognitoTokenValidityUnits] {
+	return &c.TokenValidityUnitsRef
 }
 
 func (c *mqlAwsCognitoUserPoolClient) GetExplicitAuthFlows() *plugin.TValue[[]any] {

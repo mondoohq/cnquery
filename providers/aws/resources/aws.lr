@@ -17277,6 +17277,29 @@ private aws.apigateway.restapi @defaults("name id") {
   policy string
 }
 
+// Access-log configuration of an API Gateway REST API stage
+//
+// Where the stage writes one line per request and what that line contains.
+// Without it there is no per-request record of who called the API, so a stage
+// with no access log configuration cannot be investigated after the fact.
+private aws.apigateway.stage.accessLogConfiguration @defaults("destinationArn") {
+  // ARN of the destination receiving the stage access log
+  //
+  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
+  // stream.
+  destinationArn string
+  // CloudWatch log group receiving the stage access log
+  //
+  // Null when the destination is a Kinesis Data Firehose delivery stream
+  // rather than a log group. Read destinationArn to tell the two apart.
+  logGroup() aws.cloudwatch.loggroup
+  // Format of the stage access log
+  //
+  // A single line built from $context variables, which must include at least
+  // $context.requestId.
+  format string
+}
+
 // Amazon API Gateway REST API stages
 private aws.apigateway.stage @defaults("arn") {
   // ARN for the REST API stage
@@ -17305,25 +17328,12 @@ private aws.apigateway.stage @defaults("arn") {
   cacheClusterStatus string
   // Whether the stage response cache is encrypted, from the default method settings
   cacheDataEncrypted bool
-  // CloudWatch log group receiving the stage access log
+  // Access-log configuration for the stage
   //
-  // Null when access logging is off, and also when the destination is a
-  // Kinesis Data Firehose delivery stream rather than a log group. Read
-  // accessLogDestinationArn to tell those two cases apart.
-  accessLogGroup() aws.cloudwatch.loggroup
-  // ARN of the destination receiving the stage access log
-  //
-  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
-  // stream. Empty when access logging is off, which is the reading an
-  // access-logging check is looking for. Mirrors
-  // `aws.apigatewayv2.stage.accessLogDestinationArn`, so one check can cover
-  // REST and HTTP APIs the same way.
-  accessLogDestinationArn string
-  // Format of the stage access log
-  //
-  // A single line built from $context variables, which must include at least
-  // $context.requestId. Empty when access logging is off.
-  accessLogFormat string
+  // Null when access logging is off, which is the reading an access-logging
+  // check is looking for. Mirrors `aws.apigatewayv2.stage.accessLog`, so one
+  // check can cover REST and HTTP APIs the same way.
+  accessLog aws.apigateway.stage.accessLogConfiguration
   // Client certificate ID for mutual TLS with backend
   clientCertificateId string
   // WAF web ACL associated with the stage
@@ -17566,6 +17576,59 @@ private aws.apigatewayv2.api @defaults("apiId name protocolType") {
   createdAt time
 }
 
+// Access-log configuration of an API Gateway v2 API stage
+//
+// Where the stage writes one line per request and what that line contains.
+// Without it there is no per-request record of who called the API, so a stage
+// with no access log configuration cannot be investigated after the fact.
+private aws.apigatewayv2.stage.accessLogConfiguration @defaults("destinationArn") {
+  // ARN of the destination receiving the stage access log
+  //
+  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
+  // stream.
+  destinationArn string
+  // CloudWatch log group receiving the stage access log
+  //
+  // Null when the destination is a Kinesis Data Firehose delivery stream
+  // rather than a log group. Read destinationArn to tell the two apart.
+  logGroup() aws.cloudwatch.loggroup
+  // Format of the stage access log
+  //
+  // A single line built from $context variables, which must include at least
+  // $context.requestId.
+  format string
+}
+
+// Route settings of an API Gateway v2 API stage
+//
+// Logging, metrics and throttling a stage applies to a route. The same shape
+// is used for the stage-wide defaults and for the per-route overrides that
+// replace them.
+private aws.apigatewayv2.routeSettings @defaults("loggingLevel detailedMetricsEnabled") {
+  // Whether data trace logging is enabled
+  //
+  // Data traces record full request and response bodies into CloudWatch Logs,
+  // so leaving this on in production writes payloads, including any secrets
+  // they carry, into the log group. Supported only for WebSocket APIs.
+  dataTraceEnabled bool
+  // Whether detailed CloudWatch metrics are enabled
+  detailedMetricsEnabled bool
+  // Execution logging level
+  //
+  // One of INFO, ERROR, or OFF. Supported only for WebSocket APIs.
+  loggingLevel string
+  // Throttling burst limit
+  //
+  // Null when no burst limit is set, in which case the account-level limit
+  // applies.
+  throttlingBurstLimit int
+  // Throttling steady-state rate limit, in requests per second
+  //
+  // Null when no rate limit is set, in which case the account-level limit
+  // applies.
+  throttlingRateLimit float
+}
+
 // Stage of an API Gateway v2 API
 //
 // Deployed stage, the named environment that exposes a particular
@@ -17594,34 +17657,16 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   stageVariables map[string]string
   // Default per-route settings
   //
-  // Deprecated in favor of defaultRouteDataTraceEnabled,
-  // defaultRouteDetailedMetricsEnabled, defaultRouteLoggingLevel,
-  // defaultRouteThrottlingBurstLimit, and defaultRouteThrottlingRateLimit.
-  // Keys: throttlingBurstLimit, throttlingRateLimit, detailedMetricsEnabled,
-  // dataTraceEnabled, loggingLevel.
+  // Deprecated in favor of defaultRoute, which carries the same five values as
+  // a resource. Keys: throttlingBurstLimit, throttlingRateLimit,
+  // detailedMetricsEnabled, dataTraceEnabled, loggingLevel.
   defaultRouteSettings @maturity("deprecated") dict
-  // Whether data trace logging is enabled by default for routes on the stage
+  // Default per-route settings
   //
-  // Data traces record full request and response bodies into CloudWatch Logs,
-  // so leaving this on in production writes payloads, including any secrets
-  // they carry, into the log group. Supported only for WebSocket APIs.
-  defaultRouteDataTraceEnabled bool
-  // Whether detailed CloudWatch metrics are enabled by default for routes on the stage
-  defaultRouteDetailedMetricsEnabled bool
-  // Default execution logging level for routes on the stage
-  //
-  // One of INFO, ERROR, or OFF. Supported only for WebSocket APIs.
-  defaultRouteLoggingLevel string
-  // Default throttling burst limit for routes on the stage
-  //
-  // 0 when the stage sets no default burst limit, in which case the
-  // account-level limit applies.
-  defaultRouteThrottlingBurstLimit int
-  // Default throttling steady-state rate limit for routes on the stage, in requests per second
-  //
-  // 0 when the stage sets no default rate limit, in which case the
-  // account-level limit applies.
-  defaultRouteThrottlingRateLimit float
+  // Applied to every route on the stage that has no override of its own. Null
+  // when the stage sets no defaults, in which case the account-level
+  // throttling limits apply and logging is off.
+  defaultRoute aws.apigatewayv2.routeSettings
   // Per-route setting overrides
   //
   // Keyed by route key; each value carries the same shape as
@@ -17630,28 +17675,16 @@ private aws.apigatewayv2.stage @defaults("stageName apiId") {
   routeSettings dict
   // Access-log configuration
   //
-  // Deprecated in favor of accessLogGroup, accessLogDestinationArn, and
-  // accessLogFormat. Keys: destinationArn (CloudWatch Logs log group or
-  // Kinesis Data Firehose delivery stream) and format (the $context log
-  // format string). Null when access logging is off.
+  // Deprecated in favor of accessLog, which carries the same two values as a
+  // resource with the destination log group resolved. Keys: destinationArn
+  // (CloudWatch Logs log group or Kinesis Data Firehose delivery stream) and
+  // format (the $context log format string). Null when access logging is off.
   accessLogSettings @maturity("deprecated") dict
-  // CloudWatch log group receiving the stage access log
+  // Access-log configuration for the stage
   //
-  // Null when access logging is off, and also when the destination is a
-  // Kinesis Data Firehose delivery stream rather than a log group. Read
-  // accessLogDestinationArn to tell those two cases apart.
-  accessLogGroup() aws.cloudwatch.loggroup
-  // ARN of the destination receiving the stage access log
-  //
-  // Either a CloudWatch Logs log group or a Kinesis Data Firehose delivery
-  // stream. Empty when access logging is off, which is the reading an
-  // access-logging check is looking for.
-  accessLogDestinationArn string
-  // Format of the stage access log
-  //
-  // A single line built from $context variables, which must include at least
-  // $context.requestId. Empty when access logging is off.
-  accessLogFormat string
+  // Null when access logging is off, which is the reading an access-logging
+  // check is looking for.
+  accessLog aws.apigatewayv2.stage.accessLogConfiguration
   // Whether the stage is owned and managed by another AWS service
   apiGatewayManaged bool
   // Status message of the most recent deployment
@@ -21826,6 +21859,49 @@ aws.cognito @defaults("userPools") {
   identityPools() []aws.cognito.identityPool
 }
 
+// Device-remembering configuration of an Amazon Cognito user pool
+//
+// Whether Cognito remembers the devices users sign in from, and whether a
+// remembered device can stand in for the second authentication factor. A
+// remembered device that satisfies the challenge means a session continues
+// without the user presenting a one-time code.
+private aws.cognito.deviceConfiguration @defaults("challengeRequiredOnNewDevice deviceOnlyRememberedOnUserPrompt") {
+  // Whether a remembered device can stand in for the second authentication factor
+  //
+  // When true, a remembered device signs in with device authentication
+  // instead of SMS or a time-based one-time password.
+  challengeRequiredOnNewDevice bool
+  // Whether a device is remembered only after the user is prompted
+  //
+  // When true, Cognito does not remember a device on ConfirmDevice unless the
+  // app reports the user's own choice.
+  deviceOnlyRememberedOnUserPrompt bool
+}
+
+// Username case-sensitivity configuration of an Amazon Cognito user pool
+//
+// Whether the user pool treats usernames as case sensitive. A pool that does
+// not lets a user sign in with any capitalization variation of their username
+// or email alias, so two spellings reach one account.
+private aws.cognito.usernameConfiguration @defaults("caseSensitive") {
+  // Whether username case sensitivity applies to every user in the pool
+  caseSensitive bool
+}
+
+// Token validity units of an Amazon Cognito user pool app client
+//
+// Units the client's access, ID and refresh token validity numbers are
+// counted in, which is what turns a validity of 24 into either a day or a
+// day-and-a-bit-under-a-month depending on the unit.
+private aws.cognito.tokenValidityUnits @defaults("accessToken idToken refreshToken") {
+  // Time unit applied to accessTokenValidity: seconds, minutes, hours, or days
+  accessToken string
+  // Time unit applied to idTokenValidity: seconds, minutes, hours, or days
+  idToken string
+  // Time unit applied to refreshTokenValidity: seconds, minutes, hours, or days
+  refreshToken string
+}
+
 // Amazon Cognito user pool
 private aws.cognito.userPool @defaults("arn name") {
   // ARN of the user pool
@@ -21876,35 +21952,25 @@ private aws.cognito.userPool @defaults("arn name") {
   accountRecoverySetting() dict
   // Device-remembering configuration
   //
-  // Deprecated in favor of deviceChallengeRequiredOnNewDevice and
-  // deviceOnlyRememberedOnUserPrompt. A null value means device remembering
-  // is deactivated. When set, exposes ChallengeRequiredOnNewDevice and
+  // Deprecated in favor of deviceConfigurationRef, which carries the same two
+  // values as a resource. A null value means device remembering is
+  // deactivated. When set, exposes ChallengeRequiredOnNewDevice and
   // DeviceOnlyRememberedOnUserPrompt.
   deviceConfiguration() @maturity("deprecated") dict
-  // Whether a remembered device can stand in for the second authentication factor
+  // Device-remembering configuration
   //
-  // When true, a remembered device signs in with device authentication
-  // instead of SMS or a time-based one-time password. False when device
-  // remembering is deactivated on the user pool.
-  deviceChallengeRequiredOnNewDevice() bool
-  // Whether a device is remembered only after the user is prompted
-  //
-  // When true, Cognito does not remember a device on ConfirmDevice unless the
-  // app reports the user's own choice. False when device remembering is
-  // deactivated on the user pool.
-  deviceOnlyRememberedOnUserPrompt() bool
+  // Null when device remembering is deactivated on the user pool.
+  deviceConfigurationRef() aws.cognito.deviceConfiguration
   // Username case-sensitivity configuration
   //
-  // Deprecated in favor of usernameCaseSensitive. Exposes CaseSensitive:
-  // when false, users can sign in with any capitalization variation of their
-  // username or email alias.
+  // Deprecated in favor of usernameConfigurationRef, which carries the same
+  // value as a resource. Exposes CaseSensitive: when false, users can sign in
+  // with any capitalization variation of their username or email alias.
   usernameConfiguration() @maturity("deprecated") dict
-  // Whether username case sensitivity applies to every user in the pool
+  // Username case-sensitivity configuration
   //
-  // When false, a user signs in with any capitalization variation of their
-  // username or email alias. False when the user pool reports no username
-  // configuration.
-  usernameCaseSensitive() bool
+  // Null when the user pool reports no username configuration.
+  usernameConfigurationRef() aws.cognito.usernameConfiguration
   // Attribute schema of the user pool
   //
   // Each entry describes a standard or custom attribute (custom: prefix).
@@ -22004,16 +22070,16 @@ private aws.cognito.userPoolClient @defaults("clientId clientName userPoolId") {
   idTokenValidity int
   // Time units applied to the *Validity numeric fields, keyed by token type
   //
-  // Deprecated in favor of accessTokenValidityUnit, idTokenValidityUnit, and
-  // refreshTokenValidityUnit. Keys: accessToken, idToken, refreshToken.
-  // Values are seconds, minutes, hours, or days.
+  // Deprecated in favor of tokenValidityUnitsRef, which carries the same three
+  // values as a resource. Keys: accessToken, idToken, refreshToken. Values
+  // are seconds, minutes, hours, or days.
   tokenValidityUnits @maturity("deprecated") dict
-  // Time unit applied to accessTokenValidity: seconds, minutes, hours, or days
-  accessTokenValidityUnit string
-  // Time unit applied to idTokenValidity: seconds, minutes, hours, or days
-  idTokenValidityUnit string
-  // Time unit applied to refreshTokenValidity: seconds, minutes, hours, or days
-  refreshTokenValidityUnit string
+  // Time units applied to the *Validity numeric fields
+  //
+  // Null when the client reports no token validity units, in which case the
+  // Cognito defaults apply: hours for the access and ID tokens and days for
+  // the refresh token.
+  tokenValidityUnitsRef aws.cognito.tokenValidityUnits
   // Permitted sign-in flows, e.g. ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH
   explicitAuthFlows []string
   // Identity providers the client can use, e.g. COGNITO, Google, SAML provider names

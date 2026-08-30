@@ -190,34 +190,36 @@ func (a *mqlAwsApigatewayRestapi) stages() ([]any, error) {
 		if ms, ok := stage.MethodSettings["*/*"]; ok {
 			cacheDataEncrypted = ms.CacheDataEncrypted
 		}
-		// Nil when access logging is off, which leaves both fields empty, so
-		// `accessLogDestinationArn == ""` is the test for "logging is not
-		// configured".
-		var accessLogDestinationArn, accessLogFormat string
+		stageArn := fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))
+		// Nil when access logging is off, which leaves the reference null, so
+		// `accessLog == null` is the test for "logging is not configured".
+		accessLog := llx.NilData
 		if stage.AccessLogSettings != nil {
-			accessLogDestinationArn = convert.ToValue(stage.AccessLogSettings.DestinationArn)
-			accessLogFormat = convert.ToValue(stage.AccessLogSettings.Format)
+			accessLog, err = newMqlApigatewayAccessLog(a.MqlRuntime, "aws.apigateway.stage.accessLogConfiguration", stageArn,
+				convert.ToValue(stage.AccessLogSettings.DestinationArn), convert.ToValue(stage.AccessLogSettings.Format))
+			if err != nil {
+				return nil, err
+			}
 		}
 		mqlStage, err := CreateResource(a.MqlRuntime, ResourceAwsApigatewayStage,
 			map[string]*llx.RawData{
-				"arn":                     llx.StringData(fmt.Sprintf(apiStageArnPattern, region, conn.AccountId(), restApiId, convert.ToValue(stage.StageName))),
-				"name":                    llx.StringData(convert.ToValue(stage.StageName)),
-				"description":             llx.StringData(convert.ToValue(stage.Description)),
-				"tracingEnabled":          llx.BoolData(stage.TracingEnabled),
-				"deploymentId":            llx.StringData(convert.ToValue(stage.DeploymentId)),
-				"methodSettings":          llx.MapData(dictMethodSettings, mqltypes.Any),
-				"cacheClusterEnabled":     llx.BoolData(stage.CacheClusterEnabled),
-				"cacheClusterSize":        llx.StringData(string(stage.CacheClusterSize)),
-				"cacheClusterStatus":      llx.StringData(string(stage.CacheClusterStatus)),
-				"cacheDataEncrypted":      llx.BoolData(cacheDataEncrypted),
-				"accessLogDestinationArn": llx.StringData(accessLogDestinationArn),
-				"accessLogFormat":         llx.StringData(accessLogFormat),
-				"clientCertificateId":     llx.StringData(convert.ToValue(stage.ClientCertificateId)),
-				"createdAt":               llx.TimeDataPtr(stage.CreatedDate),
-				"lastUpdatedAt":           llx.TimeDataPtr(stage.LastUpdatedDate),
-				"documentationVersion":    llx.StringData(convert.ToValue(stage.DocumentationVersion)),
-				"variables":               llx.MapData(toInterfaceMap(stage.Variables), mqltypes.String),
-				"tags":                    llx.MapData(toInterfaceMap(stage.Tags), mqltypes.String),
+				"arn":                  llx.StringData(stageArn),
+				"name":                 llx.StringData(convert.ToValue(stage.StageName)),
+				"description":          llx.StringData(convert.ToValue(stage.Description)),
+				"tracingEnabled":       llx.BoolData(stage.TracingEnabled),
+				"deploymentId":         llx.StringData(convert.ToValue(stage.DeploymentId)),
+				"methodSettings":       llx.MapData(dictMethodSettings, mqltypes.Any),
+				"cacheClusterEnabled":  llx.BoolData(stage.CacheClusterEnabled),
+				"cacheClusterSize":     llx.StringData(string(stage.CacheClusterSize)),
+				"cacheClusterStatus":   llx.StringData(string(stage.CacheClusterStatus)),
+				"cacheDataEncrypted":   llx.BoolData(cacheDataEncrypted),
+				"accessLog":            accessLog,
+				"clientCertificateId":  llx.StringData(convert.ToValue(stage.ClientCertificateId)),
+				"createdAt":            llx.TimeDataPtr(stage.CreatedDate),
+				"lastUpdatedAt":        llx.TimeDataPtr(stage.LastUpdatedDate),
+				"documentationVersion": llx.StringData(convert.ToValue(stage.DocumentationVersion)),
+				"variables":            llx.MapData(toInterfaceMap(stage.Variables), mqltypes.String),
+				"tags":                 llx.MapData(toInterfaceMap(stage.Tags), mqltypes.String),
 			})
 		if err != nil {
 			return nil, err
@@ -236,8 +238,23 @@ func (a *mqlAwsApigatewayStage) id() (string, error) {
 	return a.Arn.Data, nil
 }
 
-func (a *mqlAwsApigatewayStage) accessLogGroup() (*mqlAwsCloudwatchLoggroup, error) {
-	return resolveAccessLogGroup(a.MqlRuntime, a.AccessLogDestinationArn.Data, &a.AccessLogGroup.State)
+// newMqlApigatewayAccessLog builds a stage's access-log configuration. REST
+// and HTTP API stages return the same two members through separate SDK types,
+// so the resource name says which of the two identical sub-resources to build.
+func newMqlApigatewayAccessLog(runtime *plugin.Runtime, resourceName, stageArn, destinationArn, format string) (*llx.RawData, error) {
+	res, err := CreateResource(runtime, resourceName, map[string]*llx.RawData{
+		"__id":           llx.StringData(stageArn + "/accessLogSettings"),
+		"destinationArn": llx.StringData(destinationArn),
+		"format":         llx.StringData(format),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return llx.ResourceData(res, resourceName), nil
+}
+
+func (a *mqlAwsApigatewayStageAccessLogConfiguration) logGroup() (*mqlAwsCloudwatchLoggroup, error) {
+	return resolveAccessLogGroup(a.MqlRuntime, a.DestinationArn.Data, &a.LogGroup.State)
 }
 
 // resolveAccessLogGroup turns an API Gateway access-log destination into a log
