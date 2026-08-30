@@ -33,7 +33,7 @@ const LexerRegex = `(\s+)` +
 	`|(?P<Ident>[a-zA-Z$_][a-zA-Z0-9_]*)` +
 	`|(?P<Float>[-+]?\d*\.\d+([eE][-+]?\d+)?)` +
 	`|(?P<Int>[-+]?\d+([eE][-+]?\d+)?)` +
-	`|(?P<String>'[^']*'|"[^"]*")` +
+	`|(?P<String>'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")` +
 	`|(?P<Comment>(//|#)[^\n]*(\n|\z))` +
 	`|(?P<Regex>/([^\\/]+|\\.)+/[msi]*)` +
 	`|(?P<Op>[-+*/%,:.=<>!|&~;?])` +
@@ -280,7 +280,16 @@ func (p *parser) token2string() string {
 	vv := v[1 : len(v)-1]
 
 	if v[0] == '\'' {
-		return vv
+		// Single-quoted strings are raw: escape sequences are kept verbatim.
+		// The one exception is an escaped single quote, the only way to put a
+		// single quote inside single quotes. The lexer could not produce that
+		// pair before, so unescaping it here cannot change an existing literal.
+		return reUnescape.ReplaceAllStringFunc(vv, func(match string) string {
+			if match == `\'` {
+				return "'"
+			}
+			return match
+		})
 	}
 
 	vv = reUnescape.ReplaceAllStringFunc(vv, func(match string) string {
