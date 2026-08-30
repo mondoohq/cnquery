@@ -997,18 +997,12 @@ private aws.waf.acl @defaults("name") {
   // and metricName. Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`,
   // and `metricName`.
   visibilityConfig() @maturity("deprecated") dict
-  // Whether the ACL emits CloudWatch metrics
+  // CloudWatch metrics and request-sampling settings for the ACL
   //
   // Without metrics there is nothing to alert on when the ACL starts blocking
-  // or stops blocking traffic.
-  cloudWatchMetricsEnabled() bool
-  // Whether the ACL stores a sample of the requests it inspects
-  //
-  // Sampled requests are what an investigation reads to see what a rule
-  // actually matched.
-  sampledRequestsEnabled() bool
-  // CloudWatch metric name for the ACL
-  metricName() string
+  // or stops blocking traffic, and without sampled requests an investigation
+  // has nothing to read to see what a rule actually matched.
+  visibility() aws.waf.visibilityConfig
   // Web ACL capacity units (WCU) consumed by the ACL
   capacity() int
   // Domains WAF accepts in host headers when generating and validating challenge and CAPTCHA tokens
@@ -1093,19 +1087,31 @@ private aws.waf.rule @defaults("name") {
   // and metricName. Has `cloudWatchMetricsEnabled`, `sampledRequestsEnabled`,
   // and `metricName`.
   visibilityConfig @maturity("deprecated") dict
-  // Whether the rule emits CloudWatch metrics
+  // CloudWatch metrics and request-sampling settings for the rule
   //
   // A rule with metrics off is invisible in the ACL's own dashboards even
   // when the ACL itself has metrics on.
-  cloudWatchMetricsEnabled bool
-  // Whether the rule stores a sample of the requests it inspects
-  sampledRequestsEnabled bool
-  // CloudWatch metric name for the rule
-  metricName string
+  visibility aws.waf.visibilityConfig
   // Labels WAF adds to matching requests, consumed by later label-match rules
   ruleLabels []string
   // ARN of either rule ACL or the RuleGroup that this rule belongs to
   belongsTo string
+}
+
+// CloudWatch metrics and request-sampling settings of a WAF web ACL or rule
+//
+// Whether the ACL or rule emits CloudWatch metrics, whether it stores a sample
+// of the requests it inspects, and the metric name both are published under.
+// The same settings are configured on a web ACL and on every rule inside it,
+// so a rule can be invisible in CloudWatch even when the ACL that runs it is
+// not.
+private aws.waf.visibilityConfig @defaults("metricName cloudWatchMetricsEnabled sampledRequestsEnabled") {
+  // Whether CloudWatch metrics are emitted
+  cloudWatchMetricsEnabled bool
+  // Whether a sample of the inspected requests is stored
+  sampledRequestsEnabled bool
+  // CloudWatch metric name the settings publish under
+  metricName string
 }
 
 // Action that happens if a rule statement matches
@@ -8264,20 +8270,15 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   publicAccess dict
   // Default server-side encryption settings
   //
-  // Deprecated in favor of serverSideEncryptionType and
-  // serverSideEncryptionKmsKey. Keys `Type` and `KmsMasterKeyId`.
+  // Deprecated in favor of serverSideEncryptionRef, which carries the same two
+  // settings with the key resolved to a resource. Keys `Type` and
+  // `KmsMasterKeyId`.
   serverSideEncryption @maturity("deprecated") dict
-  // Default server-side encryption algorithm configured on the bucket
+  // Default server-side encryption settings
   //
-  // One of NONE, AES256, aws:kms, or aws:kms:dsse. NONE means the bucket's
-  // default encryption settings specify no server-side encryption behavior
-  // for new objects.
-  serverSideEncryptionType string
-  // KMS key configured as the bucket's default server-side encryption key
-  //
-  // Null unless the encryption type is one of the KMS modes. Macie reports
-  // the key as an ARN or as a bare key ID, and both resolve.
-  serverSideEncryptionKmsKey() aws.kms.key
+  // Encryption Amazon S3 applies to new objects written to the bucket, as
+  // reported by Macie.
+  serverSideEncryptionRef aws.macie.bucket.encryption
   // Whether versioning is enabled for the bucket
   versioning bool
   // Whether the bucket policy requires server-side encryption of new objects: FALSE (required), TRUE (not required or no policy), UNKNOWN
@@ -8300,6 +8301,26 @@ private aws.macie.bucket @defaults("name region sensitivityScore sharedAccess") 
   errorMessage string
   // Tags on the bucket as captured by Macie
   tags map[string]string
+}
+
+// Default server-side encryption settings of an S3 bucket, as reported by Macie
+//
+// Encryption Amazon S3 applies to new objects written to the bucket when the
+// request does not name its own key. A bucket reporting NONE encrypts nothing
+// by default, and one reporting an AES256 mode is encrypted with a key AWS
+// owns rather than one the account controls.
+private aws.macie.bucket.encryption @defaults("type") {
+  // Default server-side encryption algorithm configured on the bucket
+  //
+  // One of NONE, AES256, aws:kms, or aws:kms:dsse. NONE means the bucket's
+  // default encryption settings specify no server-side encryption behavior
+  // for new objects.
+  type string
+  // KMS key configured as the bucket's default server-side encryption key
+  //
+  // Null unless the encryption type is one of the KMS modes. Macie reports
+  // the key as an ARN or as a bare key ID, and both resolve.
+  kmsKey() aws.kms.key
 }
 
 // Amazon Macie allow list
@@ -29454,19 +29475,15 @@ private aws.verifiedaccess.trustProvider @defaults("verifiedAccessTrustProviderI
   oidcOptions dict
   // Server-side encryption specification
   //
-  // Deprecated in favor of sseCustomerManagedKeyEnabled and sseKmsKey. KMS
-  // encryption settings for the trust provider, with keys `CustomerManagedKeyEnabled`
-  // and `KmsKeyArn`.
+  // Deprecated in favor of sseSpecificationRef, which carries the same two
+  // settings with the key resolved to a resource. KMS encryption settings for
+  // the trust provider, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
   sseSpecification @maturity("deprecated") dict
-  // Whether a customer managed KMS key encrypts the trust provider
+  // Server-side encryption specification
   //
-  // False means AWS encrypts with an AWS owned key, which you cannot audit,
-  // rotate, or revoke.
-  sseCustomerManagedKeyEnabled bool
-  // KMS key encrypting the trust provider
-  //
-  // Null when no customer managed key is in use.
-  sseKmsKey() aws.kms.key
+  // Encryption settings AWS Verified Access applies to the trust provider. Null when
+  // the service reports no encryption settings.
+  sseSpecificationRef aws.verifiedaccess.sseSpecification
   // Tags for the trust provider
   tags map[string]string
 }
@@ -29483,19 +29500,15 @@ private aws.verifiedaccess.group @defaults("verifiedAccessGroupId verifiedAccess
   verifiedAccessInstanceId string
   // Server-side encryption specification
   //
-  // Deprecated in favor of sseCustomerManagedKeyEnabled and sseKmsKey. KMS
-  // encryption settings for the group, with keys `CustomerManagedKeyEnabled`
-  // and `KmsKeyArn`.
+  // Deprecated in favor of sseSpecificationRef, which carries the same two
+  // settings with the key resolved to a resource. KMS encryption settings for
+  // the group, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
   sseSpecification @maturity("deprecated") dict
-  // Whether a customer managed KMS key encrypts the group
+  // Server-side encryption specification
   //
-  // False means AWS encrypts with an AWS owned key, which you cannot audit,
-  // rotate, or revoke.
-  sseCustomerManagedKeyEnabled bool
-  // KMS key encrypting the group
-  //
-  // Null when no customer managed key is in use.
-  sseKmsKey() aws.kms.key
+  // Encryption settings AWS Verified Access applies to the group. Null when
+  // the service reports no encryption settings.
+  sseSpecificationRef aws.verifiedaccess.sseSpecification
   // Owner of the group
   owner string
   // Tags for the group
@@ -29531,21 +29544,31 @@ private aws.verifiedaccess.endpoint @defaults("verifiedAccessEndpointId applicat
   securityGroups() []aws.ec2.securitygroup
   // Server-side encryption specification
   //
-  // Deprecated in favor of sseCustomerManagedKeyEnabled and sseKmsKey. KMS
-  // encryption settings for the endpoint, with keys `CustomerManagedKeyEnabled`
-  // and `KmsKeyArn`.
+  // Deprecated in favor of sseSpecificationRef, which carries the same two
+  // settings with the key resolved to a resource. KMS encryption settings for
+  // the endpoint, with keys `CustomerManagedKeyEnabled` and `KmsKeyArn`.
   sseSpecification @maturity("deprecated") dict
-  // Whether a customer managed KMS key encrypts the endpoint
+  // Server-side encryption specification
   //
-  // False means AWS encrypts with an AWS owned key, which you cannot audit,
-  // rotate, or revoke.
-  sseCustomerManagedKeyEnabled bool
-  // KMS key encrypting the endpoint
-  //
-  // Null when no customer managed key is in use.
-  sseKmsKey() aws.kms.key
+  // Encryption settings AWS Verified Access applies to the endpoint. Null when
+  // the service reports no encryption settings.
+  sseSpecificationRef aws.verifiedaccess.sseSpecification
   // Tags for the endpoint
   tags map[string]string
+}
+
+// Server-side encryption specification of an AWS Verified Access resource
+//
+// KMS settings Verified Access applies to the trust provider, group, or
+// endpoint they are attached to. A resource with no customer managed key is
+// encrypted with an AWS owned key, which you cannot audit, rotate, or revoke.
+private aws.verifiedaccess.sseSpecification @defaults("customerManagedKeyEnabled") {
+  // Whether a customer managed KMS key encrypts the resource
+  customerManagedKeyEnabled bool
+  // KMS key encrypting the resource
+  //
+  // Null when no customer managed key is in use.
+  kmsKey() aws.kms.key
 }
 
 // AWS Verified Access instance logging configuration

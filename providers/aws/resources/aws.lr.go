@@ -42,6 +42,7 @@ const (
 	ResourceAwsWafAcl                                                           string = "aws.waf.acl"
 	ResourceAwsWafRulegroup                                                     string = "aws.waf.rulegroup"
 	ResourceAwsWafRule                                                          string = "aws.waf.rule"
+	ResourceAwsWafVisibilityConfig                                              string = "aws.waf.visibilityConfig"
 	ResourceAwsWafRuleAction                                                    string = "aws.waf.rule.action"
 	ResourceAwsWafRuleStatement                                                 string = "aws.waf.rule.statement"
 	ResourceAwsWafRuleStatementGeomatchstatement                                string = "aws.waf.rule.statement.geomatchstatement"
@@ -274,6 +275,7 @@ const (
 	ResourceAwsMacieFinding                                                     string = "aws.macie.finding"
 	ResourceAwsMacieCustomDataIdentifier                                        string = "aws.macie.customDataIdentifier"
 	ResourceAwsMacieBucket                                                      string = "aws.macie.bucket"
+	ResourceAwsMacieBucketEncryption                                            string = "aws.macie.bucket.encryption"
 	ResourceAwsMacieAllowList                                                   string = "aws.macie.allowList"
 	ResourceAwsMacieFindingsFilter                                              string = "aws.macie.findingsFilter"
 	ResourceAwsMacieMember                                                      string = "aws.macie.member"
@@ -921,6 +923,7 @@ const (
 	ResourceAwsVerifiedaccessTrustProvider                                      string = "aws.verifiedaccess.trustProvider"
 	ResourceAwsVerifiedaccessGroup                                              string = "aws.verifiedaccess.group"
 	ResourceAwsVerifiedaccessEndpoint                                           string = "aws.verifiedaccess.endpoint"
+	ResourceAwsVerifiedaccessSseSpecification                                   string = "aws.verifiedaccess.sseSpecification"
 	ResourceAwsVerifiedaccessInstanceLoggingConfiguration                       string = "aws.verifiedaccess.instanceLoggingConfiguration"
 	ResourceAwsControltower                                                     string = "aws.controltower"
 	ResourceAwsControltowerLandingZone                                          string = "aws.controltower.landingZone"
@@ -1114,6 +1117,10 @@ func init() {
 		"aws.waf.rule": {
 			// to override args, implement: initAwsWafRule(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsWafRule,
+		},
+		"aws.waf.visibilityConfig": {
+			// to override args, implement: initAwsWafVisibilityConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsWafVisibilityConfig,
 		},
 		"aws.waf.rule.action": {
 			// to override args, implement: initAwsWafRuleAction(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -2042,6 +2049,10 @@ func init() {
 		"aws.macie.bucket": {
 			Init:   initAwsMacieBucket,
 			Create: createAwsMacieBucket,
+		},
+		"aws.macie.bucket.encryption": {
+			// to override args, implement: initAwsMacieBucketEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsMacieBucketEncryption,
 		},
 		"aws.macie.allowList": {
 			// to override args, implement: initAwsMacieAllowList(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -4631,6 +4642,10 @@ func init() {
 			// to override args, implement: initAwsVerifiedaccessEndpoint(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVerifiedaccessEndpoint,
 		},
+		"aws.verifiedaccess.sseSpecification": {
+			// to override args, implement: initAwsVerifiedaccessSseSpecification(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsVerifiedaccessSseSpecification,
+		},
 		"aws.verifiedaccess.instanceLoggingConfiguration": {
 			// to override args, implement: initAwsVerifiedaccessInstanceLoggingConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsVerifiedaccessInstanceLoggingConfiguration,
@@ -5827,14 +5842,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.acl.visibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetVisibilityConfig()).ToDataRes(types.Dict)
 	},
-	"aws.waf.acl.cloudWatchMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafAcl).GetCloudWatchMetricsEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.waf.acl.sampledRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafAcl).GetSampledRequestsEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.waf.acl.metricName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafAcl).GetMetricName()).ToDataRes(types.String)
+	"aws.waf.acl.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafAcl).GetVisibility()).ToDataRes(types.Resource("aws.waf.visibilityConfig"))
 	},
 	"aws.waf.acl.capacity": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafAcl).GetCapacity()).ToDataRes(types.Int)
@@ -5911,20 +5920,23 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.waf.rule.visibilityConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetVisibilityConfig()).ToDataRes(types.Dict)
 	},
-	"aws.waf.rule.cloudWatchMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRule).GetCloudWatchMetricsEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.waf.rule.sampledRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRule).GetSampledRequestsEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.waf.rule.metricName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsWafRule).GetMetricName()).ToDataRes(types.String)
+	"aws.waf.rule.visibility": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafRule).GetVisibility()).ToDataRes(types.Resource("aws.waf.visibilityConfig"))
 	},
 	"aws.waf.rule.ruleLabels": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetRuleLabels()).ToDataRes(types.Array(types.String))
 	},
 	"aws.waf.rule.belongsTo": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRule).GetBelongsTo()).ToDataRes(types.String)
+	},
+	"aws.waf.visibilityConfig.cloudWatchMetricsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafVisibilityConfig).GetCloudWatchMetricsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.waf.visibilityConfig.sampledRequestsEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafVisibilityConfig).GetSampledRequestsEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.waf.visibilityConfig.metricName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsWafVisibilityConfig).GetMetricName()).ToDataRes(types.String)
 	},
 	"aws.waf.rule.action.ruleName": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsWafRuleAction).GetRuleName()).ToDataRes(types.String)
@@ -13270,11 +13282,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.macie.bucket.serverSideEncryption": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieBucket).GetServerSideEncryption()).ToDataRes(types.Dict)
 	},
-	"aws.macie.bucket.serverSideEncryptionType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMacieBucket).GetServerSideEncryptionType()).ToDataRes(types.String)
-	},
-	"aws.macie.bucket.serverSideEncryptionKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsMacieBucket).GetServerSideEncryptionKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.macie.bucket.serverSideEncryptionRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucket).GetServerSideEncryptionRef()).ToDataRes(types.Resource("aws.macie.bucket.encryption"))
 	},
 	"aws.macie.bucket.versioning": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieBucket).GetVersioning()).ToDataRes(types.Bool)
@@ -13308,6 +13317,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.macie.bucket.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieBucket).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.macie.bucket.encryption.type": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucketEncryption).GetType()).ToDataRes(types.String)
+	},
+	"aws.macie.bucket.encryption.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsMacieBucketEncryption).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.macie.allowList.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsMacieAllowList).GetId()).ToDataRes(types.String)
@@ -34636,11 +34651,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.trustProvider.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseSpecification()).ToDataRes(types.Dict)
 	},
-	"aws.verifiedaccess.trustProvider.sseCustomerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.verifiedaccess.trustProvider.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.verifiedaccess.trustProvider.sseSpecificationRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetSseSpecificationRef()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
 	},
 	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessTrustProvider).GetTags()).ToDataRes(types.Map(types.String, types.String))
@@ -34660,11 +34672,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.group.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessGroup).GetSseSpecification()).ToDataRes(types.Dict)
 	},
-	"aws.verifiedaccess.group.sseCustomerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessGroup).GetSseCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.verifiedaccess.group.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessGroup).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.verifiedaccess.group.sseSpecificationRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessGroup).GetSseSpecificationRef()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
 	},
 	"aws.verifiedaccess.group.owner": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessGroup).GetOwner()).ToDataRes(types.String)
@@ -34708,14 +34717,17 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.verifiedaccess.endpoint.sseSpecification": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseSpecification()).ToDataRes(types.Dict)
 	},
-	"aws.verifiedaccess.endpoint.sseCustomerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
-	},
-	"aws.verifiedaccess.endpoint.sseKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.verifiedaccess.endpoint.sseSpecificationRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessEndpoint).GetSseSpecificationRef()).ToDataRes(types.Resource("aws.verifiedaccess.sseSpecification"))
 	},
 	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessEndpoint).GetTags()).ToDataRes(types.Map(types.String, types.String))
+	},
+	"aws.verifiedaccess.sseSpecification.customerManagedKeyEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessSseSpecification).GetCustomerManagedKeyEnabled()).ToDataRes(types.Bool)
+	},
+	"aws.verifiedaccess.sseSpecification.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsVerifiedaccessSseSpecification).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.verifiedaccess.instanceLoggingConfiguration.verifiedAccessInstanceId": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsVerifiedaccessInstanceLoggingConfiguration).GetVerifiedAccessInstanceId()).ToDataRes(types.String)
@@ -38385,16 +38397,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafAcl).VisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.waf.acl.cloudWatchMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafAcl).CloudWatchMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.waf.acl.sampledRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafAcl).SampledRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.waf.acl.metricName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafAcl).MetricName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.waf.acl.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafAcl).Visibility, ok = plugin.RawToTValue[*mqlAwsWafVisibilityConfig](v.Value, v.Error)
 		return
 	},
 	"aws.waf.acl.capacity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38505,16 +38509,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsWafRule).VisibilityConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.waf.rule.cloudWatchMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRule).CloudWatchMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.waf.rule.sampledRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRule).SampledRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.waf.rule.metricName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsWafRule).MetricName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+	"aws.waf.rule.visibility": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafRule).Visibility, ok = plugin.RawToTValue[*mqlAwsWafVisibilityConfig](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.ruleLabels": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -38523,6 +38519,22 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.waf.rule.belongsTo": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsWafRule).BelongsTo, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.waf.visibilityConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafVisibilityConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.waf.visibilityConfig.cloudWatchMetricsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafVisibilityConfig).CloudWatchMetricsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.visibilityConfig.sampledRequestsEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafVisibilityConfig).SampledRequestsEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.waf.visibilityConfig.metricName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsWafVisibilityConfig).MetricName, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"aws.waf.rule.action.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49245,12 +49257,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsMacieBucket).ServerSideEncryption, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.macie.bucket.serverSideEncryptionType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMacieBucket).ServerSideEncryptionType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"aws.macie.bucket.serverSideEncryptionKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsMacieBucket).ServerSideEncryptionKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.macie.bucket.serverSideEncryptionRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucket).ServerSideEncryptionRef, ok = plugin.RawToTValue[*mqlAwsMacieBucketEncryption](v.Value, v.Error)
 		return
 	},
 	"aws.macie.bucket.versioning": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -49295,6 +49303,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.macie.bucket.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsMacieBucket).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.encryption.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucketEncryption).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.macie.bucket.encryption.type": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucketEncryption).Type, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.macie.bucket.encryption.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsMacieBucketEncryption).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.macie.allowList.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80313,12 +80333,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessTrustProvider).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.verifiedaccess.trustProvider.sseCustomerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessTrustProvider).SseCustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.verifiedaccess.trustProvider.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessTrustProvider).SseKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.verifiedaccess.trustProvider.sseSpecificationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessTrustProvider).SseSpecificationRef, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.trustProvider.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80349,12 +80365,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessGroup).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.verifiedaccess.group.sseCustomerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessGroup).SseCustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.verifiedaccess.group.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessGroup).SseKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.verifiedaccess.group.sseSpecificationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessGroup).SseSpecificationRef, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.group.owner": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -80417,16 +80429,24 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsVerifiedaccessEndpoint).SseSpecification, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.verifiedaccess.endpoint.sseCustomerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessEndpoint).SseCustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"aws.verifiedaccess.endpoint.sseKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsVerifiedaccessEndpoint).SseKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.verifiedaccess.endpoint.sseSpecificationRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessEndpoint).SseSpecificationRef, ok = plugin.RawToTValue[*mqlAwsVerifiedaccessSseSpecification](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.endpoint.tags": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsVerifiedaccessEndpoint).Tags, ok = plugin.RawToTValue[map[string]any](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.sseSpecification.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessSseSpecification).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.verifiedaccess.sseSpecification.customerManagedKeyEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessSseSpecification).CustomerManagedKeyEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"aws.verifiedaccess.sseSpecification.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsVerifiedaccessSseSpecification).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.verifiedaccess.instanceLoggingConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -87312,9 +87332,7 @@ type mqlAwsWafAcl struct {
 	ManagedByFirewallManager plugin.TValue[bool]
 	DefaultAction            plugin.TValue[string]
 	VisibilityConfig         plugin.TValue[any]
-	CloudWatchMetricsEnabled plugin.TValue[bool]
-	SampledRequestsEnabled   plugin.TValue[bool]
-	MetricName               plugin.TValue[string]
+	Visibility               plugin.TValue[*mqlAwsWafVisibilityConfig]
 	Capacity                 plugin.TValue[int64]
 	TokenDomains             plugin.TValue[[]any]
 	LabelNamespace           plugin.TValue[string]
@@ -87398,21 +87416,19 @@ func (c *mqlAwsWafAcl) GetVisibilityConfig() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsWafAcl) GetCloudWatchMetricsEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.CloudWatchMetricsEnabled, func() (bool, error) {
-		return c.cloudWatchMetricsEnabled()
-	})
-}
+func (c *mqlAwsWafAcl) GetVisibility() *plugin.TValue[*mqlAwsWafVisibilityConfig] {
+	return plugin.GetOrCompute[*mqlAwsWafVisibilityConfig](&c.Visibility, func() (*mqlAwsWafVisibilityConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.waf.acl", c.__id, "visibility")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsWafVisibilityConfig), nil
+			}
+		}
 
-func (c *mqlAwsWafAcl) GetSampledRequestsEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.SampledRequestsEnabled, func() (bool, error) {
-		return c.sampledRequestsEnabled()
-	})
-}
-
-func (c *mqlAwsWafAcl) GetMetricName() *plugin.TValue[string] {
-	return plugin.GetOrCompute[string](&c.MetricName, func() (string, error) {
-		return c.metricName()
+		return c.visibility()
 	})
 }
 
@@ -87605,18 +87621,16 @@ type mqlAwsWafRule struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlAwsWafRuleInternal it will be used here
-	Id                       plugin.TValue[string]
-	Name                     plugin.TValue[string]
-	Priority                 plugin.TValue[int64]
-	Statement                plugin.TValue[*mqlAwsWafRuleStatement]
-	Action                   plugin.TValue[*mqlAwsWafRuleAction]
-	OverrideAction           plugin.TValue[string]
-	VisibilityConfig         plugin.TValue[any]
-	CloudWatchMetricsEnabled plugin.TValue[bool]
-	SampledRequestsEnabled   plugin.TValue[bool]
-	MetricName               plugin.TValue[string]
-	RuleLabels               plugin.TValue[[]any]
-	BelongsTo                plugin.TValue[string]
+	Id               plugin.TValue[string]
+	Name             plugin.TValue[string]
+	Priority         plugin.TValue[int64]
+	Statement        plugin.TValue[*mqlAwsWafRuleStatement]
+	Action           plugin.TValue[*mqlAwsWafRuleAction]
+	OverrideAction   plugin.TValue[string]
+	VisibilityConfig plugin.TValue[any]
+	Visibility       plugin.TValue[*mqlAwsWafVisibilityConfig]
+	RuleLabels       plugin.TValue[[]any]
+	BelongsTo        plugin.TValue[string]
 }
 
 // createAwsWafRule creates a new instance of this resource
@@ -87684,16 +87698,8 @@ func (c *mqlAwsWafRule) GetVisibilityConfig() *plugin.TValue[any] {
 	return &c.VisibilityConfig
 }
 
-func (c *mqlAwsWafRule) GetCloudWatchMetricsEnabled() *plugin.TValue[bool] {
-	return &c.CloudWatchMetricsEnabled
-}
-
-func (c *mqlAwsWafRule) GetSampledRequestsEnabled() *plugin.TValue[bool] {
-	return &c.SampledRequestsEnabled
-}
-
-func (c *mqlAwsWafRule) GetMetricName() *plugin.TValue[string] {
-	return &c.MetricName
+func (c *mqlAwsWafRule) GetVisibility() *plugin.TValue[*mqlAwsWafVisibilityConfig] {
+	return &c.Visibility
 }
 
 func (c *mqlAwsWafRule) GetRuleLabels() *plugin.TValue[[]any] {
@@ -87702,6 +87708,60 @@ func (c *mqlAwsWafRule) GetRuleLabels() *plugin.TValue[[]any] {
 
 func (c *mqlAwsWafRule) GetBelongsTo() *plugin.TValue[string] {
 	return &c.BelongsTo
+}
+
+// mqlAwsWafVisibilityConfig for the aws.waf.visibilityConfig resource
+type mqlAwsWafVisibilityConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsWafVisibilityConfigInternal it will be used here
+	CloudWatchMetricsEnabled plugin.TValue[bool]
+	SampledRequestsEnabled   plugin.TValue[bool]
+	MetricName               plugin.TValue[string]
+}
+
+// createAwsWafVisibilityConfig creates a new instance of this resource
+func createAwsWafVisibilityConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsWafVisibilityConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.waf.visibilityConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsWafVisibilityConfig) MqlName() string {
+	return "aws.waf.visibilityConfig"
+}
+
+func (c *mqlAwsWafVisibilityConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsWafVisibilityConfig) GetCloudWatchMetricsEnabled() *plugin.TValue[bool] {
+	return &c.CloudWatchMetricsEnabled
+}
+
+func (c *mqlAwsWafVisibilityConfig) GetSampledRequestsEnabled() *plugin.TValue[bool] {
+	return &c.SampledRequestsEnabled
+}
+
+func (c *mqlAwsWafVisibilityConfig) GetMetricName() *plugin.TValue[string] {
+	return &c.MetricName
 }
 
 // mqlAwsWafRuleAction for the aws.waf.rule.action resource
@@ -116007,7 +116067,7 @@ func (c *mqlAwsMacieCustomDataIdentifier) GetTags() *plugin.TValue[map[string]an
 type mqlAwsMacieBucket struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsMacieBucketInternal
+	// optional: if you define mqlAwsMacieBucketInternal it will be used here
 	Arn                                plugin.TValue[string]
 	Name                               plugin.TValue[string]
 	Region                             plugin.TValue[string]
@@ -116025,8 +116085,7 @@ type mqlAwsMacieBucket struct {
 	SharedAccess                       plugin.TValue[string]
 	PublicAccess                       plugin.TValue[any]
 	ServerSideEncryption               plugin.TValue[any]
-	ServerSideEncryptionType           plugin.TValue[string]
-	ServerSideEncryptionKmsKey         plugin.TValue[*mqlAwsKmsKey]
+	ServerSideEncryptionRef            plugin.TValue[*mqlAwsMacieBucketEncryption]
 	Versioning                         plugin.TValue[bool]
 	AllowsUnencryptedObjectUploads     plugin.TValue[string]
 	AutomatedDiscoveryMonitoringStatus plugin.TValue[string]
@@ -116157,24 +116216,8 @@ func (c *mqlAwsMacieBucket) GetServerSideEncryption() *plugin.TValue[any] {
 	return &c.ServerSideEncryption
 }
 
-func (c *mqlAwsMacieBucket) GetServerSideEncryptionType() *plugin.TValue[string] {
-	return &c.ServerSideEncryptionType
-}
-
-func (c *mqlAwsMacieBucket) GetServerSideEncryptionKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.ServerSideEncryptionKmsKey, func() (*mqlAwsKmsKey, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.bucket", c.__id, "serverSideEncryptionKmsKey")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
-			}
-		}
-
-		return c.serverSideEncryptionKmsKey()
-	})
+func (c *mqlAwsMacieBucket) GetServerSideEncryptionRef() *plugin.TValue[*mqlAwsMacieBucketEncryption] {
+	return &c.ServerSideEncryptionRef
 }
 
 func (c *mqlAwsMacieBucket) GetVersioning() *plugin.TValue[bool] {
@@ -116219,6 +116262,67 @@ func (c *mqlAwsMacieBucket) GetErrorMessage() *plugin.TValue[string] {
 
 func (c *mqlAwsMacieBucket) GetTags() *plugin.TValue[map[string]any] {
 	return &c.Tags
+}
+
+// mqlAwsMacieBucketEncryption for the aws.macie.bucket.encryption resource
+type mqlAwsMacieBucketEncryption struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsMacieBucketEncryptionInternal
+	Type   plugin.TValue[string]
+	KmsKey plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsMacieBucketEncryption creates a new instance of this resource
+func createAwsMacieBucketEncryption(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsMacieBucketEncryption{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.macie.bucket.encryption", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsMacieBucketEncryption) MqlName() string {
+	return "aws.macie.bucket.encryption"
+}
+
+func (c *mqlAwsMacieBucketEncryption) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsMacieBucketEncryption) GetType() *plugin.TValue[string] {
+	return &c.Type
+}
+
+func (c *mqlAwsMacieBucketEncryption) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.macie.bucket.encryption", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
 }
 
 // mqlAwsMacieAllowList for the aws.macie.allowList resource
@@ -195091,7 +195195,7 @@ func (c *mqlAwsVerifiedaccessInstance) GetLoggingConfiguration() *plugin.TValue[
 type mqlAwsVerifiedaccessTrustProvider struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsVerifiedaccessTrustProviderInternal
+	// optional: if you define mqlAwsVerifiedaccessTrustProviderInternal it will be used here
 	VerifiedAccessTrustProviderId plugin.TValue[string]
 	Region                        plugin.TValue[string]
 	TrustProviderType             plugin.TValue[string]
@@ -195100,8 +195204,7 @@ type mqlAwsVerifiedaccessTrustProvider struct {
 	PolicyReferenceName           plugin.TValue[string]
 	OidcOptions                   plugin.TValue[any]
 	SseSpecification              plugin.TValue[any]
-	SseCustomerManagedKeyEnabled  plugin.TValue[bool]
-	SseKmsKey                     plugin.TValue[*mqlAwsKmsKey]
+	SseSpecificationRef           plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
 	Tags                          plugin.TValue[map[string]any]
 }
 
@@ -195174,24 +195277,8 @@ func (c *mqlAwsVerifiedaccessTrustProvider) GetSseSpecification() *plugin.TValue
 	return &c.SseSpecification
 }
 
-func (c *mqlAwsVerifiedaccessTrustProvider) GetSseCustomerManagedKeyEnabled() *plugin.TValue[bool] {
-	return &c.SseCustomerManagedKeyEnabled
-}
-
-func (c *mqlAwsVerifiedaccessTrustProvider) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.SseKmsKey, func() (*mqlAwsKmsKey, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.trustProvider", c.__id, "sseKmsKey")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
-			}
-		}
-
-		return c.sseKmsKey()
-	})
+func (c *mqlAwsVerifiedaccessTrustProvider) GetSseSpecificationRef() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
+	return &c.SseSpecificationRef
 }
 
 func (c *mqlAwsVerifiedaccessTrustProvider) GetTags() *plugin.TValue[map[string]any] {
@@ -195202,16 +195289,15 @@ func (c *mqlAwsVerifiedaccessTrustProvider) GetTags() *plugin.TValue[map[string]
 type mqlAwsVerifiedaccessGroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	mqlAwsVerifiedaccessGroupInternal
-	VerifiedAccessGroupId        plugin.TValue[string]
-	VerifiedAccessGroupArn       plugin.TValue[string]
-	Region                       plugin.TValue[string]
-	VerifiedAccessInstanceId     plugin.TValue[string]
-	SseSpecification             plugin.TValue[any]
-	SseCustomerManagedKeyEnabled plugin.TValue[bool]
-	SseKmsKey                    plugin.TValue[*mqlAwsKmsKey]
-	Owner                        plugin.TValue[string]
-	Tags                         plugin.TValue[map[string]any]
+	// optional: if you define mqlAwsVerifiedaccessGroupInternal it will be used here
+	VerifiedAccessGroupId    plugin.TValue[string]
+	VerifiedAccessGroupArn   plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	VerifiedAccessInstanceId plugin.TValue[string]
+	SseSpecification         plugin.TValue[any]
+	SseSpecificationRef      plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
+	Owner                    plugin.TValue[string]
+	Tags                     plugin.TValue[map[string]any]
 }
 
 // createAwsVerifiedaccessGroup creates a new instance of this resource
@@ -195271,24 +195357,8 @@ func (c *mqlAwsVerifiedaccessGroup) GetSseSpecification() *plugin.TValue[any] {
 	return &c.SseSpecification
 }
 
-func (c *mqlAwsVerifiedaccessGroup) GetSseCustomerManagedKeyEnabled() *plugin.TValue[bool] {
-	return &c.SseCustomerManagedKeyEnabled
-}
-
-func (c *mqlAwsVerifiedaccessGroup) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.SseKmsKey, func() (*mqlAwsKmsKey, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.group", c.__id, "sseKmsKey")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
-			}
-		}
-
-		return c.sseKmsKey()
-	})
+func (c *mqlAwsVerifiedaccessGroup) GetSseSpecificationRef() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
+	return &c.SseSpecificationRef
 }
 
 func (c *mqlAwsVerifiedaccessGroup) GetOwner() *plugin.TValue[string] {
@@ -195304,21 +195374,20 @@ type mqlAwsVerifiedaccessEndpoint struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsVerifiedaccessEndpointInternal
-	VerifiedAccessEndpointId     plugin.TValue[string]
-	Region                       plugin.TValue[string]
-	VerifiedAccessGroupId        plugin.TValue[string]
-	VerifiedAccessInstanceId     plugin.TValue[string]
-	ApplicationDomain            plugin.TValue[string]
-	EndpointDomain               plugin.TValue[string]
-	EndpointType                 plugin.TValue[string]
-	AttachmentType               plugin.TValue[string]
-	DomainCertificate            plugin.TValue[*mqlAwsAcmCertificate]
-	Status                       plugin.TValue[any]
-	SecurityGroups               plugin.TValue[[]any]
-	SseSpecification             plugin.TValue[any]
-	SseCustomerManagedKeyEnabled plugin.TValue[bool]
-	SseKmsKey                    plugin.TValue[*mqlAwsKmsKey]
-	Tags                         plugin.TValue[map[string]any]
+	VerifiedAccessEndpointId plugin.TValue[string]
+	Region                   plugin.TValue[string]
+	VerifiedAccessGroupId    plugin.TValue[string]
+	VerifiedAccessInstanceId plugin.TValue[string]
+	ApplicationDomain        plugin.TValue[string]
+	EndpointDomain           plugin.TValue[string]
+	EndpointType             plugin.TValue[string]
+	AttachmentType           plugin.TValue[string]
+	DomainCertificate        plugin.TValue[*mqlAwsAcmCertificate]
+	Status                   plugin.TValue[any]
+	SecurityGroups           plugin.TValue[[]any]
+	SseSpecification         plugin.TValue[any]
+	SseSpecificationRef      plugin.TValue[*mqlAwsVerifiedaccessSseSpecification]
+	Tags                     plugin.TValue[map[string]any]
 }
 
 // createAwsVerifiedaccessEndpoint creates a new instance of this resource
@@ -195430,14 +195499,63 @@ func (c *mqlAwsVerifiedaccessEndpoint) GetSseSpecification() *plugin.TValue[any]
 	return &c.SseSpecification
 }
 
-func (c *mqlAwsVerifiedaccessEndpoint) GetSseCustomerManagedKeyEnabled() *plugin.TValue[bool] {
-	return &c.SseCustomerManagedKeyEnabled
+func (c *mqlAwsVerifiedaccessEndpoint) GetSseSpecificationRef() *plugin.TValue[*mqlAwsVerifiedaccessSseSpecification] {
+	return &c.SseSpecificationRef
 }
 
-func (c *mqlAwsVerifiedaccessEndpoint) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.SseKmsKey, func() (*mqlAwsKmsKey, error) {
+func (c *mqlAwsVerifiedaccessEndpoint) GetTags() *plugin.TValue[map[string]any] {
+	return &c.Tags
+}
+
+// mqlAwsVerifiedaccessSseSpecification for the aws.verifiedaccess.sseSpecification resource
+type mqlAwsVerifiedaccessSseSpecification struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsVerifiedaccessSseSpecificationInternal
+	CustomerManagedKeyEnabled plugin.TValue[bool]
+	KmsKey                    plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsVerifiedaccessSseSpecification creates a new instance of this resource
+func createAwsVerifiedaccessSseSpecification(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsVerifiedaccessSseSpecification{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.verifiedaccess.sseSpecification", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsVerifiedaccessSseSpecification) MqlName() string {
+	return "aws.verifiedaccess.sseSpecification"
+}
+
+func (c *mqlAwsVerifiedaccessSseSpecification) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsVerifiedaccessSseSpecification) GetCustomerManagedKeyEnabled() *plugin.TValue[bool] {
+	return &c.CustomerManagedKeyEnabled
+}
+
+func (c *mqlAwsVerifiedaccessSseSpecification) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.endpoint", c.__id, "sseKmsKey")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.verifiedaccess.sseSpecification", c.__id, "kmsKey")
 			if err != nil {
 				return nil, err
 			}
@@ -195446,12 +195564,8 @@ func (c *mqlAwsVerifiedaccessEndpoint) GetSseKmsKey() *plugin.TValue[*mqlAwsKmsK
 			}
 		}
 
-		return c.sseKmsKey()
+		return c.kmsKey()
 	})
-}
-
-func (c *mqlAwsVerifiedaccessEndpoint) GetTags() *plugin.TValue[map[string]any] {
-	return &c.Tags
 }
 
 // mqlAwsVerifiedaccessInstanceLoggingConfiguration for the aws.verifiedaccess.instanceLoggingConfiguration resource
