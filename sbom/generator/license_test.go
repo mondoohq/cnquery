@@ -30,7 +30,7 @@ func TestLicenseReachesTheSbom(t *testing.T) {
 
 		// The legacy scalar keeps being written. Nothing populates it from the
 		// list, so a consumer that has not migrated would see nothing without it.
-		assert.Equal(t, "GPL-2.0-only", pkg.License)
+		assert.Equal(t, "GPL-2.0-only", pkg.License) //nolint:staticcheck // SA1019: that the legacy scalar is STILL written is the assertion
 
 		require.Len(t, pkg.Licenses, 1)
 		l := pkg.Licenses[0]
@@ -72,7 +72,7 @@ func TestLicenseReachesTheSbom(t *testing.T) {
 		pkg := findProtoPkg(pkgs, "undeclared")
 		require.NotNil(t, pkg)
 
-		assert.Empty(t, pkg.License)
+		assert.Empty(t, pkg.License) //nolint:staticcheck // SA1019: that the legacy scalar is STILL written is the assertion
 		assert.Empty(t, pkg.Licenses)
 	})
 }
@@ -86,11 +86,11 @@ func TestLanguagePackagesCarryTheLicense(t *testing.T) {
 	}, "npm")
 	require.Len(t, out, 2)
 
-	assert.Equal(t, "MIT", out[0].License)
+	assert.Equal(t, "MIT", out[0].License) //nolint:staticcheck // SA1019: that the legacy scalar is STILL written is the assertion
 	require.Len(t, out[0].Licenses, 1)
 	assert.Equal(t, "MIT", out[0].Licenses[0].GetSpdxId())
 	assert.Equal(t, "npm", out[0].Type)
 
-	assert.Empty(t, out[1].License)
+	assert.Empty(t, out[1].License) //nolint:staticcheck // SA1019: that the legacy scalar is STILL written is the assertion
 	assert.Empty(t, out[1].Licenses)
 }
