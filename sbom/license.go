@@ -54,6 +54,41 @@ func DeclaredLicense(value string) *License {
 	return l
 }
 
+// ConcludedLicense builds the License model entry for a license that was
+// CONCLUDED: determined by looking at what a package ships, rather than taken
+// from what its manifest says about itself.
+//
+// It shares DeclaredLicense's value handling, because which of the three
+// mutually exclusive fields a string belongs in is a property of the string and
+// not of how it was obtained. What differs is the acquisition and the
+// confidence: a conclusion is a measurement, so it carries the score whoever
+// made it arrived at, and location records the file the value was read from.
+//
+// confidence is clamped into (0,1]. A conclusion nothing was confident about is
+// not evidence of anything, and a score above 1 is a producer bug rather than
+// certainty; either would be read as a real measurement by a consumer ranking
+// conclusions against each other. A zero or absent score becomes 1.0, which is
+// what an entry with no score attached already means to a reader.
+//
+// Returns nil when the value states no license, for the reason DeclaredLicense
+// does: an entry naming none asserts a fact the producer does not have.
+func ConcludedLicense(value, location string, confidence float64) *License {
+	l := DeclaredLicense(value)
+	if l == nil {
+		return nil
+	}
+
+	l.Acquisition = LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED
+	l.Location = strings.TrimSpace(location)
+	switch {
+	case confidence <= 0, confidence > 1:
+		l.Confidence = 1.0
+	default:
+		l.Confidence = confidence
+	}
+	return l
+}
+
 // DeclaredLicenses is DeclaredLicense as the repeated field wants it: a
 // one-entry list, or nil when the value states no license.
 func DeclaredLicenses(value string) []*License {
