@@ -461,14 +461,26 @@ func cycloneDXLicenses(license string) *cyclonedx.Licenses {
 
 // isSPDXExpression reports whether a license string joins operands with SPDX
 // operators, which is what makes it an expression rather than an identifier.
+//
+// The operators are matched case-SENSITIVELY, because that is what the grammar
+// defines: SPDX spells them as upper-case keywords, so a license whose *name*
+// contains the ordinary English word — "Sleepycat and others" — is not a
+// conjunction. Upper-casing before the comparison read that as an expression
+// and emitted it as one, which is not parseable SPDX and is exactly the
+// malformed document the three mutually exclusive fields exist to prevent.
+//
+// Parentheses are deliberately not a signal on their own either. "BSD (see
+// LICENSE)" is a free-text name, and grouping only ever exists to order
+// operators, so a genuinely grouped expression contains one anyway and is
+// caught above.
 func isSPDXExpression(s string) bool {
 	for _, t := range strings.Fields(s) {
-		switch strings.ToUpper(t) {
+		switch t {
 		case "AND", "OR", "WITH":
 			return true
 		}
 	}
-	return strings.ContainsAny(s, "()")
+	return false
 }
 
 // isSPDXIdentifierShaped reports whether a license string could be a bare SPDX

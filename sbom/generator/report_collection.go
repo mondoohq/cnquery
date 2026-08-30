@@ -33,6 +33,12 @@ type BomPackage struct {
 	Format  string   `json:"format,omitempty"`
 	Purl    string   `json:"purl,omitempty"`
 	CPEs    []string `json:"cpes.map,omitempty"`
+	// License as the package's own manifest or metadata declared it, e.g. npm
+	// package.json `license` or a Python distribution's METADATA. Empty when
+	// the query did not select it, or when the package declared none -- the
+	// two are indistinguishable here, which is why an empty value records no
+	// license entry rather than an unknown one.
+	License string `json:"license,omitempty"`
 	// used by python packages
 	// deprecated: remove once python.packages uses files
 	FilePath string `json:"file.path,omitempty"`
