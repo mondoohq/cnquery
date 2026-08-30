@@ -54,6 +54,50 @@ func DeclaredLicense(value string) *License {
 	return l
 }
 
+// ConcludedLicense builds the License model entry for a license that was
+// CONCLUDED: determined by looking at what a package ships, rather than taken
+// from what its manifest says about itself.
+//
+// It shares DeclaredLicense's value handling, because which of the three
+// mutually exclusive fields a string belongs in is a property of the string and
+// not of how it was obtained. What differs is the acquisition and the
+// confidence: a conclusion is a measurement, so it carries the score whoever
+// made it arrived at, and location records the file the value was read from.
+//
+// confidence keeps the three readings the model gives it. A score in (0,1] is a
+// measurement and travels as written. Above 1 is a producer bug rather than
+// extra certainty, so it clamps to 1.0. Zero or below is *no score at all*, and
+// it stays zero: promoting it to 1.0 would report a conclusion nothing measured
+// as a certainty, which is the reading the field exists to let a consumer avoid.
+// The renderers already say nothing about an absent score, so this is the
+// difference between staying silent and asserting.
+//
+// location is the file the value was read from. Pass "" rather than something
+// that merely mentions a file: a caller that has prose about how a conclusion
+// was reached has not got a location, and putting it here makes every consumer
+// treat a sentence as a path.
+//
+// Returns nil when the value states no license, for the reason DeclaredLicense
+// does: an entry naming none asserts a fact the producer does not have.
+func ConcludedLicense(value, location string, confidence float64) *License {
+	l := DeclaredLicense(value)
+	if l == nil {
+		return nil
+	}
+
+	l.Acquisition = LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED
+	l.Location = strings.TrimSpace(location)
+	switch {
+	case confidence > 1:
+		l.Confidence = 1.0
+	case confidence <= 0:
+		l.Confidence = 0
+	default:
+		l.Confidence = confidence
+	}
+	return l
+}
+
 // DeclaredLicenses is DeclaredLicense as the repeated field wants it: a
 // one-entry list, or nil when the value states no license.
 func DeclaredLicenses(value string) []*License {

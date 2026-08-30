@@ -98,3 +98,48 @@ func TestDeclaredLicensesWrapsASingleEntry(t *testing.T) {
 	require.Len(t, got, 1)
 	assert.Equal(t, "MIT", got[0].GetSpdxId())
 }
+
+// A conclusion is a measurement rather than a statement, so unlike a declared
+// license it carries where it was read from and how sure whoever read it was.
+func TestConcludedLicense(t *testing.T) {
+	t.Run("value handling is shared with declared", func(t *testing.T) {
+		assert.Equal(t, "MIT", ConcludedLicense("MIT", "", 1).GetSpdxId())
+		assert.Equal(t, "MIT OR Apache-2.0", ConcludedLicense("MIT OR Apache-2.0", "", 1).GetExpression())
+		assert.Equal(t, "BSD-like, see LICENSE", ConcludedLicense("BSD-like, see LICENSE", "", 1).GetName())
+	})
+
+	t.Run("acquisition and location are what differ", func(t *testing.T) {
+		l := ConcludedLicense("AGPL-3.0-only", " node_modules/x/LICENSE ", 0.98)
+		require.NotNil(t, l)
+		assert.Equal(t, LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED, l.GetAcquisition())
+		assert.Equal(t, "node_modules/x/LICENSE", l.GetLocation())
+		assert.Equal(t, 0.98, l.GetConfidence())
+	})
+
+	// A score above 1 is a producer bug rather than extra certainty, so it
+	// clamps to the top of the range instead of travelling as written, where a
+	// consumer ranking conclusions would read it as a real measurement.
+	t.Run("a score above 1 clamps to 1", func(t *testing.T) {
+		for _, in := range []float64{1.5, 42} {
+			assert.Equal(t, 1.0, ConcludedLicense("MIT", "", in).GetConfidence(), "confidence %v", in)
+		}
+		assert.Equal(t, 1.0, ConcludedLicense("MIT", "", 1).GetConfidence())
+	})
+
+	// The case that matters, and the one that used to read as certainty: no
+	// score is not a perfect score. An importer whose format carries no
+	// confidence passes 0, and promoting that to 1.0 would put a conclusion
+	// nobody measured alongside one that matched exactly -- which is the
+	// distinction the field exists to preserve.
+	t.Run("no score stays no score", func(t *testing.T) {
+		for _, in := range []float64{0, -1, -0.5} {
+			assert.Equal(t, 0.0, ConcludedLicense("MIT", "", in).GetConfidence(), "confidence %v", in)
+		}
+	})
+
+	// An entry naming no license asserts a fact the producer does not have.
+	t.Run("no value means no entry", func(t *testing.T) {
+		assert.Nil(t, ConcludedLicense("", "somewhere", 1))
+		assert.Nil(t, ConcludedLicense("   ", "somewhere", 1))
+	})
+}

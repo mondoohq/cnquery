@@ -5,6 +5,7 @@ package sbom
 
 import (
 	"io"
+	"strings"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/protobom/protobom/pkg/reader"
@@ -30,15 +31,123 @@ func (s *Protobom) Parse(f io.ReadSeeker) (*Sbom, error) {
 	return s.convertToSbom(document), nil
 }
 
+// readNodeLicensing carries a node's licensing across into the package.
+//
+// This is an importer: the document being read was produced by somebody else,
+// and dropping what it stated about a package's licensing loses information
+// that cannot be recovered from anywhere else in the file. Every field below
+// was already parsed and then discarded.
+//
+// protobom keeps the same declared/concluded distinction the model does.
+// `licenses` is what the package says about itself and `license_concluded` is
+// what the document's producer determined, so they map onto the two
+// acquisitions rather than being merged into one list.
+func readNodeLicensing(pkg *Package, node *protobom_sbom.Node) {
+	for _, l := range node.GetLicenses() {
+		if entry := DeclaredLicense(importedLicenseValue(l)); entry != nil {
+			pkg.Licenses = append(pkg.Licenses, entry)
+		}
+	}
+
+	// No location: the model documents it as the file a license was read from,
+	// and protobom has no field holding one. license_comments is free-form
+	// prose about how the license fields were arrived at -- "concluded from
+	// LICENSE" is a sentence, not a path -- so putting it there would make the
+	// field mean two different things depending on who wrote it.
+	//
+	// No confidence either, and that is a zero rather than a default. The
+	// format carries no score, and the model spells "nobody measured this" as
+	// 0: reporting 1.0 would put an imported conclusion that was never scored
+	// alongside one that scored perfectly, which is the distinction the field
+	// exists to preserve. Both renderers say nothing about a zero.
+	if entry := ConcludedLicense(importedLicenseValue(node.GetLicenseConcluded()), "", 0); entry != nil {
+		pkg.Licenses = append(pkg.Licenses, entry)
+	}
+
+	// The legacy scalar keeps being written, as every other producer in this
+	// package does, so a consumer that has not migrated to the list still sees
+	// a license. It takes the first DECLARED entry, which is the convention the
+	// field's own documentation asks producers to follow, falling back to the
+	// concluded value when the document declared none: a scalar that stayed
+	// empty while a license was in fact stated is the failure the fallback
+	// exists to prevent.
+	for _, l := range pkg.Licenses {
+		if l.GetAcquisition() == LicenseAcquisition_LICENSE_ACQUISITION_DECLARED {
+			pkg.License = licenseValueOf(l)
+			break
+		}
+	}
+	if pkg.License == "" {
+		pkg.License = importedLicenseValue(node.GetLicenseConcluded())
+	}
+
+	if c := strings.TrimSpace(node.GetCopyright()); c != "" {
+		pkg.Copyright = []string{c}
+	}
+
+	for _, person := range node.GetSuppliers() {
+		if name := strings.TrimSpace(person.GetName()); name != "" {
+			pkg.Supplier = name
+			break
+		}
+	}
+}
+
+// importedLicenseValue returns a license value from an imported document, or ""
+// when the document is using SPDX's vocabulary to say it has none to give.
+//
+// NONE and NOASSERTION are how the spec states absence: one means the package is
+// under no license, the other that the document does not know. Neither is a
+// license, but both are identifier-shaped, so nothing about their spelling stops
+// them becoming a license named "NONE" -- reported to a consumer as a fact about
+// the package, and indistinguishable from one the document actually stated.
+//
+// protobom already drops NOASSERTION and passes NONE through, so only one of the
+// two reaches this today. Both are handled because which sentinels a parser
+// filters is its decision and not a contract, and the failure is silent in
+// either direction.
+func importedLicenseValue(value string) string {
+	value = strings.TrimSpace(value)
+	if strings.EqualFold(value, "NONE") || strings.EqualFold(value, "NOASSERTION") {
+		return ""
+	}
+	return value
+}
+
+// licenseValueOf returns whichever of the three mutually exclusive value fields
+// an entry carries, which is what the scalar holds.
+func licenseValueOf(l *License) string {
+	switch {
+	case l.GetExpression() != "":
+		return l.GetExpression()
+	case l.GetSpdxId() != "":
+		return l.GetSpdxId()
+	default:
+		return l.GetName()
+	}
+}
+
 func (s *Protobom) convertToSbom(doc *protobom_sbom.Document) *Sbom {
 	bom := &Sbom{
-		Asset: &Asset{
-			Name: doc.Metadata.Name,
-		},
+		// Platform is set below only for a document that names an operating
+		// system, and most do not. It is initialized here rather than left nil
+		// because every renderer reads it unguarded, so an imported document
+		// carrying no OS crashed whatever it was handed to -- including this
+		// package's own CycloneDX and SPDX renderers, which is the obvious
+		// thing to do with a document you just parsed.
+		Asset:    &Asset{Platform: &Platform{}},
 		Packages: make([]*Package, 0),
 	}
 
-	if doc.Metadata != nil && len(doc.Metadata.Tools) > 0 {
+	// The name is read after the nil check rather than before it. Reading it
+	// first made the guard below unreachable: a document with no metadata
+	// panicked on the line above it.
+	if doc == nil || doc.Metadata == nil {
+		return bom
+	}
+	bom.Asset.Name = doc.Metadata.Name
+
+	if len(doc.Metadata.Tools) > 0 {
 		bom.Generator = &Generator{
 			Name:    doc.Metadata.Tools[0].Name,
 			Version: doc.Metadata.Tools[0].Version,
@@ -55,6 +164,7 @@ func (s *Protobom) convertToSbom(doc *protobom_sbom.Document) *Sbom {
 			Name:    node.Name,
 			Version: node.Version,
 		}
+		readNodeLicensing(pkg, node)
 
 		for key, identifier := range node.GetIdentifiers() {
 			if key == int32(protobom_sbom.SoftwareIdentifierType_PURL) {
