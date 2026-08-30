@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/service/mq"
@@ -183,7 +184,7 @@ func newMqlAwsMqBroker(runtime *plugin.Runtime, region string, accountID string,
 			"brokerId":         llx.StringDataPtr(broker.BrokerId),
 			"name":             llx.StringDataPtr(broker.BrokerName),
 			"state":            llx.StringData(string(broker.BrokerState)),
-			"engineType":       llx.StringData(string(broker.EngineType)),
+			"engineType":       llx.StringData(strings.ToUpper(string(broker.EngineType))),
 			"deploymentMode":   llx.StringData(string(broker.DeploymentMode)),
 			"hostInstanceType": llx.StringDataPtr(broker.HostInstanceType),
 			"region":           llx.StringData(region),
@@ -243,7 +244,7 @@ func newMqlAwsMqConfiguration(runtime *plugin.Runtime, region string, cfg mq_typ
 			"id":                        llx.StringDataPtr(cfg.Id),
 			"name":                      llx.StringDataPtr(cfg.Name),
 			"description":               llx.StringDataPtr(cfg.Description),
-			"engineType":                llx.StringData(string(cfg.EngineType)),
+			"engineType":                llx.StringData(strings.ToUpper(string(cfg.EngineType))),
 			"engineVersion":             llx.StringDataPtr(cfg.EngineVersion),
 			"authenticationStrategy":    llx.StringData(string(cfg.AuthenticationStrategy)),
 			"created":                   created,
