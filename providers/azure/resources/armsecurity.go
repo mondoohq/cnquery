@@ -70,6 +70,38 @@ func getPolicyAssignments(ctx context.Context, conn armSecurityConn) (PolicyAssi
 	return result, nil
 }
 
+// mdvmSelectedProvider is the value ARM reports when a subscription's server
+// vulnerability assessment is Microsoft Defender Vulnerability Management.
+const mdvmSelectedProvider = "MdeTvm"
+
+// azureServersSetting identifies the subscription-wide server VA setting.
+//
+// ARM spells it two ways on the same record, differing only in the leading
+// capital: "AzureServersSetting" is the kind (the discriminator) and
+// "azureServersSetting" is the resource name. The SDK models them as two
+// separate enums for that reason.
+const azureServersSetting = "azureServersSetting"
+
+// mdvmVulnerabilityAssessmentEnabled reports whether any server VA setting
+// selects Microsoft Defender Vulnerability Management.
+//
+// It matches either field, case-insensitively, rather than picking one: the
+// call behind these records is pinned to an older api-version whose casing we
+// cannot assume, and matching the wrong one is silent -- the loop simply never
+// fires and the subscription reports no vulnerability management tool.
+func mdvmVulnerabilityAssessmentEnabled(settings []ServerVulnerabilityAssessmentsSettings) bool {
+	for _, sett := range settings {
+		if !strings.EqualFold(sett.Properties.SelectedProvider, mdvmSelectedProvider) {
+			continue
+		}
+		if strings.EqualFold(sett.Kind, azureServersSetting) ||
+			strings.EqualFold(sett.Name, azureServersSetting) {
+			return true
+		}
+	}
+	return false
+}
+
 func getServerVulnAssessmentSettings(ctx context.Context, conn armSecurityConn) (ServerVulnerabilityAssessmentsSettingsList, error) {
 	urlPath := "/subscriptions/{subscriptionId}/providers/Microsoft.Security/serverVulnerabilityAssessmentsSettings"
 	urlPath = strings.ReplaceAll(urlPath, "{subscriptionId}", url.PathEscape(conn.subscriptionId))

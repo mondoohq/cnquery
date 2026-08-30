@@ -235,11 +235,9 @@ func (a *mqlAzureSubscriptionCloudDefenderService) forServers() (*mqlAzureSubscr
 			vulnToolName = "Microsoft Defender for Cloud integrated Qualys scanner"
 		}
 	}
-	for _, sett := range serverVASetings.Settings {
-		if sett.Properties.SelectedProvider == "MdeTvm" && sett.Name == "AzureServersSetting" {
-			args["enabled"] = llx.BoolData(true)
-			vulnToolName = "Microsoft Defender vulnerability management"
-		}
+	if mdvmVulnerabilityAssessmentEnabled(serverVASetings.Settings) {
+		args["enabled"] = llx.BoolData(true)
+		vulnToolName = "Microsoft Defender vulnerability management"
 	}
 	args["vulnerabilityManagementToolName"] = llx.StringData(vulnToolName)
 
