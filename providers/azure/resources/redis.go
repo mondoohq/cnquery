@@ -183,8 +183,17 @@ func createRedisInstanceRawData(runtime *plugin.Runtime, cache *armredis.Resourc
 	// throughout; normalize to an empty struct so a cache returned without
 	// properties doesn't panic here (the callers reach this before their own
 	// nil guards).
+	//
+	// Normalize onto a local copy rather than writing back through the pointer.
+	// The caller keeps using its own *ResourceInfo after this returns -- to seed
+	// the resource's caches, behind an `if cache.Properties != nil` guard -- so
+	// filling the field in here would turn that guard into a read of an empty
+	// struct, and would contradict what the redaction helpers below promise
+	// about leaving the source alone.
 	if cache.Properties == nil {
-		cache.Properties = &armredis.Properties{}
+		normalized := *cache
+		normalized.Properties = &armredis.Properties{}
+		cache = &normalized
 	}
 	properties, err := convert.JsonToDict(redactedRedisResource(cache))
 	if err != nil {

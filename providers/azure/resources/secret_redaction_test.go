@@ -116,6 +116,48 @@ func TestRedactedAuthSettingsDropsEveryProviderSecret(t *testing.T) {
 	assert.Nil(t, redactedAuthSettings(nil))
 }
 
+// TestCreateRedisInstanceRawDataLeavesTheSourceAlone pins the guarantee at the
+// level that actually matters to the caller.
+//
+// The redaction helpers copy before editing, but the function around them used
+// to normalize a nil Properties by writing back through the caller's pointer.
+// The caller keeps using that same *ResourceInfo afterwards to seed the
+// resource's caches, behind an `if cache.Properties != nil` guard -- so filling
+// the field in here quietly turned that guard into a read of an empty struct.
+func TestCreateRedisInstanceRawDataLeavesTheSourceAlone(t *testing.T) {
+	bare := &armredis.ResourceInfo{Name: to.Ptr("no-properties")}
+
+	_, err := createRedisInstanceRawData(nil, bare)
+	require.NoError(t, err)
+
+	assert.Nil(t, bare.Properties,
+		"a cache that arrived without properties must still have none afterwards")
+
+	withSecret := &armredis.ResourceInfo{
+		Name: to.Ptr("has-properties"),
+		Properties: &armredis.Properties{
+			RedisConfiguration: &armredis.CommonPropertiesRedisConfiguration{
+				RdbStorageConnectionString: to.Ptr(fakeStorageConnString),
+			},
+		},
+	}
+
+	args, err := createRedisInstanceRawData(nil, withSecret)
+	require.NoError(t, err)
+
+	// The secret is gone from both fields it used to reach.
+	for _, field := range []string{"properties", "redisConfiguration"} {
+		require.Contains(t, args, field)
+		assert.NotContains(t, mustJSON(t, args[field].Value), "SUPERSECRETKEY",
+			"%s must not carry the storage credential", field)
+	}
+
+	// ...and still present on the caller's own struct.
+	require.NotNil(t, withSecret.Properties.RedisConfiguration.RdbStorageConnectionString)
+	assert.Equal(t, fakeStorageConnString,
+		*withSecret.Properties.RedisConfiguration.RdbStorageConnectionString)
+}
+
 // mustJSON serializes exactly as the value will reach MQL. It deliberately does
 // NOT normalize case: the assertions below search for upper-case secret
 // markers, and lower-casing here would make every NotContains unfalsifiable.
