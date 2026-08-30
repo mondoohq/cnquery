@@ -1,7 +1,7 @@
 ---
 name: update-provider-deps
-description: Upgrade an mql provider's vendored SDKs (all providers or a named subset), audit the new versions for breaking changes and fix call sites while keeping shipped MQL fields backwards-compatible, check whether .lr enum comments drifted, and propose a numbered list of new resources and fields the upgrade unlocks for the user to choose from. Use this whenever the user mentions updating, bumping, upgrading, or refreshing SDK or provider dependencies for any provider (azure, aws, gcp, github, cloudflare, okta, alicloud, mongodbatlas, databricks, and the rest), asks what a newer SDK would give us, asks whether a dep bump is safe or breaking, or asks what new fields or resources an SDK version makes available. Also use it for "check for new SDK majors", "are our SDKs current", and "what did we miss in the new SDK".
-argument-hint: "[provider names, comma-separated] (default: probe all)"
+description: Upgrade an mql provider's vendored SDKs (all providers or a named subset), audit the new versions for breaking changes and fix call sites while keeping shipped MQL fields backwards-compatible, check whether .lr enum comments drifted, and propose a numbered list of new resources and fields the upgrade unlocks for the user to choose from. Use this whenever the user mentions updating, bumping, upgrading, or refreshing SDK or provider dependencies for any provider (azure, aws, gcp, github, cloudflare, okta, alicloud, mongodbatlas, databricks, and the rest), asks what a newer SDK would give us, asks whether a dep bump is safe or breaking, or asks what new fields or resources an SDK version makes available. Also use it for "check for new SDK majors", "are our SDKs current", and "what did we miss in the new SDK". Runs one provider at a time by default; a sweep across several providers is an explicit opt-in.
+argument-hint: "[provider name] (one provider is the default; comma-separated for a sweep)"
 ---
 
 # Update provider SDK dependencies
@@ -22,8 +22,20 @@ P=.claude/skills/update-provider-deps
 
 ## Phase 0 — Scope
 
-Work in worktrees. How the run splits into PRs depends on **what each provider's diff
-touches**, not on how many providers the run spans:
+Work in worktrees, and **target one provider per run unless the user asked for more**.
+One provider is both the common ask ("update the azure SDKs", "is go-github current?")
+and the cheaper one: probe time scales with the dep count, and review time scales with
+the number of PRs. Widen to a sweep only on an explicit "check every provider" or a
+named list — never because a single-provider run finished and the others were right
+there.
+
+**Single provider — the default shape.** One worktree, one branch, one PR, carrying the
+bump together with whatever the migration forced: code edits, `.lr` enum-drift fixes, and
+the Phase 6 additions the user picked. There is no split to decide, so none of the
+combined-PR rules below apply — go straight to Phase 1.
+
+**A sweep — only when asked.** Now the split matters, and it follows from **what each
+provider's diff touches**, not from how many providers the run spans:
 
 - **A provider whose diff touches anything beyond `go.mod`/`go.sum` gets its own worktree,
   branch, and PR.** That means the Phase 6 schema additions the user picked, the code edits
@@ -50,7 +62,7 @@ A provider moves out of the combined PR the moment the user picks a field on it,
 cannot know that before Phase 6. Apply and verify everything first, decide the split last.
 Opening PRs as each provider goes green feels like progress and forces a rewrite.
 
-Pick the providers with the user. `python3 $P/probe.py --list` shows every known provider
+Confirm the target with the user. `python3 $P/probe.py --list` shows every known provider
 and the module prefixes it scans. For a provider that isn't in that table (a DB driver, a
 network device client), pass its `go.mod` directly — that's the escape hatch:
 
@@ -72,13 +84,16 @@ still covers our feature set.
 ## Phase 1 — Probe, then get sign-off
 
 ```bash
+python3 $P/probe.py --provider=azure                    # one provider — the default
 python3 $P/probe.py --provider=github,cloudflare        # named subset
-python3 $P/probe.py                                     # everything
 python3 $P/probe.py --provider=aws --json               # structured, for scripted follow-up
+python3 $P/probe.py                                     # every provider — a sweep
 ```
 
 Probing AWS or Azure takes minutes (120+ deps, two proxy round-trips each), so start it in
-the background and do other prep while it runs.
+the background and do other prep while it runs. The bare form is every provider in the
+`--list` table and costs that much again for each one — don't reach for it to answer a
+question about a single provider.
 
 Three outcomes: `UP` (stable upgrade available), `OK` (current), `BETA` (a higher major
 exists but only as beta or pseudo-version). Never fold `BETA` into the upgrade set — a
@@ -229,9 +244,10 @@ criteria.
 Present the list, ask which numbers they want, and wait. The user picks — that's the point
 of the phase.
 
-Their answer also settles the PR split from Phase 0: every provider they pick a field on
-leaves the combined PR and gets its own. A provider they pick nothing on stays in the
-combined PR unless its bump already needed a code edit.
+On a sweep, their answer also settles the PR split from Phase 0: every provider they pick
+a field on leaves the combined PR and gets its own, and a provider they pick nothing on
+stays in the combined PR unless its bump already needed a code edit. On a single-provider
+run there is nothing to settle — the picks land in the one PR alongside the bump.
 
 ## Phase 7 — Implement the selection, verify, PR
 
@@ -246,15 +262,18 @@ riding in the combined PR, which is a set of independent modules rather than one
 cd providers/<name> && go build ./... && go test ./... && gofmt -l .
 ```
 
-Then open PRs in the two shapes Phase 0 set out.
+Then open PRs in the shape Phase 0 set out.
 
-**Per-provider PRs.** One for each provider whose diff has a code change. The body carries
-the SDK bump and the schema work together, and should state which breaking changes in the
-new version did *not* reach a shipped field, and why. That is the reasoning a reviewer would
-otherwise have to redo from the changelog.
+**The single-provider PR.** One PR titled for the provider, carrying the bump and any
+schema work together. The body requirements in the next paragraph apply to it unchanged.
 
-**The combined PR.** One PR for all the pure bumps, titled for the sweep rather than for any
-one provider (`🧹 providers: refresh SDK dependencies`). Its body needs:
+**Sweep, per-provider PRs.** One for each provider whose diff has a code change. The body
+carries the SDK bump and the schema work together, and should state which breaking changes
+in the new version did *not* reach a shipped field, and why. That is the reasoning a
+reviewer would otherwise have to redo from the changelog.
+
+**Sweep, the combined PR.** One PR for all the pure bumps, titled for the sweep rather
+than for any one provider (`🧹 providers: refresh SDK dependencies`). Its body needs:
 
 - a table of every provider and module bumped, with from/to versions, so the change is
   readable without expanding `go.sum`;
