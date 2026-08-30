@@ -66,6 +66,7 @@ const (
 	service_networkconnectivity = "networkconnectivity.googleapis.com"
 	service_networkmanagement   = "networkmanagement.googleapis.com"
 	service_memcache            = "memcache.googleapis.com"
+	service_monitoring          = "monitoring.googleapis.com"
 	service_aiplatform          = "aiplatform.googleapis.com"
 	service_datastream          = "datastream.googleapis.com"
 	service_memorystore         = "memorystore.googleapis.com"

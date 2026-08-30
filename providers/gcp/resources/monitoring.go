@@ -13,11 +13,11 @@ import (
 	"go.mondoo.com/mql/providers/gcp/connection"
 	"go.mondoo.com/mql/types"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
 	dashboard "cloud.google.com/go/monitoring/dashboard/apiv1"
 	"cloud.google.com/go/monitoring/dashboard/apiv1/dashboardpb"
+	"github.com/rs/zerolog/log"
 	"go.mondoo.com/mql/llx"
 	"google.golang.org/api/iterator"
 	monitoringv3 "google.golang.org/api/monitoring/v3"
@@ -73,6 +73,10 @@ func initGcpProjectMonitoringService(runtime *plugin.Runtime, args map[string]*l
 	return args, nil, nil
 }
 
+type mqlGcpProjectMonitoringServiceInternal struct {
+	serviceGate
+}
+
 func (g *mqlGcpProject) monitoring() (*mqlGcpProjectMonitoringService, error) {
 	if g.Id.Error != nil {
 		return nil, g.Id.Error
@@ -85,7 +89,24 @@ func (g *mqlGcpProject) monitoring() (*mqlGcpProjectMonitoringService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return res.(*mqlGcpProjectMonitoringService), nil
+
+	serviceEnabled, err := g.isServiceEnabled(service_monitoring)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := res.(*mqlGcpProjectMonitoringService)
+	svc.recordEnabled(serviceEnabled)
+	if !serviceEnabled {
+		log.Debug().Str("service", service_monitoring).Msg("gcp service is not enabled, skipping")
+	}
+
+	return svc, nil
+}
+
+// isEnabled reports whether the API is enabled on this project.
+func (g *mqlGcpProjectMonitoringService) isEnabled() (bool, error) {
+	return g.resolveEnabled(g.MqlRuntime, g.ProjectId, service_monitoring)
 }
 
 func (g *mqlGcpProjectMonitoringServiceAlertPolicy) id() (string, error) {
@@ -134,6 +155,14 @@ func (g *mqlGcpProjectMonitoringServiceAlertPolicy) notificationChannels() ([]an
 }
 
 func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -141,7 +170,7 @@ func (g *mqlGcpProjectMonitoringService) alertPolicies() ([]any, error) {
 
 	conn := g.MqlRuntime.Connection.(*connection.GcpConnection)
 
-	creds, err := conn.Credentials(kms.DefaultAuthScopes()...)
+	creds, err := conn.Credentials(monitoring.DefaultAuthScopes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -282,6 +311,14 @@ func (g *mqlGcpProjectMonitoringServiceUptimeCheckConfig) id() (string, error) {
 }
 
 func (g *mqlGcpProjectMonitoringService) uptimeCheckConfigs() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -375,6 +412,14 @@ func (g *mqlGcpProjectMonitoringServiceNotificationChannel) id() (string, error)
 }
 
 func (g *mqlGcpProjectMonitoringService) notificationChannels() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -434,6 +479,14 @@ func (g *mqlGcpProjectMonitoringServiceGroup) id() (string, error) {
 }
 
 func (g *mqlGcpProjectMonitoringService) groups() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -481,6 +534,14 @@ func (g *mqlGcpProjectMonitoringService) groups() ([]any, error) {
 }
 
 func (g *mqlGcpProjectMonitoringService) dashboards() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}
@@ -557,6 +618,14 @@ func (g *mqlGcpProjectMonitoringServiceDashboard) id() (string, error) {
 }
 
 func (g *mqlGcpProjectMonitoringService) services() ([]any, error) {
+	enabled, err := g.isEnabled()
+	if err != nil {
+		return nil, err
+	}
+	if !enabled {
+		return nil, nil
+	}
+
 	if g.ProjectId.Error != nil {
 		return nil, g.ProjectId.Error
 	}

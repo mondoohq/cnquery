@@ -159,3 +159,128 @@ func isResolveEnabledForwarder(fn *ast.FuncDecl) bool {
 	sel, ok := call.Fun.(*ast.SelectorExpr)
 	return ok && sel.Sel.Name == "resolveEnabled"
 }
+
+// TestGatedServiceCollectionsConsultTheGate closes the gap the two tests above
+// leave open.
+//
+// They police the gate's mechanism -- that nobody grows a parallel one, that
+// isEnabled() stays a forwarder. Neither notices a service that embeds the gate
+// and then never asks it. That is not hypothetical: vertexai carried 25
+// collections and monitoring 7, none of which consulted any gate, so on a
+// project with the API switched off every one of them spent a doomed call per
+// region and returned an authoritative empty list.
+//
+// Scope is deliberately narrow. Only resources whose Internal struct embeds
+// serviceGate are checked -- those are the ones that opted in, so there is no
+// judgement call about which services ought to be gated and no false failure on
+// one that should not be.
+func TestGatedServiceCollectionsConsultTheGate(t *testing.T) {
+	paths, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatalf("glob package sources: %v", err)
+	}
+
+	fset := token.NewFileSet()
+	files := map[string]*ast.File{}
+	for _, path := range paths {
+		if strings.HasSuffix(path, "_test.go") || strings.HasSuffix(path, ".lr.go") {
+			continue
+		}
+		f, err := parser.ParseFile(fset, path, nil, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", path, err)
+		}
+		files[path] = f
+	}
+
+	// Resource types whose Internal struct embeds serviceGate.
+	gated := map[string]bool{}
+	for _, f := range files {
+		ast.Inspect(f, func(n ast.Node) bool {
+			ts, ok := n.(*ast.TypeSpec)
+			if !ok || !strings.HasSuffix(ts.Name.Name, "Internal") {
+				return true
+			}
+			st, ok := ts.Type.(*ast.StructType)
+			if !ok {
+				return true
+			}
+			for _, field := range st.Fields.List {
+				if len(field.Names) != 0 {
+					continue // named field, not an embed
+				}
+				if id, ok := field.Type.(*ast.Ident); ok && id.Name == "serviceGate" {
+					gated[strings.TrimSuffix(ts.Name.Name, "Internal")] = true
+				}
+			}
+			return true
+		})
+	}
+	require.NotEmpty(t, gated, "no gated services found; this test would pass vacuously")
+
+	for _, f := range files {
+		for _, decl := range f.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Recv == nil || fn.Body == nil || len(fn.Recv.List) != 1 {
+				continue
+			}
+			star, ok := fn.Recv.List[0].Type.(*ast.StarExpr)
+			if !ok {
+				continue
+			}
+			recv, ok := star.X.(*ast.Ident)
+			if !ok || !gated[recv.Name] {
+				continue
+			}
+			// Only collections: func() ([]any, error).
+			if !returnsAnySliceAndError(fn) {
+				continue
+			}
+			if fn.Name.Name == "isEnabled" || callsIsEnabled(fn) {
+				continue
+			}
+			t.Errorf("%s: %s.%s() lists without consulting the service gate. "+
+				"On a project with the API disabled it spends calls that cannot "+
+				"succeed and returns an empty list as fact. Start it with "+
+				"`enabled, err := g.isEnabled()`.",
+				fset.Position(fn.Pos()), recv.Name, fn.Name.Name)
+		}
+	}
+}
+
+func returnsAnySliceAndError(fn *ast.FuncDecl) bool {
+	// Collections take no arguments. A shared helper that happens to return the
+	// same pair (vertexai listAcrossRegions) is not an accessor, and is reached
+	// only from ones that are already gated.
+	if fn.Type.Params != nil && len(fn.Type.Params.List) != 0 {
+		return false
+	}
+	if fn.Type.Results == nil || len(fn.Type.Results.List) != 2 {
+		return false
+	}
+	arr, ok := fn.Type.Results.List[0].Type.(*ast.ArrayType)
+	if !ok {
+		return false
+	}
+	elem, ok := arr.Elt.(*ast.Ident)
+	if !ok || elem.Name != "any" {
+		return false
+	}
+	errIdent, ok := fn.Type.Results.List[1].Type.(*ast.Ident)
+	return ok && errIdent.Name == "error"
+}
+
+func callsIsEnabled(fn *ast.FuncDecl) bool {
+	found := false
+	ast.Inspect(fn.Body, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "isEnabled" {
+			found = true
+		}
+		return true
+	})
+	return found
+}
