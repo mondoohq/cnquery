@@ -399,3 +399,104 @@ func TestPomXmlLicenseIsBounded(t *testing.T) {
 	assert.Equal(t, "MIT", p.Root().License,
 		"an oversized name is dropped without taking its sibling with it")
 }
+
+// Maven matches a dependency against <dependencyManagement> on groupId,
+// artifactId, type and classifier. The same groupId:artifactId is routinely
+// published as more than one artifact, and a POM versions each separately, so
+// matching on the coordinates alone returns whichever entry happens to come
+// first: a wrong version, and with it a wrong set of advisories.
+func TestPomXmlManagedMatchUsesTypeAndClassifier(t *testing.T) {
+	t.Run("a test-jar takes the test-jar's version", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>app</artifactId><version>1.0</version>
+  <dependencyManagement><dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><version>1.0</version></dependency>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>test-jar</type><version>2.0</version></dependency>
+  </dependencies></dependencyManagement>
+  <dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>test-jar</type></dependency>
+  </dependencies>
+</project>`)
+		assert.Equal(t, "2.0", packagesByName(p.Transitive())["g:a"].Version)
+	})
+
+	t.Run("the plain jar still takes the plain jar's version", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>app</artifactId><version>1.0</version>
+  <dependencyManagement><dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>test-jar</type><version>2.0</version></dependency>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><version>1.0</version></dependency>
+  </dependencies></dependencyManagement>
+  <dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId></dependency>
+  </dependencies>
+</project>`)
+		assert.Equal(t, "1.0", packagesByName(p.Transitive())["g:a"].Version)
+	})
+
+	// A native library published per platform is the ordinary classifier case.
+	t.Run("a classifier selects its own entry", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>app</artifactId><version>1.0</version>
+  <dependencyManagement><dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><version>1.0</version></dependency>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><classifier>linux-x86_64</classifier><version>2.0</version></dependency>
+  </dependencies></dependencyManagement>
+  <dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><classifier>linux-x86_64</classifier></dependency>
+  </dependencies>
+</project>`)
+		assert.Equal(t, "2.0", packagesByName(p.Transitive())["g:a"].Version)
+	})
+
+	// Maven assumes type jar when none is stated, so the two spellings are the
+	// same artifact and have to match each other.
+	t.Run("an explicit jar type matches an entry that states none", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>app</artifactId><version>1.0</version>
+  <dependencyManagement><dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><version>1.0</version></dependency>
+  </dependencies></dependencyManagement>
+  <dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>jar</type></dependency>
+  </dependencies>
+</project>`)
+		assert.Equal(t, "1.0", packagesByName(p.Transitive())["g:a"].Version)
+	})
+
+	// The key is property-resolved like the coordinates, because either side
+	// may write any part of it as a reference.
+	t.Run("a property in the type still matches", func(t *testing.T) {
+		p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>app</artifactId><version>1.0</version>
+  <properties><art.type>test-jar</art.type></properties>
+  <dependencyManagement><dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>test-jar</type><version>2.0</version></dependency>
+  </dependencies></dependencyManagement>
+  <dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>${art.type}</type></dependency>
+  </dependencies>
+</project>`)
+		assert.Equal(t, "2.0", packagesByName(p.Transitive())["g:a"].Version)
+	})
+}
+
+// The managed scope is read off the same key, so an incomplete key leaks a test
+// dependency into the production set: the test-jar below matched the plain
+// jar's entry, which states no scope, and was reported as production.
+func TestPomXmlManagedScopeUsesTheFullKey(t *testing.T) {
+	p := parsePom(t, `<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <groupId>com.example</groupId><artifactId>app</artifactId><version>1.0</version>
+  <dependencyManagement><dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><version>1.0</version></dependency>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>test-jar</type><version>2.0</version><scope>test</scope></dependency>
+  </dependencies></dependencyManagement>
+  <dependencies>
+    <dependency><groupId>g</groupId><artifactId>a</artifactId><type>test-jar</type></dependency>
+  </dependencies>
+</project>`)
+
+	assert.NotContains(t, packagesByName(p.Direct()), "g:a",
+		"a managed test scope on the test-jar must keep it out of the production set")
+	assert.Equal(t, "2.0", packagesByName(p.Transitive())["g:a"].Version)
+}

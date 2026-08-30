@@ -111,7 +111,7 @@ func (p *pomProject) depToPackage(dep pomDependency) *languages.Package {
 		// No <version> on the dependency: the project's <dependencyManagement>
 		// is where it is declared, which is the standard way a multi-module
 		// project states a version once.
-		version = p.resolve(p.managedVersion(groupId, artifactId))
+		version = p.resolve(p.managedVersion(dep))
 	}
 
 	name := artifactId

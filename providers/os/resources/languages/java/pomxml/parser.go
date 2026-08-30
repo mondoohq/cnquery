@@ -23,10 +23,15 @@ type pomProject struct {
 	// the dependency's version is the literal property reference, which matches
 	// no package and no advisory.
 	Properties pomProperties `xml:"properties"`
-	// DependencyManagement holds versions declared once for the whole project
-	// (or imported from a BOM). A <dependency> under <dependencies> may then
-	// omit its <version> entirely, and the version stated here is the one that
-	// applies.
+	// DependencyManagement holds versions declared once for the whole project.
+	// A <dependency> under <dependencies> may then omit its <version> entirely,
+	// and the version stated here is the one that applies.
+	//
+	// Only entries written in this POM are read. A <scope>import</scope> entry
+	// names a BOM whose own dependencyManagement supplies the versions, and
+	// reading that needs the BOM artifact, which is not available from the file
+	// on disk. A dependency versioned only by an imported BOM therefore reports
+	// no version rather than a guessed one.
 	DependencyManagement struct {
 		Dependencies []pomDependency `xml:"dependencies>dependency"`
 	} `xml:"dependencyManagement"`
@@ -173,9 +178,10 @@ func (p *pomProject) property(name string) (string, bool) {
 // matches only when they happen to be spelled the same way, and a miss is
 // silent: the dependency simply comes out with no version, which is the outcome
 // resolving versions at all was meant to prevent.
-func (p *pomProject) managedDependency(groupId, artifactId string) (pomDependency, bool) {
+func (p *pomProject) managedDependency(dep pomDependency) (pomDependency, bool) {
+	want := p.managementKey(dep)
 	for _, m := range p.DependencyManagement.Dependencies {
-		if p.resolve(m.GroupId) == groupId && p.resolve(m.ArtifactId) == artifactId {
+		if p.managementKey(m) == want {
 			return m, true
 		}
 	}
@@ -184,8 +190,8 @@ func (p *pomProject) managedDependency(groupId, artifactId string) (pomDependenc
 
 // managedVersion returns the version <dependencyManagement> declares for a
 // dependency, which is what applies when the <dependency> states none.
-func (p *pomProject) managedVersion(groupId, artifactId string) string {
-	m, ok := p.managedDependency(groupId, artifactId)
+func (p *pomProject) managedVersion(dep pomDependency) string {
+	m, ok := p.managedDependency(dep)
 	if !ok {
 		return ""
 	}
@@ -205,7 +211,7 @@ func (p *pomProject) effectiveScope(dep pomDependency) string {
 	if scope := p.resolve(dep.Scope); scope != "" {
 		return scope
 	}
-	m, ok := p.managedDependency(p.resolve(dep.GroupId), p.resolve(dep.ArtifactId))
+	m, ok := p.managedDependency(dep)
 	if !ok {
 		return ""
 	}
@@ -256,6 +262,35 @@ type pomDependency struct {
 	Version    string `xml:"version"`
 	Scope      string `xml:"scope"`
 	Optional   string `xml:"optional"`
+	// Type and Classifier complete the identity Maven keys a dependency on.
+	// The same groupId:artifactId is routinely published as more than one
+	// artifact -- the jar and its test-jar, or a native library built per
+	// platform -- and dependencyManagement versions each of them separately.
+	// Matching without these picks whichever entry comes first.
+	Type       string `xml:"type"`
+	Classifier string `xml:"classifier"`
+}
+
+// defaultDependencyType is the type Maven assumes when a dependency states
+// none, so an entry written without <type> and one written as <type>jar</type>
+// are the same artifact and have to compare equal.
+const defaultDependencyType = "jar"
+
+// managementKey is the identity Maven matches a dependency against
+// dependencyManagement on: groupId, artifactId, type and classifier. Every part
+// is property-resolved for the same reason the coordinates are, since either
+// side may write any of them as a reference.
+func (p *pomProject) managementKey(dep pomDependency) [4]string {
+	typ := strings.TrimSpace(p.resolve(dep.Type))
+	if typ == "" {
+		typ = defaultDependencyType
+	}
+	return [4]string{
+		strings.TrimSpace(p.resolve(dep.GroupId)),
+		strings.TrimSpace(p.resolve(dep.ArtifactId)),
+		typ,
+		strings.TrimSpace(p.resolve(dep.Classifier)),
+	}
 }
 
 // effectiveGroupId returns the project's groupId, inheriting from parent if not set.
