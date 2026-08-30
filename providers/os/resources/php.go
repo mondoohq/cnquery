@@ -339,8 +339,12 @@ func newPhpPackage(runtime *plugin.Runtime, pkg *languages.Package) (*mqlPhpPack
 		"name":    llx.StringData(pkg.Name),
 		"version": llx.StringData(pkg.Version),
 		"purl":    llx.StringData(pkg.Purl),
-		"cpes":    llx.ArrayData(cpes, types.Resource("cpe")),
-		"files":   llx.ArrayData(mqlFiles, types.Resource("pkgFileInfo")),
+		// composer.lock and installed.json both state these; the extractors
+		// render the license list as an SPDX expression.
+		"license":     llx.StringData(pkg.License),
+		"description": llx.StringData(pkg.Description),
+		"cpes":        llx.ArrayData(cpes, types.Resource("cpe")),
+		"files":       llx.ArrayData(mqlFiles, types.Resource("pkgFileInfo")),
 	})
 	if err != nil {
 		return nil, err
@@ -364,6 +368,14 @@ func (r *mqlPhpPackage) purl() (string, error) {
 	return "", r.populateData()
 }
 
+func (r *mqlPhpPackage) license() (string, error) {
+	return "", r.populateData()
+}
+
+func (r *mqlPhpPackage) description() (string, error) {
+	return "", r.populateData()
+}
+
 func (r *mqlPhpPackage) cpes() ([]any, error) {
 	return nil, r.populateData()
 }
@@ -379,6 +391,8 @@ func (r *mqlPhpPackage) populateData() error {
 	r.Name = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Version = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Purl = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	r.License = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
+	r.Description = plugin.TValue[string]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Cpes = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	r.Files = plugin.TValue[[]any]{State: plugin.StateIsSet | plugin.StateIsNull}
 	return nil

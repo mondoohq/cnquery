@@ -10829,6 +10829,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"php.package.purl": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPhpPackage).GetPurl()).ToDataRes(types.String)
 	},
+	"php.package.license": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetLicense()).ToDataRes(types.String)
+	},
+	"php.package.description": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlPhpPackage).GetDescription()).ToDataRes(types.String)
+	},
 	"php.package.cpes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlPhpPackage).GetCpes()).ToDataRes(types.Array(types.Resource("cpe")))
 	},
@@ -28600,6 +28606,14 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"php.package.purl": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlPhpPackage).Purl, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"php.package.license": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).License, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"php.package.description": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlPhpPackage).Description, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
 	"php.package.cpes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -72356,12 +72370,14 @@ type mqlPhpPackage struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	// optional: if you define mqlPhpPackageInternal it will be used here
-	Id      plugin.TValue[string]
-	Name    plugin.TValue[string]
-	Version plugin.TValue[string]
-	Purl    plugin.TValue[string]
-	Cpes    plugin.TValue[[]any]
-	Files   plugin.TValue[[]any]
+	Id          plugin.TValue[string]
+	Name        plugin.TValue[string]
+	Version     plugin.TValue[string]
+	Purl        plugin.TValue[string]
+	License     plugin.TValue[string]
+	Description plugin.TValue[string]
+	Cpes        plugin.TValue[[]any]
+	Files       plugin.TValue[[]any]
 }
 
 // createPhpPackage creates a new instance of this resource
@@ -72420,6 +72436,18 @@ func (c *mqlPhpPackage) GetVersion() *plugin.TValue[string] {
 func (c *mqlPhpPackage) GetPurl() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.Purl, func() (string, error) {
 		return c.purl()
+	})
+}
+
+func (c *mqlPhpPackage) GetLicense() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.License, func() (string, error) {
+		return c.license()
+	})
+}
+
+func (c *mqlPhpPackage) GetDescription() *plugin.TValue[string] {
+	return plugin.GetOrCompute[string](&c.Description, func() (string, error) {
+		return c.description()
 	})
 }
 
