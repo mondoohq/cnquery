@@ -49,12 +49,17 @@ func readNodeLicensing(pkg *Package, node *protobom_sbom.Node) {
 		}
 	}
 
-	// The location is the document's own license comment when it has one: a
-	// concluded license read out of a file is the case that field exists to
-	// explain, and it is the only place protobom records where the conclusion
-	// came from. The confidence is left to default, because the format carries
-	// no score for a consumer to have measured.
-	if entry := ConcludedLicense(node.GetLicenseConcluded(), node.GetLicenseComments(), 0); entry != nil {
+	// No location: the model documents it as the file a license was read from,
+	// and protobom has no field holding one. license_comments is free-form
+	// prose about how the license fields were arrived at -- "concluded from
+	// LICENSE" is a sentence, not a path -- so putting it there would make the
+	// field mean two different things depending on who wrote it.
+	//
+	// No confidence either, which leaves the constructor's default. The format
+	// carries no score, and 1.0 is what the model documents a value as carrying
+	// when it is a statement rather than a measurement: relaying somebody
+	// else's conclusion unscored is exactly that.
+	if entry := ConcludedLicense(node.GetLicenseConcluded(), "", 0); entry != nil {
 		pkg.Licenses = append(pkg.Licenses, entry)
 	}
 
@@ -102,13 +107,25 @@ func licenseValueOf(l *License) string {
 
 func (s *Protobom) convertToSbom(doc *protobom_sbom.Document) *Sbom {
 	bom := &Sbom{
-		Asset: &Asset{
-			Name: doc.Metadata.Name,
-		},
+		// Platform is set below only for a document that names an operating
+		// system, and most do not. It is initialized here rather than left nil
+		// because every renderer reads it unguarded, so an imported document
+		// carrying no OS crashed whatever it was handed to -- including this
+		// package's own CycloneDX and SPDX renderers, which is the obvious
+		// thing to do with a document you just parsed.
+		Asset:    &Asset{Platform: &Platform{}},
 		Packages: make([]*Package, 0),
 	}
 
-	if doc.Metadata != nil && len(doc.Metadata.Tools) > 0 {
+	// The name is read after the nil check rather than before it. Reading it
+	// first made the guard below unreachable: a document with no metadata
+	// panicked on the line above it.
+	if doc == nil || doc.Metadata == nil {
+		return bom
+	}
+	bom.Asset.Name = doc.Metadata.Name
+
+	if len(doc.Metadata.Tools) > 0 {
 		bom.Generator = &Generator{
 			Name:    doc.Metadata.Tools[0].Name,
 			Version: doc.Metadata.Tools[0].Version,

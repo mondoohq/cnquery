@@ -5,6 +5,7 @@ package sbom
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -66,7 +67,13 @@ func TestProtobomReadsLicensing(t *testing.T) {
 		concluded := p.Licenses[1]
 		assert.Equal(t, LicenseAcquisition_LICENSE_ACQUISITION_CONCLUDED, concluded.GetAcquisition())
 		assert.Equal(t, "AGPL-3.0-only", concluded.GetSpdxId())
-		assert.Equal(t, "concluded from LICENSE", concluded.GetLocation())
+
+		// No location. The model documents it as the file a license was read
+		// from, and protobom has no field holding one: license_comments is
+		// free-form prose ("concluded from LICENSE" is a sentence, not a path),
+		// so putting it here would make the field mean two different things
+		// depending on who wrote the document.
+		assert.Empty(t, concluded.GetLocation())
 	})
 
 	t.Run("the legacy scalar takes the first declared entry", func(t *testing.T) {
@@ -91,5 +98,44 @@ func TestProtobomReadsLicensing(t *testing.T) {
 		require.NotNil(t, p)
 		assert.Empty(t, p.Licenses)
 		assert.Empty(t, p.License)
+	})
+}
+
+// Every renderer reads Asset.Platform unguarded, so an imported document that
+// names no operating system -- which is most of them -- crashed whatever it was
+// handed to, including this package's own renderers. Parsing a document and
+// then rendering it is the obvious thing to do with an importer, and it panicked.
+func TestProtobomOutputCanBeRendered(t *testing.T) {
+	f, err := os.Open("testdata/licensing.spdx.json")
+	require.NoError(t, err)
+	defer f.Close()
+
+	bom, err := NewProtobom().Parse(f)
+	require.NoError(t, err)
+	require.NotNil(t, bom.Asset.Platform, "a nil platform is what every renderer dereferences")
+
+	var b strings.Builder
+	require.NotPanics(t, func() {
+		require.NoError(t, New(FormatCycloneDxJSON).Render(&b, bom))
+	})
+	assert.Contains(t, b.String(), "declared-and-concluded")
+
+	// SPDX is deliberately not asserted here. It fails on the same input for an
+	// unrelated reason this change does not address: the renderer writes a
+	// Creator from Generator.Vendor, and common.Creator refuses to marshal an
+	// empty one, so any BOM whose generator has no vendor -- an imported one
+	// included -- errors out. That is a renderer bug rather than an importer
+	// one, and fixing it means choosing what a document with no stated vendor
+	// says it was created by.
+}
+
+// The document name was read one line before the guard that checks whether the
+// document has any metadata, which made the guard unreachable.
+func TestProtobomHandlesADocumentWithoutMetadata(t *testing.T) {
+	s := &Protobom{}
+	require.NotPanics(t, func() {
+		bom := s.convertToSbom(nil)
+		require.NotNil(t, bom)
+		assert.Empty(t, bom.Packages)
 	})
 }
