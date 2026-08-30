@@ -312,11 +312,20 @@ func (a *mqlAwsEksCluster) populateFromDescribe(cluster *ekstypes.Cluster) error
 	zonalShiftConfig, _ := convert.JsonToDict(cluster.ZonalShiftConfig)
 	a.ZonalShiftConfig = plugin.TValue[any]{Data: zonalShiftConfig, State: plugin.StateIsSet}
 
-	var zonalShiftEnabled bool
-	if cluster.ZonalShiftConfig != nil {
-		zonalShiftEnabled = convert.ToValue(cluster.ZonalShiftConfig.Enabled)
+	if cluster.ZonalShiftConfig == nil {
+		a.ZonalShift = plugin.TValue[*mqlAwsEksZonalShiftConfig]{State: plugin.StateIsSet | plugin.StateIsNull}
+	} else {
+		mqlZonalShift, err := CreateResource(a.MqlRuntime, "aws.eks.zonalShiftConfig", map[string]*llx.RawData{
+			"__id":    llx.StringData(a.Arn.Data + "/zonalShiftConfig"),
+			"enabled": llx.BoolData(convert.ToValue(cluster.ZonalShiftConfig.Enabled)),
+		})
+		if err != nil {
+			return err
+		}
+		a.ZonalShift = plugin.TValue[*mqlAwsEksZonalShiftConfig]{
+			Data: mqlZonalShift.(*mqlAwsEksZonalShiftConfig), State: plugin.StateIsSet,
+		}
 	}
-	a.ZonalShiftEnabled = plugin.TValue[bool]{Data: zonalShiftEnabled, State: plugin.StateIsSet}
 
 	computeConfig, _ := convert.JsonToDict(cluster.ComputeConfig)
 	a.ComputeConfig = plugin.TValue[any]{Data: computeConfig, State: plugin.StateIsSet}
@@ -390,8 +399,8 @@ func (a *mqlAwsEksCluster) controlPlaneLogging() (map[string]any, error) {
 	return nil, a.fetchDetail()
 }
 
-func (a *mqlAwsEksCluster) zonalShiftEnabled() (bool, error) {
-	return false, a.fetchDetail()
+func (a *mqlAwsEksCluster) zonalShift() (*mqlAwsEksZonalShiftConfig, error) {
+	return nil, a.fetchDetail()
 }
 
 // eksControlPlaneLogging re-keys the LogSetup pair list EKS returns into a map
@@ -789,53 +798,71 @@ func (a *mqlAwsEksNodegroup) scalingConfig() (map[string]any, error) {
 	return convert.JsonToDict(ng.ScalingConfig)
 }
 
-func (a *mqlAwsEksNodegroup) scalingMinSize() (int64, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return 0, err
-	}
-	if ng.ScalingConfig == nil || ng.ScalingConfig.MinSize == nil {
-		a.ScalingMinSize.State = plugin.StateIsSet | plugin.StateIsNull
-		return 0, nil
-	}
-	return int64(*ng.ScalingConfig.MinSize), nil
-}
-
-func (a *mqlAwsEksNodegroup) scalingMaxSize() (int64, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return 0, err
-	}
-	if ng.ScalingConfig == nil || ng.ScalingConfig.MaxSize == nil {
-		a.ScalingMaxSize.State = plugin.StateIsSet | plugin.StateIsNull
-		return 0, nil
-	}
-	return int64(*ng.ScalingConfig.MaxSize), nil
-}
-
-func (a *mqlAwsEksNodegroup) scalingDesiredSize() (int64, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return 0, err
-	}
-	if ng.ScalingConfig == nil || ng.ScalingConfig.DesiredSize == nil {
-		a.ScalingDesiredSize.State = plugin.StateIsSet | plugin.StateIsNull
-		return 0, nil
-	}
-	return int64(*ng.ScalingConfig.DesiredSize), nil
-}
-
-func (a *mqlAwsEksNodegroup) remoteAccessKeyPair() (*mqlAwsEc2Keypair, error) {
+func (a *mqlAwsEksNodegroup) scaling() (*mqlAwsEksScalingConfig, error) {
 	ng, err := a.fetchDetails()
 	if err != nil {
 		return nil, err
 	}
-	if ng.RemoteAccess == nil || ng.RemoteAccess.Ec2SshKey == nil || *ng.RemoteAccess.Ec2SshKey == "" {
-		a.RemoteAccessKeyPair.State = plugin.StateIsSet | plugin.StateIsNull
+	if ng.ScalingConfig == nil {
+		a.Scaling.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.eks.scalingConfig", map[string]*llx.RawData{
+		"__id":        llx.StringData(a.Arn.Data + "/scalingConfig"),
+		"minSize":     eksNodeCount(ng.ScalingConfig.MinSize),
+		"maxSize":     eksNodeCount(ng.ScalingConfig.MaxSize),
+		"desiredSize": eksNodeCount(ng.ScalingConfig.DesiredSize),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlAwsEksScalingConfig), nil
+}
+
+// eksNodeCount keeps an unreported node count null. Reading it as 0 would say
+// the node group runs no nodes, which is a real and very different state.
+func eksNodeCount(v *int32) *llx.RawData {
+	if v == nil {
+		return llx.NilData
+	}
+	return llx.IntData(int64(*v))
+}
+
+func (a *mqlAwsEksNodegroup) remoteAccessRef() (*mqlAwsEksRemoteAccess, error) {
+	ng, err := a.fetchDetails()
+	if err != nil {
+		return nil, err
+	}
+	if ng.RemoteAccess == nil {
+		a.RemoteAccessRef.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+	res, err := CreateResource(a.MqlRuntime, "aws.eks.remoteAccess", map[string]*llx.RawData{
+		"__id": llx.StringData(a.Arn.Data + "/remoteAccess"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlRemoteAccess := res.(*mqlAwsEksRemoteAccess)
+	mqlRemoteAccess.cacheEc2SshKey = convert.ToValue(ng.RemoteAccess.Ec2SshKey)
+	mqlRemoteAccess.cacheSourceSecurityGroups = ng.RemoteAccess.SourceSecurityGroups
+	mqlRemoteAccess.region = a.region
+	return mqlRemoteAccess, nil
+}
+
+type mqlAwsEksRemoteAccessInternal struct {
+	cacheEc2SshKey            string
+	cacheSourceSecurityGroups []string
+	region                    string
+}
+
+func (a *mqlAwsEksRemoteAccess) keyPair() (*mqlAwsEc2Keypair, error) {
+	if a.cacheEc2SshKey == "" {
+		a.KeyPair.State = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
 	mqlKp, err := NewResource(a.MqlRuntime, "aws.ec2.keypair", map[string]*llx.RawData{
-		"name":   llx.StringDataPtr(ng.RemoteAccess.Ec2SshKey),
+		"name":   llx.StringData(a.cacheEc2SshKey),
 		"region": llx.StringData(a.region),
 	})
 	if err != nil {
@@ -844,17 +871,10 @@ func (a *mqlAwsEksNodegroup) remoteAccessKeyPair() (*mqlAwsEc2Keypair, error) {
 	return mqlKp.(*mqlAwsEc2Keypair), nil
 }
 
-func (a *mqlAwsEksNodegroup) remoteAccessSecurityGroups() ([]any, error) {
-	ng, err := a.fetchDetails()
-	if err != nil {
-		return nil, err
-	}
-	if ng.RemoteAccess == nil {
-		return []any{}, nil
-	}
+func (a *mqlAwsEksRemoteAccess) sourceSecurityGroups() ([]any, error) {
 	conn := a.MqlRuntime.Connection.(*connection.AwsConnection)
 	res := []any{}
-	for _, sgId := range ng.RemoteAccess.SourceSecurityGroups {
+	for _, sgId := range a.cacheSourceSecurityGroups {
 		mqlSg, err := NewResource(a.MqlRuntime, "aws.ec2.securitygroup", map[string]*llx.RawData{
 			"arn": llx.StringData(NewSecurityGroupArn(a.region, conn.AccountId(), sgId)),
 		})

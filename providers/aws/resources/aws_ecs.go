@@ -253,6 +253,12 @@ func initAwsEcsCluster(runtime *plugin.Runtime, args map[string]*llx.RawData) (m
 		args["executeCommandConfiguration"] = llx.NilData
 	}
 
+	managedStorage, err := newMqlEcsManagedStorageConfiguration(runtime, a, c.Configuration)
+	if err != nil {
+		return nil, nil, err
+	}
+	args["managedStorage"] = managedStorage
+
 	return args, nil, nil
 }
 
@@ -353,29 +359,56 @@ func (a *mqlAwsEcsCluster) executeCommandConfiguration() (*mqlAwsEcsClusterExecu
 	return nil, errors.New("executeCommandConfiguration not set during init")
 }
 
-func (a *mqlAwsEcsCluster) managedStorageKmsKey() (*mqlAwsKmsKey, error) {
-	config, ok := a.Configuration.Data.(map[string]any)
-	if !ok || config == nil {
-		a.ManagedStorageKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
+func (a *mqlAwsEcsCluster) managedStorage() (*mqlAwsEcsClusterManagedStorageConfiguration, error) {
+	return nil, errors.New("managedStorage not set during init")
+}
+
+// newMqlEcsManagedStorageConfiguration builds the cluster's managed storage
+// encryption settings. A cluster with no ManagedStorageConfiguration names no
+// key of its own, which is reported as null rather than as a resource with two
+// empty keys.
+func newMqlEcsManagedStorageConfiguration(runtime *plugin.Runtime, clusterArn string, cfg *ecstypes.ClusterConfiguration) (*llx.RawData, error) {
+	if cfg == nil || cfg.ManagedStorageConfiguration == nil {
+		return llx.NilData, nil
+	}
+	msc := cfg.ManagedStorageConfiguration
+	res, err := CreateResource(runtime, "aws.ecs.cluster.managedStorageConfiguration", map[string]*llx.RawData{
+		"__id": llx.StringData(clusterArn + "/managedStorageConfiguration"),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlMsc := res.(*mqlAwsEcsClusterManagedStorageConfiguration)
+	mqlMsc.cacheKmsKeyId = convert.ToValue(msc.KmsKeyId)
+	mqlMsc.cacheFargateEphemeralStorageKmsKeyId = convert.ToValue(msc.FargateEphemeralStorageKmsKeyId)
+	return llx.ResourceData(mqlMsc, "aws.ecs.cluster.managedStorageConfiguration"), nil
+}
+
+type mqlAwsEcsClusterManagedStorageConfigurationInternal struct {
+	cacheKmsKeyId                        string
+	cacheFargateEphemeralStorageKmsKeyId string
+}
+
+func (a *mqlAwsEcsClusterManagedStorageConfiguration) kmsKey() (*mqlAwsKmsKey, error) {
+	return resolveEcsManagedStorageKey(a.MqlRuntime, a.cacheKmsKeyId, &a.KmsKey.State)
+}
+
+func (a *mqlAwsEcsClusterManagedStorageConfiguration) fargateEphemeralStorageKmsKey() (*mqlAwsKmsKey, error) {
+	return resolveEcsManagedStorageKey(a.MqlRuntime, a.cacheFargateEphemeralStorageKmsKeyId, &a.FargateEphemeralStorageKmsKey.State)
+}
+
+func resolveEcsManagedStorageKey(runtime *plugin.Runtime, keyId string, state *plugin.State) (*mqlAwsKmsKey, error) {
+	if keyId == "" {
+		*state = plugin.StateIsSet | plugin.StateIsNull
 		return nil, nil
 	}
-	msc, ok := config["ManagedStorageConfiguration"].(map[string]any)
-	if !ok {
-		a.ManagedStorageKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	keyId, ok := msc["KmsKeyId"].(string)
-	if !ok || keyId == "" {
-		a.ManagedStorageKmsKey.State = plugin.StateIsNull | plugin.StateIsSet
-		return nil, nil
-	}
-	mqlKey, err := NewResource(a.MqlRuntime, ResourceAwsKmsKey, map[string]*llx.RawData{
+	res, err := NewResource(runtime, ResourceAwsKmsKey, map[string]*llx.RawData{
 		"arn": llx.StringData(keyId),
 	})
 	if err != nil {
 		return nil, err
 	}
-	return mqlKey.(*mqlAwsKmsKey), nil
+	return res.(*mqlAwsKmsKey), nil
 }
 
 func (a *mqlAwsEcsCluster) fargateEphemeralStorageKmsKey() (*mqlAwsKmsKey, error) {

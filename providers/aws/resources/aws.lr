@@ -9303,12 +9303,11 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   registeredContainerInstancesCount int
   // Cluster configuration
   //
-  // Deprecated in favor of executeCommandConfiguration,
-  // managedStorageKmsKey, and fargateEphemeralStorageKmsKey. Keyed by
-  // ExecuteCommandConfiguration (ECS Exec logging and KMS key: KmsKeyId,
-  // Logging, LogConfiguration) and ManagedStorageConfiguration (KmsKeyId and
-  // FargateEphemeralStorageKmsKeyId for encrypting managed and Fargate
-  // ephemeral storage).
+  // Deprecated in favor of executeCommandConfiguration and managedStorage.
+  // Keyed by ExecuteCommandConfiguration (ECS Exec logging and KMS key:
+  // KmsKeyId, Logging, LogConfiguration) and ManagedStorageConfiguration
+  // (KmsKeyId and FargateEphemeralStorageKmsKeyId for encrypting managed and
+  // Fargate ephemeral storage).
   configuration @maturity("deprecated") dict
   // ECS Exec session logging and encryption settings for the cluster
   //
@@ -9316,8 +9315,11 @@ private aws.ecs.cluster @defaults("name region status runningTasksCount pendingT
   // session output is logged to the container's own log configuration and is
   // not encrypted with a customer key.
   executeCommandConfiguration() aws.ecs.cluster.executeCommandConfiguration
-  // KMS key used to encrypt the managed storage of tasks in the cluster
-  managedStorageKmsKey() aws.kms.key
+  // Managed storage encryption settings for the cluster
+  //
+  // Null when the cluster leaves its managed storage at the AWS-owned
+  // encryption keys.
+  managedStorage() aws.ecs.cluster.managedStorageConfiguration
   // Cluster settings
   //
   // Keyed by setting name; the containerInsights key reports the CloudWatch
@@ -9380,6 +9382,22 @@ private aws.ecs.cluster.executeCommandConfiguration @defaults("logging cloudWatc
   s3EncryptionEnabled bool
   // Optional folder in the S3 bucket that session output is written under
   s3KeyPrefix string
+}
+
+// Managed storage encryption of an Amazon ECS cluster
+//
+// Customer managed KMS keys ECS uses to encrypt the storage it manages for
+// tasks in the cluster. A cluster that names no key of its own is encrypted
+// with an AWS owned key, which you cannot audit, rotate, or revoke.
+private aws.ecs.cluster.managedStorageConfiguration @defaults("kmsKey") {
+  // KMS key used to encrypt the managed storage of tasks in the cluster
+  //
+  // Null when the cluster names no key for managed storage.
+  kmsKey() aws.kms.key
+  // KMS key used to encrypt the ephemeral storage of Fargate tasks in the cluster
+  //
+  // Null when the cluster names no key for Fargate ephemeral storage.
+  fargateEphemeralStorageKmsKey() aws.kms.key
 }
 
 // Capacity provider strategy item for an ECS cluster
@@ -21028,8 +21046,49 @@ aws.eks {
   clusters() []aws.eks.cluster
 }
 
+// Scaling configuration of an Amazon EKS managed node group
+//
+// Node counts the managed node group maintains: the floor it never scales
+// below, the ceiling it never scales above, and the count it currently aims
+// to run.
+private aws.eks.scalingConfig @defaults("desiredSize minSize maxSize") {
+  // Minimum number of nodes the managed node group maintains
+  minSize int
+  // Maximum number of nodes the managed node group maintains
+  maxSize int
+  // Number of nodes the managed node group currently aims to run
+  desiredSize int
+}
+
+// Remote access configuration of an Amazon EKS managed node group
+//
+// SSH access provisioned onto the nodes in the group. When a key pair is set
+// with no source security groups, the SSH port is reachable from anywhere the
+// node subnets allow.
+private aws.eks.remoteAccess @defaults("keyPair") {
+  // EC2 key pair granting SSH access to the nodes in the group
+  //
+  // Null when no key pair is configured, which means SSH access to the nodes
+  // is not provisioned through the node group.
+  keyPair() aws.ec2.keypair
+  // Security groups allowed SSH access to the nodes in the group
+  //
+  // Empty when a key pair is set with no source security groups, in which
+  // case SSH reaches the nodes from anywhere the node subnets allow.
+  sourceSecurityGroups() []aws.ec2.securitygroup
+}
+
+// Zonal shift configuration of an Amazon EKS cluster
+//
+// Whether Amazon Application Recovery Controller may shift traffic away from
+// an impaired availability zone for the cluster.
+private aws.eks.zonalShiftConfig @defaults("enabled") {
+  // Whether ARC zonal shift is enabled on the cluster
+  enabled bool
+}
+
 // Amazon EKS managed node group
-private aws.eks.nodegroup @defaults("name scalingDesiredSize diskSize status") {
+private aws.eks.nodegroup @defaults("name diskSize status") {
   // Name for the EKS node group
   name string
   // ARN for the EKS node group
@@ -21046,16 +21105,14 @@ private aws.eks.nodegroup @defaults("name scalingDesiredSize diskSize status") {
   capacityType() string
   // Scaling configuration for the EKS node group
   //
-  // Deprecated in favor of scalingMinSize, scalingMaxSize, and
-  // scalingDesiredSize. Keys: `MinSize`, `MaxSize`, and `DesiredSize` (node
-  // counts the managed node group maintains).
+  // Deprecated in favor of scaling, which carries the same three values as a
+  // resource. Keys: `MinSize`, `MaxSize`, and `DesiredSize` (node counts the
+  // managed node group maintains).
   scalingConfig() @maturity("deprecated") dict
-  // Minimum number of nodes the managed node group maintains
-  scalingMinSize() int
-  // Maximum number of nodes the managed node group maintains
-  scalingMaxSize() int
-  // Number of nodes the managed node group currently aims to run
-  scalingDesiredSize() int
+  // Scaling configuration for the node group
+  //
+  // Null when the node group reports no scaling configuration.
+  scaling() aws.eks.scalingConfig
   // Instance types for the EKS node group
   instanceTypes() []string
   // AMI type for the EKS node group
@@ -21089,22 +21146,16 @@ private aws.eks.nodegroup @defaults("name scalingDesiredSize diskSize status") {
   releaseVersion() string
   // Remote access configuration for the node group
   //
-  // Deprecated in favor of remoteAccessKeyPair and
-  // remoteAccessSecurityGroups. Keys: `Ec2SshKey` (EC2 key pair granting SSH
-  // access to the nodes) and `SourceSecurityGroups` (security group IDs
-  // allowed SSH access). When a key is set with no source security groups,
-  // the SSH port is open to the internet.
+  // Deprecated in favor of remoteAccessRef, which carries the same values as a
+  // resource with the key pair and security groups resolved. Keys:
+  // `Ec2SshKey` (EC2 key pair granting SSH access to the nodes) and
+  // `SourceSecurityGroups` (security group IDs allowed SSH access).
   remoteAccess() @maturity("deprecated") dict
-  // EC2 key pair granting SSH access to the nodes in the group
+  // Remote access configuration for the node group
   //
-  // Null when no key pair is configured, which means SSH access to the nodes
-  // is not provisioned through the node group.
-  remoteAccessKeyPair() aws.ec2.keypair
-  // Security groups allowed SSH access to the nodes in the group
-  //
-  // Empty when a key pair is set with no source security groups, in which
-  // case SSH reaches the nodes from anywhere the node subnets allow.
-  remoteAccessSecurityGroups() []aws.ec2.securitygroup
+  // Null when the node group reports no remote access configuration, which
+  // means SSH access to the nodes is not provisioned through the node group.
+  remoteAccessRef() aws.eks.remoteAccess
   // Update configuration for the node group
   //
   // Keys: `MaxUnavailable`, `MaxUnavailablePercentage`, and `UpdateStrategy`
@@ -21231,11 +21282,6 @@ aws.eks.cluster @defaults("arn version status") {
   //
   // `STANDARD` support automatically upgrades at the end of standard support. `EXTENDED` automatically enters extended support at the end of standard support.
   supportType() string
-  // Whether ARC zonal shift is enabled on the cluster
-  //
-  // When enabled, Amazon Application Recovery Controller can shift traffic
-  // away from an impaired availability zone.
-  zonalShiftEnabled() bool
   // Cluster authentication mode
   //
   // One of API, API_AND_CONFIG_MAP, or CONFIG_MAP, controlling whether access
@@ -21308,10 +21354,14 @@ aws.eks.cluster @defaults("arn version status") {
   upgradePolicy() @maturity("deprecated") dict
   // Zonal shift configuration for the cluster
   //
-  // Deprecated in favor of zonalShiftEnabled. Contains `Enabled`, indicating
-  // whether ARC zonal shift is enabled to shift traffic away from an
-  // impaired Availability Zone.
+  // Deprecated in favor of zonalShift, which carries the same value as a
+  // resource. Contains `Enabled`, indicating whether ARC zonal shift is
+  // enabled to shift traffic away from an impaired Availability Zone.
   zonalShiftConfig() @maturity("deprecated") dict
+  // Zonal shift configuration for the cluster
+  //
+  // Null when the cluster reports no zonal shift configuration.
+  zonalShift() aws.eks.zonalShiftConfig
   // Compute configuration for Auto Mode clusters
   //
   // Keys: `Enabled` (whether EKS Auto Mode manages EC2 compute), `NodePools`

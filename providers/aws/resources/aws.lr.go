@@ -322,6 +322,7 @@ const (
 	ResourceAwsEcsAccountSetting                                                string = "aws.ecs.accountSetting"
 	ResourceAwsEcsCluster                                                       string = "aws.ecs.cluster"
 	ResourceAwsEcsClusterExecuteCommandConfiguration                            string = "aws.ecs.cluster.executeCommandConfiguration"
+	ResourceAwsEcsClusterManagedStorageConfiguration                            string = "aws.ecs.cluster.managedStorageConfiguration"
 	ResourceAwsEcsClusterCapacityProviderStrategyItem                           string = "aws.ecs.cluster.capacityProviderStrategyItem"
 	ResourceAwsEcsInstance                                                      string = "aws.ecs.instance"
 	ResourceAwsEcsTask                                                          string = "aws.ecs.task"
@@ -682,6 +683,9 @@ const (
 	ResourceAwsConfigAggregatorAccountAggregationSource                         string = "aws.config.aggregator.accountAggregationSource"
 	ResourceAwsConfigAggregatorOrganizationAggregationSource                    string = "aws.config.aggregator.organizationAggregationSource"
 	ResourceAwsEks                                                              string = "aws.eks"
+	ResourceAwsEksScalingConfig                                                 string = "aws.eks.scalingConfig"
+	ResourceAwsEksRemoteAccess                                                  string = "aws.eks.remoteAccess"
+	ResourceAwsEksZonalShiftConfig                                              string = "aws.eks.zonalShiftConfig"
 	ResourceAwsEksNodegroup                                                     string = "aws.eks.nodegroup"
 	ResourceAwsEksAddon                                                         string = "aws.eks.addon"
 	ResourceAwsEksCluster                                                       string = "aws.eks.cluster"
@@ -2252,6 +2256,10 @@ func init() {
 			// to override args, implement: initAwsEcsClusterExecuteCommandConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcsClusterExecuteCommandConfiguration,
 		},
+		"aws.ecs.cluster.managedStorageConfiguration": {
+			// to override args, implement: initAwsEcsClusterManagedStorageConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEcsClusterManagedStorageConfiguration,
+		},
 		"aws.ecs.cluster.capacityProviderStrategyItem": {
 			// to override args, implement: initAwsEcsClusterCapacityProviderStrategyItem(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEcsClusterCapacityProviderStrategyItem,
@@ -3691,6 +3699,18 @@ func init() {
 		"aws.eks": {
 			// to override args, implement: initAwsEks(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createAwsEks,
+		},
+		"aws.eks.scalingConfig": {
+			// to override args, implement: initAwsEksScalingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksScalingConfig,
+		},
+		"aws.eks.remoteAccess": {
+			// to override args, implement: initAwsEksRemoteAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksRemoteAccess,
+		},
+		"aws.eks.zonalShiftConfig": {
+			// to override args, implement: initAwsEksZonalShiftConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createAwsEksZonalShiftConfig,
 		},
 		"aws.eks.nodegroup": {
 			// to override args, implement: initAwsEksNodegroup(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -14267,8 +14287,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.ecs.cluster.executeCommandConfiguration": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetExecuteCommandConfiguration()).ToDataRes(types.Resource("aws.ecs.cluster.executeCommandConfiguration"))
 	},
-	"aws.ecs.cluster.managedStorageKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEcsCluster).GetManagedStorageKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	"aws.ecs.cluster.managedStorage": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsCluster).GetManagedStorage()).ToDataRes(types.Resource("aws.ecs.cluster.managedStorageConfiguration"))
 	},
 	"aws.ecs.cluster.settings": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsCluster).GetSettings()).ToDataRes(types.Map(types.String, types.String))
@@ -14326,6 +14346,12 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.ecs.cluster.executeCommandConfiguration.s3KeyPrefix": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsClusterExecuteCommandConfiguration).GetS3KeyPrefix()).ToDataRes(types.String)
+	},
+	"aws.ecs.cluster.managedStorageConfiguration.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterManagedStorageConfiguration).GetKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
+	},
+	"aws.ecs.cluster.managedStorageConfiguration.fargateEphemeralStorageKmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEcsClusterManagedStorageConfiguration).GetFargateEphemeralStorageKmsKey()).ToDataRes(types.Resource("aws.kms.key"))
 	},
 	"aws.ecs.cluster.capacityProviderStrategyItem.capacityProvider": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEcsClusterCapacityProviderStrategyItem).GetCapacityProvider()).ToDataRes(types.String)
@@ -25952,6 +25978,24 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.clusters": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEks).GetClusters()).ToDataRes(types.Array(types.Resource("aws.eks.cluster")))
 	},
+	"aws.eks.scalingConfig.minSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksScalingConfig).GetMinSize()).ToDataRes(types.Int)
+	},
+	"aws.eks.scalingConfig.maxSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksScalingConfig).GetMaxSize()).ToDataRes(types.Int)
+	},
+	"aws.eks.scalingConfig.desiredSize": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksScalingConfig).GetDesiredSize()).ToDataRes(types.Int)
+	},
+	"aws.eks.remoteAccess.keyPair": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksRemoteAccess).GetKeyPair()).ToDataRes(types.Resource("aws.ec2.keypair"))
+	},
+	"aws.eks.remoteAccess.sourceSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksRemoteAccess).GetSourceSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	},
+	"aws.eks.zonalShiftConfig.enabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksZonalShiftConfig).GetEnabled()).ToDataRes(types.Bool)
+	},
 	"aws.eks.nodegroup.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetName()).ToDataRes(types.String)
 	},
@@ -25976,14 +26020,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.scalingConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetScalingConfig()).ToDataRes(types.Dict)
 	},
-	"aws.eks.nodegroup.scalingMinSize": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksNodegroup).GetScalingMinSize()).ToDataRes(types.Int)
-	},
-	"aws.eks.nodegroup.scalingMaxSize": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksNodegroup).GetScalingMaxSize()).ToDataRes(types.Int)
-	},
-	"aws.eks.nodegroup.scalingDesiredSize": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksNodegroup).GetScalingDesiredSize()).ToDataRes(types.Int)
+	"aws.eks.nodegroup.scaling": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetScaling()).ToDataRes(types.Resource("aws.eks.scalingConfig"))
 	},
 	"aws.eks.nodegroup.instanceTypes": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetInstanceTypes()).ToDataRes(types.Array(types.String))
@@ -26021,11 +26059,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.nodegroup.remoteAccess": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetRemoteAccess()).ToDataRes(types.Dict)
 	},
-	"aws.eks.nodegroup.remoteAccessKeyPair": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksNodegroup).GetRemoteAccessKeyPair()).ToDataRes(types.Resource("aws.ec2.keypair"))
-	},
-	"aws.eks.nodegroup.remoteAccessSecurityGroups": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksNodegroup).GetRemoteAccessSecurityGroups()).ToDataRes(types.Array(types.Resource("aws.ec2.securitygroup")))
+	"aws.eks.nodegroup.remoteAccessRef": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksNodegroup).GetRemoteAccessRef()).ToDataRes(types.Resource("aws.eks.remoteAccess"))
 	},
 	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksNodegroup).GetUpdateConfig()).ToDataRes(types.Dict)
@@ -26144,9 +26179,6 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"aws.eks.cluster.supportType": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetSupportType()).ToDataRes(types.String)
 	},
-	"aws.eks.cluster.zonalShiftEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlAwsEksCluster).GetZonalShiftEnabled()).ToDataRes(types.Bool)
-	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetAuthenticationMode()).ToDataRes(types.String)
 	},
@@ -26215,6 +26247,9 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"aws.eks.cluster.zonalShiftConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetZonalShiftConfig()).ToDataRes(types.Dict)
+	},
+	"aws.eks.cluster.zonalShift": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlAwsEksCluster).GetZonalShift()).ToDataRes(types.Resource("aws.eks.zonalShiftConfig"))
 	},
 	"aws.eks.cluster.computeConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlAwsEksCluster).GetComputeConfig()).ToDataRes(types.Dict)
@@ -50767,8 +50802,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEcsCluster).ExecuteCommandConfiguration, ok = plugin.RawToTValue[*mqlAwsEcsClusterExecuteCommandConfiguration](v.Value, v.Error)
 		return
 	},
-	"aws.ecs.cluster.managedStorageKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEcsCluster).ManagedStorageKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+	"aws.ecs.cluster.managedStorage": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsCluster).ManagedStorage, ok = plugin.RawToTValue[*mqlAwsEcsClusterManagedStorageConfiguration](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.settings": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -50849,6 +50884,18 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.ecs.cluster.executeCommandConfiguration.s3KeyPrefix": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEcsClusterExecuteCommandConfiguration).S3KeyPrefix, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.managedStorageConfiguration.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterManagedStorageConfiguration).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.ecs.cluster.managedStorageConfiguration.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterManagedStorageConfiguration).KmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
+		return
+	},
+	"aws.ecs.cluster.managedStorageConfiguration.fargateEphemeralStorageKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEcsClusterManagedStorageConfiguration).FargateEphemeralStorageKmsKey, ok = plugin.RawToTValue[*mqlAwsKmsKey](v.Value, v.Error)
 		return
 	},
 	"aws.ecs.cluster.capacityProviderStrategyItem.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -67791,6 +67838,42 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEks).Clusters, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
+	"aws.eks.scalingConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksScalingConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eks.scalingConfig.minSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksScalingConfig).MinSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eks.scalingConfig.maxSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksScalingConfig).MaxSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eks.scalingConfig.desiredSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksScalingConfig).DesiredSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"aws.eks.remoteAccess.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksRemoteAccess).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eks.remoteAccess.keyPair": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksRemoteAccess).KeyPair, ok = plugin.RawToTValue[*mqlAwsEc2Keypair](v.Value, v.Error)
+		return
+	},
+	"aws.eks.remoteAccess.sourceSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksRemoteAccess).SourceSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.zonalShiftConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksZonalShiftConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"aws.eks.zonalShiftConfig.enabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksZonalShiftConfig).Enabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
 	"aws.eks.nodegroup.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksNodegroup).__id, ok = v.Value.(string)
 		return
@@ -67827,16 +67910,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksNodegroup).ScalingConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.eks.nodegroup.scalingMinSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).ScalingMinSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.eks.nodegroup.scalingMaxSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).ScalingMaxSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"aws.eks.nodegroup.scalingDesiredSize": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).ScalingDesiredSize, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"aws.eks.nodegroup.scaling": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).Scaling, ok = plugin.RawToTValue[*mqlAwsEksScalingConfig](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.instanceTypes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -67887,12 +67962,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksNodegroup).RemoteAccess, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"aws.eks.nodegroup.remoteAccessKeyPair": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).RemoteAccessKeyPair, ok = plugin.RawToTValue[*mqlAwsEc2Keypair](v.Value, v.Error)
-		return
-	},
-	"aws.eks.nodegroup.remoteAccessSecurityGroups": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksNodegroup).RemoteAccessSecurityGroups, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"aws.eks.nodegroup.remoteAccessRef": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksNodegroup).RemoteAccessRef, ok = plugin.RawToTValue[*mqlAwsEksRemoteAccess](v.Value, v.Error)
 		return
 	},
 	"aws.eks.nodegroup.updateConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -68059,10 +68130,6 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlAwsEksCluster).SupportType, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
 	},
-	"aws.eks.cluster.zonalShiftEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlAwsEksCluster).ZonalShiftEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
 	"aws.eks.cluster.authenticationMode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).AuthenticationMode, ok = plugin.RawToTValue[string](v.Value, v.Error)
 		return
@@ -68153,6 +68220,10 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"aws.eks.cluster.zonalShiftConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlAwsEksCluster).ZonalShiftConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
+		return
+	},
+	"aws.eks.cluster.zonalShift": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlAwsEksCluster).ZonalShift, ok = plugin.RawToTValue[*mqlAwsEksZonalShiftConfig](v.Value, v.Error)
 		return
 	},
 	"aws.eks.cluster.computeConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -120392,7 +120463,7 @@ type mqlAwsEcsCluster struct {
 	RegisteredContainerInstancesCount plugin.TValue[int64]
 	Configuration                     plugin.TValue[any]
 	ExecuteCommandConfiguration       plugin.TValue[*mqlAwsEcsClusterExecuteCommandConfiguration]
-	ManagedStorageKmsKey              plugin.TValue[*mqlAwsKmsKey]
+	ManagedStorage                    plugin.TValue[*mqlAwsEcsClusterManagedStorageConfiguration]
 	Settings                          plugin.TValue[map[string]any]
 	Status                            plugin.TValue[string]
 	Tasks                             plugin.TValue[[]any]
@@ -120488,19 +120559,19 @@ func (c *mqlAwsEcsCluster) GetExecuteCommandConfiguration() *plugin.TValue[*mqlA
 	})
 }
 
-func (c *mqlAwsEcsCluster) GetManagedStorageKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
-	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.ManagedStorageKmsKey, func() (*mqlAwsKmsKey, error) {
+func (c *mqlAwsEcsCluster) GetManagedStorage() *plugin.TValue[*mqlAwsEcsClusterManagedStorageConfiguration] {
+	return plugin.GetOrCompute[*mqlAwsEcsClusterManagedStorageConfiguration](&c.ManagedStorage, func() (*mqlAwsEcsClusterManagedStorageConfiguration, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "managedStorageKmsKey")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster", c.__id, "managedStorage")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAwsKmsKey), nil
+				return d.Value.(*mqlAwsEcsClusterManagedStorageConfiguration), nil
 			}
 		}
 
-		return c.managedStorageKmsKey()
+		return c.managedStorage()
 	})
 }
 
@@ -120720,6 +120791,79 @@ func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetS3EncryptionEnabled() *
 
 func (c *mqlAwsEcsClusterExecuteCommandConfiguration) GetS3KeyPrefix() *plugin.TValue[string] {
 	return &c.S3KeyPrefix
+}
+
+// mqlAwsEcsClusterManagedStorageConfiguration for the aws.ecs.cluster.managedStorageConfiguration resource
+type mqlAwsEcsClusterManagedStorageConfiguration struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEcsClusterManagedStorageConfigurationInternal
+	KmsKey                        plugin.TValue[*mqlAwsKmsKey]
+	FargateEphemeralStorageKmsKey plugin.TValue[*mqlAwsKmsKey]
+}
+
+// createAwsEcsClusterManagedStorageConfiguration creates a new instance of this resource
+func createAwsEcsClusterManagedStorageConfiguration(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEcsClusterManagedStorageConfiguration{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.ecs.cluster.managedStorageConfiguration", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEcsClusterManagedStorageConfiguration) MqlName() string {
+	return "aws.ecs.cluster.managedStorageConfiguration"
+}
+
+func (c *mqlAwsEcsClusterManagedStorageConfiguration) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEcsClusterManagedStorageConfiguration) GetKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.KmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster.managedStorageConfiguration", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
+	})
+}
+
+func (c *mqlAwsEcsClusterManagedStorageConfiguration) GetFargateEphemeralStorageKmsKey() *plugin.TValue[*mqlAwsKmsKey] {
+	return plugin.GetOrCompute[*mqlAwsKmsKey](&c.FargateEphemeralStorageKmsKey, func() (*mqlAwsKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.ecs.cluster.managedStorageConfiguration", c.__id, "fargateEphemeralStorageKmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsKmsKey), nil
+			}
+		}
+
+		return c.fargateEphemeralStorageKmsKey()
+	})
 }
 
 // mqlAwsEcsClusterCapacityProviderStrategyItem for the aws.ecs.cluster.capacityProviderStrategyItem resource
@@ -164051,42 +164195,210 @@ func (c *mqlAwsEks) GetClusters() *plugin.TValue[[]any] {
 	})
 }
 
+// mqlAwsEksScalingConfig for the aws.eks.scalingConfig resource
+type mqlAwsEksScalingConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEksScalingConfigInternal it will be used here
+	MinSize     plugin.TValue[int64]
+	MaxSize     plugin.TValue[int64]
+	DesiredSize plugin.TValue[int64]
+}
+
+// createAwsEksScalingConfig creates a new instance of this resource
+func createAwsEksScalingConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksScalingConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.scalingConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksScalingConfig) MqlName() string {
+	return "aws.eks.scalingConfig"
+}
+
+func (c *mqlAwsEksScalingConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksScalingConfig) GetMinSize() *plugin.TValue[int64] {
+	return &c.MinSize
+}
+
+func (c *mqlAwsEksScalingConfig) GetMaxSize() *plugin.TValue[int64] {
+	return &c.MaxSize
+}
+
+func (c *mqlAwsEksScalingConfig) GetDesiredSize() *plugin.TValue[int64] {
+	return &c.DesiredSize
+}
+
+// mqlAwsEksRemoteAccess for the aws.eks.remoteAccess resource
+type mqlAwsEksRemoteAccess struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlAwsEksRemoteAccessInternal
+	KeyPair              plugin.TValue[*mqlAwsEc2Keypair]
+	SourceSecurityGroups plugin.TValue[[]any]
+}
+
+// createAwsEksRemoteAccess creates a new instance of this resource
+func createAwsEksRemoteAccess(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksRemoteAccess{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.remoteAccess", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksRemoteAccess) MqlName() string {
+	return "aws.eks.remoteAccess"
+}
+
+func (c *mqlAwsEksRemoteAccess) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksRemoteAccess) GetKeyPair() *plugin.TValue[*mqlAwsEc2Keypair] {
+	return plugin.GetOrCompute[*mqlAwsEc2Keypair](&c.KeyPair, func() (*mqlAwsEc2Keypair, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.remoteAccess", c.__id, "keyPair")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEc2Keypair), nil
+			}
+		}
+
+		return c.keyPair()
+	})
+}
+
+func (c *mqlAwsEksRemoteAccess) GetSourceSecurityGroups() *plugin.TValue[[]any] {
+	return plugin.GetOrCompute[[]any](&c.SourceSecurityGroups, func() ([]any, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.remoteAccess", c.__id, "sourceSecurityGroups")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.([]any), nil
+			}
+		}
+
+		return c.sourceSecurityGroups()
+	})
+}
+
+// mqlAwsEksZonalShiftConfig for the aws.eks.zonalShiftConfig resource
+type mqlAwsEksZonalShiftConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlAwsEksZonalShiftConfigInternal it will be used here
+	Enabled plugin.TValue[bool]
+}
+
+// createAwsEksZonalShiftConfig creates a new instance of this resource
+func createAwsEksZonalShiftConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlAwsEksZonalShiftConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("aws.eks.zonalShiftConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlAwsEksZonalShiftConfig) MqlName() string {
+	return "aws.eks.zonalShiftConfig"
+}
+
+func (c *mqlAwsEksZonalShiftConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlAwsEksZonalShiftConfig) GetEnabled() *plugin.TValue[bool] {
+	return &c.Enabled
+}
+
 // mqlAwsEksNodegroup for the aws.eks.nodegroup resource
 type mqlAwsEksNodegroup struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlAwsEksNodegroupInternal
-	Name                       plugin.TValue[string]
-	Arn                        plugin.TValue[string]
-	Region                     plugin.TValue[string]
-	CreatedAt                  plugin.TValue[*time.Time]
-	ModifiedAt                 plugin.TValue[*time.Time]
-	Status                     plugin.TValue[string]
-	CapacityType               plugin.TValue[string]
-	ScalingConfig              plugin.TValue[any]
-	ScalingMinSize             plugin.TValue[int64]
-	ScalingMaxSize             plugin.TValue[int64]
-	ScalingDesiredSize         plugin.TValue[int64]
-	InstanceTypes              plugin.TValue[[]any]
-	AmiType                    plugin.TValue[string]
-	NodeRole                   plugin.TValue[*mqlAwsIamRole]
-	DiskSize                   plugin.TValue[int64]
-	Labels                     plugin.TValue[map[string]any]
-	Tags                       plugin.TValue[map[string]any]
-	AutoscalingGroups          plugin.TValue[[]any]
-	WarmPoolConfig             plugin.TValue[any]
-	Health                     plugin.TValue[any]
-	Taints                     plugin.TValue[[]any]
-	ReleaseVersion             plugin.TValue[string]
-	RemoteAccess               plugin.TValue[any]
-	RemoteAccessKeyPair        plugin.TValue[*mqlAwsEc2Keypair]
-	RemoteAccessSecurityGroups plugin.TValue[[]any]
-	UpdateConfig               plugin.TValue[any]
-	NodeVersion                plugin.TValue[string]
-	NodeRepairEnabled          plugin.TValue[bool]
-	NodegroupSubnets           plugin.TValue[[]any]
-	LaunchTemplate             plugin.TValue[*mqlAwsEc2Launchtemplate]
-	LaunchTemplateVersion      plugin.TValue[string]
+	Name                  plugin.TValue[string]
+	Arn                   plugin.TValue[string]
+	Region                plugin.TValue[string]
+	CreatedAt             plugin.TValue[*time.Time]
+	ModifiedAt            plugin.TValue[*time.Time]
+	Status                plugin.TValue[string]
+	CapacityType          plugin.TValue[string]
+	ScalingConfig         plugin.TValue[any]
+	Scaling               plugin.TValue[*mqlAwsEksScalingConfig]
+	InstanceTypes         plugin.TValue[[]any]
+	AmiType               plugin.TValue[string]
+	NodeRole              plugin.TValue[*mqlAwsIamRole]
+	DiskSize              plugin.TValue[int64]
+	Labels                plugin.TValue[map[string]any]
+	Tags                  plugin.TValue[map[string]any]
+	AutoscalingGroups     plugin.TValue[[]any]
+	WarmPoolConfig        plugin.TValue[any]
+	Health                plugin.TValue[any]
+	Taints                plugin.TValue[[]any]
+	ReleaseVersion        plugin.TValue[string]
+	RemoteAccess          plugin.TValue[any]
+	RemoteAccessRef       plugin.TValue[*mqlAwsEksRemoteAccess]
+	UpdateConfig          plugin.TValue[any]
+	NodeVersion           plugin.TValue[string]
+	NodeRepairEnabled     plugin.TValue[bool]
+	NodegroupSubnets      plugin.TValue[[]any]
+	LaunchTemplate        plugin.TValue[*mqlAwsEc2Launchtemplate]
+	LaunchTemplateVersion plugin.TValue[string]
 }
 
 // createAwsEksNodegroup creates a new instance of this resource
@@ -164170,21 +164482,19 @@ func (c *mqlAwsEksNodegroup) GetScalingConfig() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetScalingMinSize() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.ScalingMinSize, func() (int64, error) {
-		return c.scalingMinSize()
-	})
-}
+func (c *mqlAwsEksNodegroup) GetScaling() *plugin.TValue[*mqlAwsEksScalingConfig] {
+	return plugin.GetOrCompute[*mqlAwsEksScalingConfig](&c.Scaling, func() (*mqlAwsEksScalingConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "scaling")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEksScalingConfig), nil
+			}
+		}
 
-func (c *mqlAwsEksNodegroup) GetScalingMaxSize() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.ScalingMaxSize, func() (int64, error) {
-		return c.scalingMaxSize()
-	})
-}
-
-func (c *mqlAwsEksNodegroup) GetScalingDesiredSize() *plugin.TValue[int64] {
-	return plugin.GetOrCompute[int64](&c.ScalingDesiredSize, func() (int64, error) {
-		return c.scalingDesiredSize()
+		return c.scaling()
 	})
 }
 
@@ -164280,35 +164590,19 @@ func (c *mqlAwsEksNodegroup) GetRemoteAccess() *plugin.TValue[any] {
 	})
 }
 
-func (c *mqlAwsEksNodegroup) GetRemoteAccessKeyPair() *plugin.TValue[*mqlAwsEc2Keypair] {
-	return plugin.GetOrCompute[*mqlAwsEc2Keypair](&c.RemoteAccessKeyPair, func() (*mqlAwsEc2Keypair, error) {
+func (c *mqlAwsEksNodegroup) GetRemoteAccessRef() *plugin.TValue[*mqlAwsEksRemoteAccess] {
+	return plugin.GetOrCompute[*mqlAwsEksRemoteAccess](&c.RemoteAccessRef, func() (*mqlAwsEksRemoteAccess, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "remoteAccessKeyPair")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "remoteAccessRef")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlAwsEc2Keypair), nil
+				return d.Value.(*mqlAwsEksRemoteAccess), nil
 			}
 		}
 
-		return c.remoteAccessKeyPair()
-	})
-}
-
-func (c *mqlAwsEksNodegroup) GetRemoteAccessSecurityGroups() *plugin.TValue[[]any] {
-	return plugin.GetOrCompute[[]any](&c.RemoteAccessSecurityGroups, func() ([]any, error) {
-		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.nodegroup", c.__id, "remoteAccessSecurityGroups")
-			if err != nil {
-				return nil, err
-			}
-			if d != nil {
-				return d.Value.([]any), nil
-			}
-		}
-
-		return c.remoteAccessSecurityGroups()
+		return c.remoteAccessRef()
 	})
 }
 
@@ -164513,7 +164807,6 @@ type mqlAwsEksCluster struct {
 	Addons                                  plugin.TValue[[]any]
 	IamRole                                 plugin.TValue[*mqlAwsIamRole]
 	SupportType                             plugin.TValue[string]
-	ZonalShiftEnabled                       plugin.TValue[bool]
 	AuthenticationMode                      plugin.TValue[string]
 	BootstrapClusterCreatorAdminPermissions plugin.TValue[bool]
 	DeletionProtection                      plugin.TValue[bool]
@@ -164537,6 +164830,7 @@ type mqlAwsEksCluster struct {
 	AvailableAddonVersions                  plugin.TValue[[]any]
 	UpgradePolicy                           plugin.TValue[any]
 	ZonalShiftConfig                        plugin.TValue[any]
+	ZonalShift                              plugin.TValue[*mqlAwsEksZonalShiftConfig]
 	ComputeConfig                           plugin.TValue[any]
 	StorageConfig                           plugin.TValue[any]
 	RemoteNetworkConfig                     plugin.TValue[any]
@@ -164746,12 +165040,6 @@ func (c *mqlAwsEksCluster) GetIamRole() *plugin.TValue[*mqlAwsIamRole] {
 func (c *mqlAwsEksCluster) GetSupportType() *plugin.TValue[string] {
 	return plugin.GetOrCompute[string](&c.SupportType, func() (string, error) {
 		return c.supportType()
-	})
-}
-
-func (c *mqlAwsEksCluster) GetZonalShiftEnabled() *plugin.TValue[bool] {
-	return plugin.GetOrCompute[bool](&c.ZonalShiftEnabled, func() (bool, error) {
-		return c.zonalShiftEnabled()
 	})
 }
 
@@ -165000,6 +165288,22 @@ func (c *mqlAwsEksCluster) GetUpgradePolicy() *plugin.TValue[any] {
 func (c *mqlAwsEksCluster) GetZonalShiftConfig() *plugin.TValue[any] {
 	return plugin.GetOrCompute[any](&c.ZonalShiftConfig, func() (any, error) {
 		return c.zonalShiftConfig()
+	})
+}
+
+func (c *mqlAwsEksCluster) GetZonalShift() *plugin.TValue[*mqlAwsEksZonalShiftConfig] {
+	return plugin.GetOrCompute[*mqlAwsEksZonalShiftConfig](&c.ZonalShift, func() (*mqlAwsEksZonalShiftConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("aws.eks.cluster", c.__id, "zonalShift")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlAwsEksZonalShiftConfig), nil
+			}
+		}
+
+		return c.zonalShift()
 	})
 }
 
