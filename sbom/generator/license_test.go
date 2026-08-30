@@ -94,3 +94,23 @@ func TestLanguagePackagesCarryTheLicense(t *testing.T) {
 	assert.Empty(t, out[1].License) //nolint:staticcheck // SA1019: that the legacy scalar is STILL written is the assertion
 	assert.Empty(t, out[1].Licenses)
 }
+
+// GithubActions, Jenkins and Wordpress packages were built by hand-written
+// loops that never mapped Cpes, so a CPE the query reported was dropped. They
+// go through the shared constructor now, which is the whole point of having
+// one: the three were identical to it apart from the field they were missing.
+func TestGithubActionPackagesCarryCpesAndLicense(t *testing.T) {
+	report, err := LoadReport("testdata/licenses.json")
+	require.NoError(t, err)
+
+	boms := GenerateBom(report)
+	require.Len(t, boms, 1)
+
+	pkg := findProtoPkg(boms[0].Packages, "actions/checkout")
+	require.NotNil(t, pkg)
+	assert.Equal(t, "github-action", pkg.Type)
+	assert.Equal(t, []string{"cpe:2.3:a:actions:checkout:4.2.2:*:*:*:*:*:*:*"}, pkg.Cpes)
+
+	require.Len(t, pkg.Licenses, 1)
+	assert.Equal(t, "MIT", pkg.Licenses[0].GetSpdxId())
+}

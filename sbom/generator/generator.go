@@ -230,92 +230,21 @@ func GenerateBom(r *reporter.Report) []*sbom.Sbom {
 
 			bom.Packages = append(bom.Packages, languagePackages(rb.PhpPackages, "composer")...)
 
-			for _, pkg := range rb.GithubActionsPackages {
-				bomPkg := &sbom.Package{
-					Name:     pkg.Name,
-					Version:  pkg.Version,
-					Purl:     pkg.Purl,
-					Type:     "github-action",
-					License:  pkg.License,
-					Licenses: sbom.DeclaredLicenses(pkg.License),
-				}
-
-				for _, filepath := range pkg.FilePaths {
-					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
-						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-						Value: filepath,
-					})
-				}
-
-				bom.Packages = append(bom.Packages, bomPkg)
-			}
+			bom.Packages = append(bom.Packages, languagePackages(rb.GithubActionsPackages, "github-action")...)
 
 			for _, pkg := range rb.SwiftPackages {
 				pkgType := "swift"
 				if strings.HasPrefix(pkg.Purl, "pkg:cocoapods/") {
 					pkgType = "cocoapods"
 				}
-				bomPkg := &sbom.Package{
-					Name:     pkg.Name,
-					Version:  pkg.Version,
-					Purl:     pkg.Purl,
-					Cpes:     pkg.CPEs,
-					Type:     pkgType,
-					License:  pkg.License,
-					Licenses: sbom.DeclaredLicenses(pkg.License),
-				}
-
-				for _, filepath := range pkg.FilePaths {
-					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
-						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-						Value: filepath,
-					})
-				}
-
-				bom.Packages = append(bom.Packages, bomPkg)
+				bom.Packages = append(bom.Packages, languagePackage(pkg, pkgType))
 			}
 
 			bom.Packages = append(bom.Packages, languagePackages(rb.TerraformPackages, "terraform")...)
 
-			for _, pkg := range rb.JenkinsPackages {
-				bomPkg := &sbom.Package{
-					Name:     pkg.Name,
-					Version:  pkg.Version,
-					Purl:     pkg.Purl,
-					Type:     "jenkins-plugin",
-					License:  pkg.License,
-					Licenses: sbom.DeclaredLicenses(pkg.License),
-				}
+			bom.Packages = append(bom.Packages, languagePackages(rb.JenkinsPackages, "jenkins-plugin")...)
 
-				for _, filepath := range pkg.FilePaths {
-					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
-						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-						Value: filepath,
-					})
-				}
-
-				bom.Packages = append(bom.Packages, bomPkg)
-			}
-
-			for _, pkg := range rb.WordpressPackages {
-				bomPkg := &sbom.Package{
-					Name:     pkg.Name,
-					Version:  pkg.Version,
-					Purl:     pkg.Purl,
-					Type:     "wordpress-plugin",
-					License:  pkg.License,
-					Licenses: sbom.DeclaredLicenses(pkg.License),
-				}
-
-				for _, filepath := range pkg.FilePaths {
-					bomPkg.EvidenceList = append(bomPkg.EvidenceList, &sbom.Evidence{
-						Type:  sbom.EvidenceType_EVIDENCE_TYPE_FILE,
-						Value: filepath,
-					})
-				}
-
-				bom.Packages = append(bom.Packages, bomPkg)
-			}
+			bom.Packages = append(bom.Packages, languagePackages(rb.WordpressPackages, "wordpress-plugin")...)
 
 			bom.Packages = append(bom.Packages, languagePackages(rb.RubyPackages, "gem")...)
 

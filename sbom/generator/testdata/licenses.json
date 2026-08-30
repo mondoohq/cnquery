@@ -63,6 +63,21 @@
                             }
                         ]
                     }
+                },
+                "//local.cnquery.io/run/local-execution/queries/mondoo-sbom-githubactions-packages": {
+                    "content": {
+                        "githubactions.packages.list": [
+                            {
+                                "name": "actions/checkout",
+                                "version": "4.2.2",
+                                "purl": "pkg:githubactions/actions/checkout@4.2.2",
+                                "license": "MIT",
+                                "cpes.map": [
+                                    "cpe:2.3:a:actions:checkout:4.2.2:*:*:*:*:*:*:*"
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }
