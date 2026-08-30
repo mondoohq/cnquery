@@ -51,6 +51,10 @@ const (
 	ResourceOciCompute                                                         string = "oci.compute"
 	ResourceOciNetworkExposure                                                 string = "oci.network.exposure"
 	ResourceOciComputeInstance                                                 string = "oci.compute.instance"
+	ResourceOciComputePlatformSecurity                                         string = "oci.compute.platformSecurity"
+	ResourceOciComputeLaunchConfig                                             string = "oci.compute.launchConfig"
+	ResourceOciComputeInstanceSizing                                           string = "oci.compute.instanceSizing"
+	ResourceOciComputeImageSource                                              string = "oci.compute.imageSource"
 	ResourceOciComputeVnic                                                     string = "oci.compute.vnic"
 	ResourceOciComputeImage                                                    string = "oci.compute.image"
 	ResourceOciComputeBlockVolume                                              string = "oci.compute.blockVolume"
@@ -443,6 +447,22 @@ func init() {
 		"oci.compute.instance": {
 			Init:   initOciComputeInstance,
 			Create: createOciComputeInstance,
+		},
+		"oci.compute.platformSecurity": {
+			// to override args, implement: initOciComputePlatformSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciComputePlatformSecurity,
+		},
+		"oci.compute.launchConfig": {
+			// to override args, implement: initOciComputeLaunchConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciComputeLaunchConfig,
+		},
+		"oci.compute.instanceSizing": {
+			// to override args, implement: initOciComputeInstanceSizing(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciComputeInstanceSizing,
+		},
+		"oci.compute.imageSource": {
+			// to override args, implement: initOciComputeImageSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciComputeImageSource,
 		},
 		"oci.compute.vnic": {
 			Init:   initOciComputeVnic,
@@ -2574,38 +2594,14 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.instance.platformConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetPlatformConfig()).ToDataRes(types.Dict)
 	},
-	"oci.compute.instance.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetSecureBootEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.compute.instance.trustedPlatformModuleEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetTrustedPlatformModuleEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.compute.instance.measuredBootEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetMeasuredBootEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.compute.instance.memoryEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetMemoryEncryptionEnabled()).ToDataRes(types.Bool)
+	"oci.compute.instance.platformSecurity": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetPlatformSecurity()).ToDataRes(types.Resource("oci.compute.platformSecurity"))
 	},
 	"oci.compute.instance.launchOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetLaunchOptions()).ToDataRes(types.Dict)
 	},
-	"oci.compute.instance.pvEncryptionInTransitEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetPvEncryptionInTransitEnabled()).ToDataRes(types.Bool)
-	},
-	"oci.compute.instance.bootVolumeType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetBootVolumeType()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.remoteDataVolumeType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetRemoteDataVolumeType()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.firmware": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetFirmware()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.networkType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetNetworkType()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.consistentVolumeNamingEnabled": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetConsistentVolumeNamingEnabled()).ToDataRes(types.Bool)
+	"oci.compute.instance.launchConfig": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetLaunchConfig()).ToDataRes(types.Resource("oci.compute.launchConfig"))
 	},
 	"oci.compute.instance.instanceOptions": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetInstanceOptions()).ToDataRes(types.Dict)
@@ -2628,44 +2624,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.instance.shapeConfig": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetShapeConfig()).ToDataRes(types.Dict)
 	},
-	"oci.compute.instance.ocpus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetOcpus()).ToDataRes(types.Float)
-	},
-	"oci.compute.instance.memoryInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetMemoryInGBs()).ToDataRes(types.Float)
-	},
-	"oci.compute.instance.baselineOcpuUtilization": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetBaselineOcpuUtilization()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.processorDescription": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetProcessorDescription()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.networkingBandwidthInGbps": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetNetworkingBandwidthInGbps()).ToDataRes(types.Float)
-	},
-	"oci.compute.instance.maxVnicAttachments": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetMaxVnicAttachments()).ToDataRes(types.Int)
-	},
-	"oci.compute.instance.gpus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetGpus()).ToDataRes(types.Int)
-	},
-	"oci.compute.instance.gpuDescription": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetGpuDescription()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.localDisks": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetLocalDisks()).ToDataRes(types.Int)
-	},
-	"oci.compute.instance.localDisksTotalSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetLocalDisksTotalSizeInGBs()).ToDataRes(types.Float)
-	},
-	"oci.compute.instance.localDiskDescription": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetLocalDiskDescription()).ToDataRes(types.String)
-	},
-	"oci.compute.instance.vcpus": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetVcpus()).ToDataRes(types.Int)
-	},
-	"oci.compute.instance.localVolumeSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetLocalVolumeSizeInGBs()).ToDataRes(types.Int)
+	"oci.compute.instance.sizing": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetSizing()).ToDataRes(types.Resource("oci.compute.instanceSizing"))
 	},
 	"oci.compute.instance.sourceDetails": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetSourceDetails()).ToDataRes(types.Dict)
@@ -2673,14 +2633,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.compute.instance.bootVolume": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetBootVolume()).ToDataRes(types.Resource("oci.compute.bootVolume"))
 	},
-	"oci.compute.instance.bootVolumeKmsKey": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetBootVolumeKmsKey()).ToDataRes(types.Resource("oci.kms.key"))
-	},
-	"oci.compute.instance.bootVolumeSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetBootVolumeSizeInGBs()).ToDataRes(types.Int)
-	},
-	"oci.compute.instance.bootVolumeVpusPerGB": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciComputeInstance).GetBootVolumeVpusPerGB()).ToDataRes(types.Int)
+	"oci.compute.instance.bootSource": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstance).GetBootSource()).ToDataRes(types.Resource("oci.compute.imageSource"))
 	},
 	"oci.compute.instance.metadata": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetMetadata()).ToDataRes(types.Map(types.String, types.String))
@@ -2732,6 +2686,87 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.compute.instance.endpointProtectionScanResult": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeInstance).GetEndpointProtectionScanResult()).ToDataRes(types.Resource("oci.vulnerabilityScanning.hostEndpointProtectionScanResult"))
+	},
+	"oci.compute.platformSecurity.secureBootEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputePlatformSecurity).GetSecureBootEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.platformSecurity.trustedPlatformModuleEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputePlatformSecurity).GetTrustedPlatformModuleEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.platformSecurity.measuredBootEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputePlatformSecurity).GetMeasuredBootEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.platformSecurity.memoryEncryptionEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputePlatformSecurity).GetMemoryEncryptionEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.launchConfig.bootVolumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeLaunchConfig).GetBootVolumeType()).ToDataRes(types.String)
+	},
+	"oci.compute.launchConfig.firmware": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeLaunchConfig).GetFirmware()).ToDataRes(types.String)
+	},
+	"oci.compute.launchConfig.networkType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeLaunchConfig).GetNetworkType()).ToDataRes(types.String)
+	},
+	"oci.compute.launchConfig.remoteDataVolumeType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeLaunchConfig).GetRemoteDataVolumeType()).ToDataRes(types.String)
+	},
+	"oci.compute.launchConfig.pvEncryptionInTransitEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeLaunchConfig).GetPvEncryptionInTransitEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.launchConfig.consistentVolumeNamingEnabled": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeLaunchConfig).GetConsistentVolumeNamingEnabled()).ToDataRes(types.Bool)
+	},
+	"oci.compute.instanceSizing.ocpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetOcpus()).ToDataRes(types.Float)
+	},
+	"oci.compute.instanceSizing.memoryInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetMemoryInGBs()).ToDataRes(types.Float)
+	},
+	"oci.compute.instanceSizing.baselineOcpuUtilization": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetBaselineOcpuUtilization()).ToDataRes(types.String)
+	},
+	"oci.compute.instanceSizing.processorDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetProcessorDescription()).ToDataRes(types.String)
+	},
+	"oci.compute.instanceSizing.networkingBandwidthInGbps": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetNetworkingBandwidthInGbps()).ToDataRes(types.Float)
+	},
+	"oci.compute.instanceSizing.maxVnicAttachments": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetMaxVnicAttachments()).ToDataRes(types.Int)
+	},
+	"oci.compute.instanceSizing.gpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetGpus()).ToDataRes(types.Int)
+	},
+	"oci.compute.instanceSizing.gpuDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetGpuDescription()).ToDataRes(types.String)
+	},
+	"oci.compute.instanceSizing.localDisks": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetLocalDisks()).ToDataRes(types.Int)
+	},
+	"oci.compute.instanceSizing.localDisksTotalSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetLocalDisksTotalSizeInGBs()).ToDataRes(types.Float)
+	},
+	"oci.compute.instanceSizing.localDiskDescription": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetLocalDiskDescription()).ToDataRes(types.String)
+	},
+	"oci.compute.instanceSizing.vcpus": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetVcpus()).ToDataRes(types.Int)
+	},
+	"oci.compute.instanceSizing.localVolumeSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeInstanceSizing).GetLocalVolumeSizeInGBs()).ToDataRes(types.Int)
+	},
+	"oci.compute.imageSource.image": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeImageSource).GetImage()).ToDataRes(types.Resource("oci.compute.image"))
+	},
+	"oci.compute.imageSource.bootVolumeSizeInGBs": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeImageSource).GetBootVolumeSizeInGBs()).ToDataRes(types.Int)
+	},
+	"oci.compute.imageSource.bootVolumeVpusPerGB": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeImageSource).GetBootVolumeVpusPerGB()).ToDataRes(types.Int)
+	},
+	"oci.compute.imageSource.kmsKey": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciComputeImageSource).GetKmsKey()).ToDataRes(types.Resource("oci.kms.key"))
 	},
 	"oci.compute.vnic.id": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciComputeVnic).GetId()).ToDataRes(types.String)
@@ -13154,48 +13189,16 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeInstance).PlatformConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.compute.instance.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.trustedPlatformModuleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).TrustedPlatformModuleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.measuredBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).MeasuredBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.memoryEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).MemoryEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"oci.compute.instance.platformSecurity": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).PlatformSecurity, ok = plugin.RawToTValue[*mqlOciComputePlatformSecurity](v.Value, v.Error)
 		return
 	},
 	"oci.compute.instance.launchOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).LaunchOptions, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.compute.instance.pvEncryptionInTransitEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).PvEncryptionInTransitEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.bootVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).BootVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.remoteDataVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).RemoteDataVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.firmware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).Firmware, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.consistentVolumeNamingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).ConsistentVolumeNamingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"oci.compute.instance.launchConfig": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).LaunchConfig, ok = plugin.RawToTValue[*mqlOciComputeLaunchConfig](v.Value, v.Error)
 		return
 	},
 	"oci.compute.instance.instanceOptions": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13226,56 +13229,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeInstance).ShapeConfig, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.compute.instance.ocpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).Ocpus, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.memoryInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).MemoryInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.baselineOcpuUtilization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).BaselineOcpuUtilization, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.processorDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).ProcessorDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.networkingBandwidthInGbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).NetworkingBandwidthInGbps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.maxVnicAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).MaxVnicAttachments, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.gpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).Gpus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.gpuDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).GpuDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.localDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).LocalDisks, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.localDisksTotalSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).LocalDisksTotalSizeInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.localDiskDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).LocalDiskDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.vcpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).Vcpus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.localVolumeSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).LocalVolumeSizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"oci.compute.instance.sizing": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).Sizing, ok = plugin.RawToTValue[*mqlOciComputeInstanceSizing](v.Value, v.Error)
 		return
 	},
 	"oci.compute.instance.sourceDetails": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13286,16 +13241,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciComputeInstance).BootVolume, ok = plugin.RawToTValue[*mqlOciComputeBootVolume](v.Value, v.Error)
 		return
 	},
-	"oci.compute.instance.bootVolumeKmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).BootVolumeKmsKey, ok = plugin.RawToTValue[*mqlOciKmsKey](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.bootVolumeSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).BootVolumeSizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.compute.instance.bootVolumeVpusPerGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciComputeInstance).BootVolumeVpusPerGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+	"oci.compute.instance.bootSource": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstance).BootSource, ok = plugin.RawToTValue[*mqlOciComputeImageSource](v.Value, v.Error)
 		return
 	},
 	"oci.compute.instance.metadata": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -13364,6 +13311,130 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.compute.instance.endpointProtectionScanResult": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciComputeInstance).EndpointProtectionScanResult, ok = plugin.RawToTValue[*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult](v.Value, v.Error)
+		return
+	},
+	"oci.compute.platformSecurity.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputePlatformSecurity).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.compute.platformSecurity.secureBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputePlatformSecurity).SecureBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.platformSecurity.trustedPlatformModuleEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputePlatformSecurity).TrustedPlatformModuleEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.platformSecurity.measuredBootEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputePlatformSecurity).MeasuredBootEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.platformSecurity.memoryEncryptionEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputePlatformSecurity).MemoryEncryptionEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.launchConfig.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeLaunchConfig).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.compute.launchConfig.bootVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeLaunchConfig).BootVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.launchConfig.firmware": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeLaunchConfig).Firmware, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.launchConfig.networkType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeLaunchConfig).NetworkType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.launchConfig.remoteDataVolumeType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeLaunchConfig).RemoteDataVolumeType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.launchConfig.pvEncryptionInTransitEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeLaunchConfig).PvEncryptionInTransitEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.launchConfig.consistentVolumeNamingEnabled": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeLaunchConfig).ConsistentVolumeNamingEnabled, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.compute.instanceSizing.ocpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).Ocpus, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.memoryInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).MemoryInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.baselineOcpuUtilization": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).BaselineOcpuUtilization, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.processorDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).ProcessorDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.networkingBandwidthInGbps": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).NetworkingBandwidthInGbps, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.maxVnicAttachments": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).MaxVnicAttachments, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.gpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).Gpus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.gpuDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).GpuDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.localDisks": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).LocalDisks, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.localDisksTotalSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).LocalDisksTotalSizeInGBs, ok = plugin.RawToTValue[float64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.localDiskDescription": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).LocalDiskDescription, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.vcpus": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).Vcpus, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.instanceSizing.localVolumeSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeInstanceSizing).LocalVolumeSizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.imageSource.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeImageSource).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.compute.imageSource.image": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeImageSource).Image, ok = plugin.RawToTValue[*mqlOciComputeImage](v.Value, v.Error)
+		return
+	},
+	"oci.compute.imageSource.bootVolumeSizeInGBs": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeImageSource).BootVolumeSizeInGBs, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.imageSource.bootVolumeVpusPerGB": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeImageSource).BootVolumeVpusPerGB, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.compute.imageSource.kmsKey": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciComputeImageSource).KmsKey, ok = plugin.RawToTValue[*mqlOciKmsKey](v.Value, v.Error)
 		return
 	},
 	"oci.compute.vnic.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -29979,71 +30050,49 @@ type mqlOciComputeInstance struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
 	mqlOciComputeInstanceInternal
-	Id                            plugin.TValue[string]
-	Name                          plugin.TValue[string]
-	Region                        plugin.TValue[*mqlOciRegion]
-	Created                       plugin.TValue[*time.Time]
-	State                         plugin.TValue[string]
-	Shape                         plugin.TValue[string]
-	AvailabilityDomain            plugin.TValue[string]
-	Compartment                   plugin.TValue[*mqlOciCompartment]
-	FaultDomain                   plugin.TValue[string]
-	Image                         plugin.TValue[*mqlOciComputeImage]
-	DedicatedVmHostId             plugin.TValue[string]
-	PlatformConfig                plugin.TValue[any]
-	SecureBootEnabled             plugin.TValue[bool]
-	TrustedPlatformModuleEnabled  plugin.TValue[bool]
-	MeasuredBootEnabled           plugin.TValue[bool]
-	MemoryEncryptionEnabled       plugin.TValue[bool]
-	LaunchOptions                 plugin.TValue[any]
-	PvEncryptionInTransitEnabled  plugin.TValue[bool]
-	BootVolumeType                plugin.TValue[string]
-	RemoteDataVolumeType          plugin.TValue[string]
-	Firmware                      plugin.TValue[string]
-	NetworkType                   plugin.TValue[string]
-	ConsistentVolumeNamingEnabled plugin.TValue[bool]
-	InstanceOptions               plugin.TValue[any]
-	LegacyImdsEndpointsDisabled   plugin.TValue[bool]
-	MonitoringDisabled            plugin.TValue[bool]
-	ManagementDisabled            plugin.TValue[bool]
-	AllPluginsDisabled            plugin.TValue[bool]
-	AgentPlugins                  plugin.TValue[map[string]any]
-	ShapeConfig                   plugin.TValue[any]
-	Ocpus                         plugin.TValue[float64]
-	MemoryInGBs                   plugin.TValue[float64]
-	BaselineOcpuUtilization       plugin.TValue[string]
-	ProcessorDescription          plugin.TValue[string]
-	NetworkingBandwidthInGbps     plugin.TValue[float64]
-	MaxVnicAttachments            plugin.TValue[int64]
-	Gpus                          plugin.TValue[int64]
-	GpuDescription                plugin.TValue[string]
-	LocalDisks                    plugin.TValue[int64]
-	LocalDisksTotalSizeInGBs      plugin.TValue[float64]
-	LocalDiskDescription          plugin.TValue[string]
-	Vcpus                         plugin.TValue[int64]
-	LocalVolumeSizeInGBs          plugin.TValue[int64]
-	SourceDetails                 plugin.TValue[any]
-	BootVolume                    plugin.TValue[*mqlOciComputeBootVolume]
-	BootVolumeKmsKey              plugin.TValue[*mqlOciKmsKey]
-	BootVolumeSizeInGBs           plugin.TValue[int64]
-	BootVolumeVpusPerGB           plugin.TValue[int64]
-	Metadata                      plugin.TValue[map[string]any]
-	ExtendedMetadata              plugin.TValue[any]
-	IpxeScript                    plugin.TValue[string]
-	SshAuthorizedKeys             plugin.TValue[[]any]
-	TimeMaintenanceRebootDue      plugin.TValue[*time.Time]
-	SecurityAttributes            plugin.TValue[map[string]any]
-	AppliedSecurityAttributes     plugin.TValue[[]any]
-	SecurityAttributesState       plugin.TValue[string]
-	FreeformTags                  plugin.TValue[map[string]any]
-	DefinedTags                   plugin.TValue[map[string]any]
-	SystemTags                    plugin.TValue[map[string]any]
-	Vnics                         plugin.TValue[[]any]
-	Exposure                      plugin.TValue[*mqlOciNetworkExposure]
-	VulnerabilityScanResult       plugin.TValue[*mqlOciVulnerabilityScanningHostAgentScanResult]
-	PortScanResult                plugin.TValue[*mqlOciVulnerabilityScanningHostPortScanResult]
-	CisBenchmarkScanResult        plugin.TValue[*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult]
-	EndpointProtectionScanResult  plugin.TValue[*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult]
+	Id                           plugin.TValue[string]
+	Name                         plugin.TValue[string]
+	Region                       plugin.TValue[*mqlOciRegion]
+	Created                      plugin.TValue[*time.Time]
+	State                        plugin.TValue[string]
+	Shape                        plugin.TValue[string]
+	AvailabilityDomain           plugin.TValue[string]
+	Compartment                  plugin.TValue[*mqlOciCompartment]
+	FaultDomain                  plugin.TValue[string]
+	Image                        plugin.TValue[*mqlOciComputeImage]
+	DedicatedVmHostId            plugin.TValue[string]
+	PlatformConfig               plugin.TValue[any]
+	PlatformSecurity             plugin.TValue[*mqlOciComputePlatformSecurity]
+	LaunchOptions                plugin.TValue[any]
+	LaunchConfig                 plugin.TValue[*mqlOciComputeLaunchConfig]
+	InstanceOptions              plugin.TValue[any]
+	LegacyImdsEndpointsDisabled  plugin.TValue[bool]
+	MonitoringDisabled           plugin.TValue[bool]
+	ManagementDisabled           plugin.TValue[bool]
+	AllPluginsDisabled           plugin.TValue[bool]
+	AgentPlugins                 plugin.TValue[map[string]any]
+	ShapeConfig                  plugin.TValue[any]
+	Sizing                       plugin.TValue[*mqlOciComputeInstanceSizing]
+	SourceDetails                plugin.TValue[any]
+	BootVolume                   plugin.TValue[*mqlOciComputeBootVolume]
+	BootSource                   plugin.TValue[*mqlOciComputeImageSource]
+	Metadata                     plugin.TValue[map[string]any]
+	ExtendedMetadata             plugin.TValue[any]
+	IpxeScript                   plugin.TValue[string]
+	SshAuthorizedKeys            plugin.TValue[[]any]
+	TimeMaintenanceRebootDue     plugin.TValue[*time.Time]
+	SecurityAttributes           plugin.TValue[map[string]any]
+	AppliedSecurityAttributes    plugin.TValue[[]any]
+	SecurityAttributesState      plugin.TValue[string]
+	FreeformTags                 plugin.TValue[map[string]any]
+	DefinedTags                  plugin.TValue[map[string]any]
+	SystemTags                   plugin.TValue[map[string]any]
+	Vnics                        plugin.TValue[[]any]
+	Exposure                     plugin.TValue[*mqlOciNetworkExposure]
+	VulnerabilityScanResult      plugin.TValue[*mqlOciVulnerabilityScanningHostAgentScanResult]
+	PortScanResult               plugin.TValue[*mqlOciVulnerabilityScanningHostPortScanResult]
+	CisBenchmarkScanResult       plugin.TValue[*mqlOciVulnerabilityScanningHostCisBenchmarkScanResult]
+	EndpointProtectionScanResult plugin.TValue[*mqlOciVulnerabilityScanningHostEndpointProtectionScanResult]
 }
 
 // createOciComputeInstance creates a new instance of this resource
@@ -30143,48 +30192,40 @@ func (c *mqlOciComputeInstance) GetPlatformConfig() *plugin.TValue[any] {
 	return &c.PlatformConfig
 }
 
-func (c *mqlOciComputeInstance) GetSecureBootEnabled() *plugin.TValue[bool] {
-	return &c.SecureBootEnabled
-}
+func (c *mqlOciComputeInstance) GetPlatformSecurity() *plugin.TValue[*mqlOciComputePlatformSecurity] {
+	return plugin.GetOrCompute[*mqlOciComputePlatformSecurity](&c.PlatformSecurity, func() (*mqlOciComputePlatformSecurity, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "platformSecurity")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputePlatformSecurity), nil
+			}
+		}
 
-func (c *mqlOciComputeInstance) GetTrustedPlatformModuleEnabled() *plugin.TValue[bool] {
-	return &c.TrustedPlatformModuleEnabled
-}
-
-func (c *mqlOciComputeInstance) GetMeasuredBootEnabled() *plugin.TValue[bool] {
-	return &c.MeasuredBootEnabled
-}
-
-func (c *mqlOciComputeInstance) GetMemoryEncryptionEnabled() *plugin.TValue[bool] {
-	return &c.MemoryEncryptionEnabled
+		return c.platformSecurity()
+	})
 }
 
 func (c *mqlOciComputeInstance) GetLaunchOptions() *plugin.TValue[any] {
 	return &c.LaunchOptions
 }
 
-func (c *mqlOciComputeInstance) GetPvEncryptionInTransitEnabled() *plugin.TValue[bool] {
-	return &c.PvEncryptionInTransitEnabled
-}
+func (c *mqlOciComputeInstance) GetLaunchConfig() *plugin.TValue[*mqlOciComputeLaunchConfig] {
+	return plugin.GetOrCompute[*mqlOciComputeLaunchConfig](&c.LaunchConfig, func() (*mqlOciComputeLaunchConfig, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "launchConfig")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeLaunchConfig), nil
+			}
+		}
 
-func (c *mqlOciComputeInstance) GetBootVolumeType() *plugin.TValue[string] {
-	return &c.BootVolumeType
-}
-
-func (c *mqlOciComputeInstance) GetRemoteDataVolumeType() *plugin.TValue[string] {
-	return &c.RemoteDataVolumeType
-}
-
-func (c *mqlOciComputeInstance) GetFirmware() *plugin.TValue[string] {
-	return &c.Firmware
-}
-
-func (c *mqlOciComputeInstance) GetNetworkType() *plugin.TValue[string] {
-	return &c.NetworkType
-}
-
-func (c *mqlOciComputeInstance) GetConsistentVolumeNamingEnabled() *plugin.TValue[bool] {
-	return &c.ConsistentVolumeNamingEnabled
+		return c.launchConfig()
+	})
 }
 
 func (c *mqlOciComputeInstance) GetInstanceOptions() *plugin.TValue[any] {
@@ -30215,56 +30256,20 @@ func (c *mqlOciComputeInstance) GetShapeConfig() *plugin.TValue[any] {
 	return &c.ShapeConfig
 }
 
-func (c *mqlOciComputeInstance) GetOcpus() *plugin.TValue[float64] {
-	return &c.Ocpus
-}
+func (c *mqlOciComputeInstance) GetSizing() *plugin.TValue[*mqlOciComputeInstanceSizing] {
+	return plugin.GetOrCompute[*mqlOciComputeInstanceSizing](&c.Sizing, func() (*mqlOciComputeInstanceSizing, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "sizing")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeInstanceSizing), nil
+			}
+		}
 
-func (c *mqlOciComputeInstance) GetMemoryInGBs() *plugin.TValue[float64] {
-	return &c.MemoryInGBs
-}
-
-func (c *mqlOciComputeInstance) GetBaselineOcpuUtilization() *plugin.TValue[string] {
-	return &c.BaselineOcpuUtilization
-}
-
-func (c *mqlOciComputeInstance) GetProcessorDescription() *plugin.TValue[string] {
-	return &c.ProcessorDescription
-}
-
-func (c *mqlOciComputeInstance) GetNetworkingBandwidthInGbps() *plugin.TValue[float64] {
-	return &c.NetworkingBandwidthInGbps
-}
-
-func (c *mqlOciComputeInstance) GetMaxVnicAttachments() *plugin.TValue[int64] {
-	return &c.MaxVnicAttachments
-}
-
-func (c *mqlOciComputeInstance) GetGpus() *plugin.TValue[int64] {
-	return &c.Gpus
-}
-
-func (c *mqlOciComputeInstance) GetGpuDescription() *plugin.TValue[string] {
-	return &c.GpuDescription
-}
-
-func (c *mqlOciComputeInstance) GetLocalDisks() *plugin.TValue[int64] {
-	return &c.LocalDisks
-}
-
-func (c *mqlOciComputeInstance) GetLocalDisksTotalSizeInGBs() *plugin.TValue[float64] {
-	return &c.LocalDisksTotalSizeInGBs
-}
-
-func (c *mqlOciComputeInstance) GetLocalDiskDescription() *plugin.TValue[string] {
-	return &c.LocalDiskDescription
-}
-
-func (c *mqlOciComputeInstance) GetVcpus() *plugin.TValue[int64] {
-	return &c.Vcpus
-}
-
-func (c *mqlOciComputeInstance) GetLocalVolumeSizeInGBs() *plugin.TValue[int64] {
-	return &c.LocalVolumeSizeInGBs
+		return c.sizing()
+	})
 }
 
 func (c *mqlOciComputeInstance) GetSourceDetails() *plugin.TValue[any] {
@@ -30287,28 +30292,20 @@ func (c *mqlOciComputeInstance) GetBootVolume() *plugin.TValue[*mqlOciComputeBoo
 	})
 }
 
-func (c *mqlOciComputeInstance) GetBootVolumeKmsKey() *plugin.TValue[*mqlOciKmsKey] {
-	return plugin.GetOrCompute[*mqlOciKmsKey](&c.BootVolumeKmsKey, func() (*mqlOciKmsKey, error) {
+func (c *mqlOciComputeInstance) GetBootSource() *plugin.TValue[*mqlOciComputeImageSource] {
+	return plugin.GetOrCompute[*mqlOciComputeImageSource](&c.BootSource, func() (*mqlOciComputeImageSource, error) {
 		if c.MqlRuntime.HasRecording {
-			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "bootVolumeKmsKey")
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.instance", c.__id, "bootSource")
 			if err != nil {
 				return nil, err
 			}
 			if d != nil {
-				return d.Value.(*mqlOciKmsKey), nil
+				return d.Value.(*mqlOciComputeImageSource), nil
 			}
 		}
 
-		return c.bootVolumeKmsKey()
+		return c.bootSource()
 	})
-}
-
-func (c *mqlOciComputeInstance) GetBootVolumeSizeInGBs() *plugin.TValue[int64] {
-	return &c.BootVolumeSizeInGBs
-}
-
-func (c *mqlOciComputeInstance) GetBootVolumeVpusPerGB() *plugin.TValue[int64] {
-	return &c.BootVolumeVpusPerGB
 }
 
 func (c *mqlOciComputeInstance) GetMetadata() *plugin.TValue[map[string]any] {
@@ -30462,6 +30459,321 @@ func (c *mqlOciComputeInstance) GetEndpointProtectionScanResult() *plugin.TValue
 		}
 
 		return c.endpointProtectionScanResult()
+	})
+}
+
+// mqlOciComputePlatformSecurity for the oci.compute.platformSecurity resource
+type mqlOciComputePlatformSecurity struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciComputePlatformSecurityInternal it will be used here
+	SecureBootEnabled            plugin.TValue[bool]
+	TrustedPlatformModuleEnabled plugin.TValue[bool]
+	MeasuredBootEnabled          plugin.TValue[bool]
+	MemoryEncryptionEnabled      plugin.TValue[bool]
+}
+
+// createOciComputePlatformSecurity creates a new instance of this resource
+func createOciComputePlatformSecurity(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciComputePlatformSecurity{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.compute.platformSecurity", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciComputePlatformSecurity) MqlName() string {
+	return "oci.compute.platformSecurity"
+}
+
+func (c *mqlOciComputePlatformSecurity) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciComputePlatformSecurity) GetSecureBootEnabled() *plugin.TValue[bool] {
+	return &c.SecureBootEnabled
+}
+
+func (c *mqlOciComputePlatformSecurity) GetTrustedPlatformModuleEnabled() *plugin.TValue[bool] {
+	return &c.TrustedPlatformModuleEnabled
+}
+
+func (c *mqlOciComputePlatformSecurity) GetMeasuredBootEnabled() *plugin.TValue[bool] {
+	return &c.MeasuredBootEnabled
+}
+
+func (c *mqlOciComputePlatformSecurity) GetMemoryEncryptionEnabled() *plugin.TValue[bool] {
+	return &c.MemoryEncryptionEnabled
+}
+
+// mqlOciComputeLaunchConfig for the oci.compute.launchConfig resource
+type mqlOciComputeLaunchConfig struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciComputeLaunchConfigInternal it will be used here
+	BootVolumeType                plugin.TValue[string]
+	Firmware                      plugin.TValue[string]
+	NetworkType                   plugin.TValue[string]
+	RemoteDataVolumeType          plugin.TValue[string]
+	PvEncryptionInTransitEnabled  plugin.TValue[bool]
+	ConsistentVolumeNamingEnabled plugin.TValue[bool]
+}
+
+// createOciComputeLaunchConfig creates a new instance of this resource
+func createOciComputeLaunchConfig(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciComputeLaunchConfig{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.compute.launchConfig", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciComputeLaunchConfig) MqlName() string {
+	return "oci.compute.launchConfig"
+}
+
+func (c *mqlOciComputeLaunchConfig) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciComputeLaunchConfig) GetBootVolumeType() *plugin.TValue[string] {
+	return &c.BootVolumeType
+}
+
+func (c *mqlOciComputeLaunchConfig) GetFirmware() *plugin.TValue[string] {
+	return &c.Firmware
+}
+
+func (c *mqlOciComputeLaunchConfig) GetNetworkType() *plugin.TValue[string] {
+	return &c.NetworkType
+}
+
+func (c *mqlOciComputeLaunchConfig) GetRemoteDataVolumeType() *plugin.TValue[string] {
+	return &c.RemoteDataVolumeType
+}
+
+func (c *mqlOciComputeLaunchConfig) GetPvEncryptionInTransitEnabled() *plugin.TValue[bool] {
+	return &c.PvEncryptionInTransitEnabled
+}
+
+func (c *mqlOciComputeLaunchConfig) GetConsistentVolumeNamingEnabled() *plugin.TValue[bool] {
+	return &c.ConsistentVolumeNamingEnabled
+}
+
+// mqlOciComputeInstanceSizing for the oci.compute.instanceSizing resource
+type mqlOciComputeInstanceSizing struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciComputeInstanceSizingInternal it will be used here
+	Ocpus                     plugin.TValue[float64]
+	MemoryInGBs               plugin.TValue[float64]
+	BaselineOcpuUtilization   plugin.TValue[string]
+	ProcessorDescription      plugin.TValue[string]
+	NetworkingBandwidthInGbps plugin.TValue[float64]
+	MaxVnicAttachments        plugin.TValue[int64]
+	Gpus                      plugin.TValue[int64]
+	GpuDescription            plugin.TValue[string]
+	LocalDisks                plugin.TValue[int64]
+	LocalDisksTotalSizeInGBs  plugin.TValue[float64]
+	LocalDiskDescription      plugin.TValue[string]
+	Vcpus                     plugin.TValue[int64]
+	LocalVolumeSizeInGBs      plugin.TValue[int64]
+}
+
+// createOciComputeInstanceSizing creates a new instance of this resource
+func createOciComputeInstanceSizing(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciComputeInstanceSizing{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.compute.instanceSizing", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciComputeInstanceSizing) MqlName() string {
+	return "oci.compute.instanceSizing"
+}
+
+func (c *mqlOciComputeInstanceSizing) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciComputeInstanceSizing) GetOcpus() *plugin.TValue[float64] {
+	return &c.Ocpus
+}
+
+func (c *mqlOciComputeInstanceSizing) GetMemoryInGBs() *plugin.TValue[float64] {
+	return &c.MemoryInGBs
+}
+
+func (c *mqlOciComputeInstanceSizing) GetBaselineOcpuUtilization() *plugin.TValue[string] {
+	return &c.BaselineOcpuUtilization
+}
+
+func (c *mqlOciComputeInstanceSizing) GetProcessorDescription() *plugin.TValue[string] {
+	return &c.ProcessorDescription
+}
+
+func (c *mqlOciComputeInstanceSizing) GetNetworkingBandwidthInGbps() *plugin.TValue[float64] {
+	return &c.NetworkingBandwidthInGbps
+}
+
+func (c *mqlOciComputeInstanceSizing) GetMaxVnicAttachments() *plugin.TValue[int64] {
+	return &c.MaxVnicAttachments
+}
+
+func (c *mqlOciComputeInstanceSizing) GetGpus() *plugin.TValue[int64] {
+	return &c.Gpus
+}
+
+func (c *mqlOciComputeInstanceSizing) GetGpuDescription() *plugin.TValue[string] {
+	return &c.GpuDescription
+}
+
+func (c *mqlOciComputeInstanceSizing) GetLocalDisks() *plugin.TValue[int64] {
+	return &c.LocalDisks
+}
+
+func (c *mqlOciComputeInstanceSizing) GetLocalDisksTotalSizeInGBs() *plugin.TValue[float64] {
+	return &c.LocalDisksTotalSizeInGBs
+}
+
+func (c *mqlOciComputeInstanceSizing) GetLocalDiskDescription() *plugin.TValue[string] {
+	return &c.LocalDiskDescription
+}
+
+func (c *mqlOciComputeInstanceSizing) GetVcpus() *plugin.TValue[int64] {
+	return &c.Vcpus
+}
+
+func (c *mqlOciComputeInstanceSizing) GetLocalVolumeSizeInGBs() *plugin.TValue[int64] {
+	return &c.LocalVolumeSizeInGBs
+}
+
+// mqlOciComputeImageSource for the oci.compute.imageSource resource
+type mqlOciComputeImageSource struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciComputeImageSourceInternal
+	Image               plugin.TValue[*mqlOciComputeImage]
+	BootVolumeSizeInGBs plugin.TValue[int64]
+	BootVolumeVpusPerGB plugin.TValue[int64]
+	KmsKey              plugin.TValue[*mqlOciKmsKey]
+}
+
+// createOciComputeImageSource creates a new instance of this resource
+func createOciComputeImageSource(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciComputeImageSource{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.compute.imageSource", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciComputeImageSource) MqlName() string {
+	return "oci.compute.imageSource"
+}
+
+func (c *mqlOciComputeImageSource) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciComputeImageSource) GetImage() *plugin.TValue[*mqlOciComputeImage] {
+	return plugin.GetOrCompute[*mqlOciComputeImage](&c.Image, func() (*mqlOciComputeImage, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.imageSource", c.__id, "image")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciComputeImage), nil
+			}
+		}
+
+		return c.image()
+	})
+}
+
+func (c *mqlOciComputeImageSource) GetBootVolumeSizeInGBs() *plugin.TValue[int64] {
+	return &c.BootVolumeSizeInGBs
+}
+
+func (c *mqlOciComputeImageSource) GetBootVolumeVpusPerGB() *plugin.TValue[int64] {
+	return &c.BootVolumeVpusPerGB
+}
+
+func (c *mqlOciComputeImageSource) GetKmsKey() *plugin.TValue[*mqlOciKmsKey] {
+	return plugin.GetOrCompute[*mqlOciKmsKey](&c.KmsKey, func() (*mqlOciKmsKey, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.compute.imageSource", c.__id, "kmsKey")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciKmsKey), nil
+			}
+		}
+
+		return c.kmsKey()
 	})
 }
 

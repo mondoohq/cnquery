@@ -1253,78 +1253,32 @@ private oci.compute.instance @defaults("name") {
   dedicatedVmHostId string
   // Platform security configuration
   //
-  // Deprecated in favor of secureBootEnabled, trustedPlatformModuleEnabled,
-  // measuredBootEnabled and memoryEncryptionEnabled. Shielded-instance and
-  // confidential-computing settings. Keys: `type` (the platform variant, for
-  // example AMD_VM, INTEL_VM, or AMD_MILAN_BM), `isSecureBootEnabled`,
-  // `isTrustedPlatformModuleEnabled`, `isMeasuredBootEnabled`, and
-  // `isMemoryEncryptionEnabled`. Absent when the shape does not support these
-  // features.
+  // Deprecated in favor of platformSecurity, which reports the same settings
+  // as a structure. Shielded-instance and confidential-computing settings.
+  // Keys: `type` (the platform variant, for example AMD_VM, INTEL_VM, or
+  // AMD_MILAN_BM), `isSecureBootEnabled`, `isTrustedPlatformModuleEnabled`,
+  // `isMeasuredBootEnabled`, and `isMemoryEncryptionEnabled`. Absent when the
+  // shape does not support these features.
   platformConfig @maturity("deprecated") dict
-  // Whether Secure Boot is enabled
+  // Shielded-instance and confidential-computing settings
   //
-  // Secure Boot refuses to load any boot component the platform does not
-  // trust, so a bootkit cannot survive a reboot. Null when the instance
-  // carries no platform configuration, which is the case on shapes that do
-  // not offer shielded-instance settings.
-  secureBootEnabled bool
-  // Whether the Trusted Platform Module is enabled
-  //
-  // The vTPM holds the measurements Measured Boot records and the keys that
-  // seal to them. Null when the instance carries no platform configuration.
-  trustedPlatformModuleEnabled bool
-  // Whether Measured Boot is enabled
-  //
-  // Measured Boot records each boot component into the vTPM so a later
-  // attestation can tell a tampered boot chain from a clean one. Null when
-  // the instance carries no platform configuration.
-  measuredBootEnabled bool
-  // Whether memory encryption is enabled, making this a confidential instance
-  //
-  // Encrypts the instance's memory with a key the hypervisor cannot read, so
-  // data in use is protected as well as data at rest. Null when the instance
-  // carries no platform configuration.
-  memoryEncryptionEnabled bool
+  // Null when the instance carries no platform configuration, which is the
+  // case on shapes that do not offer shielded-instance or
+  // confidential-computing features.
+  platformSecurity() oci.compute.platformSecurity
   // Launch configuration options
   //
-  // Deprecated in favor of pvEncryptionInTransitEnabled, bootVolumeType,
-  // remoteDataVolumeType, firmware, networkType and
-  // consistentVolumeNamingEnabled. Emulation and I/O settings chosen at
-  // launch. Keys: `bootVolumeType` and `remoteDataVolumeType` (ISCSI, SCSI,
-  // IDE, VFIO, or PARAVIRTUALIZED), `firmware` (BIOS or UEFI_64),
-  // `networkType` (E1000, VFIO, PARAVIRTUALIZED, or ACCELERATEDPV),
+  // Deprecated in favor of launchConfig, which reports the same settings as a
+  // structure. Emulation and I/O settings chosen at launch. Keys:
+  // `bootVolumeType` and `remoteDataVolumeType` (ISCSI, SCSI, IDE, VFIO, or
+  // PARAVIRTUALIZED), `firmware` (BIOS or UEFI_64), `networkType` (E1000,
+  // VFIO, PARAVIRTUALIZED, or ACCELERATEDPV),
   // `isPvEncryptionInTransitEnabled`, and `isConsistentVolumeNamingEnabled`.
   launchOptions @maturity("deprecated") dict
-  // Whether paravirtualized volume traffic is encrypted in transit
-  //
-  // When false the data moving between the instance and its paravirtualized
-  // block volumes crosses the virtual network unencrypted. Null when the
-  // instance reports no launch options.
-  pvEncryptionInTransitEnabled bool
-  // Emulation type for the boot volume
-  //
-  // One of ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED. Empty when the
-  // instance reports no launch options.
-  bootVolumeType string
-  // Emulation type for remote data volumes
-  //
-  // One of ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED. Empty when the
-  // instance reports no launch options.
-  remoteDataVolumeType string
-  // Firmware the instance boots with
-  //
-  // BIOS or UEFI_64. Secure Boot requires UEFI_64, so a BIOS instance cannot
-  // be running it whatever secureBootEnabled reports.
-  firmware string
-  // Emulation type for the network interface card
-  //
-  // One of E1000, VFIO, PARAVIRTUALIZED, or ACCELERATEDPV. Empty when the
-  // instance reports no launch options.
-  networkType string
-  // Whether consistent volume naming is enabled
+  // Emulation and I/O settings chosen at launch
   //
   // Null when the instance reports no launch options.
-  consistentVolumeNamingEnabled bool
+  launchConfig() oci.compute.launchConfig
   // Instance runtime options
   //
   // Deprecated in favor of legacyImdsEndpointsDisabled, which carries the
@@ -1358,56 +1312,21 @@ private oci.compute.instance @defaults("name") {
   agentPlugins map[string]string
   // Shape configuration details
   //
-  // Deprecated in favor of the individual sizing fields, from ocpus and
-  // memoryInGBs through to localVolumeSizeInGBs. Keys: `ocpus`,
-  // `memoryInGBs`, `baselineOcpuUtilization` (BASELINE_1_8, BASELINE_1_2, or
-  // BASELINE_1_1 for burstable shapes), `networkingBandwidthInGbps`,
-  // `maxVnicAttachments`, `gpus` with `gpuDescription`, `localDisks` with
-  // `localDisksTotalSizeInGBs`, and `processorDescription`.
+  // Deprecated in favor of sizing, which reports the same allocation as a
+  // structure. Keys: `ocpus`, `memoryInGBs`, `baselineOcpuUtilization`
+  // (BASELINE_1_8, BASELINE_1_2, or BASELINE_1_1 for burstable shapes),
+  // `networkingBandwidthInGbps`, `maxVnicAttachments`, `gpus` with
+  // `gpuDescription`, `localDisks` with `localDisksTotalSizeInGBs`, and
+  // `processorDescription`.
   shapeConfig @maturity("deprecated") dict
-  // OCPUs available to the instance
-  ocpus float
-  // Memory available to the instance, in gigabytes
-  memoryInGBs float
-  // Baseline OCPU utilization for a burstable instance
+  // Compute, memory, network and local-disk allocation of the instance
   //
-  // BASELINE_1_8, BASELINE_1_2, or BASELINE_1_1. Empty on a non-burstable
-  // shape, where the instance always has its full OCPU allocation.
-  baselineOcpuUtilization string
-  // Short description of the instance's processor
-  processorDescription string
-  // Networking bandwidth available to the instance, in gigabits per second
-  networkingBandwidthInGbps float
-  // Maximum number of VNIC attachments the instance supports
-  maxVnicAttachments int
-  // Number of GPUs available to the instance
-  gpus int
-  // Short description of the instance's graphics processing unit
-  //
-  // Empty when the instance has no GPUs.
-  gpuDescription string
-  // Number of local disks available to the instance
-  localDisks int
-  // Aggregate size of all local disks, in gigabytes
-  //
-  // Null when the instance has no local disks.
-  localDisksTotalSizeInGBs float
-  // Short description of the local disks available to the instance
-  //
-  // Empty when the instance has no local disks.
-  localDiskDescription string
-  // Total number of vCPUs available to the instance
-  //
-  // Null on shapes sized in OCPUs alone.
-  vcpus int
-  // NVMe-backed local storage capacity, in gigabytes, on flexible dense shapes
-  //
-  // Null on every shape that is not a flexible dense (DenseLV) VM shape.
-  localVolumeSizeInGBs int
+  // Null when the instance reports no shape configuration, which is the case
+  // on fixed shapes where the shape name alone fixes the allocation.
+  sizing() oci.compute.instanceSizing
   // Boot volume or image source details
   //
-  // Deprecated in favor of image, bootVolume, bootVolumeKmsKey,
-  // bootVolumeSizeInGBs and bootVolumeVpusPerGB, which together carry
+  // Deprecated in favor of bootSource and bootVolume, which together carry
   // everything this dict holds. The `sourceType` key discriminates the shape:
   // when "image", the keys are `imageId`, `bootVolumeSizeInGBs`,
   // `bootVolumeVpusPerGB`, and `kmsKeyId`; when "bootVolume", the single key
@@ -1415,22 +1334,12 @@ private oci.compute.instance @defaults("name") {
   sourceDetails @maturity("deprecated") dict
   // Boot volume the instance was launched from, when launched from an existing boot volume
   bootVolume() oci.compute.bootVolume
-  // Vault key protecting the boot volume created at launch
+  // Image and boot volume the instance was created from at launch
   //
-  // Null when the instance was launched from an existing boot volume, and
-  // when the boot volume is encrypted with an Oracle-managed key rather than
-  // a customer-managed one.
-  bootVolumeKmsKey() oci.kms.key
-  // Size of the boot volume created at launch, in gigabytes
-  //
-  // Null when the instance was launched from an existing boot volume.
-  bootVolumeSizeInGBs int
-  // Volume performance units per gigabyte applied to the boot volume created at launch
-  //
-  // 10 is the Balanced option, 20 Higher Performance, and 30 to 120 Ultra
-  // High Performance. Null when the instance was launched from an existing
-  // boot volume.
-  bootVolumeVpusPerGB int
+  // Null when the instance was launched from an existing boot volume, in
+  // which case the volume was sized and keyed when it was created rather than
+  // at launch, and bootVolume is what resolves it.
+  bootSource() oci.compute.imageSource
   // Instance metadata key-value pairs
   metadata map[string]string
   // Nested instance metadata beyond the flat key-value pairs
@@ -1496,6 +1405,139 @@ private oci.compute.instance @defaults("name") {
   cisBenchmarkScanResult() oci.vulnerabilityScanning.hostCisBenchmarkScanResult
   // Most recent endpoint protection scan result for this instance
   endpointProtectionScanResult() oci.vulnerabilityScanning.hostEndpointProtectionScanResult
+}
+
+// Shielded-instance and confidential-computing settings of a compute instance
+//
+// The platform security features an instance runs with: Secure Boot, the
+// virtual Trusted Platform Module, Measured Boot, and memory encryption. Each
+// flag is null when the platform variant does not report it, which keeps "not
+// offered on this shape" apart from "offered and turned off".
+private oci.compute.platformSecurity @defaults("secureBootEnabled measuredBootEnabled memoryEncryptionEnabled") {
+  // Whether Secure Boot is enabled
+  //
+  // Secure Boot refuses to load any boot component the platform does not
+  // trust, so a bootkit cannot survive a reboot.
+  secureBootEnabled bool
+  // Whether the Trusted Platform Module is enabled
+  //
+  // The vTPM holds the measurements Measured Boot records and the keys that
+  // seal to them.
+  trustedPlatformModuleEnabled bool
+  // Whether Measured Boot is enabled
+  //
+  // Measured Boot records each boot component into the vTPM so a later
+  // attestation can tell a tampered boot chain from a clean one.
+  measuredBootEnabled bool
+  // Whether memory encryption is enabled, making this a confidential instance
+  //
+  // Encrypts the instance's memory with a key the hypervisor cannot read, so
+  // data in use is protected as well as data at rest.
+  memoryEncryptionEnabled bool
+}
+
+// Launch configuration of a compute instance
+//
+// The emulation and I/O settings chosen when the instance was launched, and
+// fixed for its lifetime. pvEncryptionInTransitEnabled decides whether traffic
+// to paravirtualized block volumes is encrypted, and firmware decides whether
+// the instance can run Secure Boot at all.
+private oci.compute.launchConfig @defaults("firmware networkType pvEncryptionInTransitEnabled") {
+  // Emulation type for the boot volume
+  //
+  // One of ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED.
+  bootVolumeType string
+  // Firmware the instance boots with
+  //
+  // BIOS or UEFI_64. Secure Boot requires UEFI_64, so a BIOS instance cannot
+  // be running it whatever the platform security settings report.
+  firmware string
+  // Emulation type for the network interface card
+  //
+  // One of E1000, VFIO, PARAVIRTUALIZED, or ACCELERATEDPV.
+  networkType string
+  // Emulation type for remote data volumes
+  //
+  // One of ISCSI, SCSI, IDE, VFIO, or PARAVIRTUALIZED.
+  remoteDataVolumeType string
+  // Whether paravirtualized volume traffic is encrypted in transit
+  //
+  // When false the data moving between the instance and its paravirtualized
+  // block volumes crosses the virtual network unencrypted.
+  pvEncryptionInTransitEnabled bool
+  // Whether consistent volume naming is enabled
+  consistentVolumeNamingEnabled bool
+}
+
+// Resource allocation of a compute instance
+//
+// What a flexible shape was sized to: OCPUs and memory, the networking
+// bandwidth and VNIC slots that come with them, and any GPUs or local NVMe
+// disks attached. A field is null when the shape does not offer that resource,
+// so an instance with no GPUs reports null rather than zero.
+private oci.compute.instanceSizing @defaults("ocpus memoryInGBs") {
+  // OCPUs available to the instance
+  ocpus float
+  // Memory available to the instance, in gigabytes
+  memoryInGBs float
+  // Baseline OCPU utilization for a burstable instance
+  //
+  // BASELINE_1_8, BASELINE_1_2, or BASELINE_1_1. Empty on a non-burstable
+  // shape, where the instance always has its full OCPU allocation.
+  baselineOcpuUtilization string
+  // Short description of the instance's processor
+  processorDescription string
+  // Networking bandwidth available to the instance, in gigabits per second
+  networkingBandwidthInGbps float
+  // Maximum number of VNIC attachments the instance supports
+  maxVnicAttachments int
+  // Number of GPUs available to the instance
+  gpus int
+  // Short description of the instance's graphics processing unit
+  //
+  // Empty when the instance has no GPUs.
+  gpuDescription string
+  // Number of local disks available to the instance
+  localDisks int
+  // Aggregate size of all local disks, in gigabytes
+  //
+  // Null when the instance has no local disks.
+  localDisksTotalSizeInGBs float
+  // Short description of the local disks available to the instance
+  //
+  // Empty when the instance has no local disks.
+  localDiskDescription string
+  // Total number of vCPUs available to the instance
+  //
+  // Null on shapes sized in OCPUs alone.
+  vcpus int
+  // NVMe-backed local storage capacity, in gigabytes, on flexible dense shapes
+  //
+  // Null on every shape that is not a flexible dense (DenseLV) VM shape.
+  localVolumeSizeInGBs int
+}
+
+// Image a compute instance was launched from, with the boot volume built for it
+//
+// Present only on an instance launched from an image, where the boot volume was
+// created at launch and its size, performance tier and encryption key were
+// chosen then. kmsKey is what says the boot volume is protected by a
+// customer-managed key rather than an Oracle-managed one.
+private oci.compute.imageSource @defaults("bootVolumeSizeInGBs bootVolumeVpusPerGB") {
+  // Image the boot volume was created from
+  image() oci.compute.image
+  // Size of the boot volume created at launch, in gigabytes
+  bootVolumeSizeInGBs int
+  // Volume performance units per gigabyte applied to the boot volume created at launch
+  //
+  // 10 is the Balanced option, 20 Higher Performance, and 30 to 120 Ultra High
+  // Performance.
+  bootVolumeVpusPerGB int
+  // Vault key protecting the boot volume created at launch
+  //
+  // Null when the boot volume is encrypted with an Oracle-managed key rather
+  // than a customer-managed one.
+  kmsKey() oci.kms.key
 }
 
 // Oracle Cloud Infrastructure (OCI) virtual network interface card (VNIC)
