@@ -5,6 +5,7 @@ package gemspec
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,6 +26,9 @@ func TestGemspecExtractor(t *testing.T) {
 	assert.Equal(t, "inspec", root.Name)
 	assert.Equal(t, "6.8.1", root.Version)
 	assert.Equal(t, "pkg:gem/inspec@6.8.1", root.Purl)
+	// The fixture states `spec.license = "Apache-2.0"`. It was parsed and then
+	// dropped on the floor until this was fixed.
+	assert.Equal(t, "Apache-2.0", root.License)
 
 	// Direct = non-dev deps
 	direct := info.Direct()
@@ -56,4 +60,109 @@ func TestGemspecExtractor(t *testing.T) {
 	require.NotNil(t, rake)
 	assert.Equal(t, "", rake.Version)
 	assert.Equal(t, "pkg:gem/rake", rake.Purl)
+}
+
+// TestGemspecLicenseForms is the regression test for a gemspec's license being
+// read but never reported: the extractor matched name, version and
+// dependencies, and left Package.License empty even when the file said
+// `spec.license = "Apache-2.0"` — which the checked-in fixture does.
+//
+// RubyGems accepts two spellings of the same field. `license=` sets a
+// one-element list and `licenses=` sets the list directly, so a gemspec that
+// writes both ends up with whichever it wrote last.
+func TestGemspecLicenseForms(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		spec string
+		want string
+	}{
+		{
+			name: "singular license",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.license = "Apache-2.0"
+end`,
+			want: "Apache-2.0",
+		},
+		{
+			name: "singular license, single quotes",
+			spec: "Gem::Specification.new do |spec|\n  spec.name = 'example'\n  spec.license = 'MIT'\nend",
+			want: "MIT",
+		},
+		{
+			// A list is a choice among the members, rendered as SPDX's OR.
+			name: "plural licenses",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.licenses = ["MIT", "Apache-2.0"]
+end`,
+			want: "(MIT OR Apache-2.0)",
+		},
+		{
+			// A one-element list must not acquire parentheses: "(MIT)" is a
+			// different string to every consumer comparing identifiers.
+			name: "plural licenses with one member",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.licenses = ["MIT"]
+end`,
+			want: "MIT",
+		},
+		{
+			// The plural form must not be mistaken for the singular one, which
+			// would report only the first member.
+			name: "plural form is not read as the singular one",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.licenses = ["MIT", "GPL-2.0", "BSD-3-Clause"]
+end`,
+			want: "(MIT OR GPL-2.0 OR BSD-3-Clause)",
+		},
+		{
+			// Ruby semantics: the second assignment replaces the first.
+			name: "last assignment wins",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.licenses = ["MIT", "Apache-2.0"]
+  spec.license = "MIT"
+end`,
+			want: "MIT",
+		},
+		{
+			// A gemspec that declared nothing must report nothing rather than
+			// an empty expression that reads as a declaration.
+			name: "no license stated",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.version = "1.0.0"
+end`,
+			want: "",
+		},
+		{
+			name: "empty license value",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.license = ""
+end`,
+			want: "",
+		},
+		{
+			// The name is not a license: an unrelated `.name =` line must not
+			// leak into the field.
+			name: "license is not confused with other fields",
+			spec: `Gem::Specification.new do |spec|
+  spec.name = "example"
+  spec.homepage = "https://example.com"
+end`,
+			want: "",
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			info, err := (&Extractor{}).Parse(strings.NewReader(c.spec), "example.gemspec")
+			require.NoError(t, err)
+			root := info.Root()
+			require.NotNil(t, root)
+			assert.Equal(t, c.want, root.License)
+		})
+	}
 }
