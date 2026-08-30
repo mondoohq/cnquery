@@ -407,13 +407,6 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 			return nil, err
 		}
 
-		hc := bs.HealthChecker
-		if hc == nil {
-			// A backend set with no health checker leaves every probe field
-			// null rather than reporting a probe configured with empty values.
-			hc = &loadbalancer.HealthChecker{}
-		}
-
 		// A backend set with no SslConfiguration talks to its backends in the
 		// clear. The booleans stay false rather than null so that an assertion
 		// requiring verification fails on such a set instead of passing on a
@@ -432,23 +425,13 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		lbId := o.Id.Data
 		bsId := lbId + "/backendSet/" + name
 		mqlInstance, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.backendSet", map[string]*llx.RawData{
-			"__id":          llx.StringData(bsId),
-			"name":          llx.StringData(name),
-			"policy":        llx.StringDataPtr(bs.Policy),
-			"healthChecker": llx.DictData(healthChecker),
-
-			"healthCheckProtocol":          llx.StringDataPtr(hc.Protocol),
-			"healthCheckPort":              llx.IntDataPtr(hc.Port),
-			"healthCheckUrlPath":           llx.StringDataPtr(hc.UrlPath),
-			"healthCheckReturnCode":        llx.IntDataPtr(hc.ReturnCode),
-			"healthCheckResponseBodyRegex": llx.StringDataPtr(hc.ResponseBodyRegex),
-			"healthCheckRetries":           llx.IntDataPtr(hc.Retries),
-			"healthCheckTimeoutInMillis":   llx.IntDataPtr(hc.TimeoutInMillis),
-			"healthCheckIntervalInMillis":  llx.IntDataPtr(hc.IntervalInMillis),
-			"healthCheckForcePlainText":    llx.BoolDataPtr(hc.IsForcePlainText),
-			"backendCount":                 llx.IntData(int64(len(bs.Backends))),
-			"backendMaxConnections":        llx.IntDataPtr(bs.BackendMaxConnections),
-			"sslProtocols":                 llx.ArrayData(ssl.protocols, types.String),
+			"__id":                  llx.StringData(bsId),
+			"name":                  llx.StringData(name),
+			"policy":                llx.StringDataPtr(bs.Policy),
+			"healthChecker":         llx.DictData(healthChecker),
+			"backendCount":          llx.IntData(int64(len(bs.Backends))),
+			"backendMaxConnections": llx.IntDataPtr(bs.BackendMaxConnections),
+			"sslProtocols":          llx.ArrayData(ssl.protocols, types.String),
 
 			"sslVerifyPeerCertificate": llx.BoolData(ssl.verifyPeerCertificate),
 			"sslVerifyDepth":           llx.IntDataPtr(ssl.verifyDepth),
@@ -475,6 +458,7 @@ func (o *mqlOciLoadBalancerLoadBalancer) backendSets() ([]any, error) {
 		mqlBs.cacheCertBundleName = ssl.certificateName
 		mqlBs.cacheLbCipherSuites = o.cacheCipherSuites
 		mqlBs.cacheLbCertificates = o.cacheCertificates
+		mqlBs.cacheHealthChecker = bs.HealthChecker
 		res = append(res, mqlBs)
 	}
 	return res, nil
@@ -490,6 +474,38 @@ type mqlOciLoadBalancerBackendSetInternal struct {
 	cacheCertBundleName  string
 	cacheLbCipherSuites  map[string]loadbalancer.SslCipherSuite
 	cacheLbCertificates  map[string]loadbalancer.Certificate
+
+	cacheHealthChecker *loadbalancer.HealthChecker
+}
+
+// healthCheck builds the probe that decides which backends stay in rotation.
+//
+// A backend set with no health checker reports null rather than a probe whose
+// every field is empty: nothing removes a failed backend from rotation, which
+// is a different fact from a probe configured to accept anything.
+func (o *mqlOciLoadBalancerBackendSet) healthCheck() (*mqlOciLoadBalancerHealthChecker, error) {
+	hc := o.cacheHealthChecker
+	if hc == nil {
+		o.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.loadBalancer.healthChecker", map[string]*llx.RawData{
+		"__id":              llx.StringData(o.__id + "/healthChecker"),
+		"protocol":          llx.StringDataPtr(hc.Protocol),
+		"port":              llx.IntDataPtr(hc.Port),
+		"returnCode":        llx.IntDataPtr(hc.ReturnCode),
+		"responseBodyRegex": llx.StringDataPtr(hc.ResponseBodyRegex),
+		"urlPath":           llx.StringDataPtr(hc.UrlPath),
+		"retries":           llx.IntDataPtr(hc.Retries),
+		"timeoutInMillis":   llx.IntDataPtr(hc.TimeoutInMillis),
+		"intervalInMillis":  llx.IntDataPtr(hc.IntervalInMillis),
+		"forcePlainText":    llx.BoolDataPtr(hc.IsForcePlainText),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciLoadBalancerHealthChecker), nil
 }
 
 // sslCipherSuite resolves the cipher suite used toward the backends. Null when

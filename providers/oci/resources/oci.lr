@@ -4969,38 +4969,17 @@ private oci.loadBalancer.backendSet @defaults("name") {
   policy string
   // Health checker configuration
   //
-  // Deprecated in favor of the healthCheck fields, from healthCheckProtocol
-  // through healthCheckForcePlainText. Keys: `protocol` (the probe protocol,
-  // e.g., HTTP, HTTPS, or TCP), `port`, `urlPath`, `returnCode` (expected
-  // status code), `responseBodyRegex`, `retries`, `timeoutInMillis`,
-  // `intervalInMillis`, and `isForcePlainText`.
+  // Deprecated in favor of healthCheck, which reports the same probe as a
+  // structure. Keys: `protocol` (the probe protocol, e.g., HTTP, HTTPS, or
+  // TCP), `port`, `urlPath`, `returnCode` (expected status code),
+  // `responseBodyRegex`, `retries`, `timeoutInMillis`, `intervalInMillis`, and
+  // `isForcePlainText`.
   healthChecker @maturity("deprecated") dict
-  // Protocol the health probe uses
+  // Probe that decides whether a backend is healthy
   //
-  // HTTP or TCP. Empty when the backend set carries no health checker.
-  healthCheckProtocol string
-  // Backend port the health probe connects to
-  //
-  // Null when the probe uses the port each backend declares for itself.
-  healthCheckPort int
-  // Path the health probe requests, on an HTTP probe
-  healthCheckUrlPath string
-  // Status code a healthy backend is expected to return
-  healthCheckReturnCode int
-  // Regular expression the probe matches the response body against
-  healthCheckResponseBodyRegex string
-  // Consecutive failures before a backend is considered unhealthy
-  healthCheckRetries int
-  // Time the probe waits for a reply, in milliseconds
-  healthCheckTimeoutInMillis int
-  // Interval between health probes, in milliseconds
-  healthCheckIntervalInMillis int
-  // Whether the health probe always runs in plain text
-  //
-  // When true the probe skips TLS even where the backend set is configured to
-  // use it, so a backend whose certificate has expired or been replaced still
-  // reports healthy. Null when the backend set carries no health checker.
-  healthCheckForcePlainText bool
+  // Null when the backend set carries no health checker, in which case no
+  // probe removes a failed backend from rotation.
+  healthCheck() oci.loadBalancer.healthChecker
   // Number of backends
   backendCount int
   // Backend servers in the set
@@ -5083,6 +5062,42 @@ private oci.loadBalancer.backendSet @defaults("name") {
   //
   // Without it the cookie that pins a session is readable from JavaScript.
   lbCookieIsHttpOnly bool
+}
+
+// Health probe of a load balancer backend set
+//
+// The probe that decides which backends stay in rotation: the protocol and
+// port it uses, what it asks for, what answer it accepts, and how many
+// failures it tolerates. forcePlainText is the field that says the probe never
+// speaks TLS, which lets a backend with an expired certificate keep reporting
+// healthy.
+private oci.loadBalancer.healthChecker @defaults("protocol port urlPath") {
+  // Protocol the probe uses
+  //
+  // HTTP or TCP.
+  protocol string
+  // Backend port the probe connects to
+  //
+  // Null when the probe uses the port each backend declares for itself.
+  port int
+  // Status code a healthy backend is expected to return
+  returnCode int
+  // Regular expression the probe matches the response body against
+  responseBodyRegex string
+  // Path the probe requests, on an HTTP probe
+  urlPath string
+  // Consecutive failures before a backend is considered unhealthy
+  retries int
+  // Time the probe waits for a reply, in milliseconds
+  timeoutInMillis int
+  // Interval between probes, in milliseconds
+  intervalInMillis int
+  // Whether the probe always runs in plain text
+  //
+  // When true the probe skips TLS even where the backend set is configured to
+  // use it, so a backend whose certificate has expired or been replaced still
+  // reports healthy.
+  forcePlainText bool
 }
 
 // Backend server in an Oracle Cloud Infrastructure (OCI) load balancer backend set
@@ -5255,66 +5270,89 @@ private oci.networkLoadBalancer.backendSet @defaults("name policy") {
   isInstantFailoverEnabled bool
   // Health checker configuration
   //
-  // Deprecated in favor of the healthCheck fields, from healthCheckProtocol
-  // through healthCheckDnsRcodes. Keys: `protocol` (HTTP, HTTPS, TCP, UDP, or
-  // DNS), `port`, `urlPath`, `returnCode` (expected status code),
-  // `responseBodyRegex`, `retries`, `timeoutInMillis`, `intervalInMillis`, and
-  // a `dns` block for DNS probes.
+  // Deprecated in favor of healthCheck, which reports the same probe as a
+  // structure. Keys: `protocol` (HTTP, HTTPS, TCP, UDP, or DNS), `port`,
+  // `urlPath`, `returnCode` (expected status code), `responseBodyRegex`,
+  // `retries`, `timeoutInMillis`, `intervalInMillis`, and a `dns` block for
+  // DNS probes.
   healthChecker @maturity("deprecated") dict
-  // Protocol the health probe uses
+  // Probe that decides whether a backend is healthy
   //
-  // HTTP, HTTPS, TCP, UDP, or DNS. Empty when the backend set carries no
-  // health checker.
-  healthCheckProtocol string
-  // Backend port the health probe connects to
-  //
-  // Null when the probe uses the port each backend declares for itself.
-  healthCheckPort int
-  // Path the health probe requests, on an HTTP or HTTPS probe
-  healthCheckUrlPath string
-  // Status code a healthy backend is expected to return
-  healthCheckReturnCode int
-  // Regular expression the probe matches the response body against
-  healthCheckResponseBodyRegex string
-  // Consecutive failures before a backend is considered unhealthy
-  healthCheckRetries int
-  // Time the probe waits for a reply, in milliseconds
-  healthCheckTimeoutInMillis int
-  // Interval between health probes, in milliseconds
-  healthCheckIntervalInMillis int
-  // Base64-encoded payload sent as the UDP or TCP health probe
-  //
-  // Empty on probes that send no payload.
-  healthCheckRequestData string
-  // Base64-encoded payload the UDP or TCP health probe response is matched against
-  //
-  // Empty when the probe accepts any response.
-  healthCheckResponseData string
-  // Fully-qualified domain name a DNS health probe queries
-  //
-  // Empty on a probe that is not a DNS probe.
-  healthCheckDnsDomainName string
-  // Transport a DNS health probe uses
-  //
-  // UDP or TCP. Empty on a probe that is not a DNS probe.
-  healthCheckDnsTransportProtocol string
-  // Query class a DNS health probe sends
-  //
-  // IN or CH. Empty on a probe that is not a DNS probe.
-  healthCheckDnsQueryClass string
-  // Query type a DNS health probe sends
-  //
-  // A, AAAA, or TXT. Empty on a probe that is not a DNS probe.
-  healthCheckDnsQueryType string
-  // Response codes a DNS health probe accepts as healthy
-  //
-  // For example NOERROR and NXDOMAIN. Empty on a probe that is not a DNS
-  // probe.
-  healthCheckDnsRcodes []string
+  // Null when the backend set carries no health checker, in which case no
+  // probe removes a failed backend from rotation.
+  healthCheck() oci.networkLoadBalancer.healthChecker
   // Backends traffic is distributed to
   backends []oci.networkLoadBalancer.backend
   // Number of backends
   backendCount int
+}
+
+// Health probe of a network load balancer backend set
+//
+// The probe that decides which backends stay in rotation. A network load
+// balancer probes at layer 3 and 4 as well as layer 7, so alongside the HTTP
+// fields it carries the raw payload a UDP or TCP probe sends and expects back,
+// and a DNS query for a DNS probe.
+private oci.networkLoadBalancer.healthChecker @defaults("protocol port urlPath") {
+  // Protocol the probe uses
+  //
+  // HTTP, HTTPS, TCP, UDP, or DNS.
+  protocol string
+  // Backend port the probe connects to
+  //
+  // Null when the probe uses the port each backend declares for itself.
+  port int
+  // Consecutive failures before a backend is considered unhealthy
+  retries int
+  // Time the probe waits for a reply, in milliseconds
+  timeoutInMillis int
+  // Interval between probes, in milliseconds
+  intervalInMillis int
+  // Path the probe requests, on an HTTP or HTTPS probe
+  urlPath string
+  // Regular expression the probe matches the response body against
+  responseBodyRegex string
+  // Status code a healthy backend is expected to return
+  returnCode int
+  // Base64-encoded payload sent as the UDP or TCP probe
+  //
+  // Empty on probes that send no payload.
+  requestData string
+  // Base64-encoded payload the UDP or TCP probe response is matched against
+  //
+  // Empty when the probe accepts any response.
+  responseData string
+  // DNS query the probe sends, on a DNS probe
+  //
+  // Null on a probe that is not a DNS probe.
+  dns() oci.networkLoadBalancer.dnsHealthCheck
+}
+
+// DNS query a network load balancer health probe sends
+//
+// The query a DNS probe issues against each backend and the response codes it
+// accepts as healthy. A backend answering NXDOMAIN counts as healthy whenever
+// that code is in rcodes, so the accepted set is what decides whether a
+// resolver that has lost its zone stays in rotation.
+private oci.networkLoadBalancer.dnsHealthCheck @defaults("domainName queryType") {
+  // Fully-qualified domain name the probe queries
+  domainName string
+  // Transport the probe uses
+  //
+  // UDP or TCP.
+  transportProtocol string
+  // Query class the probe sends
+  //
+  // IN or CH.
+  queryClass string
+  // Query type the probe sends
+  //
+  // A, AAAA, or TXT.
+  queryType string
+  // Response codes the probe accepts as healthy
+  //
+  // For example NOERROR and NXDOMAIN.
+  rcodes []string
 }
 
 // IP address assigned to a network load balancer

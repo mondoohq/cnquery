@@ -139,11 +139,14 @@ const (
 	ResourceOciLoadBalancerRuleSet                                             string = "oci.loadBalancer.ruleSet"
 	ResourceOciLoadBalancerIpAddress                                           string = "oci.loadBalancer.ipAddress"
 	ResourceOciLoadBalancerBackendSet                                          string = "oci.loadBalancer.backendSet"
+	ResourceOciLoadBalancerHealthChecker                                       string = "oci.loadBalancer.healthChecker"
 	ResourceOciLoadBalancerBackend                                             string = "oci.loadBalancer.backend"
 	ResourceOciNetworkLoadBalancer                                             string = "oci.networkLoadBalancer"
 	ResourceOciNetworkLoadBalancerLoadBalancer                                 string = "oci.networkLoadBalancer.loadBalancer"
 	ResourceOciNetworkLoadBalancerListener                                     string = "oci.networkLoadBalancer.listener"
 	ResourceOciNetworkLoadBalancerBackendSet                                   string = "oci.networkLoadBalancer.backendSet"
+	ResourceOciNetworkLoadBalancerHealthChecker                                string = "oci.networkLoadBalancer.healthChecker"
+	ResourceOciNetworkLoadBalancerDnsHealthCheck                               string = "oci.networkLoadBalancer.dnsHealthCheck"
 	ResourceOciNetworkLoadBalancerIpAddress                                    string = "oci.networkLoadBalancer.ipAddress"
 	ResourceOciNetworkLoadBalancerBackend                                      string = "oci.networkLoadBalancer.backend"
 	ResourceOciResourceManager                                                 string = "oci.resourceManager"
@@ -800,6 +803,10 @@ func init() {
 			// to override args, implement: initOciLoadBalancerBackendSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciLoadBalancerBackendSet,
 		},
+		"oci.loadBalancer.healthChecker": {
+			// to override args, implement: initOciLoadBalancerHealthChecker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciLoadBalancerHealthChecker,
+		},
 		"oci.loadBalancer.backend": {
 			// to override args, implement: initOciLoadBalancerBackend(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciLoadBalancerBackend,
@@ -819,6 +826,14 @@ func init() {
 		"oci.networkLoadBalancer.backendSet": {
 			// to override args, implement: initOciNetworkLoadBalancerBackendSet(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
 			Create: createOciNetworkLoadBalancerBackendSet,
+		},
+		"oci.networkLoadBalancer.healthChecker": {
+			// to override args, implement: initOciNetworkLoadBalancerHealthChecker(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkLoadBalancerHealthChecker,
+		},
+		"oci.networkLoadBalancer.dnsHealthCheck": {
+			// to override args, implement: initOciNetworkLoadBalancerDnsHealthCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
+			Create: createOciNetworkLoadBalancerDnsHealthCheck,
 		},
 		"oci.networkLoadBalancer.ipAddress": {
 			// to override args, implement: initOciNetworkLoadBalancerIpAddress(runtime *plugin.Runtime, args map[string]*llx.RawData) (map[string]*llx.RawData, plugin.Resource, error)
@@ -5735,32 +5750,8 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.loadBalancer.backendSet.healthChecker": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthChecker()).ToDataRes(types.Dict)
 	},
-	"oci.loadBalancer.backendSet.healthCheckProtocol": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckProtocol()).ToDataRes(types.String)
-	},
-	"oci.loadBalancer.backendSet.healthCheckPort": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckPort()).ToDataRes(types.Int)
-	},
-	"oci.loadBalancer.backendSet.healthCheckUrlPath": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckUrlPath()).ToDataRes(types.String)
-	},
-	"oci.loadBalancer.backendSet.healthCheckReturnCode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckReturnCode()).ToDataRes(types.Int)
-	},
-	"oci.loadBalancer.backendSet.healthCheckResponseBodyRegex": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckResponseBodyRegex()).ToDataRes(types.String)
-	},
-	"oci.loadBalancer.backendSet.healthCheckRetries": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckRetries()).ToDataRes(types.Int)
-	},
-	"oci.loadBalancer.backendSet.healthCheckTimeoutInMillis": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckTimeoutInMillis()).ToDataRes(types.Int)
-	},
-	"oci.loadBalancer.backendSet.healthCheckIntervalInMillis": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckIntervalInMillis()).ToDataRes(types.Int)
-	},
-	"oci.loadBalancer.backendSet.healthCheckForcePlainText": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheckForcePlainText()).ToDataRes(types.Bool)
+	"oci.loadBalancer.backendSet.healthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerBackendSet).GetHealthCheck()).ToDataRes(types.Resource("oci.loadBalancer.healthChecker"))
 	},
 	"oci.loadBalancer.backendSet.backendCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetBackendCount()).ToDataRes(types.Int)
@@ -5821,6 +5812,33 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	},
 	"oci.loadBalancer.backendSet.lbCookieIsHttpOnly": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackendSet).GetLbCookieIsHttpOnly()).ToDataRes(types.Bool)
+	},
+	"oci.loadBalancer.healthChecker.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetProtocol()).ToDataRes(types.String)
+	},
+	"oci.loadBalancer.healthChecker.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetPort()).ToDataRes(types.Int)
+	},
+	"oci.loadBalancer.healthChecker.returnCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetReturnCode()).ToDataRes(types.Int)
+	},
+	"oci.loadBalancer.healthChecker.responseBodyRegex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetResponseBodyRegex()).ToDataRes(types.String)
+	},
+	"oci.loadBalancer.healthChecker.urlPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetUrlPath()).ToDataRes(types.String)
+	},
+	"oci.loadBalancer.healthChecker.retries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetRetries()).ToDataRes(types.Int)
+	},
+	"oci.loadBalancer.healthChecker.timeoutInMillis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetTimeoutInMillis()).ToDataRes(types.Int)
+	},
+	"oci.loadBalancer.healthChecker.intervalInMillis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetIntervalInMillis()).ToDataRes(types.Int)
+	},
+	"oci.loadBalancer.healthChecker.forcePlainText": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciLoadBalancerHealthChecker).GetForcePlainText()).ToDataRes(types.Bool)
 	},
 	"oci.loadBalancer.backend.name": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciLoadBalancerBackend).GetName()).ToDataRes(types.String)
@@ -5960,56 +5978,62 @@ var getDataFields = map[string]func(r plugin.Resource) *plugin.DataRes{
 	"oci.networkLoadBalancer.backendSet.healthChecker": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthChecker()).ToDataRes(types.Dict)
 	},
-	"oci.networkLoadBalancer.backendSet.healthCheckProtocol": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckProtocol()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckPort": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckPort()).ToDataRes(types.Int)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckUrlPath": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckUrlPath()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckReturnCode": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckReturnCode()).ToDataRes(types.Int)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckResponseBodyRegex": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckResponseBodyRegex()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckRetries": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckRetries()).ToDataRes(types.Int)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckTimeoutInMillis": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckTimeoutInMillis()).ToDataRes(types.Int)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckIntervalInMillis": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckIntervalInMillis()).ToDataRes(types.Int)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckRequestData": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckRequestData()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckResponseData": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckResponseData()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsDomainName": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckDnsDomainName()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsTransportProtocol": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckDnsTransportProtocol()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsQueryClass": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckDnsQueryClass()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsQueryType": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckDnsQueryType()).ToDataRes(types.String)
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsRcodes": func(r plugin.Resource) *plugin.DataRes {
-		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheckDnsRcodes()).ToDataRes(types.Array(types.String))
+	"oci.networkLoadBalancer.backendSet.healthCheck": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetHealthCheck()).ToDataRes(types.Resource("oci.networkLoadBalancer.healthChecker"))
 	},
 	"oci.networkLoadBalancer.backendSet.backends": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetBackends()).ToDataRes(types.Array(types.Resource("oci.networkLoadBalancer.backend")))
 	},
 	"oci.networkLoadBalancer.backendSet.backendCount": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLoadBalancerBackendSet).GetBackendCount()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.healthChecker.protocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetProtocol()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.healthChecker.port": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetPort()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.healthChecker.retries": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetRetries()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.healthChecker.timeoutInMillis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetTimeoutInMillis()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.healthChecker.intervalInMillis": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetIntervalInMillis()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.healthChecker.urlPath": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetUrlPath()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.healthChecker.responseBodyRegex": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetResponseBodyRegex()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.healthChecker.returnCode": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetReturnCode()).ToDataRes(types.Int)
+	},
+	"oci.networkLoadBalancer.healthChecker.requestData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetRequestData()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.healthChecker.responseData": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetResponseData()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.healthChecker.dns": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerHealthChecker).GetDns()).ToDataRes(types.Resource("oci.networkLoadBalancer.dnsHealthCheck"))
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.domainName": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).GetDomainName()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.transportProtocol": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).GetTransportProtocol()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.queryClass": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).GetQueryClass()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.queryType": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).GetQueryType()).ToDataRes(types.String)
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.rcodes": func(r plugin.Resource) *plugin.DataRes {
+		return (r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).GetRcodes()).ToDataRes(types.Array(types.String))
 	},
 	"oci.networkLoadBalancer.ipAddress.ipAddress": func(r plugin.Resource) *plugin.DataRes {
 		return (r.(*mqlOciNetworkLoadBalancerIpAddress).GetIpAddress()).ToDataRes(types.String)
@@ -17729,40 +17753,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciLoadBalancerBackendSet).HealthChecker, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.loadBalancer.backendSet.healthCheckProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckUrlPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckUrlPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckReturnCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckReturnCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckResponseBodyRegex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckResponseBodyRegex, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckRetries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckRetries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckTimeoutInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckTimeoutInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckIntervalInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckIntervalInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.loadBalancer.backendSet.healthCheckForcePlainText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciLoadBalancerBackendSet).HealthCheckForcePlainText, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+	"oci.loadBalancer.backendSet.healthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerBackendSet).HealthCheck, ok = plugin.RawToTValue[*mqlOciLoadBalancerHealthChecker](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.backendSet.backendCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -17843,6 +17835,46 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.loadBalancer.backendSet.lbCookieIsHttpOnly": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciLoadBalancerBackendSet).LbCookieIsHttpOnly, ok = plugin.RawToTValue[bool](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.loadBalancer.healthChecker.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.returnCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).ReturnCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.responseBodyRegex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).ResponseBodyRegex, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.urlPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).UrlPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.retries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).Retries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.timeoutInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).TimeoutInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.intervalInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).IntervalInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.loadBalancer.healthChecker.forcePlainText": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciLoadBalancerHealthChecker).ForcePlainText, ok = plugin.RawToTValue[bool](v.Value, v.Error)
 		return
 	},
 	"oci.loadBalancer.backend.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18049,64 +18081,8 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthChecker, ok = plugin.RawToTValue[any](v.Value, v.Error)
 		return
 	},
-	"oci.networkLoadBalancer.backendSet.healthCheckProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckPort": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckPort, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckUrlPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckUrlPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckReturnCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckReturnCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckResponseBodyRegex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckResponseBodyRegex, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckRetries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckRetries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckTimeoutInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckTimeoutInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckIntervalInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckIntervalInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckRequestData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckRequestData, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckResponseData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckResponseData, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsDomainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckDnsDomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsTransportProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckDnsTransportProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsQueryClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckDnsQueryClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsQueryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckDnsQueryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
-		return
-	},
-	"oci.networkLoadBalancer.backendSet.healthCheckDnsRcodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
-		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheckDnsRcodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
+	"oci.networkLoadBalancer.backendSet.healthCheck": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerBackendSet).HealthCheck, ok = plugin.RawToTValue[*mqlOciNetworkLoadBalancerHealthChecker](v.Value, v.Error)
 		return
 	},
 	"oci.networkLoadBalancer.backendSet.backends": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -18115,6 +18091,78 @@ var setDataFields = map[string]func(r plugin.Resource, v *llx.RawData) bool{
 	},
 	"oci.networkLoadBalancer.backendSet.backendCount": func(r plugin.Resource, v *llx.RawData) (ok bool) {
 		r.(*mqlOciNetworkLoadBalancerBackendSet).BackendCount, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.protocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).Protocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.port": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).Port, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.retries": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).Retries, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.timeoutInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).TimeoutInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.intervalInMillis": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).IntervalInMillis, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.urlPath": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).UrlPath, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.responseBodyRegex": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).ResponseBodyRegex, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.returnCode": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).ReturnCode, ok = plugin.RawToTValue[int64](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.requestData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).RequestData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.responseData": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).ResponseData, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.healthChecker.dns": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerHealthChecker).Dns, ok = plugin.RawToTValue[*mqlOciNetworkLoadBalancerDnsHealthCheck](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).__id, ok = v.Value.(string)
+		return
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.domainName": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).DomainName, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.transportProtocol": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).TransportProtocol, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.queryClass": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).QueryClass, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.queryType": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).QueryType, ok = plugin.RawToTValue[string](v.Value, v.Error)
+		return
+	},
+	"oci.networkLoadBalancer.dnsHealthCheck.rcodes": func(r plugin.Resource, v *llx.RawData) (ok bool) {
+		r.(*mqlOciNetworkLoadBalancerDnsHealthCheck).Rcodes, ok = plugin.RawToTValue[[]any](v.Value, v.Error)
 		return
 	},
 	"oci.networkLoadBalancer.ipAddress.__id": func(r plugin.Resource, v *llx.RawData) (ok bool) {
@@ -42066,15 +42114,7 @@ type mqlOciLoadBalancerBackendSet struct {
 	Name                              plugin.TValue[string]
 	Policy                            plugin.TValue[string]
 	HealthChecker                     plugin.TValue[any]
-	HealthCheckProtocol               plugin.TValue[string]
-	HealthCheckPort                   plugin.TValue[int64]
-	HealthCheckUrlPath                plugin.TValue[string]
-	HealthCheckReturnCode             plugin.TValue[int64]
-	HealthCheckResponseBodyRegex      plugin.TValue[string]
-	HealthCheckRetries                plugin.TValue[int64]
-	HealthCheckTimeoutInMillis        plugin.TValue[int64]
-	HealthCheckIntervalInMillis       plugin.TValue[int64]
-	HealthCheckForcePlainText         plugin.TValue[bool]
+	HealthCheck                       plugin.TValue[*mqlOciLoadBalancerHealthChecker]
 	BackendCount                      plugin.TValue[int64]
 	Backends                          plugin.TValue[[]any]
 	BackendMaxConnections             plugin.TValue[int64]
@@ -42146,40 +42186,20 @@ func (c *mqlOciLoadBalancerBackendSet) GetHealthChecker() *plugin.TValue[any] {
 	return &c.HealthChecker
 }
 
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckProtocol() *plugin.TValue[string] {
-	return &c.HealthCheckProtocol
-}
+func (c *mqlOciLoadBalancerBackendSet) GetHealthCheck() *plugin.TValue[*mqlOciLoadBalancerHealthChecker] {
+	return plugin.GetOrCompute[*mqlOciLoadBalancerHealthChecker](&c.HealthCheck, func() (*mqlOciLoadBalancerHealthChecker, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.loadBalancer.backendSet", c.__id, "healthCheck")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciLoadBalancerHealthChecker), nil
+			}
+		}
 
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckPort() *plugin.TValue[int64] {
-	return &c.HealthCheckPort
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckUrlPath() *plugin.TValue[string] {
-	return &c.HealthCheckUrlPath
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckReturnCode() *plugin.TValue[int64] {
-	return &c.HealthCheckReturnCode
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckResponseBodyRegex() *plugin.TValue[string] {
-	return &c.HealthCheckResponseBodyRegex
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckRetries() *plugin.TValue[int64] {
-	return &c.HealthCheckRetries
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckTimeoutInMillis() *plugin.TValue[int64] {
-	return &c.HealthCheckTimeoutInMillis
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckIntervalInMillis() *plugin.TValue[int64] {
-	return &c.HealthCheckIntervalInMillis
-}
-
-func (c *mqlOciLoadBalancerBackendSet) GetHealthCheckForcePlainText() *plugin.TValue[bool] {
-	return &c.HealthCheckForcePlainText
+		return c.healthCheck()
+	})
 }
 
 func (c *mqlOciLoadBalancerBackendSet) GetBackendCount() *plugin.TValue[int64] {
@@ -42332,6 +42352,90 @@ func (c *mqlOciLoadBalancerBackendSet) GetLbCookieIsSecure() *plugin.TValue[bool
 
 func (c *mqlOciLoadBalancerBackendSet) GetLbCookieIsHttpOnly() *plugin.TValue[bool] {
 	return &c.LbCookieIsHttpOnly
+}
+
+// mqlOciLoadBalancerHealthChecker for the oci.loadBalancer.healthChecker resource
+type mqlOciLoadBalancerHealthChecker struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciLoadBalancerHealthCheckerInternal it will be used here
+	Protocol          plugin.TValue[string]
+	Port              plugin.TValue[int64]
+	ReturnCode        plugin.TValue[int64]
+	ResponseBodyRegex plugin.TValue[string]
+	UrlPath           plugin.TValue[string]
+	Retries           plugin.TValue[int64]
+	TimeoutInMillis   plugin.TValue[int64]
+	IntervalInMillis  plugin.TValue[int64]
+	ForcePlainText    plugin.TValue[bool]
+}
+
+// createOciLoadBalancerHealthChecker creates a new instance of this resource
+func createOciLoadBalancerHealthChecker(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciLoadBalancerHealthChecker{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.loadBalancer.healthChecker", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) MqlName() string {
+	return "oci.loadBalancer.healthChecker"
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetReturnCode() *plugin.TValue[int64] {
+	return &c.ReturnCode
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetResponseBodyRegex() *plugin.TValue[string] {
+	return &c.ResponseBodyRegex
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetUrlPath() *plugin.TValue[string] {
+	return &c.UrlPath
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetRetries() *plugin.TValue[int64] {
+	return &c.Retries
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetTimeoutInMillis() *plugin.TValue[int64] {
+	return &c.TimeoutInMillis
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetIntervalInMillis() *plugin.TValue[int64] {
+	return &c.IntervalInMillis
+}
+
+func (c *mqlOciLoadBalancerHealthChecker) GetForcePlainText() *plugin.TValue[bool] {
+	return &c.ForcePlainText
 }
 
 // mqlOciLoadBalancerBackend for the oci.loadBalancer.backend resource
@@ -42776,31 +42880,17 @@ func (c *mqlOciNetworkLoadBalancerListener) GetUdpIdleTimeout() *plugin.TValue[i
 type mqlOciNetworkLoadBalancerBackendSet struct {
 	MqlRuntime *plugin.Runtime
 	__id       string
-	// optional: if you define mqlOciNetworkLoadBalancerBackendSetInternal it will be used here
-	Name                            plugin.TValue[string]
-	Policy                          plugin.TValue[string]
-	IpVersion                       plugin.TValue[string]
-	IsPreserveSource                plugin.TValue[bool]
-	IsFailOpen                      plugin.TValue[bool]
-	IsInstantFailoverEnabled        plugin.TValue[bool]
-	HealthChecker                   plugin.TValue[any]
-	HealthCheckProtocol             plugin.TValue[string]
-	HealthCheckPort                 plugin.TValue[int64]
-	HealthCheckUrlPath              plugin.TValue[string]
-	HealthCheckReturnCode           plugin.TValue[int64]
-	HealthCheckResponseBodyRegex    plugin.TValue[string]
-	HealthCheckRetries              plugin.TValue[int64]
-	HealthCheckTimeoutInMillis      plugin.TValue[int64]
-	HealthCheckIntervalInMillis     plugin.TValue[int64]
-	HealthCheckRequestData          plugin.TValue[string]
-	HealthCheckResponseData         plugin.TValue[string]
-	HealthCheckDnsDomainName        plugin.TValue[string]
-	HealthCheckDnsTransportProtocol plugin.TValue[string]
-	HealthCheckDnsQueryClass        plugin.TValue[string]
-	HealthCheckDnsQueryType         plugin.TValue[string]
-	HealthCheckDnsRcodes            plugin.TValue[[]any]
-	Backends                        plugin.TValue[[]any]
-	BackendCount                    plugin.TValue[int64]
+	mqlOciNetworkLoadBalancerBackendSetInternal
+	Name                     plugin.TValue[string]
+	Policy                   plugin.TValue[string]
+	IpVersion                plugin.TValue[string]
+	IsPreserveSource         plugin.TValue[bool]
+	IsFailOpen               plugin.TValue[bool]
+	IsInstantFailoverEnabled plugin.TValue[bool]
+	HealthChecker            plugin.TValue[any]
+	HealthCheck              plugin.TValue[*mqlOciNetworkLoadBalancerHealthChecker]
+	Backends                 plugin.TValue[[]any]
+	BackendCount             plugin.TValue[int64]
 }
 
 // createOciNetworkLoadBalancerBackendSet creates a new instance of this resource
@@ -42863,64 +42953,20 @@ func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthChecker() *plugin.TValue[
 	return &c.HealthChecker
 }
 
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckProtocol() *plugin.TValue[string] {
-	return &c.HealthCheckProtocol
-}
+func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheck() *plugin.TValue[*mqlOciNetworkLoadBalancerHealthChecker] {
+	return plugin.GetOrCompute[*mqlOciNetworkLoadBalancerHealthChecker](&c.HealthCheck, func() (*mqlOciNetworkLoadBalancerHealthChecker, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer.backendSet", c.__id, "healthCheck")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkLoadBalancerHealthChecker), nil
+			}
+		}
 
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckPort() *plugin.TValue[int64] {
-	return &c.HealthCheckPort
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckUrlPath() *plugin.TValue[string] {
-	return &c.HealthCheckUrlPath
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckReturnCode() *plugin.TValue[int64] {
-	return &c.HealthCheckReturnCode
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckResponseBodyRegex() *plugin.TValue[string] {
-	return &c.HealthCheckResponseBodyRegex
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckRetries() *plugin.TValue[int64] {
-	return &c.HealthCheckRetries
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckTimeoutInMillis() *plugin.TValue[int64] {
-	return &c.HealthCheckTimeoutInMillis
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckIntervalInMillis() *plugin.TValue[int64] {
-	return &c.HealthCheckIntervalInMillis
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckRequestData() *plugin.TValue[string] {
-	return &c.HealthCheckRequestData
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckResponseData() *plugin.TValue[string] {
-	return &c.HealthCheckResponseData
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckDnsDomainName() *plugin.TValue[string] {
-	return &c.HealthCheckDnsDomainName
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckDnsTransportProtocol() *plugin.TValue[string] {
-	return &c.HealthCheckDnsTransportProtocol
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckDnsQueryClass() *plugin.TValue[string] {
-	return &c.HealthCheckDnsQueryClass
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckDnsQueryType() *plugin.TValue[string] {
-	return &c.HealthCheckDnsQueryType
-}
-
-func (c *mqlOciNetworkLoadBalancerBackendSet) GetHealthCheckDnsRcodes() *plugin.TValue[[]any] {
-	return &c.HealthCheckDnsRcodes
+		return c.healthCheck()
+	})
 }
 
 func (c *mqlOciNetworkLoadBalancerBackendSet) GetBackends() *plugin.TValue[[]any] {
@@ -42929,6 +42975,176 @@ func (c *mqlOciNetworkLoadBalancerBackendSet) GetBackends() *plugin.TValue[[]any
 
 func (c *mqlOciNetworkLoadBalancerBackendSet) GetBackendCount() *plugin.TValue[int64] {
 	return &c.BackendCount
+}
+
+// mqlOciNetworkLoadBalancerHealthChecker for the oci.networkLoadBalancer.healthChecker resource
+type mqlOciNetworkLoadBalancerHealthChecker struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	mqlOciNetworkLoadBalancerHealthCheckerInternal
+	Protocol          plugin.TValue[string]
+	Port              plugin.TValue[int64]
+	Retries           plugin.TValue[int64]
+	TimeoutInMillis   plugin.TValue[int64]
+	IntervalInMillis  plugin.TValue[int64]
+	UrlPath           plugin.TValue[string]
+	ResponseBodyRegex plugin.TValue[string]
+	ReturnCode        plugin.TValue[int64]
+	RequestData       plugin.TValue[string]
+	ResponseData      plugin.TValue[string]
+	Dns               plugin.TValue[*mqlOciNetworkLoadBalancerDnsHealthCheck]
+}
+
+// createOciNetworkLoadBalancerHealthChecker creates a new instance of this resource
+func createOciNetworkLoadBalancerHealthChecker(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkLoadBalancerHealthChecker{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkLoadBalancer.healthChecker", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) MqlName() string {
+	return "oci.networkLoadBalancer.healthChecker"
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetProtocol() *plugin.TValue[string] {
+	return &c.Protocol
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetPort() *plugin.TValue[int64] {
+	return &c.Port
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetRetries() *plugin.TValue[int64] {
+	return &c.Retries
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetTimeoutInMillis() *plugin.TValue[int64] {
+	return &c.TimeoutInMillis
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetIntervalInMillis() *plugin.TValue[int64] {
+	return &c.IntervalInMillis
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetUrlPath() *plugin.TValue[string] {
+	return &c.UrlPath
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetResponseBodyRegex() *plugin.TValue[string] {
+	return &c.ResponseBodyRegex
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetReturnCode() *plugin.TValue[int64] {
+	return &c.ReturnCode
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetRequestData() *plugin.TValue[string] {
+	return &c.RequestData
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetResponseData() *plugin.TValue[string] {
+	return &c.ResponseData
+}
+
+func (c *mqlOciNetworkLoadBalancerHealthChecker) GetDns() *plugin.TValue[*mqlOciNetworkLoadBalancerDnsHealthCheck] {
+	return plugin.GetOrCompute[*mqlOciNetworkLoadBalancerDnsHealthCheck](&c.Dns, func() (*mqlOciNetworkLoadBalancerDnsHealthCheck, error) {
+		if c.MqlRuntime.HasRecording {
+			d, err := c.MqlRuntime.FieldResourceFromRecording("oci.networkLoadBalancer.healthChecker", c.__id, "dns")
+			if err != nil {
+				return nil, err
+			}
+			if d != nil {
+				return d.Value.(*mqlOciNetworkLoadBalancerDnsHealthCheck), nil
+			}
+		}
+
+		return c.dns()
+	})
+}
+
+// mqlOciNetworkLoadBalancerDnsHealthCheck for the oci.networkLoadBalancer.dnsHealthCheck resource
+type mqlOciNetworkLoadBalancerDnsHealthCheck struct {
+	MqlRuntime *plugin.Runtime
+	__id       string
+	// optional: if you define mqlOciNetworkLoadBalancerDnsHealthCheckInternal it will be used here
+	DomainName        plugin.TValue[string]
+	TransportProtocol plugin.TValue[string]
+	QueryClass        plugin.TValue[string]
+	QueryType         plugin.TValue[string]
+	Rcodes            plugin.TValue[[]any]
+}
+
+// createOciNetworkLoadBalancerDnsHealthCheck creates a new instance of this resource
+func createOciNetworkLoadBalancerDnsHealthCheck(runtime *plugin.Runtime, args map[string]*llx.RawData) (plugin.Resource, error) {
+	res := &mqlOciNetworkLoadBalancerDnsHealthCheck{
+		MqlRuntime: runtime,
+	}
+
+	err := SetAllData(res, args)
+	if err != nil {
+		return res, err
+	}
+
+	// to override __id implement: id() (string, error)
+
+	if runtime.HasRecording {
+		args, err = runtime.ResourceFromRecording("oci.networkLoadBalancer.dnsHealthCheck", res.__id)
+		if err != nil || args == nil {
+			return res, err
+		}
+		return res, SetAllData(res, args)
+	}
+
+	return res, nil
+}
+
+func (c *mqlOciNetworkLoadBalancerDnsHealthCheck) MqlName() string {
+	return "oci.networkLoadBalancer.dnsHealthCheck"
+}
+
+func (c *mqlOciNetworkLoadBalancerDnsHealthCheck) MqlID() string {
+	return c.__id
+}
+
+func (c *mqlOciNetworkLoadBalancerDnsHealthCheck) GetDomainName() *plugin.TValue[string] {
+	return &c.DomainName
+}
+
+func (c *mqlOciNetworkLoadBalancerDnsHealthCheck) GetTransportProtocol() *plugin.TValue[string] {
+	return &c.TransportProtocol
+}
+
+func (c *mqlOciNetworkLoadBalancerDnsHealthCheck) GetQueryClass() *plugin.TValue[string] {
+	return &c.QueryClass
+}
+
+func (c *mqlOciNetworkLoadBalancerDnsHealthCheck) GetQueryType() *plugin.TValue[string] {
+	return &c.QueryType
+}
+
+func (c *mqlOciNetworkLoadBalancerDnsHealthCheck) GetRcodes() *plugin.TValue[[]any] {
+	return &c.Rcodes
 }
 
 // mqlOciNetworkLoadBalancerIpAddress for the oci.networkLoadBalancer.ipAddress resource

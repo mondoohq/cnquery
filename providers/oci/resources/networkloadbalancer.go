@@ -195,21 +195,6 @@ func (o *mqlOciNetworkLoadBalancer) newBackendSets(nlbID string, backendSets map
 			}
 		}
 
-		hc := backendSet.HealthChecker
-		if hc == nil {
-			// A backend set with no health checker leaves every probe field
-			// null rather than reporting a probe configured with empty values.
-			hc = &networkloadbalancer.HealthChecker{}
-		}
-		dns := hc.Dns
-		if dns == nil {
-			dns = &networkloadbalancer.DnsHealthCheckerDetails{}
-		}
-		rcodes := make([]any, 0, len(dns.Rcodes))
-		for _, rc := range dns.Rcodes {
-			rcodes = append(rcodes, string(rc))
-		}
-
 		backends, err := o.newBackends(nlbID+"/backendSet/"+name, backendSet.Backends)
 		if err != nil {
 			return nil, err
@@ -224,28 +209,13 @@ func (o *mqlOciNetworkLoadBalancer) newBackendSets(nlbID string, backendSets map
 			"isFailOpen":               llx.BoolData(boolValue(backendSet.IsFailOpen)),
 			"isInstantFailoverEnabled": llx.BoolData(boolValue(backendSet.IsInstantFailoverEnabled)),
 			"healthChecker":            llx.DictData(healthChecker),
-
-			"healthCheckProtocol":             llx.StringData(string(hc.Protocol)),
-			"healthCheckPort":                 llx.IntDataPtr(hc.Port),
-			"healthCheckUrlPath":              llx.StringDataPtr(hc.UrlPath),
-			"healthCheckReturnCode":           llx.IntDataPtr(hc.ReturnCode),
-			"healthCheckResponseBodyRegex":    llx.StringDataPtr(hc.ResponseBodyRegex),
-			"healthCheckRetries":              llx.IntDataPtr(hc.Retries),
-			"healthCheckTimeoutInMillis":      llx.IntDataPtr(hc.TimeoutInMillis),
-			"healthCheckIntervalInMillis":     llx.IntDataPtr(hc.IntervalInMillis),
-			"healthCheckRequestData":          llx.StringData(base64.StdEncoding.EncodeToString(hc.RequestData)),
-			"healthCheckResponseData":         llx.StringData(base64.StdEncoding.EncodeToString(hc.ResponseData)),
-			"healthCheckDnsDomainName":        llx.StringDataPtr(dns.DomainName),
-			"healthCheckDnsTransportProtocol": llx.StringData(string(dns.TransportProtocol)),
-			"healthCheckDnsQueryClass":        llx.StringData(string(dns.QueryClass)),
-			"healthCheckDnsQueryType":         llx.StringData(string(dns.QueryType)),
-			"healthCheckDnsRcodes":            llx.ArrayData(rcodes, types.String),
-			"backends":                        llx.ArrayData(backends, types.Resource("oci.networkLoadBalancer.backend")),
-			"backendCount":                    llx.IntData(int64(len(backendSet.Backends))),
+			"backends":                 llx.ArrayData(backends, types.Resource("oci.networkLoadBalancer.backend")),
+			"backendCount":             llx.IntData(int64(len(backendSet.Backends))),
 		})
 		if err != nil {
 			return nil, err
 		}
+		mqlBackendSet.(*mqlOciNetworkLoadBalancerBackendSet).cacheHealthChecker = backendSet.HealthChecker
 		res = append(res, mqlBackendSet)
 	}
 
@@ -350,4 +320,79 @@ type mqlOciNetworkLoadBalancerIpAddressInternal struct {
 // than staying registered in the VCN.
 func (o *mqlOciNetworkLoadBalancerIpAddress) reservedIp() (*mqlOciNetworkPublicIp, error) {
 	return resolveRef(o.MqlRuntime, "oci.network.publicIp", o.cacheReservedIpID, &o.ReservedIp)
+}
+
+type mqlOciNetworkLoadBalancerBackendSetInternal struct {
+	cacheHealthChecker *networkloadbalancer.HealthChecker
+}
+
+// healthCheck builds the probe that decides which backends stay in rotation.
+//
+// A backend set with no health checker reports null rather than a probe whose
+// every field is empty: nothing removes a failed backend from rotation, which
+// is a different fact from a probe configured to accept anything.
+func (o *mqlOciNetworkLoadBalancerBackendSet) healthCheck() (*mqlOciNetworkLoadBalancerHealthChecker, error) {
+	hc := o.cacheHealthChecker
+	if hc == nil {
+		o.HealthCheck.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.networkLoadBalancer.healthChecker", map[string]*llx.RawData{
+		"__id":              llx.StringData(o.__id + "/healthChecker"),
+		"protocol":          llx.StringData(string(hc.Protocol)),
+		"port":              llx.IntDataPtr(hc.Port),
+		"retries":           llx.IntDataPtr(hc.Retries),
+		"timeoutInMillis":   llx.IntDataPtr(hc.TimeoutInMillis),
+		"intervalInMillis":  llx.IntDataPtr(hc.IntervalInMillis),
+		"urlPath":           llx.StringDataPtr(hc.UrlPath),
+		"responseBodyRegex": llx.StringDataPtr(hc.ResponseBodyRegex),
+		"returnCode":        llx.IntDataPtr(hc.ReturnCode),
+		// The SDK hands these back as raw bytes it already base64-decoded, so
+		// they are re-encoded to survive as a string field.
+		"requestData":  llx.StringData(base64.StdEncoding.EncodeToString(hc.RequestData)),
+		"responseData": llx.StringData(base64.StdEncoding.EncodeToString(hc.ResponseData)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	mqlHc := res.(*mqlOciNetworkLoadBalancerHealthChecker)
+	mqlHc.cacheDns = hc.Dns
+	mqlHc.cacheBackendSetID = o.__id
+	return mqlHc, nil
+}
+
+type mqlOciNetworkLoadBalancerHealthCheckerInternal struct {
+	cacheDns          *networkloadbalancer.DnsHealthCheckerDetails
+	cacheBackendSetID string
+}
+
+// dns builds the query a DNS probe issues.
+//
+// Null on every probe that is not a DNS probe, which keeps "this probe asks no
+// DNS question" apart from "it asks for an empty name".
+func (o *mqlOciNetworkLoadBalancerHealthChecker) dns() (*mqlOciNetworkLoadBalancerDnsHealthCheck, error) {
+	dns := o.cacheDns
+	if dns == nil {
+		o.Dns.State = plugin.StateIsSet | plugin.StateIsNull
+		return nil, nil
+	}
+
+	rcodes := make([]any, 0, len(dns.Rcodes))
+	for _, rc := range dns.Rcodes {
+		rcodes = append(rcodes, string(rc))
+	}
+
+	res, err := CreateResource(o.MqlRuntime, "oci.networkLoadBalancer.dnsHealthCheck", map[string]*llx.RawData{
+		"__id":              llx.StringData(o.cacheBackendSetID + "/healthChecker/dns"),
+		"domainName":        llx.StringDataPtr(dns.DomainName),
+		"transportProtocol": llx.StringData(string(dns.TransportProtocol)),
+		"queryClass":        llx.StringData(string(dns.QueryClass)),
+		"queryType":         llx.StringData(string(dns.QueryType)),
+		"rcodes":            llx.ArrayData(rcodes, types.String),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return res.(*mqlOciNetworkLoadBalancerDnsHealthCheck), nil
 }
